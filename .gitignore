@@ -1,0 +1,19 @@
+# Project exclude paths
+/adbc/target/
+/core/target/
+/core/target/scala-0.26/classes/
+/project/project/target
+/project/target/
+/project/.bloop
+/target/
+/.idea/
+.bloop
+.bsp
+.metals
+.vscode
+.dotty-ide-artifact
+.dotty-ide.json
+core/target
+adbc/target
+examples/target
+*.html
