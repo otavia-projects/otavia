@@ -5,6 +5,8 @@
 /project/project/target
 /project/target/
 /project/.bloop
+/project/project
+/project/metals.sbt
 /target/
 /.idea/
 .bloop
@@ -15,5 +17,9 @@
 .dotty-ide.json
 core/target
 adbc/target
+http/target
+redis-client/target
+web/target
 examples/target
 *.html
+

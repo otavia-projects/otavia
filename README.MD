@@ -13,6 +13,8 @@ Language: [简体中文](./README.zn_ch.md)
 
 <hr>
 
+> The first runnable version is developing.
+
 ## Programming Model
 
 In `otavia`, developer only focus on
@@ -33,11 +35,12 @@ In `otavia`, developer only focus on
 - `ActorSystem`: `ActorBase` 实例容器，负责创建`ActorBase` 实例、管理 `ActorBase` 实例的生命周期，
   和调度 `ActorBase` 实例的执行。
 
-## 特性
+## Features
 
-- 消息类型安全，`ActorBase` 接收消息的类型在定义时明确约束，不满足消息约束的消息不能通过编译。
+- Message type safe: the message type should indicate when the `ActorBase` is defined.
+- dependency inject:
 
-## 快速开始
+## Quick Start
 
 sbt
 
@@ -62,3 +65,4 @@ maven
 </dependency>
 ```
 
+## Contributes
