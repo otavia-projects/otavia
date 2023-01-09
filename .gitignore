@@ -14,6 +14,9 @@ target/
 !**/target
 !**/Cargo.lock
 
+*/target
+
+out/
 
 ### BSP ###
 .bloop
