@@ -2,7 +2,7 @@
 name = "mio_transport"
 version = "0.0.1"
 edition = "2021"
-authors = ["Yan Kun <1939810907@qq.com>"]
+authors = ["Yan Kun <yan_kun_1992@foxmail.com> <1939810907@qq.com>"]
 description = "Native transport layer for otavia!"
 documentation = "https://github.com/yankun1992/fastbloom"
 readme = "README.md"

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Yan Kun
+ * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
  * This class is fork from netty
  *
