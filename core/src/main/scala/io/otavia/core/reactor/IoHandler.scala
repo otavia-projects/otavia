@@ -22,7 +22,7 @@ import io.otavia.core.address.ChannelsActorAddress
 import io.otavia.core.channel.Channel
 
 /** Handles IO dispatching for an [[io.otavia.core.actor.ChannelsActor]] All operations except [[wakeup]] and
- *  [[isCompatible]] <strong>MUST</strong> be executed on the [[io.otavia.core.actor.ChannelsActor]] and should never be
+ *  [[isCompatible]] <strong>MUST</strong> be executed on the [[io.otavia.core.reactor.Reactor]] and should never be
  *  called from the user-directly.
  */
 trait IoHandler {

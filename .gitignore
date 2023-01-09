@@ -1,25 +1,50 @@
 # Project exclude paths
-/adbc/target/
-/core/target/
-/core/target/scala-0.26/classes/
 /project/project/target
 /project/target/
 /project/.bloop
 /project/project
 /project/metals.sbt
-/target/
-/.idea/
+
+*.html
+
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+!**/target
+!**/Cargo.lock
+
+
+### BSP ###
 .bloop
 .bsp
 .metals
-.vscode
-.dotty-ide-artifact
-.dotty-ide.json
-core/target
-adbc/target
-http/target
-redis-client/target
-web/target
-examples/target
-*.html
 
+### IntelliJ IDEA ###
+.idea
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
+/mio/Cargo.lock

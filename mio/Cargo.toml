@@ -1,0 +1,26 @@
+[package]
+name = "mio_transport"
+version = "0.0.1"
+edition = "2021"
+authors = ["Yan Kun <1939810907@qq.com>"]
+description = "Native transport layer for otavia!"
+documentation = "https://github.com/yankun1992/fastbloom"
+readme = "README.md"
+homepage = "https://github.com/yankun1992/otavia"
+repository = "https://github.com/yankun1992/otavia"
+license-file = "../LICENSE"
+keywords = []
+categories = []
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "mio_transport"
+crate-type = ["cdylib"]
+
+[dependencies]
+mio = "0.8"
+jni = "0.19.0"
+
+
+[dev-dependencies]
+criterion = "0.3.6"

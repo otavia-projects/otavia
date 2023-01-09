@@ -28,12 +28,14 @@ import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 import scala.runtime.Nothing$
 
 abstract class AccepterActor[W <: AcceptedWorkerActor[_ <: Ask[?] | Notice]] extends ChannelsActor[Bind] {
+
     val workerFactory: WorkerFactory[W]
     private var localAddress: SocketAddress    = _
-    private var binded: Boolean                = false
+    private var bound: Boolean                 = false
     private var workers: Address[MessageOf[W]] = _
 
-    val workerNumber: Int = 1
+    /** Number of worker. */
+    protected def workerNumber: Int = 1
 
     override def afterMount(): Unit = {
         workers = system.crateActor(workerFactory, workerNumber)
@@ -43,7 +45,7 @@ abstract class AccepterActor[W <: AcceptedWorkerActor[_ <: Ask[?] | Notice]] ext
     protected def bind(host: String, port: Int): Unit      = bind(InetSocketAddress.createUnresolved(host, port))
     protected def bind(host: InetAddress, port: Int): Unit = bind(new InetSocketAddress(host, port))
     protected def bind(localAddress: SocketAddress): Channel = {
-        assert(!binded)
+        assert(!bound)
         this.localAddress = localAddress
         // 1. create channel
         // 2. init: pipeline and config, add ServerBootstrapAcceptor handler
@@ -64,7 +66,7 @@ abstract class AccepterActor[W <: AcceptedWorkerActor[_ <: Ask[?] | Notice]] ext
         event.channel.pipeline.fireChannelRegistered()
 
         event.channel.pipeline.bind(localAddress)
-        binded = true
+        bound = true
         event.channel.pipeline.fireChannelActive()
     }
 
@@ -88,11 +90,13 @@ object AccepterActor {
 
     final case class Bind(localAddress: SocketAddress)(using IdAllocator) extends Ask[UnitReply], Notice
     object Bind {
+
         def apply(port: Int)(using IdAllocator): Bind = Bind(new InetSocketAddress(port))
         def apply(host: String, port: Int)(using IdAllocator): Bind = Bind(
           InetSocketAddress.createUnresolved(host, port)
         )
         def apply(host: InetAddress, port: Int)(using IdAllocator): Bind = Bind(new InetSocketAddress(host, port))
+
     }
 
     private class AccepterHandler extends ChannelHandler {
@@ -104,8 +108,11 @@ object AccepterActor {
     }
 
     final class DispatchState extends StackState {
+
         val dispatchWaiter = new ReplyWaiter[UnitReply]()
 
         override def resumable(): Boolean = dispatchWaiter.received
+
     }
+
 }

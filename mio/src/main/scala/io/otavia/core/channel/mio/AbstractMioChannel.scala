@@ -19,7 +19,7 @@
 package io.otavia.core.channel.mio
 
 import io.otavia.core.actor.ChannelsActor
-import io.otavia.core.channel.{AbstractChannel, ReadHandleFactory, WriteHandleFactory}
+import io.otavia.core.channel.*
 
 import java.net.SocketAddress
 import java.nio.channels.SelectableChannel
@@ -27,8 +27,15 @@ import java.nio.channels.SelectableChannel
 abstract class AbstractMioChannel[L <: SocketAddress, R <: SocketAddress](
     executor: ChannelsActor[?],
     supportingDisconnect: Boolean,
+    initialFlag: Int,
     defaultReadHandleFactory: ReadHandleFactory,
     defaultWriteHandleFactory: WriteHandleFactory,
-    val ch: SelectableChannel,
-    val readInterestOp: Int
-) extends AbstractChannel[L, R](executor, supportingDisconnect, defaultReadHandleFactory, defaultWriteHandleFactory) {}
+    val socket: MioSocket,
+    val remote: SocketAddress
+) extends AbstractChannel[L, R](executor, supportingDisconnect, defaultReadHandleFactory, defaultWriteHandleFactory) {
+
+    override protected[channel] def doReadNow(readSink: ReadSink): Boolean = ???
+
+    override protected def doWriteNow(writeSink: WriteSink): Unit = ???
+
+}
