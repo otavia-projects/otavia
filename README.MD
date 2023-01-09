@@ -9,7 +9,7 @@
 
 <hr>
 
-Language: [简体中文](./README.zn_ch.md)
+Language: [简体中文](./README.zh_cn.md)
 
 <hr>
 
