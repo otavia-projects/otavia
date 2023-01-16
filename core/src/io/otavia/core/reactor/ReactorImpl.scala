@@ -45,7 +45,7 @@ final class ReactorImpl(
 
     private val context = new IoExecutionContext {
 
-        override def canBlock: Boolean = ???
+        override def canBlock: Boolean = registerQueue.isEmpty && deregisterQueue.isEmpty
 
         override def delayNanos(currentTimeNanos: Long): Long = ???
 

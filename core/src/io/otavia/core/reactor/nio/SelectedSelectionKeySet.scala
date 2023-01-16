@@ -24,8 +24,8 @@ import java.util.Arrays
 
 final class SelectedSelectionKeySet extends util.AbstractSet[SelectionKey] {
 
-    private var keys: Array[SelectionKey] = new Array[SelectionKey](2048)
-    private var _size: Int                = 0
+    private[reactor] var keys: Array[SelectionKey] = new Array[SelectionKey](2048)
+    private var _size: Int                         = 0
 
     override def add(o: SelectionKey): Boolean = if (o != null) {
         if (size == keys.length) increaseCapacity()
@@ -41,6 +41,7 @@ final class SelectedSelectionKeySet extends util.AbstractSet[SelectionKey] {
     override def size(): Int = _size
 
     override def iterator(): util.Iterator[SelectionKey] = new util.Iterator[SelectionKey] {
+
         private var idx: Int = 0
 
         override def hasNext: Boolean = idx < _size
@@ -52,6 +53,7 @@ final class SelectedSelectionKeySet extends util.AbstractSet[SelectionKey] {
         } else throw new NoSuchElementException()
 
         override def remove(): Unit = throw new UnsupportedOperationException
+
     }
 
     def reset(start: Int = 0): Unit = if (start < _size && start >= 0) {

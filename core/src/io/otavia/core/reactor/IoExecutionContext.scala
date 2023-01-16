@@ -18,26 +18,20 @@
 
 package io.otavia.core.reactor
 
-/**
-  * The execution context for an {@link IoHandler}.
-  * All method must be called from the {@link EventLoop} thread.
-  */
+/** The execution context for an [[IoHandler]]. All method must be called from the [[Reactor]] thread. */
 trait IoExecutionContext {
-    /**
-      * Returns {@code true} if blocking for IO is allowed or if we should try to do a non-blocking request for IO to be
-      * ready.
-      */
+
+    /** Returns `true` if blocking for IO is allowed or if we should try to do a non-blocking request for IO to be
+     *  ready.
+     */
     def canBlock: Boolean
 
-    /**
-      * Returns the amount of time left until the scheduled task with the closest deadline should run.
-      */
+    /** Returns the amount of time left until the scheduled task with the closest deadline should run. */
     def delayNanos(currentTimeNanos: Long): Long
 
-    /**
-      * Returns the absolute point in time at which the next
-      * closest scheduled task should run or {@code -1} if nothing is scheduled to run.
-      */
+    /** Returns the absolute point in time at which the next closest scheduled task should run or `-1` if nothing is
+     *  scheduled to run.
+     */
     def deadlineNanos: Long
-}
 
+}

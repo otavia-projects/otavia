@@ -75,7 +75,7 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
 
     override def handle(key: SelectionKey): Unit = ???
 
-    override def closeProcessor(): Unit = closeTransport()
+    override def closeProcessor(): Unit = closeTransport() // TODO: thread safe
 
     // End implementation of NioProcessor
 
