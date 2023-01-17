@@ -38,7 +38,7 @@ trait AddressedEnvelope[M, A <: SocketAddress] {
     def content: M
 
     /** Returns the address of the sender of this message. */
-    def sender: A
+    def sender: Option[A]
 
     /** Returns the address of the recipient of this message. */
     def recipient: A

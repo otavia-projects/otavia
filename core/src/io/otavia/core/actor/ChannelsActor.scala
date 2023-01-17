@@ -30,6 +30,7 @@ import java.util.concurrent.CancellationException
 import scala.reflect.ClassTag
 
 abstract class ChannelsActor[M <: Ask[?] | Notice] extends Actor[M] {
+
     override def self: ChannelsActorAddress[M] = super.self.asInstanceOf[ChannelsActorAddress[M]]
 
     final def reactor: Reactor = system.reactor
@@ -50,34 +51,32 @@ abstract class ChannelsActor[M <: Ask[?] | Notice] extends Actor[M] {
     /** fire inbound event to pipeline */
     def receiveEvent(event: Event): Unit = {
         event match
-            case registerReplyEvent: RegisterReplyEvent => receiveRegisterReply(registerReplyEvent)
-            case channelEvent: ChannelEvent =>
-                if (!channelEvent.selectionKey.isValid) {
-                    // close channel
-                }
-                try {
-                    val readyOps = channelEvent.selectionKey.readyOps()
-                    if ((readyOps & SelectionKey.OP_CONNECT) != 0) {
-                        var ops = channelEvent.selectionKey.interestOps()
-                        ops = ops & ~SelectionKey.OP_CONNECT
-                        channelEvent.selectionKey.interestOps(ops)
-                        // finishConnect for this channel
-//            channelEvent.channel.unsafe.finishConnect()
-                        channelEvent.channel.pipeline.fireChannelActive()
-                        // fireChannelActive
-                    }
-                    if ((readyOps & SelectionKey.OP_WRITE) != 0) {
-                        // forceFlush for this channel
-                    }
-                    // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead
-                    // to a spin loop
-                    if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
-                        // fire read inbound event
-                    }
-                } catch {
-                    case ignored: CancellationException => // close channel
-                }
+            case e: ReactorEvent.RegisterReply    => handleChannelRegisterReplyEvent(e)
+            case e: ReactorEvent.DeregisterReply  => handleChannelDeregisterReplyEvent(e)
+            case e: ReactorEvent.ChannelClose     => handleChannelCloseEvent(e)
+            case e: ReactorEvent.ChannelReadiness => handleChannelReadinessEvent(e)
     }
+
+    // Event from Reactor
+
+    /** Handle channel close event */
+    protected def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit =
+        event.channel.handleChannelCloseEvent(event)
+
+    /** Handle channel register result event */
+    protected def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit =
+        event.channel.handleChannelRegisterReplyEvent(event)
+
+    /** Handle channel deregister result event */
+    protected def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit =
+        event.channel.handleChannelDeregisterReplyEvent(event)
+
+    /** Handle channel readiness event */
+    protected def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit =
+        event.channel.handleChannelReadinessEvent(event)
+
+    // Event from Timer
+    // ...
 
     private[core] def receiveRegisterReply(registerReplyEvent: RegisterReplyEvent): Unit
 
@@ -125,6 +124,7 @@ abstract class ChannelsActor[M <: Ask[?] | Notice] extends Actor[M] {
             case thread: io.otavia.core.system.ActorThread => thread.currentRunningActor() == this
             case _                                         => false
     }
+
 }
 
 object ChannelsActor {}

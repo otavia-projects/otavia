@@ -27,7 +27,7 @@ import io.otavia.core.stack.ReplyWaiter
  *  @tparam M
  *    the message type that this actor can receive.
  */
-trait Address[-M <: Ask[?] | Notice] {
+trait Address[-M <: Ask[? <: Reply] | Notice] {
 
     /** send notice message to this address
      *

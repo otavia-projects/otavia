@@ -31,7 +31,17 @@ sealed abstract class Event {
 /** Timeout event */
 case class TimeoutEvent(registerId: Long, attach: AnyRef | Null = null) extends Event
 
-case class RegisterReplyEvent(channel: Channel, succeed: Boolean = true, cause: Throwable = null) extends Event
+enum ReactorEvent extends Event {
+
+    case RegisterReply(channel: Channel, cause: Option[Throwable])
+    case DeregisterReply(channel: Channel, cause: Option[Throwable])
+
+    case ChannelReadiness(channel: Channel, readyOps: Int)
+    case ChannelClose(channel: Channel)
+
+}
+
+case class RegisterReplyEvent(channel: Channel, succeed: Boolean = true, cause: Throwable = null)   extends Event
 case class DeregisterReplyEvent(channel: Channel, succeed: Boolean = true, cause: Throwable = null) extends Event
 
 /** channel event for [[io.otavia.core.actor.ChannelsActor]]
@@ -42,3 +52,5 @@ case class DeregisterReplyEvent(channel: Channel, succeed: Boolean = true, cause
  *    socket event type
  */
 final case class ChannelEvent(channel: Channel, selectionKey: SelectionKey) extends Event
+
+final case class ChannelClose(channel: Channel) extends Event

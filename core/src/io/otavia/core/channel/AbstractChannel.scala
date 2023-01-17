@@ -26,7 +26,7 @@ import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.AbstractChannel.*
 import io.otavia.core.channel.ChannelOption.*
 import io.otavia.core.channel.{ReadSink, WriteSink}
-import io.otavia.core.reactor.{DeregisterReplyEvent, RegisterReplyEvent}
+import io.otavia.core.reactor.{DeregisterReplyEvent, ReactorEvent, RegisterReplyEvent}
 import io.otavia.core.util.ActorLogger
 
 import java.net.{InetSocketAddress, SocketAddress}
@@ -221,16 +221,18 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         reactor.register(this)
     }
 
-    private[channel] def onRegisterTransportReply(result: RegisterReplyEvent): Unit = if (result.succeed) {
-        val firstRegistration = neverRegistered
-        neverRegistered = false
-        registered = true
-        pipeline.fireChannelRegistered()
-        if (isActive) {
-            if (firstRegistration) fireChannelActiveIfNotActiveBefore()
-            readIfIsAutoRead()
-        }
-    } else closeNowAndFail(result.cause)
+    override private[core] def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit =
+        event.cause match
+            case None =>
+                val firstRegistration = neverRegistered
+                neverRegistered = false
+                registered = true
+                pipeline.fireChannelRegistered()
+                if (isActive) {
+                    if (firstRegistration) fireChannelActiveIfNotActiveBefore()
+                    readIfIsAutoRead()
+                }
+            case Some(cause) => closeNowAndFail(cause)
 
     private[channel] def bindTransport(local: SocketAddress): Unit = {
         local match {
@@ -285,9 +287,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         reactor.deregister(this)
     })
 
-    override private[channel] def onDeregisterTransportReply(result: DeregisterReplyEvent): Unit = {
-        ???
-    }
+    override private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = ???
 
     private[channel] def readTransport(readBufferAllocator: ReadBufferAllocator): Unit = if (!isActive) {
         readBeforeActive = readBufferAllocator
@@ -354,6 +354,14 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
             if (message != null && message.readableBytes() == 0) this.outboundBuffer.remove
         } else {}
     } catch { case t: Throwable => }
+
+    /** Should be called once the connect request is ready to be completed and [[isConnectPending]] is `true`. Calling
+     *  this method if no [[isConnectPending]] connect is pending will result in an [[AlreadyConnectedException]].
+     *
+     *  @return
+     *    `true` if the connect operation completed, `false` otherwise.
+     */
+    protected def finishConnect(): Boolean = ???
 
     private[channel] def updateWritabilityIfNeeded(notify: Boolean, notifyLater: Boolean): Unit = {
         val totalPending = this.totalPending

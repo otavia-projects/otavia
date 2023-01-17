@@ -63,7 +63,7 @@ object SocketChannelWriteHandleFactory {
         ): Unit = if (attempted == written) {
             if (attempted << 1 > oldMaxBytesPerGatheringWrite)
                 calculatedMaxBytesPerGatheringWrite = math.min(maxBytesPerGatheringWrite, attempted << 1)
-        } else if (attempted > MAX_BYTES_PER_GATHERING_WRITE_ATTEMPTED_LOW_THRESHOLD && written < attempted >>> 1) {
+        } else if (attempted > MAX_BYTES_PER_GATHERING_WRITE_ATTEMPTED_LOW_THRESHOLD && written < (attempted >>> 1)) {
             calculatedMaxBytesPerGatheringWrite = math.min(maxBytesPerGatheringWrite, attempted >>> 1)
         }
 

@@ -42,7 +42,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
 
     def this() = this(SelectorProvider.provider(), DefaultSelectStrategyFactory.newSelectStrategy())
 
-    val logger: Logger = getLogger
+    val logger: Logger = getLogger // TODO: change to ActorLogger
 
     private val selectNowSupplier: IntSupplier = new IntSupplier {
         override def getAsInt: Int = try { selectNow() }
@@ -139,7 +139,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
     /** Replaces the current [[Selector]] of this event loop with newly created [[Selector]]s to work around the
      *  infamous epoll 100% CPU bug.
      */
-    def rebuildSelector(): Unit = {
+    private def rebuildSelector(): Unit = {
         val oldSelector = selector
         Try { openSelector() } match
             case Failure(e) =>
@@ -178,9 +178,25 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
 
     }
 
-    override def run(context: IoExecutionContext): Int = {
-        val handled = 0
-        try {} catch {
+    override def run(runner: IoExecutionContext): Int = {
+        var handled = 0
+        try {
+            val strategy = selectStrategy.calculateStrategy(selectNowSupplier, !runner.canBlock)
+            if (strategy == SelectStrategy.CONTINUE) {} else {
+                try {
+                    select(runner, wakenUp.getAndSet(false))
+                    if (wakenUp.get()) selector.wakeup()
+                } catch {
+                    case e: IOException =>
+                        rebuildSelector()
+                        handleLoopException(e)
+                        handled = 0
+                }
+                cancelledKeys = 0
+                needsToSelectAgain = false
+                handled = processSelectedKeys()
+            }
+        } catch {
             case e: Error     => throw e
             case t: Throwable => handleLoopException(t)
         }
@@ -267,7 +283,14 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         processor.handle(key)
     }
 
-    override def prepareToDestroy(): Unit = ???
+    override def prepareToDestroy(): Unit = {
+        selectAgain()
+        val keys = selector.keys()
+        keys.forEach { key =>
+            val processor = key.attachment().asInstanceOf[NioProcessor]
+            processor.closeProcessor()
+        }
+    }
 
     override def register(channel: Channel): Unit = {
         val nioProcessor      = nioHandle(channel)
@@ -298,7 +321,8 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         }
     }
 
-    override def wakeup(inEventLoop: Boolean): Unit = ???
+    override def wakeup(inEventLoop: Boolean): Unit = if (wakenUp.compareAndSet(false, true))
+        selector.wakeup()
 
     override def isCompatible(handleType: Class[_ <: Channel]): Boolean =
         classOf[AbstractNioChannel[?, ?]].isAssignableFrom(handleType)
@@ -433,7 +457,7 @@ object NioHandler {
         def this(unwrappedSelector: Selector) = this(unwrappedSelector, unwrappedSelector)
     }
 
-    object SelectorTuple {
+    private object SelectorTuple {
         def apply(unwrappedSelector: Selector): SelectorTuple = SelectorTuple(unwrappedSelector, unwrappedSelector)
     }
 
@@ -445,13 +469,13 @@ object NioHandler {
     private val MIN_PREMATURE_SELECTOR_RETURNS  = 3
     private var SELECTOR_AUTO_REBUILD_THRESHOLD = 0
 
-    var selectorAutoRebuildThreshold: Int =
+    private var selectorAutoRebuildThreshold: Int =
         SystemPropertyUtil.getInt("io.netty5.selectorAutoRebuildThreshold", 512)
     if (selectorAutoRebuildThreshold < MIN_PREMATURE_SELECTOR_RETURNS) selectorAutoRebuildThreshold = 0
 
     SELECTOR_AUTO_REBUILD_THRESHOLD = selectorAutoRebuildThreshold
 
-    protected def nioHandle(handle: Channel): NioProcessor = handle match
+    private def nioHandle(handle: Channel): NioProcessor = handle match
         case channel: AbstractNioChannel[?, ?] => channel.nioProcessor
         case _ =>
             throw new IllegalArgumentException(s"Channel of type ${StringUtil.simpleClassName(handle)} not supported")

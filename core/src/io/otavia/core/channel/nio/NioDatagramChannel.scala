@@ -26,7 +26,7 @@ import io.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
 import io.otavia.core.channel.socket.DatagramChannel
 import io.otavia.core.channel.socket.SocketProtocolFamily.*
 
-import java.net.{ProtocolFamily, SocketAddress}
+import java.net.{InetAddress, NetworkInterface, ProtocolFamily, SocketAddress}
 import java.nio.channels.{SelectableChannel, SelectionKey, DatagramChannel as JDatagramChannel}
 import scala.util.Try
 
@@ -120,4 +120,15 @@ class NioDatagramChannel(executor: ChannelsActor[_], socket: JDatagramChannel, p
 
     override protected def doWriteNow(writeSink: WriteSink): Unit = ???
 
+    override def joinGroup(multicast: InetAddress): Unit = ???
+
+    override def joinGroup(multicast: InetAddress, interface: NetworkInterface, source: Option[InetAddress]): Unit = ???
+
+    override def leaveGroup(multicast: InetAddress): Unit = ???
+
+    override def leaveGroup(multicast: InetAddress, interface: NetworkInterface, source: Option[InetAddress]): Unit = ???
+
+    override def block(multicast: InetAddress, interface: NetworkInterface, source: InetAddress): Unit = ???
+
+    override def block(multicast: InetAddress, source: InetAddress): Unit = ???
 }

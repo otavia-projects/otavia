@@ -26,7 +26,8 @@ import io.otavia.core.reactor.{DeregisterReplyEvent, Reactor, RegisterReplyEvent
 import io.otavia.core.timer.Timer
 
 import java.net.SocketAddress
-trait Channel extends ChannelOutboundInvoker, AttributeMap {
+
+trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
 
     /** Unique id of this channel */
     val id: Int
@@ -142,18 +143,6 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap {
 
     /** Return the assigned [[BufferAllocator]] which will be used to allocate [[Buffer]]s. */
     def bufferAllocator: BufferAllocator
-
-    /** Called by [[ChannelsActor]] when receive a [[RegisterReplyEvent]] event.
-     *  @param result
-     *    register reply event, send from [[Reactor]].
-     */
-    private[channel] def onRegisterTransportReply(result: RegisterReplyEvent): Unit
-
-    /** Called by [[ChannelsActor]] when receive a [[DeregisterReplyEvent]] event.
-     *  @param result
-     *    deregister reply event, send from [[Reactor]].
-     */
-    private[channel] def onDeregisterTransportReply(result: DeregisterReplyEvent): Unit
 
     final override def read(readBufferAllocator: ReadBufferAllocator): Channel = {
         pipeline.read(readBufferAllocator)

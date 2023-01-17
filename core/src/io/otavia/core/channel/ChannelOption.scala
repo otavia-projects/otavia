@@ -27,14 +27,15 @@ import java.util.Objects.requireNonNull
 
 class ChannelOption[T](id: Int, name: String) extends AbstractConstant[ChannelOption[T]](id, name) {
 
-    @Deprecated
     def this(name: String) = this(pool.nextId(), name)
 
     /** Validate the value which is set for the [[ChannelOption]]. Sub-classes may override this for special checks. */
     def validate(value: T): Unit = requireNonNull(value, "value")
+
 }
 
 object ChannelOption {
+
     private val pool: ConstantPool[ChannelOption[AnyRef]] = new ConstantPool[ChannelOption[AnyRef]]() {
         override protected def newConstant(id: Int, name: String): ChannelOption[AnyRef] = {
             new ChannelOption[AnyRef](id, name)
@@ -108,4 +109,5 @@ object ChannelOption {
     val DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION: ChannelOption[Boolean] = valueOf(
       "DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION"
     )
+
 }
