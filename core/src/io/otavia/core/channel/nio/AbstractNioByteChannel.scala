@@ -39,11 +39,9 @@ import java.nio.channels.{SelectableChannel, SelectionKey}
  *    type of remote address
  */
 abstract class AbstractNioByteChannel[L <: SocketAddress, R <: SocketAddress](
-    executor: ChannelsActor[?],
     defaultWriteHandleFactory: WriteHandleFactory,
     ch: SelectableChannel
 ) extends AbstractNioChannel[L, R](
-      executor,
       false,
       new AdaptiveReadHandleFactory(),
       defaultWriteHandleFactory,

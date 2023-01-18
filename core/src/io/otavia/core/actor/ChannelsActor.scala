@@ -28,6 +28,7 @@ import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 import java.nio.channels.SelectionKey
 import java.util.concurrent.CancellationException
 import scala.reflect.ClassTag
+import scala.util.*
 
 abstract class ChannelsActor[M <: Ask[?] | Notice] extends Actor[M] {
 
@@ -78,8 +79,6 @@ abstract class ChannelsActor[M <: Ask[?] | Notice] extends Actor[M] {
     // Event from Timer
     // ...
 
-    private[core] def receiveRegisterReply(registerReplyEvent: RegisterReplyEvent): Unit
-
     /** call by pipeline tail context
      *  @param msg
      */
@@ -100,15 +99,23 @@ abstract class ChannelsActor[M <: Ask[?] | Notice] extends Actor[M] {
 
     val handler: Option[ChannelHandler] = None
 
-//  val channelFactory: ChannelFactory[? <: Channel]
-
-    def initAndRegister(): Channel = {
-        val channel = ??? // channelFactory.newChannel()
-        init(channel)
-//    channel.unsafe.register()
-        //    system.reactor.register(ChannelRegister(channel, self))
+    /** Initial and register a channel for this [[ChannelsActor]]. It do the flowing things:
+     *    1. Create the [[Channel]].
+     *    1. Initial the [[Channel]] with [[init]].
+     *    1. Register the [[Channel]] to [[Reactor]]. When register channel success, the [[Reactor]] will send a
+     *       [[ReactorEvent.RegisterReply]] event to this actor, then the [[handleChannelRegisterReplyEvent]] will be
+     *       called to handle the register result [[Event]].
+     */
+    protected def initAndRegister(): Channel = {
+        val channel = newChannel()
+        Try { init(channel) } match
+            case Success(_) => reactor.register(channel)
+            case Failure(e) => channel.close()
         channel
     }
+
+    /** Create a new channel and set executor. */
+    protected def newChannel(): Channel
 
     @throws[Exception]
     def init(channel: Channel): Unit

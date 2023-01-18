@@ -53,12 +53,10 @@ object core extends OtaviaModule {
 }
 
 object handler extends OtaviaModule {
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 }
 
-object codec extends OtaviaModule {
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(handler)
-}
+object codec extends OtaviaModule {}
 
 object http extends OtaviaModule {
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)

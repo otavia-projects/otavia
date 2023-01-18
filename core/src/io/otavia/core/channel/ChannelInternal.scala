@@ -102,7 +102,7 @@ private[channel] trait ChannelInternal[L <: SocketAddress, R <: SocketAddress] {
      *    thrown on error.
      */
     @throws[Exception]
-    protected def doConnect(remote: SocketAddress, local: Option[SocketAddress], initialData: Buffer): Boolean
+    protected def doConnect(initialData: Buffer): Boolean
 
     /** Finish a connect request. This method should never be directly called, use [[finishConnect]] instead.
      *

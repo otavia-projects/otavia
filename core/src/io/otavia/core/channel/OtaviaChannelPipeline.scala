@@ -17,6 +17,7 @@
  */
 
 package io.otavia.core.channel
+
 import io.netty5.buffer.{Buffer, BufferAllocator}
 import io.netty5.util.concurrent.FastThreadLocal
 import io.netty5.util.internal.StringUtil
@@ -29,6 +30,7 @@ import java.net.SocketAddress
 import scala.collection.mutable
 
 class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeline {
+
     protected val logger: ActorLogger = ActorLogger.getLogger(getClass)(using executor)
 
     private val head = new OtaviaChannelHandlerContext(this, HEAD_NAME, HEAD_HANDLER)
@@ -480,9 +482,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
     override def bind(local: SocketAddress): Unit = tail.bind(local)
 
-    override def connect(remote: SocketAddress): Unit = tail.connect(remote)
-
-    override def connect(remote: SocketAddress, local: Option[SocketAddress]): Unit = tail.connect(remote, local)
+    override def connect(): Unit = tail.connect()
 
     override def disconnect(): Unit = tail.disconnect()
 
@@ -585,14 +585,15 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 object OtaviaChannelPipeline {
 
     private final class HeadHandler extends ChannelHandler {
+
         override def bind(ctx: ChannelHandlerContext, local: SocketAddress): Unit = {
             val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
             abstractChannel.bindTransport(local)
         }
 
-        override def connect(ctx: ChannelHandlerContext, remote: SocketAddress, local: Option[SocketAddress]): Unit = {
+        override def connect(ctx: ChannelHandlerContext): Unit = {
             val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
-            abstractChannel.connectTransport(remote, local)
+            abstractChannel.connectTransport()
         }
 
         override def disconnect(ctx: ChannelHandlerContext): Unit = {
@@ -641,6 +642,7 @@ object OtaviaChannelPipeline {
 
     }
     private final class TailHandler extends ChannelHandler {
+
         override def channelRegistered(ctx: ChannelHandlerContext): Unit = {} // Just swallow event
 
         override def channelUnregistered(ctx: ChannelHandlerContext): Unit = {} // Just swallow event
@@ -666,6 +668,7 @@ object OtaviaChannelPipeline {
             ctx.pipeline.channel.onInboundMessage(msg)
 
         override def channelReadComplete(ctx: ChannelHandlerContext): Unit = {} // Just swallow event
+
     }
 
     private val HEAD_NAME = generateName0(classOf[HeadHandler])
@@ -692,4 +695,5 @@ object OtaviaChannelPipeline {
             h.added = true
         case _ =>
     }
+
 }

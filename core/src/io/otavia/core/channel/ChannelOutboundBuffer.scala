@@ -89,7 +89,7 @@ object ChannelOutboundBuffer {
 }
 
 @SuppressWarnings(Array("UnusedDeclaration"))
-private final class ChannelOutboundBuffer private[channel] (private val executor: ChannelsActor[?]) {
+private final class ChannelOutboundBuffer() {
     // Entry(flushedEntry) --> ... Entry(unflushedEntry) --> ... Entry(tailEntry)
     //
     // The Entry that is the first in the linked-list structure that was flushed
@@ -112,7 +112,7 @@ private final class ChannelOutboundBuffer private[channel] (private val executor
     /** Add given message to this[[ChannelOutboundBuffer]]. */
     private[channel] def addMessage(msg: AnyRef, size: Int): Unit = {
         if (closed) throw new IllegalStateException
-        assert(executor.inExecutor())
+        
         val entry = ChannelOutboundBuffer.Entry.newInstance(msg, size)
         if (tailEntry == null) flushedEntry = null
         else {
@@ -130,7 +130,7 @@ private final class ChannelOutboundBuffer private[channel] (private val executor
      *  so you will be able to handle them.
      */
     private[channel] def addFlush(): Unit = {
-        assert(executor.inExecutor())
+        
 
         // There is no need to process all entries if there was already a flush before and no new messages
         // where added in the meantime.
@@ -166,7 +166,7 @@ private final class ChannelOutboundBuffer private[channel] (private val executor
 
     /** Return the current message to write or null if nothing was flushed before and so is ready to be written. */
     private[channel] def current: AnyRef = {
-        assert(executor.inExecutor())
+        
         val entry = flushedEntry
         if (entry == null) return null
         entry.msg
@@ -185,7 +185,7 @@ private final class ChannelOutboundBuffer private[channel] (private val executor
     private[channel] def remove(cause: Throwable) = remove0(requireNonNull(cause, "cause"))
 
     private def remove0(cause: Throwable): Boolean = {
-        assert(executor.inExecutor())
+        
         val e = flushedEntry
         if (e == null) return false
         val msg = e.msg
@@ -205,7 +205,7 @@ private final class ChannelOutboundBuffer private[channel] (private val executor
     }
 
     private def removeEntry(e: ChannelOutboundBuffer.Entry): Unit = {
-        assert(executor.inExecutor())
+        
         if ({
             flushed -= 1; flushed
         } == 0) {
@@ -220,7 +220,7 @@ private final class ChannelOutboundBuffer private[channel] (private val executor
 
     /** Returns the number of flushed messages in this {@link ChannelOutboundBuffer}. */
     private[channel] def size = {
-        assert(executor.inExecutor())
+        
         flushed
     }
 
@@ -228,18 +228,18 @@ private final class ChannelOutboundBuffer private[channel] (private val executor
      *  otherwise.
      */
     private[channel] def isEmpty = {
-        assert(executor.inExecutor())
+        
         flushed == 0
     }
 
     private[channel] def failFlushedAndClose(failCause: Throwable, closeCause: Throwable): Unit = {
-        assert(executor.inExecutor())
+        
         failFlushed(failCause)
         close(closeCause)
     }
 
     private[channel] def failFlushed(cause: Throwable): Unit = {
-        assert(executor.inExecutor())
+        
         // Make sure that this method does not reenter.  A listener added to the current promise can be notified by the
         // current thread in the tryFailure() call of the loop below, and the listener can trigger another fail() call
         // indirectly (usually by closing the channel.)
@@ -252,7 +252,7 @@ private final class ChannelOutboundBuffer private[channel] (private val executor
     }
 
     private def close(cause: Throwable): Unit = {
-        assert(executor.inExecutor())
+        
         if (inFail) {
 //      executor.execute(() => close(cause))
             return
@@ -284,7 +284,7 @@ private final class ChannelOutboundBuffer private[channel] (private val executor
      *  process.
      */
     private[channel] def forEachFlushedMessage(processor: AnyRef => Boolean): Unit = {
-        assert(executor.inExecutor())
+        
         var entry = flushedEntry
         if (flushedEntry != null) {
             ???

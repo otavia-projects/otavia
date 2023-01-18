@@ -135,8 +135,7 @@ trait ChannelHandler {
      *  @throws Exception
      */
     @throws[Exception]
-    def connect(ctx: ChannelHandlerContext, remote: SocketAddress, local: Option[SocketAddress]): Unit =
-        ctx.connect(remote, local)
+    def connect(ctx: ChannelHandlerContext): Unit = ctx.connect()
 
     /** Called once a disconnect operation is made.
      *  @param ctx

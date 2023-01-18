@@ -24,6 +24,7 @@ import io.otavia.core.stack.StackState
 import scala.reflect.ClassTag
 
 abstract class AcceptedWorkerActor[M <: Ask[?] | Notice] extends ChannelsActor[M | AcceptedChannel] {
+
     private val registering = collection.mutable.HashMap.empty[Long, AcceptedChannel]
     override private[core] def receiveAsk(ask: Ask[_]): Unit = {
         if (!ask.isInstanceOf[AcceptedChannel]) super.receiveAsk(ask)
@@ -36,17 +37,17 @@ abstract class AcceptedWorkerActor[M <: Ask[?] | Notice] extends ChannelsActor[M
         }
     }
 
-    private[core] override def receiveRegisterReply(registerReplyEvent: RegisterReplyEvent): Unit = {
-        val accepted = registering.remove(registerReplyEvent.channel.id).get
-        if (registerReplyEvent.succeed) {
-            accepted.reply(UnitReply())
-            registerReplyEvent.channel.pipeline.fireChannelRegistered()
-            registerReplyEvent.channel.pipeline.fireChannelActive()
-        } else {
-            accepted.channel.close()
-            accepted.throws(ExceptionMessage(registerReplyEvent.cause))
-        }
-
-    }
+//    private[core] override def receiveRegisterReply(registerReplyEvent: RegisterReplyEvent): Unit = {
+//        val accepted = registering.remove(registerReplyEvent.channel.id).get
+//        if (registerReplyEvent.succeed) {
+//            accepted.reply(UnitReply())
+//            registerReplyEvent.channel.pipeline.fireChannelRegistered()
+//            registerReplyEvent.channel.pipeline.fireChannelActive()
+//        } else {
+//            accepted.channel.close()
+//            accepted.throws(ExceptionMessage(registerReplyEvent.cause))
+//        }
+//
+//    }
 
 }

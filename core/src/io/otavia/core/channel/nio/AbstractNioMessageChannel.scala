@@ -45,14 +45,12 @@ import java.nio.channels.SelectableChannel
  *    type of remote address
  */
 abstract class AbstractNioMessageChannel[L <: SocketAddress, R <: SocketAddress](
-    executor: ChannelsActor[?],
     supportingDisconnect: Boolean,
     defaultReadHandleFactory: ReadHandleFactory,
     defaultWriteHandleFactory: WriteHandleFactory,
     ch: SelectableChannel,
     readInterestOp: Int
 ) extends AbstractNioChannel[L, R](
-      executor,
       supportingDisconnect,
       defaultReadHandleFactory,
       defaultWriteHandleFactory,

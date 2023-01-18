@@ -30,11 +30,16 @@ import java.net.SocketAddress
 trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
 
     /** Unique id of this channel */
-    val id: Int
+    def id: Int
 
     /** Executor of this channel instance, the channel inbound and outbound event must execute in the binding executor
      */
     def executor: ChannelsActor[?]
+
+    /** Set executor of this channel
+     *  @param channelsActor
+     */
+    private[core] def setExecutor(channelsActor: ChannelsActor[?]): Unit
 
     /** Address of executor [[ChannelsActor]] of this [[Channel]] belong to. */
     final def executorAddress: ChannelsActorAddress[_] = executor.self
@@ -123,6 +128,18 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
      */
     def remoteAddress: Option[SocketAddress]
 
+    /** Set the local address where this channel is bound to.
+     *  @param address
+     *    address where this channel is bound to.
+     */
+    def setLocalAddress(address: SocketAddress): Unit = {}
+
+    /** Set the remote address where this channel is connected to.
+     *  @param address
+     *    remote address where this channel is connected to.
+     */
+    def setRemoteAddress(address: SocketAddress): Unit = {}
+
     /** @return
      *    true if and only if the executor thread will perform the requested flush operation immediately. Any write
      *    requests made when this method returns false are queued until the executor thread is ready to process the
@@ -154,12 +171,10 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
         this
     }
 
+    @throws[Exception]
     final override def bind(local: SocketAddress): Unit = pipeline.bind(local)
 
-    final override def connect(remote: SocketAddress): Unit = pipeline.connect(remote)
-
-    final override def connect(remote: SocketAddress, local: Option[SocketAddress]): Unit =
-        pipeline.connect(remote, local)
+    final override def connect(): Unit = pipeline.connect()
 
     final override def disconnect(): Unit = pipeline.disconnect()
 

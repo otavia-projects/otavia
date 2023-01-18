@@ -23,13 +23,12 @@ import io.otavia.core.actor.ChannelsActor
 import java.net.SocketAddress
 
 private trait ChannelOutboundInvoker {
+
     @throws[Exception]
     def bind(local: SocketAddress): Unit
 
     @throws[Exception]
-    def connect(remote: SocketAddress): Unit
-
-    def connect(remote: SocketAddress, local: Option[SocketAddress]): Unit
+    def connect(): Unit
 
     def disconnect(): Unit
 

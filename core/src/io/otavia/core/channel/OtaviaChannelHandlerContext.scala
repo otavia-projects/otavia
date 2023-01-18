@@ -33,6 +33,7 @@ final class OtaviaChannelHandlerContext(
     override val name: String,
     override val handler: ChannelHandler
 ) extends ChannelHandlerContext {
+
     protected val logger: ActorLogger = ActorLogger.getLogger(getClass)(using channel.executor)
     private val executionMask         = mask(handler.getClass)
 
@@ -291,15 +292,13 @@ final class OtaviaChannelHandlerContext(
         case t: Throwable => handleOutboundHandlerException(t, false)
     } finally updatePendingBytesIfNeeded()
 
-    override def connect(remote: SocketAddress): Unit = connect(remote, None)
-
-    override def connect(remote: SocketAddress, local: Option[SocketAddress]): Unit = {
+    override def connect(): Unit = {
         val ctx = findContextOutbound(ChannelHandlerMask.MASK_CONNECT)
-        ctx.invokeConnect(remote, local)
+        ctx.invokeConnect()
     }
 
-    private def invokeConnect(remote: SocketAddress, local: Option[SocketAddress]): Unit = try {
-        if (saveCurrentPendingBytesIfNeededDuplex()) handler.connect(this, remote, local)
+    private def invokeConnect(): Unit = try {
+        if (saveCurrentPendingBytesIfNeededDuplex()) handler.connect(this)
     } catch {
         case t: Throwable => handleOutboundHandlerException(t, false)
     } finally updatePendingBytesIfNeeded()
@@ -483,4 +482,5 @@ object OtaviaChannelHandlerContext {
     final val REMOVE_COMPLETE: Int = 3
 
     final def handlesPendingOutboundBytes(mask: Int): Boolean = (mask & MASK_PENDING_OUTBOUND_BYTES) != 0
+
 }

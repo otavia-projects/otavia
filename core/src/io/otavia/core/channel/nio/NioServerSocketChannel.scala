@@ -37,9 +37,8 @@ import java.nio.channels.{SelectionKey, ServerSocketChannel}
  *  <th>[[SocketProtocolFamily.UNIX]]</th> </tr><tr> <td>[[NioChannelOption]]</td> <td>X</td><td>X</td><td>X</td> </tr>
  *  </table>
  */
-class NioServerSocketChannel(executor: ChannelsActor[_], socket: ServerSocketChannel, protocolFamily: ProtocolFamily)
+class NioServerSocketChannel(socket: ServerSocketChannel, protocolFamily: ProtocolFamily)
     extends AbstractNioMessageChannel[SocketAddress, SocketAddress](
-      executor,
       false,
       new ServerChannelReadHandleFactory(),
       new ServerChannelWriteHandleFactory(),

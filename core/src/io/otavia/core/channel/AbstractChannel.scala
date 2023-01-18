@@ -52,7 +52,6 @@ import scala.concurrent.Future.never
  *    type of remote address
  */
 abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected (
-    override val executor: ChannelsActor[?],
     val supportingDisconnect: Boolean,
     val defaultReadHandleFactory: ReadHandleFactory,
     val defaultWriteHandleFactory: WriteHandleFactory
@@ -71,24 +70,22 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
      *    true if and only if the channel has the [[disconnect]] operation that allows a user to disconnect and then
      *    call [[Channel.connect]] again, such as UDP/IP.
      */
-    protected def this(executor: ChannelsActor[?], supportingDisconnect: Boolean) =
-        this(
-          executor,
-          supportingDisconnect,
-          new AdaptiveReadHandleFactory(),
-          new MaxMessagesWriteHandleFactory(Int.MaxValue)
-        )
+    protected def this(supportingDisconnect: Boolean) = this(
+      supportingDisconnect,
+      new AdaptiveReadHandleFactory(),
+      new MaxMessagesWriteHandleFactory(Int.MaxValue)
+    )
 
-    protected val logger: ActorLogger = ActorLogger.getLogger(getClass)(using executor)
+    protected var logger: ActorLogger = _
 
-    override val id: Int = executor.generateChannelId()
+    private var channelId: Int = -1
 
     override val pipeline: ChannelPipeline = newChannelPipeline()
 
     private var writable: Boolean                     = true
     private var local: L | Null                       = null
     private var remote: R | Null                      = null
-    private val outboundBuffer: ChannelOutboundBuffer = new ChannelOutboundBuffer(executor)
+    private val outboundBuffer: ChannelOutboundBuffer = new ChannelOutboundBuffer()
     @volatile private var registered: Boolean         = false
 
     private var readHandleFactory: ReadHandleFactory   = defaultReadHandleFactory
@@ -124,6 +121,18 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     private var inputClosedSeenErrorOnRead = false
 
     private val laterTasks = mutable.ArrayDeque.empty[Runnable]
+
+    private var actor: ChannelsActor[?] = _
+
+    override def executor: ChannelsActor[?] = actor
+
+    final private[core] def setExecutor(channelsActor: ChannelsActor[?]): Unit = {
+        actor = channelsActor
+        logger = ActorLogger.getLogger(getClass)(using executor)
+        channelId = executor.generateChannelId()
+    }
+
+    override def id: Int = channelId
 
     private def readSink: ReadSink   = this
     private def writeSink: WriteSink = this
@@ -338,7 +347,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     protected def writeLoopComplete(allWriten: Boolean): Unit = if (!allWriten) invokeLater(() => writeFlushed())
 
-    private[channel] def connectTransport(remote: SocketAddress, local: Option[SocketAddress]): Unit = try {
+    private[channel] def connectTransport(): Unit = try {
         if (remoteAddress.nonEmpty) throw new IllegalStateException(s"$this already connected!")
         val wasActive       = isActive
         var message: Buffer = null
@@ -349,7 +358,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
                 case _              =>
             }
         }
-        if (doConnect(remote, local, message)) {
+        if (doConnect(message)) {
             // TODO: fulfillConnectPromise
             if (message != null && message.readableBytes() == 0) this.outboundBuffer.remove
         } else {}

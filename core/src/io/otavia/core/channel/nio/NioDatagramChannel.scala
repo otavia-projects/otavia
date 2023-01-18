@@ -46,9 +46,8 @@ import scala.util.Try
  *  <th>[[INET6]]</th> <th>[[UNIX]] </th> </tr><tr> <td>[[NioChannelOption]] </td><td>X</td><td>X</td><td>X</td> </tr>
  *  </table>
  */
-class NioDatagramChannel(executor: ChannelsActor[_], socket: JDatagramChannel, protocolFamily: ProtocolFamily)
+class NioDatagramChannel(socket: JDatagramChannel, protocolFamily: ProtocolFamily)
     extends AbstractNioMessageChannel[SocketAddress, SocketAddress](
-      executor,
       true,
       new FixedReadHandleFactory(2048),
       new MaxMessagesWriteHandleFactory(Int.MaxValue),
@@ -102,12 +101,8 @@ class NioDatagramChannel(executor: ChannelsActor[_], socket: JDatagramChannel, p
         bound = true
     }
 
-    override protected def doConnect(
-        remote: SocketAddress,
-        local: Option[SocketAddress],
-        initialData: Buffer
-    ): Boolean = {
-        if (local.nonEmpty) doBind(local.get)
+    override protected def doConnect(initialData: Buffer): Boolean = {
+//        if (local.nonEmpty) doBind(local.get)
 
         ???
     }
@@ -126,9 +121,11 @@ class NioDatagramChannel(executor: ChannelsActor[_], socket: JDatagramChannel, p
 
     override def leaveGroup(multicast: InetAddress): Unit = ???
 
-    override def leaveGroup(multicast: InetAddress, interface: NetworkInterface, source: Option[InetAddress]): Unit = ???
+    override def leaveGroup(multicast: InetAddress, interface: NetworkInterface, source: Option[InetAddress]): Unit =
+        ???
 
     override def block(multicast: InetAddress, interface: NetworkInterface, source: InetAddress): Unit = ???
 
     override def block(multicast: InetAddress, source: InetAddress): Unit = ???
+
 }

@@ -19,6 +19,7 @@ package io.otavia.core.actor
 import io.otavia.core.actor.AccepterActor.*
 import io.otavia.core.address.Address
 import io.otavia.core.channel.*
+import io.otavia.core.reactor.ReactorEvent
 //import io.otavia.core.channel.impl.NioServerSocketChannel
 import io.otavia.core.message.*
 import io.otavia.core.reactor.RegisterReplyEvent
@@ -30,6 +31,7 @@ import scala.runtime.Nothing$
 abstract class AccepterActor[W <: AcceptedWorkerActor[_ <: Ask[?] | Notice]] extends ChannelsActor[Bind] {
 
     val workerFactory: WorkerFactory[W]
+
     private var localAddress: SocketAddress    = _
     private var bound: Boolean                 = false
     private var workers: Address[MessageOf[W]] = _
@@ -50,7 +52,9 @@ abstract class AccepterActor[W <: AcceptedWorkerActor[_ <: Ask[?] | Notice]] ext
         // 1. create channel
         // 2. init: pipeline and config, add ServerBootstrapAcceptor handler
         // 3. register to reactor ...
-        initAndRegister()
+        val channel = initAndRegister()
+        channel.setLocalAddress(localAddress)
+        channel
     }
 
     override def init(channel: Channel): Unit = {
@@ -60,14 +64,16 @@ abstract class AccepterActor[W <: AcceptedWorkerActor[_ <: Ask[?] | Notice]] ext
         channel.pipeline.addLast(new AccepterHandler)
     }
 
-    private[core] final override def receiveRegisterReply(event: RegisterReplyEvent): Unit = {
-        // 3. ..., then set channel state registered and fireChannelRegistered
-        // 4. bind then set channel state active and fireChannelActive
-        event.channel.pipeline.fireChannelRegistered()
+    override protected def newChannel(): Channel = system.serverChannelFactory.newChannel(this)
 
-        event.channel.pipeline.bind(localAddress)
-        bound = true
-        event.channel.pipeline.fireChannelActive()
+    override protected def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {
+        super.handleChannelRegisterReplyEvent(event)
+        try {
+            event.channel.bind(localAddress)
+            bound = true
+        } catch {
+            case e: Exception => event.channel.close()
+        }
     }
 
     final override def continueChannelMessage(msg: AnyRef | ChannelFrame): Option[StackState] = msg match

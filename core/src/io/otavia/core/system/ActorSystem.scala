@@ -19,6 +19,7 @@ package io.otavia.core.system
 import io.netty5.buffer.BufferAllocator
 import io.otavia.core.actor.{Actor, ActorFactory, MessageOf}
 import io.otavia.core.address.Address
+import io.otavia.core.channel.ChannelFactory
 import io.otavia.core.message.{Ask, IdAllocator, Message, Notice}
 import io.otavia.core.reactor.{Event, Reactor}
 import io.otavia.core.timer.Timer
@@ -64,5 +65,16 @@ trait ActorSystem {
         clz: Class[_ <: Actor[_]],
         qualifier: Option[String] = None
     ): Address[M]
+
+    // IO transport layer
+
+    /** [[ChannelFactory]] for TCP server channel. */
+    def serverChannelFactory: ChannelFactory
+
+    /** [[ChannelFactory]] for TCP socket channel. */
+    def channelFactory: ChannelFactory
+
+    /** [[ChannelFactory]] for UDP socket channel. */
+    def datagramChannelFactory: ChannelFactory
 
 }

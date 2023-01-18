@@ -28,7 +28,7 @@ class TimerService extends ChannelsActor[TimerService.MSG] {
 
 //  def continueAsk(state: TimerService.MSG & Ask | AskFrame): Option[StackState] = None
 
-    override private[core] def receiveRegisterReply(registerReplyEvent: RegisterReplyEvent): Unit = ???
+//    override private[core] def receiveRegisterReply(registerReplyEvent: RegisterReplyEvent): Unit = ???
 
     override def continueChannelMessage(msg: AnyRef | ChannelFrame): Option[StackState] = ???
 

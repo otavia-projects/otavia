@@ -42,9 +42,8 @@ import scala.util.Try
  *  @param protocolFamily
  *    the [[ProtocolFamily]] that was used to create th [[SocketChannel]]
  */
-class NioSocketChannel(executor: ChannelsActor[?], socket: SocketChannel, protocolFamily: ProtocolFamily)
+class NioSocketChannel(socket: SocketChannel, protocolFamily: ProtocolFamily)
     extends AbstractNioByteChannel[SocketAddress, SocketAddress](
-      executor = executor,
       defaultWriteHandleFactory = new SocketChannelWriteHandleFactory(Int.MaxValue),
       ch = socket
     ) {
@@ -87,14 +86,8 @@ class NioSocketChannel(executor: ChannelsActor[?], socket: SocketChannel, protoc
         SocketUtils.bind(javaChannel, NioChannelUtil.toUnixDomainSocketAddress(local))
     } else SocketUtils.bind(javaChannel, local)
 
-    override protected def doConnect(
-        remote: SocketAddress,
-        local: Option[SocketAddress],
-        initialData: Buffer
-    ): Boolean = {
-        if (local.nonEmpty) doBind(local.get)
-
-
+    override protected def doConnect(initialData: Buffer): Boolean = {
+//        if (local.nonEmpty) doBind(local.get)
 
         ???
     }

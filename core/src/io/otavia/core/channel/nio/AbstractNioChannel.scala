@@ -46,13 +46,12 @@ import java.nio.channels.{CancelledKeyException, SelectableChannel, SelectionKey
  *    type of remote address
  */
 abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
-    executor: ChannelsActor[?],
     supportingDisconnect: Boolean,
     defaultReadHandleFactory: ReadHandleFactory,
     defaultWriteHandleFactory: WriteHandleFactory,
     val ch: SelectableChannel,
     val readInterestOp: Int
-) extends AbstractChannel[L, R](executor, supportingDisconnect, defaultReadHandleFactory, defaultWriteHandleFactory)
+) extends AbstractChannel[L, R](supportingDisconnect, defaultReadHandleFactory, defaultWriteHandleFactory)
     with NioProcessor {
 
     @volatile private var _selectionKey: SelectionKey | Null = null
