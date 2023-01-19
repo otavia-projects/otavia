@@ -61,7 +61,7 @@ object NioChannelOption {
     def isOptionSupported(channel: NetworkChannel, option: SocketOption[?]): Boolean =
         channel.supportedOptions().contains(option)
 
-    def toSocketOption[T](option: ChannelOption[T]): SocketOption[T] = option match
+    def toSocketOption[T](option: ChannelOption[T]): SocketOption[T] | Null = option match
         case nio: NioChannelOption[T]   => nio.option
         case ChannelOption.SO_RCVBUF    => StandardSocketOptions.SO_RCVBUF.asInstanceOf[SocketOption[T]]
         case ChannelOption.SO_SNDBUF    => StandardSocketOptions.SO_SNDBUF.asInstanceOf[SocketOption[T]]
@@ -75,5 +75,6 @@ object NioChannelOption {
         case ChannelOption.IP_MULTICAST_IF  => StandardSocketOptions.IP_MULTICAST_IF.asInstanceOf[SocketOption[T]]
         case ChannelOption.IP_MULTICAST_TTL => StandardSocketOptions.IP_MULTICAST_TTL.asInstanceOf[SocketOption[T]]
         case ChannelOption.IP_TOS           => StandardSocketOptions.IP_TOS.asInstanceOf[SocketOption[T]]
+        case _                              => null
 
 }

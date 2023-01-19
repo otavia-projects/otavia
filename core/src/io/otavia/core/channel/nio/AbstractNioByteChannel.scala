@@ -53,6 +53,8 @@ abstract class AbstractNioByteChannel[L <: SocketAddress, R <: SocketAddress](
 
     override protected def doWriteNow(writeSink: WriteSink): Unit = ???
 
+    override protected def filterOutboundMessage(msg: AnyRef): AnyRef = ???
+
     /** Write a [[FileRegion]]
      *
      *  @param region

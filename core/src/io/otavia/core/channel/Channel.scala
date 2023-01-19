@@ -132,13 +132,13 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
      *  @param address
      *    address where this channel is bound to.
      */
-    def setLocalAddress(address: SocketAddress): Unit = {}
+    def setUnresolvedLocalAddress(address: SocketAddress): Unit = {}
 
     /** Set the remote address where this channel is connected to.
      *  @param address
      *    remote address where this channel is connected to.
      */
-    def setRemoteAddress(address: SocketAddress): Unit = {}
+    def setUnresolvedRemoteAddress(address: SocketAddress): Unit = {}
 
     /** @return
      *    true if and only if the executor thread will perform the requested flush operation immediately. Any write
@@ -172,7 +172,7 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
     }
 
     @throws[Exception]
-    final override def bind(local: SocketAddress): Unit = pipeline.bind(local)
+    final override def bind(): Unit = pipeline.bind()
 
     final override def connect(): Unit = pipeline.connect()
 

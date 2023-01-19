@@ -83,8 +83,6 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     override val pipeline: ChannelPipeline = newChannelPipeline()
 
     private var writable: Boolean                     = true
-    private var local: L | Null                       = null
-    private var remote: R | Null                      = null
     private val outboundBuffer: ChannelOutboundBuffer = new ChannelOutboundBuffer()
     @volatile private var registered: Boolean         = false
 
@@ -120,7 +118,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     private var inputClosedSeenErrorOnRead = false
 
-    private val laterTasks = mutable.ArrayDeque.empty[Runnable]
+    private val laterTasks = mutable.ArrayDeque.empty[Runnable] // TODO: move to current thread.
 
     private var actor: ChannelsActor[?] = _
 
@@ -243,8 +241,8 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
                 }
             case Some(cause) => closeNowAndFail(cause)
 
-    private[channel] def bindTransport(local: SocketAddress): Unit = {
-        local match {
+    private[channel] def bindTransport(): Unit = {
+        unresolvedLocalAddress match {
             case address: InetSocketAddress
                 if isOptionSupported(ChannelOption.SO_BROADCAST) && getOption[Boolean](ChannelOption.SO_BROADCAST) &&
                     !address.getAddress.isAnyLocalAddress && !PlatformDependent.isWindows && !PlatformDependent
@@ -252,13 +250,13 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
                 logger.logWarn(
                   "A non-root user can't receive a broadcast packet if the socket " +
                       "is not bound to a wildcard address; binding to a non-wildcard " +
-                      s"address (${local}) anyway as requested."
+                      s"address ($address) anyway as requested."
                 )
             case _ =>
         }
 
         val wasActive = isActive
-        try { doBind(local) }
+        try { doBind() }
         catch { case t: Throwable => closeIfClosed(); return }
 
         if (!wasActive && isActive) invokeLater(() => if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead())
@@ -270,8 +268,8 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         try {
             doDisconnect()
             // Reset remoteAddress and localAddress
-            remote = null
-            local = null
+            clearRemoteAddress()
+            clearLocalAddress()
             neverActive = true
         } catch { case t: Throwable => closeIfClosed(); return }
 
@@ -300,7 +298,9 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     private[channel] def readTransport(readBufferAllocator: ReadBufferAllocator): Unit = if (!isActive) {
         readBeforeActive = readBufferAllocator
-    } else if (isShutdown(ChannelShutdownDirection.Inbound)) {} else {
+    } else if (isShutdown(ChannelShutdownDirection.Inbound)) {
+        // Input was shutdown so not try to read.
+    } else {
         ???
     }
 

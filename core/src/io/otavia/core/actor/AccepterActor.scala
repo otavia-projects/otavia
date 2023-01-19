@@ -53,7 +53,7 @@ abstract class AccepterActor[W <: AcceptedWorkerActor[_ <: Ask[?] | Notice]] ext
         // 2. init: pipeline and config, add ServerBootstrapAcceptor handler
         // 3. register to reactor ...
         val channel = initAndRegister()
-        channel.setLocalAddress(localAddress)
+        channel.setUnresolvedLocalAddress(localAddress)
         channel
     }
 
@@ -69,7 +69,7 @@ abstract class AccepterActor[W <: AcceptedWorkerActor[_ <: Ask[?] | Notice]] ext
     override protected def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {
         super.handleChannelRegisterReplyEvent(event)
         try {
-            event.channel.bind(localAddress)
+            event.channel.bind()
             bound = true
         } catch {
             case e: Exception => event.channel.close()

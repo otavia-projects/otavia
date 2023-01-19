@@ -25,7 +25,7 @@ import java.net.SocketAddress
 private trait ChannelOutboundInvoker {
 
     @throws[Exception]
-    def bind(local: SocketAddress): Unit
+    def bind(): Unit
 
     @throws[Exception]
     def connect(): Unit

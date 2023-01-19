@@ -18,13 +18,16 @@
 
 package io.otavia.core.channel.nio
 
+import io.netty5.buffer.Buffer
 import io.netty5.util.NetUtil
+import io.netty5.util.internal.SocketUtils
 import io.otavia.core.actor.ChannelsActor
+import io.otavia.core.channel.*
 import io.otavia.core.channel.socket.SocketProtocolFamily
-import io.otavia.core.channel.{ServerChannelReadHandleFactory, ServerChannelWriteHandleFactory}
 
 import java.net.{ProtocolFamily, SocketAddress}
-import java.nio.channels.{SelectionKey, ServerSocketChannel}
+import java.nio.channels.{SelectableChannel, SelectionKey, ServerSocketChannel}
+import scala.util.Try
 
 /** A implementation which uses NIO selector based implementation to accept new connections.
  *
@@ -51,6 +54,111 @@ class NioServerSocketChannel(socket: ServerSocketChannel, protocolFamily: Protoc
     @volatile private var backlog = NetUtil.SOMAXCONN
     @volatile private var bound   = false
 
+    private var unresolvedLocal: SocketAddress | Null = null
+
+    override def setUnresolvedLocalAddress(address: SocketAddress): Unit = unresolvedLocal = address
+
+    override protected def unresolvedLocalAddress: Option[SocketAddress] = Option(unresolvedLocal)
+
+    override protected def clearLocalAddress(): Unit = unresolvedLocal = null
+
     override def isActive: Boolean = isOpen && bound
+
+    override protected def getExtendedOption[T](option: ChannelOption[T]): T = {
+        if (option == ChannelOption.SO_BACKLOG) getBacklog().asInstanceOf[T]
+        val socketOption = NioChannelOption.toSocketOption(option)
+        if (socketOption != null)
+            NioChannelOption.getOption(javaChannel, socketOption).get
+        else
+            super.getExtendedOption(option)
+    }
+
+    override protected def setExtendedOption[T](option: ChannelOption[T], value: T): Unit = {
+        if (option == ChannelOption.SO_BACKLOG) setBacklog(value.asInstanceOf[Int])
+        else {
+            val socketOption = NioChannelOption.toSocketOption(option)
+            if (socketOption != null)
+                NioChannelOption.setOption(javaChannel, socketOption, value)
+            else
+                super.setExtendedOption(option, value)
+        }
+    }
+
+    override protected def isExtendedOptionSupported(option: ChannelOption[_]): Boolean = {
+        if (option == ChannelOption.SO_BACKLOG) true
+        else {
+            val socketOption = NioChannelOption.toSocketOption(option)
+            if (socketOption != null)
+                NioChannelOption.isOptionSupported(javaChannel, socketOption)
+            else
+                super.isExtendedOptionSupported(option)
+        }
+    }
+
+    private def getBacklog(): Int = backlog
+
+    private def setBacklog(back: Int): Unit = {
+        assert(back >= 0, s"in setBacklog(back: Int) back:$back (expected: >= 0)")
+        this.backlog = back
+    }
+
+    override protected def javaChannel: ServerSocketChannel = super.javaChannel.asInstanceOf[ServerSocketChannel]
+
+    override protected def localAddress0: Option[SocketAddress] = Try {
+        var address = javaChannel.getLocalAddress
+        if (NioChannelUtil.isDomainSocket(family)) address = NioChannelUtil.toDomainSocketAddress(address)
+        address
+    }.toOption
+
+    override protected def remoteAddress0: Option[SocketAddress] = None
+
+    override protected def doShutdown(direction: ChannelShutdownDirection): Unit =
+        throw new UnsupportedOperationException()
+
+    override def isShutdown(direction: ChannelShutdownDirection): Boolean = !isActive
+
+    @throws[Exception]
+    override protected def doBind(): Unit = {
+        if (NioChannelUtil.isDomainSocket(family))
+            unresolvedLocal = NioChannelUtil.toUnixDomainSocketAddress(unresolvedLocal.nn)
+
+        javaChannel.bind(unresolvedLocal.nn, getBacklog())
+        bound = true
+    }
+
+    override protected def doReadMessages(readSink: ReadSink): Int = {
+        val client = SocketUtils.accept(javaChannel)
+        Option(client) match
+            case Some(ch) =>
+                try {
+                    readSink.processRead(0, 0, new NioSocketChannel(ch, family))
+                    1
+                } catch {
+                    case t: Throwable =>
+                        logger.logWarn("Failed to create a new channel from an accepted socket.", t)
+                        try { ch.close() }
+                        catch { case t2: Throwable => logger.logWarn("Failed to close a socket.", t2) }
+                        readSink.processRead(0, 0, null)
+                        0
+                }
+            case None =>
+                readSink.processRead(0, 0, null)
+                0
+    }
+
+    override protected def doConnect(initialData: Buffer): Boolean =
+        throw new UnsupportedOperationException()
+
+    override protected def doFinishConnect(requestedRemoteAddress: SocketAddress): Boolean =
+        throw new UnsupportedOperationException()
+
+    override protected def doDisconnect(): Unit =
+        throw new UnsupportedOperationException()
+
+    override protected def doWriteNow(writeSink: WriteSink): Unit =
+        throw new UnsupportedOperationException()
+
+    override protected def filterOutboundMessage(msg: AnyRef): AnyRef =
+        throw new UnsupportedOperationException()
 
 }

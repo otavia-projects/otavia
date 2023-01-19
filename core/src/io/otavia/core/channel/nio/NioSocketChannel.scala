@@ -26,7 +26,7 @@ import io.otavia.core.channel.socket.SocketChannelWriteHandleFactory
 import io.otavia.core.channel.{ChannelOption, ChannelShutdownDirection, FileRegion}
 
 import java.net.{ProtocolFamily, SocketAddress}
-import java.nio.channels.{SelectableChannel, SocketChannel}
+import java.nio.channels.{SelectableChannel, SelectionKey, SocketChannel}
 import scala.util.Try
 
 /** <h3>Available options</h3>
@@ -52,6 +52,21 @@ class NioSocketChannel(socket: SocketChannel, protocolFamily: ProtocolFamily)
 
     private var inputShutdown: Boolean  = false
     private var outputShutdown: Boolean = false
+
+    private var unresolvedRemote: SocketAddress | Null = null
+    private var unresolvedLocal: SocketAddress | Null  = null
+
+    override def setUnresolvedRemoteAddress(address: SocketAddress): Unit = unresolvedRemote = address
+
+    override protected def unresolvedRemoteAddress: Option[SocketAddress] = Option(unresolvedRemote)
+
+    override def setUnresolvedLocalAddress(address: SocketAddress): Unit = unresolvedLocal = address
+
+    override protected def unresolvedLocalAddress: Option[SocketAddress] = Option(unresolvedLocal)
+
+    override protected def clearRemoteAddress(): Unit = unresolvedRemote = null
+
+    override protected def clearLocalAddress(): Unit = unresolvedLocal = null
 
     override final protected def javaChannel: SocketChannel = super.javaChannel.asInstanceOf[SocketChannel]
 
@@ -82,14 +97,27 @@ class NioSocketChannel(socket: SocketChannel, protocolFamily: ProtocolFamily)
         if (NioChannelUtil.isDomainSocket(family)) NioChannelUtil.toDomainSocketAddress(address) else address
     }.toOption
 
-    override protected def doBind(local: SocketAddress): Unit = if (NioChannelUtil.isDomainSocket(family)) {
-        SocketUtils.bind(javaChannel, NioChannelUtil.toUnixDomainSocketAddress(local))
-    } else SocketUtils.bind(javaChannel, local)
+    override protected def doBind(): Unit = if (NioChannelUtil.isDomainSocket(family)) {
+        SocketUtils.bind(javaChannel, NioChannelUtil.toUnixDomainSocketAddress(unresolvedLocal.nn))
+    } else SocketUtils.bind(javaChannel, unresolvedLocal.nn)
 
     override protected def doConnect(initialData: Buffer): Boolean = {
-//        if (local.nonEmpty) doBind(local.get)
+        unresolvedLocalAddress match
+            case Some(_) => doBind()
+            case None    =>
 
-        ???
+        var success   = false
+        var connected = false
+        try {
+            if (NioChannelUtil.isDomainSocket(family))
+                unresolvedRemote = NioChannelUtil.toUnixDomainSocketAddress(unresolvedRemote.nn)
+
+            connected = SocketUtils.connect(javaChannel, unresolvedRemote.nn)
+
+            if (!connected) selectionKey.interestOps(SelectionKey.OP_CONNECT)
+            success = true
+        } finally if (!success) doClose()
+        connected
     }
 
     override protected def doFinishConnect(requestedRemoteAddress: SocketAddress): Boolean = {

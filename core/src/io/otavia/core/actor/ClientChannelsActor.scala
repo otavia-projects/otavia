@@ -41,7 +41,7 @@ abstract class ClientChannelsActor[M <: Ask[?] | Notice] extends ChannelsActor[M
      */
     protected def connect(remoteAddress: SocketAddress): Channel = {
         val channel = initAndRegister()
-        channel.setRemoteAddress(remoteAddress)
+        channel.setUnresolvedRemoteAddress(remoteAddress)
         channel
     }
 

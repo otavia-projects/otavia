@@ -123,7 +123,7 @@ trait ChannelHandler {
      *  @throws Exception
      */
     @throws[Exception]
-    def bind(ctx: ChannelHandlerContext, local: SocketAddress): Unit = ctx.bind(local)
+    def bind(ctx: ChannelHandlerContext): Unit = ctx.bind()
 
     /** Called once a connect operation is made.
      *  @param ctx

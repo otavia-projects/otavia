@@ -281,13 +281,13 @@ final class OtaviaChannelHandlerContext(
         case t: Throwable => handleOutboundHandlerException(t, false)
     } finally updatePendingBytesIfNeeded()
 
-    override def bind(local: SocketAddress): Unit = {
+    override def bind(): Unit = {
         val ctx = findContextOutbound(ChannelHandlerMask.MASK_BIND)
-        ctx.invokeBind(local)
+        ctx.invokeBind()
     }
 
-    private[channel] def invokeBind(local: SocketAddress): Unit = try {
-        if (saveCurrentPendingBytesIfNeededDuplex()) handler.bind(this, local)
+    private[channel] def invokeBind(): Unit = try {
+        if (saveCurrentPendingBytesIfNeededDuplex()) handler.bind(this)
     } catch {
         case t: Throwable => handleOutboundHandlerException(t, false)
     } finally updatePendingBytesIfNeeded()

@@ -134,11 +134,30 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
 
     protected def selectionKey: SelectionKey = _selectionKey.nn
 
+    override protected def doClearScheduledRead(): Unit = {
+        val key = _selectionKey
+        // Check first if the key is still valid as it may be canceled as part of the deregistration
+        // from the Reactor
+        if (key == null || selectionKey.isValid) {} else {
+            val ops = selectionKey.interestOps()
+            if ((ops & readInterestOp) != 0) selectionKey.interestOps(ops & ~readInterestOp)
+        }
+    }
+
+    override protected def isWriteFlushedScheduled: Boolean = {
+        _selectionKey != null && selectionKey.isValid &&
+        ((selectionKey.interestOps() & SelectionKey.OP_WRITE) != 0)
+    }
+
     override protected def doRead(wasReadPendingAlready: Boolean): Unit = if (!wasReadPendingAlready) {
+        // Channel.read() or ChannelHandlerContext.read() was called
         if (_selectionKey.nn.isValid()) {
             val ops = selectionKey.nn.interestOps()
-            if ((ops & readInterestOp) == 0) selectionKey.interestOps(ops | readInterestOp)
+            if ((ops & readInterestOp) == 0)
+                selectionKey.interestOps(ops | readInterestOp)
         }
+    } else {
+        // We already had doRead(...) called before and so set the interestedOps.
     }
 
     override protected def doClose(): Unit = javaChannel.close()

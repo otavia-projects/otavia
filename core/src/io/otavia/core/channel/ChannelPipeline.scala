@@ -388,4 +388,7 @@ trait ChannelPipeline extends ChannelInboundInvoker with ChannelOutboundInvoker 
      *    the number of buffered / queued bytes.
      */
     def pendingOutboundBytes: Long
+
+    final def assertInExecutor(): Unit =
+        assert(executor.inExecutor(), "method must be called in ChannelsActor which this channel registered!")
 }

@@ -64,6 +64,21 @@ class NioDatagramChannel(socket: JDatagramChannel, protocolFamily: ProtocolFamil
     @volatile private var activeOnOpen = false
     @volatile private var bound        = false
 
+    private var unresolvedRemote: SocketAddress | Null = null
+    private var unresolvedLocal: SocketAddress | Null  = null
+
+    override def setUnresolvedRemoteAddress(address: SocketAddress): Unit = unresolvedRemote = address
+
+    override protected def unresolvedRemoteAddress: Option[SocketAddress] = Option(unresolvedRemote)
+
+    override def setUnresolvedLocalAddress(address: SocketAddress): Unit = unresolvedLocal = address
+
+    override protected def unresolvedLocalAddress: Option[SocketAddress] = Option(unresolvedLocal)
+
+    override protected def clearRemoteAddress(): Unit = unresolvedRemote = null
+
+    override protected def clearLocalAddress(): Unit = unresolvedLocal = null
+
     override protected def doShutdown(direction: ChannelShutdownDirection): Unit = direction match
         case Inbound  => inputShutdown = true
         case Outbound => outputShutdown = true

@@ -31,7 +31,7 @@ private[channel] trait ReadSink {
     private var readSomething   = false
     private var continueReading = false
 
-    // this.readHandle
+//     this.readHandle
 
     /** Process the read message and fire it through the [[ChannelPipeline]]
      *
@@ -52,7 +52,12 @@ private[channel] trait ReadSink {
      */
     def allocateBuffer: Buffer
 
-    def readLoop(): Unit
+    def readLoop(): Unit = {
+        continueReading = false
+        
+
+        doReadNow(this)
+    }
 
 }
 

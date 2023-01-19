@@ -480,30 +480,61 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         this
     }
 
-    override def bind(local: SocketAddress): Unit = tail.bind(local)
+    override def bind(): Unit = {
+        assertInExecutor()
+        tail.bind()
+    }
 
-    override def connect(): Unit = tail.connect()
+    override def connect(): Unit = {
+        assertInExecutor()
+        tail.connect()
+    }
 
-    override def disconnect(): Unit = tail.disconnect()
+    override def disconnect(): Unit = {
+        assertInExecutor()
+        tail.disconnect()
+    }
 
-    override def close(): Unit = tail.close()
+    override def close(): Unit = {
+        assertInExecutor()
+        tail.close()
+    }
 
-    override def shutdown(direction: ChannelShutdownDirection): Unit = tail.shutdown(direction)
+    override def shutdown(direction: ChannelShutdownDirection): Unit = {
+        assertInExecutor()
+        tail.shutdown(direction)
+    }
 
-    override def register(): Unit = tail.register()
+    override def register(): Unit = {
+        assertInExecutor()
+        tail.register()
+    }
 
-    override def deregister(): Unit = tail.deregister()
+    override def deregister(): Unit = {
+        assertInExecutor()
+        tail.deregister()
+    }
 
     override def write(msg: AnyRef): Unit = {
+        assertInExecutor()
         channel.isActive
         tail.write(msg)
     }
 
-    override def write(msg: AnyRef, msgId: Long): Unit = tail.write(msg, msgId)
+    override def write(msg: AnyRef, msgId: Long): Unit = {
+        assertInExecutor()
+        tail.write(msg, msgId)
+    }
 
-    override def writeAndFlush(msg: AnyRef): Unit = tail.writeAndFlush(msg)
+    override def writeAndFlush(msg: AnyRef): Unit = {
+        assertInExecutor()
+        tail.writeAndFlush(msg)
+    }
 
-    override def writeAndFlush(msg: AnyRef, msgId: Long): Unit = tail.writeAndFlush(msg, msgId)
+    override def writeAndFlush(msg: AnyRef, msgId: Long): Unit = {
+        assertInExecutor()
+        tail.writeAndFlush(msg, msgId)
+    }
 
     /** Send a custom outbound event via this [[ChannelOutboundInvoker]] through the [[ChannelPipeline]]. This will
      *  result in having the {{{ChannelHandler.sendOutboundEvent(ChannelHandlerContext, Object)}}} method called of the
@@ -511,7 +542,10 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
      *
      *  @param event
      */
-    override def sendOutboundEvent(event: AnyRef): Unit = tail.sendOutboundEvent(event)
+    override def sendOutboundEvent(event: AnyRef): Unit = {
+        assertInExecutor()
+        tail.sendOutboundEvent(event)
+    }
 
     final def forceCloseTransport(): Unit = {
         val abstractChannel = channel.asInstanceOf[AbstractChannel[?, ?]]
@@ -586,9 +620,9 @@ object OtaviaChannelPipeline {
 
     private final class HeadHandler extends ChannelHandler {
 
-        override def bind(ctx: ChannelHandlerContext, local: SocketAddress): Unit = {
+        override def bind(ctx: ChannelHandlerContext): Unit = {
             val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
-            abstractChannel.bindTransport(local)
+            abstractChannel.bindTransport()
         }
 
         override def connect(ctx: ChannelHandlerContext): Unit = {
@@ -679,6 +713,7 @@ object OtaviaChannelPipeline {
 
     final val DEFAULT_READ_BUFFER_ALLOCATOR: ReadBufferAllocator =
         (allocator: BufferAllocator, estimatedCapacity: Int) => allocator.allocate(estimatedCapacity)
+        
     private def generateName0(handlerType: Class[_]) = StringUtil.simpleClassName(handlerType) + "#0"
 
     private final val nameCaches: FastThreadLocal[collection.mutable.HashMap[Class[?], String]] =

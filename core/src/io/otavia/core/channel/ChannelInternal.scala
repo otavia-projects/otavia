@@ -33,7 +33,7 @@ private[channel] trait ChannelInternal[L <: SocketAddress, R <: SocketAddress] {
      *    when an error happens.
      */
     @throws[Exception]
-    protected def doBind(local: SocketAddress): Unit
+    protected def doBind(): Unit
 
     /** Disconnect this [[Channel]] from its remote peer
      *
@@ -141,5 +141,27 @@ private[channel] trait ChannelInternal[L <: SocketAddress, R <: SocketAddress] {
      *    the remote address if any, [[None]] otherwise.
      */
     protected def remoteAddress0: Option[R]
+
+    protected def unresolvedLocalAddress: Option[L] = None
+
+    protected def unresolvedRemoteAddress: Option[R] = None
+
+    protected def clearLocalAddress(): Unit = {}
+
+    protected def clearRemoteAddress(): Unit = {}
+
+    /** Clear any previous scheduled read. By default, this method does nothing but implementations might override it to
+     *  add extra logic.
+     */
+    protected def doClearScheduledRead(): Unit = {}
+
+    /** Returns `true` if flushed messages should not be tried to write when calling [[flush]] . Instead these will be
+     *  written once [[writeFlushedNow]] is called, which is typically done once the underlying transport becomes
+     *  writable again.
+     *
+     *  @return
+     *    `true` if write will be done later on by calling [[writeFlushedNow]] , `false` otherwise.
+     */
+    protected def isWriteFlushedScheduled: Boolean = false
 
 }
