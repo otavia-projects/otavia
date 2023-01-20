@@ -37,10 +37,8 @@ trait EventHandle {
     private[core] def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit
 
     // Event from Timer
-    /** Handle channel timeout event */
-    private[core] def handleTimeoutEvent(event: TimeoutEvent): Unit
 
     /** Handle channel timeout event */
-    private[core] def handleTimeoutEvent(eventRegisterId: Long): Unit
+    private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit
 
 }

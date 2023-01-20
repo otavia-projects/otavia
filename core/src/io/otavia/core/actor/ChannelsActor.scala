@@ -89,7 +89,7 @@ abstract class ChannelsActor[M <: Ask[?] | Notice] extends Actor[M] {
         case _                => handleActorTimeout(event.registerId)
 
     protected def handleChannelTimeoutEvent(eventId: Long, channel: Channel): Unit =
-        channel.handleTimeoutEvent(eventId)
+        channel.handleChannelTimeoutEvent(eventId)
 
     protected def handleActorTimeout(eventId: Long): Unit = {}
 

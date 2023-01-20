@@ -368,7 +368,8 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
             // The reactor will send a [ReactorEvent.ChannelReadiness] event to ChannelsActor, then ChannelsActor will
             // call the channel's handleChannelReadinessEvent method which call finishConnect.
 
-            // register connect timeout trigger.
+            // register connect timeout trigger. When timeout, the timer will send a timeout event, the
+            // handleConnectTimeout method will handle this timeout event.
             if (connectTimeoutMillis > 0)
                 connectTimeoutRegisterId = timer.registerTimerTask(TimeoutTrigger.DelayTime(connectTimeoutMillis))
         }
@@ -376,9 +377,11 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     private def handleConnectTimeout(): Unit = closeTransport()
 
-    override private[core] def handleTimeoutEvent(eventRegisterId: Long): Unit =
+    protected def connected: Boolean = false
+
+    override private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit =
         if (eventRegisterId == connectTimeoutRegisterId) {
-            handleConnectTimeout()
+            if (!connected) handleConnectTimeout()
         } else {
             // TODO: fire timeout event
         }
@@ -389,7 +392,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
      *  @return
      *    `true` if the connect operation completed, `false` otherwise.
      */
-    protected def finishConnect(): Boolean = {}
+    protected def finishConnect(): Boolean = {} // TODO: cancel connect timeout trigger.
 
     private def fulfillConnect(wasActive: Boolean): Unit = {
         val active = isActive
