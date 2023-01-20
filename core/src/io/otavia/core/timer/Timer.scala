@@ -18,6 +18,7 @@ package io.otavia.core.timer
 
 import io.netty5.util.{Timeout, TimerTask}
 import io.otavia.core.address.Address
+import io.otavia.core.channel.Channel
 import io.otavia.core.reactor.{Reactor, TimeoutEvent}
 import io.otavia.core.timer.Timer.*
 
@@ -35,12 +36,12 @@ trait Timer {
      *    [[Address]] of this [[TimeoutTrigger]] belong to. The timeout event of the [[TimeoutTrigger]] is send to this
      *    address.
      *  @return
-     *    Register id of [[ReactorTimerTask]], [[io.otavia.core.actor.ChannelsActor]] can use this id to cancel this
-     *    trigger by [[cancelTimerTask]]
+     *    Register id of [[ReactorTimerTask]], [[io.otavia.core.actor.Actor]] can use this id to cancel this trigger by
+     *    [[cancelTimerTask]]
      */
     def registerTimerTask(trigger: TimeoutTrigger, address: Address[?]): Long
 
-    /** API for [[io.otavia.core.actor.ChannelsActor]] to register timeout event to [[Reactor]].
+    /** API for [[io.otavia.core.actor.ChannelsActor]] to register timeout event to [[Timer]].
      *
      *  @param trigger
      *    Timeout event trigger.
@@ -54,6 +55,19 @@ trait Timer {
      *    [[cancelTimerTask]]
      */
     def registerTimerTask(trigger: TimeoutTrigger, address: Address[?], attach: AnyRef): Long
+
+    /** API for [[io.otavia.core.channel.Channel]] to register timeout event to [[Timer]].
+     *
+     *  @param trigger
+     *    Timeout event trigger.
+     *  @param channel
+     *    Channel
+     *  @return
+     *    Register id of [[ReactorTimerTask]], [[io.otavia.core.actor.Actor]] can use this id to cancel this trigger by
+     *    [[cancelTimerTask]]
+     */
+    final def registerTimerTask(trigger: TimeoutTrigger, channel: Channel): Long =
+        registerTimerTask(trigger, channel.executorAddress, channel)
 
     /** API for [[io.otavia.core.actor.Actor]] to cancel timeout event
      *

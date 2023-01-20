@@ -23,6 +23,7 @@ import io.otavia.core.message.*
 import io.otavia.core.reactor.*
 import io.otavia.core.stack.*
 import io.otavia.core.system.ActorThread
+import io.otavia.core.timer.Timer
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 import java.nio.channels.SelectionKey
@@ -49,13 +50,18 @@ abstract class ChannelsActor[M <: Ask[?] | Notice] extends Actor[M] {
     override private[core] def receiveAsk(ask: Ask[?]): Unit       = {} // flight and pending stack frame
     override private[core] def receiveReply(reply: Reply): Unit    = {}
 
-    /** fire inbound event to pipeline */
-    def receiveEvent(event: Event): Unit = {
+    /** Receive IO event from [[Reactor]] or timeout event from [[Timer]]
+     *
+     *  @param event
+     *    IO/timeout event
+     */
+    override private[core] def receiveEvent(event: Event): Unit = {
         event match
             case e: ReactorEvent.RegisterReply    => handleChannelRegisterReplyEvent(e)
             case e: ReactorEvent.DeregisterReply  => handleChannelDeregisterReplyEvent(e)
             case e: ReactorEvent.ChannelClose     => handleChannelCloseEvent(e)
             case e: ReactorEvent.ChannelReadiness => handleChannelReadinessEvent(e)
+            case e: TimeoutEvent                  => handleTimeoutEvent(e)
     }
 
     // Event from Reactor
@@ -77,7 +83,17 @@ abstract class ChannelsActor[M <: Ask[?] | Notice] extends Actor[M] {
         event.channel.handleChannelReadinessEvent(event)
 
     // Event from Timer
-    // ...
+
+    protected def handleTimeoutEvent(event: TimeoutEvent): Unit = event.attach match
+        case channel: Channel => handleChannelTimeoutEvent(event.registerId, channel)
+        case _                => handleActorTimeout(event.registerId)
+
+    protected def handleChannelTimeoutEvent(eventId: Long, channel: Channel): Unit =
+        channel.handleTimeoutEvent(eventId)
+
+    protected def handleActorTimeout(eventId: Long): Unit = {}
+
+    // End handle event.
 
     /** call by pipeline tail context
      *  @param msg
@@ -109,7 +125,7 @@ abstract class ChannelsActor[M <: Ask[?] | Notice] extends Actor[M] {
     protected def initAndRegister(): Channel = {
         val channel = newChannel()
         Try { init(channel) } match
-            case Success(_) => reactor.register(channel)
+            case Success(_) => channel.register()
             case Failure(e) => channel.close()
         channel
     }

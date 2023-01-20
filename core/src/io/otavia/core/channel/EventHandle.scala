@@ -16,11 +16,12 @@
 
 package io.otavia.core.channel
 
-import io.otavia.core.reactor.{Event, Reactor, ReactorEvent}
+import io.otavia.core.reactor.{Event, Reactor, ReactorEvent, TimeoutEvent}
 import io.otavia.core.timer.Timer
 
 /** A handle that will process [[Event]] from [[Reactor]] and [[Timer]]. */
 trait EventHandle {
+    this: Channel =>
 
     // Event from Reactor
     /** Handle channel close event */
@@ -36,5 +37,10 @@ trait EventHandle {
     private[core] def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit
 
     // Event from Timer
+    /** Handle channel timeout event */
+    private[core] def handleTimeoutEvent(event: TimeoutEvent): Unit
+
+    /** Handle channel timeout event */
+    private[core] def handleTimeoutEvent(eventRegisterId: Long): Unit
 
 }

@@ -26,7 +26,8 @@ import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.AbstractChannel.*
 import io.otavia.core.channel.ChannelOption.*
 import io.otavia.core.channel.{ReadSink, WriteSink}
-import io.otavia.core.reactor.{DeregisterReplyEvent, ReactorEvent, RegisterReplyEvent}
+import io.otavia.core.reactor.{DeregisterReplyEvent, ReactorEvent, RegisterReplyEvent, TimeoutEvent}
+import io.otavia.core.timer.Timer.TimeoutTrigger
 import io.otavia.core.util.ActorLogger
 
 import java.net.{InetSocketAddress, SocketAddress}
@@ -91,6 +92,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     private var msgSizeEstimator: MessageSizeEstimator = DEFAULT_MSG_SIZE_ESTIMATOR
     private var connectTimeoutMillis: Int              = DEFAULT_CONNECT_TIMEOUT
+    private var connectTimeoutRegisterId: Long         = null
 
     @SuppressWarnings(Array("FieldMayBeFinal"))
     private val autoRead  = 1
@@ -144,9 +146,9 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     private def invokeLater(task: Runnable): Unit = laterTasks.append(task)
 
-    override def localAddress: Option[SocketAddress] = ???
+    override def localAddress: Option[SocketAddress] = localAddress0
 
-    override def remoteAddress: Option[SocketAddress] = ???
+    override def remoteAddress: Option[SocketAddress] = remoteAddress0
 
     override def isRegistered: Boolean = registered
 
@@ -221,7 +223,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     /** Call by head handler on pipeline register oubound event.
      *
-     *  send channel register to reactor, and handle reactor reply at [[onRegisterTransportReply]]
+     *  send channel register to reactor, and handle reactor reply at [[handleChannelRegisterReplyEvent]]
      */
     private[channel] def registerTransport(): Unit = {
         if (isRegistered) throw new IllegalStateException("registered to an event loop already")
@@ -352,6 +354,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         val wasActive       = isActive
         var message: Buffer = null
         if (isOptionSupported(ChannelOption.TCP_FASTOPEN_CONNECT) && getOption(ChannelOption.TCP_FASTOPEN_CONNECT)) {
+            outboundBuffer.addFlush()
             val current = this.outboundBuffer.current
             current match {
                 case buffer: Buffer => message = buffer
@@ -359,10 +362,26 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
             }
         }
         if (doConnect(message)) {
-            // TODO: fulfillConnectPromise
+            fulfillConnect(wasActive)
             if (message != null && message.readableBytes() == 0) this.outboundBuffer.remove
-        } else {}
+        } else {
+            // The reactor will send a [ReactorEvent.ChannelReadiness] event to ChannelsActor, then ChannelsActor will
+            // call the channel's handleChannelReadinessEvent method which call finishConnect.
+
+            // register connect timeout trigger.
+            if (connectTimeoutMillis > 0)
+                connectTimeoutRegisterId = timer.registerTimerTask(TimeoutTrigger.DelayTime(connectTimeoutMillis))
+        }
     } catch { case t: Throwable => }
+
+    private def handleConnectTimeout(): Unit = closeTransport()
+
+    override private[core] def handleTimeoutEvent(eventRegisterId: Long): Unit =
+        if (eventRegisterId == connectTimeoutRegisterId) {
+            handleConnectTimeout()
+        } else {
+            // TODO: fire timeout event
+        }
 
     /** Should be called once the connect request is ready to be completed and [[isConnectPending]] is `true`. Calling
      *  this method if no [[isConnectPending]] connect is pending will result in an [[AlreadyConnectedException]].
@@ -370,7 +389,12 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
      *  @return
      *    `true` if the connect operation completed, `false` otherwise.
      */
-    protected def finishConnect(): Boolean = ???
+    protected def finishConnect(): Boolean = {}
+
+    private def fulfillConnect(wasActive: Boolean): Unit = {
+        val active = isActive
+        if (!wasActive && active) if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead()
+    }
 
     private[channel] def updateWritabilityIfNeeded(notify: Boolean, notifyLater: Boolean): Unit = {
         val totalPending = this.totalPending

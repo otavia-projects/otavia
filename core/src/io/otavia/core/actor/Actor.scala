@@ -19,8 +19,10 @@ package io.otavia.core.actor
 import io.otavia.core.actor.Actor.{ASK_TYPE, MessageType, NOTICE_TYPE, REPLY_TYPE}
 import io.otavia.core.address.Address
 import io.otavia.core.message.*
+import io.otavia.core.reactor.{Event, Reactor}
 import io.otavia.core.stack.*
 import io.otavia.core.system.ActorSystem
+import io.otavia.core.timer.Timer
 import io.otavia.core.util.TimerService
 
 import scala.reflect.{ClassTag, TypeTest, classTag}
@@ -107,6 +109,12 @@ trait Actor[M <: Ask[?] | Notice] {
      */
     private[core] def receiveReply(reply: Reply): Unit
 
+    /** Receive IO event from [[Reactor]] or timeout event from [[Timer]]
+     *  @param event
+     *    IO/timeout event
+     */
+    private[core] def receiveEvent(event: Event): Unit
+
     // actor life cycle hook method
 
     /** actor system will call this method after this actor crated and before mount to actor system */
@@ -135,8 +143,10 @@ trait Actor[M <: Ask[?] | Notice] {
 }
 
 object Actor {
+
     opaque type MessageType = Byte
     val NOTICE_TYPE: MessageType = 0
     val ASK_TYPE: MessageType    = 1
     val REPLY_TYPE: MessageType  = 2
+
 }
