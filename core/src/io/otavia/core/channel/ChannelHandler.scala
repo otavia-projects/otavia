@@ -104,6 +104,16 @@ trait ChannelHandler {
     @throws[Exception]
     def channelInboundEvent(ctx: ChannelHandlerContext, evt: AnyRef): Unit = ctx.fireChannelInboundEvent(evt)
 
+    /** Gets called if a channel timeout event happened.
+     *  @param ctx
+     *    [[ChannelHandlerContext]] of this handler.
+     *  @param id
+     *    registered [[io.otavia.core.timer.Timer.TimeoutTrigger]] id of this timeout event.
+     *  @throws Exception
+     */
+    @throws[Exception]
+    def channelTimeoutEvent(ctx: ChannelHandlerContext, id: Long): Unit = ctx.fireChannelTimeoutEvent(id)
+
     /** Gets called once the writable state of a [[Channel]] changed. You can check the state with
      *  [[Channel.writableBytes]] or [[Channel.isWritable]] .
      */

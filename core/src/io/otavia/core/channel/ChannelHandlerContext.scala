@@ -19,6 +19,7 @@
 package io.otavia.core.channel
 
 import io.netty5.buffer.{Buffer, BufferAllocator}
+import io.otavia.core.timer.Timer
 
 trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundInvoker {
 
@@ -27,6 +28,9 @@ trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundIn
 
     /** The [[Channel]] which is bound to the [[ChannelHandlerContext]]. */
     def channel: Channel = pipeline.channel
+
+    /** [[Timer]] of this actor system. */
+    def timer: Timer = channel.timer
 
     /** The unique name of the [[ChannelHandlerContext]].The name was used when then [[ChannelHandler]] was added to the
      *  [[ChannelPipeline]]. This name can also be used to access the registered [[ChannelHandler]] from the
@@ -55,6 +59,8 @@ trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundIn
 
     override def fireChannelInboundEvent(evt: AnyRef): ChannelHandlerContext
 
+    override def fireChannelTimeoutEvent(id: Long): ChannelHandlerContext
+
     override def fireChannelRead(msg: AnyRef): ChannelHandlerContext
 
     override def fireChannelReadComplete(): ChannelHandlerContext
@@ -69,4 +75,5 @@ trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundIn
 
     /** Return the assigned [[BufferAllocator]] which will be used to allocate [[Buffer]]s. */
     def bufferAllocator(): BufferAllocator = channel.bufferAllocator
+
 }

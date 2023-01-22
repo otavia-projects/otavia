@@ -369,6 +369,8 @@ trait ChannelPipeline extends ChannelInboundInvoker with ChannelOutboundInvoker 
 
     override def fireChannelInboundEvent(event: AnyRef): ChannelPipeline
 
+    override def fireChannelTimeoutEvent(id: Long): ChannelPipeline
+
     override def fireChannelRead(msg: AnyRef): ChannelPipeline
 
     override def fireChannelReadComplete(): ChannelPipeline
@@ -391,4 +393,5 @@ trait ChannelPipeline extends ChannelInboundInvoker with ChannelOutboundInvoker 
 
     final def assertInExecutor(): Unit =
         assert(executor.inExecutor(), "method must be called in ChannelsActor which this channel registered!")
+
 }

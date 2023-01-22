@@ -214,6 +214,17 @@ final class OtaviaChannelHandlerContext(
         case t: Throwable => invokeChannelExceptionCaught(t)
     } finally updatePendingBytesIfNeeded()
 
+    override def fireChannelTimeoutEvent(id: Long): ChannelHandlerContext = {
+        val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_TIMEOUT_EVENT)
+        ctx.invokeChannelTimeoutEvent(id)
+        this
+    }
+
+    private[channel] def invokeChannelTimeoutEvent(id: Long): ChannelHandlerContext = {
+        try handler.channelTimeoutEvent(id)
+        catch { case t: Throwable => invokeChannelExceptionCaught(t) }
+    }
+
     override def fireChannelRead(msg: AnyRef): ChannelHandlerContext = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_READ)
         ctx.invokeChannelRead(msg)

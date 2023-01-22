@@ -450,6 +450,11 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         this
     }
 
+    override def fireChannelTimeoutEvent(id: Long): ChannelPipeline = {
+        head.invokeChannelTimeoutEvent(id)
+        this
+    }
+
     override def fireChannelRead(msg: AnyRef): ChannelPipeline = {
         head.invokeChannelRead(msg)
         this
@@ -695,6 +700,8 @@ object OtaviaChannelPipeline {
             Resource.dispose(evt)
         }
 
+        override def channelTimeoutEvent(ctx: ChannelHandlerContext, id: Long): Unit = {} // Just swallow event
+
         override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit =
             ctx.pipeline.asInstanceOf[OtaviaChannelPipeline].onUnhandledInboundException(cause)
 
@@ -713,7 +720,7 @@ object OtaviaChannelPipeline {
 
     final val DEFAULT_READ_BUFFER_ALLOCATOR: ReadBufferAllocator =
         (allocator: BufferAllocator, estimatedCapacity: Int) => allocator.allocate(estimatedCapacity)
-        
+
     private def generateName0(handlerType: Class[_]) = StringUtil.simpleClassName(handlerType) + "#0"
 
     private final val nameCaches: FastThreadLocal[collection.mutable.HashMap[Class[?], String]] =

@@ -34,6 +34,8 @@ private trait ChannelInboundInvoker {
 
     def fireChannelInboundEvent(event: AnyRef): ChannelInboundInvoker
 
+    def fireChannelTimeoutEvent(id: Long): ChannelInboundInvoker
+
     def fireChannelRead(msg: AnyRef): ChannelInboundInvoker
 
     def fireChannelReadComplete(): ChannelInboundInvoker

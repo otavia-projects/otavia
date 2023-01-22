@@ -381,9 +381,11 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     override private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit =
         if (eventRegisterId == connectTimeoutRegisterId) {
+            // handle connect timeout event.
             if (!connected) handleConnectTimeout()
         } else {
-            // TODO: fire timeout event
+            // fire timeout event to pipeline.
+            pipeline.fireChannelTimeoutEvent(eventRegisterId)
         }
 
     /** Should be called once the connect request is ready to be completed and [[isConnectPending]] is `true`. Calling
