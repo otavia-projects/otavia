@@ -69,6 +69,14 @@ trait Timer {
     final def registerTimerTask(trigger: TimeoutTrigger, channel: Channel): Long =
         registerTimerTask(trigger, channel.executorAddress, channel)
 
+    /** Update an existed [[TimeoutTrigger]].
+     *  @param trigger
+     *    The new [[TimeoutTrigger]] for update.
+     *  @param registerId
+     *    the old register id.
+     */
+    def updateTimerTask(trigger: TimeoutTrigger, registerId: Long): Unit
+
     /** API for [[io.otavia.core.actor.Actor]] to cancel timeout event
      *
      *  @param registerId
@@ -81,22 +89,30 @@ trait Timer {
 object Timer {
 
     final class TimerTriggerTask(
-        val address: Address[?],
-        val registerId: Long,
-        val period: Long,
-        val parent: ConcurrentHashMap[Long, TimerTriggerTask],
-        val attach: AnyRef | Null = null
+        private var address: Address[?],
+        private var registerId: Long,
+        private var period: Long,
+        private var parent: ConcurrentHashMap[Long, TimerTriggerTask],
+        private var attach: AnyRef | Null = null,
+        private var periodUnit: TimeUnit = TimeUnit.MILLISECONDS
     ) extends TimerTask {
 
         @volatile private var handle: Timeout = _
 
         def timeout: Timeout = handle
 
-        def setHandle(timeout: Timeout): Unit = this.handle = timeout
+        def setHandle(timeout: Timeout): Unit = this.synchronized {
+            this.handle = timeout
+        }
 
-        override def run(timeout: Timeout): Unit = {
+        def update(period: Long, periodUnit: TimeUnit = TimeUnit.MILLISECONDS): Unit = this.synchronized {
+            this.period = period
+            this.periodUnit = periodUnit
+        }
+
+        override def run(timeout: Timeout): Unit = this.synchronized {
             address.inform(TimeoutEvent(registerId, attach))
-            if (period > 0) setHandle(timeout.timer().newTimeout(this, period, TimeUnit.MILLISECONDS))
+            if (period > 0) setHandle(timeout.timer().newTimeout(this, period, periodUnit))
             else {
                 val task = parent.remove(registerId)
                 if (task != null) task.timeout.cancel()
@@ -107,11 +123,19 @@ object Timer {
 
     enum TimeoutTrigger {
 
-        case FixTime(date: Date)                        extends TimeoutTrigger
-        case DelayTime(delay: Long)                     extends TimeoutTrigger
-        case DelayPeriod(delay: Long, period: Long)     extends TimeoutTrigger
-        case FirstTimePeriod(first: Date, period: Long) extends TimeoutTrigger
+        case FixTime(date: Date)                                            extends TimeoutTrigger
+        case DelayTime(delay: Long, unit: TimeUnit = TimeUnit.MILLISECONDS) extends TimeoutTrigger
+        case DelayPeriod(
+            delay: Long,
+            period: Long,
+            delayUnit: TimeUnit = TimeUnit.MILLISECONDS,
+            periodUnit: TimeUnit = TimeUnit.MILLISECONDS
+        ) extends TimeoutTrigger
+        case FirstTimePeriod(first: Date, period: Long, periodUnit: TimeUnit = TimeUnit.MILLISECONDS)
+            extends TimeoutTrigger
 
     }
+
+    val INVALID_TIMEOUT_REGISTER_ID: Long = Long.MinValue
 
 }
