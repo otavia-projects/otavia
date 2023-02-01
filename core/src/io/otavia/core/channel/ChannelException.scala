@@ -19,7 +19,8 @@
 package io.otavia.core.channel
 
 /** A [[RuntimeException]] which is thrown when an I/O operation fails. */
-class ChannelException(message: String, cause: Throwable) extends RuntimeException(message, cause) {
+class ChannelException(message: String | Null, cause: Throwable | Null) extends RuntimeException(message, cause) {
+
     def this() = this(null, null)
 
     def this(message: String) = this(message, null)
