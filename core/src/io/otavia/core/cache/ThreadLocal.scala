@@ -44,9 +44,11 @@ abstract class ThreadLocal[V] {
         thread.index
     }
 
-    private def syncInit(len: Int): Unit = if (!inited) {
-        doInit(len)
-        inited = true
+    private def syncInit(len: Int): Unit = this.synchronized {
+        if (!inited) {
+            doInit(len)
+            inited = true
+        }
     }
 
     private[cache] def doInit(len: Int): Unit
