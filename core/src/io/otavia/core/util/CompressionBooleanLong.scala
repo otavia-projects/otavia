@@ -20,14 +20,19 @@ trait CompressionBooleanLong {
 
     private var compression: Long = 0
 
-    protected final inline def set(position: Int, value: Boolean): Unit = {
+    protected final inline def setAt(position: Int, value: Boolean): Unit = {
         val mask = 1 << position
         if (value) compression = compression | mask else compression = compression & (~mask)
     }
 
-    protected final inline def get(position: Int): Boolean = {
+    protected final inline def getAt(position: Int): Boolean = {
         val mask = 1 << position
         (compression & mask) != 0
     }
+
+    protected final inline def set(mask: Long, value: Boolean): Unit =
+        if (value) compression = compression | mask else compression = compression & (~mask)
+
+    protected final inline def get(mask: Long): Boolean = (compression & mask) != 0
 
 }
