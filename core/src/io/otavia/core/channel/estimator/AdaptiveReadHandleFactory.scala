@@ -16,12 +16,11 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.channel.estimator
 
-import io.otavia.core.channel.AdaptiveReadHandleFactory.*
+import io.otavia.core.channel.estimator.AdaptiveReadHandleFactory.*
 
-import java.util
-import java.util.{ArrayList, List}
+import scala.collection.mutable
 
 /** The [[ReadHandleFactory]] that automatically increases and decreases the predicted buffer size on feed back.
  *
@@ -57,6 +56,17 @@ class AdaptiveReadHandleFactory(maxMessagesPerRead: Int, minimum: Int, val initi
     private var minIndex: Int = 0
     private var maxIndex: Int = 0
 
+    init()
+
+    private def init(): Unit = {
+        assert(initial >= minimum, "initial < minimum")
+        assert(maximum >= initial, "maximum < initial")
+        val minIdx = getSizeTableIndex(minimum)
+        if (SIZE_TABLE(minIdx) < minimum) this.minIndex = minIdx + 1 else this.minIndex = minIdx
+        val maxIdx = getSizeTableIndex(maximum)
+        if (SIZE_TABLE(maxIdx) > maximum) this.maxIndex = maxIdx - 1 else this.maxIndex = maxIdx
+    }
+
     override protected def newMaxMessageHandle(
         maxMessagesPerRead: Int
     ): MaxMessagesReadHandleFactory.MaxMessageReadHandle =
@@ -65,6 +75,7 @@ class AdaptiveReadHandleFactory(maxMessagesPerRead: Int, minimum: Int, val initi
 }
 
 object AdaptiveReadHandleFactory {
+
     private[channel] val DEFAULT_MINIMUM = 64
     // Use an initial value that is bigger than the common MTU of 1500
     private[channel] val DEFAULT_INITIAL = 2048
@@ -73,31 +84,37 @@ object AdaptiveReadHandleFactory {
     private val INDEX_INCREMENT = 4
     private val INDEX_DECREMENT = 1
 
-    private var SIZE_TABLE: Array[Int] = {
-        val sizeTable: util.List[Integer] = new util.ArrayList[Integer]
-        var i: Int                        = 16
+    private val SIZE_TABLE: Array[Int] = {
+        val sizeTable = mutable.ArrayBuffer.empty[Int]
+
+        var i: Int = 16
         while (i < 512) {
-            sizeTable.add(i)
+            sizeTable.addOne(i)
             i += 16
         }
 
         // Suppress a warning since `i` becomes negative when an integer overflow happens// Suppress a warning since `i` becomes negative when an integer overflow happens
         var j: Int = 512
         while (j > 0) { // lgtm[java/constant-comparison]
-            sizeTable.add(j)
+            sizeTable.addOne(j)
             j <<= 1
         }
 
-        val table = new Array[Int](sizeTable.size)
-        for (i <- table.indices) {
-            table(i) = sizeTable.get(i)
-        }
-        table
+        sizeTable.toArray
     }
 
     private def getSizeTableIndex(size: Int): Int = {
-        // TODO
-        ???
+        var index             = SIZE_TABLE.length - 1
+        var i                 = 0
+        var continue: Boolean = true
+        while (continue) {
+            if (size < SIZE_TABLE(i)) {
+                index = i
+                continue = false
+            }
+            i += 1
+        }
+        index
     }
 
     protected final class ReadHandleImpl(
@@ -106,9 +123,10 @@ object AdaptiveReadHandleFactory {
         val maxIndex: Int,
         val initial: Int
     ) extends MaxMessagesReadHandleFactory.MaxMessageReadHandle(maxMessagesPerRead) {
+
         private var index: Int                 = getSizeTableIndex(initial)
         private var nextReceiveBufferSize: Int = SIZE_TABLE(index)
-        private var decreaseNow: Boolean       = _
+        private var decreaseNow: Boolean       = false
 
         private var _totalBytesRead: Int = 0
 
@@ -125,8 +143,17 @@ object AdaptiveReadHandleFactory {
         override def estimatedBufferCapacity: Int = nextReceiveBufferSize
 
         private def record(actualReadBytes: Int): Unit = {
-            // TODO
-            ???
+            if (actualReadBytes <= SIZE_TABLE(math.max(0, index - INDEX_DECREMENT))) {
+                if (decreaseNow) {
+                    index = math.max(index - INDEX_DECREMENT, minIndex)
+                    nextReceiveBufferSize = SIZE_TABLE(index)
+                    decreaseNow = false
+                } else decreaseNow = true
+            } else if (actualReadBytes >= nextReceiveBufferSize) {
+                index = math.min(index + INDEX_INCREMENT, maxIndex)
+                nextReceiveBufferSize = SIZE_TABLE(index)
+                decreaseNow = false
+            }
         }
 
         override def readComplete(): Unit = {
@@ -136,6 +163,7 @@ object AdaptiveReadHandleFactory {
         }
 
         private def totalBytesRead(): Int = if (_totalBytesRead < 0) Int.MaxValue else _totalBytesRead
+
     }
 
 }
