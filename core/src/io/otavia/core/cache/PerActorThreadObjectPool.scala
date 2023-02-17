@@ -18,21 +18,25 @@ package io.otavia.core.cache
 
 import io.otavia.core.system.ActorThread
 
-abstract class PerActorThreadObjectPool[T <: Poolable] extends ObjectPool[T] {
+abstract class PerActorThreadObjectPool[T <: Poolable](val dropIfRecycleNotByCreated: Boolean = false)
+    extends ObjectPool[T] {
 
-    private val threadLocal = new ActorThreadLocal[Poolable.SingleThreadPoolableHolder] {
-        override protected def initialValue(): Poolable.SingleThreadPoolableHolder =
-            new Poolable.SingleThreadPoolableHolder[T]()()
+    private val threadLocal = new ActorThreadLocal[Poolable.SingleThreadPoolableHolder[T]] {
+        override protected def initialValue(): Poolable.SingleThreadPoolableHolder[T] =
+            new Poolable.SingleThreadPoolableHolder[T]()
     }
 
-    private def holder(): Poolable.SingleThreadPoolableHolder = threadLocal.get()
+    private def holder(): Poolable.SingleThreadPoolableHolder[T] = threadLocal.get()
 
     override def get(): T = {
         holder().pop() match
-            case null: Null => newObject()
-            case obj: T     => obj
+            case null: Null  => newInstance()
+            case instance: T => instance
     }
 
-    override def recycle(poolable: T): Unit = holder().push(poolable)
+    override def recycle(poolable: T): Unit = if (dropIfRecycleNotByCreated) {
+        val currentThreadIndex = ActorThread.currentThreadIndex
+        if (poolable.creator == currentThreadIndex) holder().push(poolable) else {}
+    } else holder().push(poolable)
 
 }

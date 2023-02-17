@@ -83,3 +83,9 @@ abstract class ThreadLocal[V] {
     protected def onRemoval(value: V): Unit = {}
 
 }
+
+object ThreadLocal {
+
+    val EMPTY: Array[AnyRef] = Array.empty
+
+}

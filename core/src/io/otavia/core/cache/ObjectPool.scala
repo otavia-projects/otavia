@@ -16,12 +16,28 @@
 
 package io.otavia.core.cache
 
+import io.otavia.core.system.ActorThread
+
 /** Light-weight object pool.
  *  @tparam T
  *    the type of the pooled object
  */
 abstract class ObjectPool[T <: Poolable] {
 
+    /** Creates a new Object which has been set [[Poolable.creator]] by the current thread.
+     *  @return
+     *    a new [[Poolable]] object.
+     */
+    protected final def newInstance(): T = {
+        val instance = newObject()
+        instance.creator(ActorThread.currentThreadIndex)
+        instance
+    }
+
+    /** Used by user to define how to create a new [[Poolable]] object.
+     *  @return
+     *    a object which has not been set [[Poolable.creator]].
+     */
     protected def newObject(): T
 
     /** Get a object from the [[ObjectPool]]. The returned object may be created via [[newObject]] if no pooled object

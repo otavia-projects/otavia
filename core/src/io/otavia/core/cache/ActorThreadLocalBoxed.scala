@@ -21,10 +21,12 @@ import io.otavia.core.system.ActorThread
 
 abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
 
-    private var variables: Array[ValueBox[V]] = Array.empty // Use boxed objects to avoid cpu cache false sharing.
+    private var variables: Array[AnyRef] = ThreadLocal.EMPTY // Use boxed objects to avoid cpu cache false sharing.
+
+    private def valueBox(index: Int): ValueBox[V] = variables(index).asInstanceOf[ValueBox[V]]
 
     override private[cache] def doInit(len: Int): Unit = {
-        val arr = new Array[ValueBox[V]](len)
+        val arr = new Array[AnyRef](len)
         arr.indices.foreach { index =>
             val box: ValueBox[V] = ValueBox()
             arr(index) = box
@@ -40,7 +42,7 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
 
     final def get(): V = {
         val index = threadIndex()
-        val box   = variables(index)
+        val box   = valueBox(index)
         box.get match
             case v: V       => v
             case null: Null => initializeValue(box)
@@ -48,19 +50,19 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
 
     final def getIfExists: V | Null = {
         val index = threadIndex()
-        val box   = variables(index)
+        val box   = valueBox(index)
         box.get
     }
 
     final def set(value: V): Unit = {
         val index = threadIndex()
-        val box   = variables(index)
+        val box   = valueBox(index)
         box.set(value)
     }
 
     override def isSet: Boolean = {
         val index = threadIndex()
-        val box   = variables(index)
+        val box   = valueBox(index)
         box match
             case null: Null     => false
             case v: ValueBox[V] => v.nonEmpty
@@ -68,7 +70,7 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
 
     override def remove(): Unit = if (isInited) {
         val index = threadIndex()
-        val box   = variables(index)
+        val box   = valueBox(index)
         box.get match
             case null: Null =>
             case v: V =>

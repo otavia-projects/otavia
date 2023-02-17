@@ -16,10 +16,28 @@
 
 package io.otavia.core.cache
 
+import io.otavia.core.system.{ActorSystem, ActorThreadPool}
 import io.otavia.core.util.Chainable
 
 /** An object which can be pooled */
-trait Poolable extends Chainable
+trait Poolable extends Chainable {
+
+    private var index: Int = ActorThreadPool.INVALID_THREAD_ID
+
+    private[core] def creator: Int           = index
+    private[core] def creator(id: Int): Unit = index = id
+
+    final def recycle(pool: ObjectPool[this.type]): Unit = {
+        cleanInstance()
+        dechain()
+        pool.recycle(this)
+    }
+
+    def recycle(): Unit
+
+    protected def cleanInstance(): Unit
+
+}
 
 object Poolable {
 
@@ -34,26 +52,32 @@ object Poolable {
 
     }
 
-    class SingleThreadPoolableHolder[T <: Poolable](val maxSize: Int = 1024) extends PoolableHolder[T] {
+    class SingleThreadPoolableHolder[T <: Poolable](val maxSize: Int = ActorSystem.DEFAULT_POOL_HOLDER_MAX_SIZE)
+        extends PoolableHolder[T] {
 
-        private var count: Int        = 0
-        private var head: T | Null    = null
-        private var tail: T | Null    = null
-        private var maxTail: T | Null = null
+        import scala.language.unsafeNulls
+
+        private var count: Int             = 0
+        private var head: Chainable | Null = null
+        private var tail: Chainable | Null = null
+
+        inline private def headnn: Chainable = head.asInstanceOf[Chainable]
+        inline private def tailnn: Chainable = tail.asInstanceOf[Chainable]
 
         override def size: Int = count
 
         override def pop(): T | Null = if (count > 1) {
-            val poolable = head
-            head = head.nn.next
+            val poolable = headnn
+            head = poolable.next
             count -= 1
-            poolable.nn
+            poolable.dechain()
+            poolable.asInstanceOf[T]
         } else if (count == 1) {
-            val poolable = head
+            val poolable = headnn
             head = null
             tail = null
             count -= 1
-            poolable.nn
+            poolable.asInstanceOf[T]
         } else null
 
         override def push(poolable: T): Unit = if (count == 0) {
@@ -61,16 +85,15 @@ object Poolable {
             tail = poolable
             count = 1
         } else {
-            val oldHead = head
+            val oldHead = headnn
+            poolable.next = oldHead
             head = poolable
-            head.nn.next = oldHead
             count += 1
-            if (count == maxSize) maxTail = tail
             if (count == maxSize + 1) {
-                tail = tail.nn.pre
-                maxTail.nn.pre = null
-                maxTail = tail
-                tail.nn.next = null
+                val oldTail = tailnn
+                tail = oldTail.pre
+                oldTail.dechain()
+                tailnn.cleanNext()
                 count -= 1
             }
         }

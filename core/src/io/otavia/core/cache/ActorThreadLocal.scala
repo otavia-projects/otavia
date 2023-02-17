@@ -22,7 +22,7 @@ import io.otavia.core.system.ActorThread
 
 abstract class ActorThreadLocal[V <: AnyRef] extends ThreadLocal[V] {
 
-    private var variables: Array[AnyRef] = Array.empty // Use boxed objects to avoid cpu cache false sharing.
+    private var variables: Array[AnyRef] = ThreadLocal.EMPTY // Use boxed objects to avoid cpu cache false sharing.
 
     private def initializeValue(index: Int): V = {
         val v = initialValue()
