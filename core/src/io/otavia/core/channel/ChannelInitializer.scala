@@ -36,7 +36,7 @@ import io.otavia.core.channel.{Channel, ChannelHandler}
  *  @tparam C
  *    A sub-type of [[Channel]]
  */
-class ChannelInitializer[C <: Channel] extends ChannelHandler {
+abstract class ChannelInitializer[C <: Channel] extends ChannelHandler {
 
     // TODO: inject actor logger, and reuse this object.
     override def isSharable: Boolean = true

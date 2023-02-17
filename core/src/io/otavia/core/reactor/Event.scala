@@ -16,12 +16,7 @@
 
 package io.otavia.core.reactor
 
-import io.otavia.core.address.ChannelsActorAddress
 import io.otavia.core.channel.Channel
-
-import java.nio.channels.SelectionKey
-import java.util.Date
-import java.util.concurrent.atomic.AtomicLong
 
 /** Event for [[io.otavia.core.actor.Actor]] */
 sealed abstract class Event {
@@ -31,26 +26,23 @@ sealed abstract class Event {
 /** Timeout event */
 case class TimeoutEvent(registerId: Long, attach: AnyRef | Null = null) extends Event
 
+sealed abstract class TimerEvent {
+    def registerId: Long
+
+}
+
+case class ChannelTimeout(registerId: Long, channel: Channel) extends TimerEvent
+
+private[core] case class CacheTimeout(registerId: Long) extends TimerEvent
+
+/** channel event for [[io.otavia.core.actor.ChannelsActor]] */
 enum ReactorEvent extends Event {
 
-    case RegisterReply(channel: Channel, cause: Option[Throwable])
-    case DeregisterReply(channel: Channel, cause: Option[Throwable])
+    // event for
+    case RegisterReply(channel: Channel, cause: Option[Throwable] = None)
+    case DeregisterReply(channel: Channel, cause: Option[Throwable] = None)
 
     case ChannelReadiness(channel: Channel, readyOps: Int)
     case ChannelClose(channel: Channel)
 
 }
-
-case class RegisterReplyEvent(channel: Channel, succeed: Boolean = true, cause: Throwable = null)   extends Event
-case class DeregisterReplyEvent(channel: Channel, succeed: Boolean = true, cause: Throwable = null) extends Event
-
-/** channel event for [[io.otavia.core.actor.ChannelsActor]]
- *
- *  @param channel
- *    event belong to this channel
- *  @param interest
- *    socket event type
- */
-final case class ChannelEvent(channel: Channel, selectionKey: SelectionKey) extends Event
-
-final case class ChannelClose(channel: Channel) extends Event

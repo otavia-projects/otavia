@@ -21,6 +21,8 @@ package io.otavia.core.channel
 import io.netty5.buffer.BufferAllocator
 import io.netty5.util.{AbstractConstant, ConstantPool}
 import io.otavia.core.channel.ChannelOption.pool
+import io.otavia.core.channel.estimator.{MessageSizeEstimator, ReadHandleFactory, WriteHandleFactory}
+import io.otavia.core.channel.internal.WriteBufferWaterMark
 
 import java.net.NetworkInterface
 import java.util.Objects.requireNonNull

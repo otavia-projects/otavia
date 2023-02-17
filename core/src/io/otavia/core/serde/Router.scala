@@ -1,8 +1,6 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
- * This file fork from netty.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,20 +14,8 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.serde
 
-import io.otavia.core.actor.ChannelsActor
-
-/** A handle that will process I/O. */
-private[core] trait IoHandle {
-
-    /** Return true if registered already.
-     *  @return
-     *    `true` if registered, `false` otherwise
-     */
-    def isRegistered: Boolean
-
-    /** Executor of this [[IoHandle]] instance, the [[IoHandle]] io event must execute in the binding executor */
-    def executor: ChannelsActor[?]
+trait Router {
 
 }

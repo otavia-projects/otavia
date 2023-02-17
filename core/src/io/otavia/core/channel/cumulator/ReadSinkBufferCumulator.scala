@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
-package io.otavia.core.actor
+package io.otavia.core.channel.cumulator
 
-import io.otavia.core.message.{Ask, Notice}
+import io.netty5.buffer.{Buffer, BufferAllocator}
 
-// TODO: implement abstract actor
-private[core] abstract class AbstractActor[M <: Ask[?] | Notice] extends Actor[M] {}
+/** A composed [[Cumulator]] used for [[io.otavia.core.channel.ChannelInboundBuffer]]. */
+private[channel] class ReadSinkBufferCumulator extends Cumulator {
+
+    override def cumulate(alloc: BufferAllocator, accumulation: Buffer, in: Buffer): Buffer = ???
+
+    override def discardSomeReadBytes(accumulation: Buffer): Buffer = ???
+
+}

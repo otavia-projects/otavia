@@ -16,14 +16,14 @@
 
 package io.otavia.examples
 
-import io.otavia.core.actor.{NormalActor, ExceptionStrategy}
+import io.otavia.core.actor.{StateActor, ExceptionStrategy}
 import io.otavia.core.address.Address
 import io.otavia.core.ioc.Injectable
 import io.otavia.core.message.{Ask, IdAllocator, Notice, Reply}
 import io.otavia.core.stack.*
 import io.otavia.examples.HandleStateActor.{MSG, QueryDB, QueryRedis}
 
-class HandleStateActor extends NormalActor[MSG] with Injectable {
+class HandleStateActor extends StateActor[MSG] with Injectable {
 
   import HandleStateActor.*
 

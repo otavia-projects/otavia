@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-package io.otavia.core.actor
+package io.otavia.core.address
 
-import io.otavia.core.message.{Ask, Notice}
+import io.otavia.core.reactor.Event
 
-// TODO: implement abstract actor
-private[core] abstract class AbstractActor[M <: Ask[?] | Notice] extends Actor[M] {}
+trait EventableAddress {
+
+    private[core] def inform(event: Event): Unit = {}
+
+    private[core] def inform(events: Seq[Event]): Unit = {}
+
+}

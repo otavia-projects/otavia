@@ -16,10 +16,13 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.channel.estimator
+
+import io.otavia.core.channel.Channel
 
 /** Base implementation of [[ReadHandleFactory]] which allows to limit the number of messages read per read loop. */
 abstract class MaxMessagesReadHandleFactory(private val maxMessagesPerRead: Int) extends ReadHandleFactory {
+
     def this() = this(1)
 
     assert(maxMessagesPerRead > 0)
@@ -45,6 +48,7 @@ object MaxMessagesReadHandleFactory {
      */
     private[channel] abstract class MaxMessageReadHandle(val maxMessagesPerRead: Int)
         extends ReadHandleFactory.ReadHandle {
+
         assert(maxMessagesPerRead > 0)
         private var totalMessages: Int = 0
 
@@ -54,5 +58,6 @@ object MaxMessagesReadHandleFactory {
         }
 
         override def readComplete(): Unit = totalMessages = 0
+
     }
 }

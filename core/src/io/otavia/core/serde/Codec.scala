@@ -16,13 +16,15 @@
 
 package io.otavia.core.serde
 
-trait Codec[T] extends Encoder[T], Decoder[T] {
+trait Codec[T <: AnyRef] extends Encoder[T], Decoder[T] {
     override def format: Codec.SerdeFormat
 }
 
 object Codec {
     enum SerdeFormat(format: String) {
+
         case StringFormat extends SerdeFormat("string")
         case JsonFormat   extends SerdeFormat("json")
+
     }
 }

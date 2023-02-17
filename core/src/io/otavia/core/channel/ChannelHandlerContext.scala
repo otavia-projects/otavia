@@ -19,12 +19,13 @@
 package io.otavia.core.channel
 
 import io.netty5.buffer.{Buffer, BufferAllocator}
+import io.otavia.core.channel.estimator.ReadBufferAllocator
 import io.otavia.core.timer.Timer
 
 trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundInvoker {
 
     /** The assigned [[ChannelPipeline]] */
-    val pipeline: ChannelPipeline
+    def pipeline: ChannelPipeline
 
     /** The [[Channel]] which is bound to the [[ChannelHandlerContext]]. */
     def channel: Channel = pipeline.channel
@@ -36,10 +37,10 @@ trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundIn
      *  [[ChannelPipeline]]. This name can also be used to access the registered [[ChannelHandler]] from the
      *  [[ChannelPipeline]].
      */
-    val name: String
+    def name: String
 
     /** The [[ChannelHandler]] that is bound this [[ChannelHandlerContext]]. */
-    val handler: ChannelHandler
+    def handler: ChannelHandler
 
     /** Return `true` if the [[ChannelHandler]] which belongs to this context was removed from the [[ChannelPipeline]].
      */
@@ -63,6 +64,8 @@ trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundIn
 
     override def fireChannelRead(msg: AnyRef): ChannelHandlerContext
 
+    override def fireChannelRead(msg: AnyRef, msgId: Long): ChannelHandlerContext
+
     override def fireChannelReadComplete(): ChannelHandlerContext
 
     override def fireChannelWritabilityChanged(): ChannelHandlerContext
@@ -73,7 +76,10 @@ trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundIn
 
     override def flush(): ChannelHandlerContext
 
-    /** Return the assigned [[BufferAllocator]] which will be used to allocate [[Buffer]]s. */
-    def bufferAllocator(): BufferAllocator = channel.bufferAllocator
+    /** Return the assigned [[BufferAllocator]] which will be used to allocate off-heap [[Buffer]]s. */
+    final def directAllocator(): BufferAllocator = channel.directAllocator
+
+    /** Return the assigned [[BufferAllocator]] which will be used to allocate heap [[Buffer]]s. */
+    final def heapAllocator(): BufferAllocator = channel.headAllocator
 
 }

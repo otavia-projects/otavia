@@ -16,7 +16,7 @@
 
 package io.otavia.core.util
 
-import io.otavia.core.actor.{Actor, NormalActor}
+import io.otavia.core.actor.{Actor, StateActor}
 import io.otavia.core.message.{IdAllocator, Notice}
 import io.otavia.core.util.Logger.LogMsg
 

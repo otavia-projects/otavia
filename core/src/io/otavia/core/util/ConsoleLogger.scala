@@ -16,7 +16,7 @@
 
 package io.otavia.core.util
 
-import io.otavia.core.actor.NormalActor
+import io.otavia.core.actor.StateActor
 import io.otavia.core.address.Address
 import io.otavia.core.ioc.{Component, Primary}
 import io.otavia.core.stack.StackState
@@ -24,7 +24,7 @@ import io.otavia.core.stack.StackState
 import scala.collection.mutable
 
 @Component
-class ConsoleLogger extends NormalActor[Logger.LogMsg], Logger {
+class ConsoleLogger extends StateActor[Logger.LogMsg], Logger {
     import ConsoleLogger.*
 
     override val batchable: Boolean = true

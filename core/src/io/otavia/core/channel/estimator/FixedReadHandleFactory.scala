@@ -16,16 +16,23 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.channel.estimator
 
-/** [[MaxMessagesReadHandleFactory]] implementation which should be used for [[NioServerSocketChannel]]s. */
-class ServerChannelReadHandleFactory(maxMessagesPerRead: Int = 16)
+import io.otavia.core.channel.estimator.FixedReadHandleFactory.ReadHandleImpl
+
+/** The [[ReadHandleFactory]] that always yields the same buffer size prediction. This handle ignores the feedback from
+ *  the I/O thread.
+ */
+class FixedReadHandleFactory(val bufferSize: Int, maxMessagesPerRead: Int = 1)
     extends MaxMessagesReadHandleFactory(maxMessagesPerRead) {
     override protected def newMaxMessageHandle(
         maxMessagesPerRead: Int
-    ): MaxMessagesReadHandleFactory.MaxMessageReadHandle =
-        new MaxMessagesReadHandleFactory.MaxMessageReadHandle(maxMessagesPerRead) {
-            override def estimatedBufferCapacity: Int = 128
-        }
+    ): MaxMessagesReadHandleFactory.MaxMessageReadHandle = new ReadHandleImpl(maxMessagesPerRead, bufferSize)
+}
 
+object FixedReadHandleFactory {
+    private class ReadHandleImpl(maxMessagesPerRead: Int, bufferSize: Int)
+        extends MaxMessagesReadHandleFactory.MaxMessageReadHandle(maxMessagesPerRead) {
+        override def estimatedBufferCapacity: Int = bufferSize
+    }
 }

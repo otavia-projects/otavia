@@ -19,7 +19,8 @@
 package io.otavia.core.channel.nio
 
 import io.otavia.core.actor.ChannelsActor
-import io.otavia.core.channel.{ReadHandleFactory, ReadSink, WriteHandleFactory}
+import io.otavia.core.channel.estimator.{ReadHandleFactory, WriteHandleFactory}
+import io.otavia.core.channel.internal.ReadSink
 
 import java.net.SocketAddress
 import java.nio.channels.SelectableChannel

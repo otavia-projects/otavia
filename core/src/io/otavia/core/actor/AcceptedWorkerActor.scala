@@ -18,7 +18,6 @@ package io.otavia.core.actor
 
 import io.otavia.core.actor.AccepterActor.AcceptedChannel
 import io.otavia.core.message.{Ask, ExceptionMessage, Notice, UnitReply}
-import io.otavia.core.reactor.RegisterReplyEvent
 import io.otavia.core.stack.StackState
 
 import scala.reflect.ClassTag

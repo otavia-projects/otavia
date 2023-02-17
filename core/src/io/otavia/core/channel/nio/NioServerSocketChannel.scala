@@ -23,6 +23,8 @@ import io.netty5.util.NetUtil
 import io.netty5.util.internal.SocketUtils
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*
+import io.otavia.core.channel.estimator.{ServerChannelReadHandleFactory, ServerChannelWriteHandleFactory}
+import io.otavia.core.channel.internal.{ReadSink, WriteSink}
 import io.otavia.core.channel.socket.SocketProtocolFamily
 
 import java.net.{ProtocolFamily, SocketAddress}
@@ -146,7 +148,7 @@ class NioServerSocketChannel(socket: ServerSocketChannel, protocolFamily: Protoc
                 0
     }
 
-    override protected def doConnect(initialData: Buffer): Boolean =
+    override protected def doConnect(initialData: Buffer | Null): Boolean =
         throw new UnsupportedOperationException()
 
     override protected def doFinishConnect(requestedRemoteAddress: SocketAddress): Boolean =

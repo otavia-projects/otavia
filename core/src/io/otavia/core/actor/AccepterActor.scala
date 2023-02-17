@@ -22,7 +22,6 @@ import io.otavia.core.channel.*
 import io.otavia.core.reactor.ReactorEvent
 //import io.otavia.core.channel.impl.NioServerSocketChannel
 import io.otavia.core.message.*
-import io.otavia.core.reactor.RegisterReplyEvent
 import io.otavia.core.stack.{ChannelFrame, ExceptionWaiter, ReplyWaiter, StackState}
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
@@ -44,9 +43,9 @@ abstract class AccepterActor[W <: AcceptedWorkerActor[_ <: Ask[?] | Notice]] ext
     }
 
     protected def bind(port: Int): Unit                    = bind(new InetSocketAddress(port))
-    protected def bind(host: String, port: Int): Unit      = bind(InetSocketAddress.createUnresolved(host, port))
+    protected def bind(host: String, port: Int): Unit      = bind(InetSocketAddress.createUnresolved(host, port).nn)
     protected def bind(host: InetAddress, port: Int): Unit = bind(new InetSocketAddress(host, port))
-    protected def bind(localAddress: SocketAddress): Channel = {
+    protected def bind(localAddress: SocketAddress): Unit = {
         assert(!bound)
         this.localAddress = localAddress
         // 1. create channel
@@ -54,7 +53,7 @@ abstract class AccepterActor[W <: AcceptedWorkerActor[_ <: Ask[?] | Notice]] ext
         // 3. register to reactor ...
         val channel = initAndRegister()
         channel.setUnresolvedLocalAddress(localAddress)
-        channel
+        // continue bind at handleChannelRegisterReplyEvent
     }
 
     override def init(channel: Channel): Unit = {
@@ -99,7 +98,7 @@ object AccepterActor {
 
         def apply(port: Int)(using IdAllocator): Bind = Bind(new InetSocketAddress(port))
         def apply(host: String, port: Int)(using IdAllocator): Bind = Bind(
-          InetSocketAddress.createUnresolved(host, port)
+          InetSocketAddress.createUnresolved(host, port).nn
         )
         def apply(host: InetAddress, port: Int)(using IdAllocator): Bind = Bind(new InetSocketAddress(host, port))
 

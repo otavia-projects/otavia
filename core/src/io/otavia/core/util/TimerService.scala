@@ -19,7 +19,6 @@ package io.otavia.core.util
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.Channel
 import io.otavia.core.message.{Ask, IdAllocator, Reply}
-import io.otavia.core.reactor.RegisterReplyEvent
 import io.otavia.core.stack.{AskFrame, ChannelFrame, StackState}
 
 import java.util.Date
@@ -35,9 +34,11 @@ class TimerService extends ChannelsActor[TimerService.MSG] {
     override def init(channel: Channel): Unit = ???
 
     override def close(): Unit = ???
+
 }
 
 object TimerService {
+
     type MSG = FixTime | Delay | DelayPeriod | FirstTimePeriod
 
     final case class FixTime(date: Date)(using IdAllocator) extends Ask[TimeArrival]
@@ -49,4 +50,5 @@ object TimerService {
     final case class FirstTimePeriod(firstTime: Date, period: Long)(using IdAllocator) extends Ask[TimeArrival]
 
     final case class TimeArrival()(using IdAllocator) extends Reply
+
 }

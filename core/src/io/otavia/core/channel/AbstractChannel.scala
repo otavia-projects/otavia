@@ -25,8 +25,11 @@ import io.netty5.util.internal.PlatformDependent
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.AbstractChannel.*
 import io.otavia.core.channel.ChannelOption.*
-import io.otavia.core.channel.{ReadSink, WriteSink}
-import io.otavia.core.reactor.{DeregisterReplyEvent, ReactorEvent, RegisterReplyEvent, TimeoutEvent}
+import io.otavia.core.channel.estimator.*
+import io.otavia.core.channel.internal.{ChannelOutboundBuffer, ReadSink, WriteBufferWaterMark, WriteSink}
+import io.otavia.core.reactor.{ReactorEvent, TimeoutEvent}
+import io.otavia.core.system.ActorThread
+import io.otavia.core.timer.Timer
 import io.otavia.core.timer.Timer.TimeoutTrigger
 import io.otavia.core.util.ActorLogger
 
@@ -35,6 +38,7 @@ import java.nio.channels.ClosedChannelException
 import java.util.Objects.requireNonNull
 import scala.collection.mutable
 import scala.concurrent.Future.never
+import scala.util.{Failure, Success, Try}
 
 /** A skeletal Channel implementation.
  *
@@ -61,7 +65,9 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
       WriteSink,
       ReadSink,
       ChannelInflight,
-      ChannelInternal[L, R] {
+      ChannelInternal[L, R],
+      ChannelLifecycle,
+      ChannelInboundBuffer {
 
     /** Creates a new instance.
      *
@@ -81,56 +87,65 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     private var channelId: Int = -1
 
+    // initial channel state on constructing
+    created = true
+    registering = false
+    registered = false
+
+    /** true if the channel has never been registered, false otherwise */
+    neverRegistered = true
+
+    neverActive = true
+
+    inputClosedSeenErrorOnRead = false
+
+    autoRead = true
+    autoClose = true
+    writable = true
+    allowHalfClosure = false
+    inWriteFlushed = false
+
+    closeInitiated = false
+    private var initialCloseCause: Throwable | Null = null
+
     override val pipeline: ChannelPipeline = newChannelPipeline()
 
-    private var writable: Boolean                     = true
-    private val outboundBuffer: ChannelOutboundBuffer = new ChannelOutboundBuffer()
-    @volatile private var registered: Boolean         = false
+    private var outboundBuffer: ChannelOutboundBuffer | Null = new ChannelOutboundBuffer()
 
     private var readHandleFactory: ReadHandleFactory   = defaultReadHandleFactory
     private var writeHandleFactory: WriteHandleFactory = defaultWriteHandleFactory
 
     private var msgSizeEstimator: MessageSizeEstimator = DEFAULT_MSG_SIZE_ESTIMATOR
     private var connectTimeoutMillis: Int              = DEFAULT_CONNECT_TIMEOUT
-    private var connectTimeoutRegisterId: Long         = null
+    private var connectTimeoutRegisterId: Long         = Timer.INVALID_TIMEOUT_REGISTER_ID
 
-    @SuppressWarnings(Array("FieldMayBeFinal"))
-    private val autoRead  = 1
-    private var autoClose = true
     // writeBufferWaterMark
     private var waterMarkLow: Int  = WriteBufferWaterMark.DEFAULT_LOW_WATER_MARK
     private var waterMarkHigh: Int = WriteBufferWaterMark.DEFAULT_HIGH_WATER_MARK
-    private var allowHalfClosure   = false
 
-    /** Cache for the string representation of this channel */
-    private var strValActive           = false
-    private var strVal: Option[String] = None
-
-    // All fields below are only called from within the EventLoop thread.
-    private var closeInitiated                        = false
-    private var initialCloseCause: Throwable          = _
     private var readBeforeActive: ReadBufferAllocator = _
 
     private lazy val estimatorHandle: MessageSizeEstimator.Handle = msgSizeEstimator.newHandle
-    private var inWriteFlushed                                    = false
 
-    /** true if the channel has never been registered, false otherwise */
-    private var neverRegistered = true
-    private var neverActive     = true
+    private var actor: ChannelsActor[?] | Null = _
 
-    private var inputClosedSeenErrorOnRead = false
-
-    private val laterTasks = mutable.ArrayDeque.empty[Runnable] // TODO: move to current thread.
-
-    private var actor: ChannelsActor[?] = _
-
-    override def executor: ChannelsActor[?] = actor
+    override def executor: ChannelsActor[?] = actor match
+        case a: ChannelsActor[?] => a
+        case null: Null =>
+            throw new IllegalStateException(s"The channel $this is not mounted, use setExecutor to mount channel.")
 
     final private[core] def setExecutor(channelsActor: ChannelsActor[?]): Unit = {
+        assert(!mounted, s"The channel $this has been mounted already, you can't mount it twice!")
         actor = channelsActor
         logger = ActorLogger.getLogger(getClass)(using executor)
         channelId = executor.generateChannelId()
+        resetInboundBuffer()
+        mounted = true
     }
+
+    protected def currentThread: ActorThread = Thread.currentThread().asInstanceOf[ActorThread]
+
+    private def laterTasks = currentThread.laterTasks
 
     override def id: Int = channelId
 
@@ -139,8 +154,6 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     /** Returns a new [[ChannelPipeline]] instance. */
     private def newChannelPipeline(): ChannelPipeline = new OtaviaChannelPipeline(this)
-
-    override final def bufferAllocator: BufferAllocator = executor.system.allocator
 
     private def closeIfClosed(): Unit = if (!isOpen) closeTransport()
 
@@ -152,8 +165,9 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     override def isRegistered: Boolean = registered
 
-    private def totalPending: Long =
-        if (outboundBuffer == null) -1 else outboundBuffer.totalPendingWriteBytes + pipeline.pendingOutboundBytes
+    private def totalPending: Long = outboundBuffer match
+        case null: Null                 => -1
+        case out: ChannelOutboundBuffer => out.totalPendingWriteBytes + pipeline.pendingOutboundBytes
 
     override final def writableBytes: Long = {
         val totalPending = this.totalPending
@@ -166,46 +180,34 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     override def hashCode(): Int = id
 
-    override def toString: String = {
-        val active = isActive
-        if (strValActive == active && strVal.nonEmpty) strVal.get
-        else {
-            if (remoteAddress.nonEmpty) {
-                val buf = new mutable.StringBuilder(128)
-                    .append("[id: ")
-                    .append(id)
-                    .append(", L:")
-                    .append(if localAddress.nonEmpty then localAddress.get else "None")
-                    .append(if active then " - " else " ! ")
-                    .append("R:")
-                    .append(remoteAddress.get)
-                    .append(']')
-                strVal = Some(buf.toString())
-            } else if (localAddress.nonEmpty) {
-                val buf = new mutable.StringBuilder(128)
-                    .append("[id: ")
-                    .append(id)
-                    .append(", L:")
-                    .append(localAddress.get)
-                    .append(']')
-                strVal = Some(buf.toString())
-            } else {
-                val buf = new mutable.StringBuilder(64)
-                    .append("[id: ")
-                    .append(id)
-                    .append(']')
-                strVal = Some(buf.toString())
-            }
-            strValActive = active
-            strVal.get
-        }
+    override def toString: String = if (remoteAddress.nonEmpty) {
+        val buf = new mutable.StringBuilder(128)
+            .append("[id: ")
+            .append(id)
+            .append(", L:")
+            .append(if localAddress.nonEmpty then localAddress.get else "None")
+            .append(if isActive then " - " else " ! ")
+            .append("R:")
+            .append(remoteAddress.get)
+            .append(']')
+        buf.toString()
+    } else if (localAddress.nonEmpty) {
+        val buf = new mutable.StringBuilder(128)
+            .append("[id: ")
+            .append(id)
+            .append(", L:")
+            .append(localAddress.get)
+            .append(']')
+        buf.toString()
+    } else {
+        val buf = new mutable.StringBuilder(64)
+            .append("[id: ")
+            .append(id)
+            .append(']')
+        buf.toString()
     }
 
-    protected final def readIfIsAutoRead(): Unit = if (readBeforeActive != null) {
-        val readBufferAllocator = readBeforeActive
-        readBeforeActive = null
-        readTransport(readBufferAllocator)
-    } else if (isAutoRead) read()
+    protected final def readIfIsAutoRead(): Unit = if (isAutoRead) read()
 
     /** Calls [[ChannelPipeline.fireChannelActive]] if it was not done yet.
      *
@@ -226,7 +228,9 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
      *  send channel register to reactor, and handle reactor reply at [[handleChannelRegisterReplyEvent]]
      */
     private[channel] def registerTransport(): Unit = {
-        if (isRegistered) throw new IllegalStateException("registered to an event loop already")
+        if (registering) throw new IllegalStateException(s"The channel ${this} is registering to reactor!")
+        if (isRegistered) throw new IllegalStateException("registered to reactor already")
+        registering = true
         reactor.register(this)
     }
 
@@ -235,6 +239,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
             case None =>
                 val firstRegistration = neverRegistered
                 neverRegistered = false
+                registering = false
                 registered = true
                 pipeline.fireChannelRegistered()
                 if (isActive) {
@@ -244,10 +249,11 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
             case Some(cause) => closeNowAndFail(cause)
 
     private[channel] def bindTransport(): Unit = {
+        binding = true
         unresolvedLocalAddress match {
             case address: InetSocketAddress
                 if isOptionSupported(ChannelOption.SO_BROADCAST) && getOption[Boolean](ChannelOption.SO_BROADCAST) &&
-                    !address.getAddress.isAnyLocalAddress && !PlatformDependent.isWindows && !PlatformDependent
+                    !address.getAddress.nn.isAnyLocalAddress && !PlatformDependent.isWindows && !PlatformDependent
                         .maybeSuperUser() =>
                 logger.logWarn(
                   "A non-root user can't receive a broadcast packet if the socket " +
@@ -258,10 +264,15 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         }
 
         val wasActive = isActive
-        try { doBind() }
-        catch { case t: Throwable => closeIfClosed(); return }
-
-        if (!wasActive && isActive) invokeLater(() => if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead())
+        Try {
+            doBind()
+        } match
+            case Failure(_) => closeIfClosed()
+            case Success(_) =>
+                bound = true
+                binding = false
+                if (!wasActive && isActive)
+                    invokeLater(() => if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead())
 
     }
 
@@ -299,22 +310,38 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     override private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = ???
 
     private[channel] def readTransport(readBufferAllocator: ReadBufferAllocator): Unit = if (!isActive) {
-        readBeforeActive = readBufferAllocator
+        throw new IllegalStateException(s"channel $this is not active!")
     } else if (isShutdown(ChannelShutdownDirection.Inbound)) {
         // Input was shutdown so not try to read.
     } else {
-        ???
+        readSink.setReadBufferAllocator(readBufferAllocator)
+        try { doRead() }
+        catch {
+            case e: Exception =>
+                invokeLater(() => pipeline.fireChannelExceptionCaught(e))
+                closeTransport()
+        }
     }
 
     /** Reading from the underlying transport now until there is nothing more to read or the
      *  [[ReadHandleFactory.ReadHandle]] is telling us to stop.
      */
     protected final def readNow(): Unit = {
-
-        ???
-
-        readSink.readLoop()
+        if (isShutdown(ChannelShutdownDirection.Inbound) && (inputClosedSeenErrorOnRead || !isAllowHalfClosure)) {
+            // There is nothing to read anymore.
+            clearScheduledRead() // TODO: clearScheduledRead()
+        } else readSink.readLoop()
     }
+
+    /** Shutdown the read side of this channel. Depending on if half-closure is supported or not this will either just
+     *  shutdown the [[ChannelShutdownDirection.Inbound]] or close the channel completely.
+     */
+    protected final def shutdownReadSide(): Unit = if (!isShutdown(ChannelShutdownDirection.Inbound)) {
+        if (isAllowHalfClosure) shutdownTransport(ChannelShutdownDirection.Inbound)
+        else closeTransport()
+    } else inputClosedSeenErrorOnRead = true
+
+    private def clearScheduledRead(): Unit = doClearScheduledRead()
 
     private[channel] def writeTransport(msg: AnyRef): Unit = {
         assertExecutor()
@@ -329,18 +356,9 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     }
 
     private[channel] def flushTransport(): Unit = {
-        outboundBuffer.addFlush()
+        outboundBuffer.nn.addFlush()
         writeFlushed()
     }
-
-    /** Returns true if flushed messages should not be tried to write when calling [[flush()]] . Instead these will be
-     *  written once [[writeFlushedNow]] is called, which is typically done once the underlying transport becomes
-     *  writable again.
-     *
-     *  @return
-     *    true if write will be done later on by calling [[writeFlushedNow]], false otherwise.
-     */
-    protected def isWriteFlushedScheduled = false
 
     /** Writing previous flushed messages if [[isWriteFlushedScheduled]] returns false, otherwise do nothing. */
     protected final def writeFlushed(): Unit = if (!isWriteFlushedScheduled) writeFlushedNow()
@@ -350,12 +368,12 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     protected def writeLoopComplete(allWriten: Boolean): Unit = if (!allWriten) invokeLater(() => writeFlushed())
 
     private[channel] def connectTransport(): Unit = try {
-        if (remoteAddress.nonEmpty) throw new IllegalStateException(s"$this already connected!")
-        val wasActive       = isActive
-        var message: Buffer = null
+        if (connected) throw new IllegalStateException(s"$this already connected!")
+        val wasActive              = isActive
+        var message: Buffer | Null = null
         if (isOptionSupported(ChannelOption.TCP_FASTOPEN_CONNECT) && getOption(ChannelOption.TCP_FASTOPEN_CONNECT)) {
-            outboundBuffer.addFlush()
-            val current = this.outboundBuffer.current
+            outboundBuffer.nn.addFlush()
+            val current = this.outboundBuffer.nn.current
             current match {
                 case buffer: Buffer => message = buffer
                 case _              =>
@@ -363,7 +381,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         }
         if (doConnect(message)) {
             fulfillConnect(wasActive)
-            if (message != null && message.readableBytes() == 0) this.outboundBuffer.remove
+            if (message != null && message.nn.readableBytes() == 0) this.outboundBuffer.nn.remove
         } else {
             // The reactor will send a [ReactorEvent.ChannelReadiness] event to ChannelsActor, then ChannelsActor will
             // call the channel's handleChannelReadinessEvent method which call finishConnect.
@@ -371,13 +389,11 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
             // register connect timeout trigger. When timeout, the timer will send a timeout event, the
             // handleConnectTimeout method will handle this timeout event.
             if (connectTimeoutMillis > 0)
-                connectTimeoutRegisterId = timer.registerTimerTask(TimeoutTrigger.DelayTime(connectTimeoutMillis))
+                connectTimeoutRegisterId = timer.registerTimerTask(TimeoutTrigger.DelayTime(connectTimeoutMillis), this)
         }
     } catch { case t: Throwable => }
 
     private def handleConnectTimeout(): Unit = closeTransport()
-
-    protected def connected: Boolean = false
 
     override private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit =
         if (eventRegisterId == connectTimeoutRegisterId) {
@@ -394,7 +410,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
      *  @return
      *    `true` if the connect operation completed, `false` otherwise.
      */
-    protected def finishConnect(): Boolean = {} // TODO: cancel connect timeout trigger.
+    protected def finishConnect(): Boolean = { ??? } // TODO: cancel connect timeout trigger.
 
     private def fulfillConnect(wasActive: Boolean): Unit = {
         val active = isActive
@@ -465,7 +481,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     override final def setOption[T](option: ChannelOption[T], value: T): Channel = {
         option.validate(value)
         option match
-            case AUTO_READ               => ???
+            case AUTO_READ               => setAutoRead(value.asInstanceOf[Boolean])
             case WRITE_BUFFER_WATER_MARK => ???
             case CONNECT_TIMEOUT_MILLIS  => ???
             case BUFFER_ALLOCATOR        => ???
@@ -510,46 +526,51 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         this.connectTimeoutMillis = checkPositiveOrZero(connectTimeoutMillis, "connectTimeoutMillis")
     }
 
-//  private def getBufferAllocator = bufferAllocator
-
-//  private def setBufferAllocator(bufferAllocator: BufferAllocator): Unit = {
-//    this.bufferAllocator = requireNonNull(bufferAllocator, "bufferAllocator")
-//  }
-
     @SuppressWarnings(Array("unchecked"))
     private[channel] def getReadHandleFactory[T <: ReadHandleFactory] = readHandleFactory.asInstanceOf[T]
 
     private def setReadHandleFactory(readHandleFactory: ReadHandleFactory): Unit = {
-        this.readHandleFactory = requireNonNull(readHandleFactory, "readHandleFactory")
+        this.readHandleFactory = requireNonNull(readHandleFactory, "readHandleFactory").nn
     }
 
-    protected def readHandle: ReadHandleFactory.ReadHandle    = readHandleFactory.newHandle(this)
-    protected def writeHandle: WriteHandleFactory.WriteHandle = writeHandleFactory.newHandle(this)
+    protected def newReadHandle: ReadHandleFactory.ReadHandle    = readHandleFactory.newHandle(this)
+    protected def newWriteHandle: WriteHandleFactory.WriteHandle = writeHandleFactory.newHandle(this)
 
     @SuppressWarnings(Array("unchecked"))
     private def getWriteHandleFactory[T <: WriteHandleFactory] = writeHandleFactory.asInstanceOf[T]
 
     private def setWriteHandleFactory(writeHandleFactory: WriteHandleFactory): Unit = {
-        this.writeHandleFactory = requireNonNull(writeHandleFactory, "writeHandleFactory")
+        this.writeHandleFactory = requireNonNull(writeHandleFactory, "writeHandleFactory").nn
     }
 
-    private def isAutoRead = autoRead == 1
+    private def isAutoRead = autoRead
 
-    private def setAutoRead(autoRead: Boolean): Unit = ???
+    private def setAutoRead(auto: Boolean): Unit = {
+        assertExecutor()
+        val old = autoRead
+        autoRead = auto
+        if (auto && !old) read() else if (!auto && old) clearScheduledRead()
+    }
 
     private def isAutoClose = autoClose
 
-    private def setAutoClose(autoClose: Boolean): Unit = this.autoClose = autoClose
+    private def setAutoClose(auto: Boolean): Unit = autoClose = auto
 
     private def getMessageSizeEstimator = msgSizeEstimator
 
     private def setMessageSizeEstimator(estimator: MessageSizeEstimator): Unit =
-        msgSizeEstimator = requireNonNull(estimator, "estimator")
+        msgSizeEstimator = requireNonNull(estimator, "estimator").nn
 
     private def isAllowHalfClosure = allowHalfClosure
 
-    private def setAllowHalfClosure(allowHalfClosure: Boolean): Unit =
-        this.allowHalfClosure = allowHalfClosure
+    private def setAllowHalfClosure(allow: Boolean): Unit = allowHalfClosure = allow
+
+    /** Called once the read loop completed for this Channel. Sub-classes might override this method but should also
+     *  call super.
+     */
+    protected def readLoopComplete(): Unit = {
+        // NOOP
+    }
 
 }
 

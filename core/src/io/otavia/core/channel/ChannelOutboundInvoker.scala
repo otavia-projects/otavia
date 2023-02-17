@@ -19,10 +19,11 @@
 package io.otavia.core.channel
 
 import io.otavia.core.actor.ChannelsActor
+import io.otavia.core.channel.estimator.ReadBufferAllocator
 
 import java.net.SocketAddress
 
-private trait ChannelOutboundInvoker {
+trait ChannelOutboundInvoker {
 
     @throws[Exception]
     def bind(): Unit

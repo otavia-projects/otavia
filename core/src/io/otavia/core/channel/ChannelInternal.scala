@@ -19,6 +19,7 @@
 package io.otavia.core.channel
 
 import io.netty5.buffer.Buffer
+import io.otavia.core.channel.internal.{ReadSink, WriteSink}
 
 import java.net.SocketAddress
 
@@ -63,13 +64,11 @@ private[channel] trait ChannelInternal[L <: SocketAddress, R <: SocketAddress] {
 
     /** Schedule a read operation.
      *
-     *  @param wasReadPendingAlready
-     *    true if a read was already pending when [[read]] was called.
      *  @throws Exception
      *    thrown on error.
      */
     @throws[Exception]
-    protected def doRead(wasReadPendingAlready: Boolean): Unit
+    protected def doRead(): Unit
 
     /** Called in a loop when writes should be performed until this method returns false or there are no more messages
      *  to write. Implementations are responsible for handling partial writes, which for example means that if
@@ -88,10 +87,6 @@ private[channel] trait ChannelInternal[L <: SocketAddress, R <: SocketAddress] {
 
     /** Connect to remote peer. This method should never be directly called.
      *
-     *  @param remote
-     *    the address of the remote peer.
-     *  @param local
-     *    the local address of this channel.
      *  @param initialData
      *    the initial data that is written during connect (if [[ChannelOption.TCP_FASTOPEN_CONNECT]] is supported and
      *    configured). If data is written care must be taken to update the [[Buffer.readerOffset]] .
@@ -102,7 +97,7 @@ private[channel] trait ChannelInternal[L <: SocketAddress, R <: SocketAddress] {
      *    thrown on error.
      */
     @throws[Exception]
-    protected def doConnect(initialData: Buffer): Boolean
+    protected def doConnect(initialData: Buffer | Null): Boolean
 
     /** Finish a connect request. This method should never be directly called, use [[finishConnect]] instead.
      *

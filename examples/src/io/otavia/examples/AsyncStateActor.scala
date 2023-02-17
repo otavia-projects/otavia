@@ -1,6 +1,6 @@
 package io.otavia.examples
 
-import io.otavia.core.actor.NormalActor
+import io.otavia.core.actor.StateActor
 import io.otavia.core.address.Address
 import io.otavia.core.async.Async
 import io.otavia.core.ioc.Injectable
@@ -13,7 +13,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @experimental
-class AsyncStateActor extends NormalActor[MSG] with Injectable {
+class AsyncStateActor extends StateActor[MSG] with Injectable {
 
   var redis: Address[QueryRedis] = _
   var db: Address[QueryDB] = _

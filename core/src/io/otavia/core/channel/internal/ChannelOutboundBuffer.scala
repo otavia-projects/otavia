@@ -16,17 +16,21 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.channel.internal
 
 import io.netty5.util.concurrent.{EventExecutor, Promise}
 import io.netty5.util.internal.logging.{InternalLogger, InternalLoggerFactory}
 import io.netty5.util.internal.{ObjectPool, PromiseNotificationUtil, SilentDispose, SystemPropertyUtil}
 import io.otavia.core.actor.ChannelsActor
+import io.otavia.core.cache.{PerActorThreadObjectPool, Poolable}
+import io.otavia.core.channel.ChannelOutboundBuffer
+import io.otavia.core.channel.internal.ChannelOutboundBuffer.MessageEntry
 
 import java.util.Objects.requireNonNull
 import java.util.function.Predicate
 
 object ChannelOutboundBuffer {
+
     // Assuming a 64-bit JVM:
     //  - 16 bytes object header
     //  - 6 reference fields
@@ -46,58 +50,66 @@ object ChannelOutboundBuffer {
         PromiseNotificationUtil.tryFailure(promise, cause, logger)
     }
 
-    object Entry {
-        private val RECYCLER = ObjectPool.newPool((handle: ObjectPool.Handle[Entry]) => new Entry(handle))
-        def newInstance(msg: AnyRef, size: Int): Entry = {
-            val entry = RECYCLER.get
-            entry.msg = msg
-            entry.pendingSize = size + CHANNEL_OUTBOUND_BUFFER_ENTRY_OVERHEAD
+    private object MessageEntry {
+
+        private val recycler = new PerActorThreadObjectPool[MessageEntry] {
+            override protected def newObject(): MessageEntry = new MessageEntry()
+        }
+
+        def apply(message: AnyRef | Null, pendingSize: Int, cancelled: Boolean = false): MessageEntry = {
+            val entry = recycler.get()
+            entry.message = message
+            entry.pendingSize = pendingSize + CHANNEL_OUTBOUND_BUFFER_ENTRY_OVERHEAD
+            entry.cancelled = cancelled
             entry
         }
+
     }
 
-    final class Entry private (private val handle: ObjectPool.Handle[ChannelOutboundBuffer.Entry]) {
-        var next: ChannelOutboundBuffer.Entry = _
-        var msg: AnyRef                       = _
-        var pendingSize                       = 0
-        var cancelled                         = false
+    private final class MessageEntry(
+        var message: AnyRef | Null = null,
+        var pendingSize: Int = 0,
+        var cancelled: Boolean = false
+    ) extends Poolable {
 
-        def cancel: Int = if (!cancelled) {
+        def cancel(): Int = if (!cancelled) {
             cancelled = true
-            val pSize = pendingSize
-            // release message and replace with null
-            SilentDispose.dispose(msg, logger)
-            msg = null
+            val size = pendingSize
+            SilentDispose.dispose(message, logger)
+            message = null
             pendingSize = 0
-            pSize
+            size
         } else 0
 
-        def recycle(): Unit = {
-            next = null
-            msg = null
+        override protected def cleanInstance(): Unit = {
+            message = null
             pendingSize = 0
             cancelled = false
-            handle.recycle(this)
         }
 
-        def recycleAndGetNext: Entry = {
-            val next = this.next
-            recycle()
-            next
+        override def recycle(): Unit = this.recycle(MessageEntry.recycler)
+
+        def recycleAndGetNext(): MessageEntry | Null = {
+            val n = this.next
+            recycle(MessageEntry.recycler)
+            n
         }
+
     }
+
 }
 
 @SuppressWarnings(Array("UnusedDeclaration"))
 private final class ChannelOutboundBuffer() {
-    // Entry(flushedEntry) --> ... Entry(unflushedEntry) --> ... Entry(tailEntry)
+
+    // MessageEntry(flushedEntry) --> ... MessageEntry(unflushedEntry) --> ... MessageEntry(tailEntry)
     //
-    // The Entry that is the first in the linked-list structure that was flushed
-    private var flushedEntry: ChannelOutboundBuffer.Entry = _
-    // The Entry which is the first unflushed in the linked-list structure
-    private var unflushedEntry: ChannelOutboundBuffer.Entry = _
-    // The Entry which represents the tail of the buffer
-    private var tailEntry: ChannelOutboundBuffer.Entry = _
+    // The MessageEntry that is the first in the linked-list structure that was flushed
+    private var flushedEntry: MessageEntry | Null = null
+    // The MessageEntry which is the first unflushed in the linked-list structure
+    private var unflushedEntry: MessageEntry | Null = null
+    // The MessageEntry which represents the tail of the buffer
+    private var tailEntry: MessageEntry | Null = null
     // The number of flushed entries that are not written yet
     private var flushed = 0
     private var inFail  = false
@@ -111,15 +123,14 @@ private final class ChannelOutboundBuffer() {
 
     /** Add given message to this[[ChannelOutboundBuffer]]. */
     private[channel] def addMessage(msg: AnyRef, size: Int): Unit = {
-        if (closed) throw new IllegalStateException
-        
-        val entry = ChannelOutboundBuffer.Entry.newInstance(msg, size)
-        if (tailEntry == null) flushedEntry = null
-        else {
-            val tail = tailEntry
-            tail.next = entry
-        }
+        if (closed) throw new IllegalStateException("ChannelOutboundBuffer has been closed!")
+
+        val entry = MessageEntry(msg, size)
+        tailEntry match
+            case null: Null         => flushedEntry = null
+            case tail: MessageEntry => tail.next = entry
         tailEntry = entry
+
         if (unflushedEntry == null) unflushedEntry = entry
         // increment pending bytes after adding message to the unflushed arrays.
         // See https://github.com/netty/netty/issues/1619
@@ -130,19 +141,42 @@ private final class ChannelOutboundBuffer() {
      *  so you will be able to handle them.
      */
     private[channel] def addFlush(): Unit = {
-        
 
         // There is no need to process all entries if there was already a flush before and no new messages
         // where added in the meantime.
         //
         // See https://github.com/netty/netty/issues/2577
+        unflushedEntry match
+            case null: Null =>
+            case entry: MessageEntry =>
+                if (flushedEntry == null) {
+                    // there is no flushedEntry yet, so start with the entry
+                    flushedEntry = entry
+                }
+                var prev: MessageEntry | Null = null
+                while {
+                    // Was cancelled so make sure we free up memory, unlink and notify about the freed bytes
+                    val pending = entry.cancel()
+                    prev match
+                        case null: Null =>
+                            // It's the first entry, drop it
+                            flushedEntry = entry.next
+                        case prevEntry: MessageEntry =>
+                            // Remove te entry from the linked list.
+                            prevEntry.next = entry.next
+
+                    val next = entry.next
+                    entry.recycle()
+
+                } do ()
+
         var entry = unflushedEntry
         if (entry != null) {
             if (flushedEntry == null) {
                 // there is no flushedEntry yet, so start with the entry
                 flushedEntry = entry
             }
-            var prev: ChannelOutboundBuffer.Entry = null
+            var prev: MessageEntry = null
             while {
                 // Was cancelled so make sure we free up memory, unlink and notify about the freed bytes
                 val pending = entry.cancel
@@ -166,7 +200,7 @@ private final class ChannelOutboundBuffer() {
 
     /** Return the current message to write or null if nothing was flushed before and so is ready to be written. */
     private[channel] def current: AnyRef = {
-        
+
         val entry = flushedEntry
         if (entry == null) return null
         entry.msg
@@ -182,10 +216,10 @@ private final class ChannelOutboundBuffer() {
      *  return {@code true}. If no flushed message exists at the time this method is called it will return {@code false}
      *  to signal that no more messages are ready to be handled.
      */
-    private[channel] def remove(cause: Throwable) = remove0(requireNonNull(cause, "cause"))
+    private[channel] def remove(cause: Throwable) = remove0(requireNonNull(cause, "cause").nn)
 
-    private def remove0(cause: Throwable): Boolean = {
-        
+    private def remove0(cause: Throwable | Null): Boolean = {
+
         val e = flushedEntry
         if (e == null) return false
         val msg = e.msg
@@ -205,7 +239,7 @@ private final class ChannelOutboundBuffer() {
     }
 
     private def removeEntry(e: ChannelOutboundBuffer.Entry): Unit = {
-        
+
         if ({
             flushed -= 1; flushed
         } == 0) {
@@ -220,7 +254,7 @@ private final class ChannelOutboundBuffer() {
 
     /** Returns the number of flushed messages in this {@link ChannelOutboundBuffer}. */
     private[channel] def size = {
-        
+
         flushed
     }
 
@@ -228,18 +262,18 @@ private final class ChannelOutboundBuffer() {
      *  otherwise.
      */
     private[channel] def isEmpty = {
-        
+
         flushed == 0
     }
 
     private[channel] def failFlushedAndClose(failCause: Throwable, closeCause: Throwable): Unit = {
-        
+
         failFlushed(failCause)
         close(closeCause)
     }
 
     private[channel] def failFlushed(cause: Throwable): Unit = {
-        
+
         // Make sure that this method does not reenter.  A listener added to the current promise can be notified by the
         // current thread in the tryFailure() call of the loop below, and the listener can trigger another fail() call
         // indirectly (usually by closing the channel.)
@@ -252,7 +286,7 @@ private final class ChannelOutboundBuffer() {
     }
 
     private def close(cause: Throwable): Unit = {
-        
+
         if (inFail) {
 //      executor.execute(() => close(cause))
             return
@@ -284,12 +318,13 @@ private final class ChannelOutboundBuffer() {
      *  process.
      */
     private[channel] def forEachFlushedMessage(processor: AnyRef => Boolean): Unit = {
-        
+
         var entry = flushedEntry
         if (flushedEntry != null) {
             ???
         }
     }
 
-    private def isFlushedEntry(e: ChannelOutboundBuffer.Entry) = e != null && (e ne unflushedEntry)
+    private def isFlushedEntry(e: ChannelOutboundBuffer.MessageEntry) = e != null && (e ne unflushedEntry)
+
 }

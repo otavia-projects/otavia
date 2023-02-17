@@ -1,8 +1,6 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
- * This file fork from netty.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,22 +14,14 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.address
 
-import io.otavia.core.channel.ServerChannelWriteHandleFactory.HANDLE
+import io.otavia.core.reactor.Event
 
-class ServerChannelWriteHandleFactory extends WriteHandleFactory {
-    override def newHandle(channel: Channel): WriteHandleFactory.WriteHandle = HANDLE
-}
+class ActorThreadAddress extends EventableAddress {
 
-object ServerChannelWriteHandleFactory {
-    private val HANDLE: WriteHandleFactory.WriteHandle = new WriteHandleFactory.WriteHandle {
+    override private[core] def inform(event: Event): Unit = ???
 
-        override def lastWrite(attemptedBytesWrite: Long, actualBytesWrite: Long, numMessagesWrite: Int): Boolean =
-            false
-
-        override def writeComplete(): Unit = {}
-
-    }
+    override private[core] def inform(events: Seq[Event]): Unit = ???
 
 }

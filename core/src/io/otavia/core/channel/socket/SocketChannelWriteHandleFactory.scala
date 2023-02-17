@@ -18,9 +18,10 @@
 
 package io.otavia.core.channel.socket
 
+import io.otavia.core.channel.estimator.MaxMessagesWriteHandleFactory
 import io.otavia.core.channel.socket.SocketChannelWriteHandleFactory.SndBufferWriteHandle
 import io.otavia.core.channel.socket.SocketChannelWriteHandleFactory.SndBufferWriteHandle.calculateMaxBytesPerGatheringWrite
-import io.otavia.core.channel.{Channel, ChannelOption, MaxMessagesWriteHandleFactory}
+import io.otavia.core.channel.{Channel, ChannelOption}
 
 class SocketChannelWriteHandleFactory(maxMessagesPerWrite: Int, private val maxBytesPerGatheringWrite: Long)
     extends MaxMessagesWriteHandleFactory(maxMessagesPerWrite) {

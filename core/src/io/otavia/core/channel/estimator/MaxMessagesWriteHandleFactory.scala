@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.channel.estimator
 
-import io.otavia.core.channel.MaxMessagesWriteHandleFactory.MaxMessagesWriteHandle
+import io.otavia.core.channel.Channel
+import io.otavia.core.channel.estimator.MaxMessagesWriteHandleFactory.MaxMessagesWriteHandle
+import io.otavia.core.channel.estimator.WriteHandleFactory
 
 class MaxMessagesWriteHandleFactory(private val maxMessagesPerWrite: Int) extends WriteHandleFactory {
 

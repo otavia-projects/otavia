@@ -299,14 +299,14 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         while (!success) {
             try {
                 nioProcessor.registerSelector(unwrappedSelector)
-                channel.executorAddress.inform(RegisterReplyEvent(channel))
+                channel.executorAddress.inform(ReactorEvent.RegisterReply(channel))
                 success = true
             } catch {
                 case e: CancelledKeyException =>
                     if (!selected) {
                         selectNow()
                         selected = true
-                    } else channel.executorAddress.inform(RegisterReplyEvent(channel, succeed = false, cause = e))
+                    } else channel.executorAddress.inform(ReactorEvent.RegisterReply(channel, Some(e)))
             }
         }
     }

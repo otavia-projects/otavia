@@ -16,7 +16,7 @@
 
 package io.otavia.core.address
 
-import io.otavia.core.actor.{Actor, ChannelsActor, NormalActor}
+import io.otavia.core.actor.{Actor, ChannelsActor, StateActor}
 import io.otavia.core.house.House
 import io.otavia.core.message.*
 import io.otavia.core.stack.ReplyWaiter
@@ -38,7 +38,7 @@ trait PhysicalAddress[M <: Ask[?] | Notice, H <: House] extends Address[M] {
     override def ask[A <: M & Ask[?]](ask: A, waiter: ReplyWaiter[ReplyOf[A]])(using sender: Actor[?]): Unit = {
         check(ask)
         sender match
-            case actor: NormalActor[_]   => actor.attachFrame(ask.id, waiter)
+            case actor: StateActor[_]   => actor.attachFrame(ask.id, waiter)
             case group: ChannelsActor[_] => ???
         house.putAsk(ask)
     }

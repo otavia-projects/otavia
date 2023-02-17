@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.channel.udp
 
 import io.netty5.util.{ReferenceCounted, Resource}
 

@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.channel.estimator
+
+import io.otavia.core.channel.Channel
 
 /** Implementations allow to influence how much data / messages are written per write loop invocation. */
 object WriteHandleFactory {
@@ -42,6 +44,7 @@ object WriteHandleFactory {
 
         /** Method that must be called once the write loop was completed. */
         def writeComplete(): Unit
+
     }
 }
 

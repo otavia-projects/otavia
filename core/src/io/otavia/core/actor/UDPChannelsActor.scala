@@ -16,8 +16,11 @@
 
 package io.otavia.core.actor
 
+import io.otavia.core.channel.Channel
 import io.otavia.core.message.{Ask, Notice}
 
 import scala.reflect.ClassTag
 
-abstract class UDPChannelsActor[M <: Ask[?] | Notice] extends ChannelsActor[M] {}
+abstract class UDPChannelsActor[M <: Ask[?] | Notice] extends ChannelsActor[M] {
+    override protected def newChannel(): Channel = ???
+}

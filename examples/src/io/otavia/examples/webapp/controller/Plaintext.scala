@@ -16,13 +16,13 @@
 
 package io.otavia.examples.webapp.controller
 
-import io.otavia.core.actor.NormalActor
+import io.otavia.core.actor.StateActor
 import io.otavia.core.stack.{AskFrame, StackFrame, StackState}
 //import io.otavia.http.annotation.Controller
 import io.otavia.http.{HttpRequest, HttpResponse}
 
 //@Controller("/plaintext")
-class Plaintext extends NormalActor[HttpRequest[String]] {
+class Plaintext extends StateActor[HttpRequest[String]] {
 
   import Plaintext.*
 

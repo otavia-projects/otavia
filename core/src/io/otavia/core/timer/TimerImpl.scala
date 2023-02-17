@@ -22,7 +22,7 @@ import io.otavia.core.reactor.TimeoutEvent
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.timer.Timer
 import io.otavia.core.timer.Timer.*
-import org.log4s.Logger
+import org.log4s.{Logger, getLogger}
 
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, ThreadFactory, TimeUnit}
@@ -106,7 +106,7 @@ final class TimerImpl(private[core] val system: ActorSystem) extends Timer {
         period: Long = -1,
         delayUnit: TimeUnit = TimeUnit.MILLISECONDS,
         periodUnit: TimeUnit = TimeUnit.MILLISECONDS
-    ): TimerTriggerTask = {
+    ): Unit = {
         task.update(period, periodUnit)
         task.setHandle(hashedWheelTimer.newTimeout(task, if (delay < 0) 0 else delay, delayUnit))
     }

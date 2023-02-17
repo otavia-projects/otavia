@@ -90,7 +90,7 @@ object Timer {
 
     final class TimerTriggerTask(
         private var address: Address[?],
-        private var registerId: Long,
+        private var id: Long,
         private var period: Long,
         private var parent: ConcurrentHashMap[Long, TimerTriggerTask],
         private var attach: AnyRef | Null = null,
@@ -100,6 +100,8 @@ object Timer {
         @volatile private var handle: Timeout = _
 
         def timeout: Timeout = handle
+
+        def registerId: Long = id
 
         def setHandle(timeout: Timeout): Unit = this.synchronized {
             this.handle = timeout
@@ -111,10 +113,10 @@ object Timer {
         }
 
         override def run(timeout: Timeout): Unit = this.synchronized {
-            address.inform(TimeoutEvent(registerId, attach))
+            address.inform(TimeoutEvent(id, attach))
             if (period > 0) setHandle(timeout.timer().newTimeout(this, period, periodUnit))
             else {
-                val task = parent.remove(registerId)
+                val task = parent.remove(id)
                 if (task != null) task.timeout.cancel()
             }
         }

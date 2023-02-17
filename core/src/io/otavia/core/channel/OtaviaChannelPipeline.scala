@@ -23,8 +23,10 @@ import io.netty5.util.concurrent.FastThreadLocal
 import io.netty5.util.internal.StringUtil
 import io.netty5.util.{Resource, ResourceLeakDetector}
 import io.otavia.core.actor.ChannelsActor
+import io.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import io.otavia.core.channel.OtaviaChannelPipeline.*
-import io.otavia.core.util.ActorLogger
+import io.otavia.core.channel.estimator.{MessageSizeEstimator, ReadBufferAllocator}
+import io.otavia.core.util.{ActorLogger, ClassUtils}
 
 import java.net.SocketAddress
 import scala.collection.mutable
@@ -145,7 +147,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         ctx.callHandlerRemoved()
     } catch {
         case t: Throwable =>
-            val handlerName = ctx.handler.getClass().getName()
+            val handlerName = ctx.handler.getClass.getName
             fireChannelExceptionCaught(
               new RuntimeException(s"${handlerName}.handlerRemoved() has thrown an exception.", t)
             )
@@ -164,7 +166,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         // It's not very likely for a user to put more than one handler of the same type, but make sure to avoid
         // any name conflicts.  Note that we don't cache the names generated here.
         if (context(name).nonEmpty) {
-            val baseName          = name.substring(0, name.length - 1) // Strip the trailing '0'.
+            val baseName          = name.substring(0, name.length - 1).nn // Strip the trailing '0'.
             var i: Int            = 1
             var continue: Boolean = true
             while (continue) {
@@ -708,6 +710,8 @@ object OtaviaChannelPipeline {
         override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit =
             ctx.pipeline.channel.onInboundMessage(msg)
 
+        override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit =
+            ctx.pipeline.channel.onInboundMessage(msg, msgId)
         override def channelReadComplete(ctx: ChannelHandlerContext): Unit = {} // Just swallow event
 
     }
@@ -719,13 +723,13 @@ object OtaviaChannelPipeline {
     private val TAIL_HANDLER = new TailHandler
 
     final val DEFAULT_READ_BUFFER_ALLOCATOR: ReadBufferAllocator =
-        (allocator: BufferAllocator, estimatedCapacity: Int) => allocator.allocate(estimatedCapacity)
+        (allocator: BufferAllocator, estimatedCapacity: Int) => allocator.allocate(estimatedCapacity).nn
 
-    private def generateName0(handlerType: Class[_]) = StringUtil.simpleClassName(handlerType) + "#0"
+    private def generateName0(handlerType: Class[_]) = ClassUtils.simpleClassName(handlerType) + "#0"
 
-    private final val nameCaches: FastThreadLocal[collection.mutable.HashMap[Class[?], String]] =
-        new FastThreadLocal[mutable.HashMap[Class[_], String]] {
-            override def initialValue(): mutable.HashMap[Class[_], String] = collection.mutable.HashMap.empty
+    private final val nameCaches: ActorThreadLocal[collection.mutable.HashMap[Class[?], String]] =
+        new ActorThreadLocal[mutable.HashMap[Class[_], String]] {
+            override protected def initialValue(): mutable.HashMap[Class[_], String] = collection.mutable.HashMap.empty
         }
 
     private def checkMultiplicity(handler: ChannelHandler): Unit = handler match {

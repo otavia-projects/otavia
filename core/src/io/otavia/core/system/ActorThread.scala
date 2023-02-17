@@ -18,8 +18,42 @@ package io.otavia.core.system
 
 import io.otavia.core.actor.Actor
 
-class ActorThread(private[core] val system: ActorSystem, val index: Int, parent: ActorThreadPool)
-    extends Thread(s"otavia-worker-$index") {
+import scala.collection.mutable
+
+class ActorThread(private[core] val system: ActorSystem, val parent: ActorThreadPool) extends Thread() {
+
+    private val id = parent.nextThreadId()
+
+    setName(s"otavia-actor-thread-$index")
+
+    private val channelLaterTasks: mutable.ArrayDeque[Runnable] = mutable.ArrayDeque.empty
+
+    def index: Int = id
 
     private[core] def currentRunningActor(): Actor[?] = ???
+
+    def laterTasks: mutable.ArrayDeque[Runnable] = channelLaterTasks
+
+    def cleanChannelTask(): Unit = if (channelLaterTasks.nonEmpty) {
+        // TODO: log warn
+        channelLaterTasks.clear()
+    }
+
+}
+
+object ActorThread {
+
+    /** Returns a reference to the currently executing [[ActorThread]] object.
+     *
+     *  @return
+     *    the currently executing thread.
+     */
+    def currentThread(): ActorThread = Thread.currentThread().asInstanceOf[ActorThread]
+
+    /** Returns the [[ActorThread.index]] of the currently executing [[ActorThread]] object.
+     *  @return
+     *    [[ActorThread]] index
+     */
+    def currentThreadIndex: Int = currentThread().index
+
 }

@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.channel.estimator
 
 import io.netty5.buffer.{Buffer, BufferAllocator}
+import io.otavia.core.channel.ChannelOutboundInvoker
 
 /** Implementations of this interface can influence how [[Buffer]]s are allocated that are used when reading from the
  *  transport.
@@ -33,8 +34,8 @@ object ReadBufferAllocator {
      *    a [[ReadBufferAllocator]].
      */
     def exact(numBytes: Int): ReadBufferAllocator = (allocator: BufferAllocator, estimatedCapacity: Int) => {
-        val buffer = allocator.allocate(numBytes)
-        if (numBytes != buffer.writableBytes()) buffer.split(buffer.writerOffset() + numBytes) else buffer
+        val buffer = allocator.allocate(numBytes).nn
+        if (numBytes != buffer.writableBytes()) buffer.split(buffer.writerOffset() + numBytes).nn else buffer
     }
 }
 

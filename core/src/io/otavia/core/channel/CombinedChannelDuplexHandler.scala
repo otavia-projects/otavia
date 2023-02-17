@@ -19,7 +19,8 @@
 package io.otavia.core.channel
 
 import io.otavia.core.channel.CombinedChannelDuplexHandler.*
-import io.otavia.core.channel.internal.DelegatingChannelHandlerContext
+import io.otavia.core.channel.estimator.ReadBufferAllocator
+import io.otavia.core.channel.internal.{ChannelHandlerMask, DelegatingChannelHandlerContext}
 
 /** Combines the inbound handling of one [[ChannelHandler]] with the outbound handling of another [[ChannelHandler]]. */
 class CombinedChannelDuplexHandler[I <: ChannelHandler, O <: ChannelHandler] extends ChannelHandlerAdapter {

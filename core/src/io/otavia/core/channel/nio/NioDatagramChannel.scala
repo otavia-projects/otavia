@@ -23,8 +23,11 @@ import io.netty5.util.internal.SocketUtils
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*
 import io.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
+import io.otavia.core.channel.estimator.{FixedReadHandleFactory, MaxMessagesWriteHandleFactory}
+import io.otavia.core.channel.internal.{ReadSink, WriteSink}
 import io.otavia.core.channel.socket.DatagramChannel
 import io.otavia.core.channel.socket.SocketProtocolFamily.*
+import io.otavia.core.channel.udp.AddressedEnvelope
 
 import java.net.{InetAddress, NetworkInterface, ProtocolFamily, SocketAddress}
 import java.nio.channels.{SelectableChannel, SelectionKey, DatagramChannel as JDatagramChannel}
@@ -62,7 +65,7 @@ class NioDatagramChannel(socket: JDatagramChannel, protocolFamily: ProtocolFamil
     @volatile private var outputShutdown = false
 
     @volatile private var activeOnOpen = false
-    @volatile private var bound        = false
+    bound = false
 
     private var unresolvedRemote: SocketAddress | Null = null
     private var unresolvedLocal: SocketAddress | Null  = null
@@ -116,7 +119,7 @@ class NioDatagramChannel(socket: JDatagramChannel, protocolFamily: ProtocolFamil
         bound = true
     }
 
-    override protected def doConnect(initialData: Buffer): Boolean = {
+    override protected def doConnect(initialData: Buffer | Null): Boolean = {
 //        if (local.nonEmpty) doBind(local.get)
 
         ???

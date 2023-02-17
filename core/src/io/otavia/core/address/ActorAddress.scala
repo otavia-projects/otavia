@@ -16,7 +16,7 @@
 
 package io.otavia.core.address
 
-import io.otavia.core.actor.{Actor, NormalActor}
+import io.otavia.core.actor.{Actor, StateActor}
 import io.otavia.core.house.ActorHouse
 import io.otavia.core.message.{Ask, Message, Notice, Reply}
 import io.otavia.core.stack.ReplyWaiter

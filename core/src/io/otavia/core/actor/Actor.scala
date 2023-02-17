@@ -28,7 +28,7 @@ import io.otavia.core.util.TimerService
 import scala.reflect.{ClassTag, TypeTest, classTag}
 
 /** base class of IO & Actor model, it has two subclass
- *    1. [[io.otavia.core.actor.NormalActor]]: general actor
+ *    1. [[io.otavia.core.actor.StateActor]]: general actor
  *    1. [[io.otavia.core.actor.ChannelsActor]]: socket group, a actor which can handle io event
  *
  *  @tparam M
@@ -130,7 +130,7 @@ trait Actor[M <: Ask[?] | Notice] {
      *  implement this method, the actor will dead.
      */
     def restart(): Unit =
-        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
+        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
 
     /** Actor system call this method after call restart */
     def afterRestart(): Unit = {}

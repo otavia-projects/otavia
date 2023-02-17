@@ -1,8 +1,6 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
- * This file fork from netty.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,23 +14,28 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.channel.estimator
 
-import io.otavia.core.channel.FixedReadHandleFactory.ReadHandleImpl
-
-/** The [[ReadHandleFactory]] that always yields the same buffer size prediction. This handle ignores the feedback from
- *  the I/O thread.
- */
-class FixedReadHandleFactory(val bufferSize: Int, maxMessagesPerRead: Int = 1)
-    extends MaxMessagesReadHandleFactory(maxMessagesPerRead) {
+class ReadSinkReadHandleFactory extends MaxMessagesReadHandleFactory {
     override protected def newMaxMessageHandle(
         maxMessagesPerRead: Int
-    ): MaxMessagesReadHandleFactory.MaxMessageReadHandle = new ReadHandleImpl(maxMessagesPerRead, bufferSize)
+    ): MaxMessagesReadHandleFactory.MaxMessageReadHandle = {
+
+        ???
+    }
 }
 
-object FixedReadHandleFactory {
-    private class ReadHandleImpl(maxMessagesPerRead: Int, bufferSize: Int)
+object ReadSinkReadHandleFactory {
+    protected final class ReadSinkReadHandle(maxMessagesPerRead: Int)
         extends MaxMessagesReadHandleFactory.MaxMessageReadHandle(maxMessagesPerRead) {
-        override def estimatedBufferCapacity: Int = bufferSize
+
+        override def estimatedBufferCapacity: Int = ???
+
+        override def lastRead(attemptedBytesRead: Int, actualBytesRead: Int, numMessagesRead: Int): Boolean = {
+            ???
+        }
+
+        override def readComplete(): Unit = {}
+
     }
 }

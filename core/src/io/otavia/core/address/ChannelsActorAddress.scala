@@ -16,7 +16,7 @@
 
 package io.otavia.core.address
 
-import io.otavia.core.actor.NormalActor
+import io.otavia.core.actor.StateActor
 import io.otavia.core.house.ChannelsActorHouse
 import io.otavia.core.message.{Ask, Message, Notice, Reply}
 import io.otavia.core.reactor.Event

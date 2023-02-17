@@ -24,6 +24,7 @@ import io.otavia.core.reactor.*
 import io.otavia.core.stack.*
 import io.otavia.core.system.ActorThread
 import io.otavia.core.timer.Timer
+import io.otavia.core.util.ActorLogger
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 import java.nio.channels.SelectionKey
@@ -31,7 +32,9 @@ import java.util.concurrent.CancellationException
 import scala.reflect.ClassTag
 import scala.util.*
 
-abstract class ChannelsActor[M <: Ask[?] | Notice] extends Actor[M] {
+abstract class ChannelsActor[M <: Ask[?] | Notice] extends AbstractActor[M] {
+
+    protected val logger: ActorLogger = ActorLogger.getLogger(this.getClass)
 
     override def self: ChannelsActorAddress[M] = super.self.asInstanceOf[ChannelsActorAddress[M]]
 
@@ -103,17 +106,17 @@ abstract class ChannelsActor[M <: Ask[?] | Notice] extends Actor[M] {
     }
 
     def continueAsk(state: M & Ask[?] | AskFrame): Option[StackState] = throw new NotImplementedError(
-      getClass.getName + ": an implementation is missing"
+      getClass.getName.nn + ": an implementation is missing"
     )
     def continueNotice(state: M & Notice | NoticeFrame): Option[StackState] = throw new NotImplementedError(
-      getClass.getName + ": an implementation is missing"
+      getClass.getName.nn + ": an implementation is missing"
     )
     def continueReply(state: M & Reply): Option[StackState] = throw new NotImplementedError(
-      getClass.getName + ": an implementation is missing"
+      getClass.getName.nn + ": an implementation is missing"
     )
     def continueChannelMessage(msg: AnyRef | ChannelFrame): Option[StackState]
 
-    val handler: Option[ChannelHandler] = None
+    val handler: Option[ChannelInitializer[? <: Channel]] = None
 
     /** Initial and register a channel for this [[ChannelsActor]]. It do the flowing things:
      *    1. Create the [[Channel]].

@@ -21,6 +21,7 @@ package io.otavia.core.channel.internal
 import io.netty5.buffer.BufferAllocator
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*
+import io.otavia.core.channel.estimator.ReadBufferAllocator
 
 abstract class DelegatingChannelHandlerContext(private val ctx: ChannelHandlerContext) extends ChannelHandlerContext {
 
@@ -104,8 +105,6 @@ abstract class DelegatingChannelHandlerContext(private val ctx: ChannelHandlerCo
     override def sendOutboundEvent(event: AnyRef): Unit = ctx.sendOutboundEvent(event)
 
     override def pipeline: ChannelPipeline = ctx.pipeline
-
-    override def bufferAllocator(): BufferAllocator = ctx.bufferAllocator()
 
     override def bind(): Unit = ctx.bind()
 

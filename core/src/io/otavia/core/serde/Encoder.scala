@@ -18,7 +18,7 @@ package io.otavia.core.serde
 
 import io.netty5.buffer.Buffer
 
-trait Encoder[T] {
+trait Encoder[T <: AnyRef] {
     def format: Codec.SerdeFormat
     def encode(obj: T, buffer: Buffer): Unit
     def write(obj: Any, buffer: Buffer): Unit = encode(obj.asInstanceOf[T], buffer)

@@ -18,6 +18,8 @@
 
 package io.otavia.core.channel
 
+import io.otavia.core.channel.estimator.ReadBufferAllocator
+
 import java.net.SocketAddress
 
 /** Handles an I/O event or intercepts an I/O operation, and forwards it to its next handler in its [[ChannelPipeline]].
@@ -92,6 +94,10 @@ trait ChannelHandler {
     /** Invoked when the current [[Channel]] has read a message from the peer. */
     @throws[Exception]
     def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = ctx.fireChannelRead(msg)
+
+    /** Invoked when the current [[Channel]] has read a message from the peer. */
+    @throws[Exception]
+    def channelRead(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit = ctx.fireChannelRead(msg, msgId)
 
     /** Invoked when the last message read by the current read operation has been consumed by [[channelRead]]. If
      *  [[ChannelOption.AUTO_READ]] is off, no further attempt to read an inbound data from the current [[Channel]] will

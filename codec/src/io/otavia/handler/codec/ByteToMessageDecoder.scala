@@ -69,14 +69,14 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
 
     def this() = this(COMPOSITE_CUMULATOR)
 
-    private def singleDecode_=(value: Boolean): Unit = set(0, value)
-    private def singleDecode: Boolean                = get(0)
+    private def singleDecode_=(value: Boolean): Unit = setAt(0, value)
+    private def singleDecode: Boolean                = getAt(0)
 
-    private def first_=(value: Boolean): Unit = set(1, value)
-    private def first: Boolean                = get(1)
+    private def first_=(value: Boolean): Unit = setAt(1, value)
+    private def first: Boolean                = getAt(1)
 
-    private def firedChannelRead_=(value: Boolean): Unit = set(2, value)
-    private def firedChannelRead: Boolean                = get(2)
+    private def firedChannelRead_=(value: Boolean): Unit = setAt(2, value)
+    private def firedChannelRead: Boolean                = getAt(2)
 
     private def discardAfterReads = 16
 
@@ -148,7 +148,7 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
         case buffer: Buffer =>
             first = accumulation == null
             if (first) accumulation = buffer
-            else accumulation = cumulator.cumulate(ctx.bufferAllocator(), accumulation.nn, buffer)
+            else accumulation = cumulator.cumulate(ctx.directAllocator(), accumulation.nn, buffer)
             try {
                 assertContext(ctx)
                 callDecode(context, accumulation.nn)
@@ -224,7 +224,7 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
     @throws[Exception]
     def channelInputClosed(ctx: ByteToMessageDecoderContext): Unit = accumulation match
         case null: Null =>
-            val buffer = ctx.bufferAllocator().allocate(0)
+            val buffer = ctx.directAllocator().allocate(0)
             decodeLast(ctx, buffer)
             buffer.close()
         case buffer: Buffer =>
@@ -236,7 +236,7 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
                 // See https://github.com/netty/netty/issues/10802.
                 accumulation match
                     case null: Null =>
-                        val buffer = ctx.bufferAllocator().allocate(0)
+                        val buffer = ctx.directAllocator().allocate(0)
                         decodeLast(ctx, buffer)
                         buffer.close()
                     case _ => decodeLast(ctx, buffer)

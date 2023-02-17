@@ -25,28 +25,28 @@ trait Chainable {
     /** Set the next object of this object. */
     def next_=(chainable: Chainable): Unit = n = chainable
 
+    def cleanNext(): Unit = n = null
+
     /** Get the next object of this object. */
     def next: Chainable | Null = n
 
     /** Set the pre object of this object. */
     def pre_=(chainable: Chainable): Unit = p = chainable
 
+    def cleanPre(): Unit = p = null
+
     /** Get the pre object of this object. */
     def pre: Chainable | Null = p
-
-    /** Append [[chainable]] object to the tail of this chain. */
-    def append(chainable: Chainable): Unit = {
-        var cursor = this
-        while (!cursor.isTail) {
-            cursor = cursor.next
-        }
-        cursor.next = chainable
-    }
 
     /** `true` if this object is at tail of a chain. */
     def isTail: Boolean = n == null
 
     /** `true` if this object is at head of a chain. */
     def isHead: Boolean = p == null
+
+    def dechain(): Unit = {
+        p = null
+        n = null
+    }
 
 }

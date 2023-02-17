@@ -16,10 +16,10 @@
 
 package io.otavia.core.house
 
-import io.otavia.core.actor.NormalActor
+import io.otavia.core.actor.StateActor
 import io.otavia.core.message.{Ask, Message, Notice, Reply}
 
-/** House is [[io.otavia.core.actor.NormalActor]] instance mount point. when a actor is creating by actor system, a
+/** House is [[io.otavia.core.actor.StateActor]] instance mount point. when a actor is creating by actor system, a
  *  house is creating at the same time, and mount the actor instance to the house instance.
  *
  *  @tparam M
@@ -27,9 +27,9 @@ import io.otavia.core.message.{Ask, Message, Notice, Reply}
  */
 private[core] class ActorHouse extends House {
 
-    def setActor(actor: NormalActor[?]): Unit = dweller = actor
+    def setActor(actor: StateActor[?]): Unit = dweller = actor
 
-    def actor: NormalActor[?] = this.dweller.asInstanceOf[NormalActor[?]]
+    def actor: StateActor[?] = this.dweller.asInstanceOf[StateActor[?]]
 
     override def putNotice(notice: Notice): Unit = {}
 

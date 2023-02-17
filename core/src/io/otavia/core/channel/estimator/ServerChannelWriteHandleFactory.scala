@@ -16,22 +16,23 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.socket
+package io.otavia.core.channel.estimator
 
-import io.netty5.buffer.Buffer
-import io.otavia.core.channel.udp.BufferAddressedEnvelope
+import io.otavia.core.channel.Channel
+import io.otavia.core.channel.estimator.ServerChannelWriteHandleFactory.HANDLE
 
-import java.net.SocketAddress
+class ServerChannelWriteHandleFactory extends WriteHandleFactory {
+    override def newHandle(channel: Channel): WriteHandleFactory.WriteHandle = HANDLE
+}
 
-/** The message container that is used for [[DatagramChannel]] to communicate with the remote peer. */
-class DatagramPacket(message: Buffer, recipient: SocketAddress, sender: Option[SocketAddress] = None)
-    extends BufferAddressedEnvelope[SocketAddress, DatagramPacket](message, recipient, sender) {
+object ServerChannelWriteHandleFactory {
+    private val HANDLE: WriteHandleFactory.WriteHandle = new WriteHandleFactory.WriteHandle {
 
-    override def replace(content: Buffer): DatagramPacket = new DatagramPacket(content, recipient, sender)
+        override def lastWrite(attemptedBytesWrite: Long, actualBytesWrite: Long, numMessagesWrite: Int): Boolean =
+            false
 
-    override def touch(hint: Any): DatagramPacket = {
-        super.touch(hint)
-        this
+        override def writeComplete(): Unit = {}
+
     }
 
 }

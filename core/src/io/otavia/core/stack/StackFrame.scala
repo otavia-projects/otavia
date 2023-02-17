@@ -19,14 +19,17 @@ package io.otavia.core.stack
 import io.otavia.core.message.{Ask, Message, Notice, Reply}
 import io.otavia.core.stack.AsksFrame.ReturnType
 
-final class ChannelFrame(initialState: StackState, val msgId: Long) {
-    protected var stackState: StackState = initialState
-    def state: StackState                = stackState
-    private var r: AnyRef                = _
-    private[core] var pre: ChannelFrame  = null
-    private[core] var next: ChannelFrame = null
+final class ChannelFrame(initialState: StackState | Null, val msgId: Long) {
 
-    final private[core] def nextState(stackState: StackState): Unit = this.stackState = stackState
+    private var stackState: StackState | Null = initialState
+
+    private var r: AnyRef | Null                = null
+    private[core] var pre: ChannelFrame | Null  = null
+    private[core] var next: ChannelFrame | Null = null
+
+    def state: StackState = stackState.nn
+
+    private[core] def nextState(stackState: StackState): Unit = this.stackState = stackState
 
     def `return`(reply: AnyRef): None.type = {
         r = reply
@@ -34,13 +37,14 @@ final class ChannelFrame(initialState: StackState, val msgId: Long) {
     }
 
     def `return`(): None.type = {
-        r = None
+        r = null
         None
     }
 
 }
 
-sealed abstract class StackFrame(initialState: StackState) {
+sealed abstract class StackFrame(initialState: StackState | Null) {
+
     protected var stackState: StackState = initialState
     protected var error: Boolean         = false
 
@@ -58,46 +62,54 @@ sealed abstract class StackFrame(initialState: StackState) {
     protected[core] def thrown: Boolean  = error
 
     def isCompleted: Boolean
+
 }
 
-sealed abstract class NoReturnFrame(initialState: StackState) extends StackFrame(initialState) {
+sealed abstract class NoReturnFrame(initialState: StackState | Null) extends StackFrame(initialState) {
+
     private var completed: Boolean = false
 
     override def `return`(): Unit = completed = true
 
     override def isCompleted: Boolean = completed
+
 }
 
-final class NoticeFrame private[core] (val notice: Notice, initialState: StackState = null)
+final class NoticeFrame private[core] (val notice: Notice, initialState: StackState | Null = null)
     extends NoReturnFrame(initialState) {
     override def call: Notice = notice
 }
 
-final class NoticesFrame private[core] (val notices: Seq[Notice], initialState: StackState = null)
+final class NoticesFrame private[core] (val notices: Seq[Notice], initialState: StackState | Null = null)
     extends NoReturnFrame(initialState) {
     override def call: Seq[Notice] = notices
 }
 
-sealed abstract class ReturnFrame(initialState: StackState) extends StackFrame(initialState) {
-    protected var r: Reply = _
+sealed abstract class ReturnFrame(initialState: StackState | Null) extends StackFrame(initialState) {
+
+    protected var r: Reply | Null = _
 
     def isCompleted: Boolean = r != null
 
-    def reply: Reply = r
+    def reply: Reply = r.nn
+
 }
 
-final class AskFrame private[core] (val ask: Ask[?], initialState: StackState = null)
+final class AskFrame private[core] (val ask: Ask[?], initialState: StackState | Null = null)
     extends ReturnFrame(initialState) {
+
     override def call: Ask[?] = ask
     override def `return`(reply: Reply): None.type = {
         reply.setReplyId(ask.id)
         this.r = reply
         None
     }
+
 }
 
-final class AsksFrame private[core] (val asks: Seq[Ask[?]], initialState: StackState = null)
+final class AsksFrame private[core] (val asks: Seq[Ask[?]], initialState: StackState | Null = null)
     extends ReturnFrame(initialState) {
+
     var returnType: AsksFrame.ReturnType = _
     override def call: Seq[Ask[?]]       = asks
     override def `return`(reply: Reply): None.type = {
@@ -113,7 +125,9 @@ final class AsksFrame private[core] (val asks: Seq[Ask[?]], initialState: StackS
 
 object AsksFrame {
     enum ReturnType {
+
         case ALL_FOR_ONE
         case ONE_BY_ONE
+
     }
 }

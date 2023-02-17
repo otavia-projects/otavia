@@ -18,7 +18,8 @@ package io.otavia.core.actor
 
 import io.otavia.core.channel.Channel
 import io.otavia.core.message.*
-import io.otavia.core.reactor.{Reactor, ReactorEvent, RegisterReplyEvent}
+import io.otavia.core.reactor.{Reactor, ReactorEvent}
+import io.otavia.core.util.ActorLogger
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 import java.nio.channels.SelectionKey
@@ -26,8 +27,9 @@ import scala.reflect.ClassTag
 
 abstract class ClientChannelsActor[M <: Ask[?] | Notice] extends ChannelsActor[M] {
 
-    protected def connect(host: String, port: Int): Channel = connect(InetSocketAddress.createUnresolved(host, port))
-    protected def connect(host: InetAddress, port: Int): Channel = connect(new InetSocketAddress(host, port))
+    protected def connect(host: String, port: Int): Unit = connect(InetSocketAddress.createUnresolved(host, port).nn)
+
+    protected def connect(host: InetAddress, port: Int): Unit = connect(new InetSocketAddress(host, port))
 
     /** Request to connect to the given [[SocketAddress]]. This method return a channel which is not connected to the
      *  remote address, it only register this channel to [[Reactor]], when register operation completes, this actor will
@@ -39,33 +41,34 @@ abstract class ClientChannelsActor[M <: Ask[?] | Notice] extends ChannelsActor[M
      *  @return
      *    a channel which is registering to [[Reactor]].
      */
-    protected def connect(remoteAddress: SocketAddress): Channel = {
+    protected def connect(remoteAddress: SocketAddress): Unit = {
         val channel = initAndRegister()
         channel.setUnresolvedRemoteAddress(remoteAddress)
-        channel
     }
 
     override protected def newChannel(): Channel = system.channelFactory.newChannel(this)
 
-    override def init(channel: Channel): Unit = ???
+    override def init(channel: Channel): Unit = {
+        handler match
+            case Some(h) => channel.pipeline.addLast(h)
+            case None    => logger.logWarn(s"The channel $channel is not add any handler!")
+    }
 
     override protected def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {
         super.handleChannelRegisterReplyEvent(event)
-        event.channel.connect()
+        try {
+            event.channel.connect()
+            finshConnect(event.channel)
+        } catch {
+            case e: Throwable => event.channel.close()
+        }
     }
+
+    protected def finshConnect(channel: Channel): Unit = {}
 
     protected def disconnect(channel: Channel): Unit = {
         channel.pipeline.disconnect()
     }
-
-//    private[core] override def receiveRegisterReply(event: RegisterReplyEvent): Unit = if (event.succeed) {
-//        event.channel.pipeline.fireChannelRegistered()
-//        val key: SelectionKey = ??? // event.channel.unsafe.selectionKey()
-//        key.interestOps(key.interestOps() | SelectionKey.OP_CONNECT)
-//        event.channel.pipeline.connect(event.channel.remoteAddress.get)
-//    } else {
-//        // close channel
-//    }
 
 }
 
@@ -75,7 +78,7 @@ object ClientChannelsActor {
     object Connect {
 
         def apply(host: String, port: Int)(using IdAllocator: IdAllocator): Connect = Connect(
-          InetSocketAddress.createUnresolved(host, port)
+          InetSocketAddress.createUnresolved(host, port).nn
         )
         def apply(host: InetAddress, port: Int)(using IdAllocator): Connect = Connect(new InetSocketAddress(host, port))
 

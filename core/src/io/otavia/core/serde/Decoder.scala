@@ -18,8 +18,10 @@ package io.otavia.core.serde
 
 import io.netty5.buffer.Buffer
 
-trait Decoder[T] {
+trait Decoder[T <: AnyRef] {
+
     def format: Codec.SerdeFormat
-    def decode(buffer: Buffer): T
-    def read(buffer: Buffer): Any = decode(buffer)
+    def decode(buffer: Buffer): T | Null
+    def read(buffer: Buffer): AnyRef | Null = decode(buffer)
+
 }

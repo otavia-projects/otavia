@@ -18,6 +18,7 @@ package io.otavia.core.reactor
 
 import io.netty5.util.internal.SystemPropertyUtil
 import io.otavia.core.channel.Channel
+import io.otavia.core.system.ActorSystem
 
 /** [[Reactor]] is an io event generator for [[Channel]]. */
 trait Reactor {
@@ -38,7 +39,6 @@ trait Reactor {
 
 object Reactor {
 
-    val DEFAULT_MAX_TASKS_PER_RUN: Int =
-        Math.max(1, SystemPropertyUtil.getInt("io.otavia.reactor.maxTaskPerRun", 1024 * 4))
+    val DEFAULT_MAX_TASKS_PER_RUN: Int = ActorSystem.DEFAULT_MAX_TASKS_PER_RUN
 
 }

@@ -24,7 +24,7 @@ import io.otavia.core.util.Logging
 
 import scala.reflect.ClassTag
 
-abstract class NormalActor[M <: Ask[?] | Notice] extends Actor[M], Logging {
+abstract class StateActor[M <: Ask[?] | Notice] extends AbstractActor[M], Logging {
 
     /** self address of this actor instance
      *
@@ -42,7 +42,7 @@ abstract class NormalActor[M <: Ask[?] | Notice] extends Actor[M], Logging {
     private[core] var currentIsBatch: Boolean                                              = false
 
     /** current stack frame for running ask or notice message */
-    private[core] var currentFrame: StackFrame = _
+    private[core] var currentFrame: StackFrame | Null = _
 
     /** user actor override this to control whether restart when occur exception */
     val noticeExceptionStrategy: ExceptionStrategy = ExceptionStrategy.Restart
@@ -82,7 +82,7 @@ abstract class NormalActor[M <: Ask[?] | Notice] extends Actor[M], Logging {
      *  @return
      *    current stack frame
      */
-    private[core] def getOrCreateCurrentFrame(): StackFrame = if (currentIsReply) currentFrame
+    private[core] def getOrCreateCurrentFrame(): StackFrame = if (currentIsReply) currentFrame.nn
     else {
         currentFrame = currentReceived match
             case ask: Ask[?]                        => new AskFrame(ask)
@@ -90,7 +90,7 @@ abstract class NormalActor[M <: Ask[?] | Notice] extends Actor[M], Logging {
             case asks: Seq[?] if currentIsAsk       => new AsksFrame(asks.asInstanceOf[Seq[Ask[?]]])
             case notices: Seq[?] if currentIsNotice => new NoticesFrame(notices.asInstanceOf[Seq[Notice]])
             case _                                  => throw new IllegalStateException("")
-        currentFrame
+        currentFrame.nn
     }
 
     /** when this actor send ask message to other actor, a [[ReplyWaiter]] will attach to current stack frame
@@ -114,7 +114,7 @@ abstract class NormalActor[M <: Ask[?] | Notice] extends Actor[M], Logging {
     private[core] def handleNoticeException(e: Throwable): Unit = {
         val log =
             if (currentFrame != null)
-                s"StackFrame with call message ${currentFrame.call} failed at handle ${currentReceived} message"
+                s"StackFrame with call message ${currentFrame.nn.call} failed at handle ${currentReceived} message"
             else s"failed at handle ${currentReceived} message"
         noticeExceptionStrategy match
             case ExceptionStrategy.Restart =>
@@ -143,11 +143,11 @@ abstract class NormalActor[M <: Ask[?] | Notice] extends Actor[M], Logging {
         setCurrentNotice(notice)
         try {
             continueNotice(notice.asInstanceOf[M & Notice]) match
-                case Some(state) => currentFrame.nextState(state) // resume the frame by continueNotice
+                case Some(state) => currentFrame.nn.nextState(state) // resume the frame by continueNotice
                 case None        =>
         } catch {
             case e: Exception =>
-                if (currentFrame != null) currentFrame.setError() // mark this frame is errored to ignore reply message
+                if (currentFrame != null) currentFrame.nn.setError() // mark this frame is errored to ignore reply message
                 handleNoticeException(e)
         }
     }
@@ -161,11 +161,11 @@ abstract class NormalActor[M <: Ask[?] | Notice] extends Actor[M], Logging {
         setCurrentAsk(ask)
         try {
             continueAsk(ask.asInstanceOf[M & Ask[?]]) match
-                case Some(state) => currentFrame.nextState(state) // resume the frame by continueAsk
+                case Some(state) => currentFrame.nn.nextState(state) // resume the frame by continueAsk
                 case None        =>                               // user code directly return reply message to sender
         } catch {
             case e: Exception =>
-                if (currentFrame != null) currentFrame.setError() // mark this frame is errored to ignore reply message
+                if (currentFrame != null) currentFrame.nn.setError() // mark this frame is errored to ignore reply message
                 ask.throws(ExceptionMessage(e))
         }
     }
@@ -189,14 +189,14 @@ abstract class NormalActor[M <: Ask[?] | Notice] extends Actor[M], Logging {
                     case exceptionWaiter: ExceptionWaiter[_] =>
                         exceptionWaiter.receive(reply)
                     case _ =>
-                        currentFrame.setError()
+                        currentFrame.nn.setError()
                         currentFrame match
                             case askFrame: AskFrame => askFrame.ask.throws(ExceptionMessage(message.cause))
                             case _: NoticeFrame     => handleNoticeException(message.cause)
                             case _                  =>
             case _ => waiter.receive(reply)
         }
-        if (!currentFrame.thrown && currentFrame.state.resumable()) continue()
+        if (!currentFrame.nn.thrown && currentFrame.nn.state.resumable()) continue()
     }
 
     /** continue running current stack frame to next state */
@@ -206,14 +206,14 @@ abstract class NormalActor[M <: Ask[?] | Notice] extends Actor[M], Logging {
             case noticeFrame: NoticeFrame => continueNotice(noticeFrame)
             case _                        => None
         next match
-            case Some(state) => currentFrame.nextState(state)
+            case Some(state) => currentFrame.nn.nextState(state)
             case None =>
                 currentFrame match
                     case askFrame: AskFrame => askFrame.ask.replyInternal(askFrame.reply)
                     case _                  => ()
     } catch {
         case e: Exception =>
-            currentFrame.setError()
+            currentFrame.nn.setError()
             currentFrame match
                 case askFrame: AskFrame => askFrame.ask.throws(ExceptionMessage(e))
                 case _: NoticeFrame     => handleNoticeException(e)
@@ -243,12 +243,12 @@ abstract class NormalActor[M <: Ask[?] | Notice] extends Actor[M], Logging {
         setCurrentNotices(notices)
         try {
             batchContinueNotice(notices.asInstanceOf[Seq[M & Notice]]) match
-                case Some(state) => currentFrame.nextState(state)
+                case Some(state) => currentFrame.nn.nextState(state)
                 case None        =>
         } catch {
             case _: NotImplementedError => notices.foreach(notice => receiveNotice(notice.asInstanceOf[M & Notice]))
             case e: Exception =>
-                if (currentFrame != null) currentFrame.setError() // mark this frame is errored to ignore reply message
+                if (currentFrame != null) currentFrame.nn.setError() // mark this frame is errored to ignore reply message
                 handleNoticeException(e)
         }
     }
@@ -257,21 +257,21 @@ abstract class NormalActor[M <: Ask[?] | Notice] extends Actor[M], Logging {
         setCurrentAsks(asks)
         try {
             batchContinueAsk(asks.asInstanceOf[Seq[M & Ask[?]]]) match
-                case Some(state) => currentFrame.nextState(state)
+                case Some(state) => currentFrame.nn.nextState(state)
                 case None        =>
         } catch {
             case _: NotImplementedError => asks.foreach(notice => receiveAsk(notice.asInstanceOf[M & Ask[?]]))
             case e: Exception =>
-                if (currentFrame != null) currentFrame.setError() // mark this frame is errored to ignore reply message
+                if (currentFrame != null) currentFrame.nn.setError() // mark this frame is errored to ignore reply message
             //        ask.reply(ExceptionMessage(e))
         }
     }
 
     def batchContinueNotice(notices: Seq[M & Notice]): Option[StackState] =
-        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
+        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
 
     def batchContinueAsk(asks: Seq[M & Ask[?]]): Option[StackState] =
-        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
+        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
 
     /** implement this method to handle ask message and resume when received reply message for this notice message
      *
@@ -282,7 +282,7 @@ abstract class NormalActor[M <: Ask[?] | Notice] extends Actor[M], Logging {
      *    frame has finished.
      */
     def continueAsk(state: M & Ask[?] | AskFrame): Option[StackState] =
-        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
+        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
 
     /** implement this method to handle notice message and resume when received reply message for this notice message
      *
@@ -293,9 +293,9 @@ abstract class NormalActor[M <: Ask[?] | Notice] extends Actor[M], Logging {
      *    frame has finished.
      */
     def continueNotice(state: M & Notice | NoticeFrame): Option[StackState] =
-        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
+        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
 
     def resumeMerge(frames: Seq[StackFrame]): Seq[Option[StackState]] =
-        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
+        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
 
 }

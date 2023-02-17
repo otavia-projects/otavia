@@ -21,8 +21,10 @@ package io.otavia.core.channel
 import io.netty5.util.Resource
 import io.netty5.util.internal.{StringUtil, ThrowableUtil}
 import io.otavia.core.actor.ChannelsActor
-import io.otavia.core.channel.ChannelHandlerMask.*
+import io.otavia.core.channel.internal.ChannelHandlerMask.*
 import io.otavia.core.channel.OtaviaChannelHandlerContext.*
+import io.otavia.core.channel.estimator.ReadBufferAllocator
+import io.otavia.core.channel.internal.ChannelHandlerMask
 import io.otavia.core.util.ActorLogger
 
 import java.net.SocketAddress
@@ -220,9 +222,11 @@ final class OtaviaChannelHandlerContext(
         this
     }
 
-    private[channel] def invokeChannelTimeoutEvent(id: Long): ChannelHandlerContext = {
-        try handler.channelTimeoutEvent(id)
-        catch { case t: Throwable => invokeChannelExceptionCaught(t) }
+    private[channel] def invokeChannelTimeoutEvent(id: Long): Unit = {
+        try handler.channelTimeoutEvent(this, id)
+        catch {
+            case t: Throwable => invokeChannelExceptionCaught(t)
+        }
     }
 
     override def fireChannelRead(msg: AnyRef): ChannelHandlerContext = {

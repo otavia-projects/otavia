@@ -35,6 +35,7 @@ import java.nio.channels.{FileChannel, WritableByteChannel}
 class DefaultFileRegion(override val position: Long, override val count: Long)
     extends AbstractReferenceCounted
     with FileRegion {
+
     private var _transferred: Long               = 0L
     private var fileChannel: Option[FileChannel] = None
     private var file: Option[File]               = None
@@ -75,7 +76,7 @@ class DefaultFileRegion(override val position: Long, override val count: Long)
      */
     @throws[IOException]
     def open(): Unit =
-        if (!isOpen && refCnt() > 0) this.fileChannel = Some(new RandomAccessFile(file.get, "r").getChannel)
+        if (!isOpen && refCnt() > 0) this.fileChannel = Some(new RandomAccessFile(file.get, "r").getChannel.nn)
 
     override def deallocate(): Unit = fileChannel match
         case Some(value) =>

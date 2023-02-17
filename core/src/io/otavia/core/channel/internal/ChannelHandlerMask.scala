@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.channel.internal
 
 import io.netty5.util.concurrent.FastThreadLocal
+import io.otavia.core.channel.ChannelHandler
 
 import scala.collection.mutable
 

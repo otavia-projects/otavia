@@ -19,7 +19,8 @@
 package io.otavia.core.channel.nio
 
 import io.otavia.core.actor.ChannelsActor
-import io.otavia.core.channel.{AbstractChannel, Channel, ReadHandleFactory, WriteHandleFactory}
+import io.otavia.core.channel.estimator.{ReadHandleFactory, WriteHandleFactory}
+import io.otavia.core.channel.{AbstractChannel, Channel}
 import io.otavia.core.reactor.ReactorEvent
 
 import java.net.SocketAddress
@@ -149,15 +150,11 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
         ((selectionKey.interestOps() & SelectionKey.OP_WRITE) != 0)
     }
 
-    override protected def doRead(wasReadPendingAlready: Boolean): Unit = if (!wasReadPendingAlready) {
-        // Channel.read() or ChannelHandlerContext.read() was called
-        if (_selectionKey.nn.isValid()) {
-            val ops = selectionKey.nn.interestOps()
-            if ((ops & readInterestOp) == 0)
-                selectionKey.interestOps(ops | readInterestOp)
-        }
-    } else {
-        // We already had doRead(...) called before and so set the interestedOps.
+    // Channel.read() or ChannelHandlerContext.read() was called
+    override protected def doRead(): Unit = if (_selectionKey.nn.isValid()) {
+        val ops = selectionKey.nn.interestOps()
+        if ((ops & readInterestOp) == 0)
+            selectionKey.interestOps(ops | readInterestOp)
     }
 
     override protected def doClose(): Unit = javaChannel.close()

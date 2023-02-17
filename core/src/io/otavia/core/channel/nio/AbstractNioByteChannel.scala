@@ -21,6 +21,8 @@ package io.otavia.core.channel.nio
 import io.netty5.buffer.Buffer
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*
+import io.otavia.core.channel.estimator.{AdaptiveReadHandleFactory, WriteHandleFactory}
+import io.otavia.core.channel.internal.{ReadSink, WriteSink}
 
 import java.net.SocketAddress
 import java.nio.channels.{SelectableChannel, SelectionKey}
@@ -49,7 +51,15 @@ abstract class AbstractNioByteChannel[L <: SocketAddress, R <: SocketAddress](
       SelectionKey.OP_READ
     ) {
 
-    override final protected[channel] def doReadNow(readSink: ReadSink): Boolean = ???
+    override final protected[channel] def doReadNow(readSink: ReadSink): Boolean = {
+        val buffer = channelInboundBufferAccumulation
+        if (buffer.writableBytes() > 0) {
+            val accLast = buffer.writableBytes()
+            val read    = doReadBytes(buffer)
+
+        }
+        ???
+    }
 
     override protected def doWriteNow(writeSink: WriteSink): Unit = ???
 

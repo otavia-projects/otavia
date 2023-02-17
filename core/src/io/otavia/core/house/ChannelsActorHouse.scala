@@ -16,7 +16,7 @@
 
 package io.otavia.core.house
 
-import io.otavia.core.actor.{ChannelsActor, NormalActor}
+import io.otavia.core.actor.{ChannelsActor, StateActor}
 import io.otavia.core.message.{Ask, Message, Notice, Reply}
 
 /** [[ChannelsActorHouse]] is [[io.otavia.core.actor.ChannelsActor]] instance mount point. when a channel group is

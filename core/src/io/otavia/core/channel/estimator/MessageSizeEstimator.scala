@@ -16,24 +16,27 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.channel.estimator
 
-import io.netty5.buffer.Buffer
-
-/** Default [[MessageSizeEstimator]] implementation which supports the estimation of the size of [[Buffer]] and
- *  [[FileRegion]].
+/** Responsible to estimate the size of a message. The size represents approximately how much memory the message will
+ *  reserve in memory.
  */
-private object DefaultMessageSizeEstimator extends MessageSizeEstimator {
+object MessageSizeEstimator {
+    trait Handle {
 
-    private final val handle = new HandleImpl(8)
+        /** Calculate the size of the given message.
+         *
+         *  @param msg
+         *    The message for which the size should be calculated
+         *  @return
+         *    size The size in bytes. The returned size must be >= 0
+         */
+        def size(msg: AnyRef): Int
+    }
+}
+
+trait MessageSizeEstimator {
 
     /** Creates a new handle. The handle provides the actual operations. */
-    override def newHandle: MessageSizeEstimator.Handle = handle
-
-    final private class HandleImpl(private val unknownSize: Int) extends MessageSizeEstimator.Handle {
-        override def size(msg: AnyRef): Int = msg match
-            case buffer: Buffer => return buffer.readableBytes
-            case _: FileRegion  => 0
-            case _              => unknownSize
-    }
+    def newHandle: MessageSizeEstimator.Handle
 }

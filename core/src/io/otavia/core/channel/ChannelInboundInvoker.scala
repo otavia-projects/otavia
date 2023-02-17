@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel
 
-private trait ChannelInboundInvoker {
+trait ChannelInboundInvoker {
 
     def fireChannelRegistered(): ChannelInboundInvoker
 
@@ -38,7 +38,10 @@ private trait ChannelInboundInvoker {
 
     def fireChannelRead(msg: AnyRef): ChannelInboundInvoker
 
+    def fireChannelRead(msg: AnyRef, msgId: Long): ChannelInboundInvoker
+
     def fireChannelReadComplete(): ChannelInboundInvoker
 
     def fireChannelWritabilityChanged(): ChannelInboundInvoker
+
 }

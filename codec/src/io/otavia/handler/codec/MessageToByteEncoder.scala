@@ -71,7 +71,7 @@ abstract class MessageToByteEncoder[I]() extends ChannelHandlerAdapter {
                 if (buffer.readableBytes() > 0) {
                     ctx.write(buffer)
                 } else {
-                    ctx.write(ctx.bufferAllocator().allocate(0))
+                    ctx.write(ctx.directAllocator().allocate(0))
                 }
             } else ctx.write(msg)
         } catch {

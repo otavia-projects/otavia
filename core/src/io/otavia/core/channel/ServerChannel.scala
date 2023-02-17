@@ -18,25 +18,13 @@
 
 package io.otavia.core.channel
 
-/** Responsible to estimate the size of a message. The size represents approximately how much memory the message will
- *  reserve in memory.
+/** A [[Channel]] that accepts an incoming connection attempts and creates its child [[Channel]]s by accepting them. A
+ *  [[ServerChannel]] does not allow the following operations and so will throws [[Exception]] of these operations:
+ *
+ *    1. connect(SocketAddress)
+ *    1. disconnect()
+ *    1. write(Object)
+ *    1. flush()
+ *    1. shutdown(ChannelShutdownDirection)
  */
-object MessageSizeEstimator {
-    trait Handle {
-
-        /** Calculate the size of the given message.
-         *
-         *  @param msg
-         *    The message for which the size should be calculated
-         *  @return
-         *    size The size in bytes. The returned size must be >= 0
-         */
-        def size(msg: AnyRef): Int
-    }
-}
-
-trait MessageSizeEstimator {
-
-    /** Creates a new handle. The handle provides the actual operations. */
-    def newHandle: MessageSizeEstimator.Handle
-}
+trait ServerChannel extends Channel

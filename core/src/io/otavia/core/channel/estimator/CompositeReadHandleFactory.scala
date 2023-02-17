@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-package io.otavia.core.actor
+package io.otavia.core.channel.estimator
 
-import io.otavia.core.message.{Ask, Notice}
-
-// TODO: implement abstract actor
-private[core] abstract class AbstractActor[M <: Ask[?] | Notice] extends Actor[M] {}
+class CompositeReadHandleFactory {}

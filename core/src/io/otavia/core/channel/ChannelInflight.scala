@@ -16,7 +16,7 @@
 
 package io.otavia.core.channel
 
-trait ChannelInflight {
+trait ChannelInflight extends Channel {
     this: AbstractChannel[?, ?] =>
 
     private var headOfLine: Boolean = true
@@ -39,7 +39,18 @@ trait ChannelInflight {
      *  @param barrier
      */
     def setInboundMessageBarrier(barrier: AnyRef => Boolean): Unit = _inboundMessageBarrier = barrier
-    
-    
+
+    // actor send ask message to channel
+    def ask(value: AnyRef): Unit
+
+    // actor send notice message to channel
+    def notice(value: AnyRef): Unit
+
+    // actor end reply message to channel, the channel generate a ChannelFrame
+    def reply(value: AnyRef): Unit // TODO: use by ChannelFrame
+
+    override private[core] def onInboundMessage(msg: AnyRef): Unit = ???
+
+    override private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit = ???
 
 }

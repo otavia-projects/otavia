@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package io.otavia.core.actor
+package io.otavia.core.serde
 
-import io.otavia.core.message.{Ask, Notice}
+import io.netty5.buffer.Buffer
 
-// TODO: implement abstract actor
-private[core] abstract class AbstractActor[M <: Ask[?] | Notice] extends Actor[M] {}
+/** Match byte data in [[Buffer]], then use [[decoder]] to decode byte data to object [[T]] */
+trait BufferMatcher[T <: AnyRef] {
+    def decoder: Decoder[T]
+
+}

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.channel.udp
 
 import io.netty5.buffer.Buffer
 import io.netty5.util.{Resource, Send}
@@ -40,8 +40,8 @@ abstract class BufferAddressedEnvelope[A <: SocketAddress, T <: BufferAddressedE
       Resource[T] {
 
     override def send(): Send[T] = {
-        val contentSend = content.send()
-        Send.sending(getClass.asInstanceOf[Class[T]], () => replace(contentSend.receive()))
+        val contentSend = content.send().nn
+        Send.sending(getClass.asInstanceOf[Class[T]], () => replace(contentSend.receive().nn)).nn
     }
 
     /** Create a new addressed envelope instance, that has the same recipient and sender as this one, but the given

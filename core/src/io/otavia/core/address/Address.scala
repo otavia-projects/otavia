@@ -27,7 +27,7 @@ import io.otavia.core.stack.ReplyWaiter
  *  @tparam M
  *    the message type that this actor can receive.
  */
-trait Address[-M <: Ask[? <: Reply] | Notice] {
+trait Address[-M <: Ask[? <: Reply] | Notice] extends EventableAddress {
 
     /** send notice message to this address
      *
@@ -55,9 +55,5 @@ trait Address[-M <: Ask[? <: Reply] | Notice] {
      *    reply message
      */
     private[core] def reply(reply: Reply): Unit
-
-    private[core] def inform(event: Event): Unit = {}
-
-    private[core] def inform(events: Seq[Event]): Unit = {}
 
 }

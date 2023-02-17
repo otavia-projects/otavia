@@ -100,11 +100,7 @@ final class ReactorImpl(
         processedTasks
     }
 
-    private def runRegister(channel: Channel): Unit = if (channel.isRegistered)
-        channel.executorAddress.inform(
-          RegisterReplyEvent(channel, false, new IllegalStateException("Channel already registered"))
-        )
-    else ioHandler.register(channel)
+    private def runRegister(channel: Channel): Unit = ioHandler.register(channel)
 
     private def runDeregisters(maxTasks: Int): Int = {
         var processedTasks: Int = 0
@@ -115,11 +111,7 @@ final class ReactorImpl(
         processedTasks
     }
 
-    private def runDeregister(channel: Channel): Unit = if (!channel.isRegistered)
-        channel.executorAddress.inform(
-          DeregisterReplyEvent(channel, false, new IllegalStateException("Channel not registered"))
-        )
-    else ioHandler.deregister(channel)
+    private def runDeregister(channel: Channel): Unit = ioHandler.deregister(channel)
 
 }
 

@@ -22,7 +22,8 @@ import io.netty5.buffer.{Buffer, BufferAllocator}
 import io.netty5.util.AttributeMap
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.address.ChannelsActorAddress
-import io.otavia.core.reactor.{DeregisterReplyEvent, Reactor, RegisterReplyEvent}
+import io.otavia.core.channel.estimator.ReadBufferAllocator
+import io.otavia.core.reactor.Reactor
 import io.otavia.core.timer.Timer
 
 import java.net.SocketAddress
@@ -36,8 +37,9 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
      */
     def executor: ChannelsActor[?]
 
-    /** Set executor of this channel
+    /** Set executor of this channel, this method will mount this [[Channel]] to the [[ChannelsActor]].
      *  @param channelsActor
+     *    [[ChannelsActor]] to be mounted.
      */
     private[core] def setExecutor(channelsActor: ChannelsActor[?]): Unit
 
@@ -45,10 +47,10 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
     final def executorAddress: ChannelsActorAddress[_] = executor.self
 
     /** [[Reactor]] of this actor system. */
-    def reactor: Reactor = executor.reactor
+    final def reactor: Reactor = executor.reactor
 
     /** [[Timer]] of this actor system. */
-    def timer: Timer = executor.system.timer
+    final def timer: Timer = executor.system.timer
 
     /** Return the value of the given [[ChannelOption]]
      *
@@ -92,6 +94,9 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
      *    true if supported, false otherwise.
      */
     def isOptionSupported(option: ChannelOption[?]): Boolean
+
+    /** Returns true if the [[Channel]] is mounted to [[ChannelsActor]] */
+    def isMounted: Boolean
 
     /** Returns true if the [[Channel]] is open and may get active later */
     def isOpen: Boolean
@@ -159,7 +164,9 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
     def pipeline: ChannelPipeline
 
     /** Return the assigned [[BufferAllocator]] which will be used to allocate [[Buffer]]s. */
-    def bufferAllocator: BufferAllocator
+    final def directAllocator: BufferAllocator = executor.system.directAllocator
+
+    final def headAllocator: BufferAllocator = executor.system.headAllocator
 
     final override def read(readBufferAllocator: ReadBufferAllocator): Channel = {
         pipeline.read(readBufferAllocator)
@@ -210,6 +217,10 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
      */
     def generateMessageId: Long
 
+    /** Message from tail handler from pipeline. */
     private[core] def onInboundMessage(msg: AnyRef): Unit
+
+    /** Message from tail handler from pipeline. */
+    private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit
 
 }

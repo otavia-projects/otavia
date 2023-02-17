@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.channel.udp
 
 import io.netty5.util.internal.StringUtil
 
@@ -36,7 +36,7 @@ class DefaultAddressedEnvelope[M, A <: SocketAddress](
 
     override def toString: String =
         if (sender.nonEmpty) s"${StringUtil.simpleClassName(this)}(${sender.get} => $recipient, $message)"
-        else s"${StringUtil.simpleClassName(this)}(=> ${recipient}, $message)"
+        else s"${StringUtil.simpleClassName(this)}(=> $recipient, $message)"
 
     override def content: M = message
 

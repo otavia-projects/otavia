@@ -17,6 +17,7 @@
 package io.otavia.core.system
 
 import io.netty5.buffer.BufferAllocator
+import io.netty5.util.internal.SystemPropertyUtil
 import io.otavia.core.actor.{Actor, ActorFactory, MessageOf}
 import io.otavia.core.address.Address
 import io.otavia.core.channel.ChannelFactory
@@ -34,22 +35,25 @@ import scala.quoted
 trait ActorSystem {
 
     /** [[io.otavia.core.channel.Channel]] io reactor of this actor system */
-    private[core] val reactor: Reactor
+    private[core] def reactor: Reactor
 
     /** Timeout event dispatcher of this actor system */
-    val timer: Timer
+    def timer: Timer
 
     /** message id distributor usage for create [[Notice]] message */
-    val distributor: IdAllocator
+    def distributor: IdAllocator
 
-    /** byte buffer pool */
-    val allocator: BufferAllocator
+    /** A [[BufferAllocator]] which allocate heap memory. */
+    def directAllocator: BufferAllocator
+
+    /** A [[BufferAllocator]] which allocate heap memory. */
+    def headAllocator: BufferAllocator
 
     /** log level for actor log system
      *
      *  ALL 7 > TRACE 6 > DEBUG 5 > INFO 4 > WARN 3 > ERROR 2 > FATAL 1 > OFF 0
      */
-    val logLevel: Int
+    def logLevel: Int
 
     def shutdown(): Unit
 
@@ -76,5 +80,15 @@ trait ActorSystem {
 
     /** [[ChannelFactory]] for UDP socket channel. */
     def datagramChannelFactory: ChannelFactory
+
+}
+
+object ActorSystem {
+
+    val DEFAULT_MAX_TASKS_PER_RUN: Int =
+        Math.max(1, SystemPropertyUtil.getInt("io.otavia.reactor.maxTaskPerRun", 1024 * 4))
+
+    val DEFAULT_POOL_HOLDER_MAX_SIZE: Int =
+        SystemPropertyUtil.getInt("io.otavia.pool.holder.maxSize", 1024)
 
 }
