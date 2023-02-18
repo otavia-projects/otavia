@@ -34,7 +34,7 @@ object ProjectInfo {
 
 trait OtaviaModule extends ScalaModule with PublishModule {
 
-    override def scalaVersion = "3.2.1"
+    override def scalaVersion = "3.2.2"
 
     override def publishVersion: T[String] = "0.1.0-SNAPSHOT"
 
