@@ -17,7 +17,7 @@
 package io.otavia.core.timer
 
 import io.netty5.util.{Timeout, TimerTask}
-import io.otavia.core.address.Address
+import io.otavia.core.address.{Address, EventableAddress}
 import io.otavia.core.channel.Channel
 import io.otavia.core.reactor.{Reactor, TimeoutEvent}
 import io.otavia.core.timer.Timer.*
@@ -27,6 +27,9 @@ import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 
 /** [[Timer]] can generate timeout event. */
 trait Timer {
+
+    /** Generate a unique id for a new [[OtaviaTimerTask]] */
+    private[timer] def nextRegisterId(): Long
 
     /** API for [[io.otavia.core.actor.Actor]] to register timeout event trigger.
      *
@@ -39,7 +42,7 @@ trait Timer {
      *    Register id of [[ReactorTimerTask]], [[io.otavia.core.actor.Actor]] can use this id to cancel this trigger by
      *    [[cancelTimerTask]]
      */
-    def registerTimerTask(trigger: TimeoutTrigger, address: Address[?]): Long
+    def registerTimerTask(trigger: TimeoutTrigger, address: EventableAddress): Long
 
     /** API for [[io.otavia.core.actor.ChannelsActor]] to register timeout event to [[Timer]].
      *
@@ -54,7 +57,7 @@ trait Timer {
      *    Register id of [[ReactorTimerTask]], [[io.otavia.core.actor.Actor]] can use this id to cancel this trigger by
      *    [[cancelTimerTask]]
      */
-    def registerTimerTask(trigger: TimeoutTrigger, address: Address[?], attach: AnyRef): Long
+    def registerTimerTask(trigger: TimeoutTrigger, address: EventableAddress, attach: AnyRef): Long
 
     /** API for [[io.otavia.core.channel.Channel]] to register timeout event to [[Timer]].
      *
@@ -87,41 +90,6 @@ trait Timer {
 }
 
 object Timer {
-
-    final class TimerTriggerTask(
-        private var address: Address[?],
-        private var id: Long,
-        private var period: Long,
-        private var parent: ConcurrentHashMap[Long, TimerTriggerTask],
-        private var attach: AnyRef | Null = null,
-        private var periodUnit: TimeUnit = TimeUnit.MILLISECONDS
-    ) extends TimerTask {
-
-        @volatile private var handle: Timeout = _
-
-        def timeout: Timeout = handle
-
-        def registerId: Long = id
-
-        def setHandle(timeout: Timeout): Unit = this.synchronized {
-            this.handle = timeout
-        }
-
-        def update(period: Long, periodUnit: TimeUnit = TimeUnit.MILLISECONDS): Unit = this.synchronized {
-            this.period = period
-            this.periodUnit = periodUnit
-        }
-
-        override def run(timeout: Timeout): Unit = this.synchronized {
-            address.inform(TimeoutEvent(id, attach))
-            if (period > 0) setHandle(timeout.timer().newTimeout(this, period, periodUnit))
-            else {
-                val task = parent.remove(id)
-                if (task != null) task.timeout.cancel()
-            }
-        }
-
-    }
 
     enum TimeoutTrigger {
 
