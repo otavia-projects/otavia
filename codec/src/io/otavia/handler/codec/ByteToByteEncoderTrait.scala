@@ -1,8 +1,6 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
- * This file fork from netty.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,28 +14,26 @@
  * limitations under the License.
  */
 
-package io.otavia.handler.codec.base64
+package io.otavia.handler.codec
 
 import io.otavia.core.buffer.AdaptiveBuffer
-import io.otavia.core.channel.ChannelHandlerContext
-import io.otavia.handler.codec.{ByteToByteEncoder, ByteToByteHandler}
+import io.otavia.core.channel.{ChannelHandler, ChannelHandlerContext}
 
-class Base64Encoder(private val breakLines: Boolean, private val dialect: Base64Dialect) extends ByteToByteEncoder {
+private[codec] trait ByteToByteEncoderTrait extends ChannelHandler {
 
-    def this(breakLines: Boolean) = this(breakLines, Base64Dialect.STANDARD)
+    override def write(ctx: ChannelHandlerContext, msg: AnyRef): Unit = msg match
+        case adaptiveBufferMessage: ByteToByteHandler.AdaptiveBufferMessage =>
+            val input  = ctx.outboundAdaptiveBuffer
+            val output = ctx.nextOutboundAdaptiveBuffer
+            encode(ctx, adaptiveBufferMessage, input, output)
+        case _ => ctx.write(msg)
 
-    def this() = this(true)
-
-    override def isSharable: Boolean = true
-
-    override protected def encode(
+    @throws[Exception]
+    protected def encode(
         ctx: ChannelHandlerContext,
         msg: ByteToByteHandler.AdaptiveBufferMessage,
         input: AdaptiveBuffer,
         output: AdaptiveBuffer
-    ): Unit = {
-        // TODO
-        ???
-    }
+    ): Unit
 
 }

@@ -16,24 +16,4 @@
 
 package io.otavia.handler.codec
 
-import io.otavia.core.buffer.AdaptiveBuffer
-import io.otavia.core.channel.{ChannelHandler, ChannelHandlerAdapter}
-
-/** io transport --> ByteToByteDecoder --> ByteToMessageDecoder --> MessageToMessageDecoder
- *
- *  io transport <-- ByteToByteEncoder <-- MessageToByteEncoder <-- MessageToMessageEncoder
- */
-abstract class ByteToByteHandler extends ChannelHandlerAdapter {
-    override final def isBufferHandler: Boolean = true
-
-}
-
-object ByteToByteHandler {
-
-    val ADAPTIVE_BUFFER_NOTICE: AnyRef = new Object
-
-    trait AdaptiveBufferMessage
-
-    object AdaptiveBufferNotice extends AdaptiveBufferMessage
-
-}
+abstract class ByteToByteCodec extends ByteToByteHandler with ByteToByteEncoderTrait with ByteToByteDecoderTrait

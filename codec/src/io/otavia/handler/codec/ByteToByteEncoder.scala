@@ -19,17 +19,4 @@ package io.otavia.handler.codec
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.ChannelHandlerContext
 
-abstract class ByteToByteEncoder extends ByteToByteHandler {
-
-    override def write(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
-        if (msg == ByteToByteHandler.ADAPTIVE_BUFFER_NOTICE) {
-            val input  = ctx.outboundAdaptiveBuffer
-            val output = ctx.nextOutboundAdaptiveBuffer
-            encode(ctx, input, output)
-        } else ctx.write(msg)
-    }
-
-    @throws[Exception]
-    protected def encode(ctx: ChannelHandlerContext, input: AdaptiveBuffer, output: AdaptiveBuffer): Unit
-
-}
+abstract class ByteToByteEncoder extends ByteToByteHandler with ByteToByteEncoderTrait
