@@ -23,8 +23,7 @@ import io.netty5.util.internal.logging.{InternalLogger, InternalLoggerFactory}
 import io.netty5.util.internal.{ObjectPool, PromiseNotificationUtil, SilentDispose, SystemPropertyUtil}
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.cache.{PerActorThreadObjectPool, Poolable}
-import io.otavia.core.channel.ChannelOutboundBuffer
-import io.otavia.core.channel.internal.ChannelOutboundBuffer.MessageEntry
+import io.otavia.core.channel.internal.ChannelOutboundBuffer.{MessageEntry, logger, safeSuccess}
 
 import java.util.Objects.requireNonNull
 import java.util.function.Predicate
@@ -66,11 +65,13 @@ object ChannelOutboundBuffer {
 
     }
 
-    private final class MessageEntry(
-        var message: AnyRef | Null = null,
-        var pendingSize: Int = 0,
-        var cancelled: Boolean = false
-    ) extends Poolable {
+    private final class MessageEntry() extends Poolable {
+
+        private var message: AnyRef | Null = null
+        var pendingSize: Int               = 0
+        var cancelled: Boolean             = false
+
+        def msg: AnyRef = message.asInstanceOf[AnyRef]
 
         def cancel(): Int = if (!cancelled) {
             cancelled = true
@@ -87,20 +88,24 @@ object ChannelOutboundBuffer {
             cancelled = false
         }
 
-        override def recycle(): Unit = this.recycle(MessageEntry.recycler)
+        override def recycle(): Unit = {
+            MessageEntry.recycler.recycle(this)
+        }
 
         def recycleAndGetNext(): MessageEntry | Null = {
             val n = this.next
-            recycle(MessageEntry.recycler)
-            n
+            this.recycle()
+            if (n == null) null else n.asInstanceOf[MessageEntry]
         }
+
+        override def next: MessageEntry | Null = super.next.asInstanceOf[MessageEntry | Null]
 
     }
 
 }
 
 @SuppressWarnings(Array("UnusedDeclaration"))
-private final class ChannelOutboundBuffer() {
+private[channel] final class ChannelOutboundBuffer() {
 
     // MessageEntry(flushedEntry) --> ... MessageEntry(unflushedEntry) --> ... MessageEntry(tailEntry)
     //
@@ -110,6 +115,8 @@ private final class ChannelOutboundBuffer() {
     private var unflushedEntry: MessageEntry | Null = null
     // The MessageEntry which represents the tail of the buffer
     private var tailEntry: MessageEntry | Null = null
+    // The number of unflushed entries that are not written yet
+    private var unflushed = 0
     // The number of flushed entries that are not written yet
     private var flushed = 0
     private var inFail  = false
@@ -121,13 +128,13 @@ private final class ChannelOutboundBuffer() {
 
     private def decrementPendingOutboundBytes(size: Long): Unit = totalPendingSize -= size
 
-    /** Add given message to this[[ChannelOutboundBuffer]]. */
+    /** Add given message to this [[ChannelOutboundBuffer]]. */
     private[channel] def addMessage(msg: AnyRef, size: Int): Unit = {
         if (closed) throw new IllegalStateException("ChannelOutboundBuffer has been closed!")
 
         val entry = MessageEntry(msg, size)
         tailEntry match
-            case null: Null         => flushedEntry = null
+            case null               => flushedEntry = null
             case tail: MessageEntry => tail.next = entry
         tailEntry = entry
 
@@ -147,102 +154,50 @@ private final class ChannelOutboundBuffer() {
         //
         // See https://github.com/netty/netty/issues/2577
         unflushedEntry match
-            case null: Null =>
+            case null =>
             case entry: MessageEntry =>
                 if (flushedEntry == null) {
                     // there is no flushedEntry yet, so start with the entry
                     flushedEntry = entry
+                    flushed = unflushed
+                    unflushed = 0
                 }
-                var prev: MessageEntry | Null = null
-                while {
-                    // Was cancelled so make sure we free up memory, unlink and notify about the freed bytes
-                    val pending = entry.cancel()
-                    prev match
-                        case null: Null =>
-                            // It's the first entry, drop it
-                            flushedEntry = entry.next
-                        case prevEntry: MessageEntry =>
-                            // Remove te entry from the linked list.
-                            prevEntry.next = entry.next
-
-                    val next = entry.next
-                    entry.recycle()
-
-                } do ()
-
-        var entry = unflushedEntry
-        if (entry != null) {
-            if (flushedEntry == null) {
-                // there is no flushedEntry yet, so start with the entry
-                flushedEntry = entry
-            }
-            var prev: MessageEntry = null
-            while {
-                // Was cancelled so make sure we free up memory, unlink and notify about the freed bytes
-                val pending = entry.cancel
-                if (prev == null) {
-                    // It's the first entry, drop it
-                    flushedEntry = entry.next
-                } else {
-                    // Remove te entry from the linked list.
-                    prev.next = entry.next
-                }
-                val next = entry.next
-                entry.recycle()
-                entry = next
-                decrementPendingOutboundBytes(pending)
-                entry != null
-            } do ()
-            // All flushed so reset unflushedEntry
-            unflushedEntry = null
-        }
     }
 
     /** Return the current message to write or null if nothing was flushed before and so is ready to be written. */
-    private[channel] def current: AnyRef = {
+    private[channel] def current: AnyRef | Null = flushedEntry match
+        case null                => null
+        case entry: MessageEntry => entry.msg
 
-        val entry = flushedEntry
-        if (entry == null) return null
-        entry.msg
-    }
-
-    /** Will remove the current message, mark its {@link Promise} as success and return {@code true}. If no flushed
-     *  message exists at the time this method is called it will return {@code false} to signal that no more messages
-     *  are ready to be handled.
+    /** Will remove the current message, and return true. If no flushed message exists at the time this method is called
+     *  it will return false to signal that no more messages are ready to be handled.
      */
     private[channel] def remove = remove0(null)
 
-    /** Will remove the current message, mark its {@link Promise} as failure using the given {@link Throwable} and
-     *  return {@code true}. If no flushed message exists at the time this method is called it will return {@code false}
-     *  to signal that no more messages are ready to be handled.
+    /** Will remove the current message, and return true. If no flushed message exists at the time this method is called
+     *  it will return false to signal that no more messages are ready to be handled.
      */
-    private[channel] def remove(cause: Throwable) = remove0(requireNonNull(cause, "cause").nn)
+    private[channel] def remove(cause: Throwable) = remove0(cause)
 
     private def remove0(cause: Throwable | Null): Boolean = {
-
-        val e = flushedEntry
-        if (e == null) return false
-        val msg = e.msg
-//    val promise = e.promise
-        val size = e.pendingSize
-        removeEntry(e)
-        if (!e.cancelled) {
-            // only release message, fail and decrement if it was not canceled before.
-            SilentDispose.trySilentDispose(msg, ChannelOutboundBuffer.logger)
-//      if (cause == null) ChannelOutboundBuffer.safeSuccess(promise)
-//      else ChannelOutboundBuffer.safeFail(promise, cause)
-            decrementPendingOutboundBytes(size)
-        }
-        // recycle the entry
-        e.recycle()
-        true
+        flushedEntry match
+            case null => false
+            case e: MessageEntry =>
+                val msg  = e.msg
+                val size = e.pendingSize
+                removeEntry(e)
+                if (!e.cancelled) {
+                    SilentDispose.trySilentDispose(msg, logger)
+                    // TODO: handle cause
+                    decrementPendingOutboundBytes(size)
+                }
+                e.recycle()
+                true
     }
 
-    private def removeEntry(e: ChannelOutboundBuffer.Entry): Unit = {
-
-        if ({
-            flushed -= 1; flushed
-        } == 0) {
+    private def removeEntry(e: ChannelOutboundBuffer.MessageEntry): Unit = {
+        flushed = flushed - 1
+        if (flushed == 0) {
             // processed everything
             flushedEntry = null
             if (e eq tailEntry) {
@@ -253,21 +208,14 @@ private final class ChannelOutboundBuffer() {
     }
 
     /** Returns the number of flushed messages in this {@link ChannelOutboundBuffer}. */
-    private[channel] def size = {
-
-        flushed
-    }
+    private[channel] def size = flushed
 
     /** Returns {@code true} if there are flushed messages in this {@link ChannelOutboundBuffer} or {@code false}
      *  otherwise.
      */
-    private[channel] def isEmpty = {
-
-        flushed == 0
-    }
+    private[channel] def isEmpty = flushed == 0
 
     private[channel] def failFlushedAndClose(failCause: Throwable, closeCause: Throwable): Unit = {
-
         failFlushed(failCause)
         close(closeCause)
     }
@@ -279,36 +227,11 @@ private final class ChannelOutboundBuffer() {
         // indirectly (usually by closing the channel.)
         //
         // See https://github.com/netty/netty/issues/1501
-        if (inFail) return try {
-            inFail = true
-            while (!isEmpty) remove(cause)
-        } finally inFail = false
+        ???
     }
 
     private def close(cause: Throwable): Unit = {
-
-        if (inFail) {
-//      executor.execute(() => close(cause))
-            return
-        }
-        inFail = true
-        if (!isEmpty) throw new IllegalStateException("close() must be invoked after all flushed writes are handled.")
-        // Release all unflushed messages.
-        try {
-            var e = unflushedEntry
-            while (e != null) {
-                val size = e.pendingSize
-                decrementPendingOutboundBytes(size)
-                if (!e.cancelled) {
-                    SilentDispose.dispose(e.msg, ChannelOutboundBuffer.logger)
-//          ChannelOutboundBuffer.safeFail(e.promise, cause)
-                }
-                e = e.recycleAndGetNext
-            }
-        } finally {
-            closed = true
-            inFail = false
-        }
+        ???
     }
 
     private[channel] def totalPendingWriteBytes = totalPendingSize
@@ -325,6 +248,6 @@ private final class ChannelOutboundBuffer() {
         }
     }
 
-    private def isFlushedEntry(e: ChannelOutboundBuffer.MessageEntry) = e != null && (e ne unflushedEntry)
+    private def isFlushedEntry(e: ChannelOutboundBuffer.MessageEntry) = ???
 
 }

@@ -23,7 +23,6 @@ import io.otavia.core.reactor.{Event, Reactor}
 import io.otavia.core.stack.*
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.timer.Timer
-import io.otavia.core.util.TimerService
 
 import scala.reflect.{ClassTag, TypeTest, classTag}
 

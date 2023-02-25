@@ -21,10 +21,11 @@ package io.otavia.core.channel
 import io.netty5.util.Resource
 import io.netty5.util.internal.{StringUtil, ThrowableUtil}
 import io.otavia.core.actor.ChannelsActor
-import io.otavia.core.channel.internal.ChannelHandlerMask.*
+import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.OtaviaChannelHandlerContext.*
 import io.otavia.core.channel.estimator.ReadBufferAllocator
 import io.otavia.core.channel.internal.ChannelHandlerMask
+import io.otavia.core.channel.internal.ChannelHandlerMask.*
 import io.otavia.core.util.ActorLogger
 
 import java.net.SocketAddress
@@ -46,6 +47,27 @@ final class OtaviaChannelHandlerContext(
 
     protected[channel] var next: OtaviaChannelHandlerContext = _
     protected[channel] var prev: OtaviaChannelHandlerContext = _
+
+    private var inboundAdaptive: AdaptiveBuffer  = _
+    private var outboundAdaptive: AdaptiveBuffer = _
+
+    def setInboundAdaptiveBuffer(inboundAdaptiveBuffer: AdaptiveBuffer): Unit =
+        inboundAdaptive = inboundAdaptiveBuffer
+
+    def setOutboundAdaptiveBuffer(outboundAdaptiveBuffer: AdaptiveBuffer): Unit =
+        outboundAdaptive = outboundAdaptiveBuffer
+
+    override def isBufferHandlerContext: Boolean = handler.isBufferHandler
+
+    override def inboundAdaptiveBuffer: AdaptiveBuffer =
+        if (isBufferHandlerContext) inboundAdaptive else throw new UnsupportedOperationException()
+
+    override def outboundAdaptiveBuffer: AdaptiveBuffer =
+        if (isBufferHandlerContext) outboundAdaptive else throw new UnsupportedOperationException()
+
+    override def nextInboundAdaptiveBuffer: AdaptiveBuffer = ???
+
+    override def nextOutboundAdaptiveBuffer: AdaptiveBuffer = ???
 
     private def handleOutboundHandlerException(cause: Throwable, closeDidThrow: Boolean): Unit = {
         val msg = s"$handler threw an exception while handling an outbound event. This is most likely a bug"
@@ -119,7 +141,7 @@ final class OtaviaChannelHandlerContext(
         }
     }
 
-    override def fireChannelRegistered(): ChannelHandlerContext = {
+    override def fireChannelRegistered(): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_REGISTERED)
         ctx.invokeChannelRegistered()
         this
@@ -131,7 +153,7 @@ final class OtaviaChannelHandlerContext(
         case t: Throwable => invokeChannelExceptionCaught(t)
     } finally updatePendingBytesIfNeeded()
 
-    override def fireChannelUnregistered(): ChannelHandlerContext = {
+    override def fireChannelUnregistered(): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_UNREGISTERED)
         ctx.invokeChannelUnregistered()
         this
@@ -143,7 +165,7 @@ final class OtaviaChannelHandlerContext(
         case t: Throwable => invokeChannelExceptionCaught(t)
     } finally updatePendingBytesIfNeeded()
 
-    override def fireChannelActive(): ChannelHandlerContext = {
+    override def fireChannelActive(): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_ACTIVE)
         ctx.invokeChannelActive()
         this
@@ -155,7 +177,7 @@ final class OtaviaChannelHandlerContext(
         case t: Throwable => invokeChannelExceptionCaught(t)
     } finally updatePendingBytesIfNeeded()
 
-    override def fireChannelInactive(): ChannelHandlerContext = {
+    override def fireChannelInactive(): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_INACTIVE)
         ctx.invokeChannelInactive()
         this
@@ -167,7 +189,7 @@ final class OtaviaChannelHandlerContext(
         case t: Throwable => invokeChannelExceptionCaught(t)
     } finally updatePendingBytesIfNeeded()
 
-    override def fireChannelShutdown(direction: ChannelShutdownDirection): ChannelHandlerContext = {
+    override def fireChannelShutdown(direction: ChannelShutdownDirection): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_SHUTDOWN)
         ctx.invokeChannelShutdown(direction)
         this
@@ -179,7 +201,7 @@ final class OtaviaChannelHandlerContext(
         case t: Throwable => invokeChannelExceptionCaught(t)
     } finally updatePendingBytesIfNeeded()
 
-    override def fireChannelExceptionCaught(cause: Throwable): ChannelHandlerContext = {
+    override def fireChannelExceptionCaught(cause: Throwable): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_EXCEPTION_CAUGHT)
         ctx.invokeChannelExceptionCaught(cause)
         this
@@ -203,7 +225,7 @@ final class OtaviaChannelHandlerContext(
         } finally updatePendingBytesIfNeeded()
     }
 
-    override def fireChannelInboundEvent(evt: AnyRef): ChannelHandlerContext = {
+    override def fireChannelInboundEvent(evt: AnyRef): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_INBOUND_EVENT)
         ctx.invokeChannelInboundEvent(evt)
         this
@@ -216,7 +238,7 @@ final class OtaviaChannelHandlerContext(
         case t: Throwable => invokeChannelExceptionCaught(t)
     } finally updatePendingBytesIfNeeded()
 
-    override def fireChannelTimeoutEvent(id: Long): ChannelHandlerContext = {
+    override def fireChannelTimeoutEvent(id: Long): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_TIMEOUT_EVENT)
         ctx.invokeChannelTimeoutEvent(id)
         this
@@ -229,11 +251,13 @@ final class OtaviaChannelHandlerContext(
         }
     }
 
-    override def fireChannelRead(msg: AnyRef): ChannelHandlerContext = {
+    override def fireChannelRead(msg: AnyRef): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_READ)
         ctx.invokeChannelRead(msg)
         this
     }
+
+    override def fireChannelRead(msg: AnyRef, msgId: Long): this.type = ???
 
     private[channel] def invokeChannelRead(msg: AnyRef): Unit = if (saveCurrentPendingBytesIfNeededDuplex()) {
         try handler.channelRead(this, msg)
@@ -242,7 +266,7 @@ final class OtaviaChannelHandlerContext(
         } finally updatePendingBytesIfNeeded()
     } else Resource.dispose(msg)
 
-    override def fireChannelReadComplete(): ChannelHandlerContext = {
+    override def fireChannelReadComplete(): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_READ_COMPLETE)
         ctx.invokeChannelReadComplete()
         this
@@ -254,7 +278,7 @@ final class OtaviaChannelHandlerContext(
         case t: Throwable => invokeChannelExceptionCaught(t)
     } finally updatePendingBytesIfNeeded()
 
-    override def fireChannelWritabilityChanged(): ChannelHandlerContext = {
+    override def fireChannelWritabilityChanged(): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_WRITABILITY_CHANGED)
         ctx.invokeChannelWritabilityChanged()
         this
@@ -266,7 +290,7 @@ final class OtaviaChannelHandlerContext(
         case t: Throwable => invokeChannelExceptionCaught(t)
     } finally updatePendingBytesIfNeeded()
 
-    override def read(readBufferAllocator: ReadBufferAllocator): ChannelHandlerContext = {
+    override def read(readBufferAllocator: ReadBufferAllocator): this.type = {
         val ctx = findContextOutbound(ChannelHandlerMask.MASK_READ)
         ctx.invokeRead(readBufferAllocator)
         this
@@ -278,13 +302,13 @@ final class OtaviaChannelHandlerContext(
         case t: Throwable => handleOutboundHandlerException(t, false)
     } finally updatePendingBytesIfNeeded()
 
-    override def read(): ChannelHandlerContext = {
+    override def read(): this.type = {
         val ctx = findContextOutbound(ChannelHandlerMask.MASK_READ)
         ctx.invokeRead(OtaviaChannelPipeline.DEFAULT_READ_BUFFER_ALLOCATOR)
         this
     }
 
-    override def flush(): ChannelHandlerContext = {
+    override def flush(): this.type = {
         val ctx = findContextOutbound(ChannelHandlerMask.MASK_FLUSH)
         ctx.invokeFlush()
         this

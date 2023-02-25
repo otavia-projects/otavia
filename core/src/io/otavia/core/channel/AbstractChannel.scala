@@ -38,6 +38,7 @@ import java.nio.channels.ClosedChannelException
 import java.util.Objects.requireNonNull
 import scala.collection.mutable
 import scala.concurrent.Future.never
+import scala.language.unsafeNulls
 import scala.util.{Failure, Success, Try}
 
 /** A skeletal Channel implementation.
@@ -131,7 +132,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     override def executor: ChannelsActor[?] = actor match
         case a: ChannelsActor[?] => a
-        case null: Null =>
+        case null =>
             throw new IllegalStateException(s"The channel $this is not mounted, use setExecutor to mount channel.")
 
     final private[core] def setExecutor(channelsActor: ChannelsActor[?]): Unit = {
@@ -166,7 +167,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     override def isRegistered: Boolean = registered
 
     private def totalPending: Long = outboundBuffer match
-        case null: Null                 => -1
+        case null                       => -1
         case out: ChannelOutboundBuffer => out.totalPendingWriteBytes + pipeline.pendingOutboundBytes
 
     override final def writableBytes: Long = {
@@ -251,7 +252,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     private[channel] def bindTransport(): Unit = {
         binding = true
         unresolvedLocalAddress match {
-            case address: InetSocketAddress
+            case Some(address): Option[InetSocketAddress]
                 if isOptionSupported(ChannelOption.SO_BROADCAST) && getOption[Boolean](ChannelOption.SO_BROADCAST) &&
                     !address.getAddress.nn.isAnyLocalAddress && !PlatformDependent.isWindows && !PlatformDependent
                         .maybeSuperUser() =>
@@ -356,14 +357,34 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     }
 
     private[channel] def flushTransport(): Unit = {
-        outboundBuffer.nn.addFlush()
-        writeFlushed()
+        outboundBuffer match
+            case null =>
+            case out: ChannelOutboundBuffer =>
+                out.addFlush()
+                writeFlushed()
     }
 
     /** Writing previous flushed messages if [[isWriteFlushedScheduled]] returns false, otherwise do nothing. */
     protected final def writeFlushed(): Unit = if (!isWriteFlushedScheduled) writeFlushedNow()
 
-    protected final def writeFlushedNow(): Unit = {}
+    /** Writing previous flushed messages now. */
+    protected final def writeFlushedNow(): Unit = {
+        outboundBuffer match
+            case null =>
+            case out: ChannelOutboundBuffer =>
+                inWriteFlushed = true
+                try {
+                    if (!isActive) {
+                        if (!out.isEmpty) {
+                            ???
+                        }
+                    } else {
+                        writeSink.writeLoop(out)
+                    }
+                } finally {
+                    inWriteFlushed = false
+                }
+    }
 
     protected def writeLoopComplete(allWriten: Boolean): Unit = if (!allWriten) invokeLater(() => writeFlushed())
 

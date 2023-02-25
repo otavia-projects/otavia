@@ -27,6 +27,7 @@ import io.otavia.core.channel.{ChannelOption, ChannelShutdownDirection, FileRegi
 
 import java.net.{ProtocolFamily, SocketAddress}
 import java.nio.channels.{SelectableChannel, SelectionKey, SocketChannel}
+import scala.language.unsafeNulls
 import scala.util.Try
 
 /** <h3>Available options</h3>

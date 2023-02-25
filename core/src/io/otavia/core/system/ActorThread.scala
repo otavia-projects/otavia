@@ -17,16 +17,17 @@
 package io.otavia.core.system
 
 import io.otavia.core.actor.Actor
+import io.otavia.core.address.ActorThreadAddress
 
 import scala.collection.mutable
 
 class ActorThread(private[core] val system: ActorSystem, val parent: ActorThreadPool) extends Thread() {
 
-    private val id = parent.nextThreadId()
+    private val id                                              = parent.nextThreadId()
+    private val address: ActorThreadAddress                     = new ActorThreadAddress()
+    private val channelLaterTasks: mutable.ArrayDeque[Runnable] = mutable.ArrayDeque.empty
 
     setName(s"otavia-actor-thread-$index")
-
-    private val channelLaterTasks: mutable.ArrayDeque[Runnable] = mutable.ArrayDeque.empty
 
     def index: Int = id
 
@@ -38,6 +39,8 @@ class ActorThread(private[core] val system: ActorSystem, val parent: ActorThread
         // TODO: log warn
         channelLaterTasks.clear()
     }
+
+    def actorThreadAddress = address
 
 }
 
@@ -55,5 +58,8 @@ object ActorThread {
      *    [[ActorThread]] index
      */
     def currentThreadIndex: Int = currentThread().index
+
+    /** Check whether the current [[Thread]] is [[ActorThread]]. */
+    final def currentThreadIsActorThread: Boolean = Thread.currentThread().isInstanceOf[ActorThread]
 
 }

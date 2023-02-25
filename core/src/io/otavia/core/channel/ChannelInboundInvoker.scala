@@ -20,28 +20,28 @@ package io.otavia.core.channel
 
 trait ChannelInboundInvoker {
 
-    def fireChannelRegistered(): ChannelInboundInvoker
+    def fireChannelRegistered(): this.type
 
-    def fireChannelUnregistered(): ChannelInboundInvoker
+    def fireChannelUnregistered(): this.type
 
-    def fireChannelActive(): ChannelInboundInvoker
+    def fireChannelActive(): this.type
 
-    def fireChannelInactive(): ChannelInboundInvoker
+    def fireChannelInactive(): this.type
 
-    def fireChannelShutdown(direction: ChannelShutdownDirection): ChannelInboundInvoker
+    def fireChannelShutdown(direction: ChannelShutdownDirection): this.type
 
-    def fireChannelExceptionCaught(cause: Throwable): ChannelInboundInvoker
+    def fireChannelExceptionCaught(cause: Throwable): this.type
 
-    def fireChannelInboundEvent(event: AnyRef): ChannelInboundInvoker
+    def fireChannelInboundEvent(event: AnyRef): this.type
 
-    def fireChannelTimeoutEvent(id: Long): ChannelInboundInvoker
+    def fireChannelTimeoutEvent(id: Long): this.type
 
-    def fireChannelRead(msg: AnyRef): ChannelInboundInvoker
+    def fireChannelRead(msg: AnyRef): this.type
 
-    def fireChannelRead(msg: AnyRef, msgId: Long): ChannelInboundInvoker
+    def fireChannelRead(msg: AnyRef, msgId: Long): this.type
 
-    def fireChannelReadComplete(): ChannelInboundInvoker
+    def fireChannelReadComplete(): this.type
 
-    def fireChannelWritabilityChanged(): ChannelInboundInvoker
+    def fireChannelWritabilityChanged(): this.type
 
 }

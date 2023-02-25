@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.IntSupplier
 import scala.jdk.CollectionConverters
+import scala.language.unsafeNulls
 import scala.util.*
 
 final class NioHandler(val selectorProvider: SelectorProvider, val selectStrategy: SelectStrategy) extends IoHandler {
@@ -419,7 +420,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         // The selector returned prematurely many times in a row.
         // Rebuild the selector to work around the problem.
         logger.warn(
-          s"Selector.select() returned prematurely $selectCnt times in a row; rebuilding Selector $selector."
+          s"Selector.select() returned prematurely $selectCnt times in a row; rebuilding Selector ${this.selector}."
         )
         rebuildSelector()
         val selector = this.selector

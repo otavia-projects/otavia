@@ -26,6 +26,7 @@ import io.otavia.core.system.ActorSystem
 import org.log4s.{Logger, getLogger}
 
 import java.util.concurrent.{ConcurrentHashMap, ThreadFactory}
+import scala.language.unsafeNulls
 
 final class ReactorImpl(
     private[core] val system: ActorSystem,

@@ -14,8 +14,20 @@
  * limitations under the License.
  */
 
-package io.otavia.http
+package io.otavia.handler.codec
 
-trait HttpHeaders {
+import io.otavia.core.buffer.AdaptiveBuffer
+import io.otavia.core.channel.{ChannelHandler, ChannelHandlerAdapter}
 
+/** io transport --> ByteToByteDecoder --> ByteToMessageDecoder --> MessageToMessageDecoder
+ *
+ *  io transport <-- ByteToByteEncoder <-- MessageToByteEncoder <-- MessageToMessageEncoder
+ */
+abstract class ByteToByteHandler extends ChannelHandlerAdapter {
+    override final def isBufferHandler: Boolean = true
+
+}
+
+object ByteToByteHandler {
+    val ADAPTIVE_BUFFER_NOTICE: AnyRef = new Object
 }

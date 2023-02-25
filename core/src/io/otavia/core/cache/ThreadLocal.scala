@@ -17,6 +17,7 @@
 package io.otavia.core.cache
 
 import io.otavia.core.system.ActorThread
+import io.otavia.core.timer.Timer
 
 /** A special variant of [[ThreadLocal]] that yields higher access performance when accessed from a [[ActorThread]].
  *
@@ -81,6 +82,11 @@ abstract class ThreadLocal[V] {
      *  case of `Thread` completion.
      */
     protected def onRemoval(value: V): Unit = {}
+
+    protected def initialTimer(): Unit = {
+        val system = ActorThread.currentThread().system
+//        system.timer.registerTimerTask()
+    }
 
 }
 

@@ -23,7 +23,7 @@ import io.otavia.core.stack.{AskFrame, ChannelFrame, StackState}
 
 import java.util.Date
 
-class TimerService extends ChannelsActor[TimerService.MSG] {
+abstract class TimerService extends ChannelsActor[TimerService.MSG] {
 
 //  def continueAsk(state: TimerService.MSG & Ask | AskFrame): Option[StackState] = None
 

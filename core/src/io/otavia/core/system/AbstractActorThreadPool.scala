@@ -14,16 +14,6 @@
  * limitations under the License.
  */
 
-package io.otavia.http
+package io.otavia.core.system
 
-import io.otavia.core.actor.AccepterActor
-import io.otavia.core.actor.AccepterActor.*
-
-//class HttpServerAccepter(val routes: Map[String, String]) extends AccepterActor[HttpServerWorker] {
-//
-//  override val workerFactory: WorkerFactory[HttpServerWorker] = new WorkerFactory[HttpServerWorker] {
-//    override def newWorker(): HttpServerWorker = ???
-//  }
-//
-//
-//}
+abstract class AbstractActorThreadPool(system: ActorSystem) extends ActorThreadPool(system) {}

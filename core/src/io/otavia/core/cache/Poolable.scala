@@ -22,20 +22,19 @@ import io.otavia.core.util.Chainable
 /** An object which can be pooled */
 trait Poolable extends Chainable {
 
-    private var index: Int = ActorThreadPool.INVALID_THREAD_ID
+    private var thread: Thread = _
 
-    private[core] def creator: Int           = index
-    private[core] def creator(id: Int): Unit = index = id
-
-    final def recycle(pool: ObjectPool[this.type]): Unit = {
-        cleanInstance()
-        dechain()
-        pool.recycle(this)
-    }
+    private[core] def creator: Thread = thread
+    private[core] def creator(t: Thread): Unit = thread = t
 
     def recycle(): Unit
 
     protected def cleanInstance(): Unit
+
+    final def clean(): Unit = {
+        this.cleanInstance()
+        this.dechain()
+    }
 
 }
 

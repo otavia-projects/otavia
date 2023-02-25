@@ -18,6 +18,7 @@
 
 package io.otavia.core.channel
 
+import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.estimator.ReadBufferAllocator
 
 import java.net.SocketAddress
@@ -248,5 +249,14 @@ trait ChannelHandler {
      *    the number of buffered / queued bytes.
      */
     def pendingOutboundBytes(ctx: ChannelHandlerContext): Long = 0
+
+    def isBufferHandler: Boolean = false
+
+    protected def inboundAdaptiveStrategy: AdaptiveBuffer.AdaptiveStrategy = AdaptiveBuffer.FullPageStrategy
+
+    protected def outboundAdaptiveStrategy: AdaptiveBuffer.AdaptiveStrategy = AdaptiveBuffer.FullPageStrategy
+
+    private[channel] def inboundStrategy: AdaptiveBuffer.AdaptiveStrategy  = inboundAdaptiveStrategy
+    private[channel] def outboundStrategy: AdaptiveBuffer.AdaptiveStrategy = outboundAdaptiveStrategy
 
 }

@@ -24,6 +24,7 @@ import java.io.IOException
 import java.nio.channels.spi.SelectorProvider
 import java.nio.channels.{SelectionKey, Selector}
 import java.util
+import scala.language.unsafeNulls
 
 final class SelectedSelectionKeySetSelector(
     private val delegate: Selector,

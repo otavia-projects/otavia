@@ -19,6 +19,7 @@
 package io.otavia.core.channel
 
 import io.netty5.buffer.{Buffer, BufferAllocator}
+import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.estimator.ReadBufferAllocator
 import io.otavia.core.timer.Timer
 
@@ -46,40 +47,22 @@ trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundIn
      */
     def isRemoved: Boolean
 
-    override def fireChannelRegistered(): ChannelHandlerContext
-
-    override def fireChannelUnregistered(): ChannelHandlerContext
-
-    override def fireChannelActive(): ChannelHandlerContext
-
-    override def fireChannelInactive(): ChannelHandlerContext
-
-    override def fireChannelShutdown(direction: ChannelShutdownDirection): ChannelHandlerContext
-
-    override def fireChannelExceptionCaught(cause: Throwable): ChannelHandlerContext
-
-    override def fireChannelInboundEvent(evt: AnyRef): ChannelHandlerContext
-
-    override def fireChannelTimeoutEvent(id: Long): ChannelHandlerContext
-
-    override def fireChannelRead(msg: AnyRef): ChannelHandlerContext
-
-    override def fireChannelRead(msg: AnyRef, msgId: Long): ChannelHandlerContext
-
-    override def fireChannelReadComplete(): ChannelHandlerContext
-
-    override def fireChannelWritabilityChanged(): ChannelHandlerContext
-
-    override def read(readBufferAllocator: ReadBufferAllocator): ChannelHandlerContext
-
-    override def read(): ChannelHandlerContext
-
-    override def flush(): ChannelHandlerContext
-
     /** Return the assigned [[BufferAllocator]] which will be used to allocate off-heap [[Buffer]]s. */
     final def directAllocator(): BufferAllocator = channel.directAllocator
 
     /** Return the assigned [[BufferAllocator]] which will be used to allocate heap [[Buffer]]s. */
     final def heapAllocator(): BufferAllocator = channel.headAllocator
+
+    def isBufferHandlerContext: Boolean = false
+
+    def inboundAdaptiveBuffer: AdaptiveBuffer
+
+    def outboundAdaptiveBuffer: AdaptiveBuffer
+
+    /** The next inbound [[ChannelHandlerContext.inboundAdaptiveBuffer]] */
+    def nextInboundAdaptiveBuffer: AdaptiveBuffer
+
+    /** The next outbound [[ChannelHandlerContext.outboundAdaptiveBuffer]] */
+    def nextOutboundAdaptiveBuffer: AdaptiveBuffer
 
 }

@@ -22,9 +22,9 @@ import java.io.File
 import java.net.SocketAddress
 
 @SerialVersionUID(-6934618000832236893L)
-class DomainSocketAddress(private final val socketPath: String) extends SocketAddress {
+class DomainSocketAddress(private val socketPath: String) extends SocketAddress {
 
-    def this(file: File) = this(file.getPath)
+    def this(file: File) = this(file.getPath.nn)
 
     /** The path to the domain socket. */
     def path: String = socketPath

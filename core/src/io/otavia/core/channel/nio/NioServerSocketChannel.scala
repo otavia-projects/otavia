@@ -29,6 +29,7 @@ import io.otavia.core.channel.socket.SocketProtocolFamily
 
 import java.net.{ProtocolFamily, SocketAddress}
 import java.nio.channels.{SelectableChannel, SelectionKey, ServerSocketChannel}
+import scala.language.unsafeNulls
 import scala.util.Try
 
 /** A implementation which uses NIO selector based implementation to accept new connections.
@@ -54,7 +55,7 @@ class NioServerSocketChannel(socket: ServerSocketChannel, protocolFamily: Protoc
     private val family = NioChannelUtil.toJdkFamily(protocolFamily)
 
     @volatile private var backlog = NetUtil.SOMAXCONN
-    @volatile private var bound   = false
+//    @volatile private var bound   = false
 
     private var unresolvedLocal: SocketAddress | Null = null
 

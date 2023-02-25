@@ -41,13 +41,13 @@ trait ChannelInflight extends Channel {
     def setInboundMessageBarrier(barrier: AnyRef => Boolean): Unit = _inboundMessageBarrier = barrier
 
     // actor send ask message to channel
-    def ask(value: AnyRef): Unit
+    def ask(value: AnyRef): Unit = ???
 
     // actor send notice message to channel
-    def notice(value: AnyRef): Unit
+    def notice(value: AnyRef): Unit = ???
 
     // actor end reply message to channel, the channel generate a ChannelFrame
-    def reply(value: AnyRef): Unit // TODO: use by ChannelFrame
+    def reply(value: AnyRef): Unit = ??? // TODO: use by ChannelFrame
 
     override private[core] def onInboundMessage(msg: AnyRef): Unit = ???
 

@@ -31,6 +31,7 @@ import io.otavia.core.channel.udp.AddressedEnvelope
 
 import java.net.{InetAddress, NetworkInterface, ProtocolFamily, SocketAddress}
 import java.nio.channels.{SelectableChannel, SelectionKey, DatagramChannel as JDatagramChannel}
+import scala.language.unsafeNulls
 import scala.util.Try
 
 /** An NIO [[DatagramChannel]] that sends and receives an [[AddressedEnvelope]].
@@ -111,7 +112,8 @@ class NioDatagramChannel(socket: JDatagramChannel, protocolFamily: ProtocolFamil
         if (NioChannelUtil.isDomainSocket(family)) NioChannelUtil.toDomainSocketAddress(address) else address
     }.toOption
 
-    override protected def doBind(local: SocketAddress): Unit = {
+    override protected def doBind(): Unit = {
+        val local = unresolvedLocal.nn
         if (NioChannelUtil.isDomainSocket(family))
             SocketUtils.bind(javaChannel, NioChannelUtil.toUnixDomainSocketAddress(local))
         else

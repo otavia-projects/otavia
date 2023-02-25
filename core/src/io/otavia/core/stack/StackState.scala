@@ -20,6 +20,9 @@ import io.otavia.core.message.Reply
 
 trait StackState {
 
+    private val option: Option[StackState] = Some(this) // for pooling Some(this) object to reduce GC
     def resumable(): Boolean
+
+    def suspend(): Option[StackState] = option
 
 }

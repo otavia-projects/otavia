@@ -34,7 +34,7 @@ private[channel] trait ChannelInternal[L <: SocketAddress, R <: SocketAddress] {
      *    when an error happens.
      */
     @throws[Exception]
-    protected def doBind(): Unit
+    protected def doBind(): Unit = ???
 
     /** Disconnect this [[Channel]] from its remote peer
      *

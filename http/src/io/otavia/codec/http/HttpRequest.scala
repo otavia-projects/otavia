@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.otavia.http
+package io.otavia.codec.http
 
 import io.otavia.core.message.{Ask, IdAllocator, Reply}
 

@@ -47,7 +47,7 @@ class FixedLengthFrameDecoder(private val frameLength: Int, cumulator: Cumulator
         val maybe = decode0(ctx, in)
         maybe match
             case msg: AnyRef => ctx.fireChannelRead(msg)
-            case null: Null  =>
+            case null        =>
     }
 
     /** Create a frame out of the Buffer and return it.

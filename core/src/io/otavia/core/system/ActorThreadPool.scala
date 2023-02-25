@@ -16,10 +16,15 @@
 
 package io.otavia.core.system
 
-class ActorThreadPool(val system: ActorSystem) {
+trait ActorThreadPool(val system: ActorSystem) {
+
+    /** Size of this pool. */
+    def size: Int
+
+    /** Max size of this thread pool. */
+    def maxSize: Int
 
     private var cursor: Int = ActorThreadPool.INVALID_THREAD_ID
-    def size: Int           = ???
 
     def nextThreadId(): Int = {
         cursor += 1

@@ -30,7 +30,7 @@ abstract class ObjectPool[T <: Poolable] {
      */
     protected final def newInstance(): T = {
         val instance = newObject()
-        instance.creator(ActorThread.currentThreadIndex)
+        instance.creator(Thread.currentThread().nn)
         instance
     }
 

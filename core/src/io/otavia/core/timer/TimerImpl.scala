@@ -35,7 +35,7 @@ final class TimerImpl(private[core] val system: ActorSystem) extends Timer {
 
     private val nextId = new AtomicLong(Timer.INVALID_TIMEOUT_REGISTER_ID + 1)
 
-    protected val logger: Logger = getLogger
+    protected val logger: Logger = ???
 
     override private[timer] def nextRegisterId() = nextId.getAndIncrement()
 

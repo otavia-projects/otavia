@@ -21,12 +21,12 @@ import io.otavia.core.system.ActorThread
 
 abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
 
-    private var variables: Array[AnyRef] = ThreadLocal.EMPTY // Use boxed objects to avoid cpu cache false sharing.
+    private var variables: Array[ValueBox[V]] = _ // Use boxed objects to avoid cpu cache false sharing.
 
-    private def valueBox(index: Int): ValueBox[V] = variables(index).asInstanceOf[ValueBox[V]]
+    private def valueBox(index: Int): ValueBox[V] = variables(index) // .asInstanceOf[ValueBox[V]]
 
     override private[cache] def doInit(len: Int): Unit = {
-        val arr = new Array[AnyRef](len)
+        val arr = new Array[ValueBox[V]](len)
         arr.indices.foreach { index =>
             val box: ValueBox[V] = ValueBox()
             arr(index) = box
@@ -43,9 +43,7 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
     final def get(): V = {
         val index = threadIndex()
         val box   = valueBox(index)
-        box.get match
-            case v: V       => v
-            case null: Null => initializeValue(box)
+        if (box.isEmpty) initializeValue(box) else box.getValue
     }
 
     final def getIfExists: V | Null = {
@@ -60,22 +58,20 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
         box.set(value)
     }
 
-    override def isSet: Boolean = {
+    override def isSet: Boolean = if (isInited) {
         val index = threadIndex()
-        val box   = valueBox(index)
-        box match
-            case null: Null     => false
-            case v: ValueBox[V] => v.nonEmpty
-    }
+        val box   = variables(index)
+        box.nonEmpty
+    } else false
 
     override def remove(): Unit = if (isInited) {
         val index = threadIndex()
         val box   = valueBox(index)
-        box.get match
-            case null: Null =>
-            case v: V =>
-                box.remove()
-                onRemoval(v)
+        if (box.nonEmpty) {
+            val value = box.getValue
+            box.remove()
+            onRemoval(value)
+        }
     }
 
 }
@@ -87,7 +83,10 @@ object ActorThreadLocalBoxed {
         private var value: V | Null = null
 
         def set(v: V): Unit = value = v
-        def get: V | Null   = value
+
+        def get: V | Null = value
+
+        def getValue: V = value.asInstanceOf[V]
 
         def remove(): Unit = value = null
 
@@ -100,5 +99,7 @@ object ActorThreadLocalBoxed {
     private object ValueBox {
         def apply[V](): ValueBox[V] = new ValueBox()
     }
+
+    private val EMPTY_ARRAY: Array[ValueBox[?]] = Array.empty
 
 }

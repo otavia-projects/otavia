@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-package io.otavia.http
+package io.otavia.core.system
 
-import io.otavia.core.message.{IdAllocator, Reply}
+trait ActorThreadPoolFactory {
+    def newThreadPool(): ActorThreadPool
+}
 
-final case class HttpResponse[T](headers: HttpHeaders, content: T)(using IdAllocator) extends Reply
+object ActorThreadPoolFactory {
+
+}

@@ -25,6 +25,7 @@ import io.otavia.core.reactor.ReactorEvent
 
 import java.net.SocketAddress
 import java.nio.channels.{CancelledKeyException, SelectableChannel, SelectionKey, Selector}
+import scala.language.unsafeNulls
 
 /** Abstract base class for Channel implementations which use a Selector based approach.
  *

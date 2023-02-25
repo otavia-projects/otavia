@@ -23,6 +23,7 @@ import io.otavia.core.channel.{ChannelException, ChannelOption}
 import java.io.IOException
 import java.net.{SocketOption, StandardSocketOptions}
 import java.nio.channels.{NetworkChannel, ServerSocketChannel}
+import scala.language.unsafeNulls
 
 /** Provides [[ChannelOption]] over a given [[SocketOption]] which is then passed through the underlying
  *  [[NetworkChannel]].

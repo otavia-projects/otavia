@@ -24,7 +24,7 @@ import io.otavia.core.stack.StackState
 import scala.collection.mutable
 
 @Component
-class ConsoleLogger extends StateActor[Logger.LogMsg], Logger {
+abstract class ConsoleLogger extends StateActor[Logger.LogMsg], Logger {
     import ConsoleLogger.*
 
     override val batchable: Boolean = true

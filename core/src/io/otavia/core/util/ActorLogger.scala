@@ -24,8 +24,10 @@ import io.otavia.core.system.ActorSystem
 import io.otavia.core.util.Logger.{Debug, Error, Fatal, Info, Trace, Warn}
 
 import java.time.LocalDateTime
+import scala.language.unsafeNulls
 
 class ActorLogger private[core] (val clz: Class[?], actor: Actor[?]) {
+
     private val system: ActorSystem            = actor.system
     private val logger: Address[Logger.LogMsg] = system.getAddress(classOf[Logger])
     private given id: IdAllocator              = actor.idAllocator
@@ -48,6 +50,7 @@ class ActorLogger private[core] (val clz: Class[?], actor: Actor[?]) {
     def logFatal(log: String): Unit = if (system.logLevel >= 1) logger.notice(Fatal(getClass, LocalDateTime.now(), log))
 
     def logFatal(log: String, e: Throwable): Unit = logFatal(s"${log}\n${ThrowableUtil.stackTraceToString(e)}")
+
 }
 
 object ActorLogger {

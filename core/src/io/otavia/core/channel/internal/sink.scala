@@ -19,7 +19,7 @@
 package io.otavia.core.channel.internal
 
 import io.netty5.buffer.Buffer
-import io.otavia.core.channel.estimator.{ReadBufferAllocator, ReadHandleFactory}
+import io.otavia.core.channel.estimator.{ReadBufferAllocator, ReadHandleFactory, WriteHandleFactory}
 import io.otavia.core.channel.internal.ChannelOutboundBuffer
 import io.otavia.core.channel.{AbstractChannel, ChannelPipeline, ChannelShutdownDirection, ServerChannel}
 
@@ -126,7 +126,34 @@ private[channel] trait ReadSink {
 private[channel] trait WriteSink {
     this: AbstractChannel[?, ?] =>
 
-    def writeLoop(outboundBuffer: ChannelOutboundBuffer): Unit
+    private lazy val writeHandle: WriteHandleFactory.WriteHandle = newWriteHandle // TODO:
+
+    private var writtenBytes         = 0
+    private var writtenMessages: Int = 0
+
+    private val predicate: AnyRef => Boolean = o =>
+        o match
+            case buffer: Buffer =>
+                val readable = buffer.readableBytes()
+                buffer.skipReadableBytes(math.min(readable, writtenBytes))
+                if (buffer.readableBytes() == 0) {
+                    writtenBytes -= readable
+                    writtenMessages += 1
+                    true
+                } else ???
+            case _ => false
+
+    def writeLoop(outboundBuffer: ChannelOutboundBuffer): Unit = try {
+        try {} catch {
+            case t: Throwable => ???
+        } finally {
+            try {
+                writeLoopComplete(outboundBuffer.isEmpty)
+            } catch {
+                case cause: Throwable => ???
+            }
+        }
+    } finally {}
 
     /** Update the [[Buffer.readerOffset]] of each buffer and return the number of completely written [[Buffer]]s.
      *
@@ -135,14 +162,14 @@ private[channel] trait WriteSink {
      *  @return
      *    the number of completely written buffers.
      */
-    def updateBufferReaderOffsets(writtenBytes: Long): Int
+    def updateBufferReaderOffsets(writtenBytes: Long): Int = ???
 
     /** Return the estimated maximum number of bytes that can be written with one gathering write operation.
      *
      *  @return
      *    number of bytes.
      */
-    def estimatedMaxBytesPerGatheringWrite(): Long
+    def estimatedMaxBytesPerGatheringWrite(): Long = ???
 
     /** The number of flushed messages that are ready to be written. The messages can be accessed by either calling
      *  {@link # currentFlushedMessage ( )} or {@link # forEachFlushedMessage ( Predicate )}.
@@ -150,14 +177,14 @@ private[channel] trait WriteSink {
      *  @return
      *    the number of messages.
      */
-    def numFlushedMessages(): Int
+    def numFlushedMessages(): Int = ???
 
     /** Return the current message that should be written.
      *
      *  @return
      *    the first flushed message.
      */
-    def currentFlushedMessage(): AnyRef
+    def currentFlushedMessage(): AnyRef = ???
 
     /** Call {@link Predicate# test ( Object )} for each message that is flushed until {@link Predicate# test ( Object
      *  )} returns {@code false} or there are no more flushed messages.
@@ -168,7 +195,7 @@ private[channel] trait WriteSink {
      *    if called after {@link # complete ( long, long, int, boolean)} or {@link # complete ( long, Throwable,
      *    boolean)} was called.
      */
-    def forEachFlushedMessage(processor: AnyRef => Boolean): Unit
+    def forEachFlushedMessage(processor: AnyRef => Boolean): Unit = ???
 
     /** Notify of the last write operation and its result.
      *
@@ -189,6 +216,6 @@ private[channel] trait WriteSink {
         actualBytesWrite: Long,
         messagesWritten: Int,
         mightContinueWriting: Boolean
-    ): Unit
+    ): Unit = ???
 
 }

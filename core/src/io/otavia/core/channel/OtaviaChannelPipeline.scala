@@ -18,11 +18,12 @@
 
 package io.otavia.core.channel
 
-import io.netty5.buffer.{Buffer, BufferAllocator}
+import io.netty5.buffer.{Buffer, BufferAllocator, StandardAllocationTypes}
 import io.netty5.util.concurrent.FastThreadLocal
 import io.netty5.util.internal.StringUtil
 import io.netty5.util.{Resource, ResourceLeakDetector}
 import io.otavia.core.actor.ChannelsActor
+import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import io.otavia.core.channel.OtaviaChannelPipeline.*
 import io.otavia.core.channel.estimator.{MessageSizeEstimator, ReadBufferAllocator}
@@ -52,6 +53,13 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         channel.getOption(ChannelOption.MESSAGE_SIZE_ESTIMATOR).newHandle
 
     private var _pendingOutboundBytes: Long = 0
+
+    private val readAdaptiveBuffer: AdaptiveBuffer  = new AdaptiveBuffer(channel.directAllocator)
+    private val writeAdaptiveBuffer: AdaptiveBuffer = new AdaptiveBuffer(channel.directAllocator)
+
+    private[core] override def channelInboundBuffer: AdaptiveBuffer = readAdaptiveBuffer
+
+    private[core] override def channelOutboundBuffer: AdaptiveBuffer = writeAdaptiveBuffer
 
     final def touch(msg: AnyRef, next: OtaviaChannelHandlerContext): AnyRef = {
         if (touch) Resource.touch(msg, next)
@@ -417,72 +425,77 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
     /** Converts this pipeline into an [[Map]] whose keys are handler names and whose values are handlers. */
     override def toMap: Map[String, ChannelHandler] = handlers.map(ctx => ctx.name -> ctx.handler).toMap
 
-    override def fireChannelRegistered(): ChannelPipeline = {
+    override def fireChannelRegistered(): this.type = {
         head.invokeChannelRegistered()
         this
     }
 
-    override def fireChannelUnregistered(): ChannelPipeline = {
+    override def fireChannelUnregistered(): this.type = {
         head.invokeChannelUnregistered()
         this
     }
 
-    override def fireChannelActive(): ChannelPipeline = {
+    override def fireChannelActive(): this.type = {
         head.invokeChannelActive()
         this
     }
 
-    override def fireChannelInactive(): ChannelPipeline = {
+    override def fireChannelInactive(): this.type = {
         head.invokeChannelInactive()
         this
     }
 
-    override def fireChannelShutdown(direction: ChannelShutdownDirection): ChannelPipeline = {
+    override def fireChannelShutdown(direction: ChannelShutdownDirection): this.type = {
         head.invokeChannelShutdown(direction)
         this
     }
 
-    override def fireChannelExceptionCaught(cause: Throwable): ChannelPipeline = {
+    override def fireChannelExceptionCaught(cause: Throwable): this.type = {
         head.invokeChannelExceptionCaught(cause)
         this
     }
 
-    override def fireChannelInboundEvent(event: AnyRef): ChannelPipeline = {
+    override def fireChannelInboundEvent(event: AnyRef): this.type = {
         head.invokeChannelInboundEvent(event)
         this
     }
 
-    override def fireChannelTimeoutEvent(id: Long): ChannelPipeline = {
+    override def fireChannelTimeoutEvent(id: Long): this.type = {
         head.invokeChannelTimeoutEvent(id)
         this
     }
 
-    override def fireChannelRead(msg: AnyRef): ChannelPipeline = {
+    override def fireChannelRead(msg: AnyRef): this.type = {
         head.invokeChannelRead(msg)
         this
     }
 
-    override def fireChannelReadComplete(): ChannelPipeline = {
+    override def fireChannelRead(msg: AnyRef, msgId: Long): this.type = {
+        ???
+        this
+    }
+
+    override def fireChannelReadComplete(): this.type = {
         head.invokeChannelReadComplete()
         this
     }
 
-    override def fireChannelWritabilityChanged(): ChannelPipeline = {
+    override def fireChannelWritabilityChanged(): this.type = {
         head.invokeChannelWritabilityChanged()
         this
     }
 
-    override def flush(): ChannelPipeline = {
+    override def flush(): this.type = {
         tail.flush()
         this
     }
 
-    override def read(readBufferAllocator: ReadBufferAllocator): ChannelPipeline = {
+    override def read(readBufferAllocator: ReadBufferAllocator): this.type = {
         tail.read(readBufferAllocator)
         this
     }
 
-    override def read(): ChannelPipeline = {
+    override def read(): this.type = {
         tail.read()
         this
     }

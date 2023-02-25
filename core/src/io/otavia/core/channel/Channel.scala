@@ -168,12 +168,12 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
 
     final def headAllocator: BufferAllocator = executor.system.headAllocator
 
-    final override def read(readBufferAllocator: ReadBufferAllocator): Channel = {
+    final override def read(readBufferAllocator: ReadBufferAllocator): this.type = {
         pipeline.read(readBufferAllocator)
         this
     }
 
-    override def read(): Channel = {
+    override def read(): this.type = {
         pipeline.read()
         this
     }
@@ -201,7 +201,7 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
 
     final override def writeAndFlush(msg: AnyRef, msgId: Long): Unit = pipeline.writeAndFlush(msg, msgId)
 
-    final override def flush(): Channel = {
+    final override def flush(): this.type  = {
         pipeline.flush()
         this
     }
@@ -215,7 +215,7 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
      *  @return
      *    id
      */
-    def generateMessageId: Long
+    def generateMessageId: Long = ???
 
     /** Message from tail handler from pipeline. */
     private[core] def onInboundMessage(msg: AnyRef): Unit

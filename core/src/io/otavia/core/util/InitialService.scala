@@ -21,7 +21,7 @@ import io.otavia.core.message.{IdAllocator, Notice}
 import io.otavia.core.stack.{NoticeFrame, StackState}
 import io.otavia.core.util.InitialService.*
 
-class InitialService extends StateActor[InitialService.MSG] {
+abstract class InitialService extends StateActor[InitialService.MSG] {
 
     override def continueNotice(state: InitialService.MSG & Notice | NoticeFrame): Option[StackState] = state match
         case initialFromConfig: InitialFromConfig => None
@@ -31,6 +31,7 @@ class InitialService extends StateActor[InitialService.MSG] {
 }
 
 object InitialService {
+
     type MSG = InitialFromConfig | InitialFromClass
 
     final case class InitialFromConfig()(using IdAllocator) extends Notice

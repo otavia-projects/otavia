@@ -133,7 +133,7 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
                     ctx.fireChannelReadComplete()
                 } else buffer.close()
 
-            case null: Null =>
+            case null =>
 
         handlerRemoved0(context.nn)
     }
@@ -151,7 +151,7 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
             else accumulation = cumulator.cumulate(ctx.directAllocator(), accumulation.nn, buffer)
             try {
                 assertContext(ctx)
-                callDecode(context, accumulation.nn)
+                callDecode(context.nn, accumulation.nn)
             } catch {
                 case e: DecoderException => throw e
                 case e: Exception        => throw new DecoderException(e)
@@ -166,8 +166,8 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
                     numReads = 0
                     discardSomeReadBytes()
                 }
-                fireChannelRead = fireChannelRead | (context.fireChannelReadCallCount() > 0)
-                context.reset()
+                firedChannelRead_=(firedChannelRead | (context.nn.fireChannelReadCallCount > 0))
+                context.nn.reset()
             }
 
         case _ => ctx.fireChannelRead(msg)
@@ -212,7 +212,7 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
     } finally {
         accumulation match
             case buf: Buffer => buf.close()
-            case null: Null  =>
+            case null        =>
         accumulation = null
         if (ctx.fireChannelReadCallCount > 0) {
             ctx.reset()
@@ -223,8 +223,8 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
 
     @throws[Exception]
     def channelInputClosed(ctx: ByteToMessageDecoderContext): Unit = accumulation match
-        case null: Null =>
-            val buffer = ctx.directAllocator().allocate(0)
+        case null =>
+            val buffer: Buffer = ctx.directAllocator().allocate(0).nn
             decodeLast(ctx, buffer)
             buffer.close()
         case buffer: Buffer =>
@@ -235,8 +235,8 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
                 // Use Unpooled.EMPTY_BUFFER if accumulation become null after calling callDecode(...).
                 // See https://github.com/netty/netty/issues/10802.
                 accumulation match
-                    case null: Null =>
-                        val buffer = ctx.directAllocator().allocate(0)
+                    case null =>
+                        val buffer: Buffer = ctx.directAllocator().allocate(0).nn
                         decodeLast(ctx, buffer)
                         buffer.close()
                     case _ => decodeLast(ctx, buffer)
@@ -329,7 +329,7 @@ object ByteToMessageDecoder {
 
         def fireChannelReadCallCount: Int = fireChannelReadCalled
 
-        override def fireChannelRead(msg: AnyRef): ChannelHandlerContext = {
+        override def fireChannelRead(msg: AnyRef): this.type = {
             fireChannelReadCalled += 1
             super.fireChannelRead(msg)
             this
@@ -368,7 +368,7 @@ object ByteToMessageDecoder {
                 accumulation
             } else {
                 val buffer = if (accumulation.readOnly()) {
-                    val tmp = accumulation.copy()
+                    val tmp: Buffer = accumulation.copy().nn
                     accumulation.close()
                     tmp
                 } else accumulation
@@ -377,7 +377,7 @@ object ByteToMessageDecoder {
                         composite.extendWith(prepareInForCompose(in))
                         composite
                     case _ =>
-                        alloc.compose(util.Arrays.asList(buffer.send(), prepareInForCompose(in)))
+                        alloc.compose(util.Arrays.asList(buffer.send().nn, prepareInForCompose(in))).nn
                 in.close()
                 composite
             }
@@ -387,7 +387,7 @@ object ByteToMessageDecoder {
             // Using readSplit(0), we grab zero readable bytes in the split-off buffer, but all the already-read
             // bytes get cut off from the accumulation buffer.
 
-            accumulation.readSplit(0).close()
+            accumulation.readSplit(0).nn.close()
             accumulation
 
         }
@@ -396,7 +396,8 @@ object ByteToMessageDecoder {
     }
 
     object CompositeBufferCumulator {
-        private def prepareInForCompose(in: Buffer): Send[Buffer] = if (in.readOnly()) in.copy().send() else in.send()
+        private def prepareInForCompose(in: Buffer): Send[Buffer] =
+            if (in.readOnly()) in.copy().nn.send().nn else in.send().nn
 
     }
 
@@ -431,7 +432,7 @@ object ByteToMessageDecoder {
             val newSize = MathUtil.safeFindNextPositivePowerOfTwo(oldAcc.readableBytes() + in.readableBytes())
 
             if (oldAcc.readOnly()) {
-                val newAcc = allocator.allocate(newSize)
+                val newAcc: Buffer = allocator.allocate(newSize).nn
                 newAcc.writeBytes(oldAcc)
                 oldAcc.close()
                 newAcc.writeBytes(in)

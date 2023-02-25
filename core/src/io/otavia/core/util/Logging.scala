@@ -25,6 +25,7 @@ import io.otavia.core.util.Logger
 import io.otavia.core.util.Logger.*
 
 import java.time.LocalDateTime
+import scala.language.unsafeNulls
 
 private[core] trait Logging {
     this: Actor[?] =>
@@ -45,4 +46,5 @@ private[core] trait Logging {
 
     def logFatal(log: String): Unit = if (system.logLevel >= 1) logger.notice(Fatal(getClass, LocalDateTime.now(), log))
     def logFatal(log: String, e: Throwable): Unit = logFatal(s"${log}\n${ThrowableUtil.stackTraceToString(e)}")
+
 }

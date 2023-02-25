@@ -16,27 +16,38 @@
 
 package io.otavia.core.cache
 
+import io.netty5.util.concurrent.FastThreadLocal
 import io.otavia.core.system.ActorThread
 
 abstract class PerActorThreadObjectPool[T <: Poolable](val dropIfRecycleNotByCreated: Boolean = false)
     extends ObjectPool[T] {
 
+    // use by ActorThread
     private val threadLocal = new ActorThreadLocal[Poolable.SingleThreadPoolableHolder[T]] {
         override protected def initialValue(): Poolable.SingleThreadPoolableHolder[T] =
             new Poolable.SingleThreadPoolableHolder[T]()
     }
 
-    private def holder(): Poolable.SingleThreadPoolableHolder[T] = threadLocal.get()
-
-    override def get(): T = {
-        holder().pop() match
-            case null: Null  => newInstance()
-            case instance: T => instance
+    // use by other Thread
+    private lazy val fastThreadLocal = new FastThreadLocal[Poolable.SingleThreadPoolableHolder[T]] {
+        override def initialValue(): Poolable.SingleThreadPoolableHolder[T] =
+            new Poolable.SingleThreadPoolableHolder[T]()
     }
 
-    override def recycle(poolable: T): Unit = if (dropIfRecycleNotByCreated) {
-        val currentThreadIndex = ActorThread.currentThreadIndex
-        if (poolable.creator == currentThreadIndex) holder().push(poolable) else {}
-    } else holder().push(poolable)
+    private def holder(): Poolable.SingleThreadPoolableHolder[T] = {
+        if (ActorThread.currentThreadIsActorThread) threadLocal.get() else fastThreadLocal.get().nn
+    }
+
+    override def get(): T = {
+        val pop = holder().pop()
+        if (pop != null) pop.asInstanceOf[T] else newInstance()
+    }
+
+    override def recycle(poolable: T): Unit = {
+        poolable.clean()
+        if (dropIfRecycleNotByCreated) {
+            if (poolable.creator == ActorThread.currentThread()) holder().push(poolable) else {}
+        } else holder().push(poolable)
+    }
 
 }

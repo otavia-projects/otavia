@@ -19,6 +19,7 @@
 package io.otavia.core.channel.socket
 
 import java.net.{ProtocolFamily, StandardProtocolFamily}
+import scala.language.unsafeNulls
 
 /** [[ProtocolFamily]] implementation that is used by the different transport implementations. */
 sealed trait SocketProtocolFamily extends ProtocolFamily {

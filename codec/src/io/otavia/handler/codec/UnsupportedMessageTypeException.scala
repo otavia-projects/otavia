@@ -31,8 +31,8 @@ class UnsupportedMessageTypeException(msg: String | Null, cause: Throwable | Nul
         this(
           message(
             s match
-                case null: Null => "null"
-                case m: AnyRef  => m.getClass.getName
+                case null      => "null"
+                case m: AnyRef => m.getClass.getName.nn
             ,
             expectedTypes
           )

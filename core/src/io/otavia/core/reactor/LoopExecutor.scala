@@ -21,7 +21,10 @@ package io.otavia.core.reactor
 import java.util.concurrent.{Executor, ThreadFactory}
 
 class LoopExecutor(private val threadFactory: ThreadFactory) extends Executor {
-    override def execute(command: Runnable): Unit = threadFactory.newThread(command).start()
+    override def execute(command: Runnable): Unit = {
+        val thread: Thread = threadFactory.newThread(command).nn
+        thread.start()
+    }
 }
 
 object LoopExecutor {

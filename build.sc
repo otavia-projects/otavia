@@ -29,14 +29,20 @@ object ProjectInfo {
     def repository              = github.browsableRepository.get
     def licenses                = Seq(License.`Apache-2.0`)
     def author                  = Seq("Yan Kun <yan_kun_1992@foxmail.com>")
+    def version                 = "0.1.0-SNAPSHOT"
+    def scalaVersion            = "3.2.2"
+    def buildTool               = "mill"
+    def buildToolVersion        = mill.BuildInfo.millVersion
+
+    def testDep = ivy"org.scalatest::scalatest:3.2.15"
 
 }
 
 trait OtaviaModule extends ScalaModule with PublishModule {
 
-    override def scalaVersion = "3.2.2"
+    override def scalaVersion = ProjectInfo.scalaVersion
 
-    override def publishVersion: T[String] = "0.1.0-SNAPSHOT"
+    override def publishVersion: T[String] = ProjectInfo.version
 
     override def pomSettings: T[PomSettings] = PomSettings(
       description = ProjectInfo.description,
@@ -85,14 +91,36 @@ object core extends OtaviaModule with BuildInfo {
 
     override def buildInfoPackageName: Option[String] = Some("io.otavia")
 
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
+
 }
 
 object handler extends OtaviaModule {
+
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
+
 }
 
 object codec extends OtaviaModule {
+
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep, ivy"io.netty:netty5-codec:5.0.0.Alpha5")
+        
+    }
+
 }
 
 object http extends OtaviaModule {

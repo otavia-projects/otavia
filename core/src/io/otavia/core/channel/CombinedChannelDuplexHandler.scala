@@ -18,6 +18,7 @@
 
 package io.otavia.core.channel
 
+import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.CombinedChannelDuplexHandler.*
 import io.otavia.core.channel.estimator.ReadBufferAllocator
 import io.otavia.core.channel.internal.{ChannelHandlerMask, DelegatingChannelHandlerContext}
@@ -79,6 +80,15 @@ class CombinedChannelDuplexHandler[I <: ChannelHandler, O <: ChannelHandler] ext
     def inboundHandler: I = this.inbound
 
     def outboundHandler: O = this.outbound
+
+    override def isBufferHandler: Boolean =
+        inboundHandler.isBufferHandler || outboundHandler.isBufferHandler
+
+    override protected def inboundAdaptiveStrategy: AdaptiveBuffer.AdaptiveStrategy =
+        inboundHandler.inboundStrategy
+
+    override protected def outboundAdaptiveStrategy: AdaptiveBuffer.AdaptiveStrategy =
+        outboundHandler.outboundStrategy
 
     private def checkAdded(): Unit =
         if (!handlerAdded) throw new IllegalStateException("handler not added to pipeline yet")

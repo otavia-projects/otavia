@@ -36,7 +36,7 @@ import io.otavia.core.channel.{ChannelHandlerAdapter, ChannelHandlerContext}
 abstract class MessageToByteEncoder[I]() extends ChannelHandlerAdapter {
 
     private var matcher: TypeParameterMatcher =
-        TypeParameterMatcher.find(this, classOf[MessageToByteEncoder[?]], "I")
+        TypeParameterMatcher.find(this, classOf[MessageToByteEncoder[?]], "I").nn
 
     def this(outboundMessageType: Class[? <: I]) = {
         this()
@@ -65,13 +65,13 @@ abstract class MessageToByteEncoder[I]() extends ChannelHandlerAdapter {
                     encode(ctx, cast, buffer)
                 } finally {
                     SilentDispose.autoClosing(cast) match
-                        case null: Null               =>
+                        case null                     =>
                         case closeable: AutoCloseable => closeable.close()
                 }
                 if (buffer.readableBytes() > 0) {
                     ctx.write(buffer)
                 } else {
-                    ctx.write(ctx.directAllocator().allocate(0))
+                    ctx.write(ctx.directAllocator().allocate(0).nn)
                 }
             } else ctx.write(msg)
         } catch {

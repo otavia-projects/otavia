@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package io.otavia.http
+package io.otavia.codec.http.annotation
 
-import io.otavia.core.actor.AccepterActor.AcceptedChannel
-import io.otavia.core.actor.{AcceptedWorkerActor, ChannelsActor}
-import io.otavia.core.channel.Channel
-import io.otavia.core.message.{Ask, IdAllocator, UnitReply}
+import java.lang.annotation.{Documented, ElementType, Inherited, Retention, RetentionPolicy, Target, Annotation}
 
-//abstract class HttpServerWorker extends AcceptedWorkerActor[HttpRequest[?]] {}
+
+
+@Target(Array(ElementType.TYPE))
+@Retention(RetentionPolicy.RUNTIME)
+trait Controller(route: String, number: Int = 1) extends Annotation

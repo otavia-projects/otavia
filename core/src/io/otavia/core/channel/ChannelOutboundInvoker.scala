@@ -41,14 +41,17 @@ trait ChannelOutboundInvoker {
 
     def deregister(): Unit
 
-    def read(readBufferAllocator: ReadBufferAllocator): ChannelOutboundInvoker
-    def read(): ChannelOutboundInvoker
+    def read(readBufferAllocator: ReadBufferAllocator): this.type
+
+    def read(): this.type
 
     def write(msg: AnyRef): Unit
 
     def write(msg: AnyRef, msgId: Long): Unit
 
-    def flush(): ChannelOutboundInvoker
+//    def writeComplete(): Unit // TODO for clean AdaptiveBuffer in batch write for example http pipeline request
+
+    def flush(): this.type
 
     def writeAndFlush(msg: AnyRef): Unit
 

@@ -44,7 +44,7 @@ class TimerTaskManager(val timer: Timer) {
     }
 
     def remove(id: Long): Unit = registeredTasks.remove(id) match
-        case null: Null =>
+        case null =>
         case timerTask: OtaviaTimerTask =>
             timerTask.timeout.cancel()
 

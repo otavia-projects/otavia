@@ -20,6 +20,7 @@ package io.otavia.core.channel.internal
 
 import io.netty5.buffer.BufferAllocator
 import io.otavia.core.actor.ChannelsActor
+import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.*
 import io.otavia.core.channel.estimator.ReadBufferAllocator
 
@@ -37,67 +38,77 @@ abstract class DelegatingChannelHandlerContext(private val ctx: ChannelHandlerCo
 
     override def isRemoved: Boolean = ctx.isRemoved
 
-    override def fireChannelRegistered(): ChannelHandlerContext = {
+    override def fireChannelRegistered(): this.type = {
         ctx.fireChannelRegistered()
         this
     }
 
-    override def fireChannelUnregistered(): ChannelHandlerContext = {
+    override def fireChannelUnregistered(): this.type = {
         ctx.fireChannelUnregistered()
         this
     }
 
-    override def fireChannelActive(): ChannelHandlerContext = {
+    override def fireChannelActive(): this.type = {
         ctx.fireChannelActive()
         this
     }
 
-    override def fireChannelInactive(): ChannelHandlerContext = {
+    override def fireChannelInactive(): this.type = {
         ctx.fireChannelInactive()
         this
     }
 
-    override def fireChannelShutdown(direction: ChannelShutdownDirection): ChannelHandlerContext = {
+    override def fireChannelShutdown(direction: ChannelShutdownDirection): this.type = {
         ctx.fireChannelShutdown(direction)
         this
     }
 
-    override def fireChannelExceptionCaught(cause: Throwable): ChannelHandlerContext = {
+    override def fireChannelExceptionCaught(cause: Throwable): this.type = {
         ctx.fireChannelExceptionCaught(cause)
         this
     }
 
-    override def fireChannelInboundEvent(evt: AnyRef): ChannelHandlerContext = {
+    override def fireChannelInboundEvent(evt: AnyRef): this.type = {
         ctx.fireChannelInboundEvent(evt)
         this
     }
 
-    override def fireChannelRead(msg: AnyRef): ChannelHandlerContext = {
+    override def fireChannelTimeoutEvent(id: Long): this.type = {
+        ctx.fireChannelTimeoutEvent(id)
+        this
+    }
+
+    override def fireChannelRead(msg: AnyRef): this.type = {
         ctx.fireChannelRead(msg)
         this
     }
 
-    override def fireChannelReadComplete(): ChannelHandlerContext = {
+    override def fireChannelRead(msg: AnyRef, msgId: Long): this.type = {
+        ctx.fireChannelRead(msg, msgId)
+        this
+    }
+
+    override def fireChannelReadComplete(): this.type = {
         ctx.fireChannelReadComplete()
         this
     }
 
-    override def fireChannelWritabilityChanged(): ChannelHandlerContext = {
+    override def fireChannelWritabilityChanged(): this.type = {
         ctx.fireChannelWritabilityChanged()
         this
     }
 
-    override def read(readBufferAllocator: ReadBufferAllocator): ChannelHandlerContext = {
+    override def read(readBufferAllocator: ReadBufferAllocator): this.type = {
         ctx.read(readBufferAllocator)
         this
     }
 
-    override def read(): ChannelHandlerContext = {
+    override def read(): this.type = {
         ctx.read()
         this
     }
 
-    override def flush(): ChannelHandlerContext = {
+    override def flush(): this.type = {
         ctx.flush()
         this
     }
@@ -127,5 +138,15 @@ abstract class DelegatingChannelHandlerContext(private val ctx: ChannelHandlerCo
     override def writeAndFlush(msg: AnyRef): Unit = ctx.writeAndFlush(msg)
 
     override def writeAndFlush(msg: AnyRef, msgId: Long): Unit = ctx.writeAndFlush(msg, msgId)
+
+    override def isBufferHandlerContext: Boolean = ctx.isBufferHandlerContext
+
+    override def inboundAdaptiveBuffer: AdaptiveBuffer = ctx.inboundAdaptiveBuffer
+
+    override def outboundAdaptiveBuffer: AdaptiveBuffer = ctx.outboundAdaptiveBuffer
+
+    override def nextInboundAdaptiveBuffer: AdaptiveBuffer = ctx.nextInboundAdaptiveBuffer
+
+    override def nextOutboundAdaptiveBuffer: AdaptiveBuffer = ctx.nextOutboundAdaptiveBuffer
 
 }

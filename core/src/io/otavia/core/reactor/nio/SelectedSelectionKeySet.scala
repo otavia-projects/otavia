@@ -21,6 +21,7 @@ package io.otavia.core.reactor.nio
 import java.nio.channels.SelectionKey
 import java.util
 import java.util.Arrays
+import scala.language.unsafeNulls
 
 final class SelectedSelectionKeySet extends util.AbstractSet[SelectionKey] {
 

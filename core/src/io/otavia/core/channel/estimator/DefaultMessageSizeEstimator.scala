@@ -25,7 +25,7 @@ import io.otavia.core.channel.estimator.MessageSizeEstimator
 /** Default [[MessageSizeEstimator]] implementation which supports the estimation of the size of [[Buffer]] and
  *  [[FileRegion]].
  */
-private object DefaultMessageSizeEstimator extends MessageSizeEstimator {
+private[channel] object DefaultMessageSizeEstimator extends MessageSizeEstimator {
 
     private final val handle = new HandleImpl(8)
 

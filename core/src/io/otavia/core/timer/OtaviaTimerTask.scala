@@ -61,8 +61,8 @@ final class OtaviaTimerTask(val manager: TimerTaskManager) extends TimerTask {
         address.inform(TimeoutEvent(id, attach))
         if (period > 0) {
             val timer: NTimer = timeout.timer().nn
-            val timeout       = timer.newTimeout(this, period, periodUnit).nn
-            this.setHandle(timeout)
+            val newTimeout    = timer.newTimeout(this, period, periodUnit).nn
+            this.setHandle(newTimeout)
         } else {
             parent.remove(id)
         }

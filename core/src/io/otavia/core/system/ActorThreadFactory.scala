@@ -28,7 +28,6 @@ object ActorThreadFactory {
             val thread = new ActorThread(system, pool)
             if (thread.isDaemon) thread.setDaemon(false)
             if (thread.getPriority != Thread.NORM_PRIORITY) thread.setPriority(Thread.NORM_PRIORITY)
-            index += 1
             thread
         }
 

@@ -19,6 +19,8 @@ package io.otavia.core.stack
 import io.otavia.core.message.{Ask, Message, Notice, Reply}
 import io.otavia.core.stack.AsksFrame.ReturnType
 
+import scala.language.unsafeNulls
+
 final class ChannelFrame(initialState: StackState | Null, val msgId: Long) {
 
     private var stackState: StackState | Null = initialState

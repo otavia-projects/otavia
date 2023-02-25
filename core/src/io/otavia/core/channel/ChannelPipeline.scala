@@ -18,6 +18,7 @@
 
 package io.otavia.core.channel
 
+import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.*
 import io.otavia.core.channel.estimator.ReadBufferAllocator
 
@@ -356,34 +357,6 @@ trait ChannelPipeline extends ChannelInboundInvoker with ChannelOutboundInvoker 
     /** Converts this pipeline into an ordered [[Map]] whose keys are handler names and whose values are handlers. */
     def toMap: Map[String, ChannelHandler]
 
-    override def fireChannelRegistered(): ChannelPipeline
-
-    override def fireChannelUnregistered(): ChannelPipeline
-
-    override def fireChannelActive(): ChannelPipeline
-
-    override def fireChannelInactive(): ChannelPipeline
-
-    override def fireChannelShutdown(direction: ChannelShutdownDirection): ChannelPipeline
-
-    override def fireChannelExceptionCaught(cause: Throwable): ChannelPipeline
-
-    override def fireChannelInboundEvent(event: AnyRef): ChannelPipeline
-
-    override def fireChannelTimeoutEvent(id: Long): ChannelPipeline
-
-    override def fireChannelRead(msg: AnyRef): ChannelPipeline
-
-    override def fireChannelReadComplete(): ChannelPipeline
-
-    override def fireChannelWritabilityChanged(): ChannelPipeline
-
-    override def flush(): ChannelPipeline
-
-    override def read(readBufferAllocator: ReadBufferAllocator): ChannelPipeline
-
-    override def read(): ChannelPipeline
-
     /** The number of the outbound bytes that are buffered / queued in this [[ChannelPipeline]]. This number will affect
      *  the writability of the [[Channel]] together the buffered / queued bytes in the [[Channel]] itself.
      *
@@ -394,5 +367,9 @@ trait ChannelPipeline extends ChannelInboundInvoker with ChannelOutboundInvoker 
 
     final def assertInExecutor(): Unit =
         assert(executor.inExecutor(), "method must be called in ChannelsActor which this channel registered!")
+
+    private[core] def channelInboundBuffer: AdaptiveBuffer
+
+    private[core] def channelOutboundBuffer: AdaptiveBuffer
 
 }

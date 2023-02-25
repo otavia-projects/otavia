@@ -1,6 +1,8 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
+ * This file fork from netty.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,12 +16,21 @@
  * limitations under the License.
  */
 
-package io.otavia.http.annotation
+package io.otavia.handler.codec.base64
 
-import java.lang.annotation.{Documented, ElementType, Inherited, Retention, RetentionPolicy, Target, Annotation}
+import io.otavia.core.buffer.AdaptiveBuffer
+import io.otavia.core.channel.ChannelHandlerContext
+import io.otavia.handler.codec.ByteToByteDecoder
 
+class Base64Decoder(private val dialect: Base64Dialect) extends ByteToByteDecoder {
 
+    def this() = this(Base64Dialect.STANDARD)
 
-@Target(Array(ElementType.TYPE))
-@Retention(RetentionPolicy.RUNTIME)
-trait Controller(route: String, number: Int = 1) extends Annotation
+    override def isSharable: Boolean = true
+
+    override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer, output: AdaptiveBuffer): Unit = {
+        // TODO
+        ???
+    }
+
+}
