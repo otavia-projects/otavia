@@ -19,6 +19,7 @@
 package io.otavia.handler.codec
 
 import io.netty5.buffer.Buffer
+import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.ChannelHandlerContext
 import io.otavia.handler.codec.ByteToMessageDecoder.{COMPOSITE_CUMULATOR, Cumulator}
 
@@ -36,31 +37,25 @@ import io.otavia.handler.codec.ByteToMessageDecoder.{COMPOSITE_CUMULATOR, Cumula
  *  +-----+-----+-----+\</pre>
  *
  *  @param frameLength the length of the frame
- *  @param cumulator Buffer [[Cumulator]]
  */
-class FixedLengthFrameDecoder(private val frameLength: Int, cumulator: Cumulator = COMPOSITE_CUMULATOR)
-    extends ByteToMessageDecoder(cumulator) {
+class FixedLengthFrameDecoder(private val frameLength: Int) extends ByteToByteDecoder(cumulator) {
 
     assert(frameLength > 0)
 
-    override protected def decode(ctx: ChannelHandlerContext, in: Buffer): Unit = {
-        val maybe = decode0(ctx, in)
-        maybe match
-            case msg: AnyRef => ctx.fireChannelRead(msg)
-            case null        =>
+    override protected def decode(
+        ctx: ChannelHandlerContext,
+        msg: ByteToByteHandler.AdaptiveBufferMessage,
+        input: AdaptiveBuffer,
+        output: AdaptiveBuffer
+    ): Unit = {
+        if (input.readableBytes() >= frameLength) {
+            // TODO: consider a new API to transfer the underlying Buffer. Maby readInto ?
+            output.ensureWritable(frameLength)
+            input.copyInto(input.readerOffset(), output, output.writerOffset(), frameLength)
+            input.skipReadableBytes(frameLength)
+            output.writerOffset(output.writerOffset() + frameLength)
+            ctx.fireChannelRead(ByteToByteHandler.AdaptiveBufferNotice)
+        }
     }
-
-    /** Create a frame out of the Buffer and return it.
-     *
-     *  @param ctx
-     *    the [[ChannelHandlerContext]] which this [[ByteToMessageDecoder]] belongs to
-     *  @param buffer
-     *    the [[Buffer]] from which to read data
-     *  @return
-     *    frame the [[Buffer]] which represent the frame or null if no frame could be created.
-     */
-    @throws[Exception]
-    protected def decode0(ctx: ChannelHandlerContext, buffer: Buffer): AnyRef | Null =
-        if (buffer.readableBytes() < frameLength) null else buffer.readSplit(frameLength)
 
 }
