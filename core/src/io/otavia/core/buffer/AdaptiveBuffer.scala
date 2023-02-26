@@ -205,6 +205,34 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     override def implicitCapacityLimit(): Int = ???
 
+    /** Writes into this [[AdaptiveBuffer]] from the source [[AdaptiveBuffer]]. This updates the write offset of this
+     *  buffer and also the position of the source [[AdaptiveBuffer]].
+     *
+     *  Note: the behaviour is undefined if the given [[AdaptiveBuffer]] is an alias for the memory in this buffer.
+     *
+     *  @param source
+     *    The [[AdaptiveBuffer]] to read from.
+     *  @param length
+     *    length of data to write.
+     *  @return
+     *    This buffer.
+     */
+    def writeBytes(source: AdaptiveBuffer, length: Int): this.type = ???
+
+    /** Read from this [[AdaptiveBuffer]], into the destination [[AdaptiveBuffer]] This updates the read offset of this
+     *  buffer and also the position of the destination [[AdaptiveBuffer]].
+     *
+     *  Note: the behaviour is undefined if the given [[AdaptiveBuffer]] is an alias for the memory in this buffer.
+     *
+     *  @param destination
+     *    The [[AdaptiveBuffer]] to write into.
+     *  @param length
+     *    length of data to read.
+     *  @return
+     *    This buffer.
+     */
+    def readBytes(destination: AdaptiveBuffer, length: Int): this.type = ???
+
     override def copyInto(srcPos: Int, dest: Array[Byte], destPos: Int, length: Int): Unit = ???
 
     override def copyInto(srcPos: Int, dest: ByteBuffer, destPos: Int, length: Int): Unit = ???
