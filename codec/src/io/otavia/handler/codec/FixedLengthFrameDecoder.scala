@@ -38,7 +38,7 @@ import io.otavia.handler.codec.ByteToMessageDecoder.{COMPOSITE_CUMULATOR, Cumula
  *
  *  @param frameLength the length of the frame
  */
-class FixedLengthFrameDecoder(private val frameLength: Int) extends ByteToByteDecoder(cumulator) {
+class FixedLengthFrameDecoder(private val frameLength: Int) extends ByteToByteDecoder {
 
     assert(frameLength > 0)
 
