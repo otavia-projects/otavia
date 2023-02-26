@@ -16,8 +16,12 @@
 
 package io.otavia.core.cache
 
+import io.otavia.core.reactor.CacheTimeout
 import io.otavia.core.system.ActorThread
 import io.otavia.core.timer.Timer
+import io.otavia.core.timer.Timer.TimeoutTrigger
+
+import scala.language.unsafeNulls
 
 /** A special variant of [[ThreadLocal]] that yields higher access performance when accessed from a [[ActorThread]].
  *
@@ -32,9 +36,10 @@ import io.otavia.core.timer.Timer
  *  @tparam V
  *    the type of the thread-local variable
  */
-abstract class ThreadLocal[V] {
+abstract class ThreadLocal[V] extends TimeoutResource {
 
-    @volatile private var inited: Boolean = false
+    @volatile private var inited: Boolean                  = false
+    private var threadLocalTimers: Array[ThreadLocalTimer] = _
 
     private final def initIfNotInited(len: Int): Unit =
         if (inited) {} else syncInit(len) // Reducing cpu branch prediction errors.
@@ -48,6 +53,7 @@ abstract class ThreadLocal[V] {
     private def syncInit(len: Int): Unit = this.synchronized {
         if (!inited) {
             doInit(len)
+            if (isSupportedTimeout) threadLocalTimers = new Array[ThreadLocalTimer](len)
             inited = true
         }
     }
@@ -63,11 +69,21 @@ abstract class ThreadLocal[V] {
     /** Returns the current value for the current thread */
     def get(): V
 
+    private[cache] def updateGetTime(): Unit = if (isSupportedTimeout) {
+        val threadLocalTimer = threadLocalTimers(ActorThread.currentThread().index)
+        threadLocalTimer.updateGetTime()
+    }
+
     /** Returns the current value for the current thread if it exists, null otherwise. */
     def getIfExists: V | Null
 
     /** Set the value for the current thread. */
     def set(v: V): Unit
+
+    private[cache] def updateSetTime(): Unit = if (isSupportedTimeout) {
+        val threadLocalTimer = threadLocalTimers(ActorThread.currentThread().index)
+        threadLocalTimer.updateSetTime()
+    }
 
     /** Returns true if and only if this thread-local variable is set. */
     def isSet: Boolean
@@ -77,15 +93,51 @@ abstract class ThreadLocal[V] {
      */
     def remove(): Unit
 
+    /** Cancel the local variable timer task. */
+    def cancelTimer(): Unit = if (isSupportedTimeout) {
+        val thread           = ActorThread.currentThread()
+        val index            = thread.index
+        val threadLocalTimer = threadLocalTimers(index)
+        thread.system.timer.cancelTimerTask(threadLocalTimer.registerId)
+        threadLocalTimers(index) = null
+    }
+
     /** Invoked when this thread local variable is removed by remove(). Be aware that remove() is not guaranteed to be
      *  called when the `Thread` completes which means you can not depend on this for cleanup of the resources in the
      *  case of `Thread` completion.
      */
     protected def onRemoval(value: V): Unit = {}
 
-    protected def initialTimer(): Unit = {
-        val system = ActorThread.currentThread().system
-//        system.timer.registerTimerTask()
+    final def initialTimer(): Unit = {
+        initialTimeoutTrigger match
+            case Some(trigger) =>
+                val thread           = ActorThread.currentThread()
+                val system           = thread.system
+                val threadLocalTimer = new ThreadLocalTimer(this)
+                val id = system.timer.registerTimerTask(
+                  trigger,
+                  ActorThread.currentThread().actorThreadAddress,
+                  threadLocalTimer
+                )
+                threadLocalTimer.updateRegisterId(id)
+                threadLocalTimers(thread.index) = threadLocalTimer
+            case None =>
+    }
+
+    /** Whether this [[ThreadLocal]] support timeout. */
+    final def isSupportedTimeout: Boolean = initialTimeoutTrigger.nonEmpty
+
+    /** Initial [[TimeoutTrigger]] when calling [[initialValue]] */
+    protected def initialTimeoutTrigger: Option[TimeoutTrigger] = None
+
+    /** Handle [[io.otavia.core.reactor.TimeoutEvent]] for this [[ThreadLocal]]
+     *  @param registerId
+     *    timer task register id in [[Timer]].
+     *  @param threadLocalTimer
+     *    current time-out [[ResourceTimer]]
+     */
+    protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit = {
+        // default do nothing.
     }
 
 }

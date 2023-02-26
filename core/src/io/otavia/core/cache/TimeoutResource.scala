@@ -16,13 +16,4 @@
 
 package io.otavia.core.cache
 
-import io.otavia.core.timer.Timer
-
-class CacheTimer {
-
-    var registerId      = Timer.INVALID_TIMEOUT_REGISTER_ID
-    var initialTime     = System.nanoTime()
-    var recentlyGetTime = System.nanoTime()
-    var recentlySetTime = System.nanoTime()
-
-}
+trait TimeoutResource

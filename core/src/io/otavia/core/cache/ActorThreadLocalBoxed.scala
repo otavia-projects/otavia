@@ -36,6 +36,7 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
 
     private def initializeValue(box: ValueBox[V]): V = {
         val v = initialValue()
+        initialTimer()
         box.set(v)
         v
     }
@@ -43,18 +44,25 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
     final def get(): V = {
         val index = threadIndex()
         val box   = valueBox(index)
-        if (box.isEmpty) initializeValue(box) else box.getValue
+        if (box.isEmpty) initializeValue(box)
+        else {
+            updateGetTime()
+            box.getValue
+        }
     }
 
     final def getIfExists: V | Null = {
         val index = threadIndex()
         val box   = valueBox(index)
+        if (box.nonEmpty) updateGetTime()
         box.get
     }
 
     final def set(value: V): Unit = {
         val index = threadIndex()
         val box   = valueBox(index)
+        if (box.isEmpty) initialTimer()
+        updateSetTime()
         box.set(value)
     }
 
@@ -65,9 +73,11 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
     } else false
 
     override def remove(): Unit = if (isInited) {
-        val index = threadIndex()
-        val box   = valueBox(index)
+        val thread = ActorThread.currentThread()
+        val index  = thread.index
+        val box    = valueBox(index)
         if (box.nonEmpty) {
+            cancelTimer()
             val value = box.getValue
             box.remove()
             onRemoval(value)

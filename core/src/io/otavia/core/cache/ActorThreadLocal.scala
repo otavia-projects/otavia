@@ -26,6 +26,7 @@ abstract class ActorThreadLocal[V <: AnyRef] extends ThreadLocal[V] {
 
     private def initializeValue(index: Int): V = {
         val v = initialValue()
+        initialTimer()
         variables(index) = v
         v
     }
@@ -40,18 +41,26 @@ abstract class ActorThreadLocal[V <: AnyRef] extends ThreadLocal[V] {
         val index = threadIndex()
         if (variables(index) == UNSET) {
             initializeValue(index)
-        } else variables(index).asInstanceOf[V]
+        } else {
+            updateGetTime()
+            variables(index).asInstanceOf[V]
+        }
     }
 
     override def getIfExists: V | Null = {
         val index = threadIndex()
         if (variables(index) == UNSET) {
             null
-        } else variables(index).asInstanceOf[V]
+        } else {
+            updateGetTime()
+            variables(index).asInstanceOf[V]
+        }
     }
 
     override def set(v: V): Unit = {
         val index = threadIndex()
+        if (variables(index) == UNSET) initialTimer()
+        updateSetTime()
         variables(index) = v
     }
 
@@ -64,7 +73,10 @@ abstract class ActorThreadLocal[V <: AnyRef] extends ThreadLocal[V] {
         val index = threadIndex()
         val v     = variables(index)
         variables(index) = UNSET
-        if (v != UNSET) onRemoval(v.asInstanceOf[V])
+        if (v != UNSET) {
+            cancelTimer()
+            onRemoval(v.asInstanceOf[V])
+        }
     }
 
 }

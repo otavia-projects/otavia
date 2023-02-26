@@ -18,6 +18,7 @@ package io.otavia.core.timer
 
 import io.netty5.util.{Timeout, TimerTask}
 import io.otavia.core.address.{Address, EventableAddress}
+import io.otavia.core.cache.ResourceTimer
 import io.otavia.core.channel.Channel
 import io.otavia.core.reactor.{Reactor, TimeoutEvent}
 import io.otavia.core.timer.Timer.*

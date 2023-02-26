@@ -16,7 +16,7 @@
 
 package io.otavia.core.reactor
 
-import io.otavia.core.cache.CacheTimer
+import io.otavia.core.cache.ResourceTimer
 import io.otavia.core.channel.Channel
 
 /** Event for [[io.otavia.core.actor.Actor]] */
@@ -33,7 +33,7 @@ case class TimeoutEvent(registerId: Long, attach: AnyRef | Null = null) extends 
 
 case class ChannelTimeout(registerId: Long, channel: Channel) extends TimerEvent
 
-private[core] case class CacheTimeout(registerId: Long, cache: CacheTimer) extends TimerEvent
+case class CacheTimeout(registerId: Long, cache: ResourceTimer) extends TimerEvent
 
 /** channel event for [[io.otavia.core.actor.ChannelsActor]] */
 enum ReactorEvent extends Event {
