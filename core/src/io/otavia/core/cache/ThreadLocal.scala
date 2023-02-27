@@ -16,7 +16,7 @@
 
 package io.otavia.core.cache
 
-import io.otavia.core.reactor.CacheTimeout
+import io.otavia.core.reactor.ResourceTimeoutEvent
 import io.otavia.core.system.ActorThread
 import io.otavia.core.timer.Timer
 import io.otavia.core.timer.Timer.TimeoutTrigger
@@ -126,19 +126,6 @@ abstract class ThreadLocal[V] extends TimeoutResource {
 
     /** Whether this [[ThreadLocal]] support timeout. */
     final def isSupportedTimeout: Boolean = initialTimeoutTrigger.nonEmpty
-
-    /** Initial [[TimeoutTrigger]] when calling [[initialValue]] */
-    protected def initialTimeoutTrigger: Option[TimeoutTrigger] = None
-
-    /** Handle [[io.otavia.core.reactor.TimeoutEvent]] for this [[ThreadLocal]]
-     *  @param registerId
-     *    timer task register id in [[Timer]].
-     *  @param threadLocalTimer
-     *    current time-out [[ResourceTimer]]
-     */
-    protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit = {
-        // default do nothing.
-    }
 
 }
 

@@ -16,4 +16,22 @@
 
 package io.otavia.core.cache
 
-trait TimeoutResource
+import io.otavia.core.timer.Timer.TimeoutTrigger
+
+private[cache] trait TimeoutResource {
+
+    /** Initial [[TimeoutTrigger]] when initial a time-out resource like [[ThreadLocal]] */
+    protected def initialTimeoutTrigger: Option[TimeoutTrigger] = None
+
+    /** Handle [[io.otavia.core.reactor.TimeoutEvent]] for this [[TimeoutResource]]
+     *
+     *  @param registerId
+     *    timer task register id in [[Timer]].
+     *  @param threadLocalTimer
+     *    current time-out [[ResourceTimer]]
+     */
+    protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit = {
+        // default do nothing.
+    }
+
+}

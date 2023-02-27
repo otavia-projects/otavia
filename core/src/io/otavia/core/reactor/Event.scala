@@ -31,9 +31,9 @@ sealed abstract class TimerEvent extends Event {
 /** Timeout event */
 case class TimeoutEvent(registerId: Long, attach: AnyRef | Null = null) extends TimerEvent
 
-case class ChannelTimeout(registerId: Long, channel: Channel) extends TimerEvent
+case class ChannelTimeoutEvent(registerId: Long, channel: Channel) extends TimerEvent
 
-case class CacheTimeout(registerId: Long, cache: ResourceTimer) extends TimerEvent
+case class ResourceTimeoutEvent(registerId: Long, cache: ResourceTimer) extends TimerEvent
 
 /** channel event for [[io.otavia.core.actor.ChannelsActor]] */
 enum ReactorEvent extends Event {
