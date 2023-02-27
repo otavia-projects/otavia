@@ -28,7 +28,7 @@ import io.otavia.core.timer.Timer
 
 import java.net.SocketAddress
 
-trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
+trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle, ChannelInflight {
 
     /** Unique id of this channel */
     def id: Int
@@ -201,7 +201,7 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
 
     final override def writeAndFlush(msg: AnyRef, msgId: Long): Unit = pipeline.writeAndFlush(msg, msgId)
 
-    final override def flush(): this.type  = {
+    final override def flush(): this.type = {
         pipeline.flush()
         this
     }
@@ -210,17 +210,5 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle {
 
     final def assertExecutor(): Unit =
         assert(executor.inExecutor(), "method must be called in ChannelsActor which this channel registered!")
-
-    /** generate a unique id for the channel message
-     *  @return
-     *    id
-     */
-    def generateMessageId: Long = ???
-
-    /** Message from tail handler from pipeline. */
-    private[core] def onInboundMessage(msg: AnyRef): Unit
-
-    /** Message from tail handler from pipeline. */
-    private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit
 
 }

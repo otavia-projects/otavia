@@ -26,6 +26,7 @@ import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.AbstractChannel.*
 import io.otavia.core.channel.ChannelOption.*
 import io.otavia.core.channel.estimator.*
+import io.otavia.core.channel.inflight.ChannelInflightImpl
 import io.otavia.core.channel.internal.{ChannelOutboundBuffer, ReadSink, WriteBufferWaterMark, WriteSink}
 import io.otavia.core.reactor.{ReactorEvent, TimeoutEvent}
 import io.otavia.core.system.ActorThread
@@ -65,7 +66,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
       Channel,
       WriteSink,
       ReadSink,
-      ChannelInflight,
+      ChannelInflightImpl,
       ChannelInternal[L, R],
       ChannelLifecycle,
       ChannelInboundBuffer {

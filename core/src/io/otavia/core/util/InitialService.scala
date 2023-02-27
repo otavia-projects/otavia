@@ -34,8 +34,8 @@ object InitialService {
 
     type MSG = InitialFromConfig | InitialFromClass
 
-    final case class InitialFromConfig()(using IdAllocator) extends Notice
+    final case class InitialFromConfig() extends Notice
 
-    final case class InitialFromClass(clz: Class[?], num: Int)(using IdAllocator) extends Notice
+    final case class InitialFromClass(clz: Class[?], num: Int) extends Notice
 
 }

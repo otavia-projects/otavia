@@ -102,7 +102,7 @@ final class AskFrame private[core] (val ask: Ask[?], initialState: StackState | 
 
     override def call: Ask[?] = ask
     override def `return`(reply: Reply): None.type = {
-        reply.setReplyId(ask.id)
+        reply.setReplyId(ask.messageId)
         this.r = reply
         None
     }
@@ -115,7 +115,7 @@ final class AsksFrame private[core] (val asks: Seq[Ask[?]], initialState: StackS
     var returnType: AsksFrame.ReturnType = _
     override def call: Seq[Ask[?]]       = asks
     override def `return`(reply: Reply): None.type = {
-        reply.setReplyId(asks.map(_.id))
+        reply.setReplyId(asks.map(_.messageId))
         this.r = reply
         returnType = AsksFrame.ReturnType.ALL_FOR_ONE
         None

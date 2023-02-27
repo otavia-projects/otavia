@@ -41,14 +41,14 @@ object TimerService {
 
     type MSG = FixTime | Delay | DelayPeriod | FirstTimePeriod
 
-    final case class FixTime(date: Date)(using IdAllocator) extends Ask[TimeArrival]
+    final case class FixTime(date: Date) extends Ask[TimeArrival]
 
-    final case class Delay(delay: Long)(using IdAllocator) extends Ask[TimeArrival]
+    final case class Delay(delay: Long) extends Ask[TimeArrival]
 
-    final case class DelayPeriod(delay: Long, period: Long)(using IdAllocator) extends Ask[TimeArrival]
+    final case class DelayPeriod(delay: Long, period: Long) extends Ask[TimeArrival]
 
-    final case class FirstTimePeriod(firstTime: Date, period: Long)(using IdAllocator) extends Ask[TimeArrival]
+    final case class FirstTimePeriod(firstTime: Date, period: Long) extends Ask[TimeArrival]
 
-    final case class TimeArrival()(using IdAllocator) extends Reply
+    final case class TimeArrival() extends Reply
 
 }

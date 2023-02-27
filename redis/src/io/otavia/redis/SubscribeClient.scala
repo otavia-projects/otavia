@@ -32,6 +32,6 @@ import io.otavia.core.stack.{ChannelFrame, StackState}
 //object SubscribeClient {
 //  type MSG = Client.Connect | Subscribe
 //
-//  final case class Subscribe(channel: String)(using IdAllocator) extends Ask[SubscribeOk]
-//  final case class SubscribeOk()(using IdAllocator)              extends Reply
+//  final case class Subscribe(channel: String) extends Ask[SubscribeOk]
+//  final case class SubscribeOk()              extends Reply
 //}

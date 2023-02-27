@@ -24,7 +24,7 @@ abstract class Driver extends ChannelsActor[Driver.MSG] {}
 object Driver {
   type MSG = Connect
 
-  final case class Connect(url: String, username: String, password: String)(using IdAllocator) extends Ask[Connected]
-  final case class Connected()(using IdAllocator) extends Reply
+  final case class Connect(url: String, username: String, password: String) extends Ask[Connected]
+  final case class Connected() extends Reply
 
 }

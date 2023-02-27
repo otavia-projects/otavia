@@ -74,13 +74,13 @@ abstract class ClientChannelsActor[M <: Ask[?] | Notice] extends ChannelsActor[M
 
 object ClientChannelsActor {
 
-    final case class Connect(remoteAddress: SocketAddress)(using IdAllocator) extends Ask[UnitReply], Notice
+    final case class Connect(remoteAddress: SocketAddress) extends Ask[UnitReply], Notice
     object Connect {
 
         def apply(host: String, port: Int)(using IdAllocator: IdAllocator): Connect = Connect(
           InetSocketAddress.createUnresolved(host, port).nn
         )
-        def apply(host: InetAddress, port: Int)(using IdAllocator): Connect = Connect(new InetSocketAddress(host, port))
+        def apply(host: InetAddress, port: Int): Connect = Connect(new InetSocketAddress(host, port))
 
     }
 

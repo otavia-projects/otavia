@@ -91,16 +91,16 @@ object AccepterActor {
         override def newActor(): W
     }
 
-    final case class AcceptedChannel(channel: Channel)(using IdAllocator) extends Ask[UnitReply]
+    final case class AcceptedChannel(channel: Channel) extends Ask[UnitReply]
 
-    final case class Bind(localAddress: SocketAddress)(using IdAllocator) extends Ask[UnitReply], Notice
+    final case class Bind(localAddress: SocketAddress) extends Ask[UnitReply], Notice
     object Bind {
 
-        def apply(port: Int)(using IdAllocator): Bind = Bind(new InetSocketAddress(port))
-        def apply(host: String, port: Int)(using IdAllocator): Bind = Bind(
+        def apply(port: Int): Bind = Bind(new InetSocketAddress(port))
+        def apply(host: String, port: Int): Bind = Bind(
           InetSocketAddress.createUnresolved(host, port).nn
         )
-        def apply(host: InetAddress, port: Int)(using IdAllocator): Bind = Bind(new InetSocketAddress(host, port))
+        def apply(host: InetAddress, port: Int): Bind = Bind(new InetSocketAddress(host, port))
 
     }
 

@@ -32,15 +32,15 @@ object Logger {
         val log: String
     }
 
-    final case class Trace(clz: Class[?], time: LocalDateTime, log: String)(using IdAllocator) extends LogMsg
+    final case class Trace(clz: Class[?], time: LocalDateTime, log: String) extends LogMsg
 
-    final case class Debug(clz: Class[?], time: LocalDateTime, log: String)(using IdAllocator) extends LogMsg
+    final case class Debug(clz: Class[?], time: LocalDateTime, log: String) extends LogMsg
 
-    final case class Info(clz: Class[?], time: LocalDateTime, log: String)(using IdAllocator) extends LogMsg
+    final case class Info(clz: Class[?], time: LocalDateTime, log: String) extends LogMsg
 
-    final case class Warn(clz: Class[?], time: LocalDateTime, log: String)(using IdAllocator) extends LogMsg
+    final case class Warn(clz: Class[?], time: LocalDateTime, log: String) extends LogMsg
 
-    final case class Error(clz: Class[?], time: LocalDateTime, log: String)(using IdAllocator) extends LogMsg
+    final case class Error(clz: Class[?], time: LocalDateTime, log: String) extends LogMsg
 
-    final case class Fatal(clz: Class[?], time: LocalDateTime, log: String)(using IdAllocator) extends LogMsg
+    final case class Fatal(clz: Class[?], time: LocalDateTime, log: String) extends LogMsg
 }

@@ -18,28 +18,26 @@ package io.otavia.core.message
 
 import io.otavia.core.address.Address
 
-sealed trait MessageEnvelope {
-
-    private var s: Address[Ask[?] | Notice] | Null = null
-    private var sid: Long                          = ???
-    private var id: Long                           = ???
-
-    private var next: MessageEnvelope | Null = null
-
-    def sender: Address[Ask[?] | Notice] = s.nn
-    def senderId: Long                   = sid
-    def messageId: Long                  = id
-
-}
-
 /** Message is base unit for actor community */
-sealed trait Message(using distributor: IdAllocator) extends Serializable { // TODO: use MessageEnvelope
+sealed trait Message extends Serializable {
 
-    final val sender: Address[Ask[?] | Notice] = distributor.sender
-    final val senderId: Long                   = distributor.actorId
-    final val id: Long                         = distributor.generate
+    private var s: Address[Ask[?] | Notice] = _
+    private var sid: Long                   = 0
+    private var mid: Long                   = 0
 
-    @volatile private[core] var next: Message = _
+    @volatile private[core] var next: Message | Null = _
+
+    private[core] def sender: Address[Ask[?] | Notice] = s
+
+    private[core] def senderId: Long = sid
+
+    private[core] def messageId: Long = mid
+
+    private[core] def setSender(s: Address[Ask[?] | Notice]): Unit = this.s = s
+
+    private[core] def setSenderId(id: Long): Unit = this.sid = id
+
+    private[core] def setMessageId(id: Long): Unit = this.mid = id
 
 }
 
@@ -50,10 +48,10 @@ trait Notice extends Message
 trait Ask[R <: Reply] extends Message { // + for R ?
 
     // TODO: handle reply message which not create by current actor
-    def reply(rep: R): None.type                             = { rep.setReplyId(id); sender.reply(rep); None }
+    def reply(rep: R): None.type                             = { rep.setReplyId(messageId); sender.reply(rep); None }
     private[core] def replyInternal(reply: Reply): None.type = this.reply(reply.asInstanceOf[R])
 
-    def throws(reply: ExceptionMessage): None.type = { reply.setReplyId(id); sender.reply(reply); None }
+    def throws(reply: ExceptionMessage): None.type = { reply.setReplyId(messageId); sender.reply(reply); None }
 
 }
 
@@ -80,4 +78,4 @@ trait Reply extends Message {
 
 }
 
-final case class UnitReply()(using IdAllocator) extends Reply
+final case class UnitReply() extends Reply

@@ -29,17 +29,15 @@ import io.otavia.core.util.Logger
  *  @tparam H
  *    actor house
  */
-trait PhysicalAddress[M <: Ask[?] | Notice, H <: House] extends Address[M] {
+abstract class PhysicalAddress[M <: Ask[?] | Notice, H <: House] extends Address[M] {
+
     private[core] val house: H
 
-    protected def check(msg: Message)(using sender: Actor[?]): Unit =
-        assert(msg.senderId == sender.actorId, "")
-
+    // TODO: set message context.
     override def ask[A <: M & Ask[?]](ask: A, waiter: ReplyWaiter[ReplyOf[A]])(using sender: Actor[?]): Unit = {
-        check(ask)
         sender match
-            case actor: StateActor[_]   => actor.attachFrame(ask.id, waiter)
-            case group: ChannelsActor[_] => ???
+            case actor: StateActor[_]            => actor.attachFrame(ask.messageId, waiter)
+            case channelsActor: ChannelsActor[_] => ???
         house.putAsk(ask)
     }
 

@@ -18,4 +18,4 @@ package io.otavia.codec.http
 
 import io.otavia.core.message.{Ask, IdAllocator, Reply}
 
-final case class HttpRequest[C](headers: HttpHeaders, content: C)(using IdAllocator) extends Ask[HttpResponse[?]]
+final case class HttpRequest[C](headers: HttpHeaders, content: C) extends Ask[HttpResponse[?]]

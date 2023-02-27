@@ -18,4 +18,4 @@ package io.otavia.codec.http
 
 import io.otavia.core.message.{IdAllocator, Reply}
 
-final case class HttpResponse[T](headers: HttpHeaders, content: T)(using IdAllocator) extends Reply
+final case class HttpResponse[T](headers: HttpHeaders, content: T) extends Reply

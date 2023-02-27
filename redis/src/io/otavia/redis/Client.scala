@@ -63,10 +63,10 @@ object Client {
     final case class Connect(host: String, port: Int, username: String, password: String, poolSize: Int)(using
         IdAllocator
     ) extends Ask[Connected]
-    final case class Connected()(using IdAllocator) extends Reply
+    final case class Connected() extends Reply
 
-    final case class Select(index: Int)(using IdAllocator)          extends Ask[SelectReply]
-    final case class SelectReply(status: String)(using IdAllocator) extends Reply
+    final case class Select(index: Int)          extends Ask[SelectReply]
+    final case class SelectReply(status: String) extends Reply
 
     private final class ConnectingState(size: Int) extends StackState {
         val waiters                       = new Array[ChannelReplyWaiter[Unit]](size)

@@ -16,41 +16,45 @@
 
 package io.otavia.core.channel
 
-trait ChannelInflight extends Channel {
-    this: AbstractChannel[?, ?] =>
-
-    private var headOfLine: Boolean = true
-
-    private var _inboundMessageBarrier: AnyRef => Boolean = _ => false
+trait ChannelInflight {
 
     /** The Channel inbound is head-of-line */
-    def isHeadOfLine: Boolean = headOfLine
+    def isHeadOfLine: Boolean
 
     /** Set the Channel inbound head-of-line
      *  @param hol
      *    head-of-line
      */
-    def setHeadOfLine(hol: Boolean): Unit = headOfLine = hol
+    def setHeadOfLine(hol: Boolean): Unit
 
     /** Inbound message barrier */
-    def inboundMessageBarrier: AnyRef => Boolean = _inboundMessageBarrier
+    def inboundMessageBarrier: AnyRef => Boolean
 
     /** Set inbound message barrier
      *  @param barrier
      */
-    def setInboundMessageBarrier(barrier: AnyRef => Boolean): Unit = _inboundMessageBarrier = barrier
+    def setInboundMessageBarrier(barrier: AnyRef => Boolean): Unit
 
     // actor send ask message to channel
-    def ask(value: AnyRef): Unit = ???
+    def ask(value: AnyRef): Unit
 
     // actor send notice message to channel
-    def notice(value: AnyRef): Unit = ???
+    def notice(value: AnyRef): Unit
 
-    // actor end reply message to channel, the channel generate a ChannelFrame
-    def reply(value: AnyRef): Unit = ??? // TODO: use by ChannelFrame
+    // actor send reply message to channel, the channel generate a ChannelFrame
+    def reply(value: AnyRef): Unit
 
-    override private[core] def onInboundMessage(msg: AnyRef): Unit = ???
+    /** generate a unique id for the channel message
+     *
+     *  @return
+     *    id
+     */
+    def generateMessageId: Long
 
-    override private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit = ???
+    /** Message from tail handler from pipeline. */
+    private[core] def onInboundMessage(msg: AnyRef): Unit
+
+    /** Message from tail handler from pipeline. */
+    private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit
 
 }

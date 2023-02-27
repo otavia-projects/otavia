@@ -89,16 +89,16 @@ object HandleStateActor {
 
     }
 
-    final case class Request(req: String)(using IdAllocator) extends Ask[Response]
+    final case class Request(req: String) extends Ask[Response]
 
-    final case class Response(res: String)(using IdAllocator) extends Reply
+    final case class Response(res: String) extends Reply
 
-    final case class QueryRedis(cmd: String)(using IdAllocator) extends Ask[RedisResponse]
+    final case class QueryRedis(cmd: String) extends Ask[RedisResponse]
 
-    final case class RedisResponse(res: String)(using IdAllocator) extends Reply
+    final case class RedisResponse(res: String) extends Reply
 
-    final case class QueryDB(sql: String)(using IdAllocator) extends Ask[DBResponse]
+    final case class QueryDB(sql: String) extends Ask[DBResponse]
 
-    final case class DBResponse(res: String)(using IdAllocator) extends Reply
+    final case class DBResponse(res: String) extends Reply
 
 }
