@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package io.otavia.core.util
+package io.otavia.core.log4a
 
 import io.netty5.util.internal.ThrowableUtil
 import io.otavia.core.actor.Actor
 import io.otavia.core.address.Address
 import io.otavia.core.ioc.Injectable
+import io.otavia.core.log4a.Logger
+import io.otavia.core.log4a.Logger.*
 import io.otavia.core.message.Message
-import io.otavia.core.util.Logger
-import io.otavia.core.util.Logger.*
 
 import java.time.LocalDateTime
 import scala.language.unsafeNulls

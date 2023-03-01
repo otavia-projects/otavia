@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package io.otavia.core.util
+package io.otavia.core.log4a
 
 import io.otavia.core.actor.StateActor
 import io.otavia.core.address.Address
 import io.otavia.core.ioc.{Component, Primary}
+import io.otavia.core.log4a.Logger
 import io.otavia.core.stack.StackState
 
 import scala.collection.mutable
 
 @Component
 abstract class ConsoleLogger extends StateActor[Logger.LogMsg], Logger {
+
     import ConsoleLogger.*
 
     override val batchable: Boolean = true
@@ -48,6 +50,8 @@ abstract class ConsoleLogger extends StateActor[Logger.LogMsg], Logger {
 }
 
 object ConsoleLogger {
+
     private val space: String = " "
     private val line: String  = "\n"
+
 }
