@@ -20,7 +20,7 @@ package io.otavia.handler.timeout
 
 import io.otavia.core.channel.{Channel, ChannelHandler, ChannelHandlerContext}
 import io.otavia.core.timer.Timer
-import io.otavia.core.timer.Timer.TimeoutTrigger
+import io.otavia.core.timer.TimeoutTrigger
 import io.otavia.handler.timeout.IdleState.{ALL_IDLE, READER_IDLE, WRITER_IDLE}
 import io.otavia.handler.timeout.IdleStateHandler.MIN_TIMEOUT_NANOS
 
@@ -248,16 +248,18 @@ class IdleStateHandler(
     }
 
     private def registerReaderIdle(ctx: ChannelHandlerContext): Unit = if (readerIdleTimeNanos > 0)
-        readerIdleRegisterId =
-            ctx.timer.registerTimerTask(TimeoutTrigger.DelayTime(readerIdleTimeNanos, TimeUnit.NANOSECONDS))
+        readerIdleRegisterId = ctx.timer.registerChannelTimeout(
+          TimeoutTrigger.DelayTime(readerIdleTimeNanos, TimeUnit.NANOSECONDS),
+          ctx.channel
+        )
 
     private def registerWriterIdle(ctx: ChannelHandlerContext): Unit = if (writerIdleTimeNanos > 0)
         writerIdleRegisterId =
-            ctx.timer.registerTimerTask(TimeoutTrigger.DelayTime(writerIdleTimeNanos, TimeUnit.NANOSECONDS))
+            ctx.timer.registerChannelTimeout(TimeoutTrigger.DelayTime(writerIdleTimeNanos, TimeUnit.NANOSECONDS))
 
     private def registerAllIdle(ctx: ChannelHandlerContext): Unit = if (allIdleTimeNanos > 0)
         allIdleRegisterId =
-            ctx.timer.registerTimerTask(TimeoutTrigger.DelayTime(allIdleTimeNanos, TimeUnit.NANOSECONDS))
+            ctx.timer.registerChannelTimeout(TimeoutTrigger.DelayTime(allIdleTimeNanos, TimeUnit.NANOSECONDS))
 
     private def cancelTimer(ctx: ChannelHandlerContext): Unit = {
         if (readerIdleRegisterId != Timer.INVALID_TIMEOUT_REGISTER_ID) {

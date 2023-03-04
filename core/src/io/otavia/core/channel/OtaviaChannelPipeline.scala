@@ -27,7 +27,8 @@ import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import io.otavia.core.channel.OtaviaChannelPipeline.*
 import io.otavia.core.channel.estimator.{MessageSizeEstimator, ReadBufferAllocator}
-import io.otavia.core.util.{ActorLogger, ClassUtils}
+import io.otavia.core.log4a.ActorLogger
+import io.otavia.core.util.ClassUtils
 
 import java.net.SocketAddress
 import scala.collection.mutable

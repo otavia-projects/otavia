@@ -18,39 +18,76 @@ package io.otavia.core.timer
 
 import io.netty5.util.{Timeout, Timer as NettyTimer}
 import io.otavia.core.address.EventableAddress
-import io.otavia.core.timer.Timer.TimeoutTrigger
+import io.otavia.core.cache.ResourceTimer
+import io.otavia.core.channel.Channel
+import io.otavia.core.timer.TimeoutTrigger
 
 import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 
 class TimerTaskManager(val timer: Timer) {
 
-    private val registeredTasks = new ConcurrentHashMap[Long, OtaviaTimerTask]()
+    private val registeredTasks = new ConcurrentHashMap[Long, TimeoutTask]()
 
-    // TODO: support OtaviaTimerTask object pool
-
-    def newTask(
+    def newActorTimeoutTask(
         address: EventableAddress,
         period: Long,
-        attach: AnyRef | Null = null,
+        attach: Option[AnyRef],
         periodUnit: TimeUnit = TimeUnit.MILLISECONDS
-    ): OtaviaTimerTask = {
-        val timerTask = new OtaviaTimerTask(this)
+    ): ActorTimeoutTask = {
+        val timerTask = new ActorTimeoutTask(this)
         timerTask.setAttach(attach)
-        timerTask.setPeriod(period)
-        timerTask.setAddress(address)
-        timerTask.setPeriodUnit(periodUnit)
+        timerTask.set(address, period, periodUnit)
+        registeredTasks.put(timerTask.registerId, timerTask)
+        timerTask
+    }
+
+    def newAskTimeoutTask(
+        address: EventableAddress,
+        period: Long,
+        askId: Long,
+        periodUnit: TimeUnit = TimeUnit.MILLISECONDS
+    ): AskTimeoutTask = {
+        val timerTask = new AskTimeoutTask(this)
+        timerTask.setAskId(askId)
+        timerTask.set(address, period, periodUnit)
+        registeredTasks.put(timerTask.registerId, timerTask)
+        timerTask
+    }
+
+    def newChannelTimeoutTask(
+        address: EventableAddress,
+        period: Long,
+        channel: Channel,
+        periodUnit: TimeUnit = TimeUnit.MILLISECONDS
+    ): ChannelTimeoutTask = {
+        val timerTask = new ChannelTimeoutTask(this)
+        timerTask.setChannel(channel)
+        timerTask.set(address, period, periodUnit)
+        registeredTasks.put(timerTask.registerId, timerTask)
+        timerTask
+    }
+
+    def newResourceTimeoutTask(
+        address: EventableAddress,
+        period: Long,
+        resourceTimer: ResourceTimer,
+        periodUnit: TimeUnit = TimeUnit.MILLISECONDS
+    ): ResourceTimeoutTask = {
+        val timerTask = new ResourceTimeoutTask(this)
+        timerTask.setResourceTimer(resourceTimer)
+        timerTask.set(address, period, periodUnit)
         registeredTasks.put(timerTask.registerId, timerTask)
         timerTask
     }
 
     def remove(id: Long): Unit = registeredTasks.remove(id) match
         case null =>
-        case timerTask: OtaviaTimerTask =>
+        case timerTask: TimeoutTask =>
             timerTask.timeout.cancel()
 
     def update(trigger: TimeoutTrigger, registerId: Long): Unit = {
         registeredTasks.remove(registerId) match
-            case task: OtaviaTimerTask =>
+            case task: TimeoutTask =>
                 val nettyTimer: NettyTimer = task.timeout.timer().nn
                 task.timeout.cancel() // cancel old timer task
                 registeredTasks.put(registerId, task)
@@ -70,7 +107,7 @@ class TimerTaskManager(val timer: Timer) {
 
     private def updateTimeoutTrigger(
         nettyTimer: NettyTimer,
-        task: OtaviaTimerTask,
+        task: TimeoutTask,
         delay: Long,
         period: Long = -1,
         delayUnit: TimeUnit = TimeUnit.MILLISECONDS,

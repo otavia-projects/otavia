@@ -29,9 +29,11 @@ sealed abstract class TimerEvent extends Event {
 }
 
 /** Timeout event */
-case class TimeoutEvent(registerId: Long, attach: AnyRef | Null = null) extends TimerEvent
+case class TimeoutEvent(registerId: Long, attach: Option[AnyRef] = None) extends TimerEvent
 
 case class ChannelTimeoutEvent(registerId: Long, channel: Channel) extends TimerEvent
+
+case class AskTimeoutEvent(registerId: Long, askId: Long) extends TimerEvent
 
 case class ResourceTimeoutEvent(registerId: Long, cache: ResourceTimer) extends TimerEvent
 

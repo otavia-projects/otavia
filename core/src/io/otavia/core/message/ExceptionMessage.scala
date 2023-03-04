@@ -17,10 +17,29 @@
 package io.otavia.core.message
 
 /** exception message
- *
+ *  @param message
+ *    exception message
  *  @param cause
  *    exception detail
- *  @param distributor
- *    message id distributor
  */
-final case class ExceptionMessage(cause: Throwable)(using distributor: IdAllocator) extends Reply
+final class ExceptionMessage(message: String | Null, cause: Throwable | Null)
+    extends Exception(message, cause)
+    with Reply {
+
+    def this() = this(null, null)
+
+    def this(message: String) = this(message, null)
+
+    def this(cause: Throwable) = this(null, cause)
+
+}
+
+object ExceptionMessage {
+
+    def apply(): ExceptionMessage = new ExceptionMessage()
+
+    def apply(message: String): ExceptionMessage = new ExceptionMessage(message)
+
+    def apply(cause: Throwable) = new ExceptionMessage(cause)
+
+}

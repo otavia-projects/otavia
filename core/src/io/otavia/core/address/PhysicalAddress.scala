@@ -16,11 +16,12 @@
 
 package io.otavia.core.address
 
-import io.otavia.core.actor.{Actor, ChannelsActor, StateActor}
+import io.otavia.core.actor.{AbstractActor, Actor, ChannelsActor, StateActor}
 import io.otavia.core.house.House
+import io.otavia.core.log4a.Logger
 import io.otavia.core.message.*
-import io.otavia.core.stack.ReplyWaiter
-import io.otavia.core.util.Logger
+import io.otavia.core.stack.{ReplyFuture, ReplyWaiter}
+import io.otavia.core.timer.TimeoutTrigger
 
 /** every actor instance has one and only one physical address.
  *
@@ -29,21 +30,37 @@ import io.otavia.core.util.Logger
  *  @tparam H
  *    actor house
  */
-abstract class PhysicalAddress[M <: Ask[?] | Notice, H <: House] extends Address[M] {
+abstract class PhysicalAddress[M <: Call, H <: House] extends Address[M] {
 
     private[core] val house: H
 
-    // TODO: set message context.
-    override def ask[A <: M & Ask[?]](ask: A, waiter: ReplyWaiter[ReplyOf[A]])(using sender: Actor[?]): Unit = {
-        sender match
-            case actor: StateActor[_]            => actor.attachFrame(ask.messageId, waiter)
-            case channelsActor: ChannelsActor[_] => ???
+    override def ask[A <: M & Ask[_ <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using
+        sender: AbstractActor[_]
+    ): Unit = {
+        ask.setMessageContext(sender)
+        sender.attachStack(ask.messageId, future)
         house.putAsk(ask)
     }
 
-    override def notice(notice: M & Notice): Unit = house.putNotice(notice)
+    override def ask[A <: M & Ask[_ <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]], timeout: Long)(using
+        sender: AbstractActor[_]
+    ): Unit = {
+        this.ask(ask, future)
+        val promise = future.promise
 
-    override private[core] def reply(reply: Reply): Unit = {
+        val id =
+            sender.system.timer.registerAskTimeout(TimeoutTrigger.DelayTime(timeout), sender.self, ask.messageId)
+
+        promise.setTimeoutId(id)
+    }
+
+    override def notice(notice: M & Notice)(using sender: AbstractActor[?]): Unit = {
+        notice.setMessageContext(sender)
+        house.putNotice(notice)
+    }
+
+    override private[core] def reply(reply: Reply, sender: AbstractActor[?]): Unit = {
+        reply.setMessageContext(sender)
         house.putReply(reply)
     }
 

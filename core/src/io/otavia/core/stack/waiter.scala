@@ -20,6 +20,7 @@ import io.otavia.core.channel.Channel
 import io.otavia.core.message.{Ask, ExceptionMessage, Reply}
 
 sealed abstract class Waiter[R] {
+
     protected var r: R                  = _
     protected var askId: Long           = _
     private[core] var frame: StackFrame = _
@@ -31,6 +32,7 @@ sealed abstract class Waiter[R] {
     def reply: R = r
 
     def received: Boolean = r != null
+
 }
 
 //class ChannelWaiter extends Waiter[Channel] {

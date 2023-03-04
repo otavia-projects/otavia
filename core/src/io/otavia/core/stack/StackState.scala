@@ -16,13 +16,20 @@
 
 package io.otavia.core.stack
 
+import io.otavia.core.cache.Poolable
 import io.otavia.core.message.Reply
 
 trait StackState {
 
     private val option: Option[StackState] = Some(this) // for pooling Some(this) object to reduce GC
-    def resumable(): Boolean
+    def resumable(): Boolean // TODO: impl by stack
 
     def suspend(): Option[StackState] = option
 
+}
+
+object StackState {
+    val initialState: StackState = new StackState {
+        final override def resumable(): Boolean = true
+    }
 }

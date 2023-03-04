@@ -24,7 +24,7 @@ trait Poolable extends Chainable {
 
     private var thread: Thread = _
 
-    private[core] def creator: Thread = thread
+    private[core] def creator: Thread          = thread
     private[core] def creator(t: Thread): Unit = thread = t
 
     def recycle(): Unit
@@ -94,6 +94,27 @@ object Poolable {
                 oldTail.dechain()
                 tailnn.cleanNext()
                 count -= 1
+            }
+        }
+
+        /** Clear this [[PoolableHolder]] until there are remain keep's objects.
+         *  @param keep
+         *    the number of object to remain.
+         */
+        def clean(keep: Int = 0): Unit = if (count > keep) {
+            if (keep == 0) {
+                head = null
+                tail = null
+                count = 0
+            } else {
+                tail = head
+                var c = keep - 1
+                while (c > 0) {
+                    tail = headnn.next
+                    c -= 1
+                }
+                tailnn.cleanNext()
+                count = keep
             }
         }
 

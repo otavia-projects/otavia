@@ -17,7 +17,7 @@
 package io.otavia.core.log4a
 
 import io.netty5.util.internal.ThrowableUtil
-import io.otavia.core.actor.Actor
+import io.otavia.core.actor.{AbstractActor, Actor}
 import io.otavia.core.address.Address
 import io.otavia.core.log4a.Logger
 import io.otavia.core.log4a.Logger.{Debug, Error, Fatal, Info, Trace, Warn}
@@ -27,11 +27,11 @@ import io.otavia.core.system.ActorSystem
 import java.time.LocalDateTime
 import scala.language.unsafeNulls
 
-class ActorLogger private[core] (val clz: Class[?], actor: Actor[?]) {
+class ActorLogger private[core] (val clz: Class[?], actor: AbstractActor[?]) {
 
     private val system: ActorSystem            = actor.system
     private val logger: Address[Logger.LogMsg] = system.getAddress(classOf[Logger])
-    private given id: IdAllocator              = actor.idAllocator
+    private given AbstractActor[?]             = actor
 
     def logTrace(log: String): Unit = if (system.logLevel >= 6) logger.notice(Trace(getClass, LocalDateTime.now(), log))
     def logDebug(log: String): Unit = if (system.logLevel >= 5) logger.notice(Debug(getClass, LocalDateTime.now(), log))
@@ -55,5 +55,5 @@ class ActorLogger private[core] (val clz: Class[?], actor: Actor[?]) {
 }
 
 object ActorLogger {
-    def getLogger(clz: Class[?])(using actor: Actor[?]): ActorLogger = new ActorLogger(clz, actor)
+    def getLogger(clz: Class[?])(using actor: AbstractActor[?]): ActorLogger = new ActorLogger(clz, actor)
 }

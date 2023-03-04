@@ -17,8 +17,9 @@
 package io.otavia.core.timer
 
 import io.netty5.util.{Timeout, TimerTask}
+import io.otavia.core.actor.Actor
 import io.otavia.core.address.{Address, EventableAddress}
-import io.otavia.core.cache.ResourceTimer
+import io.otavia.core.cache.{ResourceTimer, TimeoutResource}
 import io.otavia.core.channel.Channel
 import io.otavia.core.reactor.{Reactor, TimeoutEvent}
 import io.otavia.core.timer.Timer.*
@@ -29,23 +30,10 @@ import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 /** [[Timer]] can generate timeout event. */
 trait Timer {
 
-    /** Generate a unique id for a new [[OtaviaTimerTask]] */
+    /** Generate a unique id for a new [[TimeoutTask]] */
     private[timer] def nextRegisterId(): Long
 
-    /** API for [[io.otavia.core.actor.Actor]] to register timeout event trigger.
-     *
-     *  @param trigger
-     *    Timeout event trigger.
-     *  @param address
-     *    [[Address]] of this [[TimeoutTrigger]] belong to. The timeout event of the [[TimeoutTrigger]] is send to this
-     *    address.
-     *  @return
-     *    Register id of [[ReactorTimerTask]], [[io.otavia.core.actor.Actor]] can use this id to cancel this trigger by
-     *    [[cancelTimerTask]]
-     */
-    def registerTimerTask(trigger: TimeoutTrigger, address: EventableAddress): Long
-
-    /** API for [[io.otavia.core.actor.ChannelsActor]] to register timeout event to [[Timer]].
+    /** API for [[Actor]] to register timeout event to [[Timer]].
      *
      *  @param trigger
      *    Timeout event trigger.
@@ -53,12 +41,12 @@ trait Timer {
      *    [[Address]] of this [[TimeoutTrigger]] belong to. The timeout event of the [[TimeoutTrigger]] is send to this
      *    address.
      *  @param attach
-     *    attachment object
+     *    optional attachment object
      *  @return
      *    Register id of [[ReactorTimerTask]], [[io.otavia.core.actor.Actor]] can use this id to cancel this trigger by
      *    [[cancelTimerTask]]
      */
-    def registerTimerTask(trigger: TimeoutTrigger, address: EventableAddress, attach: AnyRef): Long
+    def registerActorTimeout(trigger: TimeoutTrigger, address: EventableAddress, attach: Option[AnyRef] = None): Long
 
     /** API for [[io.otavia.core.channel.Channel]] to register timeout event to [[Timer]].
      *
@@ -70,8 +58,34 @@ trait Timer {
      *    Register id of [[ReactorTimerTask]], [[io.otavia.core.actor.Actor]] can use this id to cancel this trigger by
      *    [[cancelTimerTask]]
      */
-    final def registerTimerTask(trigger: TimeoutTrigger, channel: Channel): Long =
-        registerTimerTask(trigger, channel.executorAddress, channel)
+    def registerChannelTimeout(trigger: TimeoutTrigger, channel: Channel): Long
+
+    /** API for [[TimeoutResource]] to register timeout event to [[Timer]].
+     *
+     *  @param trigger
+     *    Timeout event trigger.
+     *  @param address
+     *    [[Address]] of this [[TimeoutTrigger]] belong to. The timeout event of the [[TimeoutTrigger]] is send to this
+     *    address.
+     *  @param resource
+     *    time-out [[TimeoutResource]]
+     *  @return
+     */
+    private[core] def registerResourceTimeout(
+        trigger: TimeoutTrigger,
+        address: EventableAddress,
+        resource: ResourceTimer
+    ): Long
+
+    /** API for [[Actor]] to register ask message timeout.
+     *  @param trigger
+     *    Timeout event trigger.
+     *  @param sender
+     *    [[Actor]] which send time-out ask message.
+     *  @return
+     *    Register id of ReactorTimerTask, Actor can use this id to cancel this trigger by cancelTimerTask.
+     */
+    private[core] def registerAskTimeout(trigger: TimeoutTrigger, sender: EventableAddress, askId: Long): Long
 
     /** Update an existed [[TimeoutTrigger]].
      *  @param trigger
@@ -91,21 +105,6 @@ trait Timer {
 }
 
 object Timer {
-
-    enum TimeoutTrigger {
-
-        case FixTime(date: Date)                                            extends TimeoutTrigger
-        case DelayTime(delay: Long, unit: TimeUnit = TimeUnit.MILLISECONDS) extends TimeoutTrigger
-        case DelayPeriod(
-            delay: Long,
-            period: Long,
-            delayUnit: TimeUnit = TimeUnit.MILLISECONDS,
-            periodUnit: TimeUnit = TimeUnit.MILLISECONDS
-        ) extends TimeoutTrigger
-        case FirstTimePeriod(first: Date, period: Long, periodUnit: TimeUnit = TimeUnit.MILLISECONDS)
-            extends TimeoutTrigger
-
-    }
 
     val INVALID_TIMEOUT_REGISTER_ID: Long = Long.MinValue
 

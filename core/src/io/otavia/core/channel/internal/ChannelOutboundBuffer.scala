@@ -22,7 +22,7 @@ import io.netty5.util.concurrent.{EventExecutor, Promise}
 import io.netty5.util.internal.logging.{InternalLogger, InternalLoggerFactory}
 import io.netty5.util.internal.{ObjectPool, PromiseNotificationUtil, SilentDispose, SystemPropertyUtil}
 import io.otavia.core.actor.ChannelsActor
-import io.otavia.core.cache.{PerActorThreadObjectPool, Poolable}
+import io.otavia.core.cache.{PerThreadObjectPool, Poolable}
 import io.otavia.core.channel.internal.ChannelOutboundBuffer.{MessageEntry, logger, safeSuccess}
 
 import java.util.Objects.requireNonNull
@@ -51,7 +51,7 @@ object ChannelOutboundBuffer {
 
     private object MessageEntry {
 
-        private val recycler = new PerActorThreadObjectPool[MessageEntry] {
+        private val recycler = new PerThreadObjectPool[MessageEntry] {
             override protected def newObject(): MessageEntry = new MessageEntry()
         }
 

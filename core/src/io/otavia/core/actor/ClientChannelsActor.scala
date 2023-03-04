@@ -17,15 +17,15 @@
 package io.otavia.core.actor
 
 import io.otavia.core.channel.Channel
+import io.otavia.core.log4a.ActorLogger
 import io.otavia.core.message.*
 import io.otavia.core.reactor.{Reactor, ReactorEvent}
-import io.otavia.core.util.ActorLogger
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 import java.nio.channels.SelectionKey
 import scala.reflect.ClassTag
 
-abstract class ClientChannelsActor[M <: Ask[?] | Notice] extends ChannelsActor[M] {
+abstract class ClientChannelsActor[M <: Call] extends ChannelsActor[M] {
 
     protected def connect(host: String, port: Int): Unit = connect(InetSocketAddress.createUnresolved(host, port).nn)
 
@@ -51,7 +51,7 @@ abstract class ClientChannelsActor[M <: Ask[?] | Notice] extends ChannelsActor[M
     override def init(channel: Channel): Unit = {
         handler match
             case Some(h) => channel.pipeline.addLast(h)
-            case None    => logger.logWarn(s"The channel $channel is not add any handler!")
+            case None    => logWarn(s"The channel $channel is not add any handler!")
     }
 
     override protected def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {

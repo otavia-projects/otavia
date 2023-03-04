@@ -16,22 +16,24 @@
 
 package io.otavia.core.cache
 
-import io.otavia.core.timer.TimeoutTrigger
+import io.otavia.core.system.ActorThread
 
-private[core] trait TimeoutResource {
+abstract class ThreadIsolationObjectPool[T <: Poolable] extends ObjectPool[T] {
 
-    /** Initial [[TimeoutTrigger]] when initial a time-out resource like [[ThreadLocal]] */
-    protected def initialTimeoutTrigger: Option[TimeoutTrigger] = None
+    protected def holder(): Poolable.SingleThreadPoolableHolder[T]
 
-    /** Handle [[io.otavia.core.reactor.TimeoutEvent]] for this [[TimeoutResource]]
-     *
-     *  @param registerId
-     *    timer task register id in [[Timer]].
-     *  @param threadLocalTimer
-     *    current time-out [[ResourceTimer]]
-     */
-    protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit = {
-        // default do nothing.
+    def dropIfRecycleNotByCreated: Boolean
+
+    override def get(): T = {
+        val pop = holder().pop()
+        if (pop != null) pop.asInstanceOf[T] else newInstance()
+    }
+
+    override def recycle(poolable: T): Unit = {
+        poolable.clean()
+        if (dropIfRecycleNotByCreated) {
+            if (poolable.creator == ActorThread.currentThread()) holder().push(poolable) else {}
+        } else holder().push(poolable)
     }
 
 }

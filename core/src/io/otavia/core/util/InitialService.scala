@@ -23,10 +23,10 @@ import io.otavia.core.util.InitialService.*
 
 abstract class InitialService extends StateActor[InitialService.MSG] {
 
-    override def continueNotice(state: InitialService.MSG & Notice | NoticeFrame): Option[StackState] = state match
-        case initialFromConfig: InitialFromConfig => None
-        case initialFromClass: InitialFromClass   => None
-        case _                                    => None
+//    override def continueNotice(state: InitialService.MSG & Notice | NoticeFrame): Option[StackState] = state match
+//        case initialFromConfig: InitialFromConfig => None
+//        case initialFromClass: InitialFromClass   => None
+//        case _                                    => None
 
 }
 

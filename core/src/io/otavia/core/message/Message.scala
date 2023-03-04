@@ -16,44 +16,42 @@
 
 package io.otavia.core.message
 
+import io.otavia.core.actor.{AbstractActor, Actor}
 import io.otavia.core.address.Address
+import io.otavia.core.stack.ActorStack
 
 /** Message is base unit for actor community */
 sealed trait Message extends Serializable {
 
-    private var s: Address[Ask[?] | Notice] = _
-    private var sid: Long                   = 0
-    private var mid: Long                   = 0
+    private var s: Address[Call] = _
+    private var sid: Long        = 0
+    private var mid: Long        = 0
 
     @volatile private[core] var next: Message | Null = _
 
-    private[core] def sender: Address[Ask[?] | Notice] = s
+    def sender: Address[Call] = s
 
-    private[core] def senderId: Long = sid
+    def senderId: Long = sid
 
-    private[core] def messageId: Long = mid
+    def messageId: Long = mid
 
-    private[core] def setSender(s: Address[Ask[?] | Notice]): Unit = this.s = s
-
-    private[core] def setSenderId(id: Long): Unit = this.sid = id
-
-    private[core] def setMessageId(id: Long): Unit = this.mid = id
+    private[core] def setMessageContext(sender: AbstractActor[?]): Unit = {
+        // TODO: support AOP when sender is AopActor
+        this.s = sender.self.asInstanceOf[Address[Call]]
+        this.sid = sender.actorId
+        this.mid = sender.idAllocator.generate
+    }
 
 }
+
+/** Message which will generate [[ActorStack]] when a [[Actor]] received. */
+sealed trait Call extends Message
 
 /** message which do not need reply */
-trait Notice extends Message
+trait Notice extends Call
 
 /** message which need reply */
-trait Ask[R <: Reply] extends Message { // + for R ?
-
-    // TODO: handle reply message which not create by current actor
-    def reply(rep: R): None.type                             = { rep.setReplyId(messageId); sender.reply(rep); None }
-    private[core] def replyInternal(reply: Reply): None.type = this.reply(reply.asInstanceOf[R])
-
-    def throws(reply: ExceptionMessage): None.type = { reply.setReplyId(messageId); sender.reply(reply); None }
-
-}
+trait Ask[R <: Reply] extends Call
 
 type ReplyOf[A <: Ask[_ <: Reply]] <: Reply = A match
     case Ask[r] => r
@@ -61,20 +59,20 @@ type ReplyOf[A <: Ask[_ <: Reply]] <: Reply = A match
 /** reply message, it reply at least one ask message */
 trait Reply extends Message {
 
-    private[core] var replyId: Long = -1L
+    private var rid: Long = -1L
 
-    private[core] var replyIds: Seq[Long] = _
-    private var isBatchReply: Boolean     = false
+    private var rids: Seq[Long] = _
+    private var batch: Boolean  = false
 
-    def setReplyId(id: Long): Unit = { this.replyId = id; isBatchReply = false }
+    def setReplyId(id: Long): Unit = { this.rid = id; batch = false }
 
-    def setReplyId(ids: Seq[Long]): Unit = { this.replyIds = ids; isBatchReply = true }
+    def setReplyId(ids: Seq[Long]): Unit = { this.rids = ids; batch = true }
 
-    def getReplyId: Long = if (isBatchReply) throw new RuntimeException("") else this.replyId
+    def replyId: Long = if (batch) throw new RuntimeException("") else this.rid
 
-    def getReplyIds: Seq[Long] = { assert(isBatchReply, ""); this.replyIds }
+    def replyIds: Seq[Long] = { assert(batch, ""); this.rids }
 
-    def isBatch: Boolean = isBatchReply
+    def isBatch: Boolean = batch
 
 }
 

@@ -16,25 +16,25 @@
 
 package io.otavia.core.actor
 
-import io.otavia.core.actor.AccepterActor.AcceptedChannel
-import io.otavia.core.message.{Ask, ExceptionMessage, Notice, UnitReply}
+import io.otavia.core.actor.AcceptorActor.AcceptedChannel
+import io.otavia.core.message.*
 import io.otavia.core.stack.StackState
 
 import scala.reflect.ClassTag
 
-abstract class AcceptedWorkerActor[M <: Ask[?] | Notice] extends ChannelsActor[M | AcceptedChannel] {
+abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | AcceptedChannel] {
 
     private val registering = collection.mutable.HashMap.empty[Long, AcceptedChannel]
-    override private[core] def receiveAsk(ask: Ask[_]): Unit = {
-        if (!ask.isInstanceOf[AcceptedChannel]) super.receiveAsk(ask)
-        else {
-            val accepted = ask.asInstanceOf[AcceptedChannel]
-            init(accepted.channel)
-            system.reactor.register(accepted.channel)
-
-            registering.put(accepted.channel.id, accepted)
-        }
-    }
+//    override private[core] def receiveAsk(ask: Ask[_]): Unit = {
+//        if (!ask.isInstanceOf[AcceptedChannel]) super.receiveAsk(ask)
+//        else {
+//            val accepted = ask.asInstanceOf[AcceptedChannel]
+//            init(accepted.channel)
+//            system.reactor.register(accepted.channel)
+//
+//            registering.put(accepted.channel.id, accepted)
+//        }
+//    }
 
 //    private[core] override def receiveRegisterReply(registerReplyEvent: RegisterReplyEvent): Unit = {
 //        val accepted = registering.remove(registerReplyEvent.channel.id).get

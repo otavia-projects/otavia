@@ -18,29 +18,34 @@ package io.otavia.core.timer
 
 import io.netty5.util.{Timeout, TimerTask, Timer as NTimer}
 import io.otavia.core.address.EventableAddress
-import io.otavia.core.reactor.TimeoutEvent
+import io.otavia.core.reactor.{TimeoutEvent, TimerEvent}
 
 import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 import scala.beans.BeanProperty
 
-final class OtaviaTimerTask(val manager: TimerTaskManager) extends TimerTask {
+private[timer] abstract class TimeoutTask(val manager: TimerTaskManager) extends TimerTask {
 
-    val id: Long = manager.timer.nextRegisterId()
+    protected val id: Long = manager.timer.nextRegisterId()
 
-    var address: EventableAddress = _
+    protected var address: EventableAddress = _
 
-    var period: Long = -1
+    protected var period: Long = -1
 
-    var attach: AnyRef | Null = null
+    protected var periodUnit: TimeUnit = TimeUnit.MILLISECONDS
 
-    var periodUnit: TimeUnit = TimeUnit.MILLISECONDS
-
-    @volatile private var handle: Timeout = _
+    @volatile protected var handle: Timeout = _
 
     def setAddress(address: EventableAddress): Unit = this.address = address
-    def setPeriod(period: Long): Unit               = this.period = period
-    def setAttach(attach: AnyRef | Null): Unit      = this.attach = attach
-    def setPeriodUnit(periodUnit: TimeUnit): Unit   = this.periodUnit = periodUnit
+
+    def setPeriod(period: Long): Unit = this.period = period
+
+    def setPeriodUnit(periodUnit: TimeUnit): Unit = this.periodUnit = periodUnit
+
+    def set(address: EventableAddress, period: Long, periodUnit: TimeUnit): Unit = {
+        this.address = address
+        this.period = period
+        this.periodUnit = periodUnit
+    }
 
     def parent: TimerTaskManager = manager
 
@@ -58,7 +63,7 @@ final class OtaviaTimerTask(val manager: TimerTaskManager) extends TimerTask {
     }
 
     override def run(timeout: Timeout): Unit = this.synchronized {
-        address.inform(TimeoutEvent(id, attach))
+        address.inform(newEvent())
         if (period > 0) {
             val timer: NTimer = timeout.timer().nn
             val newTimeout    = timer.newTimeout(this, period, periodUnit).nn
@@ -67,5 +72,7 @@ final class OtaviaTimerTask(val manager: TimerTaskManager) extends TimerTask {
             parent.remove(id)
         }
     }
+
+    protected def newEvent(): TimerEvent
 
 }

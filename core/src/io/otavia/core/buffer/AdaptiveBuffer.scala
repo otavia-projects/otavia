@@ -19,7 +19,7 @@ package io.otavia.core.buffer
 import io.netty5.buffer.*
 import io.netty5.util.Send
 import io.otavia.core.buffer.AdaptiveBuffer.AdaptiveStrategy
-import io.otavia.core.cache.{PerActorThreadObjectPool, Poolable}
+import io.otavia.core.cache.{PerThreadObjectPool, Poolable}
 import io.otavia.core.util.Chainable
 
 import java.nio.ByteBuffer
@@ -396,7 +396,7 @@ object AdaptiveBuffer {
 
     object BufferEntry {
 
-        private val recycler = new PerActorThreadObjectPool[BufferEntry] {
+        private val recycler = new PerThreadObjectPool[BufferEntry] {
             override protected def newObject(): BufferEntry = new BufferEntry
         }
 

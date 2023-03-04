@@ -44,6 +44,9 @@ trait Chainable {
     /** `true` if this object is at head of a chain. */
     def isHead: Boolean = p == null
 
+    /** true if and only if this object is not in any chain */
+    def notInChain: Boolean = n == null && p == null
+
     def dechain(): Unit = {
         p = null
         n = null

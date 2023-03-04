@@ -19,16 +19,16 @@ package io.otavia.core.message
 import io.otavia.core.address.Address
 
 class IdAllocator private[core] () {
-    private var address: Address[Ask[?] | Notice] = _
+    private var address: Address[Call] = _
     private var aid: Long                         = _
     private var currentId: Long                   = Long.MinValue
 
     private[core] def setActorId(id: Long): Unit = aid = id
 
-    private[core] def setActorAddress(address: Address[? <: Ask[?] | Notice]): Unit =
-        this.address = address.asInstanceOf[Address[Ask[?] | Notice]]
+    private[core] def setActorAddress(address: Address[? <: Call]): Unit =
+        this.address = address.asInstanceOf[Address[Call]]
 
-    def sender: Address[Ask[?] | Notice] = address
+    def sender: Address[Call] = address
 
     def actorId: Long = aid
 

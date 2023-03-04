@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package io.otavia.core.ioc
+package io.otavia.core.timer
 
-import io.otavia.core.actor.{Actor, MessageOf}
-import io.otavia.core.address.Address
-import io.otavia.core.message.{Ask, Call, Message, Notice}
+import io.otavia.core.channel.Channel
+import io.otavia.core.reactor.{ChannelTimeoutEvent, TimerEvent}
 
-import scala.reflect.{ClassTag, classTag}
+import scala.language.unsafeNulls
 
-trait Injectable {
-    this: Actor[?] =>
+private[timer] class ChannelTimeoutTask(manager: TimerTaskManager) extends TimeoutTask(manager) {
 
-    final def autowire[T <: Call](name: String): Address[T] = ???
+    private var channel: Channel = _
 
-    final def autowire[A <: Actor[_]: ClassTag](qualifier: Option[String] = None): Address[MessageOf[A]] =
-        system.getAddress(classTag[A].runtimeClass.asInstanceOf[Class[_ <: Actor[_]]], qualifier)
+    def setChannel(ch: Channel): Unit = channel = ch
+
+    override protected def newEvent(): TimerEvent = ChannelTimeoutEvent(registerId, channel)
 
 }

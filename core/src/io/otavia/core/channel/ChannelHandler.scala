@@ -115,7 +115,7 @@ trait ChannelHandler {
      *  @param ctx
      *    [[ChannelHandlerContext]] of this handler.
      *  @param id
-     *    registered [[io.otavia.core.timer.Timer.TimeoutTrigger]] id of this timeout event.
+     *    registered [[io.otavia.core.timer.TimeoutTrigger]] id of this timeout event.
      *  @throws Exception
      */
     @throws[Exception]

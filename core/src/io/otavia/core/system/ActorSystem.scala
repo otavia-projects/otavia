@@ -21,7 +21,7 @@ import io.netty5.util.internal.SystemPropertyUtil
 import io.otavia.core.actor.{Actor, ActorFactory, MessageOf}
 import io.otavia.core.address.Address
 import io.otavia.core.channel.ChannelFactory
-import io.otavia.core.message.{Ask, IdAllocator, Message, Notice}
+import io.otavia.core.message.{Ask, Call, IdAllocator, Message, Notice}
 import io.otavia.core.reactor.{Event, Reactor}
 import io.otavia.core.timer.Timer
 
@@ -65,7 +65,7 @@ trait ActorSystem {
     def crateActor[A <: Actor[_]](factory: ActorFactory[A], num: Int = 1): Address[MessageOf[A]]
 
     /** IOC methods, developer can ues it by [[io.otavia.core.ioc.Injectable]] */
-    private[core] def getAddress[M <: Ask[?] | Notice](
+    private[core] def getAddress[M <: Call](
         clz: Class[_ <: Actor[_]],
         qualifier: Option[String] = None
     ): Address[M]

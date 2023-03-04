@@ -18,7 +18,7 @@ package io.otavia.core.address
 
 import io.otavia.core.actor.{Actor, StateActor}
 import io.otavia.core.house.ActorHouse
-import io.otavia.core.message.{Ask, Message, Notice, Reply}
+import io.otavia.core.message.{Ask, Call, Message, Notice, Reply}
 import io.otavia.core.stack.ReplyWaiter
 
 /** Actor physical address
@@ -28,5 +28,5 @@ import io.otavia.core.stack.ReplyWaiter
  *  @tparam M
  *    the message type that this actor can receive.
  */
-final class ActorAddress[M <: Ask[?] | Notice](override private[core] val house: ActorHouse)
+final class ActorAddress[M <: Call](override private[core] val house: ActorHouse)
     extends PhysicalAddress[M, ActorHouse]

@@ -26,7 +26,7 @@ import io.otavia.core.channel.OtaviaChannelHandlerContext.*
 import io.otavia.core.channel.estimator.ReadBufferAllocator
 import io.otavia.core.channel.internal.ChannelHandlerMask
 import io.otavia.core.channel.internal.ChannelHandlerMask.*
-import io.otavia.core.util.ActorLogger
+import io.otavia.core.log4a.ActorLogger
 
 import java.net.SocketAddress
 import scala.util.Try

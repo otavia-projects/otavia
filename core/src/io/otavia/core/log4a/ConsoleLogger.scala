@@ -29,7 +29,7 @@ abstract class ConsoleLogger extends StateActor[Logger.LogMsg], Logger {
 
     import ConsoleLogger.*
 
-    override val batchable: Boolean = true
+    override def batchable: Boolean = true
     override def maxBatchSize: Int  = 1000
 
     private val cache = new mutable.StringBuilder()

@@ -16,10 +16,11 @@
 
 package io.otavia.core.actor
 
-import io.otavia.core.actor.AccepterActor.*
+import io.otavia.core.actor.AcceptorActor.*
 import io.otavia.core.address.Address
 import io.otavia.core.channel.*
 import io.otavia.core.reactor.ReactorEvent
+import io.otavia.core.stack.ReplyFuture
 //import io.otavia.core.channel.impl.NioServerSocketChannel
 import io.otavia.core.message.*
 import io.otavia.core.stack.{ChannelFrame, ExceptionWaiter, ReplyWaiter, StackState}
@@ -27,7 +28,7 @@ import io.otavia.core.stack.{ChannelFrame, ExceptionWaiter, ReplyWaiter, StackSt
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 import scala.runtime.Nothing$
 
-abstract class AccepterActor[W <: AcceptedWorkerActor[_ <: Ask[?] | Notice]] extends ChannelsActor[Bind] {
+abstract class AcceptorActor[W <: AcceptedWorkerActor[_ <: Call]] extends ChannelsActor[Bind] {
 
     val workerFactory: WorkerFactory[W]
 
@@ -78,16 +79,16 @@ abstract class AccepterActor[W <: AcceptedWorkerActor[_ <: Ask[?] | Notice]] ext
     final override def continueChannelMessage(msg: AnyRef | ChannelFrame): Option[StackState] = msg match
         case accepted: Channel =>
             val state = new DispatchState()
-            workers.ask[AcceptedChannel](AcceptedChannel(accepted), state.dispatchWaiter)
+            workers.ask(AcceptedChannel(accepted), state.dispatchFuture)
             Some(state)
         case frame: ChannelFrame =>
             frame.`return`()
 
 }
 
-object AccepterActor {
+object AcceptorActor {
 
-    trait WorkerFactory[W <: AcceptedWorkerActor[_ <: Ask[?] | Notice]] extends ActorFactory[W] {
+    trait WorkerFactory[W <: AcceptedWorkerActor[_ <: Call]] extends ActorFactory[W] {
         override def newActor(): W
     }
 
@@ -114,9 +115,9 @@ object AccepterActor {
 
     final class DispatchState extends StackState {
 
-        val dispatchWaiter = new ReplyWaiter[UnitReply]()
+        val dispatchFuture = ReplyFuture[UnitReply]()
 
-        override def resumable(): Boolean = dispatchWaiter.received
+        override def resumable(): Boolean = dispatchFuture.isDone
 
     }
 

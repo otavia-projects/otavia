@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-package io.otavia.core.ioc
+package io.otavia.core.actor
 
-import io.otavia.core.actor.{Actor, MessageOf}
-import io.otavia.core.address.Address
-import io.otavia.core.message.{Ask, Call, Message, Notice}
+import io.otavia.core.message.Call
 
-import scala.reflect.{ClassTag, classTag}
+abstract class MainActor[M <: Call](val args: Array[String]) extends StateActor[M] {
 
-trait Injectable {
-    this: Actor[?] =>
+    override def afterMount(): Unit = main(args)
 
-    final def autowire[T <: Call](name: String): Address[T] = ???
-
-    final def autowire[A <: Actor[_]: ClassTag](qualifier: Option[String] = None): Address[MessageOf[A]] =
-        system.getAddress(classTag[A].runtimeClass.asInstanceOf[Class[_ <: Actor[_]]], qualifier)
+    def main(args: Array[String]): Unit
 
 }

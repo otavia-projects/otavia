@@ -19,12 +19,12 @@ package io.otavia.core.actor
 import io.otavia.core.actor.Actor
 import io.otavia.core.address.{Address, ChannelsActorAddress}
 import io.otavia.core.channel.*
+import io.otavia.core.log4a.ActorLogger
 import io.otavia.core.message.*
 import io.otavia.core.reactor.*
 import io.otavia.core.stack.*
 import io.otavia.core.system.ActorThread
 import io.otavia.core.timer.Timer
-import io.otavia.core.util.ActorLogger
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 import java.nio.channels.SelectionKey
@@ -32,9 +32,7 @@ import java.util.concurrent.CancellationException
 import scala.reflect.ClassTag
 import scala.util.*
 
-abstract class ChannelsActor[M <: Ask[?] | Notice] extends AbstractActor[M] {
-
-    protected val logger: ActorLogger = ActorLogger.getLogger(this.getClass)
+abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
     override def self: ChannelsActorAddress[M] = super.self.asInstanceOf[ChannelsActorAddress[M]]
 
@@ -47,30 +45,17 @@ abstract class ChannelsActor[M <: Ask[?] | Notice] extends AbstractActor[M] {
         channelId
     }
 
-    private[core] def attachFrame(askId: Long, waiter: ChannelReplyWaiter[_]): Unit = {}
-
-    override private[core] def receiveNotice(notice: Notice): Unit = {}
-    override private[core] def receiveAsk(ask: Ask[?]): Unit       = {} // flight and pending stack frame
-    override private[core] def receiveReply(reply: Reply): Unit    = {}
-
-    /** Receive IO event from [[Reactor]] or timeout event from [[Timer]]
-     *
-     *  @param event
-     *    IO/timeout event
-     */
-    override private[core] def receiveEvent(event: Event): Unit = {
-        event match
-            case e: ReactorEvent.RegisterReply    => handleChannelRegisterReplyEvent(e)
-            case e: ReactorEvent.DeregisterReply  => handleChannelDeregisterReplyEvent(e)
-            case e: ReactorEvent.ChannelClose     => handleChannelCloseEvent(e)
-            case e: ReactorEvent.ChannelReadiness => handleChannelReadinessEvent(e)
-            case e: TimeoutEvent                  => handleTimeoutEvent(e)
-    }
+    final override protected def receiveIOEvent(event: Event): Unit = event match
+        case e: ReactorEvent.RegisterReply            => handleChannelRegisterReplyEvent(e)
+        case e: ReactorEvent.DeregisterReply          => handleChannelDeregisterReplyEvent(e)
+        case e: ReactorEvent.ChannelClose             => handleChannelCloseEvent(e)
+        case e: ReactorEvent.ChannelReadiness         => handleChannelReadinessEvent(e)
+        case channelTimeoutEvent: ChannelTimeoutEvent => handleChannelTimeoutEvent(channelTimeoutEvent)
 
     // Event from Reactor
 
     /** Handle channel close event */
-    protected def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit =
+    private def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit =
         event.channel.handleChannelCloseEvent(event)
 
     /** Handle channel register result event */
@@ -78,23 +63,18 @@ abstract class ChannelsActor[M <: Ask[?] | Notice] extends AbstractActor[M] {
         event.channel.handleChannelRegisterReplyEvent(event)
 
     /** Handle channel deregister result event */
-    protected def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit =
+    private def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit =
         event.channel.handleChannelDeregisterReplyEvent(event)
 
     /** Handle channel readiness event */
-    protected def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit =
+    private def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit =
         event.channel.handleChannelReadinessEvent(event)
 
     // Event from Timer
 
-    protected def handleTimeoutEvent(event: TimeoutEvent): Unit = event.attach match
-        case channel: Channel => handleChannelTimeoutEvent(event.registerId, channel)
-        case _                => handleActorTimeout(event.registerId)
-
-    protected def handleChannelTimeoutEvent(eventId: Long, channel: Channel): Unit =
-        channel.handleChannelTimeoutEvent(eventId)
-
-    protected def handleActorTimeout(eventId: Long): Unit = {}
+    private def handleChannelTimeoutEvent(channelTimeoutEvent: ChannelTimeoutEvent): Unit = {
+        channelTimeoutEvent.channel.handleChannelTimeoutEvent(channelTimeoutEvent.registerId)
+    }
 
     // End handle event.
 
@@ -105,15 +85,6 @@ abstract class ChannelsActor[M <: Ask[?] | Notice] extends AbstractActor[M] {
         val frame = new ChannelFrame(null, msgId)
     }
 
-    def continueAsk(state: M & Ask[?] | AskFrame): Option[StackState] = throw new NotImplementedError(
-      getClass.getName.nn + ": an implementation is missing"
-    )
-    def continueNotice(state: M & Notice | NoticeFrame): Option[StackState] = throw new NotImplementedError(
-      getClass.getName.nn + ": an implementation is missing"
-    )
-    def continueReply(state: M & Reply): Option[StackState] = throw new NotImplementedError(
-      getClass.getName.nn + ": an implementation is missing"
-    )
     def continueChannelMessage(msg: AnyRef | ChannelFrame): Option[StackState]
 
     val handler: Option[ChannelInitializer[? <: Channel]] = None

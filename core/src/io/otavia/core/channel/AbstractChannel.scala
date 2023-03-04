@@ -28,11 +28,11 @@ import io.otavia.core.channel.ChannelOption.*
 import io.otavia.core.channel.estimator.*
 import io.otavia.core.channel.inflight.ChannelInflightImpl
 import io.otavia.core.channel.internal.{ChannelOutboundBuffer, ReadSink, WriteBufferWaterMark, WriteSink}
+import io.otavia.core.log4a.ActorLogger
 import io.otavia.core.reactor.{ReactorEvent, TimeoutEvent}
 import io.otavia.core.system.ActorThread
 import io.otavia.core.timer.Timer
-import io.otavia.core.timer.Timer.TimeoutTrigger
-import io.otavia.core.util.ActorLogger
+import io.otavia.core.timer.TimeoutTrigger
 
 import java.net.{InetSocketAddress, SocketAddress}
 import java.nio.channels.ClosedChannelException
@@ -411,7 +411,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
             // register connect timeout trigger. When timeout, the timer will send a timeout event, the
             // handleConnectTimeout method will handle this timeout event.
             if (connectTimeoutMillis > 0)
-                connectTimeoutRegisterId = timer.registerTimerTask(TimeoutTrigger.DelayTime(connectTimeoutMillis), this)
+                connectTimeoutRegisterId = timer.registerChannelTimeout(TimeoutTrigger.DelayTime(connectTimeoutMillis), this)
         }
     } catch { case t: Throwable => }
 

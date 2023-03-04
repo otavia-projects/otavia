@@ -16,8 +16,8 @@
 
 package io.otavia.core.actor
 
-import io.otavia.core.message.{Ask, Notice}
+import io.otavia.core.message.{Ask, Notice, Call}
 
-trait ActorFactory[A <: Actor[_ <: Ask[?] | Notice]] {
+trait ActorFactory[A <: Actor[_ <: Call]] {
     def newActor(): A
 }

@@ -16,6 +16,6 @@
 
 package io.otavia.core.address
 
-import io.otavia.core.message.{Ask, Message, Notice}
+import io.otavia.core.message.{Ask, Message, Notice, Call}
 
-trait ProxyAddress[-M <: Ask[?] | Notice] extends Address[M]
+trait ProxyAddress[-M <: Call] extends Address[M]

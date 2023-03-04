@@ -65,7 +65,8 @@ object HandleStateActor {
 
         var query: String = ask
 
-        val redisWaiter: ReplyWaiter[RedisResponse] = new ReplyWaiter()
+        val redisWaiter: ReplyWaiter[RedisResponse]         = new ReplyWaiter()
+        val redisResponseFuture: ReplyFuture[RedisResponse] = ReplyFuture[RedisResponse]()
 
         override def resumable(): Boolean = redisWaiter.received
 

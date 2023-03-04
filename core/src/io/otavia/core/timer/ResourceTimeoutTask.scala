@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 
-package io.otavia.core.ioc
+package io.otavia.core.timer
 
-import io.otavia.core.actor.{Actor, MessageOf}
-import io.otavia.core.address.Address
-import io.otavia.core.message.{Ask, Call, Message, Notice}
+import io.otavia.core.cache.ResourceTimer
+import io.otavia.core.reactor.{ResourceTimeoutEvent, TimerEvent}
 
-import scala.reflect.{ClassTag, classTag}
+private[timer] class ResourceTimeoutTask(manager: TimerTaskManager) extends TimeoutTask(manager) {
 
-trait Injectable {
-    this: Actor[?] =>
+    private var resourceTimer: ResourceTimer = _
 
-    final def autowire[T <: Call](name: String): Address[T] = ???
+    def setResourceTimer(timer: ResourceTimer): Unit = resourceTimer = timer
 
-    final def autowire[A <: Actor[_]: ClassTag](qualifier: Option[String] = None): Address[MessageOf[A]] =
-        system.getAddress(classTag[A].runtimeClass.asInstanceOf[Class[_ <: Actor[_]]], qualifier)
+    override protected def newEvent(): TimerEvent = ResourceTimeoutEvent(registerId, resourceTimer)
 
 }

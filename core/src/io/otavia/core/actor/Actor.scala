@@ -33,7 +33,7 @@ import scala.reflect.{ClassTag, TypeTest, classTag}
  *  @tparam M
  *    the type of message of this actor can handle
  */
-trait Actor[M <: Ask[?] | Notice] {
+trait Actor[+M <: Call] {
 
     /** message id distributor */
     given idAllocator: IdAllocator = new IdAllocator()
@@ -43,16 +43,15 @@ trait Actor[M <: Ask[?] | Notice] {
     /** whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to
      *  receiveBatchXXX method
      */
-    val batchable: Boolean = false
+    def batchable: Boolean = false
 
-    val maxFetchPerRunning: Int = system.defaultMaxFetchPerRunning
+    /** max size message for each batch, usage for schedule system */
+    def maxBatchSize: Int = system.defaultMaxBatchSize
 
-    // system context, these method can only used after actor instance mount to actor system
+    def maxFetchPerRunning: Int = system.defaultMaxFetchPerRunning
 
-    private var ctx: ActorContext = _
-
-    /** context of this actor */
-    def context: ActorContext = ctx
+    /** Context of this actor. This method can only used after actor instance mount to actor system */
+    def context: ActorContext
 
     /** This method will called by [[ActorSystem]] when actor mount to actor system, when a actor is creating, the
      *  [[ActorSystem]] will create a [[ActorContext]]. When mount actor instance to actor system, use this method to
@@ -60,18 +59,14 @@ trait Actor[M <: Ask[?] | Notice] {
      *  @param context
      *    the system context of this actor
      */
-    private[core] def setCtx(context: ActorContext): Unit = {
-        ctx = context
-        idAllocator.setActorId(context.actorId)
-        idAllocator.setActorAddress(context.address)
-    }
+    private[core] def setCtx(context: ActorContext): Unit
 
     /** The ActorSystem of this actor instance is running
      *
      *  @return
      *    ActorSystem
      */
-    def system: ActorSystem = context.system
+    final def system: ActorSystem = context.system
 
     /** The unique id of this actor distributed by [[ActorSystem]], when a actor instance is mounted to a
      *  [[ActorSystem]], the actor system will distribute a unique id to the instance.
@@ -79,14 +74,7 @@ trait Actor[M <: Ask[?] | Notice] {
      *  @return
      *    id number
      */
-    def actorId: Long = context.actorId
-
-    /** self address of this actor instance
-     *
-     *  @return
-     *    self address
-     */
-    def self: Address[M] = context.address.asInstanceOf[Address[M]]
+    final def actorId: Long = context.actorId
 
     // method for receive message
 
@@ -100,7 +88,7 @@ trait Actor[M <: Ask[?] | Notice] {
      *  @param ask
      *    ask message
      */
-    private[core] def receiveAsk(ask: Ask[?]): Unit
+    private[core] def receiveAsk(ask: Ask[? <: Reply]): Unit
 
     /** receive reply message from other actor
      *  @param reply

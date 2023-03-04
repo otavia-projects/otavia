@@ -18,8 +18,7 @@ package io.otavia.core.cache
 
 import io.otavia.core.reactor.ResourceTimeoutEvent
 import io.otavia.core.system.ActorThread
-import io.otavia.core.timer.Timer
-import io.otavia.core.timer.Timer.TimeoutTrigger
+import io.otavia.core.timer.{TimeoutTrigger, Timer}
 
 import scala.language.unsafeNulls
 
@@ -108,13 +107,13 @@ abstract class ThreadLocal[V] extends TimeoutResource {
      */
     protected def onRemoval(value: V): Unit = {}
 
-    final def initialTimer(): Unit = {
+    final protected def initialTimer(): Unit = {
         initialTimeoutTrigger match
             case Some(trigger) =>
                 val thread           = ActorThread.currentThread()
                 val system           = thread.system
                 val threadLocalTimer = new ThreadLocalTimer(this)
-                val id = system.timer.registerTimerTask(
+                val id = system.timer.registerResourceTimeout(
                   trigger,
                   ActorThread.currentThread().actorThreadAddress,
                   threadLocalTimer
