@@ -56,6 +56,10 @@ class AskStack[A <: Ask[? <: Reply]] private () extends ActorStack {
         reply = null
     }
 
+    override def toString: String =
+        s"AskStack(ask = $ask, state = $stackState, uncompleted = $uncompletedPromiseCount, " +
+            s"completed = $completedPromiseCount, reply = ${Option(reply)})"
+
 }
 
 object AskStack {

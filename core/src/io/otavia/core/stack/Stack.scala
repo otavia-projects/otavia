@@ -24,9 +24,14 @@ import io.otavia.core.util.Chainable
 import scala.language.unsafeNulls
 
 object Stack {
-    class UncompletedPromiseIterator(private var head: Promise[?]) extends Iterator[Promise[?]] {
+    class UncompletedPromiseIterator(private[core] var head: Promise[?], private[core] var tail: Promise[?])
+        extends Iterator[Promise[?]] {
 
-        override def hasNext: Boolean = head != null
+        override def hasNext: Boolean = {
+            val has = head != null
+            if (!has) tail = null
+            has
+        }
 
         override def next(): Promise[?] = {
             val promise = head
@@ -36,6 +41,11 @@ object Stack {
         }
 
         def nextCast[P <: Promise[?]](): P = next().asInstanceOf[P]
+
+        def clean(): Unit = {
+            head = null
+            tail = null
+        }
 
     }
 
@@ -116,6 +126,42 @@ abstract class Stack extends Poolable {
         }
     }
 
+    private[core] def addUncompletedPromiseIterator(iterator: Stack.UncompletedPromiseIterator): Unit = {
+        if (uhead == null) {
+            uhead = iterator.head
+            utail = iterator.tail
+        } else {
+            utail.next = iterator.head
+            iterator.head.next = utail
+            utail = iterator.tail
+        }
+        iterator.clean()
+    }
+
+    private[core] def hasUncompletedPromise: Boolean = uhead != null
+
+    private[core] def hasCompletedPromise: Boolean = headPromise != null
+
+    private[core] def completedPromiseCount: Int = {
+        var cursor: Chainable = headPromise
+        var count             = 0
+        while (cursor != null) {
+            cursor = cursor.next
+            count += 1
+        }
+        count
+    }
+
+    private[core] def uncompletedPromiseCount: Int = {
+        var cursor: Chainable = uhead
+        var count             = 0
+        while (cursor != null) {
+            cursor = cursor.next
+            count += 1
+        }
+        count
+    }
+
     private[core] def recycleAllPromises(): Unit = while (headPromise != null) {
         val promise = headPromise
         if (headPromise == tailPromise) tailPromise = null
@@ -124,7 +170,7 @@ abstract class Stack extends Poolable {
     }
 
     private[core] def uncompletedIterator(): Stack.UncompletedPromiseIterator = {
-        val iterator = new Stack.UncompletedPromiseIterator(uhead)
+        val iterator = new Stack.UncompletedPromiseIterator(uhead, utail)
         uhead = null
         utail = null
         iterator

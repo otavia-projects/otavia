@@ -46,35 +46,39 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     }
 
     final override protected def receiveIOEvent(event: Event): Unit = event match
-        case e: ReactorEvent.RegisterReply            => handleChannelRegisterReplyEvent(e)
-        case e: ReactorEvent.DeregisterReply          => handleChannelDeregisterReplyEvent(e)
-        case e: ReactorEvent.ChannelClose             => handleChannelCloseEvent(e)
-        case e: ReactorEvent.ChannelReadiness         => handleChannelReadinessEvent(e)
-        case channelTimeoutEvent: ChannelTimeoutEvent => handleChannelTimeoutEvent(channelTimeoutEvent)
+        case e: ReactorEvent.RegisterReply =>
+            e.channel.handleChannelRegisterReplyEvent(e)
+            afterChannelRegisterReplyEvent(e)
+        case e: ReactorEvent.DeregisterReply =>
+            e.channel.handleChannelDeregisterReplyEvent(e)
+            afterChannelDeregisterReplyEvent(e)
+        case e: ReactorEvent.ChannelClose =>
+            e.channel.handleChannelCloseEvent(e)
+            afterChannelCloseEvent(e)
+        case e: ReactorEvent.ChannelReadiness =>
+            e.channel.handleChannelReadinessEvent(e)
+            afterChannelReadinessEvent(e)
+        case channelTimeoutEvent: ChannelTimeoutEvent =>
+            channelTimeoutEvent.channel.handleChannelTimeoutEvent(channelTimeoutEvent.registerId)
+            afterChannelTimeoutEvent(channelTimeoutEvent)
 
     // Event from Reactor
 
     /** Handle channel close event */
-    private def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit =
-        event.channel.handleChannelCloseEvent(event)
+    protected def afterChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = {}
 
     /** Handle channel register result event */
-    protected def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit =
-        event.channel.handleChannelRegisterReplyEvent(event)
+    protected def afterChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {}
 
     /** Handle channel deregister result event */
-    private def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit =
-        event.channel.handleChannelDeregisterReplyEvent(event)
+    private def afterChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = {}
 
     /** Handle channel readiness event */
-    private def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit =
-        event.channel.handleChannelReadinessEvent(event)
+    private def afterChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit = {}
 
     // Event from Timer
 
-    private def handleChannelTimeoutEvent(channelTimeoutEvent: ChannelTimeoutEvent): Unit = {
-        channelTimeoutEvent.channel.handleChannelTimeoutEvent(channelTimeoutEvent.registerId)
-    }
+    private def afterChannelTimeoutEvent(channelTimeoutEvent: ChannelTimeoutEvent): Unit = {}
 
     // End handle event.
 
@@ -93,7 +97,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
      *    1. Create the [[Channel]].
      *    1. Initial the [[Channel]] with [[init]].
      *    1. Register the [[Channel]] to [[Reactor]]. When register channel success, the [[Reactor]] will send a
-     *       [[ReactorEvent.RegisterReply]] event to this actor, then the [[handleChannelRegisterReplyEvent]] will be
+     *       [[ReactorEvent.RegisterReply]] event to this actor, then the [[afterChannelRegisterReplyEvent]] will be
      *       called to handle the register result [[Event]].
      */
     protected def initAndRegister(): Channel = {

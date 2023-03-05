@@ -16,6 +16,8 @@
 
 package io.otavia.core.channel
 
+import io.otavia.core.stack.ChannelReplyFuture
+
 trait ChannelInflight {
 
     /** The Channel inbound is head-of-line */
@@ -36,7 +38,7 @@ trait ChannelInflight {
     def setInboundMessageBarrier(barrier: AnyRef => Boolean): Unit
 
     // actor send ask message to channel
-    def ask(value: AnyRef): Unit
+    def ask(value: AnyRef, future: ChannelReplyFuture): Unit
 
     // actor send notice message to channel
     def notice(value: AnyRef): Unit

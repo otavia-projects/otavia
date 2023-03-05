@@ -66,11 +66,12 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[_ <: Call]] extends Channe
 
     override protected def newChannel(): Channel = system.serverChannelFactory.newChannel(this)
 
-    override protected def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {
-        super.handleChannelRegisterReplyEvent(event)
+    override protected def afterChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {
         try {
-            event.channel.bind()
-            bound = true
+            if (event.cause.isEmpty) {
+                event.channel.bind()
+                bound = true
+            }
         } catch {
             case e: Exception => event.channel.close()
         }

@@ -61,16 +61,16 @@ trait Reply extends Message {
 
     private var rid: Long = -1L
 
-    private var rids: Seq[Long] = _
+    private var rids: Seq[(Long, Long)] = _
     private var batch: Boolean  = false
 
     def setReplyId(id: Long): Unit = { this.rid = id; batch = false }
 
-    def setReplyId(ids: Seq[Long]): Unit = { this.rids = ids; batch = true }
+    def setReplyId(ids: Seq[(Long, Long)]): Unit = { this.rids = ids; batch = true }
 
     def replyId: Long = if (batch) throw new RuntimeException("") else this.rid
 
-    def replyIds: Seq[Long] = { assert(batch, ""); this.rids }
+    def replyIds: Seq[(Long, Long)] = { assert(batch, ""); this.rids }
 
     def isBatch: Boolean = batch
 

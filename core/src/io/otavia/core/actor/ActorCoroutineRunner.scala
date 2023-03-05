@@ -17,15 +17,19 @@
 package io.otavia.core.actor
 
 import io.otavia.core.message.{Ask, Call, Notice}
-import io.otavia.core.stack.{AskStack, NoticeStack, StackState}
+import io.otavia.core.stack.*
 
 private[core] trait ActorCoroutineRunner[M <: Call] {
 
-    def batchContinueNotice(notices: Seq[M & Notice]): Option[StackState] =
+    def batchContinueNotice(stack: BatchNoticeStack[M & Notice]): Option[StackState] =
         throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
 
-    def batchContinueAsk(asks: Seq[M & Ask[?]]): Option[StackState] =
+    def batchContinueAsk(stack: BatchAskStack[M & Ask[?]]): Option[StackState] =
         throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
+
+    def batchNoticeFilter: M & Notice => Boolean = _ => true
+
+    def batchAskFilter: M & Ask[?] => Boolean = _ => true
 
     /** implement this method to handle ask message and resume when received reply message for this notice message
      *
@@ -47,6 +51,9 @@ private[core] trait ActorCoroutineRunner[M <: Call] {
      *    frame has finished.
      */
     def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState] =
+        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
+
+    def continueChannelStack(stack: ChannelStack[?]): Option[StackState] =
         throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
 
 }

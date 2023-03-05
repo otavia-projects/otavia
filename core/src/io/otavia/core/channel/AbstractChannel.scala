@@ -225,7 +225,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     private def closeNowAndFail(cause: Throwable): Unit = try { doClose() }
     catch { case e: Exception => logger.logWarn("Failed to close a channel.", e) }
 
-    /** Call by head handler on pipeline register oubound event.
+    /** Call by head handler on pipeline register outbound event.
      *
      *  send channel register to reactor, and handle reactor reply at [[handleChannelRegisterReplyEvent]]
      */

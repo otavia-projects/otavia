@@ -19,7 +19,7 @@ package io.otavia.core.actor
 import io.otavia.core.actor.Actor.{ASK_TYPE, MessageType, NOTICE_TYPE, REPLY_TYPE}
 import io.otavia.core.address.Address
 import io.otavia.core.message.*
-import io.otavia.core.reactor.{Event, Reactor}
+import io.otavia.core.reactor.{Event, Reactor, TimeoutEvent}
 import io.otavia.core.stack.*
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.timer.Timer
@@ -101,6 +101,40 @@ trait Actor[+M <: Call] {
      *    IO/timeout event
      */
     private[core] def receiveEvent(event: Event): Unit
+
+    /** Receive [[Notice]] messages in bulk from other [[Actor]]s, possibly more than one sending [[Actor]].
+     *
+     *  The [[ActorSystem]] call this method if and only if [[batchable]] is true. Conversely, the [[receiveNotice]]
+     *  method will not be called
+     *
+     *  @param notices
+     *    batch notices message.
+     */
+    private[core] def receiveBatchNotice(notices: Seq[Notice]): Unit
+
+    /** Receive [[Ask]] messages in bulk from other [[Actor]]s, possibly more than one sending [[Actor]].
+     *
+     *  The [[ActorSystem]] call this method if and only if [[batchable]] is true. Conversely, the [[receiveBatchAsk]]
+     *  method will not be called
+     *
+     *  @param notices
+     *    batch ask messages.
+     */
+    private[core] def receiveBatchAsk(asks: Seq[Ask[?]]): Unit
+
+    /** handle user registered timeout event.
+     *
+     * @param timeoutEvent
+     * event
+     */
+    protected def handleActorTimeout(timeoutEvent: TimeoutEvent): Unit = {}
+
+    /** Receive IO event from [[Reactor]] or timeout event from [[Timer]]
+     *
+     * @param event
+     * IO/timeout event
+     */
+    protected def receiveIOEvent(event: Event): Unit = {}
 
     // actor life cycle hook method
 

@@ -33,7 +33,7 @@ abstract class ClientChannelsActor[M <: Call] extends ChannelsActor[M] {
 
     /** Request to connect to the given [[SocketAddress]]. This method return a channel which is not connected to the
      *  remote address, it only register this channel to [[Reactor]], when register operation completes, this actor will
-     *  receive a [[ReactorEvent.RegisterReply]] event, then this actor will call [[handleChannelRegisterReplyEvent]] to
+     *  receive a [[ReactorEvent.RegisterReply]] event, then this actor will call [[afterChannelRegisterReplyEvent]] to
      *  handle register result and connect to remote address.
      *
      *  @param remoteAddress
@@ -54,8 +54,8 @@ abstract class ClientChannelsActor[M <: Call] extends ChannelsActor[M] {
             case None    => logWarn(s"The channel $channel is not add any handler!")
     }
 
-    override protected def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {
-        super.handleChannelRegisterReplyEvent(event)
+    override protected def afterChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {
+        super.afterChannelRegisterReplyEvent(event)
         try {
             event.channel.connect()
             finshConnect(event.channel)

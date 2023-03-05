@@ -37,15 +37,15 @@ object ReplyFuture {
 
 private[core] class ReplyPromise[R <: Reply] private () extends Promise[Reply] with ReplyFuture[R] {
 
-    private var stack: ActorStack    = _
+    private var stack: Stack         = _
     private var aid: Long            = -1
     private var tid: Long            = Timer.INVALID_TIMEOUT_REGISTER_ID
     private var reply: Reply         = _
     private var throwable: Throwable = _
 
-    def setStack(s: ActorStack): Unit = stack = s
+    def setStack(s: Stack): Unit = stack = s
 
-    def actorStack: ActorStack = stack
+    def actorStack: Stack = stack
 
     def setAskId(id: Long): Unit = aid = id
     def askId: Long              = aid

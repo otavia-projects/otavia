@@ -1,6 +1,7 @@
 package io.otavia.core.channel.inflight
 
 import io.otavia.core.channel.{AbstractChannel, ChannelInflight}
+import io.otavia.core.stack.ChannelReplyFuture
 
 trait ChannelInflightImpl extends ChannelInflight {
     this: AbstractChannel[?, ?] =>
@@ -17,7 +18,7 @@ trait ChannelInflightImpl extends ChannelInflight {
 
     override def setInboundMessageBarrier(barrier: AnyRef => Boolean): Unit = inboundMsgBarrier = barrier
 
-    override def ask(value: AnyRef): Unit = ???
+    override def ask(value: AnyRef, future: ChannelReplyFuture): Unit = ???
 
     override def notice(value: AnyRef): Unit = ???
 
@@ -27,6 +28,9 @@ trait ChannelInflightImpl extends ChannelInflight {
 
     override private[core] def onInboundMessage(msg: AnyRef): Unit = ???
 
-    override private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit = ???
+    override private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit = {
+//        this.executor.continueChannelStack()
+        ???
+    }
 
 }

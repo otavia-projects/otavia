@@ -49,7 +49,7 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
     /** current stack frame for running ask or notice message */
     private[core] var currentFrame: StackFrame | Null = _
 
-    private var currentStack: ActorStack = _
+    private var currentStack: Stack = _
 
     /** user actor override this to control whether restart when occur exception */
     val noticeExceptionStrategy: ExceptionStrategy = ExceptionStrategy.Restart
@@ -126,14 +126,24 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
     private def runNoticeStack(): Unit = {
         val stack = currentStack.asInstanceOf[NoticeStack[M & Notice]]
         try {
+            val uncompleted = stack.uncompletedIterator()
+            val oldState    = stack.stackState
             continueNotice(stack) match
-                case Some(state) => stack.setState(state) // change the stack to next state.
+                case Some(state) =>
+                    if (state != oldState) {
+                        stack.setState(state) // change the stack to next state.
+                        if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                    } else { // state == oldState, recover uncompleted promise
+                        if (uncompleted.hasNext) stack.addUncompletedPromiseIterator(uncompleted)
+                    }
+                    assert(stack.hasUncompletedPromise, s"has no future to wait for $stack")
                 case None =>
+                    if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
                     assert(stack.isDone, "receiveNotice is return None but not call return method!")
                     stack.recycle() // NoticeStack not return value to other actor.
         } catch {
             case cause: Throwable =>
-                recycleUncompletedPromise(stack)
+                recycleUncompletedPromise(stack.uncompletedIterator())
                 stack.setFailed()
                 stack.recycle()
                 handleNoticeException(cause)
@@ -142,10 +152,49 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
         }
     }
 
+    final override private[core] def receiveBatchNotice(notices: Seq[Notice]): Unit = {
+        val stack = BatchNoticeStack[M & Notice]() // generate a BatchNoticeStack instance from object pool.
+        currentStack = stack
+        stack.setNotices(notices)
+        runBatchNoticeStack()
+    }
+
+    private def runBatchNoticeStack(): Unit = {
+        val stack = currentStack.asInstanceOf[BatchNoticeStack[M & Notice]]
+        try {
+            val uncompleted = stack.uncompletedIterator()
+            val oldState    = stack.stackState
+            batchContinueNotice(stack) match // change the stack to next state.
+                case Some(state) =>
+                    if (state != oldState) {
+                        stack.setState(state) // change the stack to next state.
+                        if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                    } else { // state == oldState, recover uncompleted promise
+                        if (uncompleted.hasNext) stack.addUncompletedPromiseIterator(uncompleted)
+                    }
+                    assert(stack.hasUncompletedPromise, s"has no future to wait for $stack")
+                case None =>
+                    if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                    assert(stack.isDone, "receiveNotice is return None but not call return method!")
+                    stack.recycle() // NoticeStack not return value to other actor.
+        } catch {
+            case _: NotImplementedError => // receive message one by one.
+                val notices = stack.notices
+                currentStack = null
+                stack.recycle()
+                notices.foreach { notice => receiveNotice(notice) }
+            case cause: Throwable =>
+                recycleUncompletedPromise(stack.uncompletedIterator())
+                stack.setFailed()
+                stack.recycle()
+                handleNoticeException(cause)
+        } finally currentStack = null
+    }
+
     /** receive ask message by this method, the method will be call when this actor instance receive ask message
      *
      *  @param ask
-     *    ask message receive by this actor instance
+     *    ask message received by this actor instance
      */
     final private[core] def receiveAsk(ask: Ask[? <: Reply]): Unit = {
         val stack = AskStack[M & Ask[? <: Reply]]
@@ -157,35 +206,77 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
     private def runAskStack(): Unit = {
         val askStack = currentStack.asInstanceOf[AskStack[M & Ask[? <: Reply]]]
         try {
-            continueAsk(askStack) match
-                case Some(state) => askStack.setState(state)
+            val uncompleted = askStack.uncompletedIterator()
+            val oldState    = askStack.stackState
+            continueAsk(askStack) match // run stack and switch to next state
+                case Some(state) =>
+                    if (state != oldState) {
+                        askStack.setState(state) // this also recycled all completed promise
+                        if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                    } else { // state == oldState, recover uncompleted promise
+                        if (uncompleted.hasNext) askStack.addUncompletedPromiseIterator(uncompleted)
+                    }
+                    assert(askStack.hasUncompletedPromise, s"has no future to wait for $askStack")
                 case None =>
+                    if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                    recycleUncompletedPromise(askStack.uncompletedIterator())
                     assert(askStack.isDone, "continueAsk is return None but not call return method!")
                     askStack.recycle()
         } catch {
             case cause: Throwable =>
                 askStack.`throw`(ExceptionMessage(cause)) // completed stack with Exception
-                recycleUncompletedPromise(askStack)
+                recycleUncompletedPromise(askStack.uncompletedIterator())
                 askStack.recycle()
         } finally {
             currentStack = null
         }
     }
 
-    private def recycleUncompletedPromise(stack: ActorStack): Unit = {
-        val uncompleted = stack.uncompletedIterator()
+    final override private[core] def receiveBatchAsk(asks: Seq[Ask[_]]): Unit = {
+        val stack = BatchAskStack[M & Ask[?]]()
+        stack.setAsks(asks)
+        currentStack = stack
+        runBatchAskStack()
+    }
+
+    final private def runBatchAskStack(): Unit = {
+        val stack = currentStack.asInstanceOf[BatchAskStack[M & Ask[?]]]
+        try {
+            val uncompleted = stack.uncompletedIterator()
+            val oldState    = stack.stackState
+            batchContinueAsk(stack) match
+                case Some(state) =>
+                    if (state != oldState) {
+                        stack.setState(state) // this also recycled all completed promise
+                        if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                    } else { // state == oldState, recover uncompleted promise
+                        if (uncompleted.hasNext) stack.addUncompletedPromiseIterator(uncompleted)
+                    }
+                    assert(stack.hasUncompletedPromise, s"has no future to wait for $stack")
+                case None =>
+                    if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                    assert(stack.isDone, "continueAsk is return None but not call return method!")
+                    stack.recycle()
+        } catch {
+            case _: NotImplementedError =>
+                val asks = stack.asks
+                currentStack = null
+                stack.recycle()
+                asks.foreach { ask => receiveAsk(ask) }
+            case cause: Throwable =>
+                stack.`throw`(ExceptionMessage(cause)) // completed stack with Exception
+                recycleUncompletedPromise(stack.uncompletedIterator())
+                stack.recycle()
+        } finally currentStack = null
+    }
+
+    private def recycleUncompletedPromise(uncompleted: Stack.UncompletedPromiseIterator): Unit = {
         while (uncompleted.hasNext) {
             val promise = uncompleted.nextCast[ReplyPromise[?]]()
             replyFutures.remove(promise.askId)
             promise.recycle()
         }
     }
-
-//    final private[core] def receiveReply(reply: Reply): Unit = {
-//        setCurrentReply(reply)
-//        if (!reply.isBatch) receiveReply0(reply, waiters.pop(reply.getReplyId))
-//        else reply.getReplyIds.foreach { id => if (waiters.contains(id)) receiveReply0(reply, waiters.pop(id)) }
-//    }
 
     /** receive reply message by this method, the method will be call when this actor instance receive reply message
      *
@@ -197,12 +288,17 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
             // reply future maybe has been recycled cause by time-out, or it stack has been throw an error.
             if (replyFutures.contains(reply.replyId)) {
                 val promise = replyFutures.pop(reply.replyId)
-                if (promise.canTimeout) {
-                    //
-                    // TODO: system.timer.cancelTimerTask()
-                }
+                if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
                 receiveReply0(reply, promise)
-            } // drop reply otherwise
+            }    // drop reply otherwise
+        } else { // reply is batch
+            reply.replyIds.foreach { (senderId, rid) =>
+                if (replyFutures.contains(rid) && senderId == actorId) {
+                    val promise = replyFutures.pop(rid)
+                    if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
+                    receiveReply0(reply, promise)
+                }
+            }
         }
     }
 
@@ -212,33 +308,17 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
             case message: ExceptionMessage => promise.setFailure(message)
             case _                         => promise.setSuccess(reply)
         currentStack.addCompletedPromise(promise)
-        if (currentStack.stackState.resumable()) resume()
+        if (currentStack.stackState.resumable() || !currentStack.hasUncompletedPromise) resume()
     }
-
-//    private def receiveReply0(reply: Reply, waiter: ReplyWaiter[?]): Unit = {
-//        currentFrame = waiter.frame
-//        reply match {
-//            case message: ExceptionMessage =>
-//                waiter match
-//                    case exceptionWaiter: ExceptionWaiter[_] =>
-//                        exceptionWaiter.receive(reply)
-//                    case _ =>
-//                        currentFrame.nn.setError()
-//                        currentFrame match
-//                            case askFrame: AskFrame => askFrame.ask.throws(ExceptionMessage(message))
-//                            case _: NoticeFrame     => handleNoticeException(message)
-//                            case _                  =>
-//            case _ => waiter.receive(reply)
-//        }
-//        if (!currentFrame.nn.thrown && currentFrame.nn.state.resumable()) resume()
-//    }
 
     /** resume running current stack frame to next state */
     private def resume(): Unit = {
         currentStack match
-            case _: AskStack[?]    => runAskStack()
-            case _: NoticeStack[?] => runNoticeStack()
-            case _                 =>
+            case _: AskStack[?]         => runAskStack()
+            case _: NoticeStack[?]      => runNoticeStack()
+            case _: BatchAskStack[?]    => runBatchAskStack()
+            case _: BatchNoticeStack[?] => runBatchNoticeStack()
+            case _                      =>
     }
 
     final override private[core] def receiveEvent(event: Event): Unit = event match
@@ -251,92 +331,12 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
             val promise = replyFutures.pop(askTimeoutEvent.askId)
             promise.setFailure(new TimeoutException())
             val stack = promise.actorStack
-            if (stack.stackState.resumable()) {
+            stack.addCompletedPromise(promise)
+            if (stack.stackState.resumable() || !currentStack.hasUncompletedPromise) {
                 currentStack = stack
                 resume()
             }
         }
-
-    /** handle user registered timeout event.
-     *  @param timeoutEvent
-     *    event
-     */
-    protected def handleActorTimeout(timeoutEvent: TimeoutEvent): Unit = {}
-
-    /** Receive IO event from [[Reactor]] or timeout event from [[Timer]]
-     *  @param event
-     *    IO/timeout event
-     */
-    protected def receiveIOEvent(event: Event): Unit = {}
-
-//    private def resume(): Unit = try {
-//        val next = currentFrame match
-//            case askFrame: AskFrame       => continueAsk(askFrame)
-//            case noticeFrame: NoticeFrame => continueNotice(noticeFrame)
-//            case _                        => None
-//        next match
-//            case Some(state) => currentFrame.nn.nextState(state)
-//            case None =>
-//                currentFrame match
-//                    case askFrame: AskFrame => askFrame.ask.replyInternal(askFrame.reply)
-//                    case _                  => ()
-//    } catch {
-//        case e: Exception =>
-//            currentFrame.nn.setError()
-//            currentFrame match
-//                case askFrame: AskFrame => askFrame.ask.throws(ExceptionMessage(e))
-//                case _: NoticeFrame     => handleNoticeException(e)
-//                case _                  =>
-//    }
-
-    /** called by receiveBatchXXX when schedule message running */
-    private[core] def setCurrentAsks(asks: Seq[Ask[?]]): Unit = {
-        currentFrame = null
-        currentReceived = asks
-        currentReceivedType = ASK_TYPE
-        currentIsBatch = true
-    }
-
-    /** called by receiveBatchXXX when schedule message running */
-    private[core] def setCurrentNotices(notices: Seq[Notice]): Unit = {
-        currentFrame = null
-        currentReceived = notices
-        currentReceivedType = NOTICE_TYPE
-        currentIsBatch = true
-    }
-
-    final private[core] def receiveBatchNotice(notices: Seq[Notice]): Unit = {
-        setCurrentNotices(notices)
-        try {
-            batchContinueNotice(notices.asInstanceOf[Seq[M & Notice]]) match
-                case Some(state) => currentFrame.nn.nextState(state)
-                case None        =>
-        } catch {
-            case _: NotImplementedError => notices.foreach(notice => receiveNotice(notice.asInstanceOf[M & Notice]))
-            case e: Exception =>
-                if (currentFrame != null)
-                    currentFrame.nn.setError() // mark this frame is errored to ignore reply message
-                handleNoticeException(e)
-        }
-    }
-
-    final private[core] def receiveBatchAsk(asks: Seq[Ask[?]]): Unit = {
-        setCurrentAsks(asks)
-        try {
-            batchContinueAsk(asks.asInstanceOf[Seq[M & Ask[?]]]) match
-                case Some(state) => currentFrame.nn.nextState(state)
-                case None        =>
-        } catch {
-            case _: NotImplementedError => asks.foreach(notice => receiveAsk(notice.asInstanceOf[M & Ask[?]]))
-            case e: Exception =>
-                if (currentFrame != null)
-                    currentFrame.nn.setError() // mark this frame is errored to ignore reply message
-            //        ask.reply(ExceptionMessage(e))
-        }
-    }
-
-    def resumeMerge(frames: Seq[StackFrame]): Seq[Option[StackState]] =
-        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
 
 }
 

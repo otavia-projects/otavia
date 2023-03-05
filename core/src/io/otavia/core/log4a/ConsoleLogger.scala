@@ -20,7 +20,7 @@ import io.otavia.core.actor.StateActor
 import io.otavia.core.address.Address
 import io.otavia.core.ioc.{Component, Primary}
 import io.otavia.core.log4a.Logger
-import io.otavia.core.stack.StackState
+import io.otavia.core.stack.{BatchNoticeStack, StackState}
 
 import scala.collection.mutable
 
@@ -33,8 +33,9 @@ abstract class ConsoleLogger extends StateActor[Logger.LogMsg], Logger {
     override def maxBatchSize: Int  = 1000
 
     private val cache = new mutable.StringBuilder()
-    override def batchContinueNotice(notices: Seq[Logger.LogMsg]): Option[StackState] = {
-        for (notice <- notices) {
+
+    override def batchContinueNotice(stack: BatchNoticeStack[Logger.LogMsg]): Option[StackState] = {
+        for (notice <- stack.notices) {
             cache.append(notice.clz.getName)
             cache.append(space)
             cache.append(notice.time.toString)
@@ -44,7 +45,7 @@ abstract class ConsoleLogger extends StateActor[Logger.LogMsg], Logger {
         }
         print(cache)
         cache.clear()
-        None
+        stack.`return`()
     }
 
 }
