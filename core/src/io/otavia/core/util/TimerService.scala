@@ -29,7 +29,7 @@ abstract class TimerService extends ChannelsActor[TimerService.MSG] {
 
 //    override private[core] def receiveRegisterReply(registerReplyEvent: RegisterReplyEvent): Unit = ???
 
-    override def continueChannelMessage(msg: AnyRef | ChannelFrame): Option[StackState] = ???
+//    override def continueChannelMessage(msg: AnyRef | ChannelFrame): Option[StackState] = ???
 
     override def init(channel: Channel): Unit = ???
 

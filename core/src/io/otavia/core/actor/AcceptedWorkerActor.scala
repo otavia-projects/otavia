@@ -17,36 +17,38 @@
 package io.otavia.core.actor
 
 import io.otavia.core.actor.AcceptorActor.AcceptedChannel
+import io.otavia.core.actor.ChannelsActor.RegisterWaitState
+import io.otavia.core.channel.Channel
 import io.otavia.core.message.*
-import io.otavia.core.stack.StackState
+import io.otavia.core.stack.{AskStack, StackState}
 
-import scala.reflect.ClassTag
+import scala.reflect.{ClassTag, classTag}
 
 abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | AcceptedChannel] {
 
-    private val registering = collection.mutable.HashMap.empty[Long, AcceptedChannel]
-//    override private[core] def receiveAsk(ask: Ask[_]): Unit = {
-//        if (!ask.isInstanceOf[AcceptedChannel]) super.receiveAsk(ask)
-//        else {
-//            val accepted = ask.asInstanceOf[AcceptedChannel]
-//            init(accepted.channel)
-//            system.reactor.register(accepted.channel)
-//
-//            registering.put(accepted.channel.id, accepted)
-//        }
-//    }
+    /** handle [[AcceptedChannel]] message, this method will called by [[continueAsk]] */
+    final protected def handleAccepted(stack: AskStack[AcceptedChannel]): Option[StackState] = {
+        stack.stackState match
+            case StackState.initialState =>
+                val channel = stack.ask.channel
+                initAndRegister(channel, stack)
+            case registerWaitState: RegisterWaitState =>
+                val event = registerWaitState.registerFuture.getNow
+                if (event.cause.isEmpty) {
+                    val channel = event.channel
+                    channel.pipeline.fireChannelRegistered()
+                    channel.pipeline.fireChannelActive()
+                    channel.pipeline.read()
+                    afterAccepted(channel)
+                    stack.`return`(UnitReply())
+                } else {
+                    event.channel.close()
+                    stack.`throw`(ExceptionMessage(event.cause.get))
+                }
+    }
 
-//    private[core] override def receiveRegisterReply(registerReplyEvent: RegisterReplyEvent): Unit = {
-//        val accepted = registering.remove(registerReplyEvent.channel.id).get
-//        if (registerReplyEvent.succeed) {
-//            accepted.reply(UnitReply())
-//            registerReplyEvent.channel.pipeline.fireChannelRegistered()
-//            registerReplyEvent.channel.pipeline.fireChannelActive()
-//        } else {
-//            accepted.channel.close()
-//            accepted.throws(ExceptionMessage(registerReplyEvent.cause))
-//        }
-//
-//    }
+    protected def afterAccepted(channel: Channel): Unit = {
+        // default, do nothing
+    }
 
 }

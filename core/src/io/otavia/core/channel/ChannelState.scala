@@ -16,11 +16,11 @@
 
 package io.otavia.core.channel
 
-import io.otavia.core.channel.ChannelLifecycle.*
+import io.otavia.core.channel.ChannelState.*
 import io.otavia.core.util.CompressionBooleanLong
 
 /** A trait for manage lifecycle for [[Channel]] */
-trait ChannelLifecycle extends CompressionBooleanLong {
+trait ChannelState extends CompressionBooleanLong {
     this: Channel =>
 
     protected final def created_=(value: Boolean): Unit = set(ST_CREATED, value)
@@ -113,10 +113,23 @@ trait ChannelLifecycle extends CompressionBooleanLong {
     protected final def continueReading_=(value: Boolean): Unit = set(ST_CONTINUE_READING, value)
     protected final def continueReading: Boolean                = get(ST_CONTINUE_READING)
 
+    /** Set the [[Channel]] inbound head-of-line
+     *  @param value
+     *    head-of-line
+     */
+    protected final def inboundHeadOfLine_=(value: Boolean): Unit = set(ST_INBOUND_HOL, value)
+
+    /** The [[Channel]] inbound is head-of-line */
+    protected final def inboundHeadOfLine: Boolean = get(ST_INBOUND_HOL)
+
+    protected final def outboundHeadOfLine_=(value: Boolean): Unit = set(ST_OUTBOUND_HOL, value)
+    protected final def outboundHeadOfLine: Boolean                = get(ST_OUTBOUND_HOL)
+
 }
 
-object ChannelLifecycle {
+object ChannelState {
 
+    // Channel lifecycle state
     private val ST_CREATED_OFFSET: Long = 0
     private val ST_CREATED: Long        = 1 << ST_CREATED_OFFSET
 
@@ -176,6 +189,7 @@ object ChannelLifecycle {
 
     private val ST_MOUNTED_OFFSET: Long = 19
     private val ST_MOUNTED: Long        = 1 << ST_MOUNTED_OFFSET
+    // End channel lifecycle state
 
     // state in ReadSink
     private val ST_READ_SOMETHING_OFFSET: Long = 20
@@ -206,5 +220,14 @@ object ChannelLifecycle {
 
     private val ST_WRITABLE_OFFSET: Long = 38
     private val ST_WRITABLE: Long        = 1 << ST_WRITABLE_OFFSET
+
+    // Channel inflight state
+    private val ST_OUTBOUND_HOL_OFFSET: Long = 39
+    private val ST_OUTBOUND_HOL: Long        = 1 << ST_OUTBOUND_HOL_OFFSET
+
+    private val ST_INBOUND_HOL_OFFSET: Long = 40
+    private val ST_INBOUND_HOL: Long        = 1 << ST_INBOUND_HOL_OFFSET
+
+    // End channel inflight state
 
 }

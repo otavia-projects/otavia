@@ -16,14 +16,15 @@
 
 package io.otavia.core.actor
 
+import io.otavia.core.actor.ChannelsActor.{Connect, RegisterWaitState}
+import io.otavia.core.actor.ClientChannelsActor.ConnectWaitState
 import io.otavia.core.channel.Channel
 import io.otavia.core.log4a.ActorLogger
 import io.otavia.core.message.*
 import io.otavia.core.reactor.{Reactor, ReactorEvent}
+import io.otavia.core.stack.{AskStack, DefaultFuture, Future, StackState}
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
-import java.nio.channels.SelectionKey
-import scala.reflect.ClassTag
 
 abstract class ClientChannelsActor[M <: Call] extends ChannelsActor[M] {
 
@@ -41,10 +42,28 @@ abstract class ClientChannelsActor[M <: Call] extends ChannelsActor[M] {
      *  @return
      *    a channel which is registering to [[Reactor]].
      */
-    protected def connect(remoteAddress: SocketAddress): Unit = {
-        val channel = initAndRegister()
-        channel.setUnresolvedRemoteAddress(remoteAddress)
+    protected def connect(remoteAddress: SocketAddress): Unit = {}
+
+    protected def connect(stack: AskStack[Connect]): Option[StackState] = {
+        stack.stackState match
+            case StackState.initialState =>
+                // TODO: check remote whether resolved, if not send ask message AddressResolver actor
+                val remote = stack.ask.remote
+
+                val channel = newChannel()
+                initAndRegister(channel, stack)
+            case registerWaitState: RegisterWaitState =>
+                val event = registerWaitState.registerFuture.getNow
+                val state = new ConnectWaitState()
+                event.channel.connect(state.connectFuture)
+                state.suspend()
+            case connectWaitState: ConnectWaitState =>
+                val ch = connectWaitState.connectFuture.getNow
+                afterConnected(ch)
+                stack.`return`(UnitReply())
     }
+
+    protected def afterConnected(channel: Channel): Unit = {}
 
     override protected def newChannel(): Channel = system.channelFactory.newChannel(this)
 
@@ -74,14 +93,8 @@ abstract class ClientChannelsActor[M <: Call] extends ChannelsActor[M] {
 
 object ClientChannelsActor {
 
-    final case class Connect(remoteAddress: SocketAddress) extends Ask[UnitReply], Notice
-    object Connect {
-
-        def apply(host: String, port: Int)(using IdAllocator: IdAllocator): Connect = Connect(
-          InetSocketAddress.createUnresolved(host, port).nn
-        )
-        def apply(host: InetAddress, port: Int): Connect = Connect(new InetSocketAddress(host, port))
-
+    final class ConnectWaitState extends StackState {
+        val connectFuture: DefaultFuture[Channel] = Future[Channel]()
     }
 
 }

@@ -36,15 +36,16 @@ abstract class PhysicalAddress[M <: Call, H <: House] extends Address[M] {
 
     override def ask[A <: M & Ask[_ <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using
         sender: AbstractActor[_]
-    ): Unit = {
+    ): ReplyFuture[ReplyOf[A]] = {
         ask.setMessageContext(sender)
         sender.attachStack(ask.messageId, future)
         house.putAsk(ask)
+        future
     }
 
     override def ask[A <: M & Ask[_ <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]], timeout: Long)(using
         sender: AbstractActor[_]
-    ): Unit = {
+    ): ReplyFuture[ReplyOf[A]] = {
         this.ask(ask, future)
         val promise = future.promise
 
@@ -52,6 +53,7 @@ abstract class PhysicalAddress[M <: Call, H <: House] extends Address[M] {
             sender.system.timer.registerAskTimeout(TimeoutTrigger.DelayTime(timeout), sender.self, ask.messageId)
 
         promise.setTimeoutId(id)
+        future
     }
 
     override def notice(notice: M & Notice)(using sender: AbstractActor[?]): Unit = {

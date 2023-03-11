@@ -56,4 +56,8 @@ private[core] trait Promise[V] extends Poolable {
      */
     def canTimeout: Boolean
 
+    def setStack(s: Stack): Unit
+
+    def actorStack: Stack
+
 }

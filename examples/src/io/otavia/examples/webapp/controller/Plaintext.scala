@@ -17,30 +17,30 @@
 package io.otavia.examples.webapp.controller
 
 import io.otavia.core.actor.StateActor
-import io.otavia.core.stack.{AskFrame, StackFrame, StackState}
+//import io.otavia.core.stack.{AskFrame, StackFrame, StackState}
 //import io.otavia.http.annotation.Controller
-import io.otavia.codec.http.{HttpRequest, HttpResponse}
+//import io.otavia.codec.http.{HttpRequest, HttpResponse}
 
 //@Controller("/plaintext")
-class Plaintext extends StateActor[HttpRequest[String]] {
-
-  import Plaintext.*
-
-  //  given codec: JsonValueCodec[User] = JsonCodecMaker.make
-
-  override def continueAsk(state: HttpRequest[String] | AskFrame): Option[StackState] = state match
-    case ask: HttpRequest[String] => ask.reply(HttpResponse(ask.headers, "hello"))
-    case _                        => None
-
-  //  @mapping("/")
-  def handle(ask: HttpRequest[String]): Option[StackState] = {
-    None
-  }
-
-}
-
-object Plaintext {
-  case class Device(id: Int, model: String)
-
-  case class User(name: String, devices: Seq[Device])
-}
+//class Plaintext extends StateActor[HttpRequest[String]] {
+//
+//  import Plaintext.*
+//
+//  //  given codec: JsonValueCodec[User] = JsonCodecMaker.make
+//
+//  override def continueAsk(state: HttpRequest[String] | AskFrame): Option[StackState] = state match
+//    case ask: HttpRequest[String] => ask.reply(HttpResponse(ask.headers, "hello"))
+//    case _                        => None
+//
+//  //  @mapping("/")
+//  def handle(ask: HttpRequest[String]): Option[StackState] = {
+//    None
+//  }
+//
+//}
+//
+//object Plaintext {
+//  case class Device(id: Int, model: String)
+//
+//  case class User(name: String, devices: Seq[Device])
+//}

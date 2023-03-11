@@ -27,7 +27,7 @@ import scala.language.unsafeNulls
  *    type of [[Reply]]
  */
 sealed trait ReplyFuture[+R <: Reply] extends Future[R] {
-    private[core] def promise: ReplyPromise[Reply] = this.asInstanceOf[ReplyPromise[Reply]]
+    private[core] override def promise: ReplyPromise[Reply] = this.asInstanceOf[ReplyPromise[Reply]]
 
 }
 

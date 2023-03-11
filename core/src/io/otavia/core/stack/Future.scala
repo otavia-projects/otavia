@@ -90,4 +90,11 @@ trait Future[+V] {
     @throws[IllegalStateException]
     def causeUnsafe: Throwable
 
+    private[core] def promise: Promise[_] = this.asInstanceOf[Promise[?]]
+
+}
+
+object Future {
+    def apply[V](): DefaultFuture[V] = DefaultPromise()
+
 }

@@ -14,23 +14,9 @@
  * limitations under the License.
  */
 
-package io.otavia.core.actor
+package io.otavia.core.channel.inflight
 
-import io.otavia.core.actor.MainActor.Args
-import io.otavia.core.message.{Ask, Call, Notice, UnitReply}
-import io.otavia.core.stack.{AskStack, NoticeStack, StackState}
+class StackQueue {
 
-abstract class MainActor(val args: Array[String]) extends StateActor[Args] {
-
-    final override def afterMount(): Unit = self.notice(Args(args))
-
-    final override def continueNotice(stack: NoticeStack[Args]): Option[StackState] = main(stack)
-
-    def main(stack: NoticeStack[Args]): Option[StackState]
-
-}
-
-object MainActor {
-    case class Args(args: Array[String]) extends Notice
-
+    def size: Int = ???
 }

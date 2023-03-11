@@ -118,7 +118,7 @@ object codec extends OtaviaModule {
     object test extends Tests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep, ivy"io.netty:netty5-codec:5.0.0.Alpha5")
-        
+
     }
 
 }
@@ -152,5 +152,5 @@ object web extends OtaviaModule {
 }
 
 object examples extends OtaviaModule {
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(web)
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
 }

@@ -76,6 +76,9 @@ trait Actor[+M <: Call] {
      */
     final def actorId: Long = context.actorId
 
+    /** user actor override this to control whether restart when occur exception */
+    protected def noticeExceptionStrategy: ExceptionStrategy = ExceptionStrategy.Restart
+
     // method for receive message
 
     /** receive notice message from other actor
@@ -124,42 +127,42 @@ trait Actor[+M <: Call] {
 
     /** handle user registered timeout event.
      *
-     * @param timeoutEvent
-     * event
+     *  @param timeoutEvent
+     *    event
      */
     protected def handleActorTimeout(timeoutEvent: TimeoutEvent): Unit = {}
 
     /** Receive IO event from [[Reactor]] or timeout event from [[Timer]]
      *
-     * @param event
-     * IO/timeout event
+     *  @param event
+     *    IO/timeout event
      */
     protected def receiveIOEvent(event: Event): Unit = {}
 
     // actor life cycle hook method
 
     /** actor system will call this method after this actor crated and before mount to actor system */
-    def afterCreate(): Unit = {}
+    protected def afterCreate(): Unit = {}
 
     /** When a actor instance is mounted to actor system, this method will call by actor system */
-    def afterMount(): Unit = {}
+    protected def afterMount(): Unit = {}
 
     /** Actor system call this method before call restart method */
-    def beforeRestart(): Unit = {}
+    protected def beforeRestart(): Unit = {}
 
     /** When this actor occur not handled exception, the actor system will call this method, if user actor do not
      *  implement this method, the actor will dead.
      */
-    def restart(): Unit =
+    protected def restart(): Unit =
         throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
 
     /** Actor system call this method after call restart */
-    def afterRestart(): Unit = {}
+    protected def afterRestart(): Unit = {}
 
     /** if restart method throw NotImplementedError, actor system will call this method and mark the actor instance
      *  dead, and release is resource
      */
-    def beforeStop(): Unit = {}
+    protected def beforeStop(): Unit = {}
 
 }
 

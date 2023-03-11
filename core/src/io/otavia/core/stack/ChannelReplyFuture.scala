@@ -19,13 +19,34 @@ package io.otavia.core.stack
 import io.otavia.core.message.ExceptionMessage
 
 /** User interface for class [[ChannelReplyPromise]] */
-sealed trait ChannelReplyFuture extends Future[AnyRef]
+sealed trait ChannelReplyFuture extends Future[AnyRef] {
+    private[core] override def promise: ChannelReplyPromise = this.asInstanceOf[ChannelReplyPromise]
+
+}
 
 object ChannelReplyFuture {
     def apply(): ChannelReplyFuture = ChannelReplyPromise()
 }
 
 class ChannelReplyPromise private () extends Promise[AnyRef] with ChannelReplyFuture {
+
+    private var stack: Stack         = _
+    private var value: Any           = _
+    private var throwable: Throwable = _
+
+    private var msgId: Long      = -1
+    private var barrier: Boolean = false
+
+    override def setStack(s: Stack): Unit = stack = s
+
+    override def actorStack: Stack = stack
+
+    def setMessageId(id: Long): Unit = this.msgId = id
+
+    def messageId: Long = msgId
+
+    def setBarrier(barrier: Boolean): Unit = this.barrier = barrier
+    def isBarrier: Boolean                 = barrier
 
     override def recycle(): Unit = ChannelReplyPromise.objectPool.recycle(this)
 
@@ -49,7 +70,9 @@ class ChannelReplyPromise private () extends Promise[AnyRef] with ChannelReplyFu
 
     override def causeUnsafe: Throwable = ???
 
-    override protected def cleanInstance(): Unit = ???
+    override protected def cleanInstance(): Unit = {
+        msgId = -1
+    }
 
 }
 

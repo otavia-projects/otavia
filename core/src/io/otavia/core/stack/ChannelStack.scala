@@ -20,10 +20,11 @@ import io.otavia.core.channel.Channel
 
 import scala.language.unsafeNulls
 
-class ChannelStack[T <: AnyRef] private () extends Stack {
+class ChannelStack[+T <: AnyRef] private () extends Stack {
 
     private var msg: AnyRef     = _
     private var belong: Channel = _
+    private var msgId: Long     = -1
 
     def message: T                                = msg.asInstanceOf[T]
     private[core] def setMessage(m: AnyRef): Unit = msg = m
@@ -31,22 +32,34 @@ class ChannelStack[T <: AnyRef] private () extends Stack {
     def channel: Channel                           = belong
     private[core] def setChannel(c: Channel): Unit = belong = c
 
+    def messageId: Long              = msgId
+    def setMessageId(id: Long): Unit = msgId = id
+
     override def recycle(): Unit = ChannelStack.stackPool.recycle(this)
 
     override protected def cleanInstance(): Unit = {
         super.cleanInstance()
         msg = null
         belong = null
+        msgId = -1
     }
 
 }
 
 object ChannelStack {
 
-    private val stackPool = new StackObjectPool[ChannelStack[?]] {
-        override protected def newObject(): ChannelStack[?] = new ChannelStack[Nothing]()
+    private val stackPool = new StackObjectPool[ChannelStack[AnyRef]] {
+        override protected def newObject(): ChannelStack[AnyRef] = new ChannelStack()
     }
 
-    def apply[T <: AnyRef](): ChannelStack[T] = stackPool.get().asInstanceOf[ChannelStack[T]]
+    def apply(): ChannelStack[AnyRef] = stackPool.get()
+
+    def apply(channel: Channel, msg: AnyRef, msgId: Long): ChannelStack[AnyRef] = {
+        val stack = ChannelStack()
+        stack.setChannel(channel)
+        stack.setMessage(msg)
+        stack.setMessageId(msgId)
+        stack
+    }
 
 }

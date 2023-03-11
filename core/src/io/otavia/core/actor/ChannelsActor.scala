@@ -17,6 +17,7 @@
 package io.otavia.core.actor
 
 import io.otavia.core.actor.Actor
+import io.otavia.core.actor.ChannelsActor.RegisterWaitState
 import io.otavia.core.address.{Address, ChannelsActorAddress}
 import io.otavia.core.channel.*
 import io.otavia.core.log4a.ActorLogger
@@ -29,25 +30,48 @@ import io.otavia.core.timer.Timer
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 import java.nio.channels.SelectionKey
 import java.util.concurrent.CancellationException
+import scala.language.unsafeNulls
 import scala.reflect.ClassTag
 import scala.util.*
 
 abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
+    private var channelCursor                  = 0
+    private var currentChannelReceived: AnyRef = _
+
     override def self: ChannelsActorAddress[M] = super.self.asInstanceOf[ChannelsActorAddress[M]]
 
     final def reactor: Reactor = system.reactor
 
-    private var channelCursor = 0
     private[core] def generateChannelId(): Int = {
         val channelId = channelCursor
         channelCursor += 1
         channelId
     }
 
+    def receiveChannelMessage(stack: ChannelStack[?]): Unit = {
+        currentStack = stack
+        currentChannelReceived = stack.message
+        runChannelStack()
+    }
+
+    def runChannelStack(): Unit = {
+        // TODO
+    }
+
+    def receiveFuture(future: Future[?]): Unit = {
+        future match
+            case promise: DefaultPromise[?] =>
+                val stack = promise.actorStack
+                stack.addCompletedPromise(promise)
+                currentStack = stack
+                if (stack.stackState.resumable() || !stack.hasUncompletedPromise) resume()
+    }
+
     final override protected def receiveIOEvent(event: Event): Unit = event match
         case e: ReactorEvent.RegisterReply =>
             e.channel.handleChannelRegisterReplyEvent(e)
+            e.channel.onRegisterReply(e)
             afterChannelRegisterReplyEvent(e)
         case e: ReactorEvent.DeregisterReply =>
             e.channel.handleChannelDeregisterReplyEvent(e)
@@ -82,16 +106,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
     // End handle event.
 
-    /** call by pipeline tail context
-     *  @param msg
-     */
-    def receiveChannelMessage(channel: Channel, msg: AnyRef, msgId: Long): Unit = {
-        val frame = new ChannelFrame(null, msgId)
-    }
-
-    def continueChannelMessage(msg: AnyRef | ChannelFrame): Option[StackState]
-
-    val handler: Option[ChannelInitializer[? <: Channel]] = None
+    def handler: Option[ChannelInitializer[? <: Channel]] = None
 
     /** Initial and register a channel for this [[ChannelsActor]]. It do the flowing things:
      *    1. Create the [[Channel]].
@@ -100,12 +115,19 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
      *       [[ReactorEvent.RegisterReply]] event to this actor, then the [[afterChannelRegisterReplyEvent]] will be
      *       called to handle the register result [[Event]].
      */
-    protected def initAndRegister(): Channel = {
-        val channel = newChannel()
-        Try { init(channel) } match
-            case Success(_) => channel.register()
-            case Failure(e) => channel.close()
-        channel
+    final protected def initAndRegister(channel: Channel, stack: AskStack[?]): Option[StackState] = {
+        try {
+            init(channel)
+            channel.setExecutor(this)
+            val state = new RegisterWaitState()
+            channel.register(state.registerFuture)
+            state.suspend()
+        } catch {
+            case cause: Throwable =>
+                channel.close()
+                stack.`throw`(ExceptionMessage(cause))
+        }
+
     }
 
     /** Create a new channel and set executor. */
@@ -128,4 +150,35 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
 }
 
-object ChannelsActor {}
+object ChannelsActor {
+
+    final class RegisterWaitState extends StackState {
+        val registerFuture: DefaultFuture[ReactorEvent.RegisterReply] = Future[ReactorEvent.RegisterReply]()
+    }
+
+    case class Connect(remote: SocketAddress, local: Option[SocketAddress] = None) extends Ask[UnitReply]
+
+    object Connect {
+
+        def apply(host: String, port: Int): Connect = Connect(
+          InetSocketAddress.createUnresolved(host, port).nn
+        )
+
+        def apply(host: InetAddress, port: Int): Connect = Connect(new InetSocketAddress(host, port))
+
+    }
+    case class Bind(local: SocketAddress) extends Ask[UnitReply]
+
+    object Bind {
+
+        def apply(port: Int): Bind = Bind(new InetSocketAddress(port))
+
+        def apply(host: String, port: Int): Bind = Bind(
+          InetSocketAddress.createUnresolved(host, port).nn
+        )
+
+        def apply(host: InetAddress, port: Int): Bind = Bind(new InetSocketAddress(host, port))
+
+    }
+
+}

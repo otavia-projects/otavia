@@ -17,10 +17,11 @@
 package io.otavia.core.actor
 
 import io.otavia.core.actor.AcceptorActor.*
+import io.otavia.core.actor.ChannelsActor.{Bind, RegisterWaitState}
 import io.otavia.core.address.Address
 import io.otavia.core.channel.*
 import io.otavia.core.reactor.ReactorEvent
-import io.otavia.core.stack.ReplyFuture
+import io.otavia.core.stack.*
 //import io.otavia.core.channel.impl.NioServerSocketChannel
 import io.otavia.core.message.*
 import io.otavia.core.stack.{ChannelFrame, ExceptionWaiter, ReplyWaiter, StackState}
@@ -30,8 +31,6 @@ import scala.runtime.Nothing$
 
 abstract class AcceptorActor[W <: AcceptedWorkerActor[_ <: Call]] extends ChannelsActor[Bind] {
 
-    val workerFactory: WorkerFactory[W]
-
     private var localAddress: SocketAddress    = _
     private var bound: Boolean                 = false
     private var workers: Address[MessageOf[W]] = _
@@ -39,51 +38,65 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[_ <: Call]] extends Channe
     /** Number of worker. */
     protected def workerNumber: Int = 1
 
+    protected def workerFactory: WorkerFactory[W]
+
     override def afterMount(): Unit = {
         workers = system.crateActor(workerFactory, workerNumber)
-    }
-
-    protected def bind(port: Int): Unit                    = bind(new InetSocketAddress(port))
-    protected def bind(host: String, port: Int): Unit      = bind(InetSocketAddress.createUnresolved(host, port).nn)
-    protected def bind(host: InetAddress, port: Int): Unit = bind(new InetSocketAddress(host, port))
-    protected def bind(localAddress: SocketAddress): Unit = {
-        assert(!bound)
-        this.localAddress = localAddress
-        // 1. create channel
-        // 2. init: pipeline and config, add ServerBootstrapAcceptor handler
-        // 3. register to reactor ...
-        val channel = initAndRegister()
-        channel.setUnresolvedLocalAddress(localAddress)
-        // continue bind at handleChannelRegisterReplyEvent
     }
 
     override def init(channel: Channel): Unit = {
         if (handler.nonEmpty) {
             channel.pipeline.addLast(handler.get)
         }
-        channel.pipeline.addLast(new AccepterHandler)
+        channel.pipeline.addLast(new AcceptorHandler)
     }
 
-    override protected def newChannel(): Channel = system.serverChannelFactory.newChannel(this)
+    final override protected def newChannel(): Channel = system.serverChannelFactory.newChannel(this)
 
-    override protected def afterChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {
-        try {
-            if (event.cause.isEmpty) {
-                event.channel.bind()
-                bound = true
-            }
-        } catch {
-            case e: Exception => event.channel.close()
-        }
+    final protected def bind(stack: AskStack[Bind]): Option[StackState] = {
+        stack.stackState match
+            case StackState.initialState =>
+                val channel = newChannel()
+                channel.setUnresolvedLocalAddress(stack.ask.local)
+                initAndRegister(channel, stack)
+            case registerWaitState: RegisterWaitState =>
+                val event = registerWaitState.registerFuture.getNow
+                try {
+                    if (event.cause.isEmpty) {
+                        event.channel.pipeline.bind()
+                        bound = true
+                        afterBind(event.channel)
+                        stack.`return`(UnitReply())
+                    } else {
+                        event.channel.close()
+                        stack.`throw`(ExceptionMessage(event.cause.get))
+                    }
+                } catch {
+                    case cause: Throwable =>
+                        event.channel.close()
+                        stack.`throw`(ExceptionMessage(cause))
+                }
     }
 
-    final override def continueChannelMessage(msg: AnyRef | ChannelFrame): Option[StackState] = msg match
-        case accepted: Channel =>
-            val state = new DispatchState()
-            workers.ask(AcceptedChannel(accepted), state.dispatchFuture)
-            Some(state)
-        case frame: ChannelFrame =>
-            frame.`return`()
+    protected def afterBind(channel: Channel): Unit = {
+        // default do nothing
+    }
+
+    override def continueChannel(stack: ChannelStack[AnyRef]): Option[StackState] = {
+        stack match
+            case _: ChannelStack[_] if stack.message.isInstanceOf[Channel] =>
+                handleAcceptedStack(stack.asInstanceOf[ChannelStack[Channel]])
+    }
+
+    private def handleAcceptedStack(stack: ChannelStack[Channel]): Option[StackState] = {
+        stack.stackState match
+            case StackState.initialState =>
+                val state = new DispatchState()
+                workers.ask(AcceptedChannel(stack.message), state.dispatchFuture)
+                state.suspend()
+            case state: DispatchState =>
+                ???
+    }
 
 }
 
@@ -95,18 +108,7 @@ object AcceptorActor {
 
     final case class AcceptedChannel(channel: Channel) extends Ask[UnitReply]
 
-    final case class Bind(localAddress: SocketAddress) extends Ask[UnitReply], Notice
-    object Bind {
-
-        def apply(port: Int): Bind = Bind(new InetSocketAddress(port))
-        def apply(host: String, port: Int): Bind = Bind(
-          InetSocketAddress.createUnresolved(host, port).nn
-        )
-        def apply(host: InetAddress, port: Int): Bind = Bind(new InetSocketAddress(host, port))
-
-    }
-
-    private class AccepterHandler extends ChannelHandler {
+    private class AcceptorHandler extends ChannelHandler {
         override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
             val accepted = msg.asInstanceOf[Channel]
             val msgId    = ctx.channel.generateMessageId
@@ -116,7 +118,7 @@ object AcceptorActor {
 
     final class DispatchState extends StackState {
 
-        val dispatchFuture = ReplyFuture[UnitReply]()
+        val dispatchFuture: ReplyFuture[UnitReply] = ReplyFuture[UnitReply]()
 
         override def resumable(): Boolean = dispatchFuture.isDone
 

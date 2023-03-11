@@ -16,9 +16,10 @@
 
 package io.otavia.examples
 
-import io.otavia.core.actor.{ExceptionStrategy, StateActor}
+import io.otavia.core.actor.*
 import io.otavia.core.address.Address
 import io.otavia.core.ioc.Injectable
+import io.otavia.core.log4a.Logger
 import io.otavia.core.message.{Ask, IdAllocator, Notice, Reply}
 import io.otavia.core.stack.*
 import io.otavia.examples.HandleStateActor.{MSG, QueryDB, QueryRedis}
@@ -27,33 +28,40 @@ class HandleStateActor extends StateActor[MSG] with Injectable {
 
     import HandleStateActor.*
 
-    var redis: Address[QueryRedis] = _
-    var db: Address[QueryDB]       = _
+    private var redis: Address[QueryRedis]  = _
+    private var db: Address[QueryDB]        = _
+    private var log: Address[Logger.LogMsg] = _
 
     override def afterMount(): Unit = {
         redis = autowire("redis-client")
         db = autowire("database-client")
+        log = autowire[Logger](Some("console"))
     }
 
-    override def continueAsk(state: MSG & Ask[?] | AskFrame): Option[StackState] = state match
-        case request: Request =>
-            val state = new WaitRedisState(request.req)
-            redis.ask(QueryRedis(request.req), state.redisWaiter)
-            Some(state)
-        case frame: AskFrame =>
-            frame.state match
-                case state: WaitRedisState =>
-                    val redisResponse = state.redisWaiter.reply
-                    if (redisResponse.res == "null") {
-                        val dbState = new WaitDBState()
-                        db.ask(QueryDB(state.query), dbState.dbWaiter)
-                        dbState.suspend()
-                    } else {
-                        val response = Response(s"hit in redis with result: ${redisResponse.res}")
-                        frame.`return`(response)
-                    }
-                case dbState: WaitDBState =>
-                    frame.`return`(Response(s"hit in database with result: ${dbState.dbWaiter.reply.res}"))
+    private def handleRequest(stack: AskStack[Request]): Option[StackState] = {
+        stack.stackState match
+            case StackState.initialState =>
+                val request = stack.ask
+                val state   = new WaitRedisState(request.req)
+                redis.ask(QueryRedis(request.req), state.redisResponseFuture)
+                state.suspend()
+            case waitRedisState: WaitRedisState =>
+                val redisResponse = waitRedisState.redisResponseFuture.getNow
+                if (redisResponse.res == "null") {
+                    val dbState = new WaitDBState()
+                    db.ask(QueryDB(waitRedisState.query), dbState.dbWaiter)
+                    dbState.suspend()
+                } else {
+                    val response = Response(s"hit in redis with result: ${redisResponse.res}")
+                    stack.`return`(response)
+                }
+            case waitDBState: WaitDBState =>
+                val res = waitDBState.dbWaiter.getNow.res
+                stack.`return`(Response(s"hit in database with result: $res"))
+    }
+
+    override def continueAsk(stack: AskStack[MSG]): Option[StackState] = stack match
+        case stack: AskStack[Request] => handleRequest(stack)
 
 }
 
@@ -61,22 +69,21 @@ object HandleStateActor {
 
     type MSG = Request
 
-    class WaitRedisState(ask: String) extends StackState {
+    private class WaitRedisState(ask: String) extends StackState {
 
         var query: String = ask
 
-        val redisWaiter: ReplyWaiter[RedisResponse]         = new ReplyWaiter()
         val redisResponseFuture: ReplyFuture[RedisResponse] = ReplyFuture[RedisResponse]()
 
-        override def resumable(): Boolean = redisWaiter.received
+        override def resumable(): Boolean = redisResponseFuture.isDone
 
     }
 
-    class WaitDBState extends StackState {
+    private class WaitDBState extends StackState {
 
-        val dbWaiter: ReplyWaiter[DBResponse] = new ReplyWaiter()
+        val dbWaiter: ReplyFuture[DBResponse] = ReplyFuture()
 
-        override def resumable(): Boolean = dbWaiter.received
+        override def resumable(): Boolean = dbWaiter.isDone
 
     }
 

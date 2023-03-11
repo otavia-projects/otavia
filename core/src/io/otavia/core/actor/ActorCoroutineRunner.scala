@@ -31,6 +31,10 @@ private[core] trait ActorCoroutineRunner[M <: Call] {
 
     def batchAskFilter: M & Ask[?] => Boolean = _ => true
 
+    def noticeBarrier: M & Notice => Boolean = _ => false
+
+    def askBarrier: M & Ask[?] => Boolean = _ => false
+
     /** implement this method to handle ask message and resume when received reply message for this notice message
      *
      *  @param state
@@ -53,7 +57,7 @@ private[core] trait ActorCoroutineRunner[M <: Call] {
     def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState] =
         throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
 
-    def continueChannelStack(stack: ChannelStack[?]): Option[StackState] =
+    def continueChannel(stack: ChannelStack[AnyRef]): Option[StackState] =
         throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
 
 }

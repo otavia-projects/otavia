@@ -31,8 +31,7 @@ import io.otavia.core.channel.internal.{ChannelOutboundBuffer, ReadSink, WriteBu
 import io.otavia.core.log4a.ActorLogger
 import io.otavia.core.reactor.{ReactorEvent, TimeoutEvent}
 import io.otavia.core.system.ActorThread
-import io.otavia.core.timer.Timer
-import io.otavia.core.timer.TimeoutTrigger
+import io.otavia.core.timer.{TimeoutTrigger, Timer}
 
 import java.net.{InetSocketAddress, SocketAddress}
 import java.nio.channels.ClosedChannelException
@@ -68,7 +67,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
       ReadSink,
       ChannelInflightImpl,
       ChannelInternal[L, R],
-      ChannelLifecycle,
+      ChannelState,
       ChannelInboundBuffer {
 
     /** Creates a new instance.
@@ -230,7 +229,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
      *  send channel register to reactor, and handle reactor reply at [[handleChannelRegisterReplyEvent]]
      */
     private[channel] def registerTransport(): Unit = {
-        if (registering) throw new IllegalStateException(s"The channel ${this} is registering to reactor!")
+        if (registering) throw new IllegalStateException(s"The channel $this is registering to reactor!")
         if (isRegistered) throw new IllegalStateException("registered to reactor already")
         registering = true
         reactor.register(this)
@@ -286,11 +285,13 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
             clearRemoteAddress()
             clearLocalAddress()
             neverActive = true
-        } catch { case t: Throwable => closeIfClosed(); return }
+        } catch {
+            case t: Throwable => closeIfClosed(); return
+        }
 
         if (wasActive && !isActive) invokeLater(() => pipeline.fireChannelInactive())
 
-        closeIfClosed()
+        closeIfClosed() // TCP channel disconnect is close, UDP is cancel local SocketAddress binding.
     }
 
     private[channel] def closeTransport(): Unit = ???
@@ -411,7 +412,8 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
             // register connect timeout trigger. When timeout, the timer will send a timeout event, the
             // handleConnectTimeout method will handle this timeout event.
             if (connectTimeoutMillis > 0)
-                connectTimeoutRegisterId = timer.registerChannelTimeout(TimeoutTrigger.DelayTime(connectTimeoutMillis), this)
+                connectTimeoutRegisterId =
+                    timer.registerChannelTimeout(TimeoutTrigger.DelayTime(connectTimeoutMillis), this)
         }
     } catch { case t: Throwable => }
 

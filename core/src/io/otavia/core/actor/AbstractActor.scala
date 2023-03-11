@@ -24,7 +24,6 @@ import io.otavia.core.message.*
 import io.otavia.core.reactor.*
 import io.otavia.core.stack.*
 import io.otavia.core.timer.Timer
-import io.otavia.core.util.TimerService
 
 import scala.collection.immutable.Seq
 import scala.concurrent.TimeoutException
@@ -35,24 +34,16 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
 
     private var ctx: ActorContext = _
 
-    /** reply message waiter */
-    lazy private[core] val waiters: ReplyWaiters = new ReplyWaiters()
-
     /** [[Reply]] message waiter */
     private val replyFutures: ActorFutures = new ActorFutures()
 
     // current received msg
-    private[core] var currentReceived: Call | Reply | Seq[Call] = _
-    private[core] var currentReceivedType: MessageType          = ASK_TYPE
-    private[core] var currentIsBatch: Boolean                   = false
+    private var currentReceived: Call | Reply | Seq[Call] = _
+
+    private[core] var currentIsBatch: Boolean = false
 
     /** current stack frame for running ask or notice message */
-    private[core] var currentFrame: StackFrame | Null = _
-
-    private var currentStack: Stack = _
-
-    /** user actor override this to control whether restart when occur exception */
-    val noticeExceptionStrategy: ExceptionStrategy = ExceptionStrategy.Restart
+    private[core] var currentStack: Stack = _
 
     /** self address of this actor instance
      *
@@ -61,11 +52,15 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
      */
     def self: Address[M] = context.address.asInstanceOf[Address[M]]
 
-    override private[core] def setCtx(context: ActorContext): Unit = {
+    final override private[core] def setCtx(context: ActorContext): Unit = {
+        afterCreate()
         ctx = context
         idAllocator.setActorId(context.actorId)
         idAllocator.setActorAddress(context.address)
+        afterMount()
     }
+
+    final override def context: ActorContext = ctx
 
     /** When this actor send ask message to other actor, a [[ReplyFuture]] will attach to current stack
      *
@@ -88,11 +83,15 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
      *  @param e
      *    exception
      */
-    private[core] def handleNoticeException(e: Throwable): Unit = { // TODO: refactor
-        val log =
-            if (currentFrame != null)
-                s"StackFrame with call message ${currentFrame.nn.call} failed at handle $currentReceived message"
-            else s"failed at handle $currentReceived message"
+    private[core] def handleNoticeException(stack: Stack, e: Throwable): Unit = { // TODO: refactor
+
+        val log = stack match
+            case s: ActorStack       => s"Stack with call message ${s.call} failed at handle $currentReceived message"
+            case s: BatchAskStack[_] => s"Stack with call message ${s.asks} failed at handle $currentReceived message"
+            case s: BatchNoticeStack[_] =>
+                s"Stack with call message ${s.notices} failed at handle $currentReceived message"
+            case s: ChannelStack[_] => ""
+            case _                  => ""
         noticeExceptionStrategy match
             case ExceptionStrategy.Restart =>
                 logError(log, e)
@@ -105,7 +104,7 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
                         logFatal("Fatal error on restart", exception)
                         system.shutdown()
                 }
-            case ExceptionStrategy.Ignore => logWarn(log, e)
+            case ExceptionStrategy.Ignore => logError(log, e)
             case ExceptionStrategy.ShutdownSystem =>
                 logFatal(log, e)
                 system.shutdown()
@@ -117,6 +116,7 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
      *    notice message receive by this actor instance
      */
     final private[core] def receiveNotice(notice: Notice): Unit = {
+        currentReceived = notice
         val stack = NoticeStack[M & Notice]() // generate a NoticeStack instance from object pool.
         stack.setCall(notice)
         currentStack = stack
@@ -145,14 +145,16 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
             case cause: Throwable =>
                 recycleUncompletedPromise(stack.uncompletedIterator())
                 stack.setFailed()
+                handleNoticeException(stack, cause)
                 stack.recycle()
-                handleNoticeException(cause)
         } finally {
             currentStack = null
+            currentReceived = null
         }
     }
 
     final override private[core] def receiveBatchNotice(notices: Seq[Notice]): Unit = {
+        currentReceived = notices
         val stack = BatchNoticeStack[M & Notice]() // generate a BatchNoticeStack instance from object pool.
         currentStack = stack
         stack.setNotices(notices)
@@ -186,9 +188,12 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
             case cause: Throwable =>
                 recycleUncompletedPromise(stack.uncompletedIterator())
                 stack.setFailed()
+                handleNoticeException(stack, cause)
                 stack.recycle()
-                handleNoticeException(cause)
-        } finally currentStack = null
+        } finally {
+            currentStack = null
+            currentReceived = null
+        }
     }
 
     /** receive ask message by this method, the method will be call when this actor instance receive ask message
@@ -197,6 +202,7 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
      *    ask message received by this actor instance
      */
     final private[core] def receiveAsk(ask: Ask[? <: Reply]): Unit = {
+        currentReceived = ask
         val stack = AskStack[M & Ask[? <: Reply]]
         stack.setCall(ask)
         currentStack = stack
@@ -229,10 +235,12 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
                 askStack.recycle()
         } finally {
             currentStack = null
+            currentReceived = null
         }
     }
 
     final override private[core] def receiveBatchAsk(asks: Seq[Ask[_]]): Unit = {
+        currentReceived = asks
         val stack = BatchAskStack[M & Ask[?]]()
         stack.setAsks(asks)
         currentStack = stack
@@ -267,7 +275,10 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
                 stack.`throw`(ExceptionMessage(cause)) // completed stack with Exception
                 recycleUncompletedPromise(stack.uncompletedIterator())
                 stack.recycle()
-        } finally currentStack = null
+        } finally {
+            currentStack = null
+            currentReceived = null
+        }
     }
 
     private def recycleUncompletedPromise(uncompleted: Stack.UncompletedPromiseIterator): Unit = {
@@ -303,6 +314,7 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
     }
 
     private def receiveReply0(reply: Reply, promise: ReplyPromise[?]): Unit = {
+        currentReceived = reply
         currentStack = promise.actorStack
         reply match
             case message: ExceptionMessage => promise.setFailure(message)
@@ -312,7 +324,7 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
     }
 
     /** resume running current stack frame to next state */
-    private def resume(): Unit = {
+    private[core] def resume(): Unit = {
         currentStack match
             case _: AskStack[?]         => runAskStack()
             case _: NoticeStack[?]      => runNoticeStack()
