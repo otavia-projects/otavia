@@ -33,17 +33,12 @@ abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | Accepted
                 val channel = stack.ask.channel
                 initAndRegister(channel, stack)
             case registerWaitState: RegisterWaitState =>
-                val event = registerWaitState.registerFuture.getNow
-                if (event.cause.isEmpty) {
-                    val channel = event.channel
-                    channel.pipeline.fireChannelRegistered()
-                    channel.pipeline.fireChannelActive()
-                    channel.pipeline.read()
-                    afterAccepted(channel)
+                val future = registerWaitState.registerFuture
+                if (future.isSuccess) {
+                    afterAccepted(future.getNow)
                     stack.`return`(UnitReply())
                 } else {
-                    event.channel.close()
-                    stack.`throw`(ExceptionMessage(event.cause.get))
+                    stack.`throw`(ExceptionMessage(future.causeUnsafe))
                 }
     }
 

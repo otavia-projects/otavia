@@ -18,6 +18,7 @@ package io.otavia.core.reactor
 
 import io.otavia.core.cache.ResourceTimer
 import io.otavia.core.channel.Channel
+import io.otavia.core.stack.BlockPromise
 
 /** Event for [[io.otavia.core.actor.Actor]] */
 sealed abstract class Event {
@@ -48,3 +49,5 @@ enum ReactorEvent extends Event {
     case ChannelClose(channel: Channel)
 
 }
+
+case class BlockFutureCompletedEvent(promise: BlockPromise[?]) extends Event

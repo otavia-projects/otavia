@@ -18,7 +18,7 @@ package io.otavia.core.async
 
 import io.otavia.core.address.Address
 import io.otavia.core.message.*
-import io.otavia.core.stack.{ReplyWaiter, StackState}
+import io.otavia.core.stack.{Future, ReplyWaiter, StackState}
 
 import scala.annotation.{compileTimeOnly, experimental}
 import scala.quoted.*
@@ -27,7 +27,9 @@ import scala.quoted.*
 object Async {
 
     // @compileTimeOnly("[async] `await` must be enclosed in an `async` block")
-    def await[A <: Ask[?], R <: Reply](address: Address[A], ask: A): R = ???
+    def await[A <: Ask[?]](address: Address[A], ask: A): Future[ReplyOf[A]] = ???
+
+    def unwarp[A <: Ask[?]](address: Address[A], ask: A): ReplyOf[A] = ???
 
     inline def async(inline body: Option[StackState]): Option[StackState] = ${ asyncImpl('body) }
 

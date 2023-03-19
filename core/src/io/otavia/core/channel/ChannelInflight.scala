@@ -17,9 +17,11 @@
 package io.otavia.core.channel
 
 import io.otavia.core.reactor.{Event, ReactorEvent}
-import io.otavia.core.stack.{ChannelReplyFuture, DefaultFuture, Future}
+import io.otavia.core.stack.{ChannelFuture, ChannelReplyFuture, DefaultFuture, Future}
 
-trait ChannelInflight {
+import java.net.SocketAddress
+
+trait ChannelInflight extends ChannelOutboundInvoker {
 
     /** Inbound message barrier function */
     def inboundMessageBarrier: AnyRef => Boolean
@@ -47,22 +49,6 @@ trait ChannelInflight {
     def inboundInflightSize: Int
     def inboundPendingSize: Int
 
-    def register(future: DefaultFuture[ReactorEvent.RegisterReply]): Unit
-
-    def onRegisterReply(event: ReactorEvent.RegisterReply): Unit
-
-    def deregister(future: DefaultFuture[ReactorEvent.DeregisterReply]): Unit
-
-    def onDeregisterReply(event: ReactorEvent.DeregisterReply): Unit
-
-    def connect(future: DefaultFuture[Channel]): Future[Channel]
-
-    def onConnectFinsh(error: Option[Throwable]): Unit
-
-    def disconnect(future: DefaultFuture[Channel]): Future[Channel]
-
-    def close(future: DefaultFuture[Channel]): Future[Channel]
-
     // actor send ask message to channel, in underlying, it call channel.write
     def ask(value: AnyRef, future: ChannelReplyFuture): ChannelReplyFuture
 
@@ -72,9 +58,6 @@ trait ChannelInflight {
     def notice(value: AnyRef): Unit
 
     def batchNotice(notices: Seq[AnyRef]): Unit
-
-    // actor send reply message to channel, the channel generate a ChannelFrame
-    def reply(value: AnyRef): Unit
 
     /** generate a unique id for the channel message
      *

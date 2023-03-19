@@ -23,6 +23,9 @@ import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.*
 import io.otavia.core.channel.estimator.ReadBufferAllocator
+import io.otavia.core.stack.ChannelFuture
+
+import java.net.SocketAddress
 
 abstract class DelegatingChannelHandlerContext(private val ctx: ChannelHandlerContext) extends ChannelHandlerContext {
 
@@ -117,19 +120,21 @@ abstract class DelegatingChannelHandlerContext(private val ctx: ChannelHandlerCo
 
     override def pipeline: ChannelPipeline = ctx.pipeline
 
-    override def bind(): Unit = ctx.bind()
+    override def bind(local: SocketAddress, future: ChannelFuture): ChannelFuture = ctx.bind(local, future)
 
-    override def connect(): Unit = ctx.connect()
+    override def connect(remote: SocketAddress, local: Option[SocketAddress], future: ChannelFuture): ChannelFuture =
+        ctx.connect(remote, local, future)
 
-    override def disconnect(): Unit = ctx.disconnect()
+    override def disconnect(future: ChannelFuture): ChannelFuture = ctx.disconnect(future)
 
-    override def close(): Unit = ctx.close()
+    override def close(future: ChannelFuture): ChannelFuture = ctx.close(future)
 
-    override def shutdown(direction: ChannelShutdownDirection): Unit = ctx.shutdown(direction)
+    override def shutdown(direction: ChannelShutdownDirection, future: ChannelFuture): ChannelFuture =
+        ctx.shutdown(direction, future)
 
-    override def deregister(): Unit = ctx.deregister()
+    override def deregister(future: ChannelFuture): ChannelFuture = ctx.deregister(future)
 
-    override def register(): Unit = ctx.register()
+    override def register(future: ChannelFuture): ChannelFuture = ctx.register(future)
 
     override def write(msg: AnyRef): Unit = ctx.write(msg)
 

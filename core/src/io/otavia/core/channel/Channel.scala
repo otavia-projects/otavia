@@ -24,11 +24,12 @@ import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.address.ChannelsActorAddress
 import io.otavia.core.channel.estimator.ReadBufferAllocator
 import io.otavia.core.reactor.Reactor
+import io.otavia.core.stack.ChannelFuture
 import io.otavia.core.timer.Timer
 
 import java.net.SocketAddress
 
-trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle, ChannelInflight {
+trait Channel extends ChannelInflight, AttributeMap, EventHandle {
 
     /** Unique id of this channel */
     def id: Int
@@ -41,7 +42,7 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle, Channel
      *  @param channelsActor
      *    [[ChannelsActor]] to be mounted.
      */
-    private[core] def setExecutor(channelsActor: ChannelsActor[?]): Unit
+    private[core] def mount(channelsActor: ChannelsActor[?]): Unit
 
     /** Address of executor [[ChannelsActor]] of this [[Channel]] belong to. */
     final def executorAddress: ChannelsActorAddress[_] = executor.self
@@ -168,6 +169,23 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle, Channel
 
     final def headAllocator: BufferAllocator = executor.system.headAllocator
 
+    // impl ChannelOutboundInvoker
+    override def bind(local: SocketAddress, future: ChannelFuture): ChannelFuture = pipeline.bind(local, future)
+
+    override def connect(remote: SocketAddress, local: Option[SocketAddress], future: ChannelFuture): ChannelFuture =
+        pipeline.connect(remote, local, future)
+
+    override def disconnect(future: ChannelFuture): ChannelFuture = pipeline.disconnect(future)
+
+    override def close(future: ChannelFuture): ChannelFuture = pipeline.close(future)
+
+    override def shutdown(direction: ChannelShutdownDirection, future: ChannelFuture): ChannelFuture =
+        pipeline.shutdown(direction, future)
+
+    override def register(future: ChannelFuture): ChannelFuture = pipeline.register(future)
+
+    override def deregister(future: ChannelFuture): ChannelFuture = pipeline.deregister(future)
+
     final override def read(readBufferAllocator: ReadBufferAllocator): this.type = {
         pipeline.read(readBufferAllocator)
         this
@@ -177,21 +195,6 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle, Channel
         pipeline.read()
         this
     }
-
-    @throws[Exception]
-    final override def bind(): Unit = pipeline.bind()
-
-    final override def connect(): Unit = pipeline.connect()
-
-    final override def disconnect(): Unit = pipeline.disconnect()
-
-    final override def close(): Unit = pipeline.close()
-
-    final override def shutdown(direction: ChannelShutdownDirection): Unit = pipeline.shutdown(direction)
-
-    override def register(): Unit = pipeline.register()
-
-    final override def deregister(): Unit = pipeline.deregister()
 
     final override def write(msg: AnyRef): Unit = pipeline.write(msg)
 
@@ -210,5 +213,8 @@ trait Channel extends ChannelOutboundInvoker, AttributeMap, EventHandle, Channel
 
     final def assertExecutor(): Unit =
         assert(executor.inExecutor(), "method must be called in ChannelsActor which this channel registered!")
+
+    /** Close the channel before is register */
+    private[core] def closeAfterCreate(): Unit
 
 }

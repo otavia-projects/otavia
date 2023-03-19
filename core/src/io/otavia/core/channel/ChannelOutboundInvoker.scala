@@ -20,26 +20,25 @@ package io.otavia.core.channel
 
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.estimator.ReadBufferAllocator
+import io.otavia.core.stack.{ChannelFuture, DefaultFuture, Future}
 
 import java.net.SocketAddress
 
 trait ChannelOutboundInvoker {
 
-    @throws[Exception]
-    def bind(): Unit
+    def bind(local: SocketAddress, future: ChannelFuture): ChannelFuture
 
-    @throws[Exception]
-    def connect(): Unit
+    def connect(remote: SocketAddress, local: Option[SocketAddress], future: ChannelFuture): ChannelFuture
 
-    def disconnect(): Unit
+    def disconnect(future: ChannelFuture): ChannelFuture
 
-    def close(): Unit
+    def close(future: ChannelFuture): ChannelFuture
 
-    def shutdown(direction: ChannelShutdownDirection): Unit
+    def shutdown(direction: ChannelShutdownDirection, future: ChannelFuture): ChannelFuture
 
-    def register(): Unit
+    def register(future: ChannelFuture): ChannelFuture
 
-    def deregister(): Unit
+    def deregister(future: ChannelFuture): ChannelFuture
 
     def read(readBufferAllocator: ReadBufferAllocator): this.type
 

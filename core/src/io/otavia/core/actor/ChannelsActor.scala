@@ -30,6 +30,7 @@ import io.otavia.core.timer.Timer
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 import java.nio.channels.SelectionKey
 import java.util.concurrent.CancellationException
+import scala.collection.mutable
 import scala.language.unsafeNulls
 import scala.reflect.ClassTag
 import scala.util.*
@@ -38,6 +39,8 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
     private var channelCursor                  = 0
     private var currentChannelReceived: AnyRef = _
+
+    protected val channels: mutable.HashMap[Int, Channel] = mutable.HashMap.empty
 
     override def self: ChannelsActorAddress[M] = super.self.asInstanceOf[ChannelsActorAddress[M]]
 
@@ -71,7 +74,6 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     final override protected def receiveIOEvent(event: Event): Unit = event match
         case e: ReactorEvent.RegisterReply =>
             e.channel.handleChannelRegisterReplyEvent(e)
-            e.channel.onRegisterReply(e)
             afterChannelRegisterReplyEvent(e)
         case e: ReactorEvent.DeregisterReply =>
             e.channel.handleChannelDeregisterReplyEvent(e)
@@ -116,21 +118,36 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
      *       called to handle the register result [[Event]].
      */
     final protected def initAndRegister(channel: Channel, stack: AskStack[?]): Option[StackState] = {
-        try {
+        Try {
             init(channel)
-            channel.setExecutor(this)
-            val state = new RegisterWaitState()
-            channel.register(state.registerFuture)
-            state.suspend()
-        } catch {
-            case cause: Throwable =>
-                channel.close()
+        } match {
+            case Success(_) =>
+                channel.mount(this)
+                val state = new RegisterWaitState()
+                channel.register(state.registerFuture)
+                state.suspend()
+            case Failure(cause) =>
+                val closeFuture = channel.close(ChannelFuture()) // ignore close result.
                 stack.`throw`(ExceptionMessage(cause))
         }
-
     }
 
-    /** Create a new channel and set executor. */
+    /** Create a new channel and set executor and init it. */
+    @throws[Exception]
+    final protected def newChannelAndInit(): Channel = {
+        val channel = newChannel()
+        channel.mount(this)
+        try {
+            init(channel)
+        } catch {
+            case cause: Throwable =>
+                channel.closeAfterCreate()
+                throw cause
+        }
+        channel
+    }
+
+    /** Create a new [[Channel]] */
     protected def newChannel(): Channel
 
     @throws[Exception]
@@ -153,10 +170,17 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 object ChannelsActor {
 
     final class RegisterWaitState extends StackState {
-        val registerFuture: DefaultFuture[ReactorEvent.RegisterReply] = Future[ReactorEvent.RegisterReply]()
+        val registerFuture: ChannelFuture = ChannelFuture()
     }
 
-    case class Connect(remote: SocketAddress, local: Option[SocketAddress] = None) extends Ask[UnitReply]
+    case class Connect(remote: SocketAddress, local: Option[SocketAddress] = None) extends Ask[ConnectReply]
+    case class ConnectReply(channelId: Int)                                        extends Reply
+
+    case class Disconnect(ids: Seq[Int] = Seq.empty) extends Ask[DisconnectReply]
+    case class DisconnectReply(ids: Seq[Int])        extends Reply
+
+    case class Close(ids: Seq[Int] = Seq.empty) extends Ask[CloseReply]
+    case class CloseReply(ids: Seq[Int])        extends Reply
 
     object Connect {
 

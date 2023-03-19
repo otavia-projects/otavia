@@ -20,6 +20,7 @@ package io.otavia.core.channel
 
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.estimator.ReadBufferAllocator
+import io.otavia.core.stack.ChannelFuture
 
 import java.net.SocketAddress
 
@@ -139,8 +140,8 @@ trait ChannelHandler {
      *    the [[SocketAddress]] to which it should bound
      *  @throws Exception
      */
-    @throws[Exception]
-    def bind(ctx: ChannelHandlerContext): Unit = ctx.bind()
+    def bind(ctx: ChannelHandlerContext, local: SocketAddress, future: ChannelFuture): ChannelFuture =
+        ctx.bind(local, future)
 
     /** Called once a connect operation is made.
      *  @param ctx
@@ -151,24 +152,26 @@ trait ChannelHandler {
      *    the option [[SocketAddress]] which is used as source on connect
      *  @throws Exception
      */
-    @throws[Exception]
-    def connect(ctx: ChannelHandlerContext): Unit = ctx.connect()
+    def connect(
+        ctx: ChannelHandlerContext,
+        remote: SocketAddress,
+        local: Option[SocketAddress],
+        future: ChannelFuture
+    ): ChannelFuture = ctx.connect(remote, local, future)
 
     /** Called once a disconnect operation is made.
      *  @param ctx
      *    the [[ChannelHandlerContext]] for which the bind operation is made
      *  @throws Exception
      */
-    @throws[Exception]
-    def disconnect(ctx: ChannelHandlerContext): Unit = ctx.disconnect()
+    def disconnect(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = ctx.disconnect(future)
 
     /** Called once a close operation is made.
      *  @param ctx
      *    the [[ChannelHandlerContext]] for which the bind operation is made
      *  @throws Exception
      */
-    @throws[Exception]
-    def close(ctx: ChannelHandlerContext): Unit = ctx.close()
+    def close(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = ctx.close(future)
 
     /** Called once a shutdown operation was requested and should be executed.
      *  @param ctx
@@ -177,16 +180,18 @@ trait ChannelHandler {
      *    the [[ChannelShutdownDirection]] that is used.
      *  @throws Exception
      */
-    @throws[Exception]
-    def shutdown(ctx: ChannelHandlerContext, direction: ChannelShutdownDirection): Unit = ctx.shutdown(direction)
+    def shutdown(
+        ctx: ChannelHandlerContext,
+        direction: ChannelShutdownDirection,
+        future: ChannelFuture
+    ): ChannelFuture =
+        ctx.shutdown(direction, future)
 
     /** Called once a register operation is made to register for IO on the [[io.otavia.core.actor.ChannelsActor]]. */
-    @throws[Exception]
-    def register(ctx: ChannelHandlerContext): Unit = ctx.register()
+    def register(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = ctx.register(future)
 
     /** Called once a deregister operation is made from the current registered [[io.otavia.core.actor.ChannelsActor]] */
-    @throws[Exception]
-    def deregister(ctx: ChannelHandlerContext): Unit = ctx.deregister()
+    def deregister(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = ctx.deregister(future)
 
     /** Called once a read operation is made from the current registered [[io.otavia.core.actor.ChannelsActor]]. If the
      *  [[ChannelHandler]] implementation queues the read and another read happens it is free to drop the first

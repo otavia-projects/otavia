@@ -20,6 +20,7 @@ package io.otavia.core.channel
 
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.{Channel, ChannelHandler}
+import io.otavia.core.stack.ChannelFuture
 
 /** A special [[ChannelHandler]] which offers an easy way to initialize a [[Channel]] once it was registered to its
  *  [[ChannelsActor]]. Implementations are most often used in the context of [[ChannelsActor.handler]], to setup the
@@ -56,7 +57,7 @@ abstract class ChannelInitializer[C <: Channel] extends ChannelHandler {
     /** Handle the [[Throwable]] by logging and closing the [[Channel]]. Sub-classes may override this. */
     override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
         // TODO: logger.warn
-        ctx.close()
+        ctx.close(ChannelFuture()) // ignore close future
     }
 
     override def handlerAdded(ctx: ChannelHandlerContext): Unit = {

@@ -281,7 +281,7 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
         }
     }
 
-    private def recycleUncompletedPromise(uncompleted: Stack.UncompletedPromiseIterator): Unit = {
+    private def recycleUncompletedPromise(uncompleted: Stack.UncompletedPromiseIterator): Unit = { // TODO: ChannelPromise
         while (uncompleted.hasNext) {
             val promise = uncompleted.nextCast[ReplyPromise[?]]()
             replyFutures.remove(promise.askId)

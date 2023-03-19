@@ -28,6 +28,7 @@ import io.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import io.otavia.core.channel.OtaviaChannelPipeline.*
 import io.otavia.core.channel.estimator.{MessageSizeEstimator, ReadBufferAllocator}
 import io.otavia.core.log4a.ActorLogger
+import io.otavia.core.stack.ChannelFuture
 import io.otavia.core.util.ClassUtils
 
 import java.net.SocketAddress
@@ -501,39 +502,39 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         this
     }
 
-    override def bind(): Unit = {
+    override def bind(local: SocketAddress, future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.bind()
+        tail.bind(local, future)
     }
 
-    override def connect(): Unit = {
+    override def connect(remote: SocketAddress, local: Option[SocketAddress], future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.connect()
+        tail.connect(remote, local, future)
     }
 
-    override def disconnect(): Unit = {
+    override def disconnect(future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.disconnect()
+        tail.disconnect(future)
     }
 
-    override def close(): Unit = {
+    override def close(future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.close()
+        tail.close(future)
     }
 
-    override def shutdown(direction: ChannelShutdownDirection): Unit = {
+    override def shutdown(direction: ChannelShutdownDirection, future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.shutdown(direction)
+        tail.shutdown(direction, future)
     }
 
-    override def register(): Unit = {
+    override def register(future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.register()
+        tail.register(future)
     }
 
-    override def deregister(): Unit = {
+    override def deregister(future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.deregister()
+        tail.deregister(future)
     }
 
     override def write(msg: AnyRef): Unit = {
@@ -570,7 +571,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
     final def forceCloseTransport(): Unit = {
         val abstractChannel = channel.asInstanceOf[AbstractChannel[?, ?]]
-        abstractChannel.closeTransport()
+        abstractChannel.closeTransport(ChannelFuture())
     }
 
     override def executor: ChannelsActor[_] = channel.executor
@@ -641,39 +642,55 @@ object OtaviaChannelPipeline {
 
     private final class HeadHandler extends ChannelHandler {
 
-        override def bind(ctx: ChannelHandlerContext): Unit = {
+        override def bind(ctx: ChannelHandlerContext, local: SocketAddress, future: ChannelFuture): ChannelFuture = {
             val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
-            abstractChannel.bindTransport()
+            abstractChannel.bindTransport(local, future.promise)
+            future
         }
 
-        override def connect(ctx: ChannelHandlerContext): Unit = {
+        override def connect(
+            ctx: ChannelHandlerContext,
+            remote: SocketAddress,
+            local: Option[SocketAddress],
+            future: ChannelFuture
+        ): ChannelFuture = {
             val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
-            abstractChannel.connectTransport()
+            abstractChannel.connectTransport(remote, local, future.promise)
+            future
         }
 
-        override def disconnect(ctx: ChannelHandlerContext): Unit = {
+        override def disconnect(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
             val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
-            abstractChannel.disconnectTransport()
+            abstractChannel.disconnectTransport(future)
+            future
         }
 
-        override def close(ctx: ChannelHandlerContext): Unit = {
+        override def close(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
             val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
-            abstractChannel.closeTransport()
+            abstractChannel.closeTransport(future)
+            future
         }
 
-        override def shutdown(ctx: ChannelHandlerContext, direction: ChannelShutdownDirection): Unit = {
+        override def shutdown(
+            ctx: ChannelHandlerContext,
+            direction: ChannelShutdownDirection,
+            future: ChannelFuture
+        ): ChannelFuture = {
             val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
-            abstractChannel.shutdownTransport(direction)
+            abstractChannel.shutdownTransport(direction, future)
+            future
         }
 
-        override def register(ctx: ChannelHandlerContext): Unit = {
+        override def register(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
             val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
-            abstractChannel.registerTransport()
+            abstractChannel.registerTransport(future.promise)
+            future
         }
 
-        override def deregister(ctx: ChannelHandlerContext): Unit = {
+        override def deregister(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
             val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
-            abstractChannel.deregisterTransport()
+            abstractChannel.deregisterTransport(future)
+            future
         }
 
         override def read(ctx: ChannelHandlerContext, readBufferAllocator: ReadBufferAllocator): Unit = {

@@ -20,9 +20,10 @@ package io.otavia.core.channel
 
 import io.netty5.buffer.{Buffer, BufferAllocator}
 import io.netty5.util.DefaultAttributeMap
-import io.netty5.util.internal.ObjectUtil.{checkPositiveOrZero, longValue}
-import io.netty5.util.internal.PlatformDependent
+import io.netty5.util.internal.ObjectUtil.{checkNotNullArrayParam, checkPositiveOrZero, longValue}
+import io.netty5.util.internal.{PlatformDependent, StringUtil, ThrowableUtil}
 import io.otavia.core.actor.ChannelsActor
+import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.AbstractChannel.*
 import io.otavia.core.channel.ChannelOption.*
 import io.otavia.core.channel.estimator.*
@@ -30,12 +31,13 @@ import io.otavia.core.channel.inflight.ChannelInflightImpl
 import io.otavia.core.channel.internal.{ChannelOutboundBuffer, ReadSink, WriteBufferWaterMark, WriteSink}
 import io.otavia.core.log4a.ActorLogger
 import io.otavia.core.reactor.{ReactorEvent, TimeoutEvent}
+import io.otavia.core.stack.{ChannelFuture, ChannelPromise, DefaultPromise, Promise}
 import io.otavia.core.system.ActorThread
 import io.otavia.core.timer.{TimeoutTrigger, Timer}
 
-import java.net.{InetSocketAddress, SocketAddress}
-import java.nio.channels.ClosedChannelException
-import java.util.Objects.requireNonNull
+import java.net.{ConnectException, InetSocketAddress, SocketAddress}
+import java.nio.channels.{AlreadyConnectedException, ClosedChannelException, ConnectionPendingException}
+import java.util.Objects.{requireNonNull, requireNonNullElseGet}
 import scala.collection.mutable
 import scala.concurrent.Future.never
 import scala.language.unsafeNulls
@@ -130,12 +132,22 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     private var actor: ChannelsActor[?] | Null = _
 
+    private var registerPromise: ChannelPromise                                 = _
+    private var connectPromise: ChannelPromise                                  = _
+    private var requestedRemoteAddress: R                                       = _
+    private var deregisterPromise: DefaultPromise[ReactorEvent.DeregisterReply] = _
+
+    // read socket data to this buffer
+    private var inboundAdaptive: AdaptiveBuffer = AdaptiveBuffer(directAllocator)
+    // write data to socket from this buffer
+    private val outboundAdaptive: AdaptiveBuffer = AdaptiveBuffer(directAllocator)
+
     override def executor: ChannelsActor[?] = actor match
         case a: ChannelsActor[?] => a
         case null =>
             throw new IllegalStateException(s"The channel $this is not mounted, use setExecutor to mount channel.")
 
-    final private[core] def setExecutor(channelsActor: ChannelsActor[?]): Unit = {
+    final private[core] def mount(channelsActor: ChannelsActor[?]): Unit = {
         assert(!mounted, s"The channel $this has been mounted already, you can't mount it twice!")
         actor = channelsActor
         logger = ActorLogger.getLogger(getClass)(using executor)
@@ -156,8 +168,19 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     /** Returns a new [[ChannelPipeline]] instance. */
     private def newChannelPipeline(): ChannelPipeline = new OtaviaChannelPipeline(this)
 
-    private def closeIfClosed(): Unit = if (!isOpen) closeTransport()
+    private def closeIfClosed(): Unit = if (!isOpen) closeTransport(newPromise())
 
+    // This method is used by outbound operation implementations to trigger an inbound event later.
+    // They do not trigger an inbound event immediately because an outbound operation might have been
+    // triggered by another inbound event handler method.  If fired immediately, the call stack
+    // will look like this for example:
+    //
+    //   handlerA.inboundBufferUpdated() - (1) an inbound handler method closes a connection.
+    //   -> handlerA.ctx.close()
+    //      -> channel.closeTransport()
+    //         -> handlerA.channelInactive() - (2) another inbound handler method called while in (1) yet
+    //
+    // which means the execution of two inbound handler methods of the same handler overlap undesirably.
     private def invokeLater(task: Runnable): Unit = laterTasks.append(task)
 
     override def localAddress: Option[SocketAddress] = localAddress0
@@ -181,31 +204,33 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     override def hashCode(): Int = id
 
-    override def toString: String = if (remoteAddress.nonEmpty) {
-        val buf = new mutable.StringBuilder(128)
-            .append("[id: ")
-            .append(id)
-            .append(", L:")
-            .append(if localAddress.nonEmpty then localAddress.get else "None")
-            .append(if isActive then " - " else " ! ")
-            .append("R:")
-            .append(remoteAddress.get)
-            .append(']')
-        buf.toString()
-    } else if (localAddress.nonEmpty) {
-        val buf = new mutable.StringBuilder(128)
-            .append("[id: ")
-            .append(id)
-            .append(", L:")
-            .append(localAddress.get)
-            .append(']')
-        buf.toString()
-    } else {
-        val buf = new mutable.StringBuilder(64)
-            .append("[id: ")
-            .append(id)
-            .append(']')
-        buf.toString()
+    override def toString: String = {
+        if (remoteAddress.nonEmpty) {
+            val buf = new mutable.StringBuilder(128)
+                .append("[id: ")
+                .append(id)
+                .append(", L:")
+                .append(if localAddress.nonEmpty then localAddress.get else "None")
+                .append(if isActive then " - " else " ! ")
+                .append("R:")
+                .append(remoteAddress.get)
+                .append(']')
+            buf.toString()
+        } else if (localAddress.nonEmpty) {
+            val buf = new mutable.StringBuilder(128)
+                .append("[id: ")
+                .append(id)
+                .append(", L:")
+                .append(localAddress.get)
+                .append(']')
+            buf.toString()
+        } else {
+            val buf = new mutable.StringBuilder(64)
+                .append("[id: ")
+                .append(id)
+                .append(']')
+            buf.toString()
+        }
     }
 
     protected final def readIfIsAutoRead(): Unit = if (isAutoRead) read()
@@ -221,18 +246,38 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         true
     } else false
 
-    private def closeNowAndFail(cause: Throwable): Unit = try { doClose() }
-    catch { case e: Exception => logger.logWarn("Failed to close a channel.", e) }
+    /** use in register */
+    private def closeNowAndFail(promise: Promise[?], cause: Throwable): Unit = {
+        closing = true
+        try {
+            doClose()
+        } catch {
+            case e: Exception => logger.logWarn("Failed to close a channel.", e)
+        }
+        closed = true
+        closing = false
+        promise.setFailure(cause)
+    }
+
+    override private[core] def closeAfterCreate(): Unit = try {
+        doClose()
+    } catch {
+        case cause: Throwable =>
+            logger.logError(s"close channel $this occur error with ${ThrowableUtil.stackTraceToString(cause)}")
+    }
 
     /** Call by head handler on pipeline register outbound event.
      *
      *  send channel register to reactor, and handle reactor reply at [[handleChannelRegisterReplyEvent]]
      */
-    private[channel] def registerTransport(): Unit = {
-        if (registering) throw new IllegalStateException(s"The channel $this is registering to reactor!")
-        if (isRegistered) throw new IllegalStateException("registered to reactor already")
-        registering = true
-        reactor.register(this)
+    private[channel] def registerTransport(promise: ChannelPromise): Unit = {
+        if (registering) promise.setFailure(new IllegalStateException(s"The channel $this is registering to reactor!"))
+        else if (isRegistered) promise.setFailure(new IllegalStateException("registered to reactor already"))
+        else {
+            registering = true
+            registerPromise = promise
+            reactor.register(this)
+        }
     }
 
     override private[core] def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit =
@@ -243,19 +288,38 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
                 registering = false
                 registered = true
                 pipeline.fireChannelRegistered()
+                val promise = registerPromise
+                registerPromise = null
+                promise.setSuccess(this)
+                // Only fire a channelActive if the channel has never been registered. This prevents firing
+                // multiple channel actives if the channel is deregistered and re-registered.
                 if (isActive) {
                     if (firstRegistration) fireChannelActiveIfNotActiveBefore()
                     readIfIsAutoRead()
                 }
-            case Some(cause) => closeNowAndFail(cause)
+            case Some(cause) =>
+                val promise = registerPromise
+                registerPromise = null
+                closeNowAndFail(promise, cause)
 
-    private[channel] def bindTransport(): Unit = {
+    private[channel] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit = {
+        if (!mounted) channelPromise.setFailure(new IllegalStateException(s"channel $this is not mounted to actor!"))
+        else if (!registered) { // if not register
+            if (!registering) pipeline.register(newPromise())
+            registerPromise.addListener(channelPromise)
+            channelPromise.onSuccess { self => bindTransport0(local, self) }
+        } else bindTransport0(local, channelPromise)
+    }
+
+    private def bindTransport0(local: SocketAddress, promise: ChannelPromise): Unit = {
         binding = true
-        unresolvedLocalAddress match {
-            case Some(address): Option[InetSocketAddress]
+        local match {
+            case address: InetSocketAddress
                 if isOptionSupported(ChannelOption.SO_BROADCAST) && getOption[Boolean](ChannelOption.SO_BROADCAST) &&
-                    !address.getAddress.nn.isAnyLocalAddress && !PlatformDependent.isWindows && !PlatformDependent
+                    !address.getAddress.isAnyLocalAddress && !PlatformDependent.isWindows && !PlatformDependent
                         .maybeSuperUser() =>
+                // Warn a user about the fact that a non-root user can't receive a
+                // broadcast packet on *nix if the socket is bound on non-wildcard address.
                 logger.logWarn(
                   "A non-root user can't receive a broadcast packet if the socket " +
                       "is not bound to a wildcard address; binding to a non-wildcard " +
@@ -265,19 +329,28 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         }
 
         val wasActive = isActive
-        Try {
+
+        var success: Boolean = false
+        try {
             doBind()
-        } match
-            case Failure(_) => closeIfClosed()
-            case Success(_) =>
-                bound = true
-                binding = false
-                if (!wasActive && isActive)
-                    invokeLater(() => if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead())
+            success = true
+        } catch {
+            case cause: Throwable =>
+                promise.setFailure(cause)
+                closeIfClosed()
+        }
+        if (success) {
+            bound = true
+            binding = false
+            if (!wasActive && isActive) // first active
+                invokeLater(() => if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead())
+
+            promise.setSuccess(this)
+        }
 
     }
 
-    private[channel] def disconnectTransport(): Unit = {
+    private[channel] def disconnectTransport(future: ChannelFuture): Unit = {
         val wasActive = isActive
         try {
             doDisconnect()
@@ -294,7 +367,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         closeIfClosed() // TCP channel disconnect is close, UDP is cancel local SocketAddress binding.
     }
 
-    private[channel] def closeTransport(): Unit = ???
+    private[channel] def closeTransport(future: ChannelFuture): Unit = ???
 
     private def close(cause: Throwable, closeCause: ClosedChannelException): Unit = if (!closeInitiated) {
         closeInitiated = true
@@ -302,9 +375,22 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         ???
     }
 
-    private[channel] def shutdownTransport(direction: ChannelShutdownDirection): Unit = ???
+    private def doClose0(promise: Promise[?]): Unit = {}
 
-    private[channel] def deregisterTransport(): Unit = ???
+    private def fireChannelInactiveAndDeregister(wasActive: Boolean): Unit = {
+        ???
+    }
+
+    private def cancelConnect(cause: Throwable): Unit = if (connectPromise != null) {
+        val promise = connectPromise
+        connectPromise = null
+        if (promise.canTimeout) timer.cancelTimerTask(promise.timeoutId)
+        promise.setFailure(cause)
+    }
+
+    private[channel] def shutdownTransport(direction: ChannelShutdownDirection, future: ChannelFuture): Unit = ???
+
+    private[channel] def deregisterTransport(future: ChannelFuture): Unit = ???
 
     private def deregister(fireChannelInactive: Boolean): Unit = if (registered) invokeLater(() => {
         reactor.deregister(this)
@@ -322,7 +408,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         catch {
             case e: Exception =>
                 invokeLater(() => pipeline.fireChannelExceptionCaught(e))
-                closeTransport()
+//                closeTransport()
         }
     }
 
@@ -340,8 +426,8 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
      *  shutdown the [[ChannelShutdownDirection.Inbound]] or close the channel completely.
      */
     protected final def shutdownReadSide(): Unit = if (!isShutdown(ChannelShutdownDirection.Inbound)) {
-        if (isAllowHalfClosure) shutdownTransport(ChannelShutdownDirection.Inbound)
-        else closeTransport()
+        if (isAllowHalfClosure) shutdownTransport(ChannelShutdownDirection.Inbound, newPromise())
+        else closeTransport(newPromise())
     } else inputClosedSeenErrorOnRead = true
 
     private def clearScheduledRead(): Unit = doClearScheduledRead()
@@ -390,36 +476,60 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     protected def writeLoopComplete(allWriten: Boolean): Unit = if (!allWriten) invokeLater(() => writeFlushed())
 
-    private[channel] def connectTransport(): Unit = try {
-        if (connected) throw new IllegalStateException(s"$this already connected!")
-        val wasActive              = isActive
-        var message: Buffer | Null = null
-        if (isOptionSupported(ChannelOption.TCP_FASTOPEN_CONNECT) && getOption(ChannelOption.TCP_FASTOPEN_CONNECT)) {
-            outboundBuffer.nn.addFlush()
-            val current = this.outboundBuffer.nn.current
-            current match {
-                case buffer: Buffer => message = buffer
-                case _              =>
+    private[channel] def connectTransport(
+        remote: SocketAddress,
+        local: Option[SocketAddress],
+        promise: ChannelPromise
+    ): Unit = {
+        if (!mounted) promise.setFailure(new IllegalStateException(s"channel $this is not mounted to actor!"))
+        else if (connected) promise.setFailure(new AlreadyConnectedException())
+        else if (connecting) promise.setFailure(new ConnectionPendingException())
+        else if (closed || closing) promise.setFailure(new ClosedChannelException())
+        else if (!registered) { // if not register
+            if (!registering) pipeline.register(newPromise())
+            registerPromise.addListener(promise)
+            promise.onSuccess { self => connectTransport0(remote, local, self) }
+            promise.onFailure { self => cancelConnect(self.causeUnsafe) }
+        } else {
+            connectTransport0(remote, local, promise)
+        }
+    }
+
+    private def connectTransport0(
+        remote: SocketAddress,
+        local: Option[SocketAddress],
+        promise: ChannelPromise
+    ): Unit = {
+        if (connected) promise.setFailure(new AlreadyConnectedException())
+        else if (connecting) promise.setFailure(new ConnectionPendingException())
+        else {
+            connecting = true
+            this.connectPromise = promise
+            val wasActive  = isActive
+            val fastOption = ChannelOption.TCP_FASTOPEN_CONNECT
+            val fastOpen   = if (isOptionSupported(fastOption) && getOption(fastOption)) true else false
+            if (doConnect(remote, local, fastOpen)) { // Connect finished
+                fulfillConnect(wasActive)
+            } else {
+                requestedRemoteAddress = remote.asInstanceOf[R]
+                // Connect not finish, the connectPromise will handle by handleChannelReadinessEvent or handleConnectTimeout
+                // The reactor will send a [ReactorEvent.ChannelReadiness] event to ChannelsActor, then ChannelsActor will
+                // call the channel's handleChannelReadinessEvent method which call finishConnect.
+
+                // register connect timeout trigger. When timeout, the timer will send a timeout event, the
+                // handleConnectTimeout method will handle this timeout event.
+                if (connectTimeoutMillis > 0) {
+                    val tid = timer.registerChannelTimeout(TimeoutTrigger.DelayTime(connectTimeoutMillis), this)
+                    promise.setTimeoutId(tid)
+                }
             }
         }
-        if (doConnect(message)) {
-            fulfillConnect(wasActive)
-            if (message != null && message.nn.readableBytes() == 0) this.outboundBuffer.nn.remove
-        } else {
-            // The reactor will send a [ReactorEvent.ChannelReadiness] event to ChannelsActor, then ChannelsActor will
-            // call the channel's handleChannelReadinessEvent method which call finishConnect.
+    }
 
-            // register connect timeout trigger. When timeout, the timer will send a timeout event, the
-            // handleConnectTimeout method will handle this timeout event.
-            if (connectTimeoutMillis > 0)
-                connectTimeoutRegisterId =
-                    timer.registerChannelTimeout(TimeoutTrigger.DelayTime(connectTimeoutMillis), this)
-        }
-    } catch { case t: Throwable => }
+    private def handleConnectTimeout(): Unit = ??? // closeTransport()
 
-    private def handleConnectTimeout(): Unit = closeTransport()
+    override private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit = {
 
-    override private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit =
         if (eventRegisterId == connectTimeoutRegisterId) {
             // handle connect timeout event.
             if (!connected) handleConnectTimeout()
@@ -427,6 +537,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
             // fire timeout event to pipeline.
             pipeline.fireChannelTimeoutEvent(eventRegisterId)
         }
+    }
 
     /** Should be called once the connect request is ready to be completed and [[isConnectPending]] is `true`. Calling
      *  this method if no [[isConnectPending]] connect is pending will result in an [[AlreadyConnectedException]].
@@ -434,11 +545,45 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
      *  @return
      *    `true` if the connect operation completed, `false` otherwise.
      */
-    protected def finishConnect(): Boolean = { ??? } // TODO: cancel connect timeout trigger.
+    protected def finishConnect(): Boolean = {
+        if (connectPromise != null) {
+            var connectStillInProgress = false
+            try {
+                val wasActive = isActive
+                if (!doFinishConnect(requestedRemoteAddress)) {
+                    connectStillInProgress = true
+                    false
+                } else { // connect success
+                    requestedRemoteAddress = null
+                    fulfillConnect(wasActive)
+                }
+            } catch {
+                case t: Throwable =>
+
+            }
+        }
+        ???
+    }
 
     private def fulfillConnect(wasActive: Boolean): Unit = {
-        val active = isActive
-        if (!wasActive && active) if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead()
+        if (connectPromise == null) {
+            // closed and the promise has been notified already.
+        } else {
+            val active  = isActive
+            val promise = connectPromise
+            connectPromise = null
+            promise.setSuccess(this)
+            if (!wasActive && active) if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead()
+        }
+    }
+
+    private def fulfillConnect(cause: Throwable): Unit = {
+        if (connectPromise != null) {
+            val promise = connectPromise
+            connectPromise = null
+            promise.setFailure(cause)
+            closeIfClosed()
+        }
     }
 
     private[channel] def updateWritabilityIfNeeded(notify: Boolean, notifyLater: Boolean): Unit = {
@@ -596,6 +741,8 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         // NOOP
     }
 
+    final protected def newPromise(): ChannelPromise = ChannelPromise()
+
 }
 
 object AbstractChannel {
@@ -613,5 +760,16 @@ object AbstractChannel {
       MESSAGE_SIZE_ESTIMATOR,
       ALLOW_HALF_CLOSURE
     )
+
+    private final class AnnotatedConnectException(exception: ConnectException, remote: SocketAddress)
+        extends ConnectException(exception.getMessage + ": " + remote) {
+
+        initCause(exception)
+
+        override def fillInStackTrace(): Throwable = this
+
+    }
+
+
 
 }

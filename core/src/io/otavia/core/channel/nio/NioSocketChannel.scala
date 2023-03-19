@@ -102,7 +102,11 @@ class NioSocketChannel(socket: SocketChannel, protocolFamily: ProtocolFamily)
         SocketUtils.bind(javaChannel, NioChannelUtil.toUnixDomainSocketAddress(unresolvedLocal.nn))
     } else SocketUtils.bind(javaChannel, unresolvedLocal.nn)
 
-    override protected def doConnect(initialData: Buffer | Null): Boolean = {
+    override protected def doConnect(
+        remote: SocketAddress,
+        local: Option[SocketAddress],
+        fastOpen: Boolean
+    ): Boolean = {
         unresolvedLocalAddress match
             case Some(_) => doBind()
             case None    =>

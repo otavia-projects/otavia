@@ -121,7 +121,11 @@ class NioDatagramChannel(socket: JDatagramChannel, protocolFamily: ProtocolFamil
         bound = true
     }
 
-    override protected def doConnect(initialData: Buffer | Null): Boolean = {
+    override protected def doConnect(
+        remote: SocketAddress,
+        local: Option[SocketAddress],
+        fastOpen: Boolean
+    ): Boolean = {
 //        if (local.nonEmpty) doBind(local.get)
 
         ???

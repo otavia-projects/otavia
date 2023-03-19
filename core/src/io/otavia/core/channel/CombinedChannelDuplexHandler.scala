@@ -22,6 +22,9 @@ import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.CombinedChannelDuplexHandler.*
 import io.otavia.core.channel.estimator.ReadBufferAllocator
 import io.otavia.core.channel.internal.{ChannelHandlerMask, DelegatingChannelHandlerContext}
+import io.otavia.core.stack.ChannelFuture
+
+import java.net.SocketAddress
 
 /** Combines the inbound handling of one [[ChannelHandler]] with the outbound handling of another [[ChannelHandler]]. */
 class CombinedChannelDuplexHandler[I <: ChannelHandler, O <: ChannelHandler] extends ChannelHandlerAdapter {
@@ -187,35 +190,47 @@ class CombinedChannelDuplexHandler[I <: ChannelHandler, O <: ChannelHandler] ext
     else
         inboundCtx.fireChannelTimeoutEvent(id)
 
-    override def bind(ctx: ChannelHandlerContext): Unit = if (!outboundCtx.removed)
-        outbound.bind(outboundCtx)
-    else outboundCtx.bind()
+    override def bind(ctx: ChannelHandlerContext, local: SocketAddress, future: ChannelFuture): ChannelFuture =
+        if (!outboundCtx.removed)
+            outbound.bind(outboundCtx, local, future)
+        else outboundCtx.bind(local, future)
 
-    override def connect(ctx: ChannelHandlerContext): Unit = if (!outboundCtx.removed)
-        outbound.connect(outboundCtx)
+    override def connect(
+        ctx: ChannelHandlerContext,
+        remote: SocketAddress,
+        local: Option[SocketAddress],
+        future: ChannelFuture
+    ): ChannelFuture = if (!outboundCtx.removed)
+        outbound.connect(outboundCtx, remote, local, future)
     else
-        outboundCtx.connect()
+        outboundCtx.connect(remote, local, future)
 
-    override def disconnect(ctx: ChannelHandlerContext): Unit = if (!outboundCtx.removed)
-        outbound.disconnect(outboundCtx)
-    else outboundCtx.disconnect()
+    override def disconnect(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture =
+        if (!outboundCtx.removed)
+            outbound.disconnect(outboundCtx, future)
+        else outboundCtx.disconnect(future)
 
-    override def close(ctx: ChannelHandlerContext): Unit = if (!outboundCtx.removed)
-        outbound.close(outboundCtx)
-    else outboundCtx.close()
+    override def close(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = if (!outboundCtx.removed)
+        outbound.close(outboundCtx, future)
+    else outboundCtx.close(future)
 
-    override def shutdown(ctx: ChannelHandlerContext, direction: ChannelShutdownDirection): Unit =
-        if (!outboundCtx.removed) outbound.shutdown(outboundCtx, direction)
+    override def shutdown(
+        ctx: ChannelHandlerContext,
+        direction: ChannelShutdownDirection,
+        future: ChannelFuture
+    ): ChannelFuture =
+        if (!outboundCtx.removed) outbound.shutdown(outboundCtx, direction, future)
         else
-            outboundCtx.shutdown(direction)
+            outboundCtx.shutdown(direction, future)
 
-    override def register(ctx: ChannelHandlerContext): Unit = if (!outboundCtx.removed)
-        outbound.register(outboundCtx)
-    else outboundCtx.register()
+    override def register(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = if (!outboundCtx.removed)
+        outbound.register(outboundCtx, future)
+    else outboundCtx.register(future)
 
-    override def deregister(ctx: ChannelHandlerContext): Unit = if (!outboundCtx.removed)
-        outbound.deregister(outboundCtx)
-    else outboundCtx.deregister()
+    override def deregister(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture =
+        if (!outboundCtx.removed)
+            outbound.deregister(outboundCtx, future)
+        else outboundCtx.deregister(future)
 
     override def read(ctx: ChannelHandlerContext, readBufferAllocator: ReadBufferAllocator): Unit =
         if (!outboundCtx.removed) outbound.read(outboundCtx, readBufferAllocator)

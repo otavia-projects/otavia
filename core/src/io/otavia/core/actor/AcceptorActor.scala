@@ -31,8 +31,6 @@ import scala.runtime.Nothing$
 
 abstract class AcceptorActor[W <: AcceptedWorkerActor[_ <: Call]] extends ChannelsActor[Bind] {
 
-    private var localAddress: SocketAddress    = _
-    private var bound: Boolean                 = false
     private var workers: Address[MessageOf[W]] = _
 
     /** Number of worker. */
@@ -56,25 +54,18 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[_ <: Call]] extends Channe
     final protected def bind(stack: AskStack[Bind]): Option[StackState] = {
         stack.stackState match
             case StackState.initialState =>
-                val channel = newChannel()
-                channel.setUnresolvedLocalAddress(stack.ask.local)
-                initAndRegister(channel, stack)
-            case registerWaitState: RegisterWaitState =>
-                val event = registerWaitState.registerFuture.getNow
-                try {
-                    if (event.cause.isEmpty) {
-                        event.channel.pipeline.bind()
-                        bound = true
-                        afterBind(event.channel)
-                        stack.`return`(UnitReply())
-                    } else {
-                        event.channel.close()
-                        stack.`throw`(ExceptionMessage(event.cause.get))
-                    }
-                } catch {
-                    case cause: Throwable =>
-                        event.channel.close()
-                        stack.`throw`(ExceptionMessage(cause))
+                val channel = newChannelAndInit()
+                val state   = new BindState()
+                channel.bind(stack.ask.local, state.bindFuture)
+                state.suspend()
+            case bindState: BindState =>
+                if (bindState.bindFuture.isSuccess) {
+                    val channel = bindState.bindFuture.getNow
+                    channels.put(channel.id, channel)
+                    afterBind(bindState.bindFuture.getNow)
+                    stack.`return`(UnitReply())
+                } else {
+                    stack.`throw`(ExceptionMessage(bindState.bindFuture.causeUnsafe))
                 }
     }
 
@@ -122,6 +113,10 @@ object AcceptorActor {
 
         override def resumable(): Boolean = dispatchFuture.isDone
 
+    }
+
+    final class BindState extends StackState {
+        val bindFuture: ChannelFuture = ChannelFuture()
     }
 
 }

@@ -16,13 +16,13 @@
 
 package io.otavia.core.actor
 
-import io.otavia.core.actor.ChannelsActor.{Connect, RegisterWaitState}
+import io.otavia.core.actor.ChannelsActor.{Connect, ConnectReply, RegisterWaitState}
 import io.otavia.core.actor.ClientChannelsActor.ConnectWaitState
 import io.otavia.core.channel.Channel
 import io.otavia.core.log4a.ActorLogger
 import io.otavia.core.message.*
 import io.otavia.core.reactor.{Reactor, ReactorEvent}
-import io.otavia.core.stack.{AskStack, DefaultFuture, Future, StackState}
+import io.otavia.core.stack.*
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 
@@ -50,18 +50,21 @@ abstract class ClientChannelsActor[M <: Call] extends ChannelsActor[M] {
                 // TODO: check remote whether resolved, if not send ask message AddressResolver actor
                 val remote = stack.ask.remote
 
-                val channel = newChannel()
+                val channel = newChannelAndInit()
                 initAndRegister(channel, stack)
             case registerWaitState: RegisterWaitState =>
-                val event = registerWaitState.registerFuture.getNow
-                val state = new ConnectWaitState()
-                event.channel.connect(state.connectFuture)
+                val channel: Channel = registerWaitState.registerFuture.getNow
+                val state            = new ConnectWaitState()
+                channel.connect(stack.ask.remote, stack.ask.local, state.connectFuture)
                 state.suspend()
             case connectWaitState: ConnectWaitState =>
                 val ch = connectWaitState.connectFuture.getNow
+                channels.put(ch.id, ch)
                 afterConnected(ch)
-                stack.`return`(UnitReply())
+                stack.`return`(ConnectReply(ch.id))
     }
+
+
 
     protected def afterConnected(channel: Channel): Unit = {}
 
@@ -73,28 +76,12 @@ abstract class ClientChannelsActor[M <: Call] extends ChannelsActor[M] {
             case None    => logWarn(s"The channel $channel is not add any handler!")
     }
 
-    override protected def afterChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {
-        super.afterChannelRegisterReplyEvent(event)
-        try {
-            event.channel.connect()
-            finshConnect(event.channel)
-        } catch {
-            case e: Throwable => event.channel.close()
-        }
-    }
-
-    protected def finshConnect(channel: Channel): Unit = {}
-
-    protected def disconnect(channel: Channel): Unit = {
-        channel.pipeline.disconnect()
-    }
-
 }
 
 object ClientChannelsActor {
 
     final class ConnectWaitState extends StackState {
-        val connectFuture: DefaultFuture[Channel] = Future[Channel]()
+        val connectFuture: ChannelFuture = ChannelFuture()
     }
 
 }

@@ -24,15 +24,27 @@ trait DefaultFuture[V] extends Future[V] {
 
 }
 
+object DefaultFuture {
+    def apply[V](): DefaultFuture[V] = DefaultPromise()
+}
+
 class DefaultPromise[V] extends Promise[V] with DefaultFuture[V] {
 
-    private var stack: Stack         = _
-    private var value: Any           = _
-    private var throwable: Throwable = _
+    private var stack: Stack                  = _
+    private var value: Any                    = _
+    private var throwable: Throwable          = _
+    private var completedFunc: () => Unit     = _
+    private var downstream: DefaultPromise[V] = _
 
     def setStack(s: Stack): Unit = stack = s
 
     def actorStack: Stack = stack
+
+    def isOnStack: Boolean = stack != null
+
+    def onCompleted(func: () => Unit): Unit = completedFunc = func
+
+    def setDownstream(down: DefaultPromise[V]): Unit = downstream = down
 
     override def setSuccess(result: V): Promise[V] = {
         value = result

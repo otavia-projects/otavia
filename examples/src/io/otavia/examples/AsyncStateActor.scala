@@ -1,6 +1,6 @@
 //package io.otavia.examples
 //
-//import io.otavia.core.actor.StateActor
+//import io.otavia.core.actor.{AcceptorActor, ChannelsActor, ClientChannelsActor, StateActor}
 //import io.otavia.core.address.Address
 //import io.otavia.core.async.Async
 //import io.otavia.core.ioc.Injectable
@@ -27,33 +27,35 @@
 //        log = autowire[Logger]
 //    }
 //
-//    def showExpr(msg: MSG): Any = Async.async {
-//        msg match
-//            case request: Request =>
-//                val variable                                        = 1 + 2
-//                val variable2: Int                                  = 1 + 2
-//                val queryRedis                                      = QueryRedis(request.req)
-//                val redisResponse: RedisResponse | ExceptionMessage = Async.await(redis, queryRedis)
-//                val p = {
-//                    val variable3               = variable + variable2
-//                    val redisRes: RedisResponse = Async.await(redis, queryRedis)
-//                    variable3
-//                }
-//                Future {
-//                    println("hello")
-//                }
-//                if (
-//                  redisResponse.isInstanceOf[RedisResponse] && redisResponse.asInstanceOf[RedisResponse].res == "null"
-//                ) {
-//                    val dbResponse: DBResponse = Async.await(db, QueryDB(request.req))
-//                    val res                    = Response(s"hit in database with result: ${dbResponse.res}")
-//                    request.reply(res)
-//                } else {
-//                    request.reply(
-//                      Response(s"hit in redis with result: ${redisResponse.asInstanceOf[RedisResponse].res}")
-//                    )
-//                }
-//                None
+//    def showExpr(stack: AskStack[Request]): Option[StackState] = Async.async {
+//        val request             = stack.ask
+//        val variable            = 1 + 2
+//        val variable2: Int      = 1 + 2
+//        val queryRedis          = QueryRedis(request.req)
+//        val redisResponseFuture = Async.await(redis, queryRedis)
+//        val p = {
+//            val variable3 = variable + variable2
+//            val redisRes  = Async.unwarp(redis, queryRedis)
+//            variable3
+//        }
+//
+//        Future {
+//            println("hello")
+//        }
+//
+//        if (
+//          redisResponseFuture.isFailed ||
+//          (redisResponseFuture.isSuccess && redisResponseFuture.getNow.res == "null")
+//        ) {
+//            val dbResponse = Async.unwarp(db, QueryDB(request.req))
+//            val res        = Response(s"hit in database with result: ${dbResponse.res}")
+//            stack.`return`(res)
+//        } else {
+//            val redisResponse = redisResponseFuture.getNow
+//            stack.`return`(
+//              Response(s"hit in redis with result: ${redisResponse.res}")
+//            )
+//        }
 //    }
 //
 //    override def continueAsk(msg: MSG & Ask[?] | AskFrame): Option[StackState] = Async.async {

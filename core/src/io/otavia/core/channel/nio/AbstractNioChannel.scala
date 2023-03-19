@@ -115,7 +115,7 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
     // Start implementation of EventHandle
     // Methods in EventHandle is running at thread which execute executor.
     override private[core] def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit =
-        closeTransport()
+        closeTransport(newPromise())
 
     override private[core] def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit = try {
         val ops = event.readyOps
@@ -123,7 +123,7 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
         if ((ops & SelectionKey.OP_WRITE) != 0) writeFlushedNow()
         if ((ops & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0) readNow()
     } catch {
-        case _: CancelledKeyException => closeTransport()
+        case _: CancelledKeyException => closeTransport(newPromise())
     }
 
     // End implementation of EventHandle

@@ -50,7 +50,7 @@ trait Address[-M <: Call] extends EventableAddress {
     def ask[A <: M & Ask[_ <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using
         sender: AbstractActor[?]
     ): ReplyFuture[ReplyOf[A]]
-
+    
     /** send ask message to this address, and set [[timeout]] milliseconds to get the respect [[Reply]], otherwise the
      *  [[ReplyFuture]] will set [[scala.concurrent.TimeoutException]].
      *  @param ask

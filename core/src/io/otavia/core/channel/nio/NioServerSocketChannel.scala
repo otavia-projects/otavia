@@ -149,7 +149,7 @@ class NioServerSocketChannel(socket: ServerSocketChannel, protocolFamily: Protoc
                 0
     }
 
-    override protected def doConnect(initialData: Buffer | Null): Boolean =
+    override protected def doConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Boolean =
         throw new UnsupportedOperationException()
 
     override protected def doFinishConnect(requestedRemoteAddress: SocketAddress): Boolean =
