@@ -39,7 +39,7 @@ import java.net.*
 import java.nio.channels.{AlreadyConnectedException, ClosedChannelException, ConnectionPendingException}
 import java.util.Objects.{requireNonNull, requireNonNullElseGet}
 import scala.collection.mutable
-import scala.concurrent.Future.never
+import scala.concurrent.Future.{find, never}
 import scala.language.{existentials, unsafeNulls}
 import scala.util.{Failure, Success, Try}
 
@@ -132,10 +132,10 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     private var actor: ChannelsActor[?] | Null = _
 
-    private var registerPromise: ChannelPromise                                 = _
-    private var connectPromise: ChannelPromise                                  = _
-    private var requestedRemoteAddress: R                                       = _
-    private var deregisterPromise: DefaultPromise[ReactorEvent.DeregisterReply] = _
+    private var registerPromise: ChannelPromise   = _
+    private var connectPromise: ChannelPromise    = _
+    private var requestedRemoteAddress: R         = _
+    private var deregisterPromise: ChannelPromise = _
 
     // read socket data to this buffer
     private var inboundAdaptive: AdaptiveBuffer = AdaptiveBuffer(directAllocator)
@@ -393,13 +393,63 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     private[channel] def shutdownTransport(direction: ChannelShutdownDirection, future: ChannelFuture): Unit = ???
 
-    private[channel] def deregisterTransport(promise: ChannelPromise): Unit = ???
+    private[channel] def deregisterTransport(promise: ChannelPromise): Unit = {
+        deregister(promise, false)
+    }
 
-    private def deregister(fireChannelInactive: Boolean): Unit = if (registered) invokeLater(() => {
-        reactor.deregister(this)
-    })
+    private def deregister(promise: ChannelPromise, fireChannelInactive: Boolean): Unit = {
+        if (!registered) promise.setSuccess(this)
+        else if (!unregistering && !unregistered) {
+            deregisterPromise = promise
+            deregisterPromise.onSuccess(self => deregisterDone(self, fireChannelInactive))
+            unregistering = true
+            invokeLater(() => reactor.deregister(this))
+        } else if (unregistering && !unregistered) {
+            deregisterPromise.addListener(promise)
+        } else {
+            promise.setSuccess(this)
+        }
+    }
 
-    override private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = ???
+    private def deregisterDone(promise: ChannelPromise, fireChannelInactive: Boolean): Unit = {
+        if (fireChannelInactive) pipeline.fireChannelInactive()
+
+        // Ensure we also clear all scheduled reads so its possible to schedule again if the Channel is re-registered.
+        clearScheduledRead()
+
+        if (registered) {
+            registered = false
+            unregistering = false
+            unregistered = true
+
+            if (!isOpen) {
+                // Remove all handlers from the ChannelPipeline. This is needed to ensure
+                // handlerRemoved(...) is called and so resources are released.
+                while (!pipeline.isEmpty) {
+                    try {
+                        pipeline.removeLast()
+                    } catch {
+                        case _: NoSuchElementException =>
+                    }
+                }
+            }
+        }
+
+        promise.setSuccess(this)
+
+    }
+
+    override private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = {
+        event.cause match
+            case Some(cause) =>
+                logger.logWarn("Unexpected exception occurred while deregistering a channel.", cause)
+            case None =>
+
+        // done deregister
+        val promise = deregisterPromise
+        deregisterPromise = null
+        promise.setSuccess(this)
+    }
 
     private[channel] def readTransport(readBufferAllocator: ReadBufferAllocator): Unit = if (!isActive) {
         throw new IllegalStateException(s"channel $this is not active!")
