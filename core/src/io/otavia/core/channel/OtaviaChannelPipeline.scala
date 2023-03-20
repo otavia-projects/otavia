@@ -689,7 +689,7 @@ object OtaviaChannelPipeline {
 
         override def deregister(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
             val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
-            abstractChannel.deregisterTransport(future)
+            abstractChannel.deregisterTransport(future.promise)
             future
         }
 
