@@ -35,12 +35,12 @@ import io.otavia.core.stack.{ChannelFuture, ChannelPromise, DefaultPromise, Prom
 import io.otavia.core.system.ActorThread
 import io.otavia.core.timer.{TimeoutTrigger, Timer}
 
-import java.net.{ConnectException, InetSocketAddress, SocketAddress}
+import java.net.*
 import java.nio.channels.{AlreadyConnectedException, ClosedChannelException, ConnectionPendingException}
 import java.util.Objects.{requireNonNull, requireNonNullElseGet}
 import scala.collection.mutable
 import scala.concurrent.Future.never
-import scala.language.unsafeNulls
+import scala.language.{existentials, unsafeNulls}
 import scala.util.{Failure, Success, Try}
 
 /** A skeletal Channel implementation.
@@ -260,7 +260,10 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     }
 
     override private[core] def closeAfterCreate(): Unit = try {
+        closing = true
         doClose()
+        closed = true
+        closing = false
     } catch {
         case cause: Throwable =>
             logger.logError(s"close channel $this occur error with ${ThrowableUtil.stackTraceToString(cause)}")
@@ -390,7 +393,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     private[channel] def shutdownTransport(direction: ChannelShutdownDirection, future: ChannelFuture): Unit = ???
 
-    private[channel] def deregisterTransport(future: ChannelFuture): Unit = ???
+    private[channel] def deregisterTransport(promise: ChannelPromise): Unit = ???
 
     private def deregister(fireChannelInactive: Boolean): Unit = if (registered) invokeLater(() => {
         reactor.deregister(this)
@@ -520,21 +523,27 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
                 // handleConnectTimeout method will handle this timeout event.
                 if (connectTimeoutMillis > 0) {
                     val tid = timer.registerChannelTimeout(TimeoutTrigger.DelayTime(connectTimeoutMillis), this)
+                    connectTimeoutRegisterId = tid
                     promise.setTimeoutId(tid)
                 }
             }
         }
     }
 
-    private def handleConnectTimeout(): Unit = ??? // closeTransport()
+    private def handleConnectTimeout(): Unit = {
+        val promise = connectPromise
+        connectPromise = null
+        closeTransport(newPromise()) // close the channel and ignore close result.
+
+        promise.setFailure(new ConnectTimeoutException(s"connection timed out: $requestedRemoteAddress"))
+    }
 
     override private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit = {
-
         if (eventRegisterId == connectTimeoutRegisterId) {
             // handle connect timeout event.
-            if (!connected) handleConnectTimeout()
+            if (connecting) handleConnectTimeout() // else ignore the event
         } else {
-            // fire timeout event to pipeline.
+            // fire other timeout event to pipeline.
             pipeline.fireChannelTimeoutEvent(eventRegisterId)
         }
     }
@@ -545,24 +554,21 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
      *  @return
      *    `true` if the connect operation completed, `false` otherwise.
      */
-    protected def finishConnect(): Boolean = {
+    protected def finishConnect(): Unit = {
         if (connectPromise != null) {
             var connectStillInProgress = false
             try {
                 val wasActive = isActive
                 if (!doFinishConnect(requestedRemoteAddress)) {
                     connectStillInProgress = true
-                    false
                 } else { // connect success
                     requestedRemoteAddress = null
                     fulfillConnect(wasActive)
                 }
             } catch {
-                case t: Throwable =>
-
+                case t: Throwable => fulfillConnect(annotateConnectException(t, requestedRemoteAddress))
             }
         }
-        ???
     }
 
     private def fulfillConnect(wasActive: Boolean): Unit = {
@@ -572,6 +578,10 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
             val active  = isActive
             val promise = connectPromise
             connectPromise = null
+            connected = true
+            connecting = false
+            if (promise.canTimeout)
+                timer.cancelTimerTask(promise.timeoutId)
             promise.setSuccess(this)
             if (!wasActive && active) if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead()
         }
@@ -581,6 +591,8 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         if (connectPromise != null) {
             val promise = connectPromise
             connectPromise = null
+            connecting = false
+            if (promise.canTimeout) timer.cancelTimerTask(promise.timeoutId)
             promise.setFailure(cause)
             closeIfClosed()
         }
@@ -761,6 +773,15 @@ object AbstractChannel {
       ALLOW_HALF_CLOSURE
     )
 
+    private def annotateConnectException(cause: Throwable, remote: SocketAddress): Throwable = {
+        cause match
+            case connectException: ConnectException => new AnnotatedConnectException(connectException, remote)
+            case noRouteToHostException: NoRouteToHostException =>
+                new AnnotatedNoRouteToHostException(noRouteToHostException, remote)
+            case socketException: SocketException => new AnnotatedSocketException(socketException, remote)
+            case _                                => cause
+    }
+
     private final class AnnotatedConnectException(exception: ConnectException, remote: SocketAddress)
         extends ConnectException(exception.getMessage + ": " + remote) {
 
@@ -770,6 +791,22 @@ object AbstractChannel {
 
     }
 
+    private final class AnnotatedNoRouteToHostException(exception: NoRouteToHostException, remote: SocketAddress)
+        extends NoRouteToHostException(exception.getMessage + ": " + remote) {
 
+        initCause(exception)
+
+        override def fillInStackTrace(): Throwable = this
+
+    }
+
+    private final class AnnotatedSocketException(exception: SocketException, remote: SocketAddress)
+        extends SocketException(exception.getMessage + ": " + remote) {
+
+        initCause(exception)
+
+        override def fillInStackTrace(): Throwable = this
+
+    }
 
 }
