@@ -21,6 +21,7 @@ package io.otavia.core.channel
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.estimator.ReadBufferAllocator
 import io.otavia.core.stack.{ChannelFuture, DefaultFuture, Future}
+import io.otavia.core.system.ActorSystem
 
 import java.net.SocketAddress
 
@@ -67,5 +68,7 @@ trait ChannelOutboundInvoker {
     /** Executor of this channel instance, the channel inbound and outbound event must execute in the binding executor
      */
     def executor: ChannelsActor[?]
+
+    final def system: ActorSystem = executor.system
 
 }

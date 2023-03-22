@@ -31,7 +31,7 @@ import io.otavia.core.channel.inflight.ChannelInflightImpl
 import io.otavia.core.channel.internal.{ChannelOutboundBuffer, ReadSink, WriteBufferWaterMark, WriteSink}
 import io.otavia.core.log4a.ActorLogger
 import io.otavia.core.reactor.{ReactorEvent, TimeoutEvent}
-import io.otavia.core.stack.{ChannelFuture, ChannelPromise, DefaultPromise, Promise}
+import io.otavia.core.stack.*
 import io.otavia.core.system.ActorThread
 import io.otavia.core.timer.{TimeoutTrigger, Timer}
 
@@ -136,6 +136,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     private var connectPromise: ChannelPromise    = _
     private var requestedRemoteAddress: R         = _
     private var deregisterPromise: ChannelPromise = _
+    private var closePromise: ChannelPromise      = _
 
     // read socket data to this buffer
     private var inboundAdaptive: AdaptiveBuffer = AdaptiveBuffer(directAllocator)
@@ -370,15 +371,56 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         closeIfClosed() // TCP channel disconnect is close, UDP is cancel local SocketAddress binding.
     }
 
-    private[channel] def closeTransport(future: ChannelFuture): Unit = ???
+    private[channel] def closeTransport(promise: ChannelPromise): Unit = {}
 
-    private def close(cause: Throwable, closeCause: ClosedChannelException): Unit = if (!closeInitiated) {
-        closeInitiated = true
-        val wasActive = isActive
-        ???
+    private def close(promise: ChannelPromise, cause: Throwable, closeCause: ClosedChannelException): Unit = {
+        if (closed) promise.setSuccess(this)
+        else if (closing && !closed) closePromise.addListener(promise)
+        else {
+            closing = true
+            closePromise = promise
+            val wasActive = isActive
+            closeAllAdaptiveBuffers()
+            failInflights()
+            cancelConnect(new ClosedChannelException())
+            if (unregistered) {
+                closeAfterDeregister(wasActive)
+            } else {
+                if (!unregistering && !unregistered) deregister(newPromise(), false)
+                val promise = newPromise()
+                deregisterPromise.addListener(promise)
+                promise.onSuccess(self => closeAfterDeregister(wasActive))
+            }
+
+        }
     }
 
-    private def doClose0(promise: Promise[?]): Unit = {}
+    private def closeAfterDeregister(wasActive: Boolean): Unit = {
+        if (isOpen && getOption(ChannelOption.SO_LINGER) > 0) {
+            val blockFuture = system.executeBlocking(() => doClose0(), this)
+            blockFuture.promise.onSuccess(self => fireChannelInactive(wasActive))
+        } else {
+            doClose0()
+            fireChannelInactive(wasActive)
+        }
+    }
+
+    private def fireChannelInactive(wasActive: Boolean): Unit = {
+        if (wasActive && !isActive) pipeline.fireChannelInactive()
+        closePromise = null
+        closing = false
+        closed = true
+    }
+
+    private def closeAllAdaptiveBuffers(): Unit = {
+        // TODO: impl
+    }
+
+    private def failInflights(): Unit = {
+        // TODO: impl
+    }
+
+    private def doClose0(): Unit = {}
 
     private def fireChannelInactiveAndDeregister(wasActive: Boolean): Unit = {
         ???
@@ -434,8 +476,6 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
                 }
             }
         }
-
-        promise.setSuccess(this)
 
     }
 

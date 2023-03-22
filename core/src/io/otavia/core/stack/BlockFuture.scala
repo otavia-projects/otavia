@@ -28,11 +28,15 @@ trait BlockFuture[V] extends Future[V] {
 
 }
 
-object BlockFuture {}
+object BlockFuture {
+    def apply[V](func: () => V): BlockFuture[V] = new BlockPromise(func)
+}
 
 class BlockPromise[V](func: () => V) extends Promise[V] with BlockFuture[V] with Runnable {
 
     private var parent: Actor[?] | Channel = _
+
+    private var callback: BlockPromise[V] => Unit = _
 
     def owner: Actor[?] | Channel = ???
 
@@ -79,5 +83,7 @@ class BlockPromise[V](func: () => V) extends Promise[V] with BlockFuture[V] with
 
         eventableAddress.inform(BlockFutureCompletedEvent(this))
     }
+
+    def onSuccess(task: BlockPromise[V] => Unit): Unit = callback = task
 
 }

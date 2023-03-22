@@ -20,9 +20,10 @@ import io.netty5.buffer.BufferAllocator
 import io.netty5.util.internal.SystemPropertyUtil
 import io.otavia.core.actor.{Actor, ActorFactory, MessageOf}
 import io.otavia.core.address.Address
-import io.otavia.core.channel.ChannelFactory
-import io.otavia.core.message.{Ask, Call, IdAllocator, Message, Notice}
+import io.otavia.core.channel.{Channel, ChannelFactory}
+import io.otavia.core.message.*
 import io.otavia.core.reactor.{Event, Reactor}
+import io.otavia.core.stack.BlockFuture
 import io.otavia.core.timer.Timer
 
 import scala.quoted
@@ -39,6 +40,11 @@ trait ActorSystem {
 
     /** Timeout event dispatcher of this actor system */
     def timer: Timer
+
+    def blockingExecutor: BlockTaskExecutor
+
+    final def executeBlocking[V](task: () => V, owner: Channel): BlockFuture[V] =
+        blockingExecutor.executeBlocking(task, owner)
 
     /** message id distributor usage for create [[Notice]] message */
     def distributor: IdAllocator

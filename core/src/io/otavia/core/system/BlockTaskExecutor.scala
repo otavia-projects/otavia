@@ -20,7 +20,7 @@ import io.otavia.core.actor.Actor
 import io.otavia.core.channel.Channel
 import io.otavia.core.stack.BlockFuture
 
-import java.util.concurrent.Executors
+import java.util.concurrent.{Callable, Executors}
 import scala.language.unsafeNulls
 
 class BlockTaskExecutor(nThreads: Int) {
@@ -34,5 +34,7 @@ class BlockTaskExecutor(nThreads: Int) {
     }
 
     def executeBlocking[V](future: BlockFuture[V], owner: Channel): BlockFuture[V] = ???
+
+    def executeBlocking[V](task: () => V, owner: Channel): BlockFuture[V] = ???
 
 }

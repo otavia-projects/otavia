@@ -28,7 +28,7 @@ import io.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import io.otavia.core.channel.OtaviaChannelPipeline.*
 import io.otavia.core.channel.estimator.{MessageSizeEstimator, ReadBufferAllocator}
 import io.otavia.core.log4a.ActorLogger
-import io.otavia.core.stack.ChannelFuture
+import io.otavia.core.stack.{ChannelFuture, ChannelPromise}
 import io.otavia.core.util.ClassUtils
 
 import java.net.SocketAddress
@@ -571,7 +571,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
     final def forceCloseTransport(): Unit = {
         val abstractChannel = channel.asInstanceOf[AbstractChannel[?, ?]]
-        abstractChannel.closeTransport(ChannelFuture())
+        abstractChannel.closeTransport(ChannelPromise())
     }
 
     override def executor: ChannelsActor[_] = channel.executor
@@ -667,7 +667,7 @@ object OtaviaChannelPipeline {
 
         override def close(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
             val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
-            abstractChannel.closeTransport(future)
+            abstractChannel.closeTransport(future.promise)
             future
         }
 
