@@ -386,28 +386,37 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
             if (unregistered) {
                 closeAfterDeregister(wasActive)
             } else {
-                if (!unregistering && !unregistered) deregister(newPromise(), false)
+                if (!unregistering && !unregistered) deregisterTransport(newPromise())
                 val promise = newPromise()
                 deregisterPromise.addListener(promise)
                 promise.onSuccess(self => closeAfterDeregister(wasActive))
             }
-
         }
     }
 
     private def closeAfterDeregister(wasActive: Boolean): Unit = {
         if (isOpen && getOption(ChannelOption.SO_LINGER) > 0) {
-            val blockFuture = system.executeBlocking(() => doClose0(), this)
-            blockFuture.promise.onSuccess(self => fireChannelInactive(wasActive))
+            val blockFuture = system.executeBlocking(() => doClose(), this)
+            blockFuture.promise.onCompleted { self =>
+                fireChannelInactive(wasActive, self.cause)
+            }
         } else {
-            doClose0()
-            fireChannelInactive(wasActive)
+            var cause = None
+            try { doClose() }
+            catch {
+                case t: Throwable => cause = Some(t)
+            }
+            fireChannelInactive(wasActive, cause)
         }
     }
 
-    private def fireChannelInactive(wasActive: Boolean): Unit = {
+    private def fireChannelInactive(wasActive: Boolean, cause: Option[Throwable]): Unit = {
         if (wasActive && !isActive) pipeline.fireChannelInactive()
+        val promise = closePromise
         closePromise = null
+        cause match
+            case Some(value) => promise.setFailure(value)
+            case None        => promise.setSuccess(this)
         closing = false
         closed = true
     }
@@ -420,12 +429,6 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         // TODO: impl
     }
 
-    private def doClose0(): Unit = {}
-
-    private def fireChannelInactiveAndDeregister(wasActive: Boolean): Unit = {
-        ???
-    }
-
     private def cancelConnect(cause: Throwable): Unit = if (connectPromise != null) {
         val promise = connectPromise
         connectPromise = null
@@ -436,14 +439,10 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     private[channel] def shutdownTransport(direction: ChannelShutdownDirection, future: ChannelFuture): Unit = ???
 
     private[channel] def deregisterTransport(promise: ChannelPromise): Unit = {
-        deregister(promise, false)
-    }
-
-    private def deregister(promise: ChannelPromise, fireChannelInactive: Boolean): Unit = {
         if (!registered) promise.setSuccess(this)
         else if (!unregistering && !unregistered) {
             deregisterPromise = promise
-            deregisterPromise.onSuccess(self => deregisterDone(self, fireChannelInactive))
+            deregisterPromise.onSuccess(self => deregisterDone(self))
             unregistering = true
             invokeLater(() => reactor.deregister(this))
         } else if (unregistering && !unregistered) {
@@ -453,9 +452,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         }
     }
 
-    private def deregisterDone(promise: ChannelPromise, fireChannelInactive: Boolean): Unit = {
-        if (fireChannelInactive) pipeline.fireChannelInactive()
-
+    private def deregisterDone(promise: ChannelPromise): Unit = {
         // Ensure we also clear all scheduled reads so its possible to schedule again if the Channel is re-registered.
         clearScheduledRead()
 
@@ -468,15 +465,13 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
                 // Remove all handlers from the ChannelPipeline. This is needed to ensure
                 // handlerRemoved(...) is called and so resources are released.
                 while (!pipeline.isEmpty) {
-                    try {
-                        pipeline.removeLast()
-                    } catch {
-                        case _: NoSuchElementException =>
+                    try { pipeline.removeLast() }
+                    catch {
+                        case _: Throwable => // do nothing
                     }
                 }
             }
         }
-
     }
 
     override private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = {

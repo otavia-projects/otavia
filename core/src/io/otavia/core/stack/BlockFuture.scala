@@ -84,6 +84,6 @@ class BlockPromise[V](func: () => V) extends Promise[V] with BlockFuture[V] with
         eventableAddress.inform(BlockFutureCompletedEvent(this))
     }
 
-    def onSuccess(task: BlockPromise[V] => Unit): Unit = callback = task
+    def onCompleted(task: BlockPromise[V] => Unit): Unit = callback = task
 
 }
