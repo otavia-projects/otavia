@@ -146,7 +146,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     override def executor: ChannelsActor[?] = actor match
         case a: ChannelsActor[?] => a
         case null =>
-            throw new IllegalStateException(s"The channel $this is not mounted, use setExecutor to mount channel.")
+            throw new IllegalStateException(s"The channel $this is not mounted, use mount to mount channel.")
 
     final private[core] def mount(channelsActor: ChannelsActor[?]): Unit = {
         assert(!mounted, s"The channel $this has been mounted already, you can't mount it twice!")

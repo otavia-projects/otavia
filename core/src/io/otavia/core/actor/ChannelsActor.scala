@@ -16,8 +16,9 @@
 
 package io.otavia.core.actor
 
+import io.netty5.util.internal.ThrowableUtil
 import io.otavia.core.actor.Actor
-import io.otavia.core.actor.ChannelsActor.RegisterWaitState
+import io.otavia.core.actor.ChannelsActor.*
 import io.otavia.core.address.{Address, ChannelsActorAddress}
 import io.otavia.core.channel.*
 import io.otavia.core.log4a.ActorLogger
@@ -151,9 +152,31 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     protected def newChannel(): Channel
 
     @throws[Exception]
-    def init(channel: Channel): Unit
+    protected def init(channel: Channel): Unit
 
-    def close(): Unit
+    final protected def close(stack: AskStack[Close]): Option[StackState] = {
+        stack.stackState match
+            case StackState.initialState =>
+                val removes = if (stack.ask.ids.isEmpty) channels.keys else stack.ask.ids
+                val futures = removes
+                    .map { id =>
+                        val ch = channels.remove(id)
+                        ch.map(c => c.close(ChannelFuture()))
+                    }
+                    .filter(_.nonEmpty)
+                    .map(_.get)
+                val state = new CloseState(futures)
+                state.suspend()
+            case closeState: CloseState =>
+                if (closeState.futures.forall(_.isSuccess))
+                    stack.`return`(CloseReply(closeState.futures.map(_.getNow.id)))
+                else {
+                    val fails = closeState.futures.filter(_.isFailed)
+                    val errors =
+                        fails.map(f => ThrowableUtil.stackTraceToString(f.causeUnsafe)).mkString("[", "\n", "]")
+                    stack.`throw`(ExceptionMessage(s"failed close at channel with ${errors}"))
+                }
+    }
 
     // 1. how to design tail handler, channel group self ?
     // 2. how to use message codec in handler
@@ -173,6 +196,8 @@ object ChannelsActor {
         val registerFuture: ChannelFuture = ChannelFuture()
     }
 
+    final class CloseState(val futures: Iterable[ChannelFuture]) extends StackState
+
     case class Connect(remote: SocketAddress, local: Option[SocketAddress] = None) extends Ask[ConnectReply]
     case class ConnectReply(channelId: Int)                                        extends Reply
 
@@ -180,7 +205,7 @@ object ChannelsActor {
     case class DisconnectReply(ids: Seq[Int])        extends Reply
 
     case class Close(ids: Seq[Int] = Seq.empty) extends Ask[CloseReply]
-    case class CloseReply(ids: Seq[Int])        extends Reply
+    case class CloseReply(ids: Iterable[Int])   extends Reply
 
     object Connect {
 
@@ -191,7 +216,7 @@ object ChannelsActor {
         def apply(host: InetAddress, port: Int): Connect = Connect(new InetSocketAddress(host, port))
 
     }
-    case class Bind(local: SocketAddress) extends Ask[UnitReply]
+    case class Bind(local: SocketAddress) extends Ask[BindReply]
 
     object Bind {
 
@@ -204,5 +229,7 @@ object ChannelsActor {
         def apply(host: InetAddress, port: Int): Bind = Bind(new InetSocketAddress(host, port))
 
     }
+
+    case class BindReply(channelId: Int) extends Reply
 
 }

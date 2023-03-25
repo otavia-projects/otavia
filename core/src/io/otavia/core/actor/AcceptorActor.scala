@@ -17,7 +17,7 @@
 package io.otavia.core.actor
 
 import io.otavia.core.actor.AcceptorActor.*
-import io.otavia.core.actor.ChannelsActor.{Bind, RegisterWaitState}
+import io.otavia.core.actor.ChannelsActor.{Bind, BindReply, RegisterWaitState}
 import io.otavia.core.address.Address
 import io.otavia.core.channel.*
 import io.otavia.core.reactor.ReactorEvent
@@ -63,7 +63,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[_ <: Call]] extends Channe
                     val channel = bindState.bindFuture.getNow
                     channels.put(channel.id, channel)
                     afterBind(bindState.bindFuture.getNow)
-                    stack.`return`(UnitReply())
+                    stack.`return`(BindReply(channel.id))
                 } else {
                     stack.`throw`(ExceptionMessage(bindState.bindFuture.causeUnsafe))
                 }

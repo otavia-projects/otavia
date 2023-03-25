@@ -33,7 +33,6 @@ abstract class TimerService extends ChannelsActor[TimerService.MSG] {
 
     override def init(channel: Channel): Unit = ???
 
-    override def close(): Unit = ???
 
 }
 
