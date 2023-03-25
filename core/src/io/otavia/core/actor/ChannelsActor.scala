@@ -158,15 +158,18 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         stack.stackState match
             case StackState.initialState =>
                 val removes = if (stack.ask.ids.isEmpty) channels.keys else stack.ask.ids
-                val futures = removes
-                    .map { id =>
-                        val ch = channels.remove(id)
-                        ch.map(c => c.close(ChannelFuture()))
-                    }
-                    .filter(_.nonEmpty)
-                    .map(_.get)
-                val state = new CloseState(futures)
-                state.suspend()
+                if (removes.isEmpty) stack.`return`(CloseReply(Iterable.empty))
+                else {
+                    val futures = removes
+                        .map { id =>
+                            val ch = channels.remove(id)
+                            ch.map(c => c.close(ChannelFuture()))
+                        }
+                        .filter(_.nonEmpty)
+                        .map(_.get)
+                    val state = new CloseState(futures)
+                    state.suspend()
+                }
             case closeState: CloseState =>
                 if (closeState.futures.forall(_.isSuccess))
                     stack.`return`(CloseReply(closeState.futures.map(_.getNow.id)))
