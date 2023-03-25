@@ -36,7 +36,7 @@ import io.otavia.core.system.ActorThread
 import io.otavia.core.timer.{TimeoutTrigger, Timer}
 
 import java.net.*
-import java.nio.channels.{AlreadyConnectedException, ClosedChannelException, ConnectionPendingException}
+import java.nio.channels.{AlreadyConnectedException, ClosedChannelException, ConnectionPendingException, NotYetConnectedException}
 import java.util.Objects.{requireNonNull, requireNonNullElseGet}
 import scala.collection.mutable
 import scala.concurrent.Future.{find, never}
@@ -380,9 +380,10 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
             closing = true
             closePromise = promise
             val wasActive = isActive
-            closeAllAdaptiveBuffers()
-            failInflights()
-            cancelConnect(new ClosedChannelException())
+            closeAdaptiveBuffers()
+            val exception = new ClosedChannelException()
+            failInflights(exception)
+            cancelConnect(exception)
             if (unregistered) {
                 closeAfterDeregister(wasActive)
             } else {
@@ -421,11 +422,22 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         closed = true
     }
 
-    private def closeAllAdaptiveBuffers(): Unit = {
-        // TODO: impl
+    private def closeAdaptiveBuffers(): Unit = {
+        closeInboundAdaptiveBuffers()
+        closeOutboundAdaptiveBuffers()
     }
 
-    private def failInflights(): Unit = {
+    private def closeInboundAdaptiveBuffers(): Unit = {
+        shutdownedInbound = true
+        ???
+    }
+
+    private def closeOutboundAdaptiveBuffers(): Unit = {
+        shutdownedOutbound = true
+        ???
+    }
+
+    private def failInflights(cause: Throwable): Unit = {
         // TODO: impl
     }
 
@@ -436,7 +448,68 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
         promise.setFailure(cause)
     }
 
-    private[channel] def shutdownTransport(direction: ChannelShutdownDirection, future: ChannelFuture): Unit = ???
+    private[channel] def shutdownTransport(direction: ChannelShutdownDirection, promise: ChannelPromise): Unit = {
+        if (!isActive) {
+            if (isOpen) promise.setFailure(new NotYetConnectedException())
+            else promise.setFailure(new ClosedChannelException())
+        } else if (isShutdown(direction)) promise.setSuccess(this)
+        else {
+            val fireEvent = direction match
+                case ChannelShutdownDirection.Outbound => shutdownOutput(promise, None)
+                case ChannelShutdownDirection.Inbound  => shutdownInput(promise)
+            if (fireEvent) pipeline.fireChannelShutdown(direction)
+        }
+    }
+
+    /** Shutdown the output portion of the corresponding Channel. For example this will close the [[outboundAdaptive]]
+     *  and not allow any more writes.
+     *
+     *  @param promise
+     *    [[ChannelPromise]]
+     *  @param cause
+     *    The cause which may provide rational for the shutdown.
+     *  @return
+     */
+    private def shutdownOutput(promise: ChannelPromise, cause: Option[Throwable]): Boolean = {
+        if (closed) {
+            promise.setFailure(new ClosedChannelException())
+            false
+        } else {
+            val shutdownCause = cause match
+                case Some(t) => new ChannelOutputShutdownException("Channel output shutdown", t)
+                case None    => new ChannelOutputShutdownException("Channel output shutdown")
+            try {
+                doShutdown(ChannelShutdownDirection.Outbound)
+                closeOutboundAdaptiveBuffers()
+                promise.setSuccess(this)
+            } catch {
+                case t: Throwable => promise.setFailure(t)
+            } finally {
+                failInflights(shutdownCause)
+            }
+            true
+        }
+    }
+
+    /** Shutdown the input portion of the corresponding Channel. For example this will close the [[inboundAdaptive]] and
+     *  not allow any more writes.
+     *
+     *  @param promise
+     *    [[ChannelPromise]]
+     *  @return
+     */
+    private def shutdownInput(promise: ChannelPromise): Boolean = {
+        try {
+            doShutdown(ChannelShutdownDirection.Inbound)
+            closeInboundAdaptiveBuffers()
+            promise.setSuccess(this)
+            true
+        } catch {
+            case cause: Throwable =>
+                promise.setFailure(cause)
+                false
+        }
+    }
 
     private[channel] def deregisterTransport(promise: ChannelPromise): Unit = {
         if (!registered) promise.setSuccess(this)

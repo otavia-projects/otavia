@@ -677,7 +677,7 @@ object OtaviaChannelPipeline {
             future: ChannelFuture
         ): ChannelFuture = {
             val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
-            abstractChannel.shutdownTransport(direction, future)
+            abstractChannel.shutdownTransport(direction, future.promise)
             future
         }
 
