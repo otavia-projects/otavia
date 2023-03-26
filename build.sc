@@ -91,6 +91,8 @@ object core extends OtaviaModule with BuildInfo {
 
     override def buildInfoPackageName: Option[String] = Some("io.otavia")
 
+    override def artifactName = "otavia-core"
+
     object test extends Tests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
@@ -102,6 +104,8 @@ object core extends OtaviaModule with BuildInfo {
 object handler extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+    override def artifactName = "otavia-handler"
 
     object test extends Tests with TestModule.ScalaTest {
 
@@ -115,6 +119,8 @@ object codec extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
 
+    override def artifactName = "otavia-codec"
+
     object test extends Tests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep, ivy"io.netty:netty5-codec:5.0.0.Alpha5")
@@ -124,23 +130,35 @@ object codec extends OtaviaModule {
 }
 
 object http extends OtaviaModule {
+
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
+
+    override def artifactName = "otavia-codec-http"
 
 }
 
 object adbc extends OtaviaModule {
+
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
+
+    override def artifactName = "otavia-adbc"
+
 }
 
 object redis extends OtaviaModule {
 
-    override def artifactName: T[String]        = "redis-client"
+    override def artifactName: T[String] = "otavia-codec-redis"
+
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
 
 }
 
 object mio extends OtaviaModule {
+
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
+
+    override def artifactName: T[String] = "otavia-native-mio"
+
 }
 
 object mionative extends RustJniModule {
@@ -148,7 +166,11 @@ object mionative extends RustJniModule {
 }
 
 object web extends OtaviaModule {
+
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, http, adbc, redis)
+
+    override def artifactName: T[String] = "otavia-web"
+
 }
 
 object examples extends OtaviaModule {
