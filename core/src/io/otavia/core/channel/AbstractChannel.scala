@@ -134,7 +134,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     private var registerPromise: ChannelPromise   = _
     private var connectPromise: ChannelPromise    = _
-    private var requestedRemoteAddress: R         = _
+    private var requestedRemoteAddress: R | Null  = _
     private var deregisterPromise: ChannelPromise = _
     private var closePromise: ChannelPromise      = _
 
@@ -402,7 +402,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
                 fireChannelInactive(wasActive, self.cause)
             }
         } else {
-            var cause = None
+            var cause: Option[Throwable] = None
             try { doClose() }
             catch {
                 case t: Throwable => cause = Some(t)
@@ -717,7 +717,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
             var connectStillInProgress = false
             try {
                 val wasActive = isActive
-                if (!doFinishConnect(requestedRemoteAddress)) {
+                if (!doFinishConnect(requestedRemoteAddress.nn)) {
                     connectStillInProgress = true
                 } else { // connect success
                     requestedRemoteAddress = null

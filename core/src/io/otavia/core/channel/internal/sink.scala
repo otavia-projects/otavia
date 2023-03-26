@@ -102,7 +102,7 @@ private[channel] trait ReadSink {
                     closed = doReadNow(this)
                 } catch {
                     case cause: Throwable =>
-                        if (completeFailure(cause)) shutdownReadSide() else closeTransport()
+                        if (completeFailure(cause)) shutdownReadSide() else closeTransport(newPromise())
                         return
                 }
                 continueReading && !closed && !isShutdown(ChannelShutdownDirection.Inbound)
