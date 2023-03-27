@@ -38,11 +38,17 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
     protected val logger: ActorLogger = ActorLogger.getLogger(getClass)(using executor)
 
+    private val readAdaptiveBuffer: AdaptiveBuffer  = new AdaptiveBuffer(channel.directAllocator)
+    private val writeAdaptiveBuffer: AdaptiveBuffer = new AdaptiveBuffer(channel.directAllocator)
+
     private val head = new OtaviaChannelHandlerContext(this, HEAD_NAME, HEAD_HANDLER)
     private val tail = new OtaviaChannelHandlerContext(this, TAIL_NAME, TAIL_HANDLER)
 
     head.next = tail
     tail.prev = head
+
+    head.setInboundAdaptiveBuffer(readAdaptiveBuffer)
+    head.setOutboundAdaptiveBuffer(writeAdaptiveBuffer)
 
     head.setAddComplete()
     tail.setAddComplete()
@@ -56,12 +62,19 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
     private var _pendingOutboundBytes: Long = 0
 
-    private val readAdaptiveBuffer: AdaptiveBuffer  = new AdaptiveBuffer(channel.directAllocator)
-    private val writeAdaptiveBuffer: AdaptiveBuffer = new AdaptiveBuffer(channel.directAllocator)
-
     private[core] override def channelInboundBuffer: AdaptiveBuffer = readAdaptiveBuffer
 
     private[core] override def channelOutboundBuffer: AdaptiveBuffer = writeAdaptiveBuffer
+
+    private[core] override def closeInboundAdaptiveBuffers(): Unit = {
+        readAdaptiveBuffer.close()
+        for { ctx <- handlers if ctx.isBufferHandlerContext } ctx.inboundAdaptiveBuffer.close()
+    }
+
+    private[core] override def closeOutboundAdaptiveBuffers(): Unit = {
+        writeAdaptiveBuffer.close()
+        for { ctx <- handlers if ctx.isBufferHandlerContext } ctx.outboundAdaptiveBuffer.close()
+    }
 
     final def touch(msg: AnyRef, next: OtaviaChannelHandlerContext): AnyRef = {
         if (touch) Resource.touch(msg, next)
@@ -84,15 +97,55 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
     private def checkDuplicateName(name: String): Unit =
         if (context(name).nonEmpty) throw new IllegalArgumentException(s"Duplicate handler name: $name")
 
+    private def replaceBufferHead(newCtx: OtaviaChannelHandlerContext, oldFirst: OtaviaChannelHandlerContext): Unit = {
+        assert(readAdaptiveBuffer.readableBytes() == 0, "buffer of handler has some data.")
+        assert(writeAdaptiveBuffer.readableBytes() == 0, "buffer of handler has some data.")
+        setAdaptiveBuffer(oldFirst, channel.headAllocator)
+        resetHead(newCtx)
+    }
+
+    private def resetHead(newCtx: OtaviaChannelHandlerContext): Unit = {
+        readAdaptiveBuffer.setStrategy(newCtx.handler.inboundStrategy)
+        writeAdaptiveBuffer.setStrategy(newCtx.handler.outboundStrategy)
+        newCtx.setInboundAdaptiveBuffer(readAdaptiveBuffer)
+        newCtx.setOutboundAdaptiveBuffer(writeAdaptiveBuffer)
+    }
+
+    private def setAdaptiveBuffer(ctx: OtaviaChannelHandlerContext, allocator: BufferAllocator): Unit = {
+        val inbound = new AdaptiveBuffer(allocator)
+        inbound.setStrategy(ctx.handler.inboundStrategy)
+        ctx.setInboundAdaptiveBuffer(inbound)
+
+        val outbound = new AdaptiveBuffer(allocator)
+        outbound.setStrategy(ctx.handler.outboundStrategy)
+        ctx.setOutboundAdaptiveBuffer(outbound)
+    }
+
     override def addFirst(name: Option[String], handler: ChannelHandler): ChannelPipeline = {
-        channel.assertExecutor() // check the method is called in ChannelsActor whit it registered
+        channel.assertExecutor() // check the method is called in ChannelsActor which it registered
         val newCtx = newContext(name, handler)
+        if (handlers.nonEmpty) {
+            val oldFirst = handlers.head
+            if (newCtx.isBufferHandlerContext && oldFirst.isBufferHandlerContext) {
+                replaceBufferHead(newCtx, oldFirst)
+            } else if (!newCtx.isBufferHandlerContext && oldFirst.isBufferHandlerContext) {
+                throw new IllegalStateException("can't add no buffered handler before at buffered handler!")
+            } else if (newCtx.isBufferHandlerContext && !oldFirst.isBufferHandlerContext) {
+                setAdaptiveBuffer(newCtx, channel.directAllocator)
+            } else if (!newCtx.isBufferHandlerContext && !oldFirst.isBufferHandlerContext) {
+                // do nothing
+            }
+        } else {
+            if (newCtx.isBufferHandlerContext) resetHead(newCtx)
+        }
+
         handlers.insert(0, newCtx)
         val nextCtx = head.next
         newCtx.prev = head
         newCtx.next = nextCtx
         head.next = newCtx
         nextCtx.prev = newCtx
+
         callHandlerAdded0(newCtx)
         this
     }
@@ -103,47 +156,83 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
     }
 
     override def addLast(name: Option[String], handler: ChannelHandler): ChannelPipeline = {
-        channel.assertExecutor() // check the method is called in ChannelsActor whit it registered
+        channel.assertExecutor() // check the method is called in ChannelsActor which it registered
+
         val newCtx = newContext(name, handler)
+        if (handlers.isEmpty && newCtx.isBufferHandlerContext) resetHead(newCtx)
+        if (newCtx.isBufferHandlerContext && !handlers.last.isBufferHandlerContext)
+            throw new IllegalStateException(
+              s"buffered handler $handler can't add after no buffered handler ${handlers.last.handler}"
+            )
+
         handlers.addOne(newCtx)
         val prevCtx = tail.prev
         newCtx.prev = prevCtx
         newCtx.next = tail
         prevCtx.next = newCtx
         tail.prev = newCtx
+
         callHandlerAdded0(newCtx)
         this
     }
 
     override def addBefore(baseName: String, name: Option[String], handler: ChannelHandler): ChannelPipeline = {
         channel.assertExecutor() // check the method is called in ChannelsActor whit it registered
-        assert(HEAD_NAME != baseName, s"Can't add handler before HeadHandler: $HEAD_NAME")
-        handlers.zipWithIndex.find(_._1.name == baseName) match
-            case Some((ctx, index)) =>
-                val newCtx = newContext(name, handler)
-                handlers.insert(index, newCtx)
-                newCtx.prev = ctx.prev
-                newCtx.next = ctx
-                ctx.prev.next = newCtx
-                ctx.prev = newCtx
-                callHandlerAdded0(newCtx)
-            case None => throw new NoSuchElementException(baseName)
+        assert(HEAD_NAME != baseName, s"Can't add handler $handler before HeadHandler: $HEAD_NAME")
+
+        if (TAIL_NAME == baseName) addLast(name, handler)
+        else {
+            handlers.zipWithIndex.find(_._1.name == baseName) match
+                case Some((ctx, index)) =>
+                    if (index == 0) addFirst(name, handler)
+                    else {
+                        val newCtx = newContext(name, handler)
+                        if (newCtx.isBufferHandlerContext) {
+                            assert(
+                              ctx.isBufferHandlerContext,
+                              s"buffered handler $handler can't add after no buffered handler ${ctx.handler}"
+                            )
+                            setAdaptiveBuffer(newCtx, channel.headAllocator)
+                        }
+                        handlers.insert(index, newCtx)
+                        newCtx.prev = ctx.prev
+                        newCtx.next = ctx
+                        ctx.prev.next = newCtx
+                        ctx.prev = newCtx
+                        callHandlerAdded0(newCtx)
+                    }
+                case None => throw new NoSuchElementException(baseName)
+        }
+
         this
     }
 
     override def addAfter(baseName: String, name: Option[String], handler: ChannelHandler): ChannelPipeline = {
         channel.assertExecutor() // check the method is called in ChannelsActor which the channel registered
         assert(TAIL_NAME != baseName, s"Can't add handler after TailHandler: $TAIL_NAME")
-        handlers.zipWithIndex.find(_._1.name == baseName) match
-            case Some((ctx, index)) =>
-                val newCtx = newContext(name, handler)
-                handlers.insert(index + 1, newCtx)
-                newCtx.prev = ctx
-                newCtx.next = ctx.next
-                ctx.next.prev = newCtx
-                ctx.next = newCtx
-                callHandlerAdded0(newCtx)
-            case None => throw new NoSuchElementException(baseName)
+
+        if (HEAD_NAME == baseName) addFirst(name, handler)
+        else {
+            handlers.zipWithIndex.find(_._1.name == baseName) match
+                case Some((ctx, index)) =>
+                    val newCtx = newContext(name, handler)
+                    if (newCtx.isBufferHandlerContext) {
+                        val before = handlers(index)
+                        assert(
+                          before.isBufferHandlerContext,
+                          s"buffered handler $handler can't add after no buffered handler ${before.handler}"
+                        )
+                        setAdaptiveBuffer(newCtx, channel.headAllocator)
+                    }
+                    handlers.insert(index + 1, newCtx)
+                    newCtx.prev = ctx
+                    newCtx.next = ctx.next
+                    ctx.next.prev = newCtx
+                    ctx.next = newCtx
+                    callHandlerAdded0(newCtx)
+                case None => throw new NoSuchElementException(baseName)
+        }
+
         this
     }
 
@@ -151,6 +240,24 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         ctx.callHandlerAdded()
     } catch {
         case t: Throwable =>
+            var removed = false
+            try {
+                handlers.zipWithIndex.find(_._1 == ctx) match
+                    case Some((_, index)) =>
+                        handlers.remove(index)
+                    case None => // do nothing
+                ctx.callHandlerRemoved()
+                removed = true
+            } catch {
+                case t2: Throwable =>
+                    logger.logWarn(s"Failed to remove a handler: ${ctx.name}", t2)
+            } finally {
+                ctx.remove(true)
+            }
+
+            if (removed) {
+                ???
+            }
     }
 
     private final def callHandlerRemoved0(ctx: OtaviaChannelHandlerContext): Unit = try {
@@ -756,11 +863,11 @@ object OtaviaChannelPipeline {
     final val DEFAULT_READ_BUFFER_ALLOCATOR: ReadBufferAllocator =
         (allocator: BufferAllocator, estimatedCapacity: Int) => allocator.allocate(estimatedCapacity).nn
 
-    private def generateName0(handlerType: Class[_]) = ClassUtils.simpleClassName(handlerType) + "#0"
+    private def generateName0(handlerType: Class[?]) = ClassUtils.simpleClassName(handlerType) + "#0"
 
     private final val nameCaches: ActorThreadLocal[collection.mutable.HashMap[Class[?], String]] =
-        new ActorThreadLocal[mutable.HashMap[Class[_], String]] {
-            override protected def initialValue(): mutable.HashMap[Class[_], String] = collection.mutable.HashMap.empty
+        new ActorThreadLocal[mutable.HashMap[Class[?], String]] {
+            override protected def initialValue(): mutable.HashMap[Class[?], String] = collection.mutable.HashMap.empty
         }
 
     private def checkMultiplicity(handler: ChannelHandler): Unit = handler match {

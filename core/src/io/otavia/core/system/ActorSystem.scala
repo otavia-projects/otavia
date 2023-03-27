@@ -67,13 +67,14 @@ trait ActorSystem {
 
     def defaultMaxBatchSize: Int
 
-    def buildActor[A <: Actor[_]](args: Any*)(num: Int = 1): Address[MessageOf[A]]
-    def crateActor[A <: Actor[_]](factory: ActorFactory[A], num: Int = 1): Address[MessageOf[A]]
+    def buildActor[A <: Actor[?]](args: Any*)(num: Int = 1): Address[MessageOf[A]]
+    def crateActor[A <: Actor[?]](factory: ActorFactory[A], num: Int = 1): Address[MessageOf[A]]
 
     /** IOC methods, developer can ues it by [[io.otavia.core.ioc.Injectable]] */
     private[core] def getAddress[M <: Call](
-        clz: Class[_ <: Actor[_]],
-        qualifier: Option[String] = None
+        clz: Class[? <: Actor[?]],
+        qualifier: Option[String] = None,
+        remote: Option[String] = None
     ): Address[M]
 
     // IO transport layer

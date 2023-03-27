@@ -372,4 +372,8 @@ trait ChannelPipeline extends ChannelInboundInvoker with ChannelOutboundInvoker 
 
     private[core] def channelOutboundBuffer: AdaptiveBuffer
 
+    private[core] def closeInboundAdaptiveBuffers(): Unit = ???
+
+    private[core] def closeOutboundAdaptiveBuffers(): Unit = ???
+
 }

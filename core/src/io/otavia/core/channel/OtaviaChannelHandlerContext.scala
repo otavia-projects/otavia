@@ -541,7 +541,7 @@ final class OtaviaChannelHandlerContext(
         case t: Throwable => handleOutboundHandlerException(t, false)
     } finally updatePendingBytesIfNeeded()
 
-    override def executor: ChannelsActor[_] = pipeline.executor
+    override def executor: ChannelsActor[?] = pipeline.executor
 
     private def pendingOutboundBytes(): Long = {
         val pending = handler.pendingOutboundBytes(this)
@@ -594,17 +594,17 @@ object OtaviaChannelHandlerContext {
     /** Neither [[ChannelHandler.handlerAdded(ChannelHandlerContext)]] nor
      *  [[ChannelHandler.handlerRemoved(ChannelHandlerContext)]] was called.
      */
-    final val INIT: Int = 0
+    private final val INIT: Int = 0
 
     /** [[ChannelHandler.handlerAdded(ChannelHandlerContext)]] was called. */
-    final val ADD_COMPLETE: Int = 1
+    private final val ADD_COMPLETE: Int = 1
 
     /** [[ChannelHandler.handlerRemoved(ChannelHandlerContext)]] is about to be called. */
-    final val REMOVE_STARTED: Int = 2
+    private final val REMOVE_STARTED: Int = 2
 
     /** [[ChannelHandler.handlerRemoved(ChannelHandlerContext)]] was called. */
-    final val REMOVE_COMPLETE: Int = 3
+    private final val REMOVE_COMPLETE: Int = 3
 
-    final def handlesPendingOutboundBytes(mask: Int): Boolean = (mask & MASK_PENDING_OUTBOUND_BYTES) != 0
+    private final def handlesPendingOutboundBytes(mask: Int): Boolean = (mask & MASK_PENDING_OUTBOUND_BYTES) != 0
 
 }

@@ -139,9 +139,9 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     private var closePromise: ChannelPromise      = _
 
     // read socket data to this buffer
-    private var inboundAdaptive: AdaptiveBuffer = AdaptiveBuffer(directAllocator)
+    private def inboundAdaptive: AdaptiveBuffer = pipeline.channelInboundBuffer
     // write data to socket from this buffer
-    private val outboundAdaptive: AdaptiveBuffer = AdaptiveBuffer(directAllocator)
+    private def outboundAdaptive: AdaptiveBuffer = pipeline.channelOutboundBuffer
 
     override def executor: ChannelsActor[?] = actor match
         case a: ChannelsActor[?] => a
@@ -429,12 +429,12 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
 
     private def closeInboundAdaptiveBuffers(): Unit = {
         shutdownedInbound = true
-        ???
+        pipeline.closeInboundAdaptiveBuffers()
     }
 
     private def closeOutboundAdaptiveBuffers(): Unit = {
         shutdownedOutbound = true
-        ???
+        pipeline.closeOutboundAdaptiveBuffers()
     }
 
     private def failInflights(cause: Throwable): Unit = {

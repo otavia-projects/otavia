@@ -27,7 +27,10 @@ trait Injectable {
 
     final def autowire[T <: Call](name: String): Address[T] = ???
 
-    final def autowire[A <: Actor[_]: ClassTag](qualifier: Option[String] = None): Address[MessageOf[A]] =
-        system.getAddress(classTag[A].runtimeClass.asInstanceOf[Class[_ <: Actor[_]]], qualifier)
+    final def autowire[A <: Actor[?]: ClassTag](
+        qualifier: Option[String] = None,
+        remote: Option[String] = None
+    ): Address[MessageOf[A]] =
+        system.getAddress(classTag[A].runtimeClass.asInstanceOf[Class[? <: Actor[?]]], qualifier, remote)
 
 }

@@ -55,8 +55,10 @@ trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundIn
 
     def isBufferHandlerContext: Boolean = false
 
+    /** Write data by upstream. */
     def inboundAdaptiveBuffer: AdaptiveBuffer
 
+    /** Write data by upstream. */
     def outboundAdaptiveBuffer: AdaptiveBuffer
 
     /** The next inbound [[ChannelHandlerContext.inboundAdaptiveBuffer]] */
