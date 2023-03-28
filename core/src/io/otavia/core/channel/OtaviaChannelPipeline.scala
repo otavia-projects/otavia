@@ -33,6 +33,7 @@ import io.otavia.core.util.ClassUtils
 
 import java.net.SocketAddress
 import scala.collection.mutable
+import scala.language.unsafeNulls
 
 class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeline {
 
@@ -98,8 +99,8 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         if (context(name).nonEmpty) throw new IllegalArgumentException(s"Duplicate handler name: $name")
 
     private def replaceBufferHead(newCtx: OtaviaChannelHandlerContext, oldFirst: OtaviaChannelHandlerContext): Unit = {
-        assert(readAdaptiveBuffer.readableBytes() == 0, "buffer of handler has some data.")
-        assert(writeAdaptiveBuffer.readableBytes() == 0, "buffer of handler has some data.")
+        assert(readAdaptiveBuffer.readableBytes() == 0, s"inbound buffer of handler ${oldFirst.name} has some data.")
+        assert(writeAdaptiveBuffer.readableBytes() == 0, s"outbound buffer of handler ${oldFirst.name} has some data.")
         setAdaptiveBuffer(oldFirst, channel.headAllocator)
         resetHead(newCtx)
     }
@@ -140,6 +141,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         }
 
         handlers.insert(0, newCtx)
+        resetIndices()
         val nextCtx = head.next
         newCtx.prev = head
         newCtx.next = nextCtx
@@ -166,6 +168,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
             )
 
         handlers.addOne(newCtx)
+        resetIndices()
         val prevCtx = tail.prev
         newCtx.prev = prevCtx
         newCtx.next = tail
@@ -195,6 +198,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
                             setAdaptiveBuffer(newCtx, channel.headAllocator)
                         }
                         handlers.insert(index, newCtx)
+                        resetIndices()
                         newCtx.prev = ctx.prev
                         newCtx.next = ctx
                         ctx.prev.next = newCtx
@@ -225,6 +229,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
                         setAdaptiveBuffer(newCtx, channel.headAllocator)
                     }
                     handlers.insert(index + 1, newCtx)
+                    resetIndices()
                     newCtx.prev = ctx
                     newCtx.next = ctx.next
                     ctx.next.prev = newCtx
@@ -245,6 +250,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
                 handlers.zipWithIndex.find(_._1 == ctx) match
                     case Some((_, index)) =>
                         handlers.remove(index)
+                        resetIndices()
                     case None => // do nothing
                 ctx.callHandlerRemoved()
                 removed = true
@@ -256,7 +262,12 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
             }
 
             if (removed) {
-                ???
+                val error = s"${ctx.handler.getClass.getName}.handlerAdded() has thrown an exception; removed."
+                fireChannelExceptionCaught(new ChannelPipelineException(error, t))
+            } else {
+                val error =
+                    s"${ctx.handler.getClass.getName}.handlerAdded() has thrown an exception; also failed to remove."
+                fireChannelExceptionCaught(new ChannelPipelineException(error, t))
             }
     }
 
@@ -264,10 +275,8 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         ctx.callHandlerRemoved()
     } catch {
         case t: Throwable =>
-            val handlerName = ctx.handler.getClass.getName
-            fireChannelExceptionCaught(
-              new RuntimeException(s"${handlerName}.handlerRemoved() has thrown an exception.", t)
-            )
+            val error = s"${ctx.handler.getClass.getName}.handlerRemoved() has thrown an exception."
+            fireChannelExceptionCaught(new RuntimeException(error, t))
     }
 
     private def generateName(handler: ChannelHandler): String = {
@@ -302,6 +311,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         handlers.zipWithIndex.find(_._1.handler == handler) match
             case Some((ctx, index)) =>
                 handlers.remove(index)
+                resetIndices()
                 remove0(ctx)
             case None => logger.logWarn(s"Handler $handler not be added to the channel's pipeline")
         this
@@ -312,6 +322,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         handlers.zipWithIndex.find(_._1.name == name) match
             case Some((ctx, index)) =>
                 handlers.remove(index)
+                resetIndices()
                 remove0(ctx)
                 Some(ctx.handler)
             case None =>
@@ -388,6 +399,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         handlers.zipWithIndex.find((ctx, _) => finder(ctx)) match
             case Some((ctx, index)) =>
                 handlers.remove(index)
+                resetIndices()
                 remove0(ctx)
                 Some(ctx.handler.asInstanceOf[T])
             case None =>
@@ -404,6 +416,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         channel.assertExecutor() // check the method is called in ChannelsActor which the channel registered
         if (handlers.nonEmpty) {
             val ctx = handlers.remove(0)
+            resetIndices()
             remove0(ctx)
             Some(ctx.handler)
         } else None
@@ -418,6 +431,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         channel.assertExecutor() // check the method is called in ChannelsActor which the channel registered
         if (handlers.nonEmpty) {
             val ctx = handlers.remove(handlers.size - 1)
+            resetIndices()
             remove0(ctx)
             Some(ctx.handler)
         } else None
@@ -646,7 +660,6 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
     override def write(msg: AnyRef): Unit = {
         assertInExecutor()
-        channel.isActive
         tail.write(msg)
     }
 
@@ -681,7 +694,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         abstractChannel.closeTransport(ChannelPromise())
     }
 
-    override def executor: ChannelsActor[_] = channel.executor
+    override def executor: ChannelsActor[?] = channel.executor
 
     /** Called once a [[Throwable]] hit the end of the [[ChannelPipeline]] without been handled by the user in
      *  [[ChannelHandler.channelExceptionCaught()]].
@@ -741,6 +754,20 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
             throw new IllegalStateException("pendingOutboundBytes underflowed, force closed transport.")
         }
         pendingOutboundBytesUpdated(_pendingOutboundBytes)
+    }
+
+    private def resetIndices(): Unit = handlers.indices.foreach(idx => handlers(idx).setIndex(idx))
+
+    private[channel] def findContextInbound(from: Int, mask: Int): OtaviaChannelHandlerContext = {
+        var cursor                           = from
+        var ctx: OtaviaChannelHandlerContext = null
+        while {
+            ctx = if (cursor < handlers.length) handlers(cursor) else tail
+            cursor += 1
+            (ctx.executionMask & mask) == 0
+        } do ()
+
+        ctx
     }
 
 }

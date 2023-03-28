@@ -53,7 +53,7 @@ trait Notice extends Call
 /** message which need reply */
 trait Ask[R <: Reply] extends Call
 
-type ReplyOf[A <: Ask[_ <: Reply]] <: Reply = A match
+type ReplyOf[A <: Ask[? <: Reply]] <: Reply = A match
     case Ask[r] => r
 
 /** reply message, it reply at least one ask message */

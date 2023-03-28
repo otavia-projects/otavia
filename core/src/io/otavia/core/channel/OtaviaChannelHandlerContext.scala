@@ -39,12 +39,14 @@ final class OtaviaChannelHandlerContext(
 ) extends ChannelHandlerContext {
 
     protected val logger: ActorLogger = ActorLogger.getLogger(getClass)(using channel.executor)
-    private val executionMask         = mask(handler.getClass)
+    private[channel] val executionMask         = mask(handler.getClass)
 
     private var currentPendingBytes: Long = 0
 
     private var handlerState: Int = INIT
     private var removed: Boolean  = _
+
+    private var idx: Int = -1
 
     protected[channel] var next: OtaviaChannelHandlerContext = _
     protected[channel] var prev: OtaviaChannelHandlerContext = _
@@ -57,6 +59,10 @@ final class OtaviaChannelHandlerContext(
 
     def setOutboundAdaptiveBuffer(outboundAdaptiveBuffer: AdaptiveBuffer): Unit =
         outboundAdaptive = outboundAdaptiveBuffer
+
+    def index: Int = idx
+
+    def setIndex(id: Int): Unit = idx = id
 
     override def isBufferHandlerContext: Boolean = handler.isBufferHandler
 
