@@ -40,7 +40,7 @@ class ActorThread(private[core] val system: ActorSystem, val parent: ActorThread
         channelLaterTasks.clear()
     }
 
-    def actorThreadAddress = address
+    def actorThreadAddress: ActorThreadAddress = address
 
 }
 

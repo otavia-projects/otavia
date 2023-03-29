@@ -52,28 +52,33 @@ object ChannelHandlerMask {
 
     private[channel] val MASK_CHANNEL_TIMEOUT_EVENT = 1 << 22
 
+    private[channel] val MASK_CHANNEL_READ_ID = 1 << 23
+    private[channel] val MASK_WRITE_ID        = 1 << 24
+
     private val MASK_ALL_INBOUND =
         MASK_CHANNEL_EXCEPTION_CAUGHT | MASK_CHANNEL_REGISTERED | MASK_CHANNEL_UNREGISTERED | MASK_CHANNEL_ACTIVE |
             MASK_CHANNEL_INACTIVE | MASK_CHANNEL_SHUTDOWN | MASK_CHANNEL_READ | MASK_CHANNEL_READ_COMPLETE |
-            MASK_CHANNEL_WRITABILITY_CHANGED | MASK_CHANNEL_INBOUND_EVENT | MASK_CHANNEL_TIMEOUT_EVENT
+            MASK_CHANNEL_WRITABILITY_CHANGED | MASK_CHANNEL_INBOUND_EVENT | MASK_CHANNEL_TIMEOUT_EVENT |
+            MASK_CHANNEL_READ_ID
     private val MASK_ALL_OUTBOUND =
         MASK_BIND | MASK_CONNECT | MASK_DISCONNECT | MASK_CLOSE | MASK_SHUTDOWN | MASK_REGISTER | MASK_DEREGISTER |
-            MASK_READ | MASK_WRITE | MASK_FLUSH | MASK_SEND_OUTBOUND_EVENT | MASK_PENDING_OUTBOUND_BYTES
+            MASK_READ | MASK_WRITE | MASK_FLUSH | MASK_SEND_OUTBOUND_EVENT | MASK_PENDING_OUTBOUND_BYTES |
+            MASK_WRITE_ID
 
-    private val MASKS = new FastThreadLocal[mutable.HashMap[Class[_ <: ChannelHandler], Int]] {
+    private val MASKS = new FastThreadLocal[mutable.HashMap[Class[? <: ChannelHandler], Int]] {
         override def initialValue(): mutable.HashMap[Class[? <: ChannelHandler], Int] = mutable.HashMap.empty
     }
 
-    def mask(clazz: Class[_ <: ChannelHandler]): Int = {
+    def mask(clazz: Class[? <: ChannelHandler]): Int = {
         ???
     }
-    private def mask0(handlerType: Class[_ <: ChannelHandler]): Int = ???
+    private def mask0(handlerType: Class[? <: ChannelHandler]): Int = ???
 
-    private[channel] def isInbound(clazz: Class[_ <: ChannelHandler]) = (mask(clazz) & MASK_ALL_INBOUND) != 0
+    private[channel] def isInbound(clazz: Class[? <: ChannelHandler]) = (mask(clazz) & MASK_ALL_INBOUND) != 0
 
-    private[channel] def isOutbound(clazz: Class[_ <: ChannelHandler]) = (mask(clazz) & MASK_ALL_OUTBOUND) != 0
+    private[channel] def isOutbound(clazz: Class[? <: ChannelHandler]) = (mask(clazz) & MASK_ALL_OUTBOUND) != 0
 
-    private def isSkippable(handlerType: Class[?], methodName: String, paramTypes: Class[_]*): Boolean = {
+    private def isSkippable(handlerType: Class[?], methodName: String, paramTypes: Class[?]*): Boolean = {
         ???
     }
 

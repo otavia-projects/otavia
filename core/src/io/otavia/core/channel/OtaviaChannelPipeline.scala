@@ -594,7 +594,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
     }
 
     override def fireChannelRead(msg: AnyRef, msgId: Long): this.type = {
-        ???
+        head.invokeChannelRead(msg, msgId)
         this
     }
 

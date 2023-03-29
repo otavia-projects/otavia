@@ -39,7 +39,8 @@ final class OtaviaChannelHandlerContext(
 ) extends ChannelHandlerContext {
 
     protected val logger: ActorLogger = ActorLogger.getLogger(getClass)(using channel.executor)
-    private[channel] val executionMask         = mask(handler.getClass)
+
+    private[channel] val executionMask = mask(handler.getClass)
 
     private var currentPendingBytes: Long = 0
 
@@ -72,9 +73,15 @@ final class OtaviaChannelHandlerContext(
     override def outboundAdaptiveBuffer: AdaptiveBuffer =
         if (isBufferHandlerContext) outboundAdaptive else throw new UnsupportedOperationException()
 
-    override def nextInboundAdaptiveBuffer: AdaptiveBuffer = ???
+    override def nextInboundAdaptiveBuffer: AdaptiveBuffer = {
+        val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_READ)
+        ctx.inboundAdaptiveBuffer
+    }
 
-    override def nextOutboundAdaptiveBuffer: AdaptiveBuffer = ???
+    override def nextOutboundAdaptiveBuffer: AdaptiveBuffer = {
+        val ctx = findContextOutbound(ChannelHandlerMask.MASK_WRITE)
+        ctx.outboundAdaptiveBuffer
+    }
 
     private def handleOutboundHandlerException(cause: Throwable, closeDidThrow: Boolean): IllegalStateException = {
         val msg = s"$handler threw an exception while handling an outbound event. This is most likely a bug"
@@ -274,14 +281,25 @@ final class OtaviaChannelHandlerContext(
         this
     }
 
-    override def fireChannelRead(msg: AnyRef, msgId: Long): this.type = ???
-
     private[channel] def invokeChannelRead(msg: AnyRef): Unit = if (saveCurrentPendingBytesIfNeededInbound()) {
         try handler.channelRead(this, msg)
         catch {
             case t: Throwable => invokeChannelExceptionCaught(t)
         } finally updatePendingBytesIfNeeded()
     } else Resource.dispose(msg)
+
+    override def fireChannelRead(msg: AnyRef, msgId: Long): this.type = {
+        val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_READ_ID)
+        ctx.invokeChannelRead(msg, msgId)
+        this
+    }
+
+    private[channel] def invokeChannelRead(msg: AnyRef, id: Long): Unit =
+        if (saveCurrentPendingBytesIfNeededInbound()) {
+            try handler.channelRead(this, msg, id)
+            catch { case t: Throwable => invokeChannelExceptionCaught(t) }
+            finally updatePendingBytesIfNeeded()
+        } else Resource.dispose(msg)
 
     override def fireChannelReadComplete(): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_READ_COMPLETE)
@@ -576,8 +594,10 @@ final class OtaviaChannelHandlerContext(
 
     private def saveCurrentPendingBytesIfNeededInbound(): Boolean =
         saveCurrentPendingBytesIfNeeded() match
-            case Some(value) => logger.logError(value); false
-            case None        => true
+            case Some(value) =>
+                logger.logError(value)
+                false
+            case None => true
 
     inline private def saveCurrentPendingBytesIfNeededOutbound(): Option[IllegalStateException] =
         saveCurrentPendingBytesIfNeeded()
