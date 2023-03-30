@@ -19,6 +19,6 @@ package io.otavia.core.actor
 import io.otavia.core.message.{Ask, Call, Notice}
 
 /** Message type of a actor can receive */
-type MessageOf[A <: Actor[_]] <: Call = A match {
+type MessageOf[A <: Actor[?]] <: Call = A match {
     case Actor[m] => m
 }

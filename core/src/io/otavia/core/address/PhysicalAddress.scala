@@ -34,8 +34,8 @@ abstract class PhysicalAddress[M <: Call, H <: House] extends Address[M] {
 
     private[core] val house: H
 
-    override def ask[A <: M & Ask[_ <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using
-        sender: AbstractActor[_]
+    override def ask[A <: M & Ask[? <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using
+        sender: AbstractActor[?]
     ): ReplyFuture[ReplyOf[A]] = {
         ask.setMessageContext(sender)
         sender.attachStack(ask.messageId, future)
@@ -43,8 +43,8 @@ abstract class PhysicalAddress[M <: Call, H <: House] extends Address[M] {
         future
     }
 
-    override def ask[A <: M & Ask[_ <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]], timeout: Long)(using
-        sender: AbstractActor[_]
+    override def ask[A <: M & Ask[? <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]], timeout: Long)(using
+        sender: AbstractActor[?]
     ): ReplyFuture[ReplyOf[A]] = {
         this.ask(ask, future)
         val promise = future.promise

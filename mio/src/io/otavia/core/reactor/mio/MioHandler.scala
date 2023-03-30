@@ -41,7 +41,7 @@ class MioHandler(val maxEvents: Int, val strategy: SelectStrategy) extends IoHan
 
     override def wakeup(inEventLoop: Boolean): Unit = ???
 
-    override def isCompatible(handleType: Class[_ <: Channel]): Boolean = ???
+    override def isCompatible(handleType: Class[? <: Channel]): Boolean = ???
 
 }
 

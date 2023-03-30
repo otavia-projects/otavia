@@ -50,7 +50,7 @@ object ChannelOption {
 
     /** Shortcut of valueOf(String) valueOf(firstNameComponent.getName() + "#" + secondNameComponent). */
     @SuppressWarnings(Array("unchecked"))
-    def valueOf[T](firstNameComponent: Class[_], secondNameComponent: String): ChannelOption[T] =
+    def valueOf[T](firstNameComponent: Class[?], secondNameComponent: String): ChannelOption[T] =
         pool.valueOf(firstNameComponent, secondNameComponent).asInstanceOf[ChannelOption[T]]
 
     /** Returns true if a [[ChannelOption]] exists for the given name. */
@@ -106,7 +106,7 @@ object ChannelOption {
 
     /** Server-side TCP FastOpen. Configures the maximum number of outstanding (waiting to be accepted) TFO connections.
      */
-    val TCP_FASTOPEN: ChannelOption[Integer] = valueOf(classOf[ChannelOption[_]], "TCP_FASTOPEN")
+    val TCP_FASTOPEN: ChannelOption[Integer] = valueOf(classOf[ChannelOption[?]], "TCP_FASTOPEN")
 
     val DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION: ChannelOption[Boolean] = valueOf(
       "DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION"

@@ -341,7 +341,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
     override def context(name: String): Option[ChannelHandlerContext] = handlers.find(_.name == name)
 
-    override def context(handlerType: Class[_ <: ChannelHandler]): Option[ChannelHandlerContext] =
+    override def context(handlerType: Class[? <: ChannelHandler]): Option[ChannelHandlerContext] =
         handlers.find(ctx => handlerType.isAssignableFrom(ctx.handler.getClass))
 
     /** Inserts [[ChannelHandler]]s at the last position of this pipeline. `null` handlers will be skipped.

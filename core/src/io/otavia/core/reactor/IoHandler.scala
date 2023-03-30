@@ -73,6 +73,6 @@ trait IoHandler {
      *  @return
      *    if compatible of not.
      */
-    def isCompatible(handleType: Class[_ <: Channel]): Boolean
+    def isCompatible(handleType: Class[? <: Channel]): Boolean
 
 }

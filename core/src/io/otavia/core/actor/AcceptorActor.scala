@@ -29,7 +29,7 @@ import io.otavia.core.stack.{ChannelFrame, ExceptionWaiter, ReplyWaiter, StackSt
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 import scala.runtime.Nothing$
 
-abstract class AcceptorActor[W <: AcceptedWorkerActor[_ <: Call]] extends ChannelsActor[Bind] {
+abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends ChannelsActor[Bind] {
 
     private var workers: Address[MessageOf[W]] = _
 
@@ -75,7 +75,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[_ <: Call]] extends Channe
 
     override def continueChannel(stack: ChannelStack[AnyRef]): Option[StackState] = {
         stack match
-            case _: ChannelStack[_] if stack.message.isInstanceOf[Channel] =>
+            case _: ChannelStack[?] if stack.message.isInstanceOf[Channel] =>
                 handleAcceptedStack(stack.asInstanceOf[ChannelStack[Channel]])
     }
 
@@ -93,7 +93,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[_ <: Call]] extends Channe
 
 object AcceptorActor {
 
-    trait WorkerFactory[W <: AcceptedWorkerActor[_ <: Call]] extends ActorFactory[W] {
+    trait WorkerFactory[W <: AcceptedWorkerActor[? <: Call]] extends ActorFactory[W] {
         override def newActor(): W
     }
 

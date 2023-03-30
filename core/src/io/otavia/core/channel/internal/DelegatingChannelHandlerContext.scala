@@ -33,7 +33,7 @@ abstract class DelegatingChannelHandlerContext(private val ctx: ChannelHandlerCo
 
     override def channel: Channel = ctx.channel
 
-    override def executor: ChannelsActor[_] = ctx.executor
+    override def executor: ChannelsActor[?] = ctx.executor
 
     override def name: String = ctx.name
 

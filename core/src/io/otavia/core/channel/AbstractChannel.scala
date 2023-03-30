@@ -109,7 +109,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     inWriteFlushed = false
 
     closeInitiated = false
-    private var initialCloseCause: Throwable | Null = null
+//    private var initialCloseCause: Throwable | Null = null
 
     override val pipeline: ChannelPipeline = newChannelPipeline()
 
@@ -846,7 +846,7 @@ abstract class AbstractChannel[L <: SocketAddress, R <: SocketAddress] protected
     protected def setExtendedOption[T](option: ChannelOption[T], value: T): Unit =
         throw new UnsupportedOperationException(s"ChannelOption not supported: $option")
 
-    override def isOptionSupported(option: ChannelOption[_]): Boolean = SUPPORTED_CHANNEL_OPTIONS.contains(option) ||
+    override def isOptionSupported(option: ChannelOption[?]): Boolean = SUPPORTED_CHANNEL_OPTIONS.contains(option) ||
         isExtendedOptionSupported(option)
 
     /** Override to add support for more [[ChannelOption]]s. You need to also call super after handling the extra

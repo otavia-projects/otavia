@@ -40,8 +40,8 @@ class BatchNoticeStack[N <: Notice] private () extends Stack {
 
 object BatchNoticeStack {
 
-    private val pool: StackObjectPool[BatchNoticeStack[_]] = new StackObjectPool[BatchNoticeStack[?]] {
-        override protected def newObject(): BatchNoticeStack[_] = new BatchNoticeStack[Nothing]()
+    private val pool: StackObjectPool[BatchNoticeStack[?]] = new StackObjectPool[BatchNoticeStack[?]] {
+        override protected def newObject(): BatchNoticeStack[?] = new BatchNoticeStack[Nothing]()
     }
 
     def apply[N <: Notice](): BatchNoticeStack[N] = pool.get().asInstanceOf[BatchNoticeStack[N]]

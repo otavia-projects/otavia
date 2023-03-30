@@ -342,7 +342,7 @@ trait ChannelPipeline extends ChannelInboundInvoker with ChannelOutboundInvoker 
      *  @return
      *    the context object of the handler of the specified type. `null` if there's no such handler in this pipeline.
      */
-    def context(handlerType: Class[_ <: ChannelHandler]): Option[ChannelHandlerContext]
+    def context(handlerType: Class[? <: ChannelHandler]): Option[ChannelHandlerContext]
 
     /** Returns the [[Channel]] that this pipeline is attached to.
      *

@@ -21,6 +21,6 @@ import io.otavia.core.channel.Channel
 
 class NioClientChannelFactory extends NioChannelFactory {
 
-    override def newChannel(executor: ChannelsActor[_]): Channel = ???
+    override def newChannel(executor: ChannelsActor[?]): Channel = ???
 
 }

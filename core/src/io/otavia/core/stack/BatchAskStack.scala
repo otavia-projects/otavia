@@ -65,7 +65,7 @@ class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
 object BatchAskStack {
 
     private val pool = new StackObjectPool[BatchAskStack[?]] {
-        override protected def newObject(): BatchAskStack[_] = new BatchAskStack[Nothing]
+        override protected def newObject(): BatchAskStack[?] = new BatchAskStack[Nothing]
     }
 
     def apply[A <: Ask[? <: Reply]](): BatchAskStack[A] = pool.get().asInstanceOf[BatchAskStack[A]]

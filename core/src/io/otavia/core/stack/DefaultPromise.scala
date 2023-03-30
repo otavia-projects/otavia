@@ -93,7 +93,7 @@ class DefaultPromise[V] extends Promise[V] with DefaultFuture[V] {
 object DefaultPromise {
 
     private val pool = new PromiseObjectPool[DefaultPromise[?]] {
-        override protected def newObject(): DefaultPromise[_] = new DefaultPromise[Nothing]
+        override protected def newObject(): DefaultPromise[?] = new DefaultPromise[Nothing]
     }
 
     def apply[V](): DefaultPromise[V] = pool.get().asInstanceOf[DefaultPromise[V]]

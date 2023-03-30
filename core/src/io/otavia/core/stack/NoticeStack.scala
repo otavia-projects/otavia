@@ -41,7 +41,7 @@ class NoticeStack[N <: Notice] private () extends ActorStack {
 object NoticeStack {
 
     private val stackPool = new StackObjectPool[NoticeStack[? <: Notice]] {
-        override protected def newObject(): NoticeStack[_ <: Notice] = new NoticeStack[Nothing]()
+        override protected def newObject(): NoticeStack[? <: Notice] = new NoticeStack[Nothing]()
     }
 
     def apply[N <: Notice](): NoticeStack[N] = stackPool.get().asInstanceOf[NoticeStack[N]]

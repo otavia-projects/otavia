@@ -45,7 +45,7 @@ trait Channel extends ChannelInflight, AttributeMap, EventHandle {
     private[core] def mount(channelsActor: ChannelsActor[?]): Unit
 
     /** Address of executor [[ChannelsActor]] of this [[Channel]] belong to. */
-    final def executorAddress: ChannelsActorAddress[_] = executor.self
+    final def executorAddress: ChannelsActorAddress[?] = executor.self
 
     /** [[Reactor]] of this actor system. */
     final def reactor: Reactor = executor.reactor

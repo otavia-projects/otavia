@@ -325,7 +325,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
     override def wakeup(inEventLoop: Boolean): Unit = if (wakenUp.compareAndSet(false, true))
         selector.wakeup()
 
-    override def isCompatible(handleType: Class[_ <: Channel]): Boolean =
+    override def isCompatible(handleType: Class[? <: Channel]): Boolean =
         classOf[AbstractNioChannel[?, ?]].isAssignableFrom(handleType)
 
     @throws[IOException]

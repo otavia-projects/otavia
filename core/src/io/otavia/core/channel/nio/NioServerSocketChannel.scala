@@ -87,7 +87,7 @@ class NioServerSocketChannel(socket: ServerSocketChannel, protocolFamily: Protoc
         }
     }
 
-    override protected def isExtendedOptionSupported(option: ChannelOption[_]): Boolean = {
+    override protected def isExtendedOptionSupported(option: ChannelOption[?]): Boolean = {
         if (option == ChannelOption.SO_BACKLOG) true
         else {
             val socketOption = NioChannelOption.toSocketOption(option)

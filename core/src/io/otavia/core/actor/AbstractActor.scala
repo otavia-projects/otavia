@@ -87,10 +87,10 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
 
         val log = stack match
             case s: ActorStack       => s"Stack with call message ${s.call} failed at handle $currentReceived message"
-            case s: BatchAskStack[_] => s"Stack with call message ${s.asks} failed at handle $currentReceived message"
-            case s: BatchNoticeStack[_] =>
+            case s: BatchAskStack[?] => s"Stack with call message ${s.asks} failed at handle $currentReceived message"
+            case s: BatchNoticeStack[?] =>
                 s"Stack with call message ${s.notices} failed at handle $currentReceived message"
-            case s: ChannelStack[_] => ""
+            case s: ChannelStack[?] => ""
             case _                  => ""
         noticeExceptionStrategy match
             case ExceptionStrategy.Restart =>
@@ -239,7 +239,7 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
         }
     }
 
-    final override private[core] def receiveBatchAsk(asks: Seq[Ask[_]]): Unit = {
+    final override private[core] def receiveBatchAsk(asks: Seq[Ask[?]]): Unit = {
         currentReceived = asks
         val stack = BatchAskStack[M & Ask[?]]()
         stack.setAsks(asks)
