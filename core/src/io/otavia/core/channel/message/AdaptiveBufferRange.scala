@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.mio
+package io.otavia.core.channel.message
 
-import io.otavia.core.channel.ChannelFactory
+import io.otavia.core.buffer.AdaptiveBuffer
 
-trait MioChannelFactory extends ChannelFactory
+/** A [[AdaptiveBufferMessage]] use for describe a data range in [[AdaptiveBuffer]]
+ *  @param start
+ *    data start offset in [[AdaptiveBuffer]]
+ *  @param length
+ *    data length in [[AdaptiveBuffer]]
+ */
+case class AdaptiveBufferRange(start: Int, length: Int) extends AdaptiveBufferMessage

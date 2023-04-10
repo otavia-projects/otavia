@@ -1,8 +1,6 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
- * This file fork from netty.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +14,18 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.reactor.nio
 
-abstract class AbstractChannel extends Channel
+import io.otavia.core.channel.Channel
+import io.otavia.core.reactor.aio.Submitter
+import io.otavia.core.stack.AioFuture
+
+class NioSubmitter extends Submitter {
+
+    override def submitRead(channel: Channel): AioFuture[Int] = ???
+
+    override def submitWrite(channel: Channel): AioFuture[Int] = ???
+
+    override def submitClose(channel: Channel): AioFuture[Unit] = ???
+
+}

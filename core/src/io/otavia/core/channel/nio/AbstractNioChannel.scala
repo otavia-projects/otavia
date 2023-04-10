@@ -20,7 +20,7 @@ package io.otavia.core.channel.nio
 
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.estimator.{ReadHandleFactory, WriteHandleFactory}
-import io.otavia.core.channel.{AbstractChannel, Channel}
+import io.otavia.core.channel.{AbstractNetChannel, Channel}
 import io.otavia.core.reactor.ReactorEvent
 
 import java.net.SocketAddress
@@ -53,7 +53,7 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
     defaultWriteHandleFactory: WriteHandleFactory,
     val ch: SelectableChannel,
     val readInterestOp: Int
-) extends AbstractChannel[L, R](supportingDisconnect, defaultReadHandleFactory, defaultWriteHandleFactory)
+) extends AbstractNetChannel[L, R](supportingDisconnect, defaultReadHandleFactory, defaultWriteHandleFactory)
     with NioProcessor {
 
     @volatile private var _selectionKey: SelectionKey | Null = null
@@ -140,7 +140,7 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
         val key = _selectionKey
         // Check first if the key is still valid as it may be canceled as part of the deregistration
         // from the Reactor
-        if (key == null || selectionKey.isValid) {} else {
+        if (key == null || !selectionKey.isValid) {} else {
             val ops = selectionKey.interestOps()
             if ((ops & readInterestOp) != 0) selectionKey.interestOps(ops & ~readInterestOp)
         }

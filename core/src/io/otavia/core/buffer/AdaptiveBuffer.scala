@@ -29,9 +29,9 @@ import scala.collection.mutable
 /** A Adaptive allocate and release memory [[Buffer]]. */
 class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
-    private var head: AdaptiveBuffer.BufferEntry | Null   = null
-    private var tail: AdaptiveBuffer.BufferEntry | Null   = null
-    private var woffIn: AdaptiveBuffer.BufferEntry | Null = null
+    private var head: AdaptiveBuffer.BufferEntry | Null   = _
+    private var tail: AdaptiveBuffer.BufferEntry | Null   = _
+    private var woffIn: AdaptiveBuffer.BufferEntry | Null = _
     private var totalEntry: Int                           = 0
 
     private var cap            = 0
@@ -394,7 +394,7 @@ object AdaptiveBuffer {
     val MAX_BUFFER_SIZE: Int                              = Int.MaxValue - 8
     def apply(allocator: BufferAllocator): AdaptiveBuffer = new AdaptiveBuffer(allocator)
 
-    object BufferEntry {
+    private object BufferEntry {
 
         private val recycler = new PerThreadObjectPool[BufferEntry] {
             override protected def newObject(): BufferEntry = new BufferEntry
@@ -410,7 +410,7 @@ object AdaptiveBuffer {
 
     class BufferEntry extends Poolable {
 
-        private var buf: Buffer | Null = null
+        private var buf: Buffer | Null = _
 
         private def setBuffer(buffer: Buffer): Unit = buf = buffer
         def buffer: Buffer                          = buf.nn

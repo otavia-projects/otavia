@@ -14,27 +14,18 @@
  * limitations under the License.
  */
 
-package io.otavia.core.system
+package io.otavia.core.reactor.native
 
-import io.otavia.core.actor.Actor
 import io.otavia.core.channel.Channel
-import io.otavia.core.stack.BlockFuture
+import io.otavia.core.reactor.aio.Submitter
+import io.otavia.core.stack.AioFuture
 
-import java.util.concurrent.{Callable, Executors}
-import scala.language.unsafeNulls
+class NativeSubmitter extends Submitter {
 
-class BlockTaskExecutor(nThreads: Int) {
+    override def submitRead(channel: Channel): AioFuture[Int] = ???
 
-    private val executor = Executors.newFixedThreadPool(nThreads)
+    override def submitWrite(channel: Channel): AioFuture[Int] = ???
 
-    def executeBlocking[V](future: BlockFuture[V], owner: Actor[?]): BlockFuture[V] = {
-        executor.submit(future.promise)
-
-        future
-    }
-
-    def executeBlocking[V](future: BlockFuture[V], owner: Channel): BlockFuture[V] = ???
-
-    def executeBlocking[V](task: () => V, owner: Channel): BlockFuture[V] = ???
+    override def submitClose(channel: Channel): AioFuture[Unit] = ???
 
 }

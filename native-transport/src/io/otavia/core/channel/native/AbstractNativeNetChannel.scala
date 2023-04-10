@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.mio
+package io.otavia.core.channel.native
 
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*
@@ -26,15 +26,14 @@ import io.otavia.core.channel.internal.{ReadSink, WriteSink}
 import java.net.SocketAddress
 import java.nio.channels.SelectableChannel
 
-abstract class AbstractMioChannel[L <: SocketAddress, R <: SocketAddress](
-    executor: ChannelsActor[?],
-    supportingDisconnect: Boolean,
-    initialFlag: Int,
-    defaultReadHandleFactory: ReadHandleFactory,
-    defaultWriteHandleFactory: WriteHandleFactory,
-    val socket: MioSocket,
-    val remote: SocketAddress
-) extends AbstractChannel[L, R](executor, supportingDisconnect, defaultReadHandleFactory, defaultWriteHandleFactory) {
+abstract class AbstractNativeNetChannel[L <: SocketAddress, R <: SocketAddress](
+                                                                             supportingDisconnect: Boolean,
+                                                                             initialFlag: Int,
+                                                                             defaultReadHandleFactory: ReadHandleFactory,
+                                                                             defaultWriteHandleFactory: WriteHandleFactory,
+                                                                             val socket: NativeSocket,
+                                                                             val remote: SocketAddress
+) extends AbstractNetChannel[L, R](supportingDisconnect, defaultReadHandleFactory, defaultWriteHandleFactory) {
 
     override protected[channel] def doReadNow(readSink: ReadSink): Boolean = ???
 

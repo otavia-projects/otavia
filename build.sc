@@ -91,7 +91,7 @@ object core extends OtaviaModule with BuildInfo {
 
     override def buildInfoPackageName: Option[String] = Some("io.otavia")
 
-    override def artifactName = "otavia-core"
+    override def artifactName = "core"
 
     object test extends Tests with TestModule.ScalaTest {
 
@@ -105,7 +105,7 @@ object handler extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
-    override def artifactName = "otavia-handler"
+    override def artifactName = "handler"
 
     object test extends Tests with TestModule.ScalaTest {
 
@@ -119,7 +119,7 @@ object codec extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
 
-    override def artifactName = "otavia-codec"
+    override def artifactName = "codec"
 
     object test extends Tests with TestModule.ScalaTest {
 
@@ -133,7 +133,7 @@ object http extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
 
-    override def artifactName = "otavia-codec-http"
+    override def artifactName = "codec-http"
 
 }
 
@@ -141,28 +141,28 @@ object adbc extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
 
-    override def artifactName = "otavia-adbc"
+    override def artifactName = "codec-adbc"
 
 }
 
 object redis extends OtaviaModule {
 
-    override def artifactName: T[String] = "otavia-codec-redis"
+    override def artifactName: T[String] = "codec-redis"
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
 
 }
 
-object mio extends OtaviaModule {
+object `native-transport` extends OtaviaModule with RustJniModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
 
-    override def artifactName: T[String] = "otavia-native-mio"
+    override def artifactName: T[String] = "native-transport"
 
-}
+    override def defaultNativeName = "nativetransport"
 
-object mionative extends RustJniModule {
     override def release: Boolean = false
+
 }
 
 object web extends OtaviaModule {

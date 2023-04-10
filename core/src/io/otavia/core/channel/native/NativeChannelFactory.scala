@@ -14,30 +14,8 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.mio
+package io.otavia.core.channel.native
 
-import io.netty5.buffer.ComponentIterator.Next
-import io.netty5.buffer.{Buffer, BufferComponent}
+import io.otavia.core.channel.ChannelFactory
 
-import java.net.ProtocolFamily
-
-class MioSocket {
-
-    private var boxSocket: Long = ???
-    def read(buffer: Buffer): Int = {
-        val iter               = buffer.forEachComponent()
-        val c: BufferComponent = iter.firstWritable()
-        c.writableNativeAddress()
-
-        ???
-    }
-
-}
-
-object MioSocket {
-
-    def newDatagramSocket(family: ProtocolFamily): MioSocket = ???
-
-    def newSocket(family: ProtocolFamily): MioSocket = ???
-
-}
+trait NativeChannelFactory extends ChannelFactory

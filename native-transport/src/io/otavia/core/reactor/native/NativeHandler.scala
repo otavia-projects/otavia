@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package io.otavia.core.reactor.mio
+package io.otavia.core.reactor.native
 
 import io.otavia.core.channel.Channel
 import io.otavia.core.reactor.*
 import org.log4s.{Logger, getLogger}
 
-class MioHandler(val maxEvents: Int, val strategy: SelectStrategy) extends IoHandler {
+import scala.language.unsafeNulls
+
+class NativeHandler(val maxEvents: Int, val strategy: SelectStrategy) extends IoHandler {
 
     def this() = this(0, DefaultSelectStrategyFactory.newSelectStrategy())
 
@@ -45,9 +47,9 @@ class MioHandler(val maxEvents: Int, val strategy: SelectStrategy) extends IoHan
 
 }
 
-object MioHandler {
+object NativeHandler {
     def newFactory(): IoHandlerFactory = new IoHandlerFactory {
-        override def newHandler: IoHandler = new MioHandler()
+        override def newHandler: IoHandler = new NativeHandler()
     }
 
 }

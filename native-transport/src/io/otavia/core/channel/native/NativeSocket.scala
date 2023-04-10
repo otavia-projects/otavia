@@ -1,8 +1,6 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
- * This file fork from netty.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +14,30 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.channel.native
 
-abstract class AbstractChannel extends Channel
+import io.netty5.buffer.ComponentIterator.Next
+import io.netty5.buffer.{Buffer, BufferComponent}
+
+import java.net.ProtocolFamily
+
+class NativeSocket {
+
+    private var boxSocket: Long = ???
+    def read(buffer: Buffer): Int = {
+        val iter               = buffer.forEachComponent()
+        val c: BufferComponent = iter.nn.firstWritable().nn
+        c.writableNativeAddress()
+
+        ???
+    }
+
+}
+
+object NativeSocket {
+
+    def newDatagramSocket(family: ProtocolFamily): NativeSocket = ???
+
+    def newSocket(family: ProtocolFamily): NativeSocket = ???
+
+}

@@ -1,8 +1,6 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
- * This file fork from netty.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +14,16 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.channel.socket
 
-abstract class AbstractChannel extends Channel
+import io.netty5.buffer.Buffer
+import io.otavia.core.channel.message.AdaptiveBufferRange
+import io.otavia.core.channel.udp.AddressedEnvelope
+
+import java.net.SocketAddress
+
+class DatagramAdaptiveRangePacket(
+    override val content: AdaptiveBufferRange,
+    override val recipient: SocketAddress,
+    override val sender: Option[SocketAddress] = None
+) extends AddressedEnvelope[AdaptiveBufferRange, SocketAddress]

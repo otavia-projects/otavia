@@ -16,7 +16,7 @@
 
 package io.otavia.core.channel.inflight
 
-import io.otavia.core.channel.{AbstractChannel, Channel, ChannelInflight, ChannelShutdownDirection}
+import io.otavia.core.channel.{AbstractNetChannel, Channel, ChannelInflight, ChannelShutdownDirection}
 import io.otavia.core.reactor.{Event, ReactorEvent}
 import io.otavia.core.stack.*
 
@@ -26,7 +26,7 @@ import scala.collection.mutable
 import scala.language.unsafeNulls
 
 trait ChannelInflightImpl extends ChannelInflight {
-    this: AbstractChannel[?, ?] =>
+    this: AbstractNetChannel[?, ?] =>
 
     private var inboundMsgBarrier: AnyRef => Boolean  = _ => false
     private var outboundMsgBarrier: AnyRef => Boolean = _ => true

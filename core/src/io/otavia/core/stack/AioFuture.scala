@@ -16,41 +16,31 @@
 
 package io.otavia.core.stack
 
-import io.otavia.core.actor.{AbstractActor, Actor}
-import io.otavia.core.channel.Channel
-import io.otavia.core.reactor.BlockFutureCompletedEvent
+trait AioFuture[V] extends Future[V] {
 
-import java.util.concurrent.Callable
+    override private[core] def promise: AioPromise[V] = this.asInstanceOf[AioPromise[V]]
 
-trait BlockFuture[V] extends Future[V] {
-
-    override private[core] def promise: BlockPromise[V] = this.asInstanceOf[BlockPromise[V]]
+    def onCompleted(exe: AioFuture[V] => Unit): Unit
 
 }
 
-object BlockFuture {
-    def apply[V](func: () => V): BlockFuture[V] = new BlockPromise(func)
-}
+object AioFuture {}
 
-class BlockPromise[V](func: () => V) extends Promise[V] with BlockFuture[V] with Runnable {
-
-    private var parent: Actor[?] | Channel = _
-
-    private var callback: BlockPromise[V] => Unit = _
-
-    def owner: Actor[?] | Channel = ???
+class AioPromise[V] extends Promise[V] with AioFuture[V] with Runnable {
 
     override def setSuccess(result: V): Promise[V] = ???
 
     override def setFailure(cause: Throwable): Promise[V] = ???
 
-    override def future: Future[V] = ???
+    override def future: AioFuture[V] = ???
 
     override def canTimeout: Boolean = ???
 
     override def setStack(s: Stack): Unit = ???
 
     override def actorStack: Stack = ???
+
+    override def run(): Unit = ???
 
     override def recycle(): Unit = ???
 
@@ -68,25 +58,6 @@ class BlockPromise[V](func: () => V) extends Promise[V] with BlockFuture[V] with
 
     override def causeUnsafe: Throwable = ???
 
-    override def run(): Unit = {
-
-        try {
-            val v = func()
-            setSuccess(v)
-        } catch {
-            case cause: Throwable => setFailure(cause)
-        }
-
-        val eventableAddress = owner match
-            case actor: AbstractActor[?] => actor.self
-            case channel: Channel        => channel.executorAddress
-
-        eventableAddress.inform(BlockFutureCompletedEvent(this))
-    }
-
-    def onCompleted(task: BlockPromise[V] => Unit): Unit = {
-        callback = task
-        if (isDone) callback(this)
-    }
+    override def onCompleted(exe: AioFuture[V] => Unit): Unit = ???
 
 }

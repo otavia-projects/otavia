@@ -22,7 +22,8 @@ import io.otavia.core.actor.{Actor, ActorFactory, MessageOf}
 import io.otavia.core.address.Address
 import io.otavia.core.channel.{Channel, ChannelFactory}
 import io.otavia.core.message.*
-import io.otavia.core.reactor.{Event, Reactor}
+import io.otavia.core.reactor.aio.Submitter
+import io.otavia.core.reactor.{BlockTaskExecutor, Event, Reactor}
 import io.otavia.core.stack.BlockFuture
 import io.otavia.core.timer.Timer
 
@@ -45,6 +46,8 @@ trait ActorSystem {
 
     final def executeBlocking[V](task: () => V, owner: Channel): BlockFuture[V] =
         blockingExecutor.executeBlocking(task, owner)
+
+    def aio: Submitter
 
     /** message id distributor usage for create [[Notice]] message */
     def distributor: IdAllocator

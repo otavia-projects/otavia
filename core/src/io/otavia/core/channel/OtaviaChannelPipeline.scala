@@ -39,8 +39,8 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
     protected val logger: ActorLogger = ActorLogger.getLogger(getClass)(using executor)
 
-    private val readAdaptiveBuffer: AdaptiveBuffer  = new AdaptiveBuffer(channel.directAllocator)
-    private val writeAdaptiveBuffer: AdaptiveBuffer = new AdaptiveBuffer(channel.directAllocator)
+    private val channelInboundAdaptiveBuffer: AdaptiveBuffer  = new AdaptiveBuffer(channel.directAllocator)
+    private val channelOutboundAdaptiveBuffer: AdaptiveBuffer = new AdaptiveBuffer(channel.directAllocator)
 
     private val head = new OtaviaChannelHandlerContext(this, HEAD_NAME, HEAD_HANDLER)
     private val tail = new OtaviaChannelHandlerContext(this, TAIL_NAME, TAIL_HANDLER)
@@ -48,8 +48,8 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
     head.next = tail
     tail.prev = head
 
-    head.setInboundAdaptiveBuffer(readAdaptiveBuffer)
-    head.setOutboundAdaptiveBuffer(writeAdaptiveBuffer)
+    head.setInboundAdaptiveBuffer(channelInboundAdaptiveBuffer)
+    head.setOutboundAdaptiveBuffer(channelOutboundAdaptiveBuffer)
 
     head.setAddComplete()
     tail.setAddComplete()
@@ -63,17 +63,17 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
     private var _pendingOutboundBytes: Long = 0
 
-    private[core] override def channelInboundBuffer: AdaptiveBuffer = readAdaptiveBuffer
+    private[core] override def channelInboundBuffer: AdaptiveBuffer = channelInboundAdaptiveBuffer
 
-    private[core] override def channelOutboundBuffer: AdaptiveBuffer = writeAdaptiveBuffer
+    private[core] override def channelOutboundBuffer: AdaptiveBuffer = channelOutboundAdaptiveBuffer
 
     private[core] override def closeInboundAdaptiveBuffers(): Unit = {
-        readAdaptiveBuffer.close()
+        channelInboundAdaptiveBuffer.close()
         for { ctx <- handlers if ctx.isBufferHandlerContext } ctx.inboundAdaptiveBuffer.close()
     }
 
     private[core] override def closeOutboundAdaptiveBuffers(): Unit = {
-        writeAdaptiveBuffer.close()
+        channelOutboundAdaptiveBuffer.close()
         for { ctx <- handlers if ctx.isBufferHandlerContext } ctx.outboundAdaptiveBuffer.close()
     }
 
@@ -99,17 +99,24 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         if (context(name).nonEmpty) throw new IllegalArgumentException(s"Duplicate handler name: $name")
 
     private def replaceBufferHead(newCtx: OtaviaChannelHandlerContext, oldFirst: OtaviaChannelHandlerContext): Unit = {
-        assert(readAdaptiveBuffer.readableBytes() == 0, s"inbound buffer of handler ${oldFirst.name} has some data.")
-        assert(writeAdaptiveBuffer.readableBytes() == 0, s"outbound buffer of handler ${oldFirst.name} has some data.")
-        setAdaptiveBuffer(oldFirst, channel.headAllocator)
+        assert(
+          channelInboundAdaptiveBuffer.readableBytes() == 0,
+          s"inbound buffer of handler ${oldFirst.name} has some data."
+        )
+        val inbound = new AdaptiveBuffer(oldFirst.heapAllocator())
+        inbound.setStrategy(oldFirst.handler.inboundStrategy)
+        oldFirst.setInboundAdaptiveBuffer(inbound)
+
         resetHead(newCtx)
     }
 
     private def resetHead(newCtx: OtaviaChannelHandlerContext): Unit = {
-        readAdaptiveBuffer.setStrategy(newCtx.handler.inboundStrategy)
-        writeAdaptiveBuffer.setStrategy(newCtx.handler.outboundStrategy)
-        newCtx.setInboundAdaptiveBuffer(readAdaptiveBuffer)
-        newCtx.setOutboundAdaptiveBuffer(writeAdaptiveBuffer)
+        channelInboundAdaptiveBuffer.setStrategy(newCtx.handler.inboundStrategy)
+        newCtx.setInboundAdaptiveBuffer(channelInboundAdaptiveBuffer)
+
+        val outbound = new AdaptiveBuffer(newCtx.heapAllocator())
+        outbound.setStrategy(newCtx.handler.outboundStrategy)
+        newCtx.setOutboundAdaptiveBuffer(outbound)
     }
 
     private def setAdaptiveBuffer(ctx: OtaviaChannelHandlerContext, allocator: BufferAllocator): Unit = {
@@ -132,9 +139,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
             } else if (!newCtx.isBufferHandlerContext && oldFirst.isBufferHandlerContext) {
                 throw new IllegalStateException("can't add no buffered handler before at buffered handler!")
             } else if (newCtx.isBufferHandlerContext && !oldFirst.isBufferHandlerContext) {
-                setAdaptiveBuffer(newCtx, channel.directAllocator)
-            } else if (!newCtx.isBufferHandlerContext && !oldFirst.isBufferHandlerContext) {
-                // do nothing
+                resetHead(newCtx)
             }
         } else {
             if (newCtx.isBufferHandlerContext) resetHead(newCtx)
@@ -690,7 +695,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
     }
 
     final def forceCloseTransport(): Unit = {
-        val abstractChannel = channel.asInstanceOf[AbstractChannel[?, ?]]
+        val abstractChannel = channel.asInstanceOf[AbstractNetChannel[?, ?]]
         abstractChannel.closeTransport(ChannelPromise())
     }
 
@@ -714,7 +719,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
      *    the new [[pendingOutboundBytes]].
      */
     private def pendingOutboundBytesUpdated(pendingOutboundBytes: Long): Unit = {
-        val abstractChannel = channel.asInstanceOf[AbstractChannel[?, ?]]
+        val abstractChannel = channel.asInstanceOf[AbstractNetChannel[?, ?]]
         abstractChannel.updateWritabilityIfNeeded(true, false)
     }
 
@@ -776,8 +781,10 @@ object OtaviaChannelPipeline {
 
     private final class HeadHandler extends ChannelHandler {
 
+        override def isBufferHandler: Boolean = true
+
         override def bind(ctx: ChannelHandlerContext, local: SocketAddress, future: ChannelFuture): ChannelFuture = {
-            val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
+            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
             abstractChannel.bindTransport(local, future.promise)
             future
         }
@@ -788,19 +795,19 @@ object OtaviaChannelPipeline {
             local: Option[SocketAddress],
             future: ChannelFuture
         ): ChannelFuture = {
-            val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
+            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
             abstractChannel.connectTransport(remote, local, future.promise)
             future
         }
 
         override def disconnect(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
-            val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
+            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
             abstractChannel.disconnectTransport(future)
             future
         }
 
         override def close(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
-            val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
+            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
             abstractChannel.closeTransport(future.promise)
             future
         }
@@ -810,37 +817,37 @@ object OtaviaChannelPipeline {
             direction: ChannelShutdownDirection,
             future: ChannelFuture
         ): ChannelFuture = {
-            val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
+            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
             abstractChannel.shutdownTransport(direction, future.promise)
             future
         }
 
         override def register(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
-            val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
+            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
             abstractChannel.registerTransport(future.promise)
             future
         }
 
         override def deregister(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
-            val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
+            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
             abstractChannel.deregisterTransport(future.promise)
             future
         }
 
         override def read(ctx: ChannelHandlerContext, readBufferAllocator: ReadBufferAllocator): Unit = {
-            val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
+            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
             abstractChannel.readTransport(readBufferAllocator)
         }
 
         override def write(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
-            val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
+            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
             abstractChannel.writeTransport(msg)
         }
 
-        override def write(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit = ???
+        override def write(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit = write(ctx, msg)
 
         override def flush(ctx: ChannelHandlerContext): Unit = {
-            val abstractChannel: AbstractChannel[?, ?] = ctx.channel.asInstanceOf[AbstractChannel[?, ?]]
+            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
             abstractChannel.flushTransport()
         }
 

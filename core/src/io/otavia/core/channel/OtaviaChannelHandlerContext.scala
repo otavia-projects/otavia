@@ -399,7 +399,7 @@ final class OtaviaChannelHandlerContext(
     }
 
     override def disconnect(future: ChannelFuture): ChannelFuture = {
-        val abstractChannel = channel.asInstanceOf[AbstractChannel[?, ?]]
+        val abstractChannel = channel.asInstanceOf[AbstractNetChannel[?, ?]]
         if (!abstractChannel.supportingDisconnect) close(future)
         else {
             try {
@@ -507,7 +507,7 @@ final class OtaviaChannelHandlerContext(
                 } finally updatePendingBytesIfNeeded()
     }
 
-    override def write(msg: AnyRef): Unit = write(msg, false)
+    override def write(msg: AnyRef): Unit = write0(msg, false)
 
     private def invokeWrite(msg: AnyRef): Unit = try {
         val m = pipeline.touch(msg, this)
@@ -515,7 +515,7 @@ final class OtaviaChannelHandlerContext(
     } catch {
         case t: Throwable => handleOutboundHandlerException(t, false)
     } finally updatePendingBytesIfNeeded()
-    override def write(msg: AnyRef, msgId: Long): Unit = write(msg, false, msgId)
+    override def write(msg: AnyRef, msgId: Long): Unit = write0(msg, false, msgId)
 
     private def invokeWrite(msg: AnyRef, msgId: Long): Unit = try {
         val m = pipeline.touch(msg, this)
@@ -524,25 +524,25 @@ final class OtaviaChannelHandlerContext(
         case t: Throwable => handleOutboundHandlerException(t, false)
     } finally updatePendingBytesIfNeeded()
 
-    override def writeAndFlush(msg: AnyRef): Unit = write(msg, true)
+    override def writeAndFlush(msg: AnyRef): Unit = write0(msg, true)
 
     private def invokeWriteAndFlush(msg: AnyRef): Unit = {
         invokeWrite(msg)
         invokeFlush()
     }
-    override def writeAndFlush(msg: AnyRef, msgId: Long): Unit = write(msg, true, msgId)
+    override def writeAndFlush(msg: AnyRef, msgId: Long): Unit = write0(msg, true, msgId)
 
     private def invokeWriteAndFlush(msg: AnyRef, msgId: Long): Unit = {
         invokeWrite(msg, msgId)
         invokeFlush()
     }
-    private def write(msg: AnyRef, flush: Boolean): Unit = {
+    private def write0(msg: AnyRef, flush: Boolean): Unit = {
         channel.assertExecutor() // check the method is called in ChannelsActor which the channel registered
         val next = findContextOutbound(if (flush) MASK_WRITE | MASK_FLUSH else MASK_WRITE)
         if (flush) next.invokeWriteAndFlush(msg) else next.invokeWrite(msg)
     }
 
-    private def write(msg: AnyRef, flush: Boolean, msgId: Long): Unit = {
+    private def write0(msg: AnyRef, flush: Boolean, msgId: Long): Unit = {
         channel.assertExecutor() // check the method is called in ChannelsActor which the channel registered
         val next = findContextOutbound(if (flush) MASK_WRITE | MASK_FLUSH else MASK_WRITE)
         if (flush) next.invokeWriteAndFlush(msg, msgId) else next.invokeWrite(msg, msgId)
