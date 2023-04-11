@@ -22,7 +22,7 @@ import io.netty5.buffer.BufferAllocator
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.*
-import io.otavia.core.channel.estimator.ReadBufferAllocator
+import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.stack.ChannelFuture
 
 import java.net.SocketAddress
@@ -101,8 +101,8 @@ abstract class DelegatingChannelHandlerContext(private val ctx: ChannelHandlerCo
         this
     }
 
-    override def read(readBufferAllocator: ReadBufferAllocator): this.type = {
-        ctx.read(readBufferAllocator)
+    override def read(readPlan: ReadPlan): this.type = {
+        ctx.read(readPlan)
         this
     }
 

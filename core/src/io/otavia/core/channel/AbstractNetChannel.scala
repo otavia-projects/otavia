@@ -29,6 +29,7 @@ import io.otavia.core.channel.ChannelOption.*
 import io.otavia.core.channel.estimator.*
 import io.otavia.core.channel.inflight.ChannelInflightImpl
 import io.otavia.core.channel.internal.{ChannelOutboundBuffer, ReadSink, WriteBufferWaterMark, WriteSink}
+import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.log4a.ActorLogger
 import io.otavia.core.reactor.{ReactorEvent, TimeoutEvent}
 import io.otavia.core.stack.*
@@ -63,13 +64,11 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
     val supportingDisconnect: Boolean,
     val defaultReadHandleFactory: ReadHandleFactory,
     val defaultWriteHandleFactory: WriteHandleFactory
-) extends DefaultAttributeMap,
-      Channel,
+) extends AbstractChannel,
       WriteSink,
       ReadSink,
       ChannelInflightImpl,
       ChannelInternal[L, R],
-      ChannelState,
       ChannelInboundBuffer {
 
     /** Creates a new instance.
@@ -85,10 +84,6 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
       new AdaptiveReadHandleFactory(),
       new MaxMessagesWriteHandleFactory(Int.MaxValue)
     )
-
-    protected var logger: ActorLogger = _
-
-    private var channelId: Int = -1
 
     // initial channel state on constructing
     created = true
@@ -109,9 +104,6 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
     inWriteFlushed = false
 
     closeInitiated = false
-//    private var initialCloseCause: Throwable | Null = null
-
-    override val pipeline: ChannelPipeline = newChannelPipeline()
 
     private var outboundBuffer: ChannelOutboundBuffer | Null = new ChannelOutboundBuffer()
 
@@ -126,11 +118,9 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
     private var waterMarkLow: Int  = WriteBufferWaterMark.DEFAULT_LOW_WATER_MARK
     private var waterMarkHigh: Int = WriteBufferWaterMark.DEFAULT_HIGH_WATER_MARK
 
-    private var readBeforeActive: ReadBufferAllocator = _
+    private var readBeforeActive: ReadPlan = _
 
     private lazy val estimatorHandle: MessageSizeEstimator.Handle = msgSizeEstimator.newHandle
-
-    private var actor: ChannelsActor[?] | Null = _
 
     private var registerPromise: ChannelPromise   = _
     private var connectPromise: ChannelPromise    = _
@@ -138,51 +128,10 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
     private var deregisterPromise: ChannelPromise = _
     private var closePromise: ChannelPromise      = _
 
-    // read socket data to this buffer
-    protected def channelInboundAdaptiveBuffer: AdaptiveBuffer = pipeline.channelInboundBuffer
-    // write data to socket from this buffer
-    protected def channelOutboundAdaptiveBuffer: AdaptiveBuffer = pipeline.channelOutboundBuffer
-
-    override def executor: ChannelsActor[?] = actor match
-        case a: ChannelsActor[?] => a
-        case null =>
-            throw new IllegalStateException(s"The channel $this is not mounted, use mount to mount channel.")
-
-    final private[core] def mount(channelsActor: ChannelsActor[?]): Unit = {
-        assert(!mounted, s"The channel $this has been mounted already, you can't mount it twice!")
-        actor = channelsActor
-        logger = ActorLogger.getLogger(getClass)(using executor)
-        channelId = executor.generateChannelId()
-        resetInboundBuffer()
-        mounted = true
-    }
-
-    protected def currentThread: ActorThread = Thread.currentThread().asInstanceOf[ActorThread]
-
-    private def laterTasks = currentThread.laterTasks
-
-    override def id: Int = channelId
-
     private def readSink: ReadSink   = this
     private def writeSink: WriteSink = this
 
-    /** Returns a new [[ChannelPipeline]] instance. */
-    private def newChannelPipeline(): ChannelPipeline = new OtaviaChannelPipeline(this)
-
     private def closeIfClosed(): Unit = if (!isOpen) closeTransport(newPromise())
-
-    // This method is used by outbound operation implementations to trigger an inbound event later.
-    // They do not trigger an inbound event immediately because an outbound operation might have been
-    // triggered by another inbound event handler method.  If fired immediately, the call stack
-    // will look like this for example:
-    //
-    //   handlerA.inboundBufferUpdated() - (1) an inbound handler method closes a connection.
-    //   -> handlerA.ctx.close()
-    //      -> channel.closeTransport()
-    //         -> handlerA.channelInactive() - (2) another inbound handler method called while in (1) yet
-    //
-    // which means the execution of two inbound handler methods of the same handler overlap undesirably.
-    private def invokeLater(task: Runnable): Unit = laterTasks.append(task)
 
     override def localAddress: Option[SocketAddress] = localAddress0
 
@@ -561,7 +510,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         promise.setSuccess(this)
     }
 
-    private[channel] def readTransport(readBufferAllocator: ReadBufferAllocator): Unit = if (!isActive) {
+    private[channel] def readTransport(readBufferAllocator: ReadPlan): Unit = if (!isActive) {
         throw new IllegalStateException(s"channel $this is not active!")
     } else if (isShutdown(ChannelShutdownDirection.Inbound)) {
         // Input was shutdown so not try to read.

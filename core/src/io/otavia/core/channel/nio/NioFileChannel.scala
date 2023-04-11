@@ -42,15 +42,11 @@ class NioFileChannel(private val ch: FileChannel) extends AbstractFileChannel {
 
     override def executor: ChannelsActor[?] = ???
 
-    override private[core] def mount(channelsActor: ChannelsActor[?]): Unit = ???
-
     override def getOption[T](option: ChannelOption[T]): T = ???
 
     override def setOption[T](option: ChannelOption[T], value: T): Channel = ???
 
     override def isOptionSupported(option: ChannelOption[?]): Boolean = ???
-
-    override def isMounted: Boolean = ???
 
     override def isOpen: Boolean = ???
 
@@ -66,7 +62,6 @@ class NioFileChannel(private val ch: FileChannel) extends AbstractFileChannel {
 
     override def writableBytes: Long = ???
 
-    override def pipeline: ChannelPipeline = ???
 
     override private[core] def closeAfterCreate(): Unit = ???
 

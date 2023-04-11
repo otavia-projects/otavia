@@ -22,7 +22,7 @@ import io.netty5.buffer.{Buffer, BufferAllocator}
 import io.netty5.util.AttributeMap
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.address.ChannelsActorAddress
-import io.otavia.core.channel.estimator.ReadBufferAllocator
+import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.reactor.Reactor
 import io.otavia.core.stack.ChannelFuture
 import io.otavia.core.timer.Timer
@@ -186,8 +186,8 @@ trait Channel extends ChannelInflight, AttributeMap, EventHandle {
 
     override def deregister(future: ChannelFuture): ChannelFuture = pipeline.deregister(future)
 
-    final override def read(readBufferAllocator: ReadBufferAllocator): this.type = {
-        pipeline.read(readBufferAllocator)
+    final override def read(readPlan: ReadPlan): this.type = {
+        pipeline.read(readPlan)
         this
     }
 

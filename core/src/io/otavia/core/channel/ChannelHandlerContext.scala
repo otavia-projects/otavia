@@ -20,7 +20,6 @@ package io.otavia.core.channel
 
 import io.netty5.buffer.{Buffer, BufferAllocator}
 import io.otavia.core.buffer.AdaptiveBuffer
-import io.otavia.core.channel.estimator.ReadBufferAllocator
 import io.otavia.core.timer.Timer
 
 trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundInvoker {

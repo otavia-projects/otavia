@@ -26,7 +26,8 @@ import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import io.otavia.core.channel.OtaviaChannelPipeline.*
-import io.otavia.core.channel.estimator.{MessageSizeEstimator, ReadBufferAllocator}
+import io.otavia.core.channel.estimator.MessageSizeEstimator
+import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.log4a.ActorLogger
 import io.otavia.core.stack.{ChannelFuture, ChannelPromise}
 import io.otavia.core.util.ClassUtils
@@ -618,8 +619,8 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         this
     }
 
-    override def read(readBufferAllocator: ReadBufferAllocator): this.type = {
-        tail.read(readBufferAllocator)
+    override def read(readPlan: ReadPlan): this.type = {
+        tail.read(readPlan)
         this
     }
 
@@ -834,7 +835,7 @@ object OtaviaChannelPipeline {
             future
         }
 
-        override def read(ctx: ChannelHandlerContext, readBufferAllocator: ReadBufferAllocator): Unit = {
+        override def read(ctx: ChannelHandlerContext, readBufferAllocator: ReadPlan): Unit = {
             val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
             abstractChannel.readTransport(readBufferAllocator)
         }
@@ -894,8 +895,8 @@ object OtaviaChannelPipeline {
     private val HEAD_HANDLER = new HeadHandler
     private val TAIL_HANDLER = new TailHandler
 
-    final val DEFAULT_READ_BUFFER_ALLOCATOR: ReadBufferAllocator =
-        (allocator: BufferAllocator, estimatedCapacity: Int) => allocator.allocate(estimatedCapacity).nn
+    final val DEFAULT_READ_BUFFER_ALLOCATOR: ReadPlan = ???
+//        (allocator: BufferAllocator, estimatedCapacity: Int) => allocator.allocate(estimatedCapacity).nn
 
     private def generateName0(handlerType: Class[?]) = ClassUtils.simpleClassName(handlerType) + "#0"
 

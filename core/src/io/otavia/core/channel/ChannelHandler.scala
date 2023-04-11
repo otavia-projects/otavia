@@ -19,7 +19,7 @@
 package io.otavia.core.channel
 
 import io.otavia.core.buffer.AdaptiveBuffer
-import io.otavia.core.channel.estimator.ReadBufferAllocator
+import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.stack.ChannelFuture
 
 import java.net.SocketAddress
@@ -195,14 +195,14 @@ trait ChannelHandler {
 
     /** Called once a read operation is made from the current registered [[io.otavia.core.actor.ChannelsActor]]. If the
      *  [[ChannelHandler]] implementation queues the read and another read happens it is free to drop the first
-     *  [[ReadBufferAllocator]] and just use the last one.
+     *  [[ReadPlan]] and just use the last one.
      *
      *  @param ctx
-     *    the [[ChannelHandlerContext]] for which the bind operation is made
+     * the [[ChannelHandlerContext]] for which the bind operation is made
      *  @param readBufferAllocator
-     *    The [[ReadBufferAllocator]] that should be used to allocate a [[Buffer]] if needed (for reading the data).
+     * The [[ReadPlan]] that should be used to allocate a [[Buffer]] if needed (for reading the data).
      */
-    def read(ctx: ChannelHandlerContext, readBufferAllocator: ReadBufferAllocator): Unit = ctx.read(readBufferAllocator)
+    def read(ctx: ChannelHandlerContext, readBufferAllocator: ReadPlan): Unit = ctx.read(readBufferAllocator)
 
     /** Called once a write operation is made. The write operation will write the messages through the
      *  [[ChannelPipeline]]. Those are then ready to be flushed to the actual [[Channel]] once [[Channel.flush()]] is

@@ -25,4 +25,5 @@ import io.otavia.core.stack.ChannelReplyFuture
 
 import java.net.SocketAddress
 
+/** Abstract channel for file, support aio. */
 abstract class AbstractFileChannel extends AbstractChannel

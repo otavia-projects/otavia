@@ -20,7 +20,7 @@ package io.otavia.core.channel
 
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.*
-import io.otavia.core.channel.estimator.ReadBufferAllocator
+import io.otavia.core.channel.message.ReadPlan
 
 trait ChannelPipeline extends ChannelInboundInvoker with ChannelOutboundInvoker {
 

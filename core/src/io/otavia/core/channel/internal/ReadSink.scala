@@ -19,7 +19,8 @@
 package io.otavia.core.channel.internal
 
 import io.netty5.buffer.Buffer
-import io.otavia.core.channel.estimator.{ReadBufferAllocator, ReadHandleFactory}
+import io.otavia.core.channel.estimator.ReadHandleFactory
+import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.channel.{AbstractNetChannel, ChannelPipeline, ChannelShutdownDirection, ServerChannel}
 
 import java.io.IOException
@@ -36,9 +37,9 @@ private[channel] trait ReadSink {
     readSomething = false
     continueReading = false
 
-    private var readBufferAllocator: ReadBufferAllocator = _
+    private var readBufferAllocator: ReadPlan = _
 
-    def setReadBufferAllocator(allocator: ReadBufferAllocator): Unit = readBufferAllocator = allocator
+    def setReadBufferAllocator(allocator: ReadPlan): Unit = readBufferAllocator = allocator
 
     /** Process the read message and fire it through the [[ChannelPipeline]]
      *
@@ -59,7 +60,8 @@ private[channel] trait ReadSink {
      *  @return
      *    the allocated [[Buffer]].
      */
-    def allocateBuffer: Buffer = readBufferAllocator.allocate(directAllocator, readHandle.estimatedBufferCapacity)
+    def allocateBuffer: Buffer =
+        ??? // readBufferAllocator.allocate(directAllocator, readHandle.estimatedBufferCapacity)
 
     private def complete(): Unit = try {
         readSomething0()

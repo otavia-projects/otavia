@@ -20,7 +20,7 @@ package io.otavia.core.channel
 
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.CombinedChannelDuplexHandler.*
-import io.otavia.core.channel.estimator.ReadBufferAllocator
+import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.channel.internal.{ChannelHandlerMask, DelegatingChannelHandlerContext}
 import io.otavia.core.stack.ChannelFuture
 
@@ -232,7 +232,7 @@ class CombinedChannelDuplexHandler[I <: ChannelHandler, O <: ChannelHandler] ext
             outbound.deregister(outboundCtx, future)
         else outboundCtx.deregister(future)
 
-    override def read(ctx: ChannelHandlerContext, readBufferAllocator: ReadBufferAllocator): Unit =
+    override def read(ctx: ChannelHandlerContext, readBufferAllocator: ReadPlan): Unit =
         if (!outboundCtx.removed) outbound.read(outboundCtx, readBufferAllocator)
         else outboundCtx.read(readBufferAllocator)
 

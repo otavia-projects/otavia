@@ -23,7 +23,7 @@ import io.netty5.util.internal.{StringUtil, ThrowableUtil}
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.OtaviaChannelHandlerContext.*
-import io.otavia.core.channel.estimator.ReadBufferAllocator
+import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.channel.internal.ChannelHandlerMask
 import io.otavia.core.channel.internal.ChannelHandlerMask.*
 import io.otavia.core.log4a.ActorLogger
@@ -325,13 +325,13 @@ final class OtaviaChannelHandlerContext(
         case t: Throwable => invokeChannelExceptionCaught(t)
     } finally updatePendingBytesIfNeeded()
 
-    override def read(readBufferAllocator: ReadBufferAllocator): this.type = {
+    override def read(readPlan: ReadPlan): this.type = {
         val ctx = findContextOutbound(ChannelHandlerMask.MASK_READ)
-        ctx.invokeRead(readBufferAllocator)
+        ctx.invokeRead(readPlan)
         this
     }
 
-    private def invokeRead(allocator: ReadBufferAllocator): Unit = try {
+    private def invokeRead(allocator: ReadPlan): Unit = try {
         if (saveCurrentPendingBytesIfNeededInbound()) handler.read(this, allocator)
     } catch {
         case t: Throwable => handleOutboundHandlerException(t, false)

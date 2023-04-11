@@ -20,6 +20,7 @@ package io.otavia.core.channel.estimator
 
 import io.netty5.buffer.{Buffer, BufferAllocator}
 import io.otavia.core.channel.ChannelOutboundInvoker
+import io.otavia.core.channel.message.ReadPlan
 
 /** Implementations of this interface can influence how [[Buffer]]s are allocated that are used when reading from the
  *  transport.
@@ -39,7 +40,7 @@ object ReadBufferAllocator {
     }
 }
 
-trait ReadBufferAllocator {
+trait ReadBufferAllocator extends ReadPlan {
 
     /** Allocates a [[Buffer]] that is used for the next actual read to store the data in.
      *
