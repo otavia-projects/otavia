@@ -129,27 +129,75 @@ object codec extends OtaviaModule {
 
 }
 
-object http extends OtaviaModule {
-
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
+object `codec-http` extends OtaviaModule {
 
     override def artifactName = "codec-http"
 
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
 }
 
-object adbc extends OtaviaModule {
-
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
+object `codec-adbc` extends OtaviaModule {
 
     override def artifactName = "codec-adbc"
 
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
 }
 
-object redis extends OtaviaModule {
+object `codec-redis` extends OtaviaModule {
 
     override def artifactName: T[String] = "codec-redis"
 
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+}
+
+object `codec-socks` extends OtaviaModule {
+
+    override def artifactName: T[String] = "codec-socks"
+
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+}
+
+object `codec-haproxy` extends OtaviaModule {
+
+    override def artifactName: T[String] = "codec-haproxy"
+
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+}
+
+object `codec-mqtt` extends OtaviaModule {
+
+    override def artifactName: T[String] = "codec-mqtt"
+
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+}
+
+object `codec-memcache` extends OtaviaModule {
+
+    override def artifactName: T[String] = "codec-memcache"
+
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+}
+
+object `codec-smtp` extends OtaviaModule {
+
+    override def artifactName: T[String] = "codec-smtp"
+
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+}
+
+object `codec-xml` extends OtaviaModule {
+
+    override def artifactName: T[String] = "codec-xml"
+
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
 }
 
@@ -167,7 +215,7 @@ object `native-transport` extends OtaviaModule with RustJniModule {
 
 object web extends OtaviaModule {
 
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, http, adbc, redis)
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, `codec-http`, `codec-adbc`, `codec-redis`)
 
     override def artifactName: T[String] = "otavia-web"
 
