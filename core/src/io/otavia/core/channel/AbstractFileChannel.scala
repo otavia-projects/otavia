@@ -66,7 +66,7 @@ abstract class AbstractFileChannel extends AbstractChannel {
     }
 
     override private[channel] def deregisterTransport(promise: ChannelPromise): Unit = {
-        ???
+        promise.setSuccess(this)
     }
 
     override private[channel] def readTransport(readPlan: ReadPlan): Unit = {
