@@ -91,6 +91,9 @@ trait ActorSystem {
     /** [[ChannelFactory]] for UDP socket channel. */
     def datagramChannelFactory: ChannelFactory
 
+    /** [[ChannelFactory]] for file */
+    def fileChannelFactory: ChannelFactory
+
 }
 
 object ActorSystem {

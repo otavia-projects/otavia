@@ -23,6 +23,8 @@ import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.stack.ChannelFuture
 
 import java.net.SocketAddress
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
 
 /** Handles an I/O event or intercepts an I/O operation, and forwards it to its next handler in its [[ChannelPipeline]].
  *  <h3>The context object</h3> A [[ChannelHandler]] is provided with a [[ChannelHandlerContext]] object. A
@@ -159,6 +161,24 @@ trait ChannelHandler {
         future: ChannelFuture
     ): ChannelFuture = ctx.connect(remote, local, future)
 
+    /** Called once a open operation is made.
+     *  @param ctx
+     *    the [[ChannelHandlerContext]] for which the bind operation is made
+     *  @param path
+     *    The path of the file to open or create
+     *  @param options
+     *    Options specifying how the file is opened
+     *  @param attrs
+     *    An optional list of file attributes to set atomically when creating the file
+     */
+    def open(
+        ctx: ChannelHandlerContext,
+        path: Path,
+        options: Seq[OpenOption],
+        attrs: Seq[FileAttribute[?]],
+        future: ChannelFuture
+    ): ChannelFuture = ctx.open(path, options, attrs, future)
+
     /** Called once a disconnect operation is made.
      *  @param ctx
      *    the [[ChannelHandlerContext]] for which the bind operation is made
@@ -198,9 +218,9 @@ trait ChannelHandler {
      *  [[ReadPlan]] and just use the last one.
      *
      *  @param ctx
-     * the [[ChannelHandlerContext]] for which the bind operation is made
+     *    the [[ChannelHandlerContext]] for which the bind operation is made
      *  @param readBufferAllocator
-     * The [[ReadPlan]] that should be used to allocate a [[Buffer]] if needed (for reading the data).
+     *    The [[ReadPlan]] that should be used to allocate a [[Buffer]] if needed (for reading the data).
      */
     def read(ctx: ChannelHandlerContext, readBufferAllocator: ReadPlan): Unit = ctx.read(readBufferAllocator)
 

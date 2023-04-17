@@ -54,6 +54,7 @@ object ChannelHandlerMask {
 
     private[channel] val MASK_CHANNEL_READ_ID = 1 << 23
     private[channel] val MASK_WRITE_ID        = 1 << 24
+    private[channel] val MASK_OPEN            = 1 << 25
 
     private val MASK_ALL_INBOUND =
         MASK_CHANNEL_EXCEPTION_CAUGHT | MASK_CHANNEL_REGISTERED | MASK_CHANNEL_UNREGISTERED | MASK_CHANNEL_ACTIVE |
@@ -63,7 +64,7 @@ object ChannelHandlerMask {
     private val MASK_ALL_OUTBOUND =
         MASK_BIND | MASK_CONNECT | MASK_DISCONNECT | MASK_CLOSE | MASK_SHUTDOWN | MASK_REGISTER | MASK_DEREGISTER |
             MASK_READ | MASK_WRITE | MASK_FLUSH | MASK_SEND_OUTBOUND_EVENT | MASK_PENDING_OUTBOUND_BYTES |
-            MASK_WRITE_ID
+            MASK_WRITE_ID | MASK_OPEN
 
     private val MASKS = new FastThreadLocal[mutable.HashMap[Class[? <: ChannelHandler], Int]] {
         override def initialValue(): mutable.HashMap[Class[? <: ChannelHandler], Int] = mutable.HashMap.empty

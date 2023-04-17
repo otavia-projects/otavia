@@ -30,17 +30,16 @@ class HandleStateActor extends StateActor[MSG] with Injectable {
 
     private var redis: Address[QueryRedis]  = _
     private var db: Address[QueryDB]        = _
-    private var log: Address[Logger.LogMsg] = _
 
     override def afterMount(): Unit = {
         redis = autowire("redis-client")
         db = autowire("database-client")
-        log = autowire[Logger](Some("console"))
     }
 
     private def handleRequest(stack: AskStack[Request]): Option[StackState] = {
         stack.stackState match
             case StackState.initialState =>
+                logDebug("Initial state")
                 val request = stack.ask
                 val state   = new WaitRedisState(request.req)
                 redis.ask(QueryRedis(request.req), state.redisResponseFuture)
@@ -49,14 +48,14 @@ class HandleStateActor extends StateActor[MSG] with Injectable {
                 val redisResponse = waitRedisState.redisResponseFuture.getNow
                 if (redisResponse.res == "null") {
                     val dbState = new WaitDBState()
-                    db.ask(QueryDB(waitRedisState.query), dbState.dbWaiter)
+                    db.ask(QueryDB(waitRedisState.query), dbState.dbFuture)
                     dbState.suspend()
                 } else {
                     val response = Response(s"hit in redis with result: ${redisResponse.res}")
                     stack.`return`(response)
                 }
             case waitDBState: WaitDBState =>
-                val res = waitDBState.dbWaiter.getNow.res
+                val res = waitDBState.dbFuture.getNow.res
                 stack.`return`(Response(s"hit in database with result: $res"))
     }
 
@@ -81,9 +80,9 @@ object HandleStateActor {
 
     private class WaitDBState extends StackState {
 
-        val dbWaiter: ReplyFuture[DBResponse] = ReplyFuture()
+        val dbFuture: ReplyFuture[DBResponse] = ReplyFuture()
 
-        override def resumable(): Boolean = dbWaiter.isDone
+        override def resumable(): Boolean = dbFuture.isDone
 
     }
 

@@ -30,6 +30,8 @@ import io.otavia.core.timer.Timer
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 import java.nio.channels.SelectionKey
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
 import java.util.concurrent.CancellationException
 import scala.collection.mutable
 import scala.language.unsafeNulls
@@ -153,6 +155,15 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
     @throws[Exception]
     protected def init(channel: Channel): Unit
+
+    protected def newFileChannel(): Channel
+
+    protected def openFileChannel(
+        path: Path,
+        options: Seq[OpenOption],
+        attrs: Seq[FileAttribute[?]],
+        future: ChannelFuture
+    ): ChannelFuture = ???
 
     final protected def close(stack: AskStack[Close]): Option[StackState] = {
         stack.stackState match

@@ -21,8 +21,14 @@ package io.otavia.core.channel
 import io.netty5.util.DefaultAttributeMap
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
+import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.log4a.ActorLogger
+import io.otavia.core.stack.ChannelPromise
 import io.otavia.core.system.ActorThread
+
+import java.net.SocketAddress
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
 
 /** Abstract class of file channel and network channel. */
 abstract class AbstractChannel extends DefaultAttributeMap, Channel, ChannelState {
@@ -76,5 +82,36 @@ abstract class AbstractChannel extends DefaultAttributeMap, Channel, ChannelStat
     //
     // which means the execution of two inbound handler methods of the same handler overlap undesirably.
     protected def invokeLater(task: Runnable): Unit = laterTasks.append(task)
+
+    private[channel] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit
+
+    private[channel] def connectTransport(
+        remote: SocketAddress,
+        local: Option[SocketAddress],
+        promise: ChannelPromise
+    ): Unit
+
+    private[channel] def openTransport(
+        path: Path,
+        options: Seq[OpenOption],
+        attrs: Seq[FileAttribute[?]],
+        promise: ChannelPromise
+    ): Unit
+
+    private[channel] def disconnectTransport(promise: ChannelPromise): Unit
+
+    private[channel] def closeTransport(promise: ChannelPromise): Unit
+
+    private[channel] def shutdownTransport(direction: ChannelShutdownDirection, promise: ChannelPromise): Unit
+
+    private[channel] def registerTransport(promise: ChannelPromise): Unit
+
+    private[channel] def deregisterTransport(promise: ChannelPromise): Unit
+
+    private[channel] def readTransport(readPlan: ReadPlan): Unit
+
+    private[channel] def writeTransport(msg: AnyRef): Unit
+
+    private[channel] def flushTransport(): Unit
 
 }

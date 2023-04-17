@@ -61,7 +61,8 @@ private[core] class ChannelPromise extends Promise[Channel] with ChannelFuture {
 
     override def setSuccess(result: Channel): Promise[Channel] = ???
 
-    override def setFailure(cause: Throwable): Promise[Channel] = ???
+    override def setFailure(cause: Throwable): Promise[Channel] =
+        ??? // TODO: bug if completed immediately, current stack is not execute completed, then execute to next state
 
     override def future: Future[Channel] = ???
 

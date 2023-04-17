@@ -28,6 +28,8 @@ import io.otavia.core.stack.ChannelFuture
 import io.otavia.core.timer.Timer
 
 import java.net.SocketAddress
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
 
 trait Channel extends ChannelInflight, AttributeMap, EventHandle {
 
@@ -174,6 +176,13 @@ trait Channel extends ChannelInflight, AttributeMap, EventHandle {
 
     override def connect(remote: SocketAddress, local: Option[SocketAddress], future: ChannelFuture): ChannelFuture =
         pipeline.connect(remote, local, future)
+
+    override def open(
+        path: Path,
+        options: Seq[OpenOption],
+        attrs: Seq[FileAttribute[?]],
+        future: ChannelFuture
+    ): ChannelFuture = pipeline.open(path, options, attrs, future)
 
     override def disconnect(future: ChannelFuture): ChannelFuture = pipeline.disconnect(future)
 

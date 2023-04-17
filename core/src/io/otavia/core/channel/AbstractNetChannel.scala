@@ -38,6 +38,8 @@ import io.otavia.core.timer.{TimeoutTrigger, Timer}
 
 import java.net.*
 import java.nio.channels.{AlreadyConnectedException, ClosedChannelException, ConnectionPendingException, NotYetConnectedException}
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
 import java.util.Objects.{requireNonNull, requireNonNullElseGet}
 import scala.collection.mutable
 import scala.concurrent.Future.{find, never}
@@ -223,7 +225,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
      *
      *  send channel register to reactor, and handle reactor reply at [[handleChannelRegisterReplyEvent]]
      */
-    private[channel] def registerTransport(promise: ChannelPromise): Unit = {
+    override private[channel] def registerTransport(promise: ChannelPromise): Unit = {
         if (registering) promise.setFailure(new IllegalStateException(s"The channel $this is registering to reactor!"))
         else if (isRegistered) promise.setFailure(new IllegalStateException("registered to reactor already"))
         else {
@@ -255,7 +257,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
                 registerPromise = null
                 closeNowAndFail(promise, cause)
 
-    private[channel] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit = {
+    override private[channel] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit = {
         if (!mounted) channelPromise.setFailure(new IllegalStateException(s"channel $this is not mounted to actor!"))
         else if (!registered) { // if not register
             if (!registering) pipeline.register(newPromise())
@@ -303,7 +305,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
 
     }
 
-    private[channel] def disconnectTransport(future: ChannelFuture): Unit = {
+    override private[channel] def disconnectTransport(promise: ChannelPromise): Unit = {
         val wasActive = isActive
         try {
             doDisconnect()
@@ -320,7 +322,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         closeIfClosed() // TCP channel disconnect is close, UDP is cancel local SocketAddress binding.
     }
 
-    private[channel] def closeTransport(promise: ChannelPromise): Unit = {}
+    override private[channel] def closeTransport(promise: ChannelPromise): Unit = {}
 
     private def close(promise: ChannelPromise, cause: Throwable, closeCause: ClosedChannelException): Unit = {
         if (closed) promise.setSuccess(this)
@@ -399,7 +401,10 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         promise.setFailure(cause)
     }
 
-    private[channel] def shutdownTransport(direction: ChannelShutdownDirection, promise: ChannelPromise): Unit = {
+    override private[channel] def shutdownTransport(
+        direction: ChannelShutdownDirection,
+        promise: ChannelPromise
+    ): Unit = {
         if (!isActive) {
             if (isOpen) promise.setFailure(new NotYetConnectedException())
             else promise.setFailure(new ClosedChannelException())
@@ -462,7 +467,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         }
     }
 
-    private[channel] def deregisterTransport(promise: ChannelPromise): Unit = {
+    override private[channel] def deregisterTransport(promise: ChannelPromise): Unit = {
         if (!registered) promise.setSuccess(this)
         else if (!unregistering && !unregistered) {
             deregisterPromise = promise
@@ -510,7 +515,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         promise.setSuccess(this)
     }
 
-    private[channel] def readTransport(readBufferAllocator: ReadPlan): Unit = if (!isActive) {
+    override private[channel] def readTransport(readBufferAllocator: ReadPlan): Unit = if (!isActive) {
         throw new IllegalStateException(s"channel $this is not active!")
     } else if (isShutdown(ChannelShutdownDirection.Inbound)) {
         // Input was shutdown so not try to read.
@@ -544,7 +549,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
 
     private def clearScheduledRead(): Unit = doClearScheduledRead()
 
-    private[channel] def writeTransport(msg: AnyRef): Unit = {
+    override private[channel] def writeTransport(msg: AnyRef): Unit = {
         var size: Int = 0
         try {
             val message = filterOutboundMessage(msg)
@@ -555,7 +560,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
 
     }
 
-    private[channel] def flushTransport(): Unit = {
+    override private[channel] def flushTransport(): Unit = {
         outboundBuffer match
             case null =>
             case out: ChannelOutboundBuffer =>
@@ -587,7 +592,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
 
     protected def writeLoopComplete(allWriten: Boolean): Unit = if (!allWriten) invokeLater(() => writeFlushed())
 
-    private[channel] def connectTransport(
+    override private[channel] def connectTransport(
         remote: SocketAddress,
         local: Option[SocketAddress],
         promise: ChannelPromise
@@ -721,6 +726,15 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         if (later) invokeLater(() => pipeline.fireChannelWritabilityChanged())
         else
             pipeline.fireChannelWritabilityChanged()
+    }
+
+    override private[channel] def openTransport(
+        path: Path,
+        options: Seq[OpenOption],
+        attrs: Seq[FileAttribute[?]],
+        promise: ChannelPromise
+    ): Unit = {
+        promise.setFailure(new UnsupportedOperationException())
     }
 
     /** Invoked when a new message is added to to the outbound queue of this [[AbstractNetChannel]], so that the

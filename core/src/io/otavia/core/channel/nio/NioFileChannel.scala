@@ -38,10 +38,6 @@ class NioFileChannel(private val ch: FileChannel) extends AbstractFileChannel {
 
     private def javaChannel: FileChannel = ch
 
-    override def id: Int = ???
-
-    override def executor: ChannelsActor[?] = ???
-
     override def getOption[T](option: ChannelOption[T]): T = ???
 
     override def setOption[T](option: ChannelOption[T], value: T): Channel = ???
@@ -61,7 +57,6 @@ class NioFileChannel(private val ch: FileChannel) extends AbstractFileChannel {
     override def remoteAddress: Option[SocketAddress] = ???
 
     override def writableBytes: Long = ???
-
 
     override private[core] def closeAfterCreate(): Unit = ???
 

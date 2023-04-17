@@ -23,13 +23,15 @@ import io.netty5.util.internal.{StringUtil, ThrowableUtil}
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.OtaviaChannelHandlerContext.*
-import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.channel.internal.ChannelHandlerMask
 import io.otavia.core.channel.internal.ChannelHandlerMask.*
+import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.log4a.ActorLogger
 import io.otavia.core.stack.ChannelFuture
 
 import java.net.SocketAddress
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
 import scala.util.Try
 
 final class OtaviaChannelHandlerContext(
@@ -393,6 +395,37 @@ final class OtaviaChannelHandlerContext(
             case None =>
                 try {
                     handler.connect(this, remote, local, future)
+                } catch {
+                    case t: Throwable => future.promise.setFailure(handleOutboundHandlerException(t, false))
+                } finally updatePendingBytesIfNeeded()
+    }
+
+    override def open(
+        path: Path,
+        options: Seq[OpenOption],
+        attrs: Seq[FileAttribute[?]],
+        future: ChannelFuture
+    ): ChannelFuture = {
+        try {
+            val nextCtx = findContextOutbound(ChannelHandlerMask.MASK_OPEN)
+            nextCtx.invokeOpen(path, options, attrs, future)
+        } catch {
+            case e: Throwable => future.promise.setFailure(e)
+        }
+        future
+    }
+
+    private def invokeOpen(
+        path: Path,
+        options: Seq[OpenOption],
+        attrs: Seq[FileAttribute[?]],
+        future: ChannelFuture
+    ): Unit = {
+        saveCurrentPendingBytesIfNeededOutbound() match
+            case Some(cause) => future.promise.setFailure(cause)
+            case None =>
+                try {
+                    handler.open(this, path, options, attrs, future)
                 } catch {
                     case t: Throwable => future.promise.setFailure(handleOutboundHandlerException(t, false))
                 } finally updatePendingBytesIfNeeded()

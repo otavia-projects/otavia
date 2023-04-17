@@ -26,6 +26,8 @@ import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.stack.ChannelFuture
 
 import java.net.SocketAddress
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
 
 abstract class DelegatingChannelHandlerContext(private val ctx: ChannelHandlerContext) extends ChannelHandlerContext {
 
@@ -124,6 +126,13 @@ abstract class DelegatingChannelHandlerContext(private val ctx: ChannelHandlerCo
 
     override def connect(remote: SocketAddress, local: Option[SocketAddress], future: ChannelFuture): ChannelFuture =
         ctx.connect(remote, local, future)
+
+    override def open(
+        path: Path,
+        options: Seq[OpenOption],
+        attrs: Seq[FileAttribute[?]],
+        future: ChannelFuture
+    ): ChannelFuture = ctx.open(path, options, attrs, future)
 
     override def disconnect(future: ChannelFuture): ChannelFuture = ctx.disconnect(future)
 

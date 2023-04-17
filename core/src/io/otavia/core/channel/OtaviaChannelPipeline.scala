@@ -33,6 +33,8 @@ import io.otavia.core.stack.{ChannelFuture, ChannelPromise}
 import io.otavia.core.util.ClassUtils
 
 import java.net.SocketAddress
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
@@ -639,6 +641,16 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         tail.connect(remote, local, future)
     }
 
+    override def open(
+        path: Path,
+        options: Seq[OpenOption],
+        attrs: Seq[FileAttribute[?]],
+        future: ChannelFuture
+    ): ChannelFuture = {
+        assertInExecutor()
+        tail.open(path, options, attrs, future)
+    }
+
     override def disconnect(future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
         tail.disconnect(future)
@@ -785,7 +797,7 @@ object OtaviaChannelPipeline {
         override def isBufferHandler: Boolean = true
 
         override def bind(ctx: ChannelHandlerContext, local: SocketAddress, future: ChannelFuture): ChannelFuture = {
-            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
+            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
             abstractChannel.bindTransport(local, future.promise)
             future
         }
@@ -796,19 +808,31 @@ object OtaviaChannelPipeline {
             local: Option[SocketAddress],
             future: ChannelFuture
         ): ChannelFuture = {
-            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
+            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
             abstractChannel.connectTransport(remote, local, future.promise)
             future
         }
 
+        override def open(
+            ctx: ChannelHandlerContext,
+            path: Path,
+            options: Seq[OpenOption],
+            attrs: Seq[FileAttribute[?]],
+            future: ChannelFuture
+        ): ChannelFuture = {
+            val abstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
+            abstractChannel.openTransport(path, options, attrs, future.promise)
+            future
+        }
+
         override def disconnect(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
-            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
-            abstractChannel.disconnectTransport(future)
+            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
+            abstractChannel.disconnectTransport(future.promise)
             future
         }
 
         override def close(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
-            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
+            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
             abstractChannel.closeTransport(future.promise)
             future
         }
@@ -818,37 +842,37 @@ object OtaviaChannelPipeline {
             direction: ChannelShutdownDirection,
             future: ChannelFuture
         ): ChannelFuture = {
-            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
+            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
             abstractChannel.shutdownTransport(direction, future.promise)
             future
         }
 
         override def register(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
-            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
+            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
             abstractChannel.registerTransport(future.promise)
             future
         }
 
         override def deregister(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
-            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
+            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
             abstractChannel.deregisterTransport(future.promise)
             future
         }
 
         override def read(ctx: ChannelHandlerContext, readBufferAllocator: ReadPlan): Unit = {
-            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
+            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
             abstractChannel.readTransport(readBufferAllocator)
         }
 
         override def write(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
-            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
+            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
             abstractChannel.writeTransport(msg)
         }
 
         override def write(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit = write(ctx, msg)
 
         override def flush(ctx: ChannelHandlerContext): Unit = {
-            val abstractChannel: AbstractNetChannel[?, ?] = ctx.channel.asInstanceOf[AbstractNetChannel[?, ?]]
+            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
             abstractChannel.flushTransport()
         }
 
