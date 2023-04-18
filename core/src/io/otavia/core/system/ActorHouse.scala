@@ -14,27 +14,37 @@
  * limitations under the License.
  */
 
-package io.otavia.core.house
+package io.otavia.core.system
 
-import io.otavia.core.actor.StateActor
-import io.otavia.core.message.{Ask, Message, Notice, Reply}
+import io.otavia.core.actor.{AbstractActor, StateActor}
+import io.otavia.core.message.*
+import io.otavia.core.reactor.Event
+import io.otavia.core.system.House
 
-/** House is [[io.otavia.core.actor.StateActor]] instance mount point. when a actor is creating by actor system, a
- *  house is creating at the same time, and mount the actor instance to the house instance.
+/** House is [[io.otavia.core.actor.StateActor]] instance mount point. when a actor is creating by actor system, a house
+ *  is creating at the same time, and mount the actor instance to the house instance.
  *
  *  @tparam M
  *    the message type of the mounted actor instance can handle
  */
-private[core] class ActorHouse extends House {
+private[core] class ActorHouse extends House with AutoCloseable {
 
-    def setActor(actor: StateActor[?]): Unit = dweller = actor
+    private var dweller: AbstractActor[? <: Call] = _
 
-    def actor: StateActor[?] = this.dweller.asInstanceOf[StateActor[?]]
+    def setActor(actor: AbstractActor[? <: Call]): Unit = dweller = actor
+
+    def actor: AbstractActor[? <: Call] = this.dweller
 
     override def putNotice(notice: Notice): Unit = {}
 
     override def putAsk(ask: Ask[?]): Unit = {}
 
     override def putReply(reply: Reply): Unit = {}
+
+    override def putEvent(event: Event): Unit = ???
+
+    override def close(): Unit = {
+        dweller.stop()
+    }
 
 }

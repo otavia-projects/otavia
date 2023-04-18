@@ -61,7 +61,7 @@ trait OtaviaModule extends ScalaModule with PublishModule {
       )
     )
 
-    override def scalacOptions = T { scala.Seq("-Yexplicit-nulls", "-Xsource:3") }
+    override def scalacOptions = T { scala.Seq("-Yexplicit-nulls") }
 
 }
 

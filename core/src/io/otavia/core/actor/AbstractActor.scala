@@ -248,7 +248,7 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
     }
 
     final private def runBatchAskStack(): Unit = {
-        val stack = currentStack.asInstanceOf[BatchAskStack[M & Ask[?]]]
+        val stack = currentStack.asInstanceOf[BatchAskStack[M & Ask[? <: Reply]]]
         try {
             val uncompleted = stack.uncompletedIterator()
             val oldState    = stack.stackState
@@ -349,6 +349,13 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
                 resume()
             }
         }
+
+    /** Call by [[io.otavia.core.system.ActorHousePhantomRef]] to release [[Actor]] resource. */
+    private[core] def stop(): Unit = try {
+        beforeStop()
+    } catch {
+        case t: Throwable => logError("Error at beforeStop with ", t)
+    }
 
 }
 

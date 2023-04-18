@@ -17,7 +17,7 @@
 package io.otavia.core.timer
 
 import io.netty5.util.{HashedWheelTimer, TimerTask}
-import io.otavia.core.address.{Address, ChannelsActorAddress, EventableAddress}
+import io.otavia.core.address.{Address, EventableAddress}
 import io.otavia.core.cache.ResourceTimer
 import io.otavia.core.channel.Channel
 import io.otavia.core.reactor.{AskTimeoutEvent, ChannelTimeoutEvent, ResourceTimeoutEvent, TimeoutEvent}

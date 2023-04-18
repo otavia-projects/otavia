@@ -17,10 +17,10 @@
 package io.otavia.core.address
 
 import io.otavia.core.actor.{AbstractActor, Actor, ChannelsActor, StateActor}
-import io.otavia.core.house.House
 import io.otavia.core.log4a.Logger
 import io.otavia.core.message.*
 import io.otavia.core.stack.{ReplyFuture, ReplyWaiter}
+import io.otavia.core.system.House
 import io.otavia.core.timer.TimeoutTrigger
 
 /** every actor instance has one and only one physical address.

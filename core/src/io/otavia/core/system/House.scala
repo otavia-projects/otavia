@@ -14,19 +14,26 @@
  * limitations under the License.
  */
 
-package io.otavia.core.address
+package io.otavia.core.system
 
-import io.otavia.core.actor.{Actor, StateActor}
-import io.otavia.core.message.{Ask, Call, Message, Notice, Reply}
-import io.otavia.core.stack.ReplyWaiter
-import io.otavia.core.system.ActorHouse
+import io.otavia.core.actor.Actor
+import io.otavia.core.message.{Ask, Message, Notice, Reply}
+import io.otavia.core.reactor.Event
 
-/** Actor physical address
+/** House is [[Actor]] instance mount point. when a actor is creating by actor system, a house is creating at the same
+ *  time, and mount the actor instance to the house instance.
  *
- *  @param house
- *    actor house
  *  @tparam M
- *    the message type that this actor can receive.
+ *    the message type of the mounted actor instance can handle
  */
-final class ActorAddress[M <: Call](override private[core] val house: ActorHouse)
-    extends PhysicalAddress[M, ActorHouse]
+private[core] trait House {
+
+    def putNotice(notice: Notice): Unit
+
+    def putAsk(ask: Ask[?]): Unit
+
+    def putReply(reply: Reply): Unit
+
+    def putEvent(event: Event): Unit
+
+}

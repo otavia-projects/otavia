@@ -19,7 +19,6 @@
 package io.otavia.core.reactor.nio
 
 import io.netty5.util.internal.*
-import io.otavia.core.address.ChannelsActorAddress
 import io.otavia.core.channel.nio.{AbstractNioChannel, NioProcessor}
 import io.otavia.core.channel.{Channel, ChannelException}
 import io.otavia.core.reactor.*

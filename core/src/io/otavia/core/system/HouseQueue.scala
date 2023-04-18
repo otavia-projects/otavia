@@ -14,24 +14,8 @@
  * limitations under the License.
  */
 
-package io.otavia.core.house
+package io.otavia.core.system
 
-import io.otavia.core.actor.Actor
-import io.otavia.core.message.{Ask, Message, Notice, Reply}
-
-/** House is [[Actor]] instance mount point. when a actor is creating by actor system, a house is creating at the same
- *  time, and mount the actor instance to the house instance.
- *
- *  @tparam M
- *    the message type of the mounted actor instance can handle
- */
-private[core] abstract class House {
-    var dweller: Actor[?] = _
-
-    def putNotice(notice: Notice): Unit
-
-    def putAsk(ask: Ask[?]): Unit
-
-    def putReply(reply: Reply): Unit
+class HouseQueue(val holder: HouseQueueHolder) {
 
 }

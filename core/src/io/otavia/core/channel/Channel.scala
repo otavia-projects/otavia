@@ -21,7 +21,7 @@ package io.otavia.core.channel
 import io.netty5.buffer.{Buffer, BufferAllocator}
 import io.netty5.util.AttributeMap
 import io.otavia.core.actor.ChannelsActor
-import io.otavia.core.address.ChannelsActorAddress
+import io.otavia.core.address.ActorAddress
 import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.reactor.Reactor
 import io.otavia.core.stack.ChannelFuture
@@ -47,7 +47,7 @@ trait Channel extends ChannelInflight, AttributeMap, EventHandle {
     private[core] def mount(channelsActor: ChannelsActor[?]): Unit
 
     /** Address of executor [[ChannelsActor]] of this [[Channel]] belong to. */
-    final def executorAddress: ChannelsActorAddress[?] = executor.self
+    final def executorAddress: ActorAddress[?] = executor.self
 
     /** [[Reactor]] of this actor system. */
     final def reactor: Reactor = executor.reactor

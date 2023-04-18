@@ -19,7 +19,7 @@ package io.otavia.core.actor
 import io.netty5.util.internal.ThrowableUtil
 import io.otavia.core.actor.Actor
 import io.otavia.core.actor.ChannelsActor.*
-import io.otavia.core.address.{Address, ChannelsActorAddress}
+import io.otavia.core.address.{ActorAddress, Address}
 import io.otavia.core.channel.*
 import io.otavia.core.log4a.ActorLogger
 import io.otavia.core.message.*
@@ -45,7 +45,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
     protected val channels: mutable.HashMap[Int, Channel] = mutable.HashMap.empty
 
-    override def self: ChannelsActorAddress[M] = super.self.asInstanceOf[ChannelsActorAddress[M]]
+    override def self: ActorAddress[M] = super.self.asInstanceOf[ActorAddress[M]]
 
     final def reactor: Reactor = system.reactor
 

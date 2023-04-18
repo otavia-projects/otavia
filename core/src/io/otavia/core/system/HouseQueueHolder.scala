@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-package io.otavia.core.address
+package io.otavia.core.system
 
-import io.otavia.core.actor.StateActor
-import io.otavia.core.house.ChannelsActorHouse
-import io.otavia.core.message.{Ask, Call, Message, Notice, Reply}
-import io.otavia.core.reactor.Event
-import io.otavia.core.stack.ReplyWaiter
+class HouseQueueHolder(val thread: ActorThread) {
 
-/** channel group physical address
- *
- *  @param house
- *  @tparam M
- *    the message type that this channel group can receive.
- */
-class ChannelsActorAddress[M <: Call](override private[core] val house: ChannelsActorHouse)
-    extends PhysicalAddress[M, ChannelsActorHouse] {}
+    private val serverChannelsActorQueue = new HouseQueue(this)
+
+
+
+}
