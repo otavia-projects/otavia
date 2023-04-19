@@ -18,14 +18,24 @@ package io.otavia.core.system
 
 import io.otavia.core.actor.Actor
 import io.otavia.core.address.ActorThreadAddress
+import io.otavia.core.system.ActorThread.GC_PEER_ROUND
+import io.otavia.core.util.SystemPropertyUtil
 
+import java.util.concurrent.CopyOnWriteArraySet
 import scala.collection.mutable
+import scala.ref.ReferenceQueue
 
 class ActorThread(private[core] val system: ActorSystem, val parent: ActorThreadPool) extends Thread() {
 
     private val id                                              = parent.nextThreadId()
     private val address: ActorThreadAddress                     = new ActorThreadAddress()
     private val channelLaterTasks: mutable.ArrayDeque[Runnable] = mutable.ArrayDeque.empty
+
+    private val houseQueueHolder = new HouseQueueHolder(this)
+
+    private val referenceQueue = new ReferenceQueue[ActorHouse]()
+
+    private val refSet = new CopyOnWriteArraySet[ActorHousePhantomRef]()
 
     setName(s"otavia-actor-thread-$index")
 
@@ -42,9 +52,43 @@ class ActorThread(private[core] val system: ActorSystem, val parent: ActorThread
 
     def actorThreadAddress: ActorThreadAddress = address
 
+    private[core] def createActorHouse(): ActorHouse = {
+        val house = new ActorHouse(houseQueueHolder)
+        registerHouseRef(house)
+        house
+    }
+
+    private def registerHouseRef(house: ActorHouse): Unit = {
+        val ref = new ActorHousePhantomRef(house, referenceQueue)
+        refSet.add(ref)
+    }
+
+    /** Stop [[Actor]] witch need be gc. */
+    private def stopActor(): Unit = {
+        var count    = 0
+        var continue = true
+        while (count < GC_PEER_ROUND && continue) {
+            referenceQueue.poll match
+                case None => continue = false
+                case Some(ref) =>
+                    refSet.remove(ref)
+                    ref.clear()
+                    count += 1
+        }
+        if (count > 0) System.gc()
+    }
+
+    override def run(): Unit = {
+        ???
+    }
+
 }
 
 object ActorThread {
+
+    private val GC_PEER_ROUND_DEFAULT = 64
+
+    private val GC_PEER_ROUND = SystemPropertyUtil.getInt("io.otavia.core.stop.size", GC_PEER_ROUND_DEFAULT)
 
     /** Returns a reference to the currently executing [[ActorThread]] object.
      *

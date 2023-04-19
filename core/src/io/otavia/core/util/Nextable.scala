@@ -14,8 +14,17 @@
  * limitations under the License.
  */
 
-package io.otavia.core.system
+package io.otavia.core.util
 
-import io.otavia.core.util.SpinLock
+private[core] trait Nextable {
 
-class HouseQueue(val holder: HouseQueueHolder) extends SpinLock {}
+    @volatile private var n: Nextable | Null = _
+
+    /** Set the next object of this object. */
+    def next_=(nextable: Nextable): Unit = n = nextable
+
+    def next: Nextable | Null = n
+
+    def isTail: Boolean = n == null
+
+}

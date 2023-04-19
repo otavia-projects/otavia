@@ -19,8 +19,8 @@ package io.otavia.core.util
 /** An object which can be chained one by one */
 trait Chainable {
 
-    private var n: Chainable | Null = null
-    private var p: Chainable | Null = null
+    private var n: Chainable | Null = _
+    private var p: Chainable | Null = _
 
     /** Set the next object of this object. */
     def next_=(chainable: Chainable): Unit = n = chainable

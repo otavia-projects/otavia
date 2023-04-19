@@ -16,8 +16,6 @@
 
 package io.otavia.core.system
 
-import io.otavia.core.system.ActorHousePhantomRef.refSet
-
 import java.util.concurrent.CopyOnWriteArraySet
 import scala.ref.{PhantomReference, ReferenceQueue}
 
@@ -26,16 +24,9 @@ class ActorHousePhantomRef(val house: ActorHouse, val queue: ReferenceQueue[Acto
 
     private val runnable: Runnable = () => house.close()
 
-    refSet.add(this)
-
     override def clear(): Unit = {
         runnable.run()
-        refSet.remove(this)
         super.clear()
     }
 
-}
-
-object ActorHousePhantomRef {
-    private val refSet = new CopyOnWriteArraySet[ActorHousePhantomRef]()
 }

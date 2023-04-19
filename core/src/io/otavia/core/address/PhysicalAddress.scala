@@ -20,7 +20,7 @@ import io.otavia.core.actor.{AbstractActor, Actor, ChannelsActor, StateActor}
 import io.otavia.core.log4a.Logger
 import io.otavia.core.message.*
 import io.otavia.core.stack.{ReplyFuture, ReplyWaiter}
-import io.otavia.core.system.House
+import io.otavia.core.system.{ActorHouse, House}
 import io.otavia.core.timer.TimeoutTrigger
 
 /** every actor instance has one and only one physical address.
@@ -30,9 +30,9 @@ import io.otavia.core.timer.TimeoutTrigger
  *  @tparam H
  *    actor house
  */
-abstract class PhysicalAddress[M <: Call, H <: House] extends Address[M] {
+abstract class PhysicalAddress[M <: Call] extends Address[M] {
 
-    private[core] val house: H
+    private[core] val house: ActorHouse
 
     override def ask[A <: M & Ask[? <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using
         sender: AbstractActor[?]

@@ -37,3 +37,7 @@ private[core] trait House {
     def putEvent(event: Event): Unit
 
 }
+
+object House {
+    
+}

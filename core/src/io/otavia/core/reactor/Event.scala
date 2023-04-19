@@ -19,11 +19,10 @@ package io.otavia.core.reactor
 import io.otavia.core.cache.ResourceTimer
 import io.otavia.core.channel.Channel
 import io.otavia.core.stack.BlockPromise
+import io.otavia.core.util.Nextable
 
 /** Event for [[io.otavia.core.actor.Actor]] */
-sealed abstract class Event {
-    private[core] var next: Event = _
-}
+sealed abstract class Event extends Nextable
 
 sealed abstract class TimerEvent extends Event {
     def registerId: Long

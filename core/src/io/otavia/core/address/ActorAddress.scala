@@ -29,4 +29,4 @@ import io.otavia.core.system.ActorHouse
  *    the message type that this actor can receive.
  */
 final class ActorAddress[M <: Call](override private[core] val house: ActorHouse)
-    extends PhysicalAddress[M, ActorHouse]
+    extends PhysicalAddress[M]

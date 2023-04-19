@@ -19,15 +19,14 @@ package io.otavia.core.message
 import io.otavia.core.actor.{AbstractActor, Actor}
 import io.otavia.core.address.Address
 import io.otavia.core.stack.ActorStack
+import io.otavia.core.util.Nextable
 
 /** Message is base unit for actor community */
-sealed trait Message extends Serializable {
+sealed trait Message extends Nextable with Serializable {
 
     private var s: Address[Call] = _
     private var sid: Long        = 0
     private var mid: Long        = 0
-
-    @volatile private[core] var next: Message | Null = _
 
     def sender: Address[Call] = s
 
@@ -62,7 +61,7 @@ trait Reply extends Message {
     private var rid: Long = -1L
 
     private var rids: Seq[(Long, Long)] = _
-    private var batch: Boolean  = false
+    private var batch: Boolean          = false
 
     def setReplyId(id: Long): Unit = { this.rid = id; batch = false }
 
