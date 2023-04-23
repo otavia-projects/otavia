@@ -18,14 +18,16 @@ package io.otavia.core.system
 
 import java.util.concurrent.ThreadFactory
 
-abstract class ActorThreadFactory(val system: ActorSystem, val pool: ActorThreadPool) extends ThreadFactory
+abstract class ActorThreadFactory(val system: ActorSystem) {
+    def newThread(): ActorThread
+
+}
 
 object ActorThreadFactory {
-    class DefaultActorThreadFactory(system: ActorSystem, pool: ActorThreadPool)
-        extends ActorThreadFactory(system, pool) {
+    class DefaultActorThreadFactory(system: ActorSystem) extends ActorThreadFactory(system) {
 
-        override def newThread(r: Runnable): ActorThread = {
-            val thread = new ActorThread(system, pool)
+        override def newThread(): ActorThread = {
+            val thread = new ActorThread(system)
             if (thread.isDaemon) thread.setDaemon(false)
             if (thread.getPriority != Thread.NORM_PRIORITY) thread.setPriority(Thread.NORM_PRIORITY)
             thread

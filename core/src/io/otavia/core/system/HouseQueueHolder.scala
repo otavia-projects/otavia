@@ -19,8 +19,42 @@ package io.otavia.core.system
 class HouseQueueHolder(val thread: ActorThread) {
 
     private val serverChannelsActorQueue = new HouseQueue(this)
+    private val channelsActorQueue       = new HouseQueue(this)
+    private val actorQueue               = new HouseQueue(this)
 
+    private var serverRuns: Long  = 0
+    private var serverTimes: Long = 0
 
-    
+    private var channelsRuns: Long  = 0
+    private var channelsTimes: Long = 0
+
+    private var actorRuns: Long  = 0
+    private var actorTimes: Long = 0
+
+    private def get(): ActorHouse = {
+        if (serverChannelsActorQueue.available) serverChannelsActorQueue.poll()
+
+        this.synchronized { this.wait() }
+
+        ???
+    }
+
+    private def get(nanos: Long): ActorHouse = {
+
+        ???
+    }
+
+    /** Run by [[thread]] */
+    def run(): Boolean = {
+
+        ???
+    }
+
+    def stealable: Boolean = actorQueue.available
+
+    /** Steal running by other [[ActorThread]] */
+    def stealRun(): Boolean = {
+        ???
+    }
 
 }

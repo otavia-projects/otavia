@@ -21,7 +21,7 @@ import io.otavia.core.system.ActorThread
 import java.util.concurrent.atomic.AtomicReference
 import scala.language.unsafeNulls
 
-private[core] abstract class SpinLock {
+private[core] class SpinLock {
 
     private val holder = new AtomicReference[Thread](null)
 

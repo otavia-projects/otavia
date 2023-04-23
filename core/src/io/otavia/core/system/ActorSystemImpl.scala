@@ -17,15 +17,28 @@
 package io.otavia.core.system
 
 import io.netty5.buffer.BufferAllocator
-import io.otavia.core.actor.{Actor, ActorFactory, MessageOf}
+import io.otavia.core.actor.*
 import io.otavia.core.address.Address
 import io.otavia.core.channel.ChannelFactory
 import io.otavia.core.message.{Call, IdAllocator}
 import io.otavia.core.reactor.BlockTaskExecutor
 import io.otavia.core.reactor.aio.Submitter
 import io.otavia.core.timer.Timer
+import io.otavia.core.util.SystemPropertyUtil
 
-class ActorSystemImpl extends ActorSystem {
+import java.util.concurrent.atomic.AtomicLong
+
+class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFactory) extends ActorSystem {
+
+    private val actorThreadPool: ActorThreadPool = new DefaultActorThreadPool(
+      this,
+      actorThreadFactory,
+      SystemPropertyUtil.getInt("io.otavia.actor.thread.pool.size", ActorSystem.DEFAULT_ACTOR_THREAD_POOL_SIZE)
+    )
+
+    private val generator = new AtomicLong(1)
+
+    override def pool: ActorThreadPool = actorThreadPool
 
     override private[core] def reactor = ???
 
@@ -49,9 +62,37 @@ class ActorSystemImpl extends ActorSystem {
 
     override def defaultMaxBatchSize: Int = ???
 
-    override def buildActor[A <: Actor[? <: Call]](args: Any*)(num: Int): Address[MessageOf[A]] = ???
+    override def buildActor[A <: Actor[? <: Call]](
+        args: Any*
+    )(num: Int, ioc: Boolean = false, qualifier: Option[String] = None): Address[MessageOf[A]] = ???
 
-    override def crateActor[A <: Actor[? <: Call]](factory: ActorFactory[A], num: Int): Address[MessageOf[A]] = ???
+    override def crateActor[A <: Actor[? <: Call]](
+        factory: ActorFactory[A],
+        num: Int = 1,
+        ioc: Boolean = false,
+        qualifier: Option[String] = None
+    ): Address[MessageOf[A]] = {
+        if (num == 1) {
+            val actor   = factory.newActor().asInstanceOf[AbstractActor[? <: Call]]
+            val thread  = pool.next(if (actor.isInstanceOf[ChannelsActor[?]]) true else false)
+            val house   = thread.createActorHouse()
+            val address = house.createActorAddress[MessageOf[A]]()
+            val context = ActorContext(this, address, generator.getAndIncrement())
+
+            actor.setCtx(context)
+            house.setActor(actor)
+
+            if (ioc) {
+                // TODO: put to IOC manager
+            }
+
+            address
+        } else {
+            // TODO: batch create
+            ???
+        }
+
+    }
 
     override private[core] def getAddress[M <: Call](
         clz: Class[? <: Actor[?]],

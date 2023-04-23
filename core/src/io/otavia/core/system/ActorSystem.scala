@@ -27,6 +27,8 @@ import io.otavia.core.reactor.{BlockTaskExecutor, Event, Reactor}
 import io.otavia.core.stack.BlockFuture
 import io.otavia.core.timer.Timer
 
+import java.net.InetAddress
+import scala.language.unsafeNulls
 import scala.quoted
 
 /** [[ActorSystem]] is a container of actor and channel group instance, a actor or channel group instance must be create
@@ -70,8 +72,16 @@ trait ActorSystem {
 
     def defaultMaxBatchSize: Int
 
-    def buildActor[A <: Actor[? <: Call]](args: Any*)(num: Int = 1): Address[MessageOf[A]]
-    def crateActor[A <: Actor[? <: Call]](factory: ActorFactory[A], num: Int = 1): Address[MessageOf[A]]
+    def buildActor[A <: Actor[? <: Call]](
+        args: Any*
+    )(num: Int = 1, ioc: Boolean = false, qualifier: Option[String] = None): Address[MessageOf[A]]
+    
+    def crateActor[A <: Actor[? <: Call]](
+        factory: ActorFactory[A],
+        num: Int = 1,
+        ioc: Boolean = false,
+        qualifier: Option[String] = None
+    ): Address[MessageOf[A]]
 
     /** IOC methods, developer can ues it by [[io.otavia.core.ioc.Injectable]] */
     private[core] def getAddress[M <: Call](
@@ -94,14 +104,24 @@ trait ActorSystem {
     /** [[ChannelFactory]] for file */
     def fileChannelFactory: ChannelFactory
 
+    def pool: ActorThreadPool
+
 }
 
 object ActorSystem {
+
+    private val DEFAULT_SYSTEM_NAME = s"ActorSystem:${InetAddress.getLocalHost.getHostName}"
 
     val DEFAULT_MAX_TASKS_PER_RUN: Int =
         Math.max(1, SystemPropertyUtil.getInt("io.otavia.reactor.maxTaskPerRun", 1024 * 4))
 
     val DEFAULT_POOL_HOLDER_MAX_SIZE: Int =
         SystemPropertyUtil.getInt("io.otavia.pool.holder.maxSize", 1024)
+
+    val DEFAULT_ACTOR_THREAD_POOL_SIZE: Int = Runtime.getRuntime.availableProcessors()
+
+    def apply(): ActorSystem = new ActorSystemImpl(DEFAULT_SYSTEM_NAME, ???)
+
+    def apply(name: String): ActorSystem = new ActorSystemImpl(name, ???)
 
 }

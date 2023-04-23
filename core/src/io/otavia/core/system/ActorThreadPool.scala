@@ -16,20 +16,22 @@
 
 package io.otavia.core.system
 
-trait ActorThreadPool(val system: ActorSystem) {
+trait ActorThreadPool {
+
+    def system: ActorSystem
+
+    def actorThreadFactory: ActorThreadFactory
 
     /** Size of this pool. */
     def size: Int
 
-    /** Max size of this thread pool. */
-    def maxSize: Int
+    def nextThreadId(): Int
 
-    private var cursor: Int = ActorThreadPool.INVALID_THREAD_ID
+    protected def createActorThread(): ActorThread
 
-    def nextThreadId(): Int = {
-        cursor += 1
-        cursor
-    }
+    def next(channels: Boolean = false): ActorThread
+
+    def nexts(num: Int, channels: Boolean): Seq[ActorThread]
 
 }
 

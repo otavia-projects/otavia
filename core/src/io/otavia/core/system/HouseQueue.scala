@@ -16,6 +16,35 @@
 
 package io.otavia.core.system
 
-import io.otavia.core.util.SpinLock
+import io.otavia.core.util.{Nextable, SpinLock}
 
-class HouseQueue(val holder: HouseQueueHolder) extends SpinLock {}
+import java.util.concurrent.atomic.AtomicInteger
+import scala.language.unsafeNulls
+
+class HouseQueue(val holder: HouseQueueHolder) {
+
+    // for normal priority actor house
+    private val readLock                   = new SpinLock()
+    private val writeLock                  = new SpinLock()
+    private val size                       = new AtomicInteger(0)
+    @volatile private var head: ActorHouse = _
+    @volatile private var tail: Nextable   = _
+
+    // for high priority actor house
+
+    private val highReadLock                 = new SpinLock()
+    private val highWriteLock                = new SpinLock()
+    private val highSize                     = new AtomicInteger(0)
+    @volatile private var highHead: Nextable = _
+    @volatile private var highTail: Nextable = _
+
+    def available: Boolean = (highSize.get() > 0) || (size.get() > 0)
+
+    def readies: Int = highSize.get() + size.get()
+
+    def poll(): ActorHouse = {
+
+        ???
+    }
+
+}

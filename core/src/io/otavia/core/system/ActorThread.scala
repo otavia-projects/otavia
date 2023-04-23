@@ -25,9 +25,9 @@ import java.util.concurrent.CopyOnWriteArraySet
 import scala.collection.mutable
 import scala.ref.ReferenceQueue
 
-class ActorThread(private[core] val system: ActorSystem, val parent: ActorThreadPool) extends Thread() {
+class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 
-    private val id                                              = parent.nextThreadId()
+    private val id                                              = system.pool.nextThreadId()
     private val address: ActorThreadAddress                     = new ActorThreadAddress()
     private val channelLaterTasks: mutable.ArrayDeque[Runnable] = mutable.ArrayDeque.empty
 
@@ -38,6 +38,8 @@ class ActorThread(private[core] val system: ActorSystem, val parent: ActorThread
     private val refSet = new CopyOnWriteArraySet[ActorHousePhantomRef]()
 
     setName(s"otavia-actor-thread-$index")
+
+    def parent: ActorThreadPool = system.pool
 
     def index: Int = id
 
