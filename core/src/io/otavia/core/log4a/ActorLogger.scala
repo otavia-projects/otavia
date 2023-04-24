@@ -33,22 +33,28 @@ class ActorLogger private[core] (val clz: Class[?], actor: AbstractActor[?]) {
     private val logger: Address[Logger.LogMsg] = system.getAddress(classOf[Logger])
     private given AbstractActor[?]             = actor
 
-    def logTrace(log: String): Unit = if (system.logLevel >= 6) logger.notice(Trace(getClass, LocalDateTime.now(), log))
-    def logDebug(log: String): Unit = if (system.logLevel >= 5) logger.notice(Debug(getClass, LocalDateTime.now(), log))
+    def logTrace(log: String): Unit =
+        if (system.logLevel >= LogLevel.TRACE) logger.notice(Trace(getClass, LocalDateTime.now(), log))
+    def logDebug(log: String): Unit =
+        if (system.logLevel >= LogLevel.DEBUG) logger.notice(Debug(getClass, LocalDateTime.now(), log))
     def logDebug(log: String, e: Throwable): Unit = logDebug(s"${log}\n${ThrowableUtil.stackTraceToString(e)}")
 
-    def logInfo(log: String): Unit = if (system.logLevel >= 4) logger.notice(Info(getClass, LocalDateTime.now(), log))
+    def logInfo(log: String): Unit =
+        if (system.logLevel >= LogLevel.INFO) logger.notice(Info(getClass, LocalDateTime.now(), log))
 
-    def logWarn(log: String): Unit = if (system.logLevel >= 3) logger.notice(Warn(getClass, LocalDateTime.now(), log))
+    def logWarn(log: String): Unit =
+        if (system.logLevel >= LogLevel.WARN) logger.notice(Warn(getClass, LocalDateTime.now(), log))
 
     def logWarn(log: String, e: Throwable): Unit = logWarn(s"${log}\n${ThrowableUtil.stackTraceToString(e)}")
 
-    def logError(log: String): Unit = if (system.logLevel >= 2) logger.notice(Error(getClass, LocalDateTime.now(), log))
+    def logError(log: String): Unit =
+        if (system.logLevel >= LogLevel.ERROR) logger.notice(Error(getClass, LocalDateTime.now(), log))
 
     def logError(log: String, e: Throwable): Unit = logError(s"${log}\n${ThrowableUtil.stackTraceToString(e)}")
     def logError(e: Throwable): Unit              = logError(s"${ThrowableUtil.stackTraceToString(e)}")
 
-    def logFatal(log: String): Unit = if (system.logLevel >= 1) logger.notice(Fatal(getClass, LocalDateTime.now(), log))
+    def logFatal(log: String): Unit =
+        if (system.logLevel >= LogLevel.FATAL) logger.notice(Fatal(getClass, LocalDateTime.now(), log))
 
     def logFatal(log: String, e: Throwable): Unit = logFatal(s"${log}\n${ThrowableUtil.stackTraceToString(e)}")
 

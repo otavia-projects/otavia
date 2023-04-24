@@ -18,7 +18,6 @@
 
 package io.otavia.core.reactor
 
-import io.otavia.core.address.ChannelsActorAddress
 import io.otavia.core.channel.Channel
 
 /** Handles IO dispatching for an [[io.otavia.core.actor.ChannelsActor]] All operations except [[wakeup]] and

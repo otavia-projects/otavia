@@ -18,13 +18,24 @@ package io.otavia.core.system
 
 import java.util.concurrent.ThreadFactory
 
-abstract class ActorThreadFactory(val system: ActorSystem) {
+abstract class ActorThreadFactory {
+
+    def system: ActorSystem
+
+    def setSystem(actorSystem: ActorSystem): Unit
+
     def newThread(): ActorThread
 
 }
 
 object ActorThreadFactory {
-    class DefaultActorThreadFactory(system: ActorSystem) extends ActorThreadFactory(system) {
+    class DefaultActorThreadFactory extends ActorThreadFactory {
+
+        private var sys: ActorSystem = _
+
+        override def setSystem(actorSystem: ActorSystem): Unit = sys = actorSystem
+
+        override def system: ActorSystem = sys
 
         override def newThread(): ActorThread = {
             val thread = new ActorThread(system)

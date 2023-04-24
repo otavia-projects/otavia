@@ -18,7 +18,6 @@ package io.otavia.core.reactor
 
 import io.netty5.util.HashedWheelTimer
 import io.netty5.util.internal.shaded.org.jctools.queues.MpscChunkedArrayQueue
-import io.otavia.core.address.ChannelsActorAddress
 import io.otavia.core.channel.Channel
 import io.otavia.core.reactor.Reactor.DEFAULT_MAX_TASKS_PER_RUN
 import io.otavia.core.reactor.ReactorImpl.ST_NOT_STARTED

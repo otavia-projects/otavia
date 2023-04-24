@@ -81,6 +81,8 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
     }
 
     override def run(): Unit = {
+        println(s"worker thread ${getName} start")
+        Thread.sleep(100000000)
         ???
     }
 

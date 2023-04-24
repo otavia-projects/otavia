@@ -18,8 +18,10 @@ package io.otavia.core.system
 
 import io.netty5.buffer.BufferAllocator
 import io.otavia.core.actor.*
-import io.otavia.core.address.Address
+import io.otavia.core.address.{Address, RobinAddress}
 import io.otavia.core.channel.ChannelFactory
+import io.otavia.core.ioc.IOCManager
+import io.otavia.core.log4a.LogLevel
 import io.otavia.core.message.{Call, IdAllocator}
 import io.otavia.core.reactor.BlockTaskExecutor
 import io.otavia.core.reactor.aio.Submitter
@@ -27,8 +29,11 @@ import io.otavia.core.timer.Timer
 import io.otavia.core.util.SystemPropertyUtil
 
 import java.util.concurrent.atomic.AtomicLong
+import scala.language.unsafeNulls
 
 class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFactory) extends ActorSystem {
+
+    actorThreadFactory.setSystem(this)
 
     private val actorThreadPool: ActorThreadPool = new DefaultActorThreadPool(
       this,
@@ -37,6 +42,15 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     )
 
     private val generator = new AtomicLong(1)
+
+    private val iocManager = new IOCManager()
+
+    private val logLvl: LogLevel = SystemPropertyUtil
+        .get("io.otavia.actor.log.level")
+        .map(str => LogLevel.valueOf(str.trim.toUpperCase))
+        .getOrElse(LogLevel.INFO)
+
+    private var mainActor: Address[MainActor.Args] = _
 
     override def pool: ActorThreadPool = actorThreadPool
 
@@ -54,7 +68,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     override def headAllocator: BufferAllocator = ???
 
-    override def logLevel: Int = ???
+    override def logLevel: LogLevel = logLvl
 
     override def shutdown(): Unit = ???
 
@@ -73,25 +87,47 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
         qualifier: Option[String] = None
     ): Address[MessageOf[A]] = {
         if (num == 1) {
-            val actor   = factory.newActor().asInstanceOf[AbstractActor[? <: Call]]
-            val thread  = pool.next(if (actor.isInstanceOf[ChannelsActor[?]]) true else false)
-            val house   = thread.createActorHouse()
-            val address = house.createActorAddress[MessageOf[A]]()
-            val context = ActorContext(this, address, generator.getAndIncrement())
-
-            actor.setCtx(context)
-            house.setActor(actor)
+            val actor     = factory.newActor().asInstanceOf[AbstractActor[? <: Call]]
+            val isIoActor = if (actor.isInstanceOf[ChannelsActor[?]]) true else false
+            val thread    = pool.next(isIoActor)
+            val address   = mountActor(actor, thread)
 
             if (ioc) {
-                // TODO: put to IOC manager
+                iocManager.register(actor.getClass, qualifier)
             }
 
             address
         } else {
-            // TODO: batch create
-            ???
+            val range     = (9 until num).toArray
+            val actors    = range.map(_ => factory.newActor().asInstanceOf[AbstractActor[? <: Call]])
+            val isIoActor = if (actors.head.isInstanceOf[ChannelsActor[?]]) true else false
+            val threads   = pool.nexts(num, isIoActor)
+
+            val address = range.map { index =>
+                val actor  = actors(index)
+                val thread = threads(index)
+                mountActor(actor, thread)
+            }
+
+            new RobinAddress[MessageOf[A]](address)
         }
 
+    }
+
+    final private def mountActor[A <: Actor[? <: Call]](actor: A, thread: ActorThread): Address[MessageOf[A]] = {
+        val house   = thread.createActorHouse()
+        val address = house.createActorAddress[MessageOf[A]]()
+        val context = ActorContext(this, address, generator.getAndIncrement())
+
+        actor.setCtx(context)
+        house.setActor(actor.asInstanceOf[AbstractActor[? <: Call]])
+
+        address
+    }
+
+    override def runMain[M <: MainActor](factory: ActorFactory[M]): Unit = {
+        val address = this.crateActor(factory)
+        mainActor = address
     }
 
     override private[core] def getAddress[M <: Call](

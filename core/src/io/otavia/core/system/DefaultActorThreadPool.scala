@@ -16,6 +16,8 @@
 
 package io.otavia.core.system
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 class DefaultActorThreadPool(
     override val system: ActorSystem,
     override val actorThreadFactory: ActorThreadFactory,
@@ -26,12 +28,18 @@ class DefaultActorThreadPool(
 
     private val threads: Array[ActorThread] = new Array[ActorThread](size)
 
-    init()
+    @volatile private var inited: Boolean = false
+
+    private val normalSelector = new TilingThreadSelector(threads)
+    private val ioSelector     = new TilingThreadSelector(threads)
 
     private def init(): Unit = {
         for (index <- 0 until size) {
-            threads(index) = createActorThread()
+            val thread = createActorThread()
+            threads(index) = thread
+            thread.start()
         }
+        inited = true
     }
 
     override def nextThreadId(): Int = {
@@ -43,8 +51,20 @@ class DefaultActorThreadPool(
         actorThreadFactory.newThread()
     }
 
-    override def next(channels: Boolean): ActorThread = ???
+    override def next(channels: Boolean): ActorThread = {
+        if (!inited) {
+            this.synchronized { init() }
+        }
+        if (!channels) normalSelector.select() else ioSelector.select()
+    }
 
-    override def nexts(num: Int, channels: Boolean): Seq[ActorThread] = ???
+    override def nexts(num: Int, channels: Boolean): Seq[ActorThread] = {
+        if (!inited) {
+            this.synchronized {
+                init()
+            }
+        }
+        if (!channels) normalSelector.select(num) else ioSelector.select(num)
+    }
 
 }

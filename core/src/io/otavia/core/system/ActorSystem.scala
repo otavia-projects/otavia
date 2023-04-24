@@ -18,9 +18,10 @@ package io.otavia.core.system
 
 import io.netty5.buffer.BufferAllocator
 import io.netty5.util.internal.SystemPropertyUtil
-import io.otavia.core.actor.{Actor, ActorFactory, MessageOf}
+import io.otavia.core.actor.{Actor, ActorFactory, MainActor, MessageOf}
 import io.otavia.core.address.Address
 import io.otavia.core.channel.{Channel, ChannelFactory}
+import io.otavia.core.log4a.LogLevel
 import io.otavia.core.message.*
 import io.otavia.core.reactor.aio.Submitter
 import io.otavia.core.reactor.{BlockTaskExecutor, Event, Reactor}
@@ -64,7 +65,7 @@ trait ActorSystem {
      *
      *  ALL 7 > TRACE 6 > DEBUG 5 > INFO 4 > WARN 3 > ERROR 2 > FATAL 1 > OFF 0
      */
-    def logLevel: Int
+    def logLevel: LogLevel
 
     def shutdown(): Unit
 
@@ -75,13 +76,15 @@ trait ActorSystem {
     def buildActor[A <: Actor[? <: Call]](
         args: Any*
     )(num: Int = 1, ioc: Boolean = false, qualifier: Option[String] = None): Address[MessageOf[A]]
-    
+
     def crateActor[A <: Actor[? <: Call]](
         factory: ActorFactory[A],
         num: Int = 1,
         ioc: Boolean = false,
         qualifier: Option[String] = None
     ): Address[MessageOf[A]]
+
+    def runMain[M <: MainActor](factory: ActorFactory[M]): Unit
 
     /** IOC methods, developer can ues it by [[io.otavia.core.ioc.Injectable]] */
     private[core] def getAddress[M <: Call](
@@ -106,6 +109,8 @@ trait ActorSystem {
 
     def pool: ActorThreadPool
 
+    final def threadPoolSize: Int = pool.size
+
 }
 
 object ActorSystem {
@@ -120,8 +125,9 @@ object ActorSystem {
 
     val DEFAULT_ACTOR_THREAD_POOL_SIZE: Int = Runtime.getRuntime.availableProcessors()
 
-    def apply(): ActorSystem = new ActorSystemImpl(DEFAULT_SYSTEM_NAME, ???)
+    def apply(): ActorSystem =
+        new ActorSystemImpl(DEFAULT_SYSTEM_NAME, new ActorThreadFactory.DefaultActorThreadFactory)
 
-    def apply(name: String): ActorSystem = new ActorSystemImpl(name, ???)
+    def apply(name: String): ActorSystem = new ActorSystemImpl(name, new ActorThreadFactory.DefaultActorThreadFactory)
 
 }

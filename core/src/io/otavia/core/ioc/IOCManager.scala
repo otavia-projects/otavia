@@ -14,28 +14,12 @@
  * limitations under the License.
  */
 
-package io.otavia.core.stack
+package io.otavia.core.ioc
 
-import io.otavia.core.cache.Poolable
-import io.otavia.core.message.Reply
+private[core] class IOCManager {
 
-trait StackState {
-
-    private val option: Option[StackState] = Some(this) // for pooling Some(this) object to reduce GC
-    def resumable(): Boolean               = false
-
-    def suspend(): Option[StackState] = option // TODO: check whether has uncompleted promise
-
-}
-
-object StackState {
-
-    val initialState: StackState = new StackState {
-        final override def resumable(): Boolean = true
-    }
-
-    class FutureState[R <: Reply] extends StackState {
-        val future: ReplyFuture[R] = ReplyFuture()
+    def register(clz: Class[?], qualifier: Option[String]): Unit = {
+        ???
     }
 
 }
