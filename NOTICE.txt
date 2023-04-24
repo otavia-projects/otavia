@@ -40,3 +40,10 @@ Base64 Encoder and Decoder, which can be obtained at:
     * copyright/LICENSE.base64.txt (Public Domain)
   * HOMEPAGE:
     * http://iharder.sourceforge.net/current/java/base64/
+
+This product contains a modified version of millw, which can be obtained at:
+
+  * LICENSE:
+    * copyright/LICENSE.millw.txt (Apache License 2.0)
+  * HOMEPAGE:
+    * https://github.com/lefou/millw
