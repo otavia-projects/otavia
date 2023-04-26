@@ -19,7 +19,7 @@ package io.otavia.core.system
 import io.otavia.core.actor.Actor
 import io.otavia.core.address.ActorThreadAddress
 import io.otavia.core.reactor.Event
-import io.otavia.core.system.ActorThread.GC_PEER_ROUND
+import io.otavia.core.system.ActorThread.{GC_PEER_ROUND, ST_RUNNING, ST_STARTING, ST_WAITING}
 import io.otavia.core.util.SystemPropertyUtil
 
 import java.lang.ref.ReferenceQueue
@@ -39,6 +39,8 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 
     private val referenceQueue = new ReferenceQueue[ActorHouse]()
     private val refSet         = new CopyOnWriteArraySet[ActorHousePhantomRef]()
+
+    @volatile private var status: Int = ST_STARTING
 
     setName(s"otavia-actor-thread-$index")
 
@@ -86,22 +88,26 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 
     private[core] def putEvent(event: Event): Unit = {
         eventQueue.offer(event)
-        this.notify()
+        if (status == ST_WAITING) this.synchronized(this.notify())
     }
 
     private[core] def putEvents(events: Seq[Event]): Unit = {
         events.foreach(event => eventQueue.offer(event))
-        this.notify()
+        if (status == ST_WAITING) this.synchronized(this.notify())
     }
 
     override def run(): Unit = {
+        status = ST_RUNNING
         while (true) {
             var block = true
             if (houseQueueHolder.run()) block = false
             this.stopActor()
             // TODO: handle events
 
-            if (block) this.synchronized { this.wait(20) }
+            if (block) this.synchronized {
+                status = ST_WAITING
+                this.wait(20)
+            }
         }
     }
 
@@ -112,6 +118,10 @@ object ActorThread {
     private val GC_PEER_ROUND_DEFAULT = 64
 
     private val GC_PEER_ROUND = SystemPropertyUtil.getInt("io.otavia.core.stop.size", GC_PEER_ROUND_DEFAULT)
+
+    private val ST_STARTING: Int = 0
+    private val ST_RUNNING: Int  = 1
+    private val ST_WAITING: Int  = 2
 
     /** Returns a reference to the currently executing [[ActorThread]] object.
      *
