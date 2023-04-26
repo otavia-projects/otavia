@@ -38,7 +38,10 @@ private[core] class ActorHouse(val houseQueueHolder: HouseQueueHolder)
 
     private var dweller: AbstractActor[? <: Call] = _
 
-    private val mailBox: MailBox = new MailBox(this)
+    private val noticeMailbox: MailBox = new MailBox(this)
+    private val askMailbox: MailBox    = new MailBox(this)
+    private val replyMailbox: MailBox  = new MailBox(this)
+    private val eventMailbox: MailBox  = new MailBox(this)
 
     private var status: AtomicInteger      = new AtomicInteger(EMPTY)
     @volatile private var running: Boolean = false
@@ -47,13 +50,23 @@ private[core] class ActorHouse(val houseQueueHolder: HouseQueueHolder)
 
     def actor: AbstractActor[? <: Call] = this.dweller
 
-    def putNotice(notice: Notice): Unit = {}
+    def putNotice(notice: Notice): Unit = put(notice, noticeMailbox)
 
-    def putAsk(ask: Ask[?]): Unit = {}
+    def putAsk(ask: Ask[?]): Unit = put(ask, askMailbox)
 
-    def putReply(reply: Reply): Unit = {}
+    def putReply(reply: Reply): Unit = put(reply, replyMailbox)
 
-    def putEvent(event: Event): Unit = { ??? }
+    def putEvent(event: Event): Unit = put(event, eventMailbox)
+
+    private final def put(nextable: Nextable, mailBox: MailBox): Unit = {
+        mailBox.put(nextable)
+
+        if (status.get() == EMPTY) {
+
+            // TODO
+        }
+
+    }
 
     override def run(): Unit = {
         running = true

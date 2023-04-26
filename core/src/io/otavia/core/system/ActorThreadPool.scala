@@ -33,6 +33,10 @@ trait ActorThreadPool {
 
     def nexts(num: Int, channels: Boolean): Seq[ActorThread]
 
+    def workers: Array[ActorThread]
+
+    def busiest: Option[ActorThread]
+
 }
 
 object ActorThreadPool {

@@ -52,6 +52,9 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     private var mainActor: Address[MainActor.Args] = _
 
+    private val direct = BufferAllocator.offHeapPooled()
+    private val heap   = BufferAllocator.onHeapPooled()
+
     override def pool: ActorThreadPool = actorThreadPool
 
     override private[core] def reactor = ???
@@ -64,9 +67,9 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     override def distributor: IdAllocator = ???
 
-    override def directAllocator: BufferAllocator = ???
+    override def directAllocator: BufferAllocator = direct
 
-    override def headAllocator: BufferAllocator = ???
+    override def headAllocator: BufferAllocator = heap
 
     override def logLevel: LogLevel = logLvl
 
@@ -75,10 +78,6 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     override def defaultMaxFetchPerRunning: Int = ???
 
     override def defaultMaxBatchSize: Int = ???
-
-    override def buildActor[A <: Actor[? <: Call]](
-        args: Any*
-    )(num: Int, ioc: Boolean = false, qualifier: Option[String] = None): Address[MessageOf[A]] = ???
 
     override def crateActor[A <: Actor[? <: Call]](
         factory: ActorFactory[A],
@@ -95,7 +94,6 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
             if (ioc) {
                 iocManager.register(actor.getClass, qualifier)
             }
-
             address
         } else {
             val range     = (9 until num).toArray
@@ -111,10 +109,12 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
             new RobinAddress[MessageOf[A]](address)
         }
-
     }
 
-    final private def mountActor[A <: Actor[? <: Call]](actor: A, thread: ActorThread): Address[MessageOf[A]] = {
+    final private[system] def mountActor[A <: Actor[? <: Call]](
+        actor: A,
+        thread: ActorThread
+    ): Address[MessageOf[A]] = {
         val house   = thread.createActorHouse()
         val address = house.createActorAddress[MessageOf[A]]()
         val context = ActorContext(this, address, generator.getAndIncrement())

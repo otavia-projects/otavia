@@ -16,11 +16,14 @@
 
 package io.otavia.core.system
 
+import io.otavia.core.system.HouseQueueHolder.*
+import io.otavia.core.util.SystemPropertyUtil
+
 class HouseQueueHolder(val thread: ActorThread) {
 
-    private val serverChannelsActorQueue = new HouseQueue(this)
-    private val channelsActorQueue       = new HouseQueue(this)
-    private val actorQueue               = new HouseQueue(this)
+    private val serverActorQueue   = new HouseQueue(this)
+    private val channelsActorQueue = new HouseQueue(this)
+    private val actorQueue         = new HouseQueue(this)
 
     private var serverRuns: Long  = 0
     private var serverTimes: Long = 0
@@ -31,10 +34,12 @@ class HouseQueueHolder(val thread: ActorThread) {
     private var actorRuns: Long  = 0
     private var actorTimes: Long = 0
 
-    private def get(): ActorHouse = {
-        if (serverChannelsActorQueue.available) serverChannelsActorQueue.poll()
+    @volatile private var runningStart: Long = Long.MaxValue
 
-        this.synchronized { this.wait() }
+    private def get(): ActorHouse = {
+        if (serverActorQueue.available) serverActorQueue.poll()
+        else if (channelsActorQueue.available) channelsActorQueue.poll()
+        else if (actorQueue.available) actorQueue.poll()
 
         ???
     }
@@ -46,15 +51,25 @@ class HouseQueueHolder(val thread: ActorThread) {
 
     /** Run by [[thread]] */
     def run(): Boolean = {
-
+//        val house =
         ???
     }
 
-    def stealable: Boolean = actorQueue.available
+    def stealable: Boolean = (actorQueue.readies > STEAL_REMAINING_THRESHOLD) ||
+        ((System.nanoTime() - runningStart) > STEAL_NANO_THRESHOLD)
 
     /** Steal running by other [[ActorThread]] */
     def stealRun(): Boolean = {
+        thread.system.pool.workers
         ???
     }
+
+}
+
+object HouseQueueHolder {
+
+    private val STEAL_REMAINING_THRESHOLD = SystemPropertyUtil.getInt("io.otavia.core.steal.threshold", 4)
+    private val STEAL_NANO_THRESHOLD =
+        SystemPropertyUtil.getInt("io.otavia.core.steal.threshold.microsecond", 1000) * 1000
 
 }

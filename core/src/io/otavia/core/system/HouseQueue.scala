@@ -31,7 +31,6 @@ class HouseQueue(val holder: HouseQueueHolder) {
     @volatile private var tail: Nextable   = _
 
     // for high priority actor house
-
     private val highReadLock                 = new SpinLock()
     private val highWriteLock                = new SpinLock()
     private val highSize                     = new AtomicInteger(0)
@@ -45,6 +44,24 @@ class HouseQueue(val holder: HouseQueueHolder) {
     def poll(): ActorHouse = {
 
         ???
+    }
+
+    def poll(timeout: Long): ActorHouse | Null = {
+        val slice                    = if (timeout > 500) 500 else timeout
+        val start                    = System.nanoTime()
+        var spin: Boolean            = true
+        var house: ActorHouse | Null = null
+        while (spin) {
+            if (highSize.get() > 0 && highReadLock.tryLock(slice)) {
+                house = ???
+                //
+            } else if (size.get() > 0 && readLock.tryLock(slice)) {
+                //
+            }
+            if (System.nanoTime() - start > timeout) spin = false
+        }
+
+        house
     }
 
 }

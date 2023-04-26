@@ -18,24 +18,27 @@ package io.otavia.core.system
 
 import io.otavia.core.actor.Actor
 import io.otavia.core.address.ActorThreadAddress
+import io.otavia.core.reactor.Event
 import io.otavia.core.system.ActorThread.GC_PEER_ROUND
 import io.otavia.core.util.SystemPropertyUtil
 
-import java.util.concurrent.CopyOnWriteArraySet
+import java.lang.ref.ReferenceQueue
+import java.util.concurrent.{ConcurrentLinkedQueue, CopyOnWriteArraySet}
 import scala.collection.mutable
-import scala.ref.ReferenceQueue
+import scala.language.unsafeNulls
 
 class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 
     private val id                                              = system.pool.nextThreadId()
-    private val address: ActorThreadAddress                     = new ActorThreadAddress()
     private val channelLaterTasks: mutable.ArrayDeque[Runnable] = mutable.ArrayDeque.empty
 
     private val houseQueueHolder = new HouseQueueHolder(this)
 
-    private val referenceQueue = new ReferenceQueue[ActorHouse]()
+    private val eventQueue                  = new ConcurrentLinkedQueue[Event]()
+    private val address: ActorThreadAddress = new ActorThreadAddress(this)
 
-    private val refSet = new CopyOnWriteArraySet[ActorHousePhantomRef]()
+    private val referenceQueue = new ReferenceQueue[ActorHouse]()
+    private val refSet         = new CopyOnWriteArraySet[ActorHousePhantomRef]()
 
     setName(s"otavia-actor-thread-$index")
 
@@ -70,20 +73,36 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
         var count    = 0
         var continue = true
         while (count < GC_PEER_ROUND && continue) {
-            referenceQueue.poll match
-                case None => continue = false
-                case Some(ref) =>
-                    refSet.remove(ref)
-                    ref.clear()
-                    count += 1
+            val ref = referenceQueue.poll()
+            if (ref == null) continue = false
+            else {
+                refSet.remove(ref)
+                ref.clear()
+                count += 1
+            }
         }
         if (count > 0) System.gc()
     }
 
+    private[core] def putEvent(event: Event): Unit = {
+        eventQueue.offer(event)
+        this.notify()
+    }
+
+    private[core] def putEvents(events: Seq[Event]): Unit = {
+        events.foreach(event => eventQueue.offer(event))
+        this.notify()
+    }
+
     override def run(): Unit = {
-        println(s"worker thread ${getName} start")
-        Thread.sleep(100000000)
-        ???
+        while (true) {
+            var block = true
+            if (houseQueueHolder.run()) block = false
+            this.stopActor()
+            // TODO: handle events
+
+            if (block) this.synchronized { this.wait(20) }
+        }
     }
 
 }

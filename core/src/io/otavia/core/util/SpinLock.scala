@@ -25,27 +25,38 @@ private[core] class SpinLock {
 
     private val holder = new AtomicReference[Thread](null)
 
+    /** Get lock, if the lock is locked by other [[Thread]], spin the current thread until get the lock. */
     def lock(): Unit = {
         val thread = Thread.currentThread()
         while (!holder.compareAndSet(null, thread)) {} // spin until get lock
     }
 
+    /** Release the lock. */
     def unlock(): Unit = {
         assert(Thread.currentThread() == holder.get(), "Unlock thread is not the lock holder")
         holder.set(null)
     }
 
+    /** Check the lock whether is locked. */
     def isLock: Boolean = holder.get() != null
 
+    /** Check the lock whether is locked by current thread. */
     def isLockByMe: Boolean = Thread.currentThread() == holder.get()
 
-    def tryLock(tryTimes: Int): Boolean = {
+    /** Try to get lock until get the lock or spin [[timeout]] nanosecond for timeout.
+     *  @param timeout
+     *    timeout nanosecond.
+     *  @return
+     *    whether get the lock.
+     */
+    def tryLock(timeout: Long): Boolean = {
         val thread = Thread.currentThread()
-        var times  = 0
-        while (holder.compareAndSet(null, thread) && times < tryTimes) {
-            times += 1
-        }
-        times < tryTimes
+        val start  = System.nanoTime()
+
+        // spin until get lock or timeout
+        while (!holder.compareAndSet(null, thread) && (System.nanoTime() - start < timeout)) {}
+
+        thread == holder.get()
     }
 
 }

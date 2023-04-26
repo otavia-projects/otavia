@@ -27,4 +27,6 @@ private[core] trait Nextable {
 
     def isTail: Boolean = n == null
 
+    def dechain(): Unit = n = null
+
 }

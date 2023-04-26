@@ -67,4 +67,10 @@ class DefaultActorThreadPool(
         if (!channels) normalSelector.select(num) else ioSelector.select(num)
     }
 
+    override def workers: Array[ActorThread] = threads
+
+    override def busiest: Option[ActorThread] = {
+        ???
+    }
+
 }

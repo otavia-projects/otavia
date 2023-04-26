@@ -17,11 +17,12 @@
 package io.otavia.core.address
 
 import io.otavia.core.reactor.Event
+import io.otavia.core.system.ActorThread
 
-class ActorThreadAddress extends EventableAddress {
+class ActorThreadAddress(private val thread: ActorThread) extends EventableAddress {
 
-    override private[core] def inform(event: Event): Unit = ???
+    override private[core] def inform(event: Event): Unit = thread.putEvent(event)
 
-    override private[core] def inform(events: Seq[Event]): Unit = ???
+    override private[core] def inform(events: Seq[Event]): Unit = thread.putEvents(events)
 
 }

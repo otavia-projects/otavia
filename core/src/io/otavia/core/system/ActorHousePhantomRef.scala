@@ -16,10 +16,10 @@
 
 package io.otavia.core.system
 
+import java.lang.ref.{PhantomReference, ReferenceQueue}
 import java.util.concurrent.CopyOnWriteArraySet
-import scala.ref.{PhantomReference, ReferenceQueue}
 
-class ActorHousePhantomRef(val house: ActorHouse, val queue: ReferenceQueue[ActorHouse])
+class ActorHousePhantomRef(house: ActorHouse, queue: ReferenceQueue[ActorHouse])
     extends PhantomReference[ActorHouse](house, queue) {
 
     private val runnable: Runnable = () => house.close()

@@ -16,36 +16,52 @@
 
 package io.otavia.core.system
 
-import io.otavia.core.system.MailBox.MailsChunk
-import io.otavia.core.util.Nextable
+import io.otavia.core.util.{Nextable, SpinLock}
 
 import java.util.concurrent.atomic.AtomicLong
 import scala.language.unsafeNulls
 
-class MailBox(val house: ActorHouse) {
+class MailBox(val house: ActorHouse) extends SpinLock {
 
-    private val noticeChunk = new MailsChunk()
+    @volatile private var head: Nextable = _
+    @volatile private var tail: Nextable = _
 
-    private val askChunk = new MailsChunk()
+    @volatile private var count: Int = 0
 
-    private val replyChunk = new MailsChunk()
+    def put(obj: Nextable): Unit = {
+        lock()
 
-    private val exceptionsChunk = new MailsChunk()
+        val oldTail = tail
+        if (oldTail == null) {
+            head = obj
+            tail = obj
+        } else {
+            tail = obj
+            oldTail.next = tail
+        }
+        count += 1
 
-    private val eventChunk = new MailsChunk()
-
-    def size: Long = noticeChunk.size.get() + askChunk.size.get() +
-        replyChunk.size.get() + exceptionsChunk.size.get() + eventChunk.size.get()
-
-}
-
-object MailBox {
-    private class MailsChunk {
-
-        @volatile var head: Nextable = _
-        @volatile var tail: Nextable = _
-
-        val size = new AtomicLong(0)
-
+        unlock()
     }
+
+    def get[T <: Nextable](): T = {
+        var obj: Nextable = null
+        lock()
+        if (count == 1) {
+            obj = head
+            head = null
+            tail = null
+        } else {
+            obj = head
+            head = obj.next
+            obj.dechain()
+        }
+        count -= 1
+        unlock()
+
+        obj.asInstanceOf[T]
+    }
+
+    def size(): Int = count
+
 }

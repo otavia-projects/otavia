@@ -73,10 +73,19 @@ trait ActorSystem {
 
     def defaultMaxBatchSize: Int
 
-    def buildActor[A <: Actor[? <: Call]](
-        args: Any*
-    )(num: Int = 1, ioc: Boolean = false, qualifier: Option[String] = None): Address[MessageOf[A]]
-
+    /** Create some new actor instance, and return the address of those actor.
+     *  @param factory
+     *    factory for create actor instance
+     *  @param num
+     *    number of actor instance to create
+     *  @param ioc
+     *    whether register this address to ioc manager of actor system
+     *  @param qualifier
+     *    qualifier of ioc instance if [[ioc]] is true
+     *  @tparam A
+     *    type of actor
+     *  @return
+     */
     def crateActor[A <: Actor[? <: Call]](
         factory: ActorFactory[A],
         num: Int = 1,
@@ -110,6 +119,8 @@ trait ActorSystem {
     def pool: ActorThreadPool
 
     final def threadPoolSize: Int = pool.size
+
+    private[system] def mountActor[A <: Actor[? <: Call]](actor: A, thread: ActorThread): Address[MessageOf[A]]
 
 }
 
