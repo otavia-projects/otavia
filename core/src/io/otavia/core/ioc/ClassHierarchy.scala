@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-package io.otavia.core.actor
+package io.otavia.core.ioc
 
-import io.otavia.core.message.{Ask, Call, Notice}
+import scala.collection.mutable
 
-trait ActorFactory[A <: Actor[? <: Call]] {
-
-    def newActor(): A
-
-    private[core] final def create(): A = {
-        val instance = newActor()
-        instance.afterCreateSys()
-        instance
-    }
-
-}
+case class ClassHierarchy(
+    name: String,
+    isClz: Boolean,
+    superClz: Option[ClassHierarchy],
+    interfaces: mutable.Seq[ClassHierarchy]
+)

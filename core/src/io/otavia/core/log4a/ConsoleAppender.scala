@@ -19,22 +19,22 @@ package io.otavia.core.log4a
 import io.otavia.core.actor.StateActor
 import io.otavia.core.address.Address
 import io.otavia.core.ioc.{Component, Primary}
-import io.otavia.core.log4a.Logger
+import io.otavia.core.log4a.Appender
 import io.otavia.core.stack.{BatchNoticeStack, StackState}
 
 import scala.collection.mutable
 
 @Component
-abstract class ConsoleLogger extends StateActor[Logger.LogMsg], Logger {
+class ConsoleAppender extends StateActor[Appender.LogMsg], Appender {
 
-    import ConsoleLogger.*
+    import ConsoleAppender.*
 
     override def batchable: Boolean = true
     override def maxBatchSize: Int  = 1000
 
     private val cache = new mutable.StringBuilder()
 
-    override def batchContinueNotice(stack: BatchNoticeStack[Logger.LogMsg]): Option[StackState] = {
+    override def batchContinueNotice(stack: BatchNoticeStack[Appender.LogMsg]): Option[StackState] = {
         for (notice <- stack.notices) {
             cache.append(notice.clz.getName)
             cache.append(space)
@@ -50,7 +50,7 @@ abstract class ConsoleLogger extends StateActor[Logger.LogMsg], Logger {
 
 }
 
-object ConsoleLogger {
+object ConsoleAppender {
 
     private val space: String = " "
     private val line: String  = "\n"

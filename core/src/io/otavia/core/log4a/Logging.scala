@@ -20,8 +20,8 @@ import io.netty5.util.internal.ThrowableUtil
 import io.otavia.core.actor.{AbstractActor, Actor}
 import io.otavia.core.address.Address
 import io.otavia.core.ioc.Injectable
-import io.otavia.core.log4a.Logger
-import io.otavia.core.log4a.Logger.*
+import io.otavia.core.log4a.Appender
+import io.otavia.core.log4a.Appender.*
 import io.otavia.core.message.Message
 
 import java.time.LocalDateTime
@@ -30,7 +30,7 @@ import scala.language.unsafeNulls
 private[core] trait Logging {
     this: AbstractActor[?] =>
 
-    protected lazy val logger: Address[Logger.LogMsg] = system.getAddress(classOf[Logger])
+    protected lazy val logger: Address[Appender.LogMsg] = system.getAddress(classOf[Appender])
 
     def logTrace(log: String): Unit =
         if (system.logLevel >= LogLevel.TRACE) logger.notice(Trace(getClass, LocalDateTime.now(), log))

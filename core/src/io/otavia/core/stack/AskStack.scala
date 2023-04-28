@@ -33,7 +33,7 @@ class AskStack[A <: Ask[? <: Reply]] private () extends ActorStack {
     override def recycle(): Unit = AskStack.stackPool.recycle(this)
 
     def `return`(ret: ReplyOf[A]): None.type = {
-        ret.setMessageContext(runtimeActor)
+        // ret.setMessageContext(runtimeActor)
         ret.setReplyId(ask.messageId)
         reply = ret
         ask.sender.reply(reply, runtimeActor)
@@ -41,7 +41,7 @@ class AskStack[A <: Ask[? <: Reply]] private () extends ActorStack {
     }
 
     def `throw`(cause: ExceptionMessage): None.type = {
-        cause.setMessageContext(runtimeActor)
+        // cause.setMessageContext(runtimeActor)
         cause.setReplyId(ask.messageId)
         reply = cause
         this.setFailed()

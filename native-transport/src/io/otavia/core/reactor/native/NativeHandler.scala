@@ -17,8 +17,8 @@
 package io.otavia.core.reactor.native
 
 import io.otavia.core.channel.Channel
+import io.otavia.core.log4a.Logger
 import io.otavia.core.reactor.*
-import org.log4s.{Logger, getLogger}
 
 import scala.language.unsafeNulls
 
@@ -26,7 +26,7 @@ class NativeHandler(val maxEvents: Int, val strategy: SelectStrategy) extends Io
 
     def this() = this(0, DefaultSelectStrategyFactory.newSelectStrategy())
 
-    val logger: Logger = getLogger
+    val logger: Logger = Logger.getLogger(getClass, system) // TODO: null bug for system
 
     /** Rust `Box<Poll>` */
     private var nativePoll: Long = ???

@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package io.otavia.core.actor
+package io.otavia.core.system
 
-import io.otavia.core.message.{Ask, Call, Notice}
+import io.otavia.BuildInfo
+import io.otavia.core.util.SystemPropertyUtil
 
-trait ActorFactory[A <: Actor[? <: Call]] {
+object SystemInfo {
 
-    def newActor(): A
+    def logo(): String = SystemPropertyUtil.readStringFromClassPath("/logo.txt")
 
-    private[core] final def create(): A = {
-        val instance = newActor()
-        instance.afterCreateSys()
-        instance
+    def info(): String = {
+        s"Otavia version ${BuildInfo.publishVersion} with Scala library ${BuildInfo.scalaVersion}"
     }
 
 }

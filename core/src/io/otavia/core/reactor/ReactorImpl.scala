@@ -19,10 +19,10 @@ package io.otavia.core.reactor
 import io.netty5.util.HashedWheelTimer
 import io.netty5.util.internal.shaded.org.jctools.queues.MpscChunkedArrayQueue
 import io.otavia.core.channel.Channel
+import io.otavia.core.log4a.Logger
 import io.otavia.core.reactor.Reactor.DEFAULT_MAX_TASKS_PER_RUN
 import io.otavia.core.reactor.ReactorImpl.ST_NOT_STARTED
 import io.otavia.core.system.ActorSystem
-import org.log4s.{Logger, getLogger}
 
 import java.util.concurrent.{ConcurrentHashMap, ThreadFactory}
 import scala.language.unsafeNulls
@@ -33,7 +33,7 @@ final class ReactorImpl(
     private[core] val maxTasksPerRun: Int = DEFAULT_MAX_TASKS_PER_RUN
 ) extends Reactor {
 
-    protected val logger: Logger = getLogger
+    protected val logger: Logger = Logger.getLogger(getClass, system)
 
     private val registerQueue   = new MpscChunkedArrayQueue[Channel](10240)
     private val deregisterQueue = new MpscChunkedArrayQueue[Channel](10240)
@@ -41,7 +41,11 @@ final class ReactorImpl(
     private val executor              = LoopExecutor()
     private var thread: Thread | Null = null
 
-    private val ioHandler: IoHandler = ioHandlerFactory.newHandler
+    private val ioHandler: IoHandler = {
+        val handler = ioHandlerFactory.newHandler
+        handler.setSystem(system)
+        handler
+    }
 
     private val context = new IoExecutionContext {
 

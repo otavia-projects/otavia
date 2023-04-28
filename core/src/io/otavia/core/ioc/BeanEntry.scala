@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package io.otavia.core.actor
+package io.otavia.core.ioc
 
-import io.otavia.core.message.{Ask, Call, Notice}
+import io.otavia.core.actor.{Actor, ActorFactory}
+import io.otavia.core.message.Call
 
-trait ActorFactory[A <: Actor[? <: Call]] {
-
-    def newActor(): A
-
-    private[core] final def create(): A = {
-        val instance = newActor()
-        instance.afterCreateSys()
-        instance
-    }
-
-}
+case class BeanEntry(
+    beanClz: Class[? <: Actor[? <: Call]],
+    factory: ActorFactory[?],
+    num: Int,
+    qualifier: Option[String],
+    primary: Boolean = false
+)

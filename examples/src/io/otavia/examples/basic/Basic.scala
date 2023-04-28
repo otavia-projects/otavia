@@ -18,6 +18,8 @@ package io.otavia.examples.basic
 
 import io.otavia.core.actor.*
 import io.otavia.core.address.Address
+import io.otavia.core.ioc.Injectable
+import io.otavia.core.log4a.Appender
 import io.otavia.core.message.{Ask, Notice, Reply}
 import io.otavia.core.stack.StackState.FutureState
 import io.otavia.core.stack.{AskStack, NoticeStack, ReplyFuture, StackState}
@@ -27,8 +29,8 @@ import io.otavia.examples.basic.Basic.*
 
 class Basic(args: Array[String]) extends MainActor(args) {
     override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] = {
-        val pongActor = system.crateActor[PongActor](() => new PongActor())
-        val pingActor = system.crateActor[PingActor](() => new PingActor(pongActor))
+        val pongActor = system.buildActor[PongActor](() => new PongActor())
+        val pingActor = system.buildActor[PingActor](() => new PingActor(pongActor))
 
         pingActor.notice(Start())
 

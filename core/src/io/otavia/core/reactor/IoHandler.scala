@@ -19,12 +19,19 @@
 package io.otavia.core.reactor
 
 import io.otavia.core.channel.Channel
+import io.otavia.core.system.ActorSystem
 
 /** Handles IO dispatching for an [[io.otavia.core.actor.ChannelsActor]] All operations except [[wakeup]] and
  *  [[isCompatible]] <strong>MUST</strong> be executed on the [[io.otavia.core.reactor.Reactor]] and should never be
  *  called from the user-directly.
  */
-trait IoHandler {
+abstract class IoHandler {
+
+    private var sys: ActorSystem = _
+
+    def setSystem(system: ActorSystem): Unit = sys = system
+
+    def system: ActorSystem = sys
 
     /** Run the IO handled by this [[IoHandler]]. The [[IoExecutionContext]] should be used to ensure we not execute too
      *  long and so block the processing of other task that are scheduled on the [[io.otavia.core.actor.ChannelsActor]]

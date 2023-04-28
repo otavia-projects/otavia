@@ -39,7 +39,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
     protected def workerFactory: WorkerFactory[W]
 
     override def afterMount(): Unit = {
-        workers = system.crateActor(workerFactory, workerNumber)
+        workers = system.buildActor(workerFactory, workerNumber)
     }
 
     override def init(channel: Channel): Unit = {

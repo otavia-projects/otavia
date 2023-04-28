@@ -104,6 +104,10 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
             this.stopActor()
             // TODO: handle events
 
+            if (!eventQueue.isEmpty) {
+                // TODO: handle event for thread
+            }
+
             if (block) this.synchronized {
                 status = ST_WAITING
                 this.wait(20)

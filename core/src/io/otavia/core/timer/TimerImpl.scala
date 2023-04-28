@@ -20,11 +20,11 @@ import io.netty5.util.{HashedWheelTimer, TimerTask}
 import io.otavia.core.address.{Address, EventableAddress}
 import io.otavia.core.cache.ResourceTimer
 import io.otavia.core.channel.Channel
+import io.otavia.core.log4a.Logger
 import io.otavia.core.reactor.{AskTimeoutEvent, ChannelTimeoutEvent, ResourceTimeoutEvent, TimeoutEvent}
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.timer.Timer
 import io.otavia.core.timer.Timer.*
-import org.log4s.{Logger, getLogger}
 
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, ThreadFactory, TimeUnit}
@@ -37,7 +37,7 @@ final class TimerImpl(private[core] val system: ActorSystem) extends Timer {
 
     private val nextId = new AtomicLong(Timer.INVALID_TIMEOUT_REGISTER_ID + 1)
 
-    protected val logger: Logger = ???
+    protected val logger: Logger = Logger.getLogger(getClass, system)
 
     override private[timer] def nextRegisterId() = nextId.getAndIncrement()
 

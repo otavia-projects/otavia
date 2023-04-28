@@ -19,8 +19,8 @@ package io.otavia.core.log4a
 import io.netty5.util.internal.ThrowableUtil
 import io.otavia.core.actor.{AbstractActor, Actor}
 import io.otavia.core.address.Address
-import io.otavia.core.log4a.Logger
-import io.otavia.core.log4a.Logger.{Debug, Error, Fatal, Info, Trace, Warn}
+import io.otavia.core.log4a.Appender
+import io.otavia.core.log4a.Appender.{Debug, Error, Fatal, Info, Trace, Warn}
 import io.otavia.core.message.IdAllocator
 import io.otavia.core.system.ActorSystem
 
@@ -30,11 +30,11 @@ import scala.language.unsafeNulls
 class ActorLogger private[core] (val clz: Class[?], actor: AbstractActor[?]) {
 
     private val system: ActorSystem            = actor.system
-    private val logger: Address[Logger.LogMsg] = system.getAddress(classOf[Logger])
+    private val logger: Address[Appender.LogMsg] = system.getAddress(classOf[Appender])
     private given AbstractActor[?]             = actor
 
     def logTrace(log: String): Unit =
-        if (system.logLevel >= LogLevel.TRACE) logger.notice(Trace(getClass, LocalDateTime.now(), log))
+        if (system.logLevel >= LogLevel.TRACE) logger.notice(Trace(clz, LocalDateTime.now(), log))
     def logDebug(log: String): Unit =
         if (system.logLevel >= LogLevel.DEBUG) logger.notice(Debug(getClass, LocalDateTime.now(), log))
     def logDebug(log: String, e: Throwable): Unit = logDebug(s"${log}\n${ThrowableUtil.stackTraceToString(e)}")

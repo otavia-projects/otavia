@@ -14,34 +14,18 @@
  * limitations under the License.
  */
 
-package io.otavia.core.log4a
+package io.otavia.core.ioc
 
 import io.otavia.core.system.ActorSystem
 
-trait Logger {
+trait Module {
 
-    def trace(log: String): Unit
-    def trace(log: String, e: Throwable): Unit
+    def entries: Seq[BeanEntry]
 
-    def debug(log: String): Unit
-    def debug(log: String, e: Throwable): Unit
-
-    def info(log: String): Unit
-    def info(log: String, e: Throwable): Unit
-
-    def warn(log: String): Unit
-    def warn(log: String, e: Throwable): Unit
-
-    def error(log: String): Unit
-    def error(log: String, e: Throwable): Unit
-
-    def fatal(log: String): Unit
-    def fatal(log: String, e: Throwable): Unit
-
-}
-
-object Logger {
-
-    def getLogger(clz: Class[?], system: ActorSystem): Logger = ???
+    private[core] final def load(system: ActorSystem): Unit = {
+        entries.foreach { entry =>
+            system.registerGlobalActor(entry)
+        }
+    }
 
 }

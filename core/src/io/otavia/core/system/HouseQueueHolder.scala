@@ -49,8 +49,13 @@ class HouseQueueHolder(val thread: ActorThread) {
         ???
     }
 
-    /** Run by [[thread]] */
-    def run(): Boolean = {
+    /** Run by [[thread]], if no house is available, spin timeout nanosecond to wait some house become ready.
+     *  @param timeout
+     *    wait [[timeout]] nanosecond
+     *  @return
+     *    true if run some [[ActorHouse]], otherwise false.
+     */
+    def run(timeout: Long = 0): Boolean = {
 //        val house =
         ???
     }

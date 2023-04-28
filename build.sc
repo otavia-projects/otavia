@@ -68,8 +68,7 @@ trait OtaviaModule extends ScalaModule with PublishModule {
 object core extends OtaviaModule with BuildInfo {
 
     override def ivyDeps = Agg(
-      ivy"io.netty:netty5-buffer:5.0.0.Alpha5",
-      ivy"org.log4s::log4s::1.10.0"
+      ivy"io.netty:netty5-buffer:5.0.0.Alpha5"
     )
 
     override def buildInfoMembers = Map(
@@ -86,7 +85,8 @@ object core extends OtaviaModule with BuildInfo {
       },
       "author" -> {
           if (ProjectInfo.author.length == 1) ProjectInfo.author.head else ProjectInfo.author.mkString("[", ", ", "]")
-      }
+      },
+      "copyright" -> "2022"
     )
 
     override def buildInfoPackageName: Option[String] = Some("io.otavia")

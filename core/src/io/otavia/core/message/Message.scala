@@ -22,7 +22,16 @@ import io.otavia.core.stack.ActorStack
 import io.otavia.core.util.Nextable
 
 /** Message is base unit for actor community */
-sealed trait Message extends Nextable with Serializable {
+sealed trait Message extends Nextable with Serializable
+
+/** Message which will generate [[ActorStack]] when a [[Actor]] received. */
+sealed trait Call extends Message
+
+/** message which do not need reply */
+trait Notice extends Call
+
+/** message which need reply */
+trait Ask[R <: Reply] extends Call {
 
     private var s: Address[Call] = _
     private var sid: Long        = 0
@@ -42,15 +51,6 @@ sealed trait Message extends Nextable with Serializable {
     }
 
 }
-
-/** Message which will generate [[ActorStack]] when a [[Actor]] received. */
-sealed trait Call extends Message
-
-/** message which do not need reply */
-trait Notice extends Call
-
-/** message which need reply */
-trait Ask[R <: Reply] extends Call
 
 type ReplyOf[A <: Ask[? <: Reply]] <: Reply = A match
     case Ask[r] => r

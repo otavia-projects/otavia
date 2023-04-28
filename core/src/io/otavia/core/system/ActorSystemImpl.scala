@@ -17,11 +17,12 @@
 package io.otavia.core.system
 
 import io.netty5.buffer.BufferAllocator
+import io.otavia.BuildInfo
 import io.otavia.core.actor.*
 import io.otavia.core.address.{Address, RobinAddress}
 import io.otavia.core.channel.ChannelFactory
-import io.otavia.core.ioc.IOCManager
-import io.otavia.core.log4a.LogLevel
+import io.otavia.core.ioc.{BeanEntry, BeanManager, Module}
+import io.otavia.core.log4a.{DefaultLog4aModule, LogLevel}
 import io.otavia.core.message.{Call, IdAllocator}
 import io.otavia.core.reactor.BlockTaskExecutor
 import io.otavia.core.reactor.aio.Submitter
@@ -30,6 +31,7 @@ import io.otavia.core.util.SystemPropertyUtil
 
 import java.util.concurrent.atomic.AtomicLong
 import scala.language.unsafeNulls
+import scala.reflect.{ClassTag, classTag}
 
 class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFactory) extends ActorSystem {
 
@@ -43,7 +45,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     private val generator = new AtomicLong(1)
 
-    private val iocManager = new IOCManager()
+    private val beanManager = new BeanManager(this)
 
     private val logLvl: LogLevel = SystemPropertyUtil
         .get("io.otavia.actor.log.level")
@@ -54,6 +56,9 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     private val direct = BufferAllocator.offHeapPooled()
     private val heap   = BufferAllocator.onHeapPooled()
+
+    println(SystemInfo.logo())
+    println(SystemInfo.info())
 
     override def pool: ActorThreadPool = actorThreadPool
 
@@ -79,25 +84,25 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     override def defaultMaxBatchSize: Int = ???
 
-    override def crateActor[A <: Actor[? <: Call]](
+    override def buildActor[A <: Actor[? <: Call]](
         factory: ActorFactory[A],
         num: Int = 1,
-        ioc: Boolean = false,
+        global: Boolean = false,
         qualifier: Option[String] = None
     ): Address[MessageOf[A]] = {
         if (num == 1) {
-            val actor     = factory.newActor().asInstanceOf[AbstractActor[? <: Call]]
+            val actor     = factory.create().asInstanceOf[AbstractActor[? <: Call]]
             val isIoActor = if (actor.isInstanceOf[ChannelsActor[?]]) true else false
             val thread    = pool.next(isIoActor)
             val address   = mountActor(actor, thread)
 
-            if (ioc) {
-                iocManager.register(actor.getClass, qualifier)
+            if (global) {
+//                beanManager.register(actor.getClass, qualifier)
             }
             address
         } else {
             val range     = (9 until num).toArray
-            val actors    = range.map(_ => factory.newActor().asInstanceOf[AbstractActor[? <: Call]])
+            val actors    = range.map(_ => factory.create().asInstanceOf[AbstractActor[? <: Call]])
             val isIoActor = if (actors.head.isInstanceOf[ChannelsActor[?]]) true else false
             val threads   = pool.nexts(num, isIoActor)
 
@@ -125,8 +130,30 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
         address
     }
 
-    override def runMain[M <: MainActor](factory: ActorFactory[M]): Unit = {
-        val address = this.crateActor(factory)
+    override private[core] def registerGlobalActor(
+        clz: Class[? <: Actor[? <: Call]],
+        factory: ActorFactory[?],
+        num: Int,
+        qualifier: Option[String] = None,
+        primary: Boolean = false
+    ): Unit = {
+        beanManager.register(clz, factory, num, qualifier, primary)
+    }
+
+    override private[core] def registerGlobalActor(entry: BeanEntry): Unit = beanManager.register(entry)
+
+    override def loadModule(module: Module): Unit = try {
+        module.load(this)
+    } catch {
+        case t: Throwable => // TODO: log
+    }
+
+    override def runMain[M <: MainActor](
+        factory: ActorFactory[M],
+        modules: Seq[Module] = Seq(new DefaultLog4aModule)
+    ): Unit = {
+        modules.foreach(m => loadModule(m))
+        val address = this.buildActor(factory)
         mainActor = address
     }
 

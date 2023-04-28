@@ -16,6 +16,8 @@
 
 package io.otavia.core.util
 
+import scala.language.{higherKinds, unsafeNulls}
+
 object ClassUtils {
 
     private val PACKAGE_SEPARATOR_CHAR = '.'
@@ -24,7 +26,7 @@ object ClassUtils {
     def simpleClassName(nullable: AnyRef | Null): String = {
         if (nullable == null) "null_object"
         else {
-            val o: AnyRef = nullable.nn
+            val o: AnyRef = nullable
             val clz       = o.getClass
             simpleClassName(clz)
         }
@@ -34,9 +36,35 @@ object ClassUtils {
      *  classes.
      */
     def simpleClassName(clz: Class[?]): String = {
-        val className: String = clz.getName.nn
+        val className: String = clz.getName
         val lastDotIdx: Int   = className.lastIndexOf(PACKAGE_SEPARATOR_CHAR)
-        if (lastDotIdx > -1) className.substring(lastDotIdx + 1).nn else className
+        if (lastDotIdx > -1) className.substring(lastDotIdx + 1) else className
+    }
+
+    def printInheritTree(clz: Class[?], hierarchy: Int = 0): Unit = {
+        val tokenClz =
+            "\t" * hierarchy + (if (clz.isInterface)
+                                    s"I(${clz.getName}${handleTypeParameters(clz)})"
+                                else
+                                    s"C(${clz.getName}${handleTypeParameters(clz)})")
+        println(tokenClz)
+
+        val sp = clz.getSuperclass
+        if (sp != null)
+            printInheritTree(sp, hierarchy + 1)
+
+        clz.getInterfaces.foreach { intClz =>
+            printInheritTree(intClz, hierarchy + 1)
+        }
+    }
+
+    def handleTypeParameters(clz: Class[?]): String = {
+        val typeParameters = clz.getTypeParameters
+        val tps = typeParameters.map { tp =>
+            (tp.getName, tp.getBounds.mkString(","), tp.getGenericDeclaration.getSimpleName)
+        }
+        val typeName = tps.mkString("[", ",", "]")
+        typeName
     }
 
 }

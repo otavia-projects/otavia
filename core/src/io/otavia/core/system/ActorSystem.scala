@@ -21,7 +21,8 @@ import io.netty5.util.internal.SystemPropertyUtil
 import io.otavia.core.actor.{Actor, ActorFactory, MainActor, MessageOf}
 import io.otavia.core.address.Address
 import io.otavia.core.channel.{Channel, ChannelFactory}
-import io.otavia.core.log4a.LogLevel
+import io.otavia.core.ioc.{BeanEntry, Module}
+import io.otavia.core.log4a.{DefaultLog4aModule, LogLevel}
 import io.otavia.core.message.*
 import io.otavia.core.reactor.aio.Submitter
 import io.otavia.core.reactor.{BlockTaskExecutor, Event, Reactor}
@@ -31,6 +32,7 @@ import io.otavia.core.timer.Timer
 import java.net.InetAddress
 import scala.language.unsafeNulls
 import scala.quoted
+import scala.reflect.ClassTag
 
 /** [[ActorSystem]] is a container of actor and channel group instance, a actor or channel group instance must be create
  *  by a actor system instance, actor instance in different actor system instance can not send message directly.
@@ -78,7 +80,7 @@ trait ActorSystem {
      *    factory for create actor instance
      *  @param num
      *    number of actor instance to create
-     *  @param ioc
+     *  @param global
      *    whether register this address to ioc manager of actor system
      *  @param qualifier
      *    qualifier of ioc instance if [[ioc]] is true
@@ -86,14 +88,26 @@ trait ActorSystem {
      *    type of actor
      *  @return
      */
-    def crateActor[A <: Actor[? <: Call]](
+    def buildActor[A <: Actor[? <: Call]](
         factory: ActorFactory[A],
         num: Int = 1,
-        ioc: Boolean = false,
+        global: Boolean = false,
         qualifier: Option[String] = None
     ): Address[MessageOf[A]]
 
-    def runMain[M <: MainActor](factory: ActorFactory[M]): Unit
+    private[core] def registerGlobalActor(
+        clz: Class[? <: Actor[? <: Call]],
+        factory: ActorFactory[?],
+        num: Int = 1,
+        qualifier: Option[String] = None,
+        primary: Boolean = false
+    ): Unit
+
+    private[core] def registerGlobalActor(entry: BeanEntry): Unit
+
+    def loadModule(module: Module): Unit
+
+    def runMain[M <: MainActor](factory: ActorFactory[M], modules: Seq[Module] = Seq(new DefaultLog4aModule)): Unit
 
     /** IOC methods, developer can ues it by [[io.otavia.core.ioc.Injectable]] */
     private[core] def getAddress[M <: Call](

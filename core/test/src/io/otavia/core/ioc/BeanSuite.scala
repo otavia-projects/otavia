@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package io.otavia.core.actor
+package io.otavia.core.ioc
 
-import io.otavia.core.message.{Ask, Call, Notice}
+import io.otavia.core.log4a.ConsoleAppender
+import org.scalatest.funsuite.AnyFunSuite
 
-trait ActorFactory[A <: Actor[? <: Call]] {
+import scala.collection.mutable
 
-    def newActor(): A
+class BeanSuite extends AnyFunSuite {
 
-    private[core] final def create(): A = {
-        val instance = newActor()
-        instance.afterCreateSys()
-        instance
+    test("Get all super class for ConsoleAppender") {
+        val bean = new Bean(classOf[ConsoleAppender], () => new ConsoleAppender())
+        val sps  = bean.superClasses()
+
+        assert(sps == mutable.Set("io.otavia.core.log4a.ConsoleAppender", "io.otavia.core.log4a.Appender"))
     }
 
 }

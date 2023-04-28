@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package io.otavia.core.ioc
+package io.otavia.core.log4a
 
-private[core] class IOCManager {
+import io.otavia.core.ioc.{BeanEntry, Module}
+import io.otavia.core.system.ActorSystem
 
-    def register(clz: Class[?], qualifier: Option[String]): Unit = {
-        ???
-    }
+class DefaultLog4aModule extends Module {
+
+    override def entries: Seq[BeanEntry] = ???
 
 }

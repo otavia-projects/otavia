@@ -21,9 +21,9 @@ package io.otavia.core.reactor.nio
 import io.netty5.util.internal.*
 import io.otavia.core.channel.nio.{AbstractNioChannel, NioProcessor}
 import io.otavia.core.channel.{Channel, ChannelException}
+import io.otavia.core.log4a.Logger
 import io.otavia.core.reactor.*
 import io.otavia.core.reactor.nio.NioHandler.*
-import org.log4s.{Logger, getLogger}
 
 import java.io.{IOException, UncheckedIOException}
 import java.nio.channels.spi.SelectorProvider
@@ -42,7 +42,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
 
     def this() = this(SelectorProvider.provider(), DefaultSelectStrategyFactory.newSelectStrategy())
 
-    val logger: Logger = getLogger // TODO: change to ActorLogger
+    val logger: Logger = Logger.getLogger(getClass, system)
 
     private val selectNowSupplier: IntSupplier = new IntSupplier {
         override def getAsInt: Int = try { selectNow() }

@@ -67,10 +67,9 @@ object SystemPropertyUtil {
 
     def getLong(key: String, default: Long): Long = get(key).map(_.toLong).getOrElse(default)
 
-    def readStringFromClassPath(path: String, bufferSize: Int = 8192): String = {
-        val buffer = new Array[Byte](bufferSize)
-        getClass.getResourceAsStream(path).read(buffer)
-        new String(buffer)
+    def readStringFromClassPath(path: String): String = {
+        val stream = getClass.getResourceAsStream(path)
+        new String(stream.readAllBytes())
     }
 
 }

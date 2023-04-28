@@ -17,7 +17,7 @@
 package io.otavia.core.address
 
 import io.otavia.core.actor.{AbstractActor, Actor, ChannelsActor, StateActor}
-import io.otavia.core.log4a.Logger
+import io.otavia.core.log4a.Appender
 import io.otavia.core.message.*
 import io.otavia.core.stack.{ReplyFuture, ReplyWaiter}
 import io.otavia.core.system.{ActorHouse, House}
@@ -57,12 +57,11 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
     }
 
     override def notice(notice: M & Notice)(using sender: AbstractActor[?]): Unit = {
-        notice.setMessageContext(sender)
         house.putNotice(notice)
     }
 
     override private[core] def reply(reply: Reply, sender: AbstractActor[?]): Unit = {
-        reply.setMessageContext(sender)
+        // reply.setMessageContext(sender)
         house.putReply(reply)
     }
 
