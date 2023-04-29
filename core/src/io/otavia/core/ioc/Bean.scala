@@ -17,11 +17,12 @@
 package io.otavia.core.ioc
 
 import io.otavia.core.actor.{AbstractActor, Actor, ActorFactory}
+import io.otavia.core.address.Address
 
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-class Bean(val clz: Class[?], val factory: ActorFactory[?], val num: Int = 1, val primary: Boolean = false) {
+class Bean(val clz: Class[?], val address: Address[?], val primary: Boolean = false) {
 
     private val superCls = Bean.getSupers(clz)
 
@@ -56,7 +57,6 @@ object Bean {
         }
     }
 
-    def apply(clz: Class[?], factory: ActorFactory[?], num: Int, primary: Boolean): Bean =
-        new Bean(clz, factory, num, primary)
+    def apply(clz: Class[?], address: Address[?], primary: Boolean): Bean = new Bean(clz, address, primary)
 
 }

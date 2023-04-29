@@ -52,23 +52,16 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
      */
     def self: Address[M] = context.address.asInstanceOf[Address[M]]
 
-    override final private[core] def afterCreateSys(): Unit = try {
-        afterCreate()
-    } catch {
-        case t: Throwable => logError("Occurs error when call afterCreate with ", t)
-    }
-
     final override private[core] def setCtx(context: ActorContext): Unit = {
         ctx = context
         idAllocator.setActorId(context.actorId)
         idAllocator.setActorAddress(context.address)
+    }
 
-        try {
-            this.afterMount()
-        } catch {
-            case t: Throwable => logError("afterMount error with", t)
-        }
-
+    private[core] final def mount(): Unit = try {
+        this.afterMount()
+    } catch {
+        case t: Throwable => logError("afterMount error with", t)
     }
 
     final override def context: ActorContext = ctx

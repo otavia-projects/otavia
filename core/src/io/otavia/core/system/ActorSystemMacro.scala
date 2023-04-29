@@ -37,7 +37,7 @@ object ActorSystemMacro {
 
             val thread = system.pool.next(isIoActor)
 
-            val address = system.mountActor(actor, thread)
+            val address = system.setActorContext(actor, thread)
 
             address
         }

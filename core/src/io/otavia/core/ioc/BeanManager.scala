@@ -22,37 +22,68 @@ import io.otavia.core.message.Call
 import io.otavia.core.system.ActorSystem
 
 import java.util.concurrent.ConcurrentHashMap
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+import scala.language.unsafeNulls
 import scala.reflect.ClassTag
 
 private[core] class BeanManager(val system: ActorSystem) {
 
     private val beans      = new ConcurrentHashMap[String, Bean]()
     private val qualifiers = new ConcurrentHashMap[String, String]()
+    private val superTypes = new ConcurrentHashMap[String, mutable.Buffer[String]]()
 
     def register(
         clz: Class[?],
-        factory: ActorFactory[?],
-        num: Int,
+        address: Address[?],
         qualifier: Option[String] = None,
         primary: Boolean = false
     ): Unit = {
-        val bean = Bean(clz, factory, num, primary)
+        val bean = Bean(clz, address, primary)
         beans.put(bean.name, bean)
 
         qualifier match
-            case None        =>
-            case Some(value) => qualifiers.put(value, bean.name)
+            case Some(name) => qualifiers.put(name, bean.name)
+            case None       =>
+
+        for (sp <- bean.superClasses() if sp != bean.name) {
+            var value: mutable.Buffer[String] = null
+
+            if (!superTypes.containsKey(sp)) value = new ArrayBuffer[String]() else value = superTypes.get(sp)
+
+            value.addOne(bean.name)
+        }
     }
 
-    def register(entry: BeanEntry): Unit = {
-        val bean = Bean(entry.beanClz, entry.factory, entry.num, entry.primary)
-        beans.put(bean.name, bean)
-
-        entry.qualifier match
-            case Some(value) => qualifiers.put(value, bean.name)
-            case None        =>
+    def getBean(qualifier: String, clz: Class[?]): Address[?] = {
+        if (qualifiers.containsKey(qualifier)) {
+            val name = qualifiers.get(qualifier)
+            val bean = beans.get(name)
+            if (clz.isAssignableFrom(bean.clz)) bean.address else throw new IllegalStateException()
+        } else throw new IllegalArgumentException()
     }
 
-    def getBean(qualifier: String): Address[?] = ???
+    def getBean(clz: Class[?]): Address[?] = {
+        val spName = clz.getName
+        if (superTypes.containsKey(spName)) {
+            val seq = superTypes.get(spName)
+            if (seq.length == 1) {
+                val bean = beans.get(seq.head)
+                bean.address
+            } else {
+                var bean: Bean = null
+
+                for (name <- seq) {
+                    val b = beans.get(name)
+                    if (b.primary) {
+                        if (bean == null) bean = b else throw new IllegalStateException()
+                    }
+                }
+
+                if (bean != null) bean.address else throw new IllegalStateException()
+            }
+
+        } else throw new IllegalStateException()
+    }
 
 }

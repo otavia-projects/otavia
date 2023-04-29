@@ -21,7 +21,7 @@ import io.netty5.util.internal.SystemPropertyUtil
 import io.otavia.core.actor.{Actor, ActorFactory, MainActor, MessageOf}
 import io.otavia.core.address.Address
 import io.otavia.core.channel.{Channel, ChannelFactory}
-import io.otavia.core.ioc.{BeanEntry, Module}
+import io.otavia.core.ioc.{BeanDefinition, Module}
 import io.otavia.core.log4a.{DefaultLog4aModule, LogLevel}
 import io.otavia.core.message.*
 import io.otavia.core.reactor.aio.Submitter
@@ -92,25 +92,18 @@ trait ActorSystem {
         factory: ActorFactory[A],
         num: Int = 1,
         global: Boolean = false,
-        qualifier: Option[String] = None
-    ): Address[MessageOf[A]]
-
-    private[core] def registerGlobalActor(
-        clz: Class[? <: Actor[? <: Call]],
-        factory: ActorFactory[?],
-        num: Int = 1,
         qualifier: Option[String] = None,
         primary: Boolean = false
-    ): Unit
+    ): Address[MessageOf[A]]
 
-    private[core] def registerGlobalActor(entry: BeanEntry): Unit
+    private[core] def registerGlobalActor(entry: BeanDefinition): Unit
 
     def loadModule(module: Module): Unit
 
     def runMain[M <: MainActor](factory: ActorFactory[M], modules: Seq[Module] = Seq(new DefaultLog4aModule)): Unit
 
     /** IOC methods, developer can ues it by [[io.otavia.core.ioc.Injectable]] */
-    private[core] def getAddress[M <: Call](
+    def getAddress[M <: Call](
         clz: Class[? <: Actor[?]],
         qualifier: Option[String] = None,
         remote: Option[String] = None
@@ -134,7 +127,7 @@ trait ActorSystem {
 
     final def threadPoolSize: Int = pool.size
 
-    private[system] def mountActor[A <: Actor[? <: Call]](actor: A, thread: ActorThread): Address[MessageOf[A]]
+    private[system] def setActorContext[A <: Actor[? <: Call]](actor: A, thread: ActorThread): Address[MessageOf[A]]
 
 }
 

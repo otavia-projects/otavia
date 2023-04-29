@@ -19,9 +19,9 @@ package io.otavia.core.system
 import io.netty5.buffer.BufferAllocator
 import io.otavia.BuildInfo
 import io.otavia.core.actor.*
-import io.otavia.core.address.{Address, RobinAddress}
+import io.otavia.core.address.*
 import io.otavia.core.channel.ChannelFactory
-import io.otavia.core.ioc.{BeanEntry, BeanManager, Module}
+import io.otavia.core.ioc.{BeanDefinition, BeanManager, Module}
 import io.otavia.core.log4a.{DefaultLog4aModule, LogLevel}
 import io.otavia.core.message.{Call, IdAllocator}
 import io.otavia.core.reactor.BlockTaskExecutor
@@ -30,6 +30,8 @@ import io.otavia.core.timer.Timer
 import io.otavia.core.util.SystemPropertyUtil
 
 import java.util.concurrent.atomic.AtomicLong
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.language.unsafeNulls
 import scala.reflect.{ClassTag, classTag}
 
@@ -88,35 +90,29 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
         factory: ActorFactory[A],
         num: Int = 1,
         global: Boolean = false,
-        qualifier: Option[String] = None
+        qualifier: Option[String] = None,
+        primary: Boolean = false
     ): Address[MessageOf[A]] = {
-        if (num == 1) {
-            val actor     = factory.create().asInstanceOf[AbstractActor[? <: Call]]
-            val isIoActor = if (actor.isInstanceOf[ChannelsActor[?]]) true else false
-            val thread    = pool.next(isIoActor)
-            val address   = mountActor(actor, thread)
+        val actorFactory   = factory.asInstanceOf[ActorFactory[?]]
+        val (address, clz) = createActor(actorFactory, num)
 
-            if (global) {
-//                beanManager.register(actor.getClass, qualifier)
-            }
-            address
-        } else {
-            val range     = (9 until num).toArray
-            val actors    = range.map(_ => factory.create().asInstanceOf[AbstractActor[? <: Call]])
-            val isIoActor = if (actors.head.isInstanceOf[ChannelsActor[?]]) true else false
-            val threads   = pool.nexts(num, isIoActor)
+        if (global) beanManager.register(clz, address, qualifier, primary)
 
-            val address = range.map { index =>
-                val actor  = actors(index)
-                val thread = threads(index)
-                mountActor(actor, thread)
-            }
+        mountActor(address)
 
-            new RobinAddress[MessageOf[A]](address)
-        }
+        address.asInstanceOf[Address[MessageOf[A]]]
     }
 
-    final private[system] def mountActor[A <: Actor[? <: Call]](
+    private final def mountActor(address: Address[?]): Unit = {
+        address match
+            case addr: ActorAddress[?] => addr.house.mount()
+            case robinAddress: RobinAddress[?] =>
+                robinAddress.underlying.foreach { addr =>
+                    addr.asInstanceOf[ActorAddress[?]].house.mount()
+                }
+    }
+
+    final private[system] def setActorContext[A <: Actor[? <: Call]](
         actor: A,
         thread: ActorThread
     ): Address[MessageOf[A]] = {
@@ -130,20 +126,67 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
         address
     }
 
-    override private[core] def registerGlobalActor(
-        clz: Class[? <: Actor[? <: Call]],
-        factory: ActorFactory[?],
-        num: Int,
-        qualifier: Option[String] = None,
-        primary: Boolean = false
-    ): Unit = {
-        beanManager.register(clz, factory, num, qualifier, primary)
+    private def setActorContext0(actor: AbstractActor[?], thread: ActorThread): ActorAddress[?] = {
+        val house   = thread.createActorHouse()
+        val address = house.createUntypedAddress()
+        val context = ActorContext(this, address, generator.getAndIncrement())
+
+        actor.setCtx(context)
+        house.setActor(actor)
+
+        address
     }
 
-    override private[core] def registerGlobalActor(entry: BeanEntry): Unit = beanManager.register(entry)
+    private def createActor(factory: ActorFactory[?], num: Int): (Address[?], Class[?]) = {
+        if (num == 1) createActor0(factory)
+        else if (num > 1) {
+            val addrs = createActor0(factory, num)
+            (new RobinAddress[Call](addrs._1.asInstanceOf[Array[Address[Call]]]), addrs._2)
+        } else throw new IllegalArgumentException("num must large than 0")
+    }
+
+    private def createActor0(factory: ActorFactory[?]): (ActorAddress[?], Class[?]) = {
+        val actor   = factory.create().asInstanceOf[AbstractActor[? <: Call]]
+        val isIO    = actor.isInstanceOf[ChannelsActor[?]]
+        val thread  = pool.next(isIO)
+        val address = setActorContext0(actor, thread)
+        (address, actor.getClass)
+    }
+
+    private def createActor0(factory: ActorFactory[?], num: Int): (Array[ActorAddress[?]], Class[?]) = {
+        val range   = (0 until num).toArray
+        val actors  = range.map(_ => factory.create().asInstanceOf[AbstractActor[? <: Call]])
+        val isIO    = actors.head.isInstanceOf[ChannelsActor[?]]
+        val threads = pool.nexts(num, isIO)
+        val address = range.map { index =>
+            val actor  = actors(index)
+            val thread = threads(index)
+            setActorContext0(actor, thread)
+        }
+
+        (address, actors.head.getClass)
+    }
+
+    override private[core] def registerGlobalActor(definition: BeanDefinition): Unit = {
+        val (address, clz) = createActor(definition.factory, definition.num)
+        beanManager.register(clz, address, definition.qualifier, definition.primary)
+        mountActor(address)
+    }
 
     override def loadModule(module: Module): Unit = try {
-        module.load(this)
+        val unmount = new ArrayBuffer[Address[?]](module.definitions.length)
+        module.definitions.foreach { definition =>
+            val (address, clz) = createActor(definition.factory, definition.num)
+            unmount.addOne(address)
+            beanManager.register(clz, address, definition.qualifier, definition.primary)
+        }
+        unmount.foreach {
+            case address: ActorAddress[?] => address.house.mount()
+            case robinAddress: RobinAddress[?] =>
+                robinAddress.underlying.foreach { addr =>
+                    addr.asInstanceOf[ActorAddress[?]].house.mount()
+                }
+        }
     } catch {
         case t: Throwable => // TODO: log
     }
@@ -157,11 +200,17 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
         mainActor = address
     }
 
-    override private[core] def getAddress[M <: Call](
+    override def getAddress[M <: Call](
         clz: Class[? <: Actor[?]],
         qualifier: Option[String],
         remote: Option[String]
-    ) = ???
+    ): Address[M] = {
+        val address = qualifier match
+            case Some(value) => beanManager.getBean(value, clz)
+            case None        => beanManager.getBean(clz)
+
+        address.asInstanceOf[Address[M]]
+    }
 
     override def serverChannelFactory: ChannelFactory = ???
 

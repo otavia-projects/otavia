@@ -20,7 +20,7 @@ import io.otavia.core.actor.{AbstractActor, StateActor}
 import io.otavia.core.address.ActorAddress
 import io.otavia.core.message.*
 import io.otavia.core.reactor.Event
-import io.otavia.core.system.ActorHouse.{EMPTY, HOUSE_STATUS}
+import io.otavia.core.system.ActorHouse.{CREATED, EMPTY, HOUSE_STATUS, MOUNTING}
 import io.otavia.core.util.Nextable
 
 import java.util.concurrent.atomic.AtomicInteger
@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger
  *  @tparam M
  *    the message type of the mounted actor instance can handle
  */
-private[core] class ActorHouse(val houseQueueHolder: HouseQueueHolder)
+private[core] class ActorHouse(val houseQueueManager: HouseQueueManager)
     extends Runnable
     with Nextable
     with AutoCloseable {
@@ -43,12 +43,25 @@ private[core] class ActorHouse(val houseQueueHolder: HouseQueueHolder)
     private val replyMailbox: MailBox  = new MailBox(this)
     private val eventMailbox: MailBox  = new MailBox(this)
 
-    private var status: AtomicInteger      = new AtomicInteger(EMPTY)
+    private val status: AtomicInteger      = new AtomicInteger(CREATED)
     @volatile private var running: Boolean = false
 
     def setActor(actor: AbstractActor[? <: Call]): Unit = dweller = actor
 
     def actor: AbstractActor[? <: Call] = this.dweller
+
+    def mount(): Unit = {
+        if (status.compareAndSet(CREATED, MOUNTING)) {
+            houseQueueManager.mount(this)
+        }
+    }
+
+    def mounting(): Unit = {
+        if (status.compareAndSet(MOUNTING, EMPTY)) {
+            dweller.mount()
+            // TODO: handle message received
+        }
+    }
 
     def putNotice(notice: Notice): Unit = put(notice, noticeMailbox)
 
@@ -79,6 +92,10 @@ private[core] class ActorHouse(val houseQueueHolder: HouseQueueHolder)
         address
     }
 
+    private[core] def createUntypedAddress(): ActorAddress[?] = {
+        new ActorAddress[Call](this)
+    }
+
     override def close(): Unit = {
         dweller.stop()
     }
@@ -88,8 +105,10 @@ private[core] class ActorHouse(val houseQueueHolder: HouseQueueHolder)
 object ActorHouse {
 
     type HOUSE_STATUS = Int
-    val EMPTY: HOUSE_STATUS   = 0
-    val READY: HOUSE_STATUS   = 1
-    val RUNNING: HOUSE_STATUS = 2
+    val CREATED: HOUSE_STATUS  = 0
+    val MOUNTING: HOUSE_STATUS = 1
+    val EMPTY: HOUSE_STATUS    = 2
+    val READY: HOUSE_STATUS    = 3
+    val RUNNING: HOUSE_STATUS  = 4
 
 }

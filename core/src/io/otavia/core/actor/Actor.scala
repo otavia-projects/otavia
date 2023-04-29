@@ -141,11 +141,6 @@ trait Actor[+M <: Call] {
 
     // actor life cycle hook method
 
-    /** actor system will call this method after this actor crated and before mount to actor system */
-    protected def afterCreate(): Unit = {}
-
-    private[core] def afterCreateSys(): Unit
-
     /** When a actor instance is mounted to actor system, this method will call by actor system */
     protected def afterMount(): Unit = {}
 

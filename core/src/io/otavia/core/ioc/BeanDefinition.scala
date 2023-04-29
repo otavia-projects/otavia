@@ -19,8 +19,7 @@ package io.otavia.core.ioc
 import io.otavia.core.actor.{Actor, ActorFactory}
 import io.otavia.core.message.Call
 
-case class BeanEntry(
-    beanClz: Class[? <: Actor[? <: Call]],
+case class BeanDefinition(
     factory: ActorFactory[?],
     num: Int,
     qualifier: Option[String],

@@ -24,7 +24,6 @@ trait ActorFactory[A <: Actor[? <: Call]] {
 
     private[core] final def create(): A = {
         val instance = newActor()
-        instance.afterCreateSys()
         instance
     }
 

@@ -16,14 +16,16 @@
 
 package io.otavia.core.system
 
-import io.otavia.core.system.HouseQueueHolder.*
+import io.otavia.core.system.HouseQueueManager.*
 import io.otavia.core.util.SystemPropertyUtil
 
-class HouseQueueHolder(val thread: ActorThread) {
+class HouseQueueManager(val thread: ActorThread) {
 
-    private val serverActorQueue   = new HouseQueue(this)
-    private val channelsActorQueue = new HouseQueue(this)
-    private val actorQueue         = new HouseQueue(this)
+    private val mountingQueue = new FIFOHouseQueue(this)
+
+    private val serverActorQueue   = new FIFOHouseQueue(this)
+    private val channelsActorQueue = new PriorityHouseQueue(this)
+    private val actorQueue         = new PriorityHouseQueue(this)
 
     private var serverRuns: Long  = 0
     private var serverTimes: Long = 0
@@ -36,8 +38,13 @@ class HouseQueueHolder(val thread: ActorThread) {
 
     @volatile private var runningStart: Long = Long.MaxValue
 
+    def mount(house: ActorHouse): Unit = {
+        mountingQueue.enqueue(house)
+        thread.notifyThread()
+    }
+
     private def get(): ActorHouse = {
-        if (serverActorQueue.available) serverActorQueue.poll()
+        if (serverActorQueue.available) serverActorQueue.dequeue(500)
         else if (channelsActorQueue.available) channelsActorQueue.poll()
         else if (actorQueue.available) actorQueue.poll()
 
@@ -56,8 +63,13 @@ class HouseQueueHolder(val thread: ActorThread) {
      *    true if run some [[ActorHouse]], otherwise false.
      */
     def run(timeout: Long = 0): Boolean = {
+        if (mountingQueue.available) {
+            println(s"${thread.getName} mounting size ${mountingQueue.readies}")
+            val house = mountingQueue.dequeue(500)
+            if (house != null) house.nn.mounting()
+        }
 //        val house =
-        ???
+        false
     }
 
     def stealable: Boolean = (actorQueue.readies > STEAL_REMAINING_THRESHOLD) ||
@@ -71,7 +83,7 @@ class HouseQueueHolder(val thread: ActorThread) {
 
 }
 
-object HouseQueueHolder {
+object HouseQueueManager {
 
     private val STEAL_REMAINING_THRESHOLD = SystemPropertyUtil.getInt("io.otavia.core.steal.threshold", 4)
     private val STEAL_NANO_THRESHOLD =

@@ -28,11 +28,12 @@ import scala.collection.mutable
 import scala.language.unsafeNulls
 
 class ActorThread(private[core] val system: ActorSystem) extends Thread() {
+ 
+    private val id = system.pool.nextThreadId()
 
-    private val id                                              = system.pool.nextThreadId()
     private val channelLaterTasks: mutable.ArrayDeque[Runnable] = mutable.ArrayDeque.empty
 
-    private val houseQueueHolder = new HouseQueueHolder(this)
+    private val houseQueueManager = new HouseQueueManager(this)
 
     private val eventQueue                  = new ConcurrentLinkedQueue[Event]()
     private val address: ActorThreadAddress = new ActorThreadAddress(this)
@@ -60,7 +61,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
     def actorThreadAddress: ActorThreadAddress = address
 
     private[core] def createActorHouse(): ActorHouse = {
-        val house = new ActorHouse(houseQueueHolder)
+        val house = new ActorHouse(houseQueueManager)
         registerHouseRef(house)
         house
     }
@@ -86,6 +87,10 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
         if (count > 0) System.gc()
     }
 
+    private[core] def notifyThread(): Unit = {
+        if (status == ST_WAITING) this.synchronized(this.notify())
+    }
+
     private[core] def putEvent(event: Event): Unit = {
         eventQueue.offer(event)
         if (status == ST_WAITING) this.synchronized(this.notify())
@@ -100,7 +105,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
         status = ST_RUNNING
         while (true) {
             var block = true
-            if (houseQueueHolder.run()) block = false
+            if (houseQueueManager.run()) block = false
             this.stopActor()
             // TODO: handle events
 

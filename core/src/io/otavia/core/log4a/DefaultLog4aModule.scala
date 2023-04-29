@@ -16,11 +16,11 @@
 
 package io.otavia.core.log4a
 
-import io.otavia.core.ioc.{BeanEntry, Module}
+import io.otavia.core.ioc.{BeanDefinition, Module}
 import io.otavia.core.system.ActorSystem
 
 class DefaultLog4aModule extends Module {
 
-    override def entries: Seq[BeanEntry] = ???
+    override def definitions: Seq[BeanDefinition] = ???
 
 }

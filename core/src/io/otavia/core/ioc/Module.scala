@@ -20,12 +20,6 @@ import io.otavia.core.system.ActorSystem
 
 trait Module {
 
-    def entries: Seq[BeanEntry]
-
-    private[core] final def load(system: ActorSystem): Unit = {
-        entries.foreach { entry =>
-            system.registerGlobalActor(entry)
-        }
-    }
+    def definitions: Seq[BeanDefinition]
 
 }

@@ -16,52 +16,14 @@
 
 package io.otavia.core.system
 
-import io.otavia.core.util.{Nextable, SpinLock}
+abstract class HouseQueue(val manager: HouseQueueManager) {
 
-import java.util.concurrent.atomic.AtomicInteger
-import scala.language.unsafeNulls
+    def available: Boolean
 
-class HouseQueue(val holder: HouseQueueHolder) {
+    def readies: Int
 
-    // for normal priority actor house
-    private val readLock                   = new SpinLock()
-    private val writeLock                  = new SpinLock()
-    private val size                       = new AtomicInteger(0)
-    @volatile private var head: ActorHouse = _
-    @volatile private var tail: Nextable   = _
+    def enqueue(house: ActorHouse): Unit
 
-    // for high priority actor house
-    private val highReadLock                 = new SpinLock()
-    private val highWriteLock                = new SpinLock()
-    private val highSize                     = new AtomicInteger(0)
-    @volatile private var highHead: Nextable = _
-    @volatile private var highTail: Nextable = _
-
-    def available: Boolean = (highSize.get() > 0) || (size.get() > 0)
-
-    def readies: Int = highSize.get() + size.get()
-
-    def poll(): ActorHouse = {
-
-        ???
-    }
-
-    def poll(timeout: Long): ActorHouse | Null = {
-        val slice                    = if (timeout > 500) 500 else timeout
-        val start                    = System.nanoTime()
-        var spin: Boolean            = true
-        var house: ActorHouse | Null = null
-        while (spin) {
-            if (highSize.get() > 0 && highReadLock.tryLock(slice)) {
-                house = ???
-                //
-            } else if (size.get() > 0 && readLock.tryLock(slice)) {
-                //
-            }
-            if (System.nanoTime() - start > timeout) spin = false
-        }
-
-        house
-    }
+    def dequeue(timeout: Long): ActorHouse | Null
 
 }
