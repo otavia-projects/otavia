@@ -19,7 +19,7 @@ package io.otavia.core.actor
 import io.otavia.core.actor.Actor.{ASK_TYPE, MessageType, NOTICE_TYPE, REPLY_TYPE}
 import io.otavia.core.address.{ActorAddress, Address}
 import io.otavia.core.cache.PerActorThreadObjectPool
-import io.otavia.core.log4a.Logging
+import io.otavia.core.slf4a.Logging
 import io.otavia.core.message.*
 import io.otavia.core.reactor.*
 import io.otavia.core.stack.*

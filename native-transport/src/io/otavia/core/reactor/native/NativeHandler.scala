@@ -17,7 +17,7 @@
 package io.otavia.core.reactor.native
 
 import io.otavia.core.channel.Channel
-import io.otavia.core.log4a.Logger
+import io.otavia.core.slf4a.Logger
 import io.otavia.core.reactor.*
 
 import scala.language.unsafeNulls

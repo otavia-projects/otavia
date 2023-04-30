@@ -19,7 +19,7 @@ package io.otavia.examples
 import io.otavia.core.actor.*
 import io.otavia.core.address.Address
 import io.otavia.core.ioc.Injectable
-import io.otavia.core.log4a.Appender
+import io.otavia.core.slf4a.Appender
 import io.otavia.core.message.{Ask, IdAllocator, Notice, Reply}
 import io.otavia.core.stack.*
 import io.otavia.examples.HandleStateActor.{MSG, QueryDB, QueryRedis}

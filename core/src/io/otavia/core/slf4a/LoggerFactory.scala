@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package io.otavia.core.log4a
+package io.otavia.core.slf4a
 
-import io.otavia.core.ioc.{BeanDefinition, Module}
 import io.otavia.core.system.ActorSystem
 
-class DefaultLog4aModule extends Module {
+object LoggerFactory {
 
-    override def definitions: Seq[BeanDefinition] = ???
+    def getLogger(clz: Class[?], system: ActorSystem): Logger = ???
 
 }

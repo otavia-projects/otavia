@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package io.otavia.core.log4a
+package io.otavia.core.slf4a.appender
 
 import io.otavia.core.actor.StateActor
 import io.otavia.core.address.Address
 import io.otavia.core.ioc.{Component, Primary}
-import io.otavia.core.log4a.Appender
+import io.otavia.core.slf4a.Appender
 import io.otavia.core.stack.{BatchNoticeStack, StackState}
 
 import scala.collection.mutable

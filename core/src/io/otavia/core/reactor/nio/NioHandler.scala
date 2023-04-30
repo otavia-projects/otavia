@@ -21,7 +21,7 @@ package io.otavia.core.reactor.nio
 import io.netty5.util.internal.*
 import io.otavia.core.channel.nio.{AbstractNioChannel, NioProcessor}
 import io.otavia.core.channel.{Channel, ChannelException}
-import io.otavia.core.log4a.Logger
+import io.otavia.core.slf4a.Logger
 import io.otavia.core.reactor.*
 import io.otavia.core.reactor.nio.NioHandler.*
 

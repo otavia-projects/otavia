@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.log4a
+package io.otavia.core.slf4a
 
 import io.otavia.core.system.ActorSystem
 
@@ -42,6 +42,6 @@ trait Logger {
 
 object Logger {
 
-    def getLogger(clz: Class[?], system: ActorSystem): Logger = ???
+    def getLogger(clz: Class[?], system: ActorSystem): Logger = LoggerFactory.getLogger(clz, system)
 
 }

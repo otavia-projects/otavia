@@ -41,7 +41,7 @@ trait Ask[R <: Reply] extends Call {
 
     def senderId: Long = sid
 
-    def messageId: Long = mid
+    def askId: Long = mid
 
     private[core] def setMessageContext(sender: AbstractActor[?]): Unit = {
         // TODO: support AOP when sender is AopActor

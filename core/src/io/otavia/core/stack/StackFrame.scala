@@ -102,7 +102,7 @@ final class AskFrame private[core] (val ask: Ask[?], initialState: StackState | 
 
     override def call: Ask[?] = ask
     override def `return`(reply: Reply): None.type = {
-        reply.setReplyId(ask.messageId)
+        reply.setReplyId(ask.askId)
         this.r = reply
         None
     }

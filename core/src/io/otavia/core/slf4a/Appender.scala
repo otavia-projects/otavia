@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.otavia.core.log4a
+package io.otavia.core.slf4a
 
 import io.otavia.core.actor.{Actor, StateActor}
-import io.otavia.core.log4a.Appender.LogMsg
+import io.otavia.core.slf4a.Appender.LogMsg
 import io.otavia.core.message.{IdAllocator, Notice}
 
 import java.time.LocalDateTime

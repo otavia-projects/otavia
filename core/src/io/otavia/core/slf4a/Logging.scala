@@ -14,52 +14,49 @@
  * limitations under the License.
  */
 
-package io.otavia.core.log4a
+package io.otavia.core.slf4a
 
 import io.netty5.util.internal.ThrowableUtil
 import io.otavia.core.actor.{AbstractActor, Actor}
 import io.otavia.core.address.Address
-import io.otavia.core.log4a.Appender
-import io.otavia.core.log4a.Appender.{Debug, Error, Fatal, Info, Trace, Warn}
-import io.otavia.core.message.IdAllocator
-import io.otavia.core.system.ActorSystem
+import io.otavia.core.ioc.Injectable
+import io.otavia.core.slf4a.Appender
+import io.otavia.core.slf4a.Appender.*
+import io.otavia.core.message.Message
 
 import java.time.LocalDateTime
 import scala.language.unsafeNulls
 
-class ActorLogger private[core] (val clz: Class[?], actor: AbstractActor[?]) {
+private[core] trait Logging {
+    this: AbstractActor[?] =>
 
-    private val system: ActorSystem            = actor.system
-    private val logger: Address[Appender.LogMsg] = system.getAddress(classOf[Appender])
-    private given AbstractActor[?]             = actor
+    protected lazy val logger: Address[Appender.LogMsg] = system.getAddress(classOf[Appender])
 
     def logTrace(log: String): Unit =
-        if (system.logLevel >= LogLevel.TRACE) logger.notice(Trace(clz, LocalDateTime.now(), log))
+        if (system.logLevel >= LogLevel.TRACE) logger.notice(Trace(getClass, LocalDateTime.now(), log))
+
+    def logTrace(log: String, e: Throwable): Unit = logTrace(s"$log\n${ThrowableUtil.stackTraceToString(e)}")
+
     def logDebug(log: String): Unit =
         if (system.logLevel >= LogLevel.DEBUG) logger.notice(Debug(getClass, LocalDateTime.now(), log))
-    def logDebug(log: String, e: Throwable): Unit = logDebug(s"${log}\n${ThrowableUtil.stackTraceToString(e)}")
+
+    def logDebug(log: String, e: Throwable): Unit = logDebug(s"$log\n${ThrowableUtil.stackTraceToString(e)}")
 
     def logInfo(log: String): Unit =
         if (system.logLevel >= LogLevel.INFO) logger.notice(Info(getClass, LocalDateTime.now(), log))
 
+    def logInfo(log: String, e: Throwable): Unit = logInfo(s"$log\n${ThrowableUtil.stackTraceToString(e)}")
+
     def logWarn(log: String): Unit =
         if (system.logLevel >= LogLevel.WARN) logger.notice(Warn(getClass, LocalDateTime.now(), log))
-
-    def logWarn(log: String, e: Throwable): Unit = logWarn(s"${log}\n${ThrowableUtil.stackTraceToString(e)}")
+    def logWarn(log: String, e: Throwable): Unit = logWarn(s"$log\n${ThrowableUtil.stackTraceToString(e)}")
 
     def logError(log: String): Unit =
         if (system.logLevel >= LogLevel.ERROR) logger.notice(Error(getClass, LocalDateTime.now(), log))
-
-    def logError(log: String, e: Throwable): Unit = logError(s"${log}\n${ThrowableUtil.stackTraceToString(e)}")
-    def logError(e: Throwable): Unit              = logError(s"${ThrowableUtil.stackTraceToString(e)}")
+    def logError(log: String, e: Throwable): Unit = logError(s"$log\n${ThrowableUtil.stackTraceToString(e)}")
 
     def logFatal(log: String): Unit =
         if (system.logLevel >= LogLevel.FATAL) logger.notice(Fatal(getClass, LocalDateTime.now(), log))
+    def logFatal(log: String, e: Throwable): Unit = logFatal(s"$log\n${ThrowableUtil.stackTraceToString(e)}")
 
-    def logFatal(log: String, e: Throwable): Unit = logFatal(s"${log}\n${ThrowableUtil.stackTraceToString(e)}")
-
-}
-
-object ActorLogger {
-    def getLogger(clz: Class[?])(using actor: AbstractActor[?]): ActorLogger = new ActorLogger(clz, actor)
 }

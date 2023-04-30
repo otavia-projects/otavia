@@ -39,7 +39,7 @@ class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
 
     def `return`(ret: ReplyOf[A]): None.type = {
         // ret.setMessageContext(runtimeActor)
-        ret.setReplyId(asks.map(ask => (ask.senderId, ask.messageId)))
+        ret.setReplyId(asks.map(ask => (ask.senderId, ask.askId)))
         reply = ret
         for (sender <- asks.map(_.sender).distinct) {
             sender.reply(reply, runtimeActor)
@@ -48,7 +48,7 @@ class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
     }
 
     def `throw`(cause: ExceptionMessage): None.type = {
-        cause.setReplyId(asks.map(ask => (ask.senderId, ask.messageId)))
+        cause.setReplyId(asks.map(ask => (ask.senderId, ask.askId)))
         // cause.setMessageContext(runtimeActor)
         reply = cause
         this.setFailed()

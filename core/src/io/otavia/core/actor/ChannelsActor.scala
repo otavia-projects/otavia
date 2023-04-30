@@ -21,7 +21,7 @@ import io.otavia.core.actor.Actor
 import io.otavia.core.actor.ChannelsActor.*
 import io.otavia.core.address.{ActorAddress, Address}
 import io.otavia.core.channel.*
-import io.otavia.core.log4a.ActorLogger
+import io.otavia.core.slf4a.ActorLogger
 import io.otavia.core.message.*
 import io.otavia.core.reactor.*
 import io.otavia.core.stack.*

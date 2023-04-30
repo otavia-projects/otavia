@@ -30,7 +30,7 @@ import io.otavia.core.channel.estimator.*
 import io.otavia.core.channel.inflight.ChannelInflightImpl
 import io.otavia.core.channel.internal.{ChannelOutboundBuffer, ReadSink, WriteBufferWaterMark, WriteSink}
 import io.otavia.core.channel.message.ReadPlan
-import io.otavia.core.log4a.ActorLogger
+import io.otavia.core.slf4a.ActorLogger
 import io.otavia.core.reactor.{ReactorEvent, TimeoutEvent}
 import io.otavia.core.stack.*
 import io.otavia.core.system.ActorThread

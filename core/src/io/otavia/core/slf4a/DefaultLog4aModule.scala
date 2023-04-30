@@ -14,21 +14,13 @@
  * limitations under the License.
  */
 
-package io.otavia.core.ioc
+package io.otavia.core.slf4a
 
-import io.otavia.core.slf4a.appender.ConsoleAppender
-import org.scalatest.funsuite.AnyFunSuite
+import io.otavia.core.ioc.{BeanDefinition, Module}
+import io.otavia.core.system.ActorSystem
 
-import scala.collection.mutable
-import scala.language.unsafeNulls
+class DefaultLog4aModule extends Module {
 
-class BeanSuite extends AnyFunSuite {
-
-    test("Get all super class for ConsoleAppender") {
-        val bean = new Bean(classOf[ConsoleAppender], null)
-        val sps  = bean.superClasses()
-
-        assert(sps == mutable.Set("io.otavia.core.slf4a.appender.ConsoleAppender", "io.otavia.core.slf4a.Appender"))
-    }
+    override def definitions: Seq[BeanDefinition] = ???
 
 }

@@ -1,7 +1,8 @@
 package io.otavia.core.util
 
 import io.otavia.core.actor.Actor
-import io.otavia.core.log4a.*
+import io.otavia.core.slf4a.*
+import io.otavia.core.slf4a.appender.ConsoleAppender
 import org.scalatest.funsuite.AnyFunSuite
 
 class ClassUtilsSuite extends AnyFunSuite {

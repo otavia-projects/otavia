@@ -19,7 +19,7 @@ package io.otavia.core.actor
 import io.otavia.core.actor.ChannelsActor.{Connect, ConnectReply, RegisterWaitState}
 import io.otavia.core.actor.ClientChannelsActor.ConnectWaitState
 import io.otavia.core.channel.Channel
-import io.otavia.core.log4a.ActorLogger
+import io.otavia.core.slf4a.ActorLogger
 import io.otavia.core.message.*
 import io.otavia.core.reactor.{Reactor, ReactorEvent}
 import io.otavia.core.stack.*

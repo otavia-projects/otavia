@@ -17,7 +17,7 @@
 package io.otavia.core.address
 
 import io.otavia.core.actor.{AbstractActor, Actor, ChannelsActor, StateActor}
-import io.otavia.core.log4a.Appender
+import io.otavia.core.slf4a.Appender
 import io.otavia.core.message.*
 import io.otavia.core.stack.{ReplyFuture, ReplyWaiter}
 import io.otavia.core.system.{ActorHouse, House}
@@ -38,7 +38,7 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
         sender: AbstractActor[?]
     ): ReplyFuture[ReplyOf[A]] = {
         ask.setMessageContext(sender)
-        sender.attachStack(ask.messageId, future)
+        sender.attachStack(ask.askId, future)
         house.putAsk(ask)
         future
     }
@@ -50,13 +50,13 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
         val promise = future.promise
 
         val id =
-            sender.system.timer.registerAskTimeout(TimeoutTrigger.DelayTime(timeout), sender.self, ask.messageId)
+            sender.system.timer.registerAskTimeout(TimeoutTrigger.DelayTime(timeout), sender.self, ask.askId)
 
         promise.setTimeoutId(id)
         future
     }
 
-    override def notice(notice: M & Notice)(using sender: AbstractActor[?]): Unit = {
+    override def notice(notice: M & Notice): Unit = {
         house.putNotice(notice)
     }
 

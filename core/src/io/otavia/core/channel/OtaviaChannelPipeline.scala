@@ -28,7 +28,7 @@ import io.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import io.otavia.core.channel.OtaviaChannelPipeline.*
 import io.otavia.core.channel.estimator.MessageSizeEstimator
 import io.otavia.core.channel.message.ReadPlan
-import io.otavia.core.log4a.ActorLogger
+import io.otavia.core.slf4a.ActorLogger
 import io.otavia.core.stack.{ChannelFuture, ChannelPromise}
 import io.otavia.core.util.ClassUtils
 

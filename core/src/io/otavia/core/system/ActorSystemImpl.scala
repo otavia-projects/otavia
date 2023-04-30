@@ -22,7 +22,7 @@ import io.otavia.core.actor.*
 import io.otavia.core.address.*
 import io.otavia.core.channel.ChannelFactory
 import io.otavia.core.ioc.{BeanDefinition, BeanManager, Module}
-import io.otavia.core.log4a.{DefaultLog4aModule, LogLevel}
+import io.otavia.core.slf4a.{DefaultLog4aModule, LogLevel}
 import io.otavia.core.message.{Call, IdAllocator}
 import io.otavia.core.reactor.BlockTaskExecutor
 import io.otavia.core.reactor.aio.Submitter

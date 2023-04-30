@@ -34,7 +34,7 @@ class AskStack[A <: Ask[? <: Reply]] private () extends ActorStack {
 
     def `return`(ret: ReplyOf[A]): None.type = {
         // ret.setMessageContext(runtimeActor)
-        ret.setReplyId(ask.messageId)
+        ret.setReplyId(ask.askId)
         reply = ret
         ask.sender.reply(reply, runtimeActor)
         None
@@ -42,7 +42,7 @@ class AskStack[A <: Ask[? <: Reply]] private () extends ActorStack {
 
     def `throw`(cause: ExceptionMessage): None.type = {
         // cause.setMessageContext(runtimeActor)
-        cause.setReplyId(ask.messageId)
+        cause.setReplyId(ask.askId)
         reply = cause
         this.setFailed()
         ask.sender.reply(reply, runtimeActor)

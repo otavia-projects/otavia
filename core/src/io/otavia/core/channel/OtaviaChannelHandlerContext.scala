@@ -26,7 +26,7 @@ import io.otavia.core.channel.OtaviaChannelHandlerContext.*
 import io.otavia.core.channel.internal.ChannelHandlerMask
 import io.otavia.core.channel.internal.ChannelHandlerMask.*
 import io.otavia.core.channel.message.ReadPlan
-import io.otavia.core.log4a.ActorLogger
+import io.otavia.core.slf4a.ActorLogger
 import io.otavia.core.stack.ChannelFuture
 
 import java.net.SocketAddress

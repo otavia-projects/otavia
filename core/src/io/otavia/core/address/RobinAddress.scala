@@ -25,7 +25,7 @@ class RobinAddress[M <: Call](val underlying: Array[Address[M]]) extends ProxyAd
     private var noticeCursor: Int = 0
     private var askCursor: Int    = 0
 
-    override def notice(notice: M & Notice)(using sender: AbstractActor[? <: Call]): Unit = {
+    override def notice(notice: M & Notice): Unit = {
         val index = noticeCursor % underlying.length
         noticeCursor += 1
         underlying(index).notice(notice)

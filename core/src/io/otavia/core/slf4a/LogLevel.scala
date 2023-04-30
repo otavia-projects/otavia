@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.log4a
+package io.otavia.core.slf4a
 
 import scala.annotation.targetName
 

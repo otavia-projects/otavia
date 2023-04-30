@@ -35,7 +35,7 @@ trait Address[-M <: Call] extends EventableAddress {
      *  @param sender
      *    who send this notice message
      */
-    def notice(notice: M & Notice)(using sender: AbstractActor[?]): Unit
+    def notice(notice: M & Notice): Unit
 
     /** send ask message to this address
      *  @param ask

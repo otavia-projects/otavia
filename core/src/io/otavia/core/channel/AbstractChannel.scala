@@ -22,7 +22,7 @@ import io.netty5.util.DefaultAttributeMap
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.message.ReadPlan
-import io.otavia.core.log4a.ActorLogger
+import io.otavia.core.slf4a.ActorLogger
 import io.otavia.core.stack.ChannelPromise
 import io.otavia.core.system.ActorThread
 
