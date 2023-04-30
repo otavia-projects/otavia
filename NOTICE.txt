@@ -47,3 +47,11 @@ This product contains a modified version of millw, which can be obtained at:
     * copyright/LICENSE.millw.txt (Apache License 2.0)
   * HOMEPAGE:
     * https://github.com/lefou/millw
+
+This product contains a modified version of slf4j, which can be obtained at:
+
+  * LICENSE:
+    * copyright/LICENSE.slf4j.txt (MIT License)
+  * HOMEPAGE:
+    * https://www.slf4j.org/
+    * https://github.com/qos-ch/slf4j

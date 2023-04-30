@@ -213,6 +213,14 @@ object `native-transport` extends OtaviaModule with RustJniModule {
 
 }
 
+object `slf4a-simple` extends OtaviaModule {
+
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
+
+    override def artifactName: T[String] = "slf4a-simple"
+
+}
+
 object web extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, `codec-http`, `codec-adbc`, `codec-redis`)
