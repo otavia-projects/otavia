@@ -22,13 +22,14 @@ import io.otavia.core.actor.*
 import io.otavia.core.address.*
 import io.otavia.core.channel.ChannelFactory
 import io.otavia.core.ioc.{BeanDefinition, BeanManager, Module}
-import io.otavia.core.slf4a.{DefaultLog4aModule, LogLevel}
 import io.otavia.core.message.{Call, IdAllocator}
 import io.otavia.core.reactor.BlockTaskExecutor
 import io.otavia.core.reactor.aio.Submitter
+import io.otavia.core.slf4a.{LogLevel, Logger}
 import io.otavia.core.timer.Timer
 import io.otavia.core.util.SystemPropertyUtil
 
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicLong
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -38,6 +39,12 @@ import scala.reflect.{ClassTag, classTag}
 class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFactory) extends ActorSystem {
 
     actorThreadFactory.setSystem(this)
+
+    @volatile private var inited: Boolean = false
+
+    private val earlyModules = new ConcurrentLinkedQueue[Module]()
+
+    private val logger = Logger.getLogger(getClass, this)
 
     private val actorThreadPool: ActorThreadPool = new DefaultActorThreadPool(
       this,
@@ -61,6 +68,17 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     println(SystemInfo.logo())
     println(SystemInfo.info())
+
+    inited = true
+
+    loadEarlyModules()
+
+    private def loadEarlyModules(): Unit = while (!earlyModules.isEmpty) {
+        val module = earlyModules.poll()
+        this.loadModule(module)
+    }
+
+    override def initialed: Boolean = inited
 
     override def pool: ActorThreadPool = actorThreadPool
 
@@ -174,27 +192,30 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     }
 
     override def loadModule(module: Module): Unit = try {
-        val unmount = new ArrayBuffer[Address[?]](module.definitions.length)
-        module.definitions.foreach { definition =>
-            val (address, clz) = createActor(definition.factory, definition.num)
-            unmount.addOne(address)
-            beanManager.register(clz, address, definition.qualifier, definition.primary)
-        }
-        unmount.foreach {
-            case address: ActorAddress[?] => address.house.mount()
-            case robinAddress: RobinAddress[?] =>
-                robinAddress.underlying.foreach { addr =>
-                    addr.asInstanceOf[ActorAddress[?]].house.mount()
-                }
+        if (!inited) {
+            earlyModules.add(module)
+        } else {
+            val unmount = new ArrayBuffer[Address[?]](module.definitions.length)
+            module.definitions.foreach { definition =>
+                val (address, clz) = createActor(definition.factory, definition.num)
+                unmount.addOne(address)
+                beanManager.register(clz, address, definition.qualifier, definition.primary)
+            }
+            unmount.foreach {
+                case address: ActorAddress[?] => address.house.mount()
+                case robinAddress: RobinAddress[?] =>
+                    robinAddress.underlying.foreach { addr =>
+                        addr.asInstanceOf[ActorAddress[?]].house.mount()
+                    }
+            }
+
+            module.onLoaded(this)
         }
     } catch {
-        case t: Throwable => // TODO: log
+        case t: Throwable => logger.error(s"Load module $module occur error with ", t)
     }
 
-    override def runMain[M <: MainActor](
-        factory: ActorFactory[M],
-        modules: Seq[Module] = Seq(new DefaultLog4aModule)
-    ): Unit = {
+    override def runMain[M <: MainActor](factory: ActorFactory[M], modules: Seq[Module] = Seq.empty): Unit = {
         modules.foreach(m => loadModule(m))
         val address = this.buildActor(factory)
         mainActor = address

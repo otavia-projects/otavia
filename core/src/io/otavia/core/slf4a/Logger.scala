@@ -52,13 +52,51 @@ trait Logger {
      */
     def trace(msg: String): Unit
 
+    /** Log a message at the [[TRACE]] level according to the specified format and argument.
+     *
+     *  This form avoids superfluous object creation when the logger is disabled for the [[TRACE]] level.
+     *
+     *  @param format
+     *    the format string
+     *  @param arg
+     *    the argument
+     */
+    def trace(format: String, arg: Any): Unit
+
+    /** Log a message at the [[TRACE]] level according to the specified format and arguments.
+     *
+     *  This form avoids superfluous object creation when the logger is disabled for the [[TRACE]] level.
+     *
+     *  @param format
+     *    the format string
+     *  @param arg1
+     *    the first argument
+     *  @param arg2
+     *    the second argument
+     */
+    def trace(format: String, arg1: Any, arg2: Any): Unit
+
+    /** Log a message at the [[TRACE]] level according to the specified format and arguments.
+     *
+     *  This form avoids superfluous string concatenation when the logger is disabled for the [[TRACE]] level. However,
+     *  this variant incurs the hidden (and relatively small) cost of creating an [[Seq]] before invoking the method,
+     *  even if this logger is disabled for [[TRACE]]. The variants taking one and two arguments exist solely in order
+     *  to avoid this hidden cost.
+     *
+     *  @param format
+     *    the format string
+     *  @param args
+     *    a list of 3 or more arguments
+     */
+    def trace(format: String, args: Any*): Unit
+
     /** Log an exception (throwable) at the TRACE level with an accompanying message.
      *  @param msg
      *    the message accompanying the exception
      *  @param e
      *    the exception (throwable) to log
      */
-    final def trace(msg: String, e: Throwable): Unit = trace(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
+    def trace(msg: String, e: Throwable): Unit
 
     /** Is the logger instance enabled for the [[DEBUG]] level?
      *
@@ -73,13 +111,51 @@ trait Logger {
      */
     def debug(msg: String): Unit
 
+    /** Log a message at the [[DEBUG]] level according to the specified format and argument.
+     *
+     *  This form avoids superfluous object creation when the logger is disabled for the [[DEBUG]] level.
+     *
+     *  @param format
+     *    the format string
+     *  @param arg
+     *    the argument
+     */
+    def debug(format: String, arg: Any): Unit
+
+    /** Log a message at the [[DEBUG]] level according to the specified format and arguments.
+     *
+     *  This form avoids superfluous object creation when the logger is disabled for the [[DEBUG]] level.
+     *
+     *  @param format
+     *    the format string
+     *  @param arg1
+     *    the first argument
+     *  @param arg2
+     *    the second argument
+     */
+    def debug(format: String, arg1: Any, arg2: Any): Unit
+
+    /** Log a message at the [[DEBUG]] level according to the specified format and arguments.
+     *
+     *  This form avoids superfluous string concatenation when the logger is disabled for the [[DEBUG]] level. However,
+     *  this variant incurs the hidden (and relatively small) cost of creating an [[Seq]] before invoking the method,
+     *  even if this logger is disabled for [[DEBUG]]. The variants taking one and two arguments exist solely in order
+     *  to avoid this hidden cost.
+     *
+     *  @param format
+     *    the format string
+     *  @param arguments
+     *    a list of 3 or more arguments
+     */
+    def debug(format: String, args: Any*): Unit
+
     /** Log an exception (throwable) at the [[DEBUG]] level with an accompanying message.
      *  @param msg
      *    the message accompanying the exception
      *  @param e
      *    the exception (throwable) to log
      */
-    final def debug(msg: String, e: Throwable): Unit = debug(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
+    def debug(msg: String, e: Throwable): Unit
 
     /** Is the logger instance enabled for the [[INFO]] level?
      *  @return
@@ -93,13 +169,51 @@ trait Logger {
      */
     def info(msg: String): Unit
 
+    /** Log a message at the [[INFO]] level according to the specified format and argument.
+     *
+     *  This form avoids superfluous object creation when the logger is disabled for the [[INFO]] level.
+     *
+     *  @param format
+     *    the format string
+     *  @param arg
+     *    the argument
+     */
+    def info(format: String, arg: Any): Unit
+
+    /** Log a message at the [[INFO]] level according to the specified format and arguments.
+     *
+     *  This form avoids superfluous object creation when the logger is disabled for the [[INFO]] level.
+     *
+     *  @param format
+     *    the format string
+     *  @param arg1
+     *    the first argument
+     *  @param arg2
+     *    the second argument
+     */
+    def info(format: String, arg1: Any, arg2: Any): Unit
+
+    /** Log a message at the [[INFO]] level according to the specified format and arguments.
+     *
+     *  This form avoids superfluous string concatenation when the logger is disabled for the [[INFO]] level. However,
+     *  this variant incurs the hidden (and relatively small) cost of creating an [[Seq]] before invoking the method,
+     *  even if this logger is disabled for [[INFO]]. The variants taking one and two arguments exist solely in order to
+     *  avoid this hidden cost.
+     *
+     *  @param format
+     *    the format string
+     *  @param arguments
+     *    a list of 3 or more arguments
+     */
+    def info(format: String, args: Any*): Unit
+
     /** Log an exception (throwable) at the [[INFO]] level with an accompanying message.
      *  @param msg
      *    the message accompanying the exception
      *  @param e
      *    the exception (throwable) to log
      */
-    final def info(msg: String, e: Throwable): Unit = info(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
+    def info(msg: String, e: Throwable): Unit
 
     /** Is the logger instance enabled for the [[WARN]] level?
      *  @return
@@ -113,13 +227,51 @@ trait Logger {
      */
     def warn(msg: String): Unit
 
+    /** Log a message at the [[WARN]] level according to the specified format and argument.
+     *
+     *  This form avoids superfluous object creation when the logger is disabled for the [[WARN]] level.
+     *
+     *  @param format
+     *    the format string
+     *  @param arg
+     *    the argument
+     */
+    def warn(format: String, arg: Any): Unit
+
+    /** Log a message at the [[WARN]] level according to the specified format and arguments.
+     *
+     *  This form avoids superfluous object creation when the logger is disabled for the [[WARN]] level.
+     *
+     *  @param format
+     *    the format string
+     *  @param arg1
+     *    the first argument
+     *  @param arg2
+     *    the second argument
+     */
+    def warn(format: String, arg1: Any, arg2: Any): Unit
+
+    /** Log a message at the [[WARN]] level according to the specified format and arguments.
+     *
+     *  This form avoids superfluous string concatenation when the logger is disabled for the [[WARN]] level. However,
+     *  this variant incurs the hidden (and relatively small) cost of creating an [[Seq]] before invoking the method,
+     *  even if this logger is disabled for [[WARN]]. The variants taking one and two arguments exist solely in order to
+     *  avoid this hidden cost.
+     *
+     *  @param format
+     *    the format string
+     *  @param arguments
+     *    a list of 3 or more arguments
+     */
+    def warn(format: String, args: Any*): Unit
+
     /** Log an exception (throwable) at the [[WARN]] level with an accompanying message.
      *  @param msg
      *    the message accompanying the exception
      *  @param e
      *    the exception (throwable) to log
      */
-    final def warn(msg: String, e: Throwable): Unit = warn(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
+    def warn(msg: String, e: Throwable): Unit
 
     /** Is the logger instance enabled for the [[ERROR]] level?
      *  @return
@@ -133,13 +285,51 @@ trait Logger {
      */
     def error(msg: String): Unit
 
+    /** Log a message at the [[ERROR]] level according to the specified format and argument.
+     *
+     *  This form avoids superfluous object creation when the logger is disabled for the [[ERROR]] level.
+     *
+     *  @param format
+     *    the format string
+     *  @param arg
+     *    the argument
+     */
+    def error(format: String, arg: Any): Unit
+
+    /** Log a message at the [[ERROR]] level according to the specified format and arguments.
+     *
+     *  This form avoids superfluous object creation when the logger is disabled for the [[ERROR]] level.
+     *
+     *  @param format
+     *    the format string
+     *  @param arg1
+     *    the first argument
+     *  @param arg2
+     *    the second argument
+     */
+    def error(format: String, arg1: Any, arg2: Any): Unit
+
+    /** Log a message at the [[ERROR]] level according to the specified format and arguments.
+     *
+     *  This form avoids superfluous string concatenation when the logger is disabled for the [[ERROR]] level. However,
+     *  this variant incurs the hidden (and relatively small) cost of creating an [[Seq]] before invoking the method,
+     *  even if this logger is disabled for [[ERROR]]. The variants taking one and two arguments exist solely in order
+     *  to avoid this hidden cost.
+     *
+     *  @param format
+     *    the format string
+     *  @param arguments
+     *    a list of 3 or more arguments
+     */
+    def error(format: String, args: Any*): Unit
+
     /** Log an exception (throwable) at the ERROR level with an accompanying message.
      *  @param msg
      *    the message accompanying the exception
      *  @param e
      *    the exception (throwable) to log
      */
-    final def error(msg: String, e: Throwable): Unit = error(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
+    def error(msg: String, e: Throwable): Unit
 
 }
 

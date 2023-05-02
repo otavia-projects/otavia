@@ -22,10 +22,10 @@ import io.otavia.core.actor.{Actor, ActorFactory, MainActor, MessageOf}
 import io.otavia.core.address.Address
 import io.otavia.core.channel.{Channel, ChannelFactory}
 import io.otavia.core.ioc.{BeanDefinition, Module}
-import io.otavia.core.slf4a.{DefaultLog4aModule, LogLevel}
 import io.otavia.core.message.*
 import io.otavia.core.reactor.aio.Submitter
 import io.otavia.core.reactor.{BlockTaskExecutor, Event, Reactor}
+import io.otavia.core.slf4a.LogLevel
 import io.otavia.core.stack.BlockFuture
 import io.otavia.core.timer.Timer
 
@@ -40,6 +40,8 @@ import scala.reflect.ClassTag
  *  only [[Notice]] message can send to a actor or channel group out side actor and channel group
  */
 trait ActorSystem {
+
+    def initialed: Boolean
 
     /** [[io.otavia.core.channel.Channel]] io reactor of this actor system */
     private[core] def reactor: Reactor
@@ -100,7 +102,7 @@ trait ActorSystem {
 
     def loadModule(module: Module): Unit
 
-    def runMain[M <: MainActor](factory: ActorFactory[M], modules: Seq[Module] = Seq(new DefaultLog4aModule)): Unit
+    def runMain[M <: MainActor](factory: ActorFactory[M], modules: Seq[Module] = Seq.empty): Unit
 
     /** IOC methods, developer can ues it by [[io.otavia.core.ioc.Injectable]] */
     def getAddress[M <: Call](

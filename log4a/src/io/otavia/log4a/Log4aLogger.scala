@@ -14,21 +14,15 @@
  * limitations under the License.
  */
 
-package io.otavia.core.ioc
+package io.otavia.log4a
 
+import io.otavia.core.slf4a.DelayAbstractLogger
 import io.otavia.core.system.ActorSystem
 
-import java.util.concurrent.ConcurrentLinkedQueue
-import scala.language.unsafeNulls
+class Log4aLogger extends DelayAbstractLogger {
 
-trait Module {
+    override def onLoaded(system: ActorSystem): Unit = ???
 
-    def definitions: Seq[BeanDefinition]
-
-    def loaded: Boolean
-
-    def addListener(listener: ModuleListener): Unit
-
-    private[core] def onLoaded(system: ActorSystem): Unit
+    override def isTraceEnabled: Boolean = ???
 
 }

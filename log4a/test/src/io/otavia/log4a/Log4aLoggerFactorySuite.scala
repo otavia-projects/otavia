@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-package io.otavia.core.ioc
+package io.otavia.log4a
 
-import io.otavia.core.system.ActorSystem
+import org.scalatest.funsuite.AnyFunSuite
 
-import java.util.concurrent.ConcurrentLinkedQueue
-import scala.language.unsafeNulls
+class Log4aLoggerFactorySuite extends AnyFunSuite {
 
-trait Module {
+    test("Load xml") {
+        val factory = new Log4aLoggerFactory()
 
-    def definitions: Seq[BeanDefinition]
 
-    def loaded: Boolean
-
-    def addListener(listener: ModuleListener): Unit
-
-    private[core] def onLoaded(system: ActorSystem): Unit
+    }
 
 }

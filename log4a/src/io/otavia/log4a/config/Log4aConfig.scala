@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-package io.otavia.core.slf4a
+package io.otavia.log4a.config
 
-import io.otavia.core.ioc.{BeanDefinition, Module}
-import io.otavia.core.system.ActorSystem
-
-class DefaultLog4aModule extends Module {
-
-    override def definitions: Seq[BeanDefinition] = ???
-
-}
+case class Log4aConfig(appenderConfigs: Seq[AppenderConfig], loggerConfigs: Seq[LoggerConfig])

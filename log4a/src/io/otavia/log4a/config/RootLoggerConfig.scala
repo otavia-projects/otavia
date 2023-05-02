@@ -14,17 +14,8 @@
  * limitations under the License.
  */
 
-package io.otavia.slf4a.simple
+package io.otavia.log4a.config
 
-import io.otavia.core.slf4a.ILoggerFactory
-import io.otavia.core.slf4a.spi.SLF4AServiceProvider
+import io.otavia.core.slf4a.LogLevel
 
-class SimpleServiceProvider extends SLF4AServiceProvider {
-
-    override def getLoggerFactory: ILoggerFactory = ???
-
-    override def getRequestedApiVersion: String = ???
-
-    override def initialize(): Unit = ???
-
-}
+case class RootLoggerConfig(level: LogLevel, refs: Seq[String]) extends LoggerConfig

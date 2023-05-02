@@ -63,7 +63,7 @@ object LoggerFactory {
      *    a [[Logger]] instance
      */
     def getLogger(name: String, system: ActorSystem): Logger = {
-        val iLoggerFactory = getILoggerFactory()
+        val iLoggerFactory = getILoggerFactory
         iLoggerFactory.getLogger(name, system)
     }
 
@@ -75,11 +75,11 @@ object LoggerFactory {
 
     @volatile private[slf4a] var INITIALIZATION_STATE = UNINITIALIZED
 
-    private var PROVIDER: SLF4AServiceProvider = _
+    @volatile private var PROVIDER: SLF4AServiceProvider = _
 
     private val NOP_SERVICE_PROVIDER = new NOPServiceProvider()
 
-    private def getILoggerFactory: ILoggerFactory = getProvider().getLoggerFactory()
+    private def getILoggerFactory: ILoggerFactory = getProvider.getLoggerFactory
 
     private def getProvider: SLF4AServiceProvider = this.synchronized {
         if (INITIALIZATION_STATE == UNINITIALIZED) {

@@ -27,20 +27,60 @@ object NOPLogger extends Logger {
 
     override def trace(msg: String): Unit = {}
 
+    override def trace(format: String, arg: Any): Unit = {}
+
+    override def trace(format: String, arg1: Any, arg2: Any): Unit = {}
+
+    override def trace(format: String, args: Any*): Unit = {}
+
+    override def trace(msg: String, e: Throwable): Unit = {}
+
     override def isDebugEnabled: Boolean = false
 
     override def debug(msg: String): Unit = {}
+
+    override def debug(format: String, arg: Any): Unit = {}
+
+    override def debug(format: String, arg1: Any, arg2: Any): Unit = {}
+
+    override def debug(format: String, args: Any*): Unit = {}
+
+    override def debug(msg: String, e: Throwable): Unit = {}
 
     override def isInfoEnabled: Boolean = false
 
     override def info(msg: String): Unit = {}
 
+    override def info(format: String, arg: Any): Unit = {}
+
+    override def info(format: String, arg1: Any, arg2: Any): Unit = {}
+
+    override def info(format: String, args: Any*): Unit = {}
+
+    override def info(msg: String, e: Throwable): Unit = {}
+
     override def isWarnEnabled: Boolean = false
 
     override def warn(msg: String): Unit = {}
 
+    override def warn(format: String, arg: Any): Unit = {}
+
+    override def warn(format: String, arg1: Any, arg2: Any): Unit = {}
+
+    override def warn(format: String, args: Any*): Unit = {}
+
+    override def warn(msg: String, e: Throwable): Unit = {}
+
     override def isErrorEnabled: Boolean = false
 
     override def error(msg: String): Unit = {}
+
+    override def error(format: String, arg: Any): Unit = {}
+
+    override def error(format: String, arg1: Any, arg2: Any): Unit = {}
+
+    override def error(format: String, args: Any*): Unit = {}
+
+    override def error(msg: String, e: Throwable): Unit = {}
 
 }

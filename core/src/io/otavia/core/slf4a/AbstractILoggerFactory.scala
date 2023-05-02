@@ -14,21 +14,32 @@
  * limitations under the License.
  */
 
-package io.otavia.core.ioc
+package io.otavia.core.slf4a
 
+import io.otavia.core.ioc.Module
 import io.otavia.core.system.ActorSystem
 
-import java.util.concurrent.ConcurrentLinkedQueue
-import scala.language.unsafeNulls
+abstract class AbstractILoggerFactory extends ILoggerFactory {
 
-trait Module {
+    @volatile private var loaded: Boolean = false
 
-    def definitions: Seq[BeanDefinition]
+    def module: Module
 
-    def loaded: Boolean
+    override def getLogger(name: String, system: ActorSystem): Logger = {
+        if (!loaded) {
+            system.loadModule(module)
+            loaded = true
+        }
 
-    def addListener(listener: ModuleListener): Unit
+        if (system.initialed) {
+            //
+        } else {
+            //
+        }
 
-    private[core] def onLoaded(system: ActorSystem): Unit
+        ???
+    }
+
+    def getLogger0(name: String, system: ActorSystem): Logger
 
 }

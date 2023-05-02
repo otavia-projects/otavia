@@ -14,21 +14,6 @@
  * limitations under the License.
  */
 
-package io.otavia.core.ioc
+package io.otavia.log4a.config
 
-import io.otavia.core.system.ActorSystem
-
-import java.util.concurrent.ConcurrentLinkedQueue
-import scala.language.unsafeNulls
-
-trait Module {
-
-    def definitions: Seq[BeanDefinition]
-
-    def loaded: Boolean
-
-    def addListener(listener: ModuleListener): Unit
-
-    private[core] def onLoaded(system: ActorSystem): Unit
-
-}
+case class NormalLoggerConfig() extends LoggerConfig

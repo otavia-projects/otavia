@@ -16,7 +16,7 @@
 
 package io.otavia.core.slf4a.nop
 
-import io.otavia.core.slf4a.helpers.NOPLogger
+import io.otavia.core.slf4a.nop.NOPLogger
 import io.otavia.core.slf4a.{ILoggerFactory, Logger}
 import io.otavia.core.system.ActorSystem
 

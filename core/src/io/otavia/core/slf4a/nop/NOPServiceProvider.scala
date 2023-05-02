@@ -17,7 +17,7 @@
 package io.otavia.core.slf4a.nop
 
 import io.otavia.core.slf4a.ILoggerFactory
-import io.otavia.core.slf4a.helpers.NOPLoggerFactory
+import io.otavia.core.slf4a.nop.NOPLoggerFactory
 import io.otavia.core.slf4a.spi.SLF4AServiceProvider
 
 class NOPServiceProvider extends SLF4AServiceProvider {

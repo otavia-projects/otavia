@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 
-package io.otavia.core.ioc
+package io.otavia.log4a.spi
 
-import io.otavia.core.system.ActorSystem
+import io.otavia.core.slf4a.ILoggerFactory
+import io.otavia.core.slf4a.spi.SLF4AServiceProvider
 
-import java.util.concurrent.ConcurrentLinkedQueue
-import scala.language.unsafeNulls
+class Log4aServiceProvider extends SLF4AServiceProvider {
 
-trait Module {
+    override def getLoggerFactory: ILoggerFactory = ???
 
-    def definitions: Seq[BeanDefinition]
+    override def getRequestedApiVersion: String = ???
 
-    def loaded: Boolean
-
-    def addListener(listener: ModuleListener): Unit
-
-    private[core] def onLoaded(system: ActorSystem): Unit
+    override def initialize(): Unit = ???
 
 }

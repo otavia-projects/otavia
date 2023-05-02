@@ -14,21 +14,15 @@
  * limitations under the License.
  */
 
-package io.otavia.core.ioc
+package io.otavia.core.slf4a
 
+import io.otavia.core.ioc.ModuleListener
 import io.otavia.core.system.ActorSystem
 
-import java.util.concurrent.ConcurrentLinkedQueue
-import scala.language.unsafeNulls
+abstract class DelayAbstractLogger extends AbstractLogger with ModuleListener {
 
-trait Module {
+    override def onLoaded(system: ActorSystem): Unit = ???
 
-    def definitions: Seq[BeanDefinition]
 
-    def loaded: Boolean
-
-    def addListener(listener: ModuleListener): Unit
-
-    private[core] def onLoaded(system: ActorSystem): Unit
 
 }

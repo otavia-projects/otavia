@@ -23,6 +23,11 @@ class UtilSuite extends AnyFunSuite {
 
     test("report error") {
         Util.report("A SLF4A service provider failed to instantiate:\n")
+        Console.err.printf("format string {} is ok", "value")
+        val format = "format string {} is ok"
+
+
+
         assert(true)
     }
 

@@ -213,11 +213,19 @@ object `native-transport` extends OtaviaModule with RustJniModule {
 
 }
 
-object `slf4a-simple` extends OtaviaModule {
+object log4a extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
 
-    override def artifactName: T[String] = "slf4a-simple"
+    override def artifactName: T[String] = "log4a"
+
+    override def ivyDeps = Agg(ivy"org.scala-lang.modules::scala-xml:2.1.0")
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
 
 }
 
