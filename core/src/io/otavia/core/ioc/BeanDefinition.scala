@@ -21,7 +21,7 @@ import io.otavia.core.message.Call
 
 case class BeanDefinition(
     factory: ActorFactory[?],
-    num: Int,
-    qualifier: Option[String],
+    num: Int = 1,
+    qualifier: Option[String] = None,
     primary: Boolean = false
 )

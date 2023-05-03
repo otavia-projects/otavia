@@ -14,30 +14,14 @@
  * limitations under the License.
  */
 
-package io.otavia.core.slf4a
+package io.otavia.log4a
 
-import io.otavia.core.ioc.Module
-import io.otavia.core.system.ActorSystem
+sealed trait InternalLogger {}
 
-abstract class AbstractILoggerFactory extends ILoggerFactory {
+object InternalLogger {
 
-    @volatile private var loaded: Boolean = false
+    class BufferedLogger extends InternalLogger {}
 
-    def module: Module
-
-    override def getLogger(name: String, system: ActorSystem): AbstractLogger = {
-        val logger = getLogger0(name, system)
-        
-        if (!loaded) {
-            system.loadModule(module)
-            loaded = true
-        }
-
-        module.addListener(logger)
-
-        logger
-    }
-
-    def getLogger0(name: String, system: ActorSystem): AbstractLogger
+    class AppenderLogger extends InternalLogger {}
 
 }

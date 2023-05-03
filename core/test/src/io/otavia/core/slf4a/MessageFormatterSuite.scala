@@ -16,28 +16,17 @@
 
 package io.otavia.core.slf4a
 
-import io.otavia.core.ioc.Module
-import io.otavia.core.system.ActorSystem
+import io.otavia.core.slf4a.helpers.MessageFormatter
+import org.scalatest.funsuite.AnyFunSuite
 
-abstract class AbstractILoggerFactory extends ILoggerFactory {
+class MessageFormatterSuite extends AnyFunSuite {
 
-    @volatile private var loaded: Boolean = false
-
-    def module: Module
-
-    override def getLogger(name: String, system: ActorSystem): AbstractLogger = {
-        val logger = getLogger0(name, system)
-        
-        if (!loaded) {
-            system.loadModule(module)
-            loaded = true
-        }
-
-        module.addListener(logger)
-
-        logger
+    test("One argument") {
+        assert(MessageFormatter.format("print {} logger", 1) == "print 1 logger")
+        assert(MessageFormatter.format("print {} logger", "hello") == "print hello logger")
+        assert(MessageFormatter.format("print {} logger", true) == "print true logger")
+        assert(MessageFormatter.format("print {} logger", false) == "print false logger")
+        assert(MessageFormatter.format("print logger", false) == "print logger false")
     }
-
-    def getLogger0(name: String, system: ActorSystem): AbstractLogger
 
 }

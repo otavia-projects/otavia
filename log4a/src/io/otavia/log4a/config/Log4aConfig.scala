@@ -16,4 +16,8 @@
 
 package io.otavia.log4a.config
 
-case class Log4aConfig(appenderConfigs: Seq[AppenderConfig], loggerConfigs: Seq[LoggerConfig])
+case class Log4aConfig(
+    appenderConfigs: Seq[AppenderConfig],
+    rootConfig: RootLoggerConfig,
+    loggerConfigs: Seq[NormalLoggerConfig]
+)

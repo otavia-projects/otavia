@@ -19,9 +19,9 @@ package io.otavia.core.actor
 import io.otavia.core.actor.Actor.{ASK_TYPE, MessageType, NOTICE_TYPE, REPLY_TYPE}
 import io.otavia.core.address.{ActorAddress, Address}
 import io.otavia.core.cache.PerActorThreadObjectPool
-import io.otavia.core.slf4a.Logging
 import io.otavia.core.message.*
 import io.otavia.core.reactor.*
+import io.otavia.core.slf4a.Logger
 import io.otavia.core.stack.*
 import io.otavia.core.timer.Timer
 
@@ -30,7 +30,9 @@ import scala.concurrent.TimeoutException
 import scala.language.unsafeNulls
 import scala.reflect.ClassTag
 
-private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with ActorCoroutineRunner[M] with Logging {
+private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with ActorCoroutineRunner[M] {
+
+    protected var logger: Logger = _
 
     private var ctx: ActorContext = _
 
@@ -56,12 +58,13 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
         ctx = context
         idAllocator.setActorId(context.actorId)
         idAllocator.setActorAddress(context.address)
+        logger = Logger.getLogger(getClass, ctx.system)
     }
 
     private[core] final def mount(): Unit = try {
         this.afterMount()
     } catch {
-        case t: Throwable => logError("afterMount error with", t)
+        case t: Throwable => logger.error("afterMount error with", t)
     }
 
     final override def context: ActorContext = ctx
@@ -98,19 +101,19 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
             case _                  => ""
         noticeExceptionStrategy match
             case ExceptionStrategy.Restart =>
-                logError(log, e)
+                logger.error(log, e)
                 try {
                     beforeRestart()
                     restart()
                     afterRestart()
                 } catch {
                     case exception: Exception =>
-                        logFatal("Fatal error on restart", exception)
+                        logger.error("Fatal error on restart", exception)
                         system.shutdown()
                 }
-            case ExceptionStrategy.Ignore => logError(log, e)
+            case ExceptionStrategy.Ignore => logger.error(log, e)
             case ExceptionStrategy.ShutdownSystem =>
-                logFatal(log, e)
+                logger.error(log, e)
                 system.shutdown()
     }
 
@@ -358,7 +361,7 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
     private[core] def stop(): Unit = try {
         beforeStop()
     } catch {
-        case t: Throwable => logError("Error at beforeStop with ", t)
+        case t: Throwable => logger.error("Error at beforeStop with ", t)
     }
 
 }

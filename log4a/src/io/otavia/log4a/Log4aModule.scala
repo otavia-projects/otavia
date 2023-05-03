@@ -14,30 +14,21 @@
  * limitations under the License.
  */
 
-package io.otavia.core.slf4a
+package io.otavia.log4a
 
-import io.otavia.core.ioc.Module
-import io.otavia.core.system.ActorSystem
+import io.otavia.core.ioc.{AbstractModule, BeanDefinition}
 
-abstract class AbstractILoggerFactory extends ILoggerFactory {
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
-    @volatile private var loaded: Boolean = false
+class Log4aModule extends AbstractModule {
 
-    def module: Module
+    private val beans = new ArrayBuffer[BeanDefinition]()
 
-    override def getLogger(name: String, system: ActorSystem): AbstractLogger = {
-        val logger = getLogger0(name, system)
-        
-        if (!loaded) {
-            system.loadModule(module)
-            loaded = true
-        }
+    override def definitions: Seq[BeanDefinition] = beans.toSeq
 
-        module.addListener(logger)
-
-        logger
+    def addDefinition(definition: BeanDefinition): Unit = {
+        beans.addOne(definition)
     }
-
-    def getLogger0(name: String, system: ActorSystem): AbstractLogger
 
 }

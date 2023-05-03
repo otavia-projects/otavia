@@ -16,4 +16,7 @@
 
 package io.otavia.log4a.config
 
-case class NormalLoggerConfig() extends LoggerConfig
+import io.otavia.core.slf4a.LogLevel
+
+case class NormalLoggerConfig(prefix: String, level: LogLevel, refs: Seq[String], additivity: Boolean = false)
+    extends LoggerConfig

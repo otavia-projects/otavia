@@ -18,13 +18,18 @@ package io.otavia.log4a.spi
 
 import io.otavia.core.slf4a.ILoggerFactory
 import io.otavia.core.slf4a.spi.SLF4AServiceProvider
+import io.otavia.log4a.Log4aLoggerFactory
 
 class Log4aServiceProvider extends SLF4AServiceProvider {
 
-    override def getLoggerFactory: ILoggerFactory = ???
+    private var loggerFactory: Log4aLoggerFactory = _
 
-    override def getRequestedApiVersion: String = ???
+    override def getLoggerFactory: ILoggerFactory = loggerFactory
 
-    override def initialize(): Unit = ???
+    override def getRequestedApiVersion: String = "1.0.0"
+
+    override def initialize(): Unit = {
+        loggerFactory = new Log4aLoggerFactory()
+    }
 
 }

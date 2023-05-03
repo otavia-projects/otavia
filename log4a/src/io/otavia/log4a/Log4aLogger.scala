@@ -16,13 +16,34 @@
 
 package io.otavia.log4a
 
-import io.otavia.core.slf4a.DelayAbstractLogger
+import io.otavia.core.slf4a.{AbstractLogger, LogLevel}
 import io.otavia.core.system.ActorSystem
+import io.otavia.log4a.InternalLogger.{AppenderLogger, BufferedLogger}
 
-class Log4aLogger extends DelayAbstractLogger {
+class Log4aLogger(val name: String, val level: LogLevel, val appenderNames: Array[String]) extends AbstractLogger {
+
+    private var internalLogger: InternalLogger = new BufferedLogger()
+
+    override def getName: String = name
 
     override def onLoaded(system: ActorSystem): Unit = ???
 
     override def isTraceEnabled: Boolean = ???
+
+    override def isDebugEnabled: Boolean = ???
+
+    override def isWarnEnabled: Boolean = ???
+
+    override def isErrorEnabled: Boolean = ???
+
+    override def trace(msg: String): Unit = ???
+
+    override def debug(msg: String): Unit = ???
+
+    override def info(msg: String): Unit = ???
+
+    override def warn(msg: String): Unit = ???
+
+    override def error(msg: String): Unit = ???
 
 }

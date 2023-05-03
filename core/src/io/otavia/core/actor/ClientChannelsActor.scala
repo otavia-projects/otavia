@@ -19,9 +19,9 @@ package io.otavia.core.actor
 import io.otavia.core.actor.ChannelsActor.{Connect, ConnectReply, RegisterWaitState}
 import io.otavia.core.actor.ClientChannelsActor.ConnectWaitState
 import io.otavia.core.channel.Channel
-import io.otavia.core.slf4a.ActorLogger
 import io.otavia.core.message.*
 import io.otavia.core.reactor.{Reactor, ReactorEvent}
+import io.otavia.core.slf4a.ActorLogger
 import io.otavia.core.stack.*
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
@@ -64,8 +64,6 @@ abstract class ClientChannelsActor[M <: Call] extends ChannelsActor[M] {
                 stack.`return`(ConnectReply(ch.id))
     }
 
-
-
     protected def afterConnected(channel: Channel): Unit = {}
 
     override protected def newChannel(): Channel = system.channelFactory.newChannel(this)
@@ -73,7 +71,7 @@ abstract class ClientChannelsActor[M <: Call] extends ChannelsActor[M] {
     override def init(channel: Channel): Unit = {
         handler match
             case Some(h) => channel.pipeline.addLast(h)
-            case None    => logWarn(s"The channel $channel is not add any handler!")
+            case None    => logger.warn(s"The channel $channel is not add any handler!")
     }
 
 }

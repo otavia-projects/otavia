@@ -16,7 +16,6 @@
 
 package io.otavia.core.slf4a
 
-import com.sun.org.slf4j.internal.LoggerFactory
 import io.otavia.core.slf4a.helpers.Util
 import io.otavia.core.slf4a.nop.NOPServiceProvider
 import io.otavia.core.slf4a.spi.SLF4AServiceProvider
@@ -118,7 +117,7 @@ object LoggerFactory {
     }
 
     private def findServiceProviders(): mutable.ArrayBuffer[SLF4AServiceProvider] = {
-        val classLoaderOfLoggerFactory = classOf[LoggerFactory].getClassLoader
+        val classLoaderOfLoggerFactory = getClass.getClassLoader
         val serviceLoader              = getServiceLoader(classLoaderOfLoggerFactory)
         val providerList               = new mutable.ArrayBuffer[SLF4AServiceProvider]()
         val iterator                   = serviceLoader.iterator()

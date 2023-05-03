@@ -16,25 +16,21 @@
 
 package io.otavia.core.slf4a
 
-abstract class AbstractLogger extends Logger, Serializable {
+import io.otavia.core.ioc.ModuleListener
+import io.otavia.core.slf4a.helpers.MessageFormatter
+import io.otavia.core.util.ThrowableUtil
 
-    protected var name: String = _
-
-    override def getName: String = name
-    
-    override def trace(msg: String): Unit = ???
+abstract class AbstractLogger extends Logger, Serializable, ModuleListener {
 
     override def trace(format: String, arg: Any): Unit = ???
+//        if (isTraceEnabled) trace(MessageFormatter.format(format, arg))
 
     override def trace(format: String, arg1: Any, arg2: Any): Unit = ???
 
     override def trace(format: String, args: Any*): Unit = ???
 
     override def trace(msg: String, e: Throwable): Unit = ???
-
-    override def isDebugEnabled: Boolean = ???
-
-    override def debug(msg: String): Unit = ???
+//        if (isTraceEnabled) trace(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
 
     override def debug(format: String, arg: Any): Unit = ???
 
@@ -43,10 +39,9 @@ abstract class AbstractLogger extends Logger, Serializable {
     override def debug(format: String, args: Any*): Unit = ???
 
     override def debug(msg: String, e: Throwable): Unit = ???
+//        if (isDebugEnabled) trace(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
 
     override def isInfoEnabled: Boolean = ???
-
-    override def info(msg: String): Unit = ???
 
     override def info(format: String, arg: Any): Unit = ???
 
@@ -55,10 +50,7 @@ abstract class AbstractLogger extends Logger, Serializable {
     override def info(format: String, args: Any*): Unit = ???
 
     override def info(msg: String, e: Throwable): Unit = ???
-
-    override def isWarnEnabled: Boolean = ???
-
-    override def warn(msg: String): Unit = ???
+//        if (isInfoEnabled) trace(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
 
     override def warn(format: String, arg: Any): Unit = ???
 
@@ -67,10 +59,7 @@ abstract class AbstractLogger extends Logger, Serializable {
     override def warn(format: String, args: Any*): Unit = ???
 
     override def warn(msg: String, e: Throwable): Unit = ???
-
-    override def isErrorEnabled: Boolean = ???
-
-    override def error(msg: String): Unit = ???
+//        if (isWarnEnabled) trace(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
 
     override def error(format: String, arg: Any): Unit = ???
 
@@ -79,5 +68,6 @@ abstract class AbstractLogger extends Logger, Serializable {
     override def error(format: String, args: Any*): Unit = ???
 
     override def error(msg: String, e: Throwable): Unit = ???
+//        if (isErrorEnabled) trace(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
 
 }

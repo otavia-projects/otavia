@@ -19,8 +19,8 @@ package io.otavia.examples
 import io.otavia.core.actor.*
 import io.otavia.core.address.Address
 import io.otavia.core.ioc.Injectable
-import io.otavia.core.slf4a.Appender
 import io.otavia.core.message.{Ask, IdAllocator, Notice, Reply}
+import io.otavia.core.slf4a.Appender
 import io.otavia.core.stack.*
 import io.otavia.examples.HandleStateActor.{MSG, QueryDB, QueryRedis}
 
@@ -28,8 +28,8 @@ class HandleStateActor extends StateActor[MSG] with Injectable {
 
     import HandleStateActor.*
 
-    private var redis: Address[QueryRedis]  = _
-    private var db: Address[QueryDB]        = _
+    private var redis: Address[QueryRedis] = _
+    private var db: Address[QueryDB]       = _
 
     override def afterMount(): Unit = {
         redis = autowire("redis-client")
@@ -39,7 +39,7 @@ class HandleStateActor extends StateActor[MSG] with Injectable {
     private def handleRequest(stack: AskStack[Request]): Option[StackState] = {
         stack.stackState match
             case StackState.initialState =>
-                logDebug("Initial state")
+                logger.debug("Initial state")
                 val request = stack.ask
                 val state   = new WaitRedisState(request.req)
                 redis.ask(QueryRedis(request.req), state.redisResponseFuture)

@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 
-package io.otavia.core.slf4a
+package io.otavia.log4a.config
 
-import io.otavia.core.ioc.ModuleListener
-import io.otavia.core.system.ActorSystem
-
-abstract class DelayAbstractLogger extends AbstractLogger with ModuleListener {
-
-    override def onLoaded(system: ActorSystem): Unit = ???
-
-
-
-}
+case class ConsoleAppenderConfig(name: String, clzName: String) extends AppenderConfig

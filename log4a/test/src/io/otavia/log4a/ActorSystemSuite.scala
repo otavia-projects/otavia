@@ -14,30 +14,35 @@
  * limitations under the License.
  */
 
-package io.otavia.core.slf4a
+package io.otavia.log4a
 
-import io.otavia.core.ioc.Module
+import io.otavia.core.actor.MainActor
+import io.otavia.core.slf4a.Logger
+import io.otavia.core.stack.{NoticeStack, StackState}
 import io.otavia.core.system.ActorSystem
+import org.scalatest.funsuite.AnyFunSuite
 
-abstract class AbstractILoggerFactory extends ILoggerFactory {
+class ActorSystemSuite extends AnyFunSuite {
 
-    @volatile private var loaded: Boolean = false
+    import ActorSystemSuite.*
 
-    def module: Module
-
-    override def getLogger(name: String, system: ActorSystem): AbstractLogger = {
-        val logger = getLogger0(name, system)
-        
-        if (!loaded) {
-            system.loadModule(module)
-            loaded = true
-        }
-
-        module.addListener(logger)
-
-        logger
+    test("SPI load log4a") {
+        val system = ActorSystem()
+        system.runMain(() => new Main(Array.empty))
+        assert(true)
     }
 
-    def getLogger0(name: String, system: ActorSystem): AbstractLogger
+}
+
+object ActorSystemSuite {
+
+    class Main(args: Array[String]) extends MainActor(args) {
+        
+        override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] = {
+            logger.info("main actor running")
+            stack.`return`()
+        }
+
+    }
 
 }
