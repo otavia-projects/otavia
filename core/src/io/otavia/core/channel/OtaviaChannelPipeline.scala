@@ -28,7 +28,7 @@ import io.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import io.otavia.core.channel.OtaviaChannelPipeline.*
 import io.otavia.core.channel.estimator.MessageSizeEstimator
 import io.otavia.core.channel.message.ReadPlan
-import io.otavia.core.slf4a.ActorLogger
+import io.otavia.core.slf4a.Logger
 import io.otavia.core.stack.{ChannelFuture, ChannelPromise}
 import io.otavia.core.util.ClassUtils
 
@@ -40,7 +40,7 @@ import scala.language.unsafeNulls
 
 class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeline {
 
-    protected val logger: ActorLogger = ActorLogger.getLogger(getClass)(using executor)
+    protected val logger: Logger = Logger.getLogger(getClass, channel.system)
 
     private val channelInboundAdaptiveBuffer: AdaptiveBuffer  = new AdaptiveBuffer(channel.directAllocator)
     private val channelOutboundAdaptiveBuffer: AdaptiveBuffer = new AdaptiveBuffer(channel.directAllocator)
@@ -264,7 +264,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
                 removed = true
             } catch {
                 case t2: Throwable =>
-                    logger.logWarn(s"Failed to remove a handler: ${ctx.name}", t2)
+                    logger.warn(s"Failed to remove a handler: ${ctx.name}", t2)
             } finally {
                 ctx.remove(true)
             }
@@ -321,7 +321,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
                 handlers.remove(index)
                 resetIndices()
                 remove0(ctx)
-            case None => logger.logWarn(s"Handler $handler not be added to the channel's pipeline")
+            case None => logger.warn(s"Handler $handler not be added to the channel's pipeline")
         this
     }
 
@@ -334,7 +334,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
                 remove0(ctx)
                 Some(ctx.handler)
             case None =>
-                logger.logWarn(s"Handler name $name not be added to the channel's pipeline")
+                logger.warn(s"Handler name $name not be added to the channel's pipeline")
                 None
     }
 
@@ -411,7 +411,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
                 remove0(ctx)
                 Some(ctx.handler.asInstanceOf[T])
             case None =>
-                logger.logWarn(s"Handler not be added to the channel's pipeline")
+                logger.warn(s"Handler not be added to the channel's pipeline")
                 None
     }
 
@@ -718,7 +718,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
      *  [[ChannelHandler.channelExceptionCaught()]].
      */
     private[channel] def onUnhandledInboundException(cause: Throwable): Unit = {
-        logger.logWarn(
+        logger.warn(
           "An exceptionCaught() event was fired, and it reached at the tail of the pipeline. " +
               "It usually means the last handler in the pipeline did not handle the exception.",
           cause

@@ -19,15 +19,16 @@
 package io.otavia.core.channel
 
 import io.netty5.util.Resource
-import io.netty5.util.internal.{StringUtil, ThrowableUtil}
+import io.netty5.util.internal.StringUtil
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.OtaviaChannelHandlerContext.*
 import io.otavia.core.channel.internal.ChannelHandlerMask
 import io.otavia.core.channel.internal.ChannelHandlerMask.*
 import io.otavia.core.channel.message.ReadPlan
-import io.otavia.core.slf4a.ActorLogger
+import io.otavia.core.slf4a.Logger
 import io.otavia.core.stack.ChannelFuture
+import io.otavia.core.util.ThrowableUtil
 
 import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
@@ -40,7 +41,7 @@ final class OtaviaChannelHandlerContext(
     override val handler: ChannelHandler
 ) extends ChannelHandlerContext {
 
-    protected val logger: ActorLogger = ActorLogger.getLogger(getClass)(using channel.executor)
+    protected val logger: Logger = Logger.getLogger(getClass, pipeline.system)
 
     private[channel] val executionMask = mask(handler.getClass)
 
@@ -87,7 +88,7 @@ final class OtaviaChannelHandlerContext(
 
     private def handleOutboundHandlerException(cause: Throwable, closeDidThrow: Boolean): IllegalStateException = {
         val msg = s"$handler threw an exception while handling an outbound event. This is most likely a bug"
-        logger.logWarn(s"$msg. This is most likely a bug, closing the channel.", cause)
+        logger.warn(s"$msg. This is most likely a bug, closing the channel.", cause)
         if (closeDidThrow) close(ChannelFuture()) else channel.close(ChannelFuture()) // ignore close future
         new IllegalStateException(msg, cause)
     }
@@ -237,12 +238,12 @@ final class OtaviaChannelHandlerContext(
         try { handler.channelExceptionCaught(this, cause) }
         catch {
             case error: Throwable =>
-                logger.logDebug(
+                logger.debug(
                   s"An exception ${ThrowableUtil.stackTraceToString(error)} was thrown by a user handler's " +
                       "exceptionCaught() method while handling the following exception:",
                   cause
                 )
-                logger.logWarn(
+                logger.warn(
                   s"An exception '$error' [enable DEBUG level for full stacktrace] "
                       + "was thrown by a user handler's exceptionCaught() "
                       + "method while handling the following exception:",
@@ -621,14 +622,14 @@ final class OtaviaChannelHandlerContext(
                 val delta      = current - newPending
                 if (delta > 0) pipeline.decrementPendingOutboundBytes(delta)
                 else if (delta < 0) pipeline.incrementPendingOutboundBytes(-delta)
-            } catch { case e: IllegalStateException => logger.logError(e) }
+            } catch { case e: IllegalStateException => logger.error(ThrowableUtil.stackTraceToString(e)) }
         }
     } else assert(currentPendingBytes == 0)
 
     private def saveCurrentPendingBytesIfNeededInbound(): Boolean =
         saveCurrentPendingBytesIfNeeded() match
             case Some(value) =>
-                logger.logError(value)
+                logger.error(ThrowableUtil.stackTraceToString(value))
                 false
             case None => true
 

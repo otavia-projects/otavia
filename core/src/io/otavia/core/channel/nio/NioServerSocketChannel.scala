@@ -138,9 +138,9 @@ class NioServerSocketChannel(socket: ServerSocketChannel, protocolFamily: Protoc
                     1
                 } catch {
                     case t: Throwable =>
-                        logger.logWarn("Failed to create a new channel from an accepted socket.", t)
+                        logger.warn("Failed to create a new channel from an accepted socket.", t)
                         try { ch.close() }
-                        catch { case t2: Throwable => logger.logWarn("Failed to close a socket.", t2) }
+                        catch { case t2: Throwable => logger.warn("Failed to close a socket.", t2) }
                         readSink.processRead(0, 0, null)
                         0
                 }

@@ -21,7 +21,7 @@ import io.otavia.core.actor.ClientChannelsActor.ConnectWaitState
 import io.otavia.core.channel.Channel
 import io.otavia.core.message.*
 import io.otavia.core.reactor.{Reactor, ReactorEvent}
-import io.otavia.core.slf4a.ActorLogger
+import io.otavia.core.slf4a.Logger
 import io.otavia.core.stack.*
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}

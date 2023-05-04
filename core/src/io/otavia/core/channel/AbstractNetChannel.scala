@@ -30,7 +30,7 @@ import io.otavia.core.channel.estimator.*
 import io.otavia.core.channel.inflight.ChannelInflightImpl
 import io.otavia.core.channel.internal.{ChannelOutboundBuffer, ReadSink, WriteBufferWaterMark, WriteSink}
 import io.otavia.core.channel.message.ReadPlan
-import io.otavia.core.slf4a.ActorLogger
+import io.otavia.core.slf4a.Logger
 import io.otavia.core.reactor.{ReactorEvent, TimeoutEvent}
 import io.otavia.core.stack.*
 import io.otavia.core.system.ActorThread
@@ -204,7 +204,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         try {
             doClose()
         } catch {
-            case e: Exception => logger.logWarn("Failed to close a channel.", e)
+            case e: Exception => logger.warn("Failed to close a channel.", e)
         }
         closed = true
         closing = false
@@ -218,7 +218,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         closing = false
     } catch {
         case cause: Throwable =>
-            logger.logError(s"close channel $this occur error with ${ThrowableUtil.stackTraceToString(cause)}")
+            logger.error(s"close channel $this occur error with ${ThrowableUtil.stackTraceToString(cause)}")
     }
 
     /** Call by head handler on pipeline register outbound event.
@@ -275,7 +275,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
                         .maybeSuperUser() =>
                 // Warn a user about the fact that a non-root user can't receive a
                 // broadcast packet on *nix if the socket is bound on non-wildcard address.
-                logger.logWarn(
+                logger.warn(
                   "A non-root user can't receive a broadcast packet if the socket " +
                       "is not bound to a wildcard address; binding to a non-wildcard " +
                       s"address ($address) anyway as requested."
@@ -506,7 +506,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
     override private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = {
         event.cause match
             case Some(cause) =>
-                logger.logWarn("Unexpected exception occurred while deregistering a channel.", cause)
+                logger.warn("Unexpected exception occurred while deregistering a channel.", cause)
             case None =>
 
         // done deregister

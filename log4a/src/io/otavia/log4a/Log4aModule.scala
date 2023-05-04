@@ -31,4 +31,6 @@ class Log4aModule extends AbstractModule {
         beans.addOne(definition)
     }
 
+    override def toString: String = "Log4a"
+
 }

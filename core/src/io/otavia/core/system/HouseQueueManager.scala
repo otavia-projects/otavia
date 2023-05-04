@@ -16,10 +16,15 @@
 
 package io.otavia.core.system
 
+import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.HouseQueueManager.*
 import io.otavia.core.util.SystemPropertyUtil
 
+import scala.language.unsafeNulls
+
 class HouseQueueManager(val thread: ActorThread) {
+
+    private val logger = Logger.getLogger(getClass, thread.system)
 
     private val mountingQueue = new FIFOHouseQueue(this)
 
@@ -40,6 +45,15 @@ class HouseQueueManager(val thread: ActorThread) {
 
     def mount(house: ActorHouse): Unit = {
         mountingQueue.enqueue(house)
+        
+        thread.notifyThread()
+    }
+
+    def ready(house: ActorHouse): Unit = {
+        if (house.actorType == ActorHouse.STATE_ACTOR) actorQueue.enqueue(house)
+        else if (house.actorType == ActorHouse.CHANNELS_ACTOR) channelsActorQueue.enqueue(house)
+        else if (house.actorType == ActorHouse.SERVER_CHANNELS_ACTOR) serverActorQueue.enqueue(house)
+
         thread.notifyThread()
     }
 
@@ -64,9 +78,9 @@ class HouseQueueManager(val thread: ActorThread) {
      */
     def run(timeout: Long = 0): Boolean = {
         if (mountingQueue.available) {
-            println(s"${thread.getName} mounting size ${mountingQueue.readies}")
+            logger.trace(s"${thread.getName} mounting size ${mountingQueue.readies}")
             val house = mountingQueue.dequeue(500)
-            if (house != null) house.nn.mounting()
+            if (house != null) house.doMount()
         }
 //        val house =
         false

@@ -34,7 +34,6 @@ import java.util.concurrent.atomic.AtomicLong
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.language.unsafeNulls
-import scala.reflect.{ClassTag, classTag}
 
 class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFactory) extends ActorSystem {
 
@@ -66,8 +65,9 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     private val direct = BufferAllocator.offHeapPooled()
     private val heap   = BufferAllocator.onHeapPooled()
 
-    println(SystemInfo.logo())
+    println(s"${Console.YELLOW}${SystemInfo.logo()}${Console.RESET}")
     println(SystemInfo.info())
+    println("\n")
 
     inited = true
 
@@ -156,33 +156,27 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     }
 
     private def createActor(factory: ActorFactory[?], num: Int): (Address[?], Class[?]) = {
-        if (num == 1) createActor0(factory)
-        else if (num > 1) {
-            val addrs = createActor0(factory, num)
-            (new RobinAddress[Call](addrs._1.asInstanceOf[Array[Address[Call]]]), addrs._2)
+        if (num == 1) {
+            val actor   = factory.create().asInstanceOf[AbstractActor[? <: Call]]
+            val isIO    = actor.isInstanceOf[ChannelsActor[?]]
+            val thread  = pool.next(isIO)
+            val address = setActorContext0(actor, thread)
+            logger.debug(s"Created actor $actor")
+            (address, actor.getClass)
+        } else if (num > 1) {
+            val range   = (0 until num).toArray
+            val actors  = range.map(_ => factory.create().asInstanceOf[AbstractActor[? <: Call]])
+            val isIO    = actors.head.isInstanceOf[ChannelsActor[?]]
+            val threads = pool.nexts(num, isIO)
+            val address = range.map { index =>
+                val actor  = actors(index)
+                val thread = threads(index)
+                setActorContext0(actor, thread)
+            }
+            logger.debug(s"Created actors ${actors.mkString("Array(", ", ", ")")}")
+
+            (new RobinAddress[Call](address.asInstanceOf[Array[Address[Call]]]), actors.head.getClass)
         } else throw new IllegalArgumentException("num must large than 0")
-    }
-
-    private def createActor0(factory: ActorFactory[?]): (ActorAddress[?], Class[?]) = {
-        val actor   = factory.create().asInstanceOf[AbstractActor[? <: Call]]
-        val isIO    = actor.isInstanceOf[ChannelsActor[?]]
-        val thread  = pool.next(isIO)
-        val address = setActorContext0(actor, thread)
-        (address, actor.getClass)
-    }
-
-    private def createActor0(factory: ActorFactory[?], num: Int): (Array[ActorAddress[?]], Class[?]) = {
-        val range   = (0 until num).toArray
-        val actors  = range.map(_ => factory.create().asInstanceOf[AbstractActor[? <: Call]])
-        val isIO    = actors.head.isInstanceOf[ChannelsActor[?]]
-        val threads = pool.nexts(num, isIO)
-        val address = range.map { index =>
-            val actor  = actors(index)
-            val thread = threads(index)
-            setActorContext0(actor, thread)
-        }
-
-        (address, actors.head.getClass)
     }
 
     override private[core] def registerGlobalActor(definition: BeanDefinition): Unit = {
@@ -195,6 +189,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
         if (!inited) {
             earlyModules.add(module)
         } else {
+            logger.debug(s"Loading module $module")
             val unmount = new ArrayBuffer[Address[?]](module.definitions.length)
             module.definitions.foreach { definition =>
                 val (address, clz) = createActor(definition.factory, definition.num)

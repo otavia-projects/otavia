@@ -90,7 +90,7 @@ class FIFOHouseQueue(manager: HouseQueueManager) extends HouseQueue(manager) {
         head = house.next.asInstanceOf[ActorHouse]
         size.decrementAndGet()
         readLock.unlock()
-        house.dechain()
+        house.deChain()
         house
     }
 

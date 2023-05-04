@@ -22,7 +22,7 @@ import io.netty5.util.DefaultAttributeMap
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.message.ReadPlan
-import io.otavia.core.slf4a.ActorLogger
+import io.otavia.core.slf4a.Logger
 import io.otavia.core.stack.ChannelPromise
 import io.otavia.core.system.ActorThread
 
@@ -33,7 +33,7 @@ import java.nio.file.{OpenOption, Path}
 /** Abstract class of file channel and network channel. */
 abstract class AbstractChannel extends DefaultAttributeMap, Channel, ChannelState {
 
-    protected var logger: ActorLogger = _
+    protected var logger: Logger = _
 
     private var channelId: Int = -1
 
@@ -49,9 +49,8 @@ abstract class AbstractChannel extends DefaultAttributeMap, Channel, ChannelStat
     final private[core] def mount(channelsActor: ChannelsActor[?]): Unit = {
         assert(!mounted, s"The channel $this has been mounted already, you can't mount it twice!")
         actor = channelsActor
-        logger = ActorLogger.getLogger(getClass)(using executor)
+        logger = Logger.getLogger(getClass, system)
         channelId = executor.generateChannelId()
-        //        resetInboundBuffer()
         mounted = true
     }
 

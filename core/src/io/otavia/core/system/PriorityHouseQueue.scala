@@ -21,21 +21,21 @@ import io.otavia.core.util.{Nextable, SpinLock}
 import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
 
-class PriorityHouseQueue(val holder: HouseQueueManager) {
+class PriorityHouseQueue(val holder: HouseQueueManager) extends HouseQueue {
 
     // for normal priority actor house
     private val readLock                   = new SpinLock()
     private val writeLock                  = new SpinLock()
     private val size                       = new AtomicInteger(0)
     @volatile private var head: ActorHouse = _
-    @volatile private var tail: Nextable   = _
+    @volatile private var tail: ActorHouse = _
 
     // for high priority actor house
-    private val highReadLock                 = new SpinLock()
-    private val highWriteLock                = new SpinLock()
-    private val highSize                     = new AtomicInteger(0)
-    @volatile private var highHead: Nextable = _
-    @volatile private var highTail: Nextable = _
+    private val highReadLock                   = new SpinLock()
+    private val highWriteLock                  = new SpinLock()
+    private val highSize                       = new AtomicInteger(0)
+    @volatile private var highHead: ActorHouse = _
+    @volatile private var highTail: ActorHouse = _
 
     def available: Boolean = (highSize.get() > 0) || (size.get() > 0)
 
@@ -44,6 +44,8 @@ class PriorityHouseQueue(val holder: HouseQueueManager) {
     def enqueue(house: ActorHouse): Unit = {
         ???
     }
+
+    override def dequeue(timeout: Long): ActorHouse | Null = ???
 
     def poll(): ActorHouse = {
 
