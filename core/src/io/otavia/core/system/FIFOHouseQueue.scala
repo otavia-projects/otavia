@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
 
 // MPSC
-class FIFOHouseQueue(manager: HouseQueueManager) extends HouseQueue(manager) {
+class FIFOHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
 
     private val readLock                   = new SpinLock()
     private val writeLock                  = new SpinLock()
@@ -33,6 +33,10 @@ class FIFOHouseQueue(manager: HouseQueueManager) extends HouseQueue(manager) {
     override def available: Boolean = size.get() > 0
 
     override def readies: Int = size.get()
+
+    override def isEmpty: Boolean = size.get() == 0
+
+    override def nonEmpty: Boolean = size.get() > 0
 
     override def enqueue(house: ActorHouse): Unit = {
         writeLock.lock()
@@ -74,6 +78,7 @@ class FIFOHouseQueue(manager: HouseQueueManager) extends HouseQueue(manager) {
                 head = null
                 tail = null
                 size.decrementAndGet()
+                house.schedule()
                 writeLock.unlock()
                 house
             } else { // size.get() > 1
@@ -89,6 +94,7 @@ class FIFOHouseQueue(manager: HouseQueueManager) extends HouseQueue(manager) {
         val house = head
         head = house.next.asInstanceOf[ActorHouse]
         size.decrementAndGet()
+        house.schedule()
         readLock.unlock()
         house.deChain()
         house

@@ -62,6 +62,28 @@ class MailBox(val house: ActorHouse) extends SpinLock {
         obj.asInstanceOf[T]
     }
 
+    def getChain(max: Int): Nextable = {
+        var obj: Nextable = null
+        lock()
+        if (count <= max) {
+            obj = head
+            head = null
+            tail = null
+            count = 0
+            unlock()
+        } else {
+            unlock()
+            obj = head
+            var i = 0
+            while (i < max) {
+                head = head.next
+                i += 1
+            }
+            count -= max
+        }
+        obj
+    }
+
     def size(): Int = count
 
     def isEmpty: Boolean = count == 0

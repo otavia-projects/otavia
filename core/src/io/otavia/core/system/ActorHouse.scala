@@ -32,7 +32,7 @@ import scala.language.unsafeNulls
  *  @tparam M
  *    the message type of the mounted actor instance can handle
  */
-private[core] class ActorHouse(val manager: HouseQueueManager) extends Runnable with AutoCloseable {
+private[core] class ActorHouse(val manager: HouseManager) extends Runnable with AutoCloseable {
 
     private var dweller: AbstractActor[? <: Call] = _
     private var atp: Int                          = 0
@@ -42,14 +42,26 @@ private[core] class ActorHouse(val manager: HouseQueueManager) extends Runnable 
     private val replyMailbox: MailBox  = new MailBox(this)
     private val eventMailbox: MailBox  = new MailBox(this)
 
-    private val status: AtomicInteger      = new AtomicInteger(CREATED)
-    @volatile private var running: Boolean = false
+    private[system] val status: AtomicInteger = new AtomicInteger(CREATED)
 
     @volatile private var preHouse: ActorHouse  = _
     @volatile private var nextHouse: ActorHouse = _
 
+    @volatile private var _inHighPriorityQueue: Boolean = false
+
     def highPriority: Boolean = (replyMailbox.size() > HIGH_PRIORITY_REPLY_SIZE) ||
         (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE)
+
+    def inHighPriorityQueue: Boolean = _inHighPriorityQueue
+
+    def inHighPriorityQueue_=(value: Boolean): Unit =
+        _inHighPriorityQueue = value
+
+    def statusReady: Boolean = status.get() == READY
+
+    def statusRunning: Boolean = status.get() == RUNNING
+
+    def statusWaiting: Boolean = status.get() == RUNNING
 
     def next_=(house: ActorHouse): Unit = nextHouse = house
 
@@ -97,9 +109,9 @@ private[core] class ActorHouse(val manager: HouseQueueManager) extends Runnable 
 
     /** Mount actor by schedule system. */
     def doMount(): Unit = {
-        if (status.compareAndSet(MOUNTING, EMPTY)) {
+        if (status.compareAndSet(MOUNTING, WAITING)) {
             dweller.mount()
-            if (this.nonEmpty) doReady()
+            if (this.nonEmpty) empty2ready()
         }
     }
 
@@ -114,24 +126,65 @@ private[core] class ActorHouse(val manager: HouseQueueManager) extends Runnable 
     private final def put(nextable: Nextable, mailBox: MailBox): Unit = {
         mailBox.put(nextable)
 
-        if (status.get() == EMPTY) {
-            doReady()
-        } else if (status.get() == READY) {
-            //
-        } else if (status.get() == RUNNING) {
-            //
+        if (status.get() == WAITING) {
+            empty2ready()
+        } else {
+            manager.change(this)
         }
 
     }
 
-    private def doReady(): Unit = if (status.compareAndSet(EMPTY, READY)) {
+    private def empty2ready(): Unit = if (status.compareAndSet(WAITING, READY)) {
         manager.ready(this)
     }
 
-    override def run(): Unit = {
-        running = true
-        // TODO
-        running = false
+    def schedule(): Unit = if (status.compareAndSet(READY, SCHEDULED)) {}
+
+    override def run(): Unit = { // TODO: support batch receive
+        if (status.compareAndSet(SCHEDULED, RUNNING)) {
+            if (replyMailbox.nonEmpty) {
+                var cursor = replyMailbox.getChain(dweller.niceReply)
+                while (cursor != null) {
+                    val msg = cursor
+                    cursor = msg.next
+                    msg.dechain()
+                    dweller.receiveReply(msg.asInstanceOf[Reply])
+                }
+            }
+            if (eventMailbox.nonEmpty) {
+                var cursor = eventMailbox.getChain(dweller.niceEvent)
+                while (cursor != null) {
+                    val msg = cursor
+                    cursor = msg.next
+                    msg.dechain()
+                    dweller.receiveEvent(msg.asInstanceOf[Event])
+                }
+            }
+            if (askMailbox.nonEmpty) {
+                var cursor = askMailbox.getChain(dweller.niceAsk)
+                while (cursor != null) {
+                    val msg = cursor
+                    cursor = msg.next
+                    msg.dechain()
+                    dweller.receiveAsk(msg.asInstanceOf[Ask[? <: Reply]])
+                }
+            }
+            if (noticeMailbox.nonEmpty) {
+                var cursor = noticeMailbox.getChain(dweller.niceNotice)
+                while (cursor != null) {
+                    val msg = cursor
+                    cursor = msg.next
+                    msg.dechain()
+                    dweller.receiveNotice(msg.asInstanceOf[Notice])
+                }
+            }
+
+            if (nonEmpty) {
+                if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
+            } else {
+                status.compareAndSet(RUNNING, WAITING)
+            }
+        }
     }
 
     private[core] def createActorAddress[M <: Call](): ActorAddress[M] = {
@@ -152,13 +205,25 @@ private[core] class ActorHouse(val manager: HouseQueueManager) extends Runnable 
 object ActorHouse {
 
     private type HOUSE_STATUS = Int
-    private val CREATED: HOUSE_STATUS  = 0
-    private val MOUNTING: HOUSE_STATUS = 1
-    private val EMPTY: HOUSE_STATUS    = 2
-    private val READY: HOUSE_STATUS    = 3
-    private val RUNNING: HOUSE_STATUS  = 4
 
-    private val HIGH_PRIORITY_REPLY_SIZE_DEFAULT = 4
+    /** When [[Actor]] created and still not schedule to mount */
+    private val CREATED: HOUSE_STATUS = 0
+
+    /** When [[Actor]] has schedule mounting */
+    private val MOUNTING: HOUSE_STATUS = 1
+
+    /** When [[Actor]] has mounted, and not have any [[Message]] or [[Event]] to handle. */
+    private val WAITING: HOUSE_STATUS = 2
+
+    /** When [[Actor]] has some [[Message]] or [[Event]] wait to handle. */
+    private val READY: HOUSE_STATUS = 3
+
+    private val SCHEDULED: HOUSE_STATUS = 4
+
+    /** The [[ActorThread]] is running this [[Actor]] */
+    private val RUNNING: HOUSE_STATUS = 5
+
+    private val HIGH_PRIORITY_REPLY_SIZE_DEFAULT = 2
     private val HIGH_PRIORITY_REPLY_SIZE =
         SystemPropertyUtil.getInt("io.otavia.core.priority.reply.size", HIGH_PRIORITY_REPLY_SIZE_DEFAULT)
 

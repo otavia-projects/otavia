@@ -16,13 +16,14 @@
 
 package io.otavia.core.actor
 
-import io.otavia.core.actor.Actor.{ASK_TYPE, MessageType, NOTICE_TYPE, REPLY_TYPE}
+import io.otavia.core.actor.Actor.*
 import io.otavia.core.address.Address
 import io.otavia.core.message.*
 import io.otavia.core.reactor.{Event, Reactor, TimeoutEvent}
 import io.otavia.core.stack.*
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.timer.Timer
+import io.otavia.core.util.SystemPropertyUtil
 
 import scala.reflect.{ClassTag, TypeTest, classTag}
 
@@ -49,6 +50,14 @@ trait Actor[+M <: Call] {
     def maxBatchSize: Int = system.defaultMaxBatchSize
 
     def maxFetchPerRunning: Int = system.defaultMaxFetchPerRunning
+
+    def niceAsk: Int = NICE_ASK
+
+    def niceReply: Int = NICE_REPLY
+
+    def niceNotice: Int = NICE_NOTICE
+
+    def niceEvent: Int = NICE_EVENT
 
     /** Context of this actor. This method can only used after actor instance mount to actor system */
     def context: ActorContext
@@ -169,5 +178,17 @@ object Actor {
     val NOTICE_TYPE: MessageType = 0
     val ASK_TYPE: MessageType    = 1
     val REPLY_TYPE: MessageType  = 2
+
+    private val NICE_ASK_DEFAULT = 2
+    private val NICE_ASK         = SystemPropertyUtil.getInt("io.otavia.core.actor.nice.ask", NICE_ASK_DEFAULT)
+
+    private val NICE_REPLY_DEFAULT = 8
+    private val NICE_REPLY         = SystemPropertyUtil.getInt("io.otavia.core.actor.nice.reply", NICE_REPLY_DEFAULT)
+
+    private val NICE_NOTICE_DEFAULT = 2
+    private val NICE_NOTICE         = SystemPropertyUtil.getInt("io.otavia.core.actor.nice.notice", NICE_NOTICE_DEFAULT)
+
+    private val NICE_EVENT_DEFAULT = 16
+    private val NICE_EVENT         = SystemPropertyUtil.getInt("io.otavia.core.actor.nice.notice", NICE_EVENT_DEFAULT)
 
 }

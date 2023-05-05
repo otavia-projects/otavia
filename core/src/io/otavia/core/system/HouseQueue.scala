@@ -16,7 +16,7 @@
 
 package io.otavia.core.system
 
-abstract class HouseQueue(val manager: HouseQueueManager) {
+abstract class HouseQueue(val manager: HouseManager) {
 
     def available: Boolean
 
@@ -25,5 +25,9 @@ abstract class HouseQueue(val manager: HouseQueueManager) {
     def enqueue(house: ActorHouse): Unit
 
     def dequeue(timeout: Long): ActorHouse | Null
+
+    def isEmpty: Boolean
+
+    def nonEmpty: Boolean
 
 }

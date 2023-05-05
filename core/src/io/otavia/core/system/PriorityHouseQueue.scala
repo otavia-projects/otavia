@@ -21,7 +21,7 @@ import io.otavia.core.util.{Nextable, SpinLock}
 import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
 
-class PriorityHouseQueue(val holder: HouseQueueManager) extends HouseQueue {
+class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
 
     // for normal priority actor house
     private val readLock                   = new SpinLock()
@@ -37,19 +37,151 @@ class PriorityHouseQueue(val holder: HouseQueueManager) extends HouseQueue {
     @volatile private var highHead: ActorHouse = _
     @volatile private var highTail: ActorHouse = _
 
-    def available: Boolean = (highSize.get() > 0) || (size.get() > 0)
+    def available: Boolean = (size.get() > 0) || (highSize.get() > 0)
 
     def readies: Int = highSize.get() + size.get()
 
-    def enqueue(house: ActorHouse): Unit = {
-        ???
+    override def isEmpty: Boolean = (highSize.get() == 0) && (size.get() == 0)
+
+    override def nonEmpty: Boolean = (size.get() > 0) || (highSize.get() > 0)
+
+    override def enqueue(house: ActorHouse): Unit = {
+        if (!house.highPriority) {
+            writeLock.lock()
+            if (size.get() == 0) {
+                head = house
+                tail = house
+                size.incrementAndGet()
+            } else {
+                val oldTail = tail
+                tail = house
+                oldTail.next = tail
+                tail.pre = oldTail
+                size.incrementAndGet()
+            }
+            house.inHighPriorityQueue = false
+            writeLock.unlock()
+        } else {
+            highWriteLock.lock()
+            if (highSize.get() == 0) {
+                highHead = house
+                highTail = house
+                highSize.incrementAndGet()
+            } else {
+                val oldTail = highTail
+                highTail = house
+                oldTail.next = highTail
+                highSize.incrementAndGet()
+            }
+            house.inHighPriorityQueue = true
+            highWriteLock.unlock()
+        }
     }
 
-    override def dequeue(timeout: Long): ActorHouse | Null = ???
+    override def dequeue(timeout: Long): ActorHouse | Null = {
+        if (highSize.get() > 0) dequeuePriority(timeout)
+        else if (size.get() > 0) dequeueNormal(timeout)
+        else null
+    }
 
-    def poll(): ActorHouse = {
+    private def dequeueNormal(timeout: Long): ActorHouse | Null = {
+        if (readLock.tryLock(timeout)) {
+            if (size.get() == 1) {
+                writeLock.lock()
+                if (size.get() == 1) {
+                    val house = head
+                    head = null
+                    tail = null
+                    size.decrementAndGet()
+                    house.deChain()
+                    house.schedule()
+                    writeLock.unlock()
+                    readLock.unlock()
+                    house
+                } else {
+                    val house = head
+                    head = house.next
+                    head.pre = null
+                    size.decrementAndGet()
+                    house.deChain()
+                    house.schedule()
+                    writeLock.unlock()
+                    readLock.unlock()
+                    house
+                }
+            } else {
+                val house = head
+                head = house.next
+                head.pre = null
+                size.decrementAndGet()
+                house.deChain()
+                house.schedule()
+                readLock.unlock()
+                house
+            }
+        } else null
+    }
 
-        ???
+    private def dequeuePriority(timeout: Long): ActorHouse | Null = {
+        if (highReadLock.tryLock(timeout)) {
+            if (highSize.get() == 1) {
+                highWriteLock.lock()
+                if (highSize.get() == 1) {
+                    val house = highHead
+                    highHead = null
+                    highTail = null
+                    highSize.decrementAndGet()
+                    house.deChain()
+                    house.schedule()
+                    highWriteLock.unlock()
+                    highReadLock.unlock()
+                    house
+                } else {
+                    val house = highHead
+                    highHead = house.next
+                    highSize.decrementAndGet()
+                    house.deChain()
+                    house.schedule()
+                    highWriteLock.unlock()
+                    highReadLock.unlock()
+                    house
+                }
+            } else {
+                val house = highHead
+                highHead = house.next
+                highSize.decrementAndGet()
+                house.deChain()
+                house.schedule()
+                highReadLock.unlock()
+                house
+            }
+        } else null
+    }
+
+    def adjustPriority(house: ActorHouse): Unit = {
+        if (readLock.tryLock(2000) && house.statusReady && !house.inHighPriorityQueue) {
+            writeLock.lock()
+            val pre  = house.pre
+            val next = house.next
+            if (pre != null) {
+                pre.next = next
+                if (next != null) next.pre = pre else tail = pre
+            } else {
+                if (next != null) {
+                    next.pre = null
+                    head = next
+                } else {
+                    head = null
+                    tail = null
+                }
+            }
+            size.decrementAndGet()
+            house.inHighPriorityQueue = true
+            writeLock.unlock()
+            readLock.unlock()
+            house.deChain()
+            this.enqueue(house)
+        }
     }
 
     def poll(timeout: Long): ActorHouse | Null = {

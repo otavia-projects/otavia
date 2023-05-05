@@ -19,14 +19,18 @@ package io.otavia.log4a
 import io.otavia.core.slf4a.helpers.Util
 import io.otavia.core.slf4a.{AbstractLogger, LogLevel}
 import io.otavia.core.system.ActorSystem
+import io.otavia.core.util.ThrowableUtil
 import io.otavia.log4a.InternalLogger.{AppenderLogger, BufferedLogger}
 
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import scala.language.unsafeNulls
 
 class Log4aLogger(val name: String, val level: LogLevel, val appenderNames: Array[String]) extends AbstractLogger {
 
     private var internalLogger: InternalLogger = new BufferedLogger()
+
+    private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
     override def getName: String = name
 
@@ -43,18 +47,33 @@ class Log4aLogger(val name: String, val level: LogLevel, val appenderNames: Arra
     override def isErrorEnabled: Boolean = ???
 
     override def trace(msg: String): Unit =
-        println(s"${LocalDateTime.now()}\tTRACE\t[${Thread.currentThread().getName}]\t${name}: ${msg}")
+        println(
+          s"${LocalDateTime.now().format(formatter)}\tTRACE\t[${Thread.currentThread().getName}]\t${name}: ${msg}"
+        )
 
     override def debug(msg: String): Unit =
-        println(s"${LocalDateTime.now()}\tDEBUG\t[${Thread.currentThread().getName}]\t${name}: ${msg}")
+        println(
+          s"${LocalDateTime.now().format(formatter)}\tDEBUG\t[${Thread.currentThread().getName}]\t${name}: ${msg}"
+        )
 
     override def info(msg: String): Unit =
-        println(s"${LocalDateTime.now()}\tINFO\t[${Thread.currentThread().getName}]\t${name}: ${msg}")
+        println(
+          s"${Console.GREEN}${LocalDateTime.now().format(formatter)}\tINFO\t[${Thread.currentThread().getName}]\t${name}: ${msg}${Console.RESET}"
+        )
 
     override def warn(msg: String): Unit =
-        println(s"${LocalDateTime.now()}\tWARN\t[${Thread.currentThread().getName}]\t${name}: ${msg}")
+        println(s"${Console.YELLOW}${LocalDateTime.now().format(formatter)}\tWARN\t[${Thread
+                .currentThread()
+                .getName}]\t${name}: ${msg}${Console.RESET}")
 
     override def error(msg: String): Unit =
-        println(s"${LocalDateTime.now()}\tERROR\t[${Thread.currentThread().getName}]\t${name}: ${msg}")
+        println(
+          s"${Console.RED}${LocalDateTime.now().format(formatter)}\tERROR\t[${Thread.currentThread().getName}]\t${name}: ${msg}${Console.RESET}"
+        )
+
+    override def error(msg: String, e: Throwable): Unit =
+        println(s"${Console.RED}${LocalDateTime.now().format(formatter)}\tERROR\t[${Thread
+                .currentThread()
+                .getName}]\t${name}: ${msg}\n${ThrowableUtil.stackTraceToString(e)}${Console.RESET}")
 
 }

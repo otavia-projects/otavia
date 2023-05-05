@@ -28,12 +28,12 @@ import scala.collection.mutable
 import scala.language.unsafeNulls
 
 class ActorThread(private[core] val system: ActorSystem) extends Thread() {
- 
+
     private val id = system.pool.nextThreadId()
 
     private val channelLaterTasks: mutable.ArrayDeque[Runnable] = mutable.ArrayDeque.empty
 
-    private val houseQueueManager = new HouseQueueManager(this)
+    private val manager = new HouseManager(this)
 
     private val eventQueue                  = new ConcurrentLinkedQueue[Event]()
     private val address: ActorThreadAddress = new ActorThreadAddress(this)
@@ -49,6 +49,8 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 
     def index: Int = id
 
+    def houseManager: HouseManager = manager
+
     private[core] def currentRunningActor(): Actor[?] = ???
 
     def laterTasks: mutable.ArrayDeque[Runnable] = channelLaterTasks
@@ -61,7 +63,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
     def actorThreadAddress: ActorThreadAddress = address
 
     private[core] def createActorHouse(): ActorHouse = {
-        val house = new ActorHouse(houseQueueManager)
+        val house = new ActorHouse(manager)
         registerHouseRef(house)
         house
     }
@@ -105,7 +107,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
         status = ST_RUNNING
         while (true) {
             var block = true
-            if (houseQueueManager.run()) block = false
+            if (manager.run()) block = false
             this.stopActor()
             // TODO: handle events
 
@@ -128,9 +130,14 @@ object ActorThread {
 
     private val GC_PEER_ROUND = SystemPropertyUtil.getInt("io.otavia.core.stop.size", GC_PEER_ROUND_DEFAULT)
 
+    /** Status of [[ActorThread]]: starting to loop schedule. */
     private val ST_STARTING: Int = 0
-    private val ST_RUNNING: Int  = 1
-    private val ST_WAITING: Int  = 2
+
+    /** Status of [[ActorThread]]: task is running. */
+    private val ST_RUNNING: Int = 1
+
+    /** Status of [[ActorThread]]: no task to run, so thread is waiting. */
+    private val ST_WAITING: Int = 2
 
     /** Returns a reference to the currently executing [[ActorThread]] object.
      *

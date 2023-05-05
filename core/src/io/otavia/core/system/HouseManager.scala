@@ -1,0 +1,141 @@
+/*
+ * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.otavia.core.system
+
+import io.otavia.core.slf4a.Logger
+import io.otavia.core.system.HouseManager.*
+import io.otavia.core.util.SystemPropertyUtil
+
+import scala.language.unsafeNulls
+
+class HouseManager(val thread: ActorThread) {
+
+    private val logger = Logger.getLogger(getClass, thread.system)
+
+    private val mountingQueue = new FIFOHouseQueue(this)
+
+    private val serverActorQueue   = new FIFOHouseQueue(this)
+    private val channelsActorQueue = new PriorityHouseQueue(this)
+    private val actorQueue         = new PriorityHouseQueue(this)
+
+    private var serverRuns: Long  = 0
+    private var serverTimes: Long = 0
+
+    private var channelsRuns: Long  = 0
+    private var channelsTimes: Long = 0
+
+    private var actorRuns: Long  = 0
+    private var actorTimes: Long = 0
+
+    @volatile private var runningStart: Long = Long.MaxValue
+
+    def mount(house: ActorHouse): Unit = {
+        mountingQueue.enqueue(house)
+        logger.trace(s"Schedule mount ${house.actor}")
+        thread.notifyThread()
+    }
+
+    /** [[ActorHouse]] status: <b> WAITING -> READY
+     *  @param house
+     *    the status changed [[ActorHouse]]
+     */
+    def ready(house: ActorHouse): Unit = {
+        if (house.actorType == ActorHouse.STATE_ACTOR) actorQueue.enqueue(house)
+        else if (house.actorType == ActorHouse.CHANNELS_ACTOR) channelsActorQueue.enqueue(house)
+        else if (house.actorType == ActorHouse.SERVER_CHANNELS_ACTOR) serverActorQueue.enqueue(house)
+
+        logger.trace(s"Change actor ${house.actor} to ready")
+
+        thread.notifyThread()
+    }
+
+    /** Received [[io.otavia.core.message.Message]] or [[io.otavia.core.reactor.Event]] when [[ActorHouse]] status is
+     *  <b> READY | RUNNING
+     *  @param house
+     *    The [[ActorHouse]] which is received [[io.otavia.core.message.Message]] or [[io.otavia.core.reactor.Event]]
+     */
+    def change(house: ActorHouse): Unit = {
+        if (house.statusReady && house.highPriority && !house.inHighPriorityQueue) {
+            // try adjust priority
+            if (house.actorType == ActorHouse.CHANNELS_ACTOR) channelsActorQueue.adjustPriority(house)
+            else if (house.actorType == ActorHouse.STATE_ACTOR) actorQueue.adjustPriority(house)
+        }
+    }
+
+    /** Run by [[thread]], if no house is available, spin timeout nanosecond to wait some house become ready.
+     *  @param timeout
+     *    wait [[timeout]] nanosecond
+     *  @return
+     *    true if run some [[ActorHouse]], otherwise false.
+     */
+    def run(timeout: Long = 0): Boolean = {
+        runningStart = System.nanoTime()
+
+        if (mountingQueue.available) {
+            logger.trace(s"${thread.getName} mounting size ${mountingQueue.readies}")
+            val house = mountingQueue.dequeue(500)
+            if (house != null) house.doMount()
+        }
+//        val house =
+
+        runningStart = Long.MaxValue
+        false
+    }
+
+    private def stealable: Boolean = (actorQueue.readies > STEAL_REMAINING_THRESHOLD) ||
+        (((System.nanoTime() - runningStart) > STEAL_NANO_THRESHOLD) && actorQueue.nonEmpty)
+
+    /** Steal from other [[ActorThread]] to run, this method is called by [[HouseManager.thread]] */
+    def steal(): Unit = {
+        // find the next stealable thread
+        val threads                         = thread.parent.workers
+        var i                               = 1
+        var continue: Boolean               = true
+        var stealThread: ActorThread | Null = null
+        while (i < threads.length && continue) {
+            val thread = threads((i + threads.length) % threads.length)
+            i += 1
+            if (thread.houseManager.stealable) {
+                continue = false
+                stealThread = thread
+            }
+        }
+        if (stealThread != null) {
+            runningStart = System.nanoTime()
+            // running other thread's HouseManager
+            stealThread.houseManager.runSteal()
+            runningStart = Long.MaxValue
+        }
+    }
+
+    /** Steal running by other [[ActorThread]] */
+    private def runSteal(): Unit = {
+        if (actorQueue.available) {
+            val house = actorQueue.dequeue(1000)
+            if (house != null) house.run()
+        }
+    }
+
+}
+
+object HouseManager {
+
+    private val STEAL_REMAINING_THRESHOLD = SystemPropertyUtil.getInt("io.otavia.core.steal.threshold", 16)
+    private val STEAL_NANO_THRESHOLD =
+        SystemPropertyUtil.getInt("io.otavia.core.steal.threshold.microsecond", 2000) * 1000
+
+}
