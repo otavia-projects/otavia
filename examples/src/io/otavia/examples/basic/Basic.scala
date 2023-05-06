@@ -19,21 +19,22 @@ package io.otavia.examples.basic
 import io.otavia.core.actor.*
 import io.otavia.core.address.Address
 import io.otavia.core.ioc.Injectable
-import io.otavia.core.slf4a.Appender
 import io.otavia.core.message.{Ask, Notice, Reply}
+import io.otavia.core.reactor.TimeoutEvent
+import io.otavia.core.slf4a.Appender
 import io.otavia.core.stack.StackState.FutureState
 import io.otavia.core.stack.{AskStack, NoticeStack, ReplyFuture, StackState}
-import io.otavia.core.system.ActorSystem
+import io.otavia.core.system.{ActorSystem, ActorThread}
+import io.otavia.core.timer.TimeoutTrigger
 import io.otavia.examples.HandleStateActor
 import io.otavia.examples.basic.Basic.*
 
+import java.util.concurrent.TimeUnit
+
 class Basic(args: Array[String]) extends MainActor(args) {
     override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] = {
-        val pongActor = system.buildActor[PongActor](() => new PongActor())
-        val pingActor = system.buildActor[PingActor](() => new PingActor(pongActor))
-
-        pingActor.notice(Start())
-
+        logger.info("main0 return")
+        println("main0 return")
         stack.`return`()
     }
 
@@ -42,7 +43,19 @@ class Basic(args: Array[String]) extends MainActor(args) {
 object Basic {
 
     def main(args: Array[String]): Unit = {
-        ActorSystem().runMain(() => new Basic(args))
+        val system = ActorSystem()
+        system.runMain(() => new Basic(args))
+        for (id <- 1 until 1_000_000) {
+            val pongActor = system.buildActor[PongActor](() => new PongActor())
+            val pingActor = system.buildActor[PingActor](() => new PingActor(pongActor))
+            for (idx <- 0 until 1000) {
+                pingActor.notice(Start())
+            }
+            if (id % 10_000 == 0) {
+                println(s"loop ${id}")
+            }
+        }
+        Thread.sleep(1000000000)
     }
 
     private case class Start() extends Notice
@@ -53,26 +66,58 @@ object Basic {
 
     private class PingActor(val pongActor: Address[Ping]) extends StateActor[Start] {
 
-        override protected def afterMount(): Unit =
-            println("The PingActor has been mounted to ActorSystem.")
+        override protected def afterMount(): Unit = {
+            logger.info("The PingActor has been mounted to ActorSystem.")
+        }
+
+        override protected def beforeStop(): Unit = {
+            logger.info("PingActor stop!")
+            println("PingActor stop!")
+        }
 
         override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = {
             stack.stackState match
                 case StackState.initialState =>
-                    val state = FutureState[Pong]
+                    val state = new FutureState[Pong]
                     pongActor.ask(Ping(), state.future)
+                    logger.info("Send ping to pongActor")
                     state.suspend()
                 case state: FutureState[Pong] =>
                     val pong = state.future.getNow
-                    println("Get pong message")
+                    logger.info(s"Get pong message ${pong}")
                     stack.`return`()
+        }
+
+        override def finalize(): Unit = {
+            logger.info("PingActor finalize")
+//            println("PingActor finalize")
         }
 
     }
 
     private class PongActor extends StateActor[Ping] {
+
+        override protected def afterMount(): Unit = {
+            val trigger = TimeoutTrigger.DelayPeriod(1, 2, TimeUnit.SECONDS, TimeUnit.SECONDS)
+//            timer.registerActorTimeout(trigger, self)
+//            logger.info("PongActor register timeout trigger")
+        }
+
+        override protected def beforeStop(): Unit = {
+            logger.info("PongActor stop!")
+        }
+
         override def continueAsk(stack: AskStack[Ping]): Option[StackState] = {
+            logger.info(s"PongActor received ask message ${stack.ask}")
             stack.`return`(Pong())
+        }
+
+        override protected def handleActorTimeout(timeoutEvent: TimeoutEvent): Unit = {
+            logger.info(s"PongActor handle timeout event ${timeoutEvent}")
+        }
+
+        override def finalize(): Unit = {
+            logger.info("PongActor finalize")
         }
 
     }

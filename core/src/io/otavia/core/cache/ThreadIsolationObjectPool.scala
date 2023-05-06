@@ -25,12 +25,17 @@ abstract class ThreadIsolationObjectPool[T <: Poolable] extends ObjectPool[T] {
     def dropIfRecycleNotByCreated: Boolean
 
     override def get(): T = {
-        val pop = holder().pop()
-        if (pop != null) pop.asInstanceOf[T] else newInstance()
+        val h   = holder()
+        val pop = h.pop()
+        if (pop != null) pop.asInstanceOf[T]
+        else newInstance()
     }
 
     override def recycle(poolable: T): Unit = {
         poolable.clean()
+        if (!poolable.notInChain) {
+            println("")
+        }
         if (dropIfRecycleNotByCreated) {
             if (poolable.creator == ActorThread.currentThread()) holder().push(poolable) else {}
         } else holder().push(poolable)

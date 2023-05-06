@@ -21,6 +21,8 @@ target
 
 out/
 
+*.log
+
 ### BSP ###
 .bloop
 .bsp

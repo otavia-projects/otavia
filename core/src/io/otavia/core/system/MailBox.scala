@@ -72,14 +72,18 @@ class MailBox(val house: ActorHouse) extends SpinLock {
             count = 0
             unlock()
         } else {
-            unlock()
             obj = head
-            var i = 0
-            while (i < max) {
-                head = head.next
+            var i      = 0
+            var cursor = head
+            while (i < max - 1) {
+                cursor = cursor.next
                 i += 1
             }
+            val chainTail = cursor
+            head = cursor.next
+            chainTail.next = null
             count -= max
+            unlock()
         }
         obj
     }

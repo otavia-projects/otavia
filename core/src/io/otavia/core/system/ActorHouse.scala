@@ -196,9 +196,7 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
         new ActorAddress[Call](this)
     }
 
-    override def close(): Unit = {
-        dweller.stop()
-    }
+    override def close(): Unit = dweller.stop()
 
 }
 

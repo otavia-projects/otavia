@@ -21,27 +21,27 @@ import io.otavia.core.system.ActorThread
 import java.util.concurrent.atomic.AtomicReference
 import scala.language.unsafeNulls
 
-private[core] class SpinLock {
+private[core] class SpinLock extends AtomicReference[Thread] {
 
-    private val holder = new AtomicReference[Thread](null)
+//    private val holder = new AtomicReference[Thread](null)
 
     /** Get lock, if the lock is locked by other [[Thread]], spin the current thread until get the lock. */
-    def lock(): Unit = {
+    final def lock(): Unit = {
         val thread = Thread.currentThread()
-        while (!holder.compareAndSet(null, thread)) {} // spin until get lock
+        while (!this.compareAndSet(null, thread)) {} // spin until get lock
     }
 
     /** Release the lock. */
-    def unlock(): Unit = {
-        assert(Thread.currentThread() == holder.get(), "Unlock thread is not the lock holder")
-        holder.set(null)
+    final def unlock(): Unit = {
+        assert(Thread.currentThread() == this.get(), "Unlock thread is not the lock holder")
+        this.set(null)
     }
 
     /** Check the lock whether is locked. */
-    def isLock: Boolean = holder.get() != null
+    final def isLock: Boolean = this.get() != null
 
     /** Check the lock whether is locked by current thread. */
-    def isLockByMe: Boolean = Thread.currentThread() == holder.get()
+    final def isLockByMe: Boolean = Thread.currentThread() == this.get()
 
     /** Try to get lock until get the lock or spin [[timeout]] nanosecond for timeout.
      *  @param timeout
@@ -49,14 +49,14 @@ private[core] class SpinLock {
      *  @return
      *    whether get the lock.
      */
-    def tryLock(timeout: Long): Boolean = {
+    final def tryLock(timeout: Long): Boolean = {
         val thread = Thread.currentThread()
         val start  = System.nanoTime()
 
         // spin until get lock or timeout
-        while (!holder.compareAndSet(null, thread) && (System.nanoTime() - start < timeout)) {}
+        while (!this.compareAndSet(null, thread) && (System.nanoTime() - start < timeout)) {}
 
-        thread == holder.get()
+        thread == this.get()
     }
 
 }

@@ -55,24 +55,23 @@ class FIFOHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
         }
     }
 
-    override def dequeue(timeout: Long): ActorHouse | Null = {
+    final override def dequeue(timeout: Long): ActorHouse | Null = {
         if (size.get() == 0) { // spin timeout to wait some house enqueue
             val start     = System.nanoTime()
-            var isTimeout = false
-            while (size.get() == 0 && !isTimeout) {
-                isTimeout = System.nanoTime() - start > timeout
-            }
+            var isTimeout = true
+//            while (size.get() == 0 && !isTimeout) {
+//                isTimeout = System.nanoTime() - start > timeout
+//            }
             if (isTimeout) null else dequeue0()
         } else dequeue0()
     }
 
-    private def dequeue0(): ActorHouse | Null = {
-        readLock.lock()
+    final private def dequeue0(): ActorHouse | Null = {
         if (size.get() == 0) {
-            readLock.unlock()
             null
         } else if (size.get() == 1) {
             writeLock.lock()
+            readLock.lock()
             if (size.get() == 1) {
                 val house = head
                 head = null
@@ -80,17 +79,19 @@ class FIFOHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
                 size.decrementAndGet()
                 house.schedule()
                 writeLock.unlock()
+                readLock.unlock()
                 house
             } else { // size.get() > 1
                 writeLock.unlock()
                 dequeue00()
             }
         } else {
+            readLock.lock()
             dequeue00()
         }
     }
 
-    private inline def dequeue00(): ActorHouse = {
+    final private inline def dequeue00(): ActorHouse = {
         val house = head
         head = house.next.asInstanceOf[ActorHouse]
         size.decrementAndGet()

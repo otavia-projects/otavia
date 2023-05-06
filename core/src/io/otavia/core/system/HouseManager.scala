@@ -85,22 +85,41 @@ class HouseManager(val thread: ActorThread) {
     def run(timeout: Long = 0): Boolean = {
         runningStart = System.nanoTime()
 
+        var success = false
+
+        if (this.run0(serverActorQueue, timeout)) success = true
+
+        if (this.run0(channelsActorQueue, timeout)) success = true
+
+        if (this.run0(actorQueue, timeout)) success = true
+
         if (mountingQueue.available) {
             logger.trace(s"${thread.getName} mounting size ${mountingQueue.readies}")
-            val house = mountingQueue.dequeue(500)
-            if (house != null) house.doMount()
+            val house = mountingQueue.dequeue(timeout)
+            if (house != null) {
+                house.doMount()
+                success = true
+            }
         }
-//        val house =
 
         runningStart = Long.MaxValue
-        false
+
+        success
+    }
+
+    final private def run0(houseQueue: HouseQueue, timeout: Long): Boolean = {
+        val house = houseQueue.dequeue(timeout)
+        if (house != null) {
+            house.run()
+            true
+        } else false
     }
 
     private def stealable: Boolean = (actorQueue.readies > STEAL_REMAINING_THRESHOLD) ||
         (((System.nanoTime() - runningStart) > STEAL_NANO_THRESHOLD) && actorQueue.nonEmpty)
 
     /** Steal from other [[ActorThread]] to run, this method is called by [[HouseManager.thread]] */
-    def steal(): Unit = {
+    def steal(): Boolean = {
         // find the next stealable thread
         val threads                         = thread.parent.workers
         var i                               = 1
@@ -119,7 +138,8 @@ class HouseManager(val thread: ActorThread) {
             // running other thread's HouseManager
             stealThread.houseManager.runSteal()
             runningStart = Long.MaxValue
-        }
+            true
+        } else false
     }
 
     /** Steal running by other [[ActorThread]] */

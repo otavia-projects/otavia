@@ -47,9 +47,9 @@ trait Chainable {
     /** true if and only if this object is not in any chain */
     def notInChain: Boolean = n == null && p == null
 
-    def dechain(): Unit = {
-        p = null
+    def deChain(): Unit = {
         n = null
+        p = null
     }
 
 }

@@ -26,7 +26,7 @@ import io.otavia.core.message.{Call, IdAllocator}
 import io.otavia.core.reactor.BlockTaskExecutor
 import io.otavia.core.reactor.aio.Submitter
 import io.otavia.core.slf4a.{LogLevel, Logger}
-import io.otavia.core.timer.Timer
+import io.otavia.core.timer.{Timer, TimerImpl}
 import io.otavia.core.util.SystemPropertyUtil
 
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -54,6 +54,10 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     private val generator = new AtomicLong(1)
 
     private val beanManager = new BeanManager(this)
+
+    private val totals = new AtomicLong(0)
+
+    private val timerExecutor = new TimerImpl(this)
 
     private val logLvl: LogLevel = SystemPropertyUtil
         .get("io.otavia.actor.log.level")
@@ -84,7 +88,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     override private[core] def reactor = ???
 
-    override def timer: Timer = ???
+    override def timer: Timer = timerExecutor
 
     override def blockingExecutor: BlockTaskExecutor = ???
 

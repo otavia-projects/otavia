@@ -20,6 +20,7 @@ import io.netty5.util.{Timeout, Timer as NettyTimer}
 import io.otavia.core.address.EventableAddress
 import io.otavia.core.cache.ResourceTimer
 import io.otavia.core.channel.Channel
+import io.otavia.core.system.ActorSystem
 import io.otavia.core.timer.TimeoutTrigger
 
 import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
@@ -27,6 +28,8 @@ import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 class TimerTaskManager(val timer: Timer) {
 
     private val registeredTasks = new ConcurrentHashMap[Long, TimeoutTask]()
+
+    final def system: ActorSystem = timer.system
 
     def newActorTimeoutTask(
         address: EventableAddress,

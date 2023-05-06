@@ -48,32 +48,36 @@ class Log4aLogger(val name: String, val level: LogLevel, val appenderNames: Arra
 
     override def trace(msg: String): Unit =
         println(
-          s"${LocalDateTime.now().format(formatter)}\tTRACE\t[${Thread.currentThread().getName}]\t${name}: ${msg}"
+          s"${Console.WHITE}${LocalDateTime.now().format(formatter)}\tTRACE\t[${Thread
+                  .currentThread()
+                  .getName}]\t${name} -\t${msg}${Console.RESET}"
         )
 
     override def debug(msg: String): Unit =
         println(
-          s"${LocalDateTime.now().format(formatter)}\tDEBUG\t[${Thread.currentThread().getName}]\t${name}: ${msg}"
+          s"${LocalDateTime.now().format(formatter)}\tDEBUG\t[${Thread
+                  .currentThread()
+                  .getName}]\t${name} -\t${msg}"
         )
 
     override def info(msg: String): Unit =
         println(
-          s"${Console.GREEN}${LocalDateTime.now().format(formatter)}\tINFO\t[${Thread.currentThread().getName}]\t${name}: ${msg}${Console.RESET}"
+          s"${Console.GREEN}${LocalDateTime.now().format(formatter)}\tINFO\t[${Thread.currentThread().getName}]\t${name} -\t${msg}${Console.RESET}"
         )
 
     override def warn(msg: String): Unit =
         println(s"${Console.YELLOW}${LocalDateTime.now().format(formatter)}\tWARN\t[${Thread
                 .currentThread()
-                .getName}]\t${name}: ${msg}${Console.RESET}")
+                .getName}]\t${name} -\t${msg}${Console.RESET}")
 
     override def error(msg: String): Unit =
         println(
-          s"${Console.RED}${LocalDateTime.now().format(formatter)}\tERROR\t[${Thread.currentThread().getName}]\t${name}: ${msg}${Console.RESET}"
+          s"${Console.RED}${LocalDateTime.now().format(formatter)}\tERROR\t[${Thread.currentThread().getName}]\t${name} -\t${msg}${Console.RESET}"
         )
 
     override def error(msg: String, e: Throwable): Unit =
         println(s"${Console.RED}${LocalDateTime.now().format(formatter)}\tERROR\t[${Thread
                 .currentThread()
-                .getName}]\t${name}: ${msg}\n${ThrowableUtil.stackTraceToString(e)}${Console.RESET}")
+                .getName}]\t${name} -\t${msg}\n${ThrowableUtil.stackTraceToString(e)}${Console.RESET}")
 
 }

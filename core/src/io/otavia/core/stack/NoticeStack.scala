@@ -28,6 +28,11 @@ class NoticeStack[N <: Notice] private () extends ActorStack {
 
     override def recycle(): Unit = NoticeStack.stackPool.recycle(this)
 
+    override protected def cleanInstance(): Unit = {
+        done = false
+        super.cleanInstance()
+    }
+
     /** Finsh this [[NoticeStack]] */
     def `return`(): None.type = {
         done = true

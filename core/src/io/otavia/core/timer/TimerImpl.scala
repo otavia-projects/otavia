@@ -20,17 +20,18 @@ import io.netty5.util.{HashedWheelTimer, TimerTask}
 import io.otavia.core.address.{Address, EventableAddress}
 import io.otavia.core.cache.ResourceTimer
 import io.otavia.core.channel.Channel
-import io.otavia.core.slf4a.Logger
 import io.otavia.core.reactor.{AskTimeoutEvent, ChannelTimeoutEvent, ResourceTimeoutEvent, TimeoutEvent}
+import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.timer.Timer
 import io.otavia.core.timer.Timer.*
 
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, ThreadFactory, TimeUnit}
+import scala.language.unsafeNulls
 
 /** Default implementation of [[Timer]] */
-final class TimerImpl(private[core] val system: ActorSystem) extends Timer {
+final class TimerImpl(private[timer] val system: ActorSystem) extends Timer {
 
     private val hashedWheelTimer = new HashedWheelTimer(new TimerThreadFactory())
     private val taskManager      = new TimerTaskManager(this)
@@ -49,6 +50,7 @@ final class TimerImpl(private[core] val system: ActorSystem) extends Timer {
         attach: Option[AnyRef]
     ): Long = {
         val (delay, period, delayUnit, periodUnit) = extract(trigger)
+        logger.trace(s"register timeout trigger with delay: ${delay} ${delayUnit} period: ${period} ${periodUnit}")
         if (delay <= 0 && period < 0) {
             val registerId = nextRegisterId()
             address.inform(TimeoutEvent(registerId, attach))
@@ -115,7 +117,7 @@ final class TimerImpl(private[core] val system: ActorSystem) extends Timer {
             val delay = first.getTime - System.currentTimeMillis()
             (delay, period, TimeUnit.MILLISECONDS, periodUnit)
 
-    inline private def handle(
+    private def handle(
         timerTask: TimeoutTask,
         delay: Long,
         period: Long,
@@ -123,9 +125,9 @@ final class TimerImpl(private[core] val system: ActorSystem) extends Timer {
         periodUnit: TimeUnit
     ): Long = {
         if (delay <= 0 && period > 0)
-            timerTask.setHandle(hashedWheelTimer.newTimeout(timerTask, 0, periodUnit).nn)
+            timerTask.setHandle(hashedWheelTimer.newTimeout(timerTask, 0, periodUnit))
         else // delay > 0, period
-            timerTask.setHandle(hashedWheelTimer.newTimeout(timerTask, delay, delayUnit).nn)
+            timerTask.setHandle(hashedWheelTimer.newTimeout(timerTask, delay, delayUnit))
         timerTask.registerId
     }
 

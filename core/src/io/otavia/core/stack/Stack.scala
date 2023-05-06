@@ -36,7 +36,7 @@ object Stack {
         override def next(): Promise[?] = {
             val promise = head
             head = promise.next.asInstanceOf[Promise[?] | Null]
-            promise.dechain()
+            promise.deChain()
             promise
         }
 
@@ -67,10 +67,12 @@ abstract class Stack extends Poolable {
     // context
     private var actor: AbstractActor[?] = _
 
-    private[core] def runtimeActor: AbstractActor[?]             = actor
+    private[core] def runtimeActor: AbstractActor[?] = actor
+
     private[core] def setRuntimeActor(a: AbstractActor[?]): Unit = actor = a
 
     def stackState: StackState = state
+
     private[core] def setState(stackState: StackState): Unit = if (this.state != stackState) {
         recycleAllPromises()
         this.state = stackState
@@ -91,15 +93,21 @@ abstract class Stack extends Poolable {
         // step 1: remove it from uncompleted chain
         val pre  = completed.pre
         val next = completed.next
-        completed.dechain()
+        completed.deChain()
         pre match
             case null =>
                 next match
-                    case null                =>
-                    case nextNode: Chainable => nextNode.cleanPre()
+                    case null =>
+                        uhead = null
+                        utail = null
+                    case nextNode: Chainable =>
+                        nextNode.cleanPre()
+                        uhead = nextNode.asInstanceOf[Promise[?]]
             case preNode: Chainable =>
                 next match
-                    case null                => preNode.cleanNext()
+                    case null =>
+                        preNode.cleanNext()
+                        utail = preNode.asInstanceOf[Promise[?]]
                     case nextNode: Chainable => preNode.next = nextNode
 
         // step 2: add completed to completed chain
@@ -186,8 +194,8 @@ abstract class ActorStack extends Stack {
     def call: Call = msg
 
     override protected def cleanInstance(): Unit = {
-        super.cleanInstance()
         msg = null
+        super.cleanInstance()
     }
 
     def isDone: Boolean

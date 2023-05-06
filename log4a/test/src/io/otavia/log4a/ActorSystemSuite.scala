@@ -29,6 +29,7 @@ class ActorSystemSuite extends AnyFunSuite {
     test("SPI load log4a") {
         val system = ActorSystem()
         system.runMain(() => new Main(Array.empty))
+        Thread.sleep(1000 * 5)
         assert(true)
     }
 
@@ -37,7 +38,7 @@ class ActorSystemSuite extends AnyFunSuite {
 object ActorSystemSuite {
 
     class Main(args: Array[String]) extends MainActor(args) {
-        
+
         override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] = {
             logger.info("main actor running")
             stack.`return`()

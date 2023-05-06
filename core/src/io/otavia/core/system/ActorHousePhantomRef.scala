@@ -22,10 +22,11 @@ import java.util.concurrent.CopyOnWriteArraySet
 class ActorHousePhantomRef(house: ActorHouse, queue: ReferenceQueue[ActorHouse])
     extends PhantomReference[ActorHouse](house, queue) {
 
-    private val runnable: Runnable = () => house.close()
+//    private val runnable: Runnable = () => house.close()
 
     override def clear(): Unit = {
-        runnable.run()
+//        runnable.run()
+        house.close()
         super.clear()
     }
 

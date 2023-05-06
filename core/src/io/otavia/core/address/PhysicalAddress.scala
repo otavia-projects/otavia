@@ -17,8 +17,9 @@
 package io.otavia.core.address
 
 import io.otavia.core.actor.{AbstractActor, Actor, ChannelsActor, StateActor}
-import io.otavia.core.slf4a.Appender
 import io.otavia.core.message.*
+import io.otavia.core.reactor.Event
+import io.otavia.core.slf4a.Appender
 import io.otavia.core.stack.{ReplyFuture, ReplyWaiter}
 import io.otavia.core.system.{ActorHouse, House}
 import io.otavia.core.timer.TimeoutTrigger
@@ -64,5 +65,7 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
         // reply.setMessageContext(sender)
         house.putReply(reply)
     }
+
+    override private[core] def inform(event: Event): Unit = house.putEvent(event)
 
 }

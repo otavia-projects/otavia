@@ -22,6 +22,7 @@ import io.otavia.core.address.{Address, EventableAddress}
 import io.otavia.core.cache.{ResourceTimer, TimeoutResource}
 import io.otavia.core.channel.Channel
 import io.otavia.core.reactor.{Reactor, TimeoutEvent}
+import io.otavia.core.system.ActorSystem
 import io.otavia.core.timer.Timer.*
 
 import java.util.Date
@@ -32,6 +33,9 @@ trait Timer {
 
     /** Generate a unique id for a new [[TimeoutTask]] */
     private[timer] def nextRegisterId(): Long
+
+    /** The [[ActorSystem]] of this [[Timer]] belong. */
+    private[timer] def system: ActorSystem
 
     /** API for [[Actor]] to register timeout event to [[Timer]].
      *

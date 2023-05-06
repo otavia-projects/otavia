@@ -64,29 +64,32 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 
     private[core] def createActorHouse(): ActorHouse = {
         val house = new ActorHouse(manager)
-        registerHouseRef(house)
+        this.registerHouseRef(house)
         house
     }
 
     private def registerHouseRef(house: ActorHouse): Unit = {
-        val ref = new ActorHousePhantomRef(house, referenceQueue)
-        refSet.add(ref)
+//        val ref = new ActorHousePhantomRef(house, referenceQueue)
+//        refSet.add(ref)
     }
 
     /** Stop [[Actor]] witch need be gc. */
-    private def stopActor(): Unit = {
+    private def stopActor(): Int = {
         var count    = 0
         var continue = true
+//        System.gc()
         while (count < GC_PEER_ROUND && continue) {
             val ref = referenceQueue.poll()
             if (ref == null) continue = false
             else {
+                println("--------GC----------")
                 refSet.remove(ref)
                 ref.clear()
                 count += 1
             }
         }
         if (count > 0) System.gc()
+        count
     }
 
     private[core] def notifyThread(): Unit = {
@@ -106,8 +109,8 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
     override def run(): Unit = {
         status = ST_RUNNING
         while (true) {
-            var block = true
-            if (manager.run()) block = false
+            manager.run(1000)
+//            manager.steal()
             this.stopActor()
             // TODO: handle events
 
@@ -115,10 +118,10 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
                 // TODO: handle event for thread
             }
 
-            if (block) this.synchronized {
-                status = ST_WAITING
-                this.wait(20)
-            }
+//            this.synchronized {
+//                status = ST_WAITING
+//                this.wait(20)
+//            }
         }
     }
 

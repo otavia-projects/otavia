@@ -32,8 +32,8 @@ trait Poolable extends Chainable {
     protected def cleanInstance(): Unit
 
     final def clean(): Unit = {
+        this.deChain()
         this.cleanInstance()
-        this.dechain()
     }
 
 }
@@ -60,8 +60,10 @@ object Poolable {
         private var head: Chainable | Null = null
         private var tail: Chainable | Null = null
 
-        inline private def headnn: Chainable = head.asInstanceOf[Chainable]
-        inline private def tailnn: Chainable = tail.asInstanceOf[Chainable]
+        private var mark: Chainable | Null = null
+
+        private def headnn: Chainable = head.asInstanceOf[Chainable]
+        private def tailnn: Chainable = tail.asInstanceOf[Chainable]
 
         override def size: Int = count
 
@@ -69,12 +71,12 @@ object Poolable {
             val poolable = headnn
             head = poolable.next
             count -= 1
-            poolable.dechain()
+            poolable.deChain()
             poolable.asInstanceOf[T]
         } else if (count == 1) {
             val poolable = headnn
-            head = null
             tail = null
+            head = null
             count -= 1
             poolable.asInstanceOf[T]
         } else null
@@ -84,16 +86,11 @@ object Poolable {
             tail = poolable
             count = 1
         } else {
-            val oldHead = headnn
-            poolable.next = oldHead
-            head = poolable
-            count += 1
-            if (count == maxSize + 1) {
-                val oldTail = tailnn
-                tail = oldTail.pre
-                oldTail.dechain()
-                tailnn.cleanNext()
-                count -= 1
+            if (count != maxSize) {
+                val oldHead = headnn
+                poolable.next = oldHead
+                head = poolable
+                count += 1
             }
         }
 

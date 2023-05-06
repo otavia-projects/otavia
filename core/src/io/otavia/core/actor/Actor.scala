@@ -77,6 +77,8 @@ trait Actor[+M <: Call] {
      */
     final def system: ActorSystem = context.system
 
+    final def timer: Timer = system.timer
+
     /** The unique id of this actor distributed by [[ActorSystem]], when a actor instance is mounted to a
      *  [[ActorSystem]], the actor system will distribute a unique id to the instance.
      *
