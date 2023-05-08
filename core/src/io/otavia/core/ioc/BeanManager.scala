@@ -86,4 +86,6 @@ private[core] class BeanManager(val system: ActorSystem) {
         } else throw new IllegalStateException()
     }
 
+    def count: Int = beans.size()
+
 }

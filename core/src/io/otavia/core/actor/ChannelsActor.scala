@@ -21,9 +21,9 @@ import io.otavia.core.actor.Actor
 import io.otavia.core.actor.ChannelsActor.*
 import io.otavia.core.address.{ActorAddress, Address}
 import io.otavia.core.channel.*
-import io.otavia.core.slf4a.Logger
 import io.otavia.core.message.*
 import io.otavia.core.reactor.*
+import io.otavia.core.slf4a.Logger
 import io.otavia.core.stack.*
 import io.otavia.core.system.ActorThread
 import io.otavia.core.timer.Timer
@@ -167,7 +167,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
     final protected def close(stack: AskStack[Close]): Option[StackState] = {
         stack.stackState match
-            case StackState.initialState =>
+            case StackState.start =>
                 val removes = if (stack.ask.ids.isEmpty) channels.keys else stack.ask.ids
                 if (removes.isEmpty) stack.`return`(CloseReply(Iterable.empty))
                 else {

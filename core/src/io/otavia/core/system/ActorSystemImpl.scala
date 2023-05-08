@@ -26,9 +26,14 @@ import io.otavia.core.message.{Call, IdAllocator}
 import io.otavia.core.reactor.BlockTaskExecutor
 import io.otavia.core.reactor.aio.Submitter
 import io.otavia.core.slf4a.{LogLevel, Logger}
+import io.otavia.core.system.monitor.{ReactorMonitor, SystemMonitor, ThreadMonitor}
 import io.otavia.core.timer.{Timer, TimerImpl}
 import io.otavia.core.util.SystemPropertyUtil
 
+import java.io.File
+import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
+import java.nio.file.StandardOpenOption
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicLong
 import scala.collection.mutable
@@ -74,6 +79,40 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     println("\n")
 
     inited = true
+
+    private val monitorTask = new Runnable {
+        override def run(): Unit = {
+            Thread.sleep(100)
+            val fs = pool.workers.map { thread =>
+                val file = new File(s"monitor.${thread.index}.log")
+                val f = FileChannel.open(
+                  file.toPath,
+                  StandardOpenOption.CREATE,
+                  StandardOpenOption.WRITE,
+                  StandardOpenOption.TRUNCATE_EXISTING
+                )
+                f
+            }
+            var i = 0
+            while (i < 1000_000) {
+                Thread.sleep(10)
+                val time  = System.currentTimeMillis()
+                val stats = monitor()
+                stats.threadMonitor.actorThreadMonitors.zipWithIndex.foreach { case (m, d) =>
+                    val sample =
+                        s"${time},${m.manager.mounts},${m.manager.serverActors},${m.manager.channelsActors},${m.manager.stateActors}\n"
+
+                    fs(d).write(ByteBuffer.wrap(sample.getBytes))
+                }
+                i += 1
+            }
+            fs.foreach(_.close())
+        }
+    }
+
+    private val monitorThread = new Thread(monitorTask)
+
+    monitorThread.start()
 
     loadEarlyModules()
 
@@ -230,6 +269,19 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
             case None        => beanManager.getBean(clz)
 
         address.asInstanceOf[Address[M]]
+    }
+
+    override def toString: String = {
+        val stats = monitor()
+
+        s"name = ${stats.name}, threads = ${stats.threads}, beans = ${stats.beans}\n" +
+            s"${stats.threadMonitor.timerMonitor}\n" +
+            s"${stats.threadMonitor.actorThreadMonitors.map(_.toString).mkString("[", ",\n", "]")}"
+    }
+
+    override def monitor(): SystemMonitor = {
+        val threadMonitor = ThreadMonitor(timer.monitor(), ReactorMonitor(), pool.workers.map(_.monitor()))
+        SystemMonitor(name, pool.size, beanManager.count, threadMonitor)
     }
 
     override def serverChannelFactory: ChannelFactory = ???

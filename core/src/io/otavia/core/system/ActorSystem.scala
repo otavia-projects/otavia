@@ -27,6 +27,7 @@ import io.otavia.core.reactor.aio.Submitter
 import io.otavia.core.reactor.{BlockTaskExecutor, Event, Reactor}
 import io.otavia.core.slf4a.LogLevel
 import io.otavia.core.stack.BlockFuture
+import io.otavia.core.system.monitor.SystemMonitor
 import io.otavia.core.timer.Timer
 
 import java.net.InetAddress
@@ -130,6 +131,8 @@ trait ActorSystem {
     final def threadPoolSize: Int = pool.size
 
     private[system] def setActorContext[A <: Actor[? <: Call]](actor: A, thread: ActorThread): Address[MessageOf[A]]
+
+    def monitor(): SystemMonitor
 
 }
 

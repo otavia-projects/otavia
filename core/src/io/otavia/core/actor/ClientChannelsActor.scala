@@ -46,7 +46,7 @@ abstract class ClientChannelsActor[M <: Call] extends ChannelsActor[M] {
 
     protected def connect(stack: AskStack[Connect]): Option[StackState] = {
         stack.stackState match
-            case StackState.initialState =>
+            case StackState.start =>
                 // TODO: check remote whether resolved, if not send ask message AddressResolver actor
                 val remote = stack.ask.remote
 

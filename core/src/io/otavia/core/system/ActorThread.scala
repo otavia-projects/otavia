@@ -20,6 +20,7 @@ import io.otavia.core.actor.Actor
 import io.otavia.core.address.ActorThreadAddress
 import io.otavia.core.reactor.Event
 import io.otavia.core.system.ActorThread.{GC_PEER_ROUND, ST_RUNNING, ST_STARTING, ST_WAITING}
+import io.otavia.core.system.monitor.ActorThreadMonitor
 import io.otavia.core.util.SystemPropertyUtil
 
 import java.lang.ref.ReferenceQueue
@@ -109,7 +110,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
     override def run(): Unit = {
         status = ST_RUNNING
         while (true) {
-            manager.run(1000)
+            manager.run()
 //            manager.steal()
             this.stopActor()
             // TODO: handle events
@@ -124,6 +125,8 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 //            }
         }
     }
+
+    def monitor(): ActorThreadMonitor = ActorThreadMonitor(eventQueue.size(), manager.monitor())
 
 }
 

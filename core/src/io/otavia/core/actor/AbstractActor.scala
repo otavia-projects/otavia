@@ -47,6 +47,12 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
     /** current stack frame for running ask or notice message */
     private[core] var currentStack: Stack = _
 
+    private var revAsks: Long  = 0
+    private var sendAsks: Long = 0
+
+    final override private[core] def stackEndRate: Float =
+        if (revAsks != 0) sendAsks.toFloat / revAsks.toFloat else Float.MaxValue
+
     /** self address of this actor instance
      *
      *  @return
@@ -77,6 +83,7 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
      *    the reply message future for this ask message
      */
     private[core] def attachStack(askId: Long, future: ReplyFuture[? <: Reply]): Unit = {
+        sendAsks += 1
         val promise = future.promise
         assert(promise.notInChain, "The ReplyFuture has been used, can't be use again!")
         promise.setStack(currentStack)
@@ -210,6 +217,7 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
      *    ask message received by this actor instance
      */
     final private[core] def receiveAsk(ask: Ask[? <: Reply]): Unit = {
+        revAsks += 1
         currentReceived = ask
         val stack = AskStack[M & Ask[? <: Reply]]
         stack.setCall(ask)

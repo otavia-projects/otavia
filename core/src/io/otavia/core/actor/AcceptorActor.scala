@@ -53,7 +53,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
 
     final protected def bind(stack: AskStack[Bind]): Option[StackState] = {
         stack.stackState match
-            case StackState.initialState =>
+            case StackState.`start` =>
                 val channel = newChannelAndInit()
                 val state   = new BindState()
                 channel.bind(stack.ask.local, state.bindFuture)
@@ -81,7 +81,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
 
     private def handleAcceptedStack(stack: ChannelStack[Channel]): Option[StackState] = {
         stack.stackState match
-            case StackState.initialState =>
+            case StackState.`start` =>
                 val state = new DispatchState()
                 workers.ask(AcceptedChannel(stack.message), state.dispatchFuture)
                 state.suspend()

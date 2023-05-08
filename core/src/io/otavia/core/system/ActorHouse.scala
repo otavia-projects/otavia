@@ -50,7 +50,7 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
     @volatile private var _inHighPriorityQueue: Boolean = false
 
     def highPriority: Boolean = (replyMailbox.size() > HIGH_PRIORITY_REPLY_SIZE) ||
-        (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE)
+        (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE) || (dweller.stackEndRate < 0.6)
 
     def inHighPriorityQueue: Boolean = _inHighPriorityQueue
 
@@ -129,7 +129,7 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
         if (status.get() == WAITING) {
             empty2ready()
         } else {
-            manager.change(this)
+//            manager.change(this)
         }
 
     }

@@ -23,6 +23,7 @@ import io.otavia.core.cache.{ResourceTimer, TimeoutResource}
 import io.otavia.core.channel.Channel
 import io.otavia.core.reactor.{Reactor, TimeoutEvent}
 import io.otavia.core.system.ActorSystem
+import io.otavia.core.system.monitor.TimerMonitor
 import io.otavia.core.timer.Timer.*
 
 import java.util.Date
@@ -36,6 +37,8 @@ trait Timer {
 
     /** The [[ActorSystem]] of this [[Timer]] belong. */
     private[timer] def system: ActorSystem
+
+    private[core] def monitor(): TimerMonitor
 
     /** API for [[Actor]] to register timeout event to [[Timer]].
      *

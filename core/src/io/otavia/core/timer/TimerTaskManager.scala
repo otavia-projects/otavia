@@ -31,6 +31,8 @@ class TimerTaskManager(val timer: Timer) {
 
     final def system: ActorSystem = timer.system
 
+    def count: Int = registeredTasks.size()
+
     def newActorTimeoutTask(
         address: EventableAddress,
         period: Long,

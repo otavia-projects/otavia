@@ -53,7 +53,7 @@ object Stack {
 
 abstract class Stack extends Poolable {
 
-    private var state          = StackState.initialState
+    private var state          = StackState.start
     private var error: Boolean = false
 
     // completed promise
@@ -83,7 +83,7 @@ abstract class Stack extends Poolable {
 
     override protected def cleanInstance(): Unit = {
         recycleAllPromises()
-        state = StackState.initialState
+        state = StackState.start
         error = false
         actor = null
     }

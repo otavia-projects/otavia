@@ -29,7 +29,7 @@ abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | Accepted
     /** handle [[AcceptedChannel]] message, this method will called by [[continueAsk]] */
     final protected def handleAccepted(stack: AskStack[AcceptedChannel]): Option[StackState] = {
         stack.stackState match
-            case StackState.initialState =>
+            case StackState.`start` =>
                 val channel = stack.ask.channel
                 initAndRegister(channel, stack)
             case registerWaitState: RegisterWaitState =>

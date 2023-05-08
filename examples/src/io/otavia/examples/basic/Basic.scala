@@ -45,17 +45,21 @@ object Basic {
     def main(args: Array[String]): Unit = {
         val system = ActorSystem()
         system.runMain(() => new Basic(args))
-        for (id <- 1 until 1_000_000) {
+        val start = System.currentTimeMillis()
+        for (id <- 1 until 100_000) {
             val pongActor = system.buildActor[PongActor](() => new PongActor())
             val pingActor = system.buildActor[PingActor](() => new PingActor(pongActor))
-            for (idx <- 0 until 1000) {
+            val start1    = System.currentTimeMillis()
+            for (idx <- 0 until 1_000) {
                 pingActor.notice(Start())
             }
-            if (id % 10_000 == 0) {
-                println(s"loop ${id}")
-            }
+            val end1 = System.currentTimeMillis()
+            if (id % 100 == 0) println(s"spend ${end1 - start1}")
+//            Thread.sleep(100)
         }
-        Thread.sleep(1000000000)
+        val end = System.currentTimeMillis()
+
+        println(s"main exit with ${end - start}")
     }
 
     private case class Start() extends Notice
@@ -77,19 +81,19 @@ object Basic {
 
         override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = {
             stack.stackState match
-                case StackState.initialState =>
+                case StackState.start =>
                     val state = new FutureState[Pong]
                     pongActor.ask(Ping(), state.future)
                     logger.info("Send ping to pongActor")
                     state.suspend()
                 case state: FutureState[Pong] =>
                     val pong = state.future.getNow
-                    logger.info(s"Get pong message ${pong}")
+                    logger.info(s"Get pong message $pong")
                     stack.`return`()
         }
 
         override def finalize(): Unit = {
-            logger.info("PingActor finalize")
+            logger.warn("PingActor finalize")
 //            println("PingActor finalize")
         }
 
@@ -108,7 +112,7 @@ object Basic {
         }
 
         override def continueAsk(stack: AskStack[Ping]): Option[StackState] = {
-            logger.info(s"PongActor received ask message ${stack.ask}")
+//            logger.info(s"PongActor received ask message ${stack.ask}")
             stack.`return`(Pong())
         }
 

@@ -23,6 +23,7 @@ import io.otavia.core.channel.Channel
 import io.otavia.core.reactor.{AskTimeoutEvent, ChannelTimeoutEvent, ResourceTimeoutEvent, TimeoutEvent}
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.ActorSystem
+import io.otavia.core.system.monitor.TimerMonitor
 import io.otavia.core.timer.Timer
 import io.otavia.core.timer.Timer.*
 
@@ -43,6 +44,8 @@ final class TimerImpl(private[timer] val system: ActorSystem) extends Timer {
     override private[timer] def nextRegisterId() = nextId.getAndIncrement()
 
     override def cancelTimerTask(registerId: Long): Unit = taskManager.remove(registerId)
+
+    override private[core] def monitor() = TimerMonitor(taskManager.count)
 
     override def registerActorTimeout(
         trigger: TimeoutTrigger,

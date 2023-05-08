@@ -55,15 +55,9 @@ class FIFOHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
         }
     }
 
-    final override def dequeue(timeout: Long): ActorHouse | Null = {
-        if (size.get() == 0) { // spin timeout to wait some house enqueue
-            val start     = System.nanoTime()
-            var isTimeout = true
-//            while (size.get() == 0 && !isTimeout) {
-//                isTimeout = System.nanoTime() - start > timeout
-//            }
-            if (isTimeout) null else dequeue0()
-        } else dequeue0()
+    final override def dequeue(): ActorHouse | Null = {
+        if (size.get() == 0) null
+        else dequeue0()
     }
 
     final private def dequeue0(): ActorHouse | Null = {

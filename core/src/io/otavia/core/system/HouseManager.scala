@@ -18,6 +18,7 @@ package io.otavia.core.system
 
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.HouseManager.*
+import io.otavia.core.system.monitor.HouseManagerMonitor
 import io.otavia.core.util.SystemPropertyUtil
 
 import scala.language.unsafeNulls
@@ -69,33 +70,38 @@ class HouseManager(val thread: ActorThread) {
      *    The [[ActorHouse]] which is received [[io.otavia.core.message.Message]] or [[io.otavia.core.reactor.Event]]
      */
     def change(house: ActorHouse): Unit = {
-        if (house.statusReady && house.highPriority && !house.inHighPriorityQueue) {
+        if (house.highPriority && !house.inHighPriorityQueue) {
             // try adjust priority
             if (house.actorType == ActorHouse.CHANNELS_ACTOR) channelsActorQueue.adjustPriority(house)
             else if (house.actorType == ActorHouse.STATE_ACTOR) actorQueue.adjustPriority(house)
         }
     }
 
+    final private def adjustPriority(queue: PriorityHouseQueue, house: ActorHouse): Unit = {
+        if (queue.adjust(house)) {
+            queue.enqueue(house)
+        }
+    }
+
     /** Run by [[thread]], if no house is available, spin timeout nanosecond to wait some house become ready.
-     *  @param timeout
-     *    wait [[timeout]] nanosecond
+     *
      *  @return
      *    true if run some [[ActorHouse]], otherwise false.
      */
-    def run(timeout: Long = 0): Boolean = {
+    def run(): Boolean = {
         runningStart = System.nanoTime()
 
         var success = false
 
-        if (this.run0(serverActorQueue, timeout)) success = true
+        if (this.run0(serverActorQueue)) success = true
 
-        if (this.run0(channelsActorQueue, timeout)) success = true
+        if (this.run0(channelsActorQueue)) success = true
 
-        if (this.run0(actorQueue, timeout)) success = true
+        if (this.run0(actorQueue)) success = true
 
         if (mountingQueue.available) {
             logger.trace(s"${thread.getName} mounting size ${mountingQueue.readies}")
-            val house = mountingQueue.dequeue(timeout)
+            val house = mountingQueue.dequeue()
             if (house != null) {
                 house.doMount()
                 success = true
@@ -107,8 +113,8 @@ class HouseManager(val thread: ActorThread) {
         success
     }
 
-    final private def run0(houseQueue: HouseQueue, timeout: Long): Boolean = {
-        val house = houseQueue.dequeue(timeout)
+    final private def run0(houseQueue: HouseQueue): Boolean = {
+        val house = houseQueue.dequeue()
         if (house != null) {
             house.run()
             true
@@ -145,10 +151,17 @@ class HouseManager(val thread: ActorThread) {
     /** Steal running by other [[ActorThread]] */
     private def runSteal(): Unit = {
         if (actorQueue.available) {
-            val house = actorQueue.dequeue(1000)
+            val house = actorQueue.dequeue()
             if (house != null) house.run()
         }
     }
+
+    def monitor(): HouseManagerMonitor = HouseManagerMonitor(
+      mountingQueue.readies,
+      serverActorQueue.readies,
+      channelsActorQueue.readies,
+      actorQueue.readies
+    )
 
 }
 

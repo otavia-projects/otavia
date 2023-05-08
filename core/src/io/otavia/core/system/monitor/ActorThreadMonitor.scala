@@ -14,28 +14,8 @@
  * limitations under the License.
  */
 
-package io.otavia.core.stack
+package io.otavia.core.system.monitor
 
-import io.otavia.core.cache.Poolable
-import io.otavia.core.message.Reply
-
-trait StackState {
-
-    private val option: Option[StackState] = Some(this) // for pooling Some(this) object to reduce GC
-    def resumable(): Boolean               = false
-
-    def suspend(): Option[StackState] = option // TODO: check whether has uncompleted promise
-
-}
-
-object StackState {
-
-    val start: StackState = new StackState {
-        final override def resumable(): Boolean = true
-    }
-
-    class FutureState[R <: Reply] extends StackState {
-        val future: ReplyFuture[R] = ReplyFuture()
-    }
-
+case class ActorThreadMonitor(events: Int, manager: HouseManagerMonitor) {
+    override def toString: String = s"thread(events = ${events}, ${manager})"
 }

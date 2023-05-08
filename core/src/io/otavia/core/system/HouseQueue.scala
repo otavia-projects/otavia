@@ -24,7 +24,7 @@ abstract class HouseQueue(val manager: HouseManager) {
 
     def enqueue(house: ActorHouse): Unit
 
-    def dequeue(timeout: Long): ActorHouse | Null
+    def dequeue(): ActorHouse | Null
 
     def isEmpty: Boolean
 

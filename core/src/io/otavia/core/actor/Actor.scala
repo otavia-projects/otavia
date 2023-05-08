@@ -59,6 +59,10 @@ trait Actor[+M <: Call] {
 
     def niceEvent: Int = NICE_EVENT
 
+    def nice: Int = 8
+
+    private[core] def stackEndRate: Float
+
     /** Context of this actor. This method can only used after actor instance mount to actor system */
     def context: ActorContext
 
@@ -181,16 +185,16 @@ object Actor {
     val ASK_TYPE: MessageType    = 1
     val REPLY_TYPE: MessageType  = 2
 
-    private val NICE_ASK_DEFAULT = 2
-    private val NICE_ASK         = SystemPropertyUtil.getInt("io.otavia.core.actor.nice.ask", NICE_ASK_DEFAULT)
+    private val NICE_MESSAGE_DEFAULT = 16
+    private val NICE_MESSAGE = SystemPropertyUtil.getInt("io.otavia.core.actor.nice.message", NICE_MESSAGE_DEFAULT)
 
-    private val NICE_REPLY_DEFAULT = 8
-    private val NICE_REPLY         = SystemPropertyUtil.getInt("io.otavia.core.actor.nice.reply", NICE_REPLY_DEFAULT)
+    private val NICE_ASK = SystemPropertyUtil.getInt("io.otavia.core.actor.nice.ask", NICE_MESSAGE)
 
-    private val NICE_NOTICE_DEFAULT = 2
-    private val NICE_NOTICE         = SystemPropertyUtil.getInt("io.otavia.core.actor.nice.notice", NICE_NOTICE_DEFAULT)
+    private val NICE_REPLY = SystemPropertyUtil.getInt("io.otavia.core.actor.nice.reply", NICE_MESSAGE)
 
-    private val NICE_EVENT_DEFAULT = 16
+    private val NICE_NOTICE = SystemPropertyUtil.getInt("io.otavia.core.actor.nice.notice", NICE_MESSAGE)
+
+    private val NICE_EVENT_DEFAULT = 32
     private val NICE_EVENT         = SystemPropertyUtil.getInt("io.otavia.core.actor.nice.notice", NICE_EVENT_DEFAULT)
 
 }
