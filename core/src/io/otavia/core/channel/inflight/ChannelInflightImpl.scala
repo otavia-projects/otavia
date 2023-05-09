@@ -17,7 +17,7 @@
 package io.otavia.core.channel.inflight
 
 import io.otavia.core.channel.{AbstractNetChannel, Channel, ChannelInflight, ChannelShutdownDirection}
-import io.otavia.core.reactor.{Event, ReactorEvent}
+import io.otavia.core.message.{Event, ReactorEvent}
 import io.otavia.core.stack.*
 
 import java.net.SocketAddress

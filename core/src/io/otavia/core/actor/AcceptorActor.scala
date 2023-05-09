@@ -20,7 +20,7 @@ import io.otavia.core.actor.AcceptorActor.*
 import io.otavia.core.actor.ChannelsActor.{Bind, BindReply, RegisterWaitState}
 import io.otavia.core.address.Address
 import io.otavia.core.channel.*
-import io.otavia.core.reactor.ReactorEvent
+import io.otavia.core.message.ReactorEvent
 import io.otavia.core.stack.*
 //import io.otavia.core.channel.impl.NioServerSocketChannel
 import io.otavia.core.message.*

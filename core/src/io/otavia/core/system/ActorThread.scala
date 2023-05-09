@@ -18,7 +18,7 @@ package io.otavia.core.system
 
 import io.otavia.core.actor.Actor
 import io.otavia.core.address.ActorThreadAddress
-import io.otavia.core.reactor.Event
+import io.otavia.core.message.{Event, ResourceTimeoutEvent}
 import io.otavia.core.system.ActorThread.{GC_PEER_ROUND, ST_RUNNING, ST_STARTING, ST_WAITING}
 import io.otavia.core.system.monitor.ActorThreadMonitor
 import io.otavia.core.util.SystemPropertyUtil
@@ -109,21 +109,65 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 
     override def run(): Unit = {
         status = ST_RUNNING
-        while (true) {
-            manager.run()
-//            manager.steal()
-            this.stopActor()
-            // TODO: handle events
 
-            if (!eventQueue.isEmpty) {
-                // TODO: handle event for thread
+        var spinStart: Long  = Long.MaxValue
+        var emptyTimes: Long = 0
+        var gc               = false
+        while (true) {
+            var success: Boolean = false
+            // run current thread tasks
+            val stops    = this.stopActor()
+            val runHouse = manager.run()
+            val runEvent = this.runThreadEvent()
+
+            if (stops > 0 || runHouse || runEvent) success = true
+
+            val currentNanoTime = System.nanoTime()
+
+            if (success) {
+                spinStart = currentNanoTime
+                emptyTimes = 0
+                gc = false
+            } else {
+                emptyTimes += 1
+                if (emptyTimes >= 50) {
+                    if (manager.steal()) {
+                        emptyTimes = 30
+                    }
+                }
+//                if ((currentNanoTime - spinStart) > 50 * 1000) { // try to steal after spin 1 millis
+//                    if (manager.steal()) {
+//                        spinStart = System.nanoTime() - 10 * 1000
+//                    }
+//                }
             }
 
-//            this.synchronized {
-//                status = ST_WAITING
-//                this.wait(20)
-//            }
+            if (emptyTimes > 100 && currentNanoTime - spinStart > 10 * 1000 * 1000) {
+                this.suspendThread(20)
+                status = ST_RUNNING
+                if (currentNanoTime - spinStart > 1000 * 1000 * 1000 && !gc) {
+                    System.gc()
+                    gc = true
+                    println(s"$getName GC")
+                }
+            }
         }
+    }
+
+    final private def suspendThread(millis: Long = 50): Unit = {
+        this.synchronized {
+            status = ST_WAITING
+            this.wait(millis)
+        }
+    }
+
+    final private def runThreadEvent(): Boolean = {
+        if (!eventQueue.isEmpty) {
+            val event = eventQueue.poll().asInstanceOf[ResourceTimeoutEvent]
+
+            event.cache.parent.handleTimeout(event.registerId, event.cache)
+            true
+        } else false
     }
 
     def monitor(): ActorThreadMonitor = ActorThreadMonitor(eventQueue.size(), manager.monitor())

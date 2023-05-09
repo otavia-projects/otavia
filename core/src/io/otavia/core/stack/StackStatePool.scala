@@ -16,7 +16,7 @@
 
 package io.otavia.core.stack
 
-import io.otavia.core.cache.{ActorThreadLocal, Poolable, ThreadIsolationObjectPool, ThreadLocalTimer}
+import io.otavia.core.cache.{ActorThreadLocal, Poolable, ResourceTimer, ThreadIsolationObjectPool, ThreadLocalTimer}
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.timer.TimeoutTrigger
 
@@ -36,7 +36,8 @@ abstract class StackStatePool[S <: StackState with Poolable] extends ThreadIsola
         override protected def initialTimeoutTrigger: Option[TimeoutTrigger] =
             Some(TimeoutTrigger.DelayPeriod(60, 60, TimeUnit.SECONDS, TimeUnit.SECONDS))
 
-        override protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit = {
+        override def handleTimeout(registerId: Long, resourceTimer: ResourceTimer): Unit = {
+            val threadLocalTimer: ThreadLocalTimer = resourceTimer.asInstanceOf[ThreadLocalTimer]
             val duration = System.nanoTime() - threadLocalTimer.recentlyGetTime
             if (duration / (1000 * 1000 * 1000) > 60) {
                 val holder = this.get()

@@ -19,7 +19,7 @@ package io.otavia.core.actor
 import io.otavia.core.actor.Actor.*
 import io.otavia.core.address.Address
 import io.otavia.core.message.*
-import io.otavia.core.reactor.{Event, Reactor, TimeoutEvent}
+import io.otavia.core.reactor.Reactor
 import io.otavia.core.stack.*
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.timer.Timer

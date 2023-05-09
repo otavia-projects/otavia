@@ -17,8 +17,7 @@
 package io.otavia.core.system
 
 import io.otavia.core.actor.Actor
-import io.otavia.core.message.{Ask, Message, Notice, Reply}
-import io.otavia.core.reactor.Event
+import io.otavia.core.message.{Ask, Event, Message, Notice, Reply}
 
 /** House is [[Actor]] instance mount point. when a actor is creating by actor system, a house is creating at the same
  *  time, and mount the actor instance to the house instance.

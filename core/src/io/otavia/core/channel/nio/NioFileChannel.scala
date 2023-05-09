@@ -21,7 +21,7 @@ package io.otavia.core.channel.nio
 import io.netty5.util.{Attribute, AttributeKey}
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*
-import io.otavia.core.reactor.ReactorEvent
+import io.otavia.core.message.ReactorEvent
 import io.otavia.core.stack.ChannelReplyFuture
 
 import java.io.File

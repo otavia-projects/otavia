@@ -53,9 +53,6 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
                 tail = house
                 size.incrementAndGet()
             } else {
-                if (tail == null) {
-                    println("")
-                }
                 val oldTail = tail
                 tail = house
                 oldTail.next = tail
@@ -89,7 +86,11 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
 
     private def dequeueNormal(): ActorHouse | Null = {
         readLock.lock()
-        if (size.get() == 1) {
+        val sizeShadow = size.get()
+        if (sizeShadow == 0) {
+            readLock.unlock()
+            null
+        } else if (sizeShadow == 1) {
             writeLock.lock()
             if (size.get() == 1) {
                 val house = head
@@ -106,9 +107,6 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
                 head = house.next
                 head.pre = null
                 size.decrementAndGet()
-                if (size.get() == -1) {
-                    println("")
-                }
                 house.deChain()
                 house.schedule()
                 writeLock.unlock()
@@ -120,9 +118,6 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
             head = house.next
             head.pre = null
             size.decrementAndGet()
-            if (size.get() == -1) {
-                println("")
-            }
             house.deChain()
             house.schedule()
             readLock.unlock()
@@ -132,7 +127,11 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
 
     private def dequeuePriority(): ActorHouse | Null = {
         highReadLock.lock()
-        if (highSize.get() == 1) {
+        val sizeShadow = highSize.get()
+        if (sizeShadow == 0) {
+            highReadLock.unlock()
+            null
+        } else if (sizeShadow == 1) {
             highWriteLock.lock()
             if (highSize.get() == 1) {
                 val house = highHead
@@ -185,7 +184,7 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
             }
             size.decrementAndGet()
             if (size.get() == -1) {
-                println("")
+                println("-1")
             }
             house.inHighPriorityQueue = true
         }

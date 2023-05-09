@@ -57,10 +57,8 @@ object Poolable {
         import scala.language.unsafeNulls
 
         private var count: Int             = 0
-        private var head: Chainable | Null = null
-        private var tail: Chainable | Null = null
-
-        private var mark: Chainable | Null = null
+        private var head: Chainable | Null = _
+        private var tail: Chainable | Null = _
 
         private def headnn: Chainable = head.asInstanceOf[Chainable]
         private def tailnn: Chainable = tail.asInstanceOf[Chainable]
@@ -69,7 +67,7 @@ object Poolable {
 
         override def pop(): T | Null = if (count > 1) {
             val poolable = headnn
-            head = poolable.next
+            head = poolable.next // TODO: java.lang.NullPointerException
             count -= 1
             poolable.deChain()
             poolable.asInstanceOf[T]

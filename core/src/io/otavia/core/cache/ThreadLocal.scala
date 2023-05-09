@@ -16,7 +16,7 @@
 
 package io.otavia.core.cache
 
-import io.otavia.core.reactor.ResourceTimeoutEvent
+import io.otavia.core.message.ResourceTimeoutEvent
 import io.otavia.core.system.ActorThread
 import io.otavia.core.timer.{TimeoutTrigger, Timer}
 

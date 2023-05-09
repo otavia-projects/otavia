@@ -16,7 +16,7 @@
 
 package io.otavia.core.timer
 
-import io.otavia.core.reactor.{TimeoutEvent, TimerEvent}
+import io.otavia.core.message.{TimeoutEvent, TimerEvent}
 
 private[timer] class ActorTimeoutTask(manager: TimerTaskManager) extends TimeoutTask(manager) {
 

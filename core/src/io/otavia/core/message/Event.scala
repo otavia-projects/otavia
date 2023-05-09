@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package io.otavia.core.reactor
+package io.otavia.core.message
 
 import io.otavia.core.cache.ResourceTimer
 import io.otavia.core.channel.Channel
+import io.otavia.core.message.{Event, TimerEvent}
 import io.otavia.core.stack.BlockPromise
 import io.otavia.core.util.Nextable
 

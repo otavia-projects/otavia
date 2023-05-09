@@ -29,8 +29,10 @@ abstract class TimeoutThreadIsolationObjectPool[T <: Poolable] extends ThreadIso
         override protected def initialTimeoutTrigger: Option[TimeoutTrigger] =
             TimeoutThreadIsolationObjectPool.this.initialTimeoutTrigger
 
-        override protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit =
+        override def handleTimeout(registerId: Long, resourceTimer: ResourceTimer): Unit = {
+            val threadLocalTimer: ThreadLocalTimer = resourceTimer.asInstanceOf[ThreadLocalTimer]
             TimeoutThreadIsolationObjectPool.this.handleTimeout(registerId, threadLocalTimer)
+        }
 
     }
 

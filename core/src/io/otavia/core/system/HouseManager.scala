@@ -16,6 +16,7 @@
 
 package io.otavia.core.system
 
+import io.otavia.core.message.Event
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.HouseManager.*
 import io.otavia.core.system.monitor.HouseManagerMonitor
@@ -64,10 +65,10 @@ class HouseManager(val thread: ActorThread) {
         thread.notifyThread()
     }
 
-    /** Received [[io.otavia.core.message.Message]] or [[io.otavia.core.reactor.Event]] when [[ActorHouse]] status is
-     *  <b> READY | RUNNING
+    /** Received [[io.otavia.core.message.Message]] or [[Event]] when [[ActorHouse]] status is <b> READY | RUNNING
+     *
      *  @param house
-     *    The [[ActorHouse]] which is received [[io.otavia.core.message.Message]] or [[io.otavia.core.reactor.Event]]
+     *    The [[ActorHouse]] which is received [[io.otavia.core.message.Message]] or [[Event]]
      */
     def change(house: ActorHouse): Unit = {
         if (house.highPriority && !house.inHighPriorityQueue) {
@@ -134,26 +135,29 @@ class HouseManager(val thread: ActorThread) {
         while (i < threads.length && continue) {
             val thread = threads((i + threads.length) % threads.length)
             i += 1
-            if (thread.houseManager.stealable) {
+            if (thread != null && thread.houseManager.stealable) {
                 continue = false
                 stealThread = thread
             }
         }
         if (stealThread != null) {
-            runningStart = System.nanoTime()
+//            runningStart = System.nanoTime()
             // running other thread's HouseManager
-            stealThread.houseManager.runSteal()
-            runningStart = Long.MaxValue
-            true
+            val success = stealThread.houseManager.runSteal()
+//            runningStart = Long.MaxValue
+            success
         } else false
     }
 
     /** Steal running by other [[ActorThread]] */
-    private def runSteal(): Unit = {
+    final private def runSteal(): Boolean = {
         if (actorQueue.available) {
             val house = actorQueue.dequeue()
-            if (house != null) house.run()
-        }
+            if (house != null) {
+                house.run()
+                true
+            } else false
+        } else false
     }
 
     def monitor(): HouseManagerMonitor = HouseManagerMonitor(
@@ -163,12 +167,15 @@ class HouseManager(val thread: ActorThread) {
       actorQueue.readies
     )
 
+    override def toString: String = s"mounting=${mountingQueue.readies}, server=${serverActorQueue.readies}, " +
+        s"channels=${channelsActorQueue.readies}, state=${actorQueue.readies}"
+
 }
 
 object HouseManager {
 
     private val STEAL_REMAINING_THRESHOLD = SystemPropertyUtil.getInt("io.otavia.core.steal.threshold", 16)
     private val STEAL_NANO_THRESHOLD =
-        SystemPropertyUtil.getInt("io.otavia.core.steal.threshold.microsecond", 2000) * 1000
+        SystemPropertyUtil.getInt("io.otavia.core.steal.threshold.microsecond", 1 * 1000) * 1000
 
 }

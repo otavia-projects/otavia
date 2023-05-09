@@ -1,6 +1,6 @@
 package io.otavia.core.stack
 
-import io.otavia.core.cache.{ActorThreadLocal, Poolable, ThreadIsolationObjectPool, ThreadLocalTimer}
+import io.otavia.core.cache.{ActorThreadLocal, Poolable, ResourceTimer, ThreadIsolationObjectPool, ThreadLocalTimer}
 import io.otavia.core.system.ActorThread
 import io.otavia.core.timer.TimeoutTrigger
 
@@ -16,7 +16,8 @@ abstract class PromiseObjectPool[P <: Promise[?]] extends ThreadIsolationObjectP
         override protected def initialTimeoutTrigger: Option[TimeoutTrigger] =
             Some(TimeoutTrigger.DelayPeriod(60, 60, TimeUnit.SECONDS, TimeUnit.SECONDS))
 
-        override protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit = {
+        override def handleTimeout(registerId: Long, resourceTimer: ResourceTimer): Unit = {
+            val threadLocalTimer: ThreadLocalTimer = resourceTimer.asInstanceOf[ThreadLocalTimer]
             if ((System.nanoTime() - threadLocalTimer.recentlyGetTime) / (1000 * 1000 * 1000) > 30) {
                 val holder = this.get()
                 if (holder.size > 100) holder.clean(100)

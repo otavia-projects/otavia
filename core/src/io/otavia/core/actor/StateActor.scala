@@ -19,7 +19,6 @@ package io.otavia.core.actor
 import io.otavia.core.actor.Actor.{ASK_TYPE, MessageType, NOTICE_TYPE, REPLY_TYPE}
 import io.otavia.core.address.{ActorAddress, Address}
 import io.otavia.core.message.*
-import io.otavia.core.reactor.Event
 import io.otavia.core.stack.*
 
 import scala.reflect.ClassTag

@@ -30,4 +30,6 @@ abstract class HouseQueue(val manager: HouseManager) {
 
     def nonEmpty: Boolean
 
+    override def toString: String = s"size = $readies"
+
 }

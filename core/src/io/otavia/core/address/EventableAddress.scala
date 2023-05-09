@@ -16,7 +16,7 @@
 
 package io.otavia.core.address
 
-import io.otavia.core.reactor.Event
+import io.otavia.core.message.Event
 
 trait EventableAddress {
 

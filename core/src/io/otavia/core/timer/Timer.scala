@@ -21,7 +21,8 @@ import io.otavia.core.actor.Actor
 import io.otavia.core.address.{Address, EventableAddress}
 import io.otavia.core.cache.{ResourceTimer, TimeoutResource}
 import io.otavia.core.channel.Channel
-import io.otavia.core.reactor.{Reactor, TimeoutEvent}
+import io.otavia.core.message.TimeoutEvent
+import io.otavia.core.reactor.Reactor
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.system.monitor.TimerMonitor
 import io.otavia.core.timer.Timer.*

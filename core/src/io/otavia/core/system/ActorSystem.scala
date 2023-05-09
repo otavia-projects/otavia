@@ -24,7 +24,7 @@ import io.otavia.core.channel.{Channel, ChannelFactory}
 import io.otavia.core.ioc.{BeanDefinition, Module}
 import io.otavia.core.message.*
 import io.otavia.core.reactor.aio.Submitter
-import io.otavia.core.reactor.{BlockTaskExecutor, Event, Reactor}
+import io.otavia.core.reactor.{BlockTaskExecutor, Reactor}
 import io.otavia.core.slf4a.LogLevel
 import io.otavia.core.stack.BlockFuture
 import io.otavia.core.system.monitor.SystemMonitor

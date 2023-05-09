@@ -17,7 +17,7 @@
 package io.otavia.core.timer
 
 import io.otavia.core.cache.ResourceTimer
-import io.otavia.core.reactor.{ResourceTimeoutEvent, TimerEvent}
+import io.otavia.core.message.{ResourceTimeoutEvent, TimerEvent}
 
 private[timer] class ResourceTimeoutTask(manager: TimerTaskManager) extends TimeoutTask(manager) {
 

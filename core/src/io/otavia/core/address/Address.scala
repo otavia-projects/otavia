@@ -18,7 +18,6 @@ package io.otavia.core.address
 
 import io.otavia.core.actor.{AbstractActor, Actor}
 import io.otavia.core.message.*
-import io.otavia.core.reactor.Event
 import io.otavia.core.stack.{AskStack, ReplyFuture}
 
 /** Address is the facade of an actor. Actors cannot call each other directly, only send messages to the actor via its

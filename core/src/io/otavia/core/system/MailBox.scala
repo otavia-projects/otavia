@@ -94,4 +94,6 @@ class MailBox(val house: ActorHouse) extends SpinLock {
 
     def nonEmpty: Boolean = count > 0
 
+    override def toString: String = s"size = $count"
+
 }

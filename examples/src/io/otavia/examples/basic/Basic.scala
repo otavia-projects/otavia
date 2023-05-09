@@ -19,8 +19,7 @@ package io.otavia.examples.basic
 import io.otavia.core.actor.*
 import io.otavia.core.address.Address
 import io.otavia.core.ioc.Injectable
-import io.otavia.core.message.{Ask, Notice, Reply}
-import io.otavia.core.reactor.TimeoutEvent
+import io.otavia.core.message.{Ask, Notice, Reply, TimeoutEvent}
 import io.otavia.core.slf4a.Appender
 import io.otavia.core.stack.StackState.FutureState
 import io.otavia.core.stack.{AskStack, NoticeStack, ReplyFuture, StackState}
@@ -46,15 +45,15 @@ object Basic {
         val system = ActorSystem()
         system.runMain(() => new Basic(args))
         val start = System.currentTimeMillis()
-        for (id <- 1 until 100_000) {
+        for (id <- 0 until 200_000) {
             val pongActor = system.buildActor[PongActor](() => new PongActor())
             val pingActor = system.buildActor[PingActor](() => new PingActor(pongActor))
             val start1    = System.currentTimeMillis()
             for (idx <- 0 until 1_000) {
-                pingActor.notice(Start())
+                pingActor.notice(Start(idx))
             }
             val end1 = System.currentTimeMillis()
-            if (id % 100 == 0) println(s"spend ${end1 - start1}")
+//            if (id % 100 == 0) println(s"spend ${end1 - start1}")
 //            Thread.sleep(100)
         }
         val end = System.currentTimeMillis()
@@ -62,7 +61,7 @@ object Basic {
         println(s"main exit with ${end - start}")
     }
 
-    private case class Start() extends Notice
+    private case class Start(id: Int) extends Notice
 
     private case class Ping() extends Ask[Pong]
 

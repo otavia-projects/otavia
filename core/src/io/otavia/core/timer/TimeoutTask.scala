@@ -18,7 +18,7 @@ package io.otavia.core.timer
 
 import io.netty5.util.{Timeout, TimerTask, Timer as NTimer}
 import io.otavia.core.address.EventableAddress
-import io.otavia.core.reactor.{TimeoutEvent, TimerEvent}
+import io.otavia.core.message.{TimeoutEvent, TimerEvent}
 import io.otavia.core.slf4a.Logger
 
 import java.util.concurrent.{ConcurrentHashMap, TimeUnit}

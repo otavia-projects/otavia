@@ -18,7 +18,6 @@ package io.otavia.core.address
 
 import io.otavia.core.actor.{AbstractActor, Actor, ChannelsActor, StateActor}
 import io.otavia.core.message.*
-import io.otavia.core.reactor.Event
 import io.otavia.core.slf4a.Appender
 import io.otavia.core.stack.{ReplyFuture, ReplyWaiter}
 import io.otavia.core.system.{ActorHouse, House}

@@ -16,7 +16,7 @@
 
 package io.otavia.core.timer
 
-import io.otavia.core.reactor.{AskTimeoutEvent, TimerEvent}
+import io.otavia.core.message.{AskTimeoutEvent, TimerEvent}
 
 private[timer] class AskTimeoutTask(manager: TimerTaskManager) extends TimeoutTask(manager) {
 

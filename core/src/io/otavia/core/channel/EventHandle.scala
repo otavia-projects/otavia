@@ -16,7 +16,8 @@
 
 package io.otavia.core.channel
 
-import io.otavia.core.reactor.{Event, Reactor, ReactorEvent, TimeoutEvent}
+import io.otavia.core.message.{Event, ReactorEvent, TimeoutEvent}
+import io.otavia.core.reactor.Reactor
 import io.otavia.core.timer.Timer
 
 /** A handle that will process [[Event]] from [[Reactor]] and [[Timer]]. */

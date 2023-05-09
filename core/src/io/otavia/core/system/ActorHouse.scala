@@ -19,7 +19,6 @@ package io.otavia.core.system
 import io.otavia.core.actor.*
 import io.otavia.core.address.ActorAddress
 import io.otavia.core.message.*
-import io.otavia.core.reactor.Event
 import io.otavia.core.system.ActorHouse.*
 import io.otavia.core.util.{Nextable, SystemPropertyUtil}
 
@@ -142,40 +141,50 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
 
     override def run(): Unit = { // TODO: support batch receive
         if (status.compareAndSet(SCHEDULED, RUNNING)) {
-            if (replyMailbox.nonEmpty) {
-                var cursor = replyMailbox.getChain(dweller.niceReply)
+            if (replyMailbox.size() > dweller.niceReply * 2) {
+                var cursor = replyMailbox.getChain(dweller.niceReply * 2)
                 while (cursor != null) {
                     val msg = cursor
                     cursor = msg.next
                     msg.dechain()
                     dweller.receiveReply(msg.asInstanceOf[Reply])
                 }
-            }
-            if (eventMailbox.nonEmpty) {
-                var cursor = eventMailbox.getChain(dweller.niceEvent)
-                while (cursor != null) {
-                    val msg = cursor
-                    cursor = msg.next
-                    msg.dechain()
-                    dweller.receiveEvent(msg.asInstanceOf[Event])
+            } else {
+                if (replyMailbox.nonEmpty) {
+                    var cursor = replyMailbox.getChain(dweller.niceReply)
+                    while (cursor != null) {
+                        val msg = cursor
+                        cursor = msg.next
+                        msg.dechain()
+                        dweller.receiveReply(msg.asInstanceOf[Reply])
+                    }
                 }
-            }
-            if (askMailbox.nonEmpty) {
-                var cursor = askMailbox.getChain(dweller.niceAsk)
-                while (cursor != null) {
-                    val msg = cursor
-                    cursor = msg.next
-                    msg.dechain()
-                    dweller.receiveAsk(msg.asInstanceOf[Ask[? <: Reply]])
+                if (eventMailbox.nonEmpty) {
+                    var cursor = eventMailbox.getChain(dweller.niceEvent)
+                    while (cursor != null) {
+                        val msg = cursor
+                        cursor = msg.next
+                        msg.dechain()
+                        dweller.receiveEvent(msg.asInstanceOf[Event])
+                    }
                 }
-            }
-            if (noticeMailbox.nonEmpty) {
-                var cursor = noticeMailbox.getChain(dweller.niceNotice)
-                while (cursor != null) {
-                    val msg = cursor
-                    cursor = msg.next
-                    msg.dechain()
-                    dweller.receiveNotice(msg.asInstanceOf[Notice])
+                if (askMailbox.nonEmpty) {
+                    var cursor = askMailbox.getChain(dweller.niceAsk)
+                    while (cursor != null) {
+                        val msg = cursor
+                        cursor = msg.next
+                        msg.dechain()
+                        dweller.receiveAsk(msg.asInstanceOf[Ask[? <: Reply]])
+                    }
+                }
+                if (noticeMailbox.nonEmpty) {
+                    var cursor = noticeMailbox.getChain(dweller.niceNotice)
+                    while (cursor != null) {
+                        val msg = cursor
+                        cursor = msg.next
+                        msg.dechain()
+                        dweller.receiveNotice(msg.asInstanceOf[Notice])
+                    }
                 }
             }
 
@@ -197,6 +206,9 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
     }
 
     override def close(): Unit = dweller.stop()
+
+    override def toString: String = s"events=${eventMailbox.size()}, notices=${noticeMailbox.size()}, " +
+        s"asks=${askMailbox.size()}, replies=${replyMailbox.size()}"
 
 }
 

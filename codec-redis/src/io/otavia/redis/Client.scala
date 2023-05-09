@@ -19,7 +19,6 @@ package io.otavia.redis
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*
 import io.otavia.core.message.*
-import io.otavia.core.reactor.Event
 import io.otavia.core.stack.*
 import io.otavia.redis.Client.{Connect, Connected, ConnectingState}
 

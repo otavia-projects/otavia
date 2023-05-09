@@ -21,7 +21,7 @@ package io.otavia.core.channel.nio
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.estimator.{ReadHandleFactory, WriteHandleFactory}
 import io.otavia.core.channel.{AbstractNetChannel, Channel}
-import io.otavia.core.reactor.ReactorEvent
+import io.otavia.core.message.ReactorEvent
 
 import java.net.SocketAddress
 import java.nio.channels.{CancelledKeyException, SelectableChannel, SelectionKey, Selector}

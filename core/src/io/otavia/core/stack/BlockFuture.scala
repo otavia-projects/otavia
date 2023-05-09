@@ -18,7 +18,7 @@ package io.otavia.core.stack
 
 import io.otavia.core.actor.{AbstractActor, Actor}
 import io.otavia.core.channel.Channel
-import io.otavia.core.reactor.BlockFutureCompletedEvent
+import io.otavia.core.message.BlockFutureCompletedEvent
 
 import java.util.concurrent.Callable
 
