@@ -360,7 +360,7 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
             promise.setFailure(new TimeoutException())
             val stack = promise.actorStack
             stack.addCompletedPromise(promise)
-            if (stack.stackState.resumable() || !currentStack.hasUncompletedPromise) {
+            if (stack.stackState.resumable() || !stack.hasUncompletedPromise) {
                 currentStack = stack
                 resume()
             }

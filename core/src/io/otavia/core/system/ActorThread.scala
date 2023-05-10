@@ -110,7 +110,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
     override def run(): Unit = {
         status = ST_RUNNING
 
-        var spinStart: Long  = Long.MaxValue
+        var spinStart: Long  = System.nanoTime()
         var emptyTimes: Long = 0
         var gc               = false
         while (true) {
@@ -130,19 +130,12 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
                 gc = false
             } else {
                 emptyTimes += 1
-                if (emptyTimes >= 50) {
-                    if (manager.steal()) {
-                        emptyTimes = 30
-                    }
+                if (emptyTimes >= 20 && currentNanoTime - spinStart > 100 * 1000) {
+                    if (manager.steal()) { emptyTimes = 10 }
                 }
-//                if ((currentNanoTime - spinStart) > 50 * 1000) { // try to steal after spin 1 millis
-//                    if (manager.steal()) {
-//                        spinStart = System.nanoTime() - 10 * 1000
-//                    }
-//                }
             }
 
-            if (emptyTimes > 100 && currentNanoTime - spinStart > 10 * 1000 * 1000) {
+            if (emptyTimes > 60 && currentNanoTime - spinStart > 10 * 1000 * 1000) {
                 this.suspendThread(20)
                 status = ST_RUNNING
                 if (currentNanoTime - spinStart > 1000 * 1000 * 1000 && !gc) {
