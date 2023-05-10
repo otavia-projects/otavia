@@ -41,6 +41,7 @@ class Basic(args: Array[String]) extends MainActor(args) {
 
 object Basic {
 
+    // -XX:NewRatio=1 -XX:SurvivorRatio=8
     def main(args: Array[String]): Unit = {
         val system = ActorSystem()
         system.runMain(() => new Basic(args))
@@ -91,11 +92,6 @@ object Basic {
                     stack.`return`()
         }
 
-        override def finalize(): Unit = {
-            logger.warn("PingActor finalize")
-//            println("PingActor finalize")
-        }
-
     }
 
     private class PongActor extends StateActor[Ping] {
@@ -117,10 +113,6 @@ object Basic {
 
         override protected def handleActorTimeout(timeoutEvent: TimeoutEvent): Unit = {
             logger.info(s"PongActor handle timeout event ${timeoutEvent}")
-        }
-
-        override def finalize(): Unit = {
-            logger.info("PongActor finalize")
         }
 
     }
