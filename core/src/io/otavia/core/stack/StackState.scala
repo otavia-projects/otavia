@@ -19,6 +19,8 @@ package io.otavia.core.stack
 import io.otavia.core.cache.Poolable
 import io.otavia.core.message.Reply
 
+import scala.reflect.{ClassTag, classTag}
+
 trait StackState {
 
     private val option: Option[StackState] = Some(this) // for pooling Some(this) object to reduce GC
@@ -34,7 +36,8 @@ object StackState {
         final override def resumable(): Boolean = true
     }
 
-    class FutureState[R <: Reply] extends StackState {
+    class FutureState[R <: Reply : ClassTag] extends StackState {
+        val replyType = classTag[R]
         val future: ReplyFuture[R] = ReplyFuture()
     }
 
