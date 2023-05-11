@@ -16,10 +16,10 @@
 
 package io.otavia.core.slf4a
 
-import io.otavia.core.slf4a.helpers.Util
 import io.otavia.core.slf4a.nop.NOPServiceProvider
 import io.otavia.core.slf4a.spi.SLF4AServiceProvider
 import io.otavia.core.system.ActorSystem
+import io.otavia.core.util.Report
 
 import java.security.{AccessController, PrivilegedAction}
 import java.util
@@ -107,8 +107,8 @@ object LoggerFactory {
             reportActualBinding(providersList)
         } else {
             INITIALIZATION_STATE = NOP_FALLBACK_INITIALIZATION
-            Util.report("No SLF4A providers were found.")
-            Util.report("Defaulting to no-operation (NOP) logger implementation")
+            Report.report("No SLF4A providers were found.")
+            Report.report("Defaulting to no-operation (NOP) logger implementation.")
         }
     } catch {
         case e: Exception =>
@@ -147,7 +147,7 @@ object LoggerFactory {
         providerList.addOne(provider)
     } catch {
         case e: ServiceConfigurationError =>
-            Util.report(s"A SLF4A service provider failed to instantiate:\n${e.getMessage}")
+            Report.report(s"A SLF4A service provider failed to instantiate:\n${e.getMessage}")
     }
 
     private def isAmbiguousProviderList(providerList: mutable.ArrayBuffer[SLF4AServiceProvider]): Boolean =
@@ -155,9 +155,9 @@ object LoggerFactory {
 
     private def reportMultipleBindingAmbiguity(providerList: mutable.ArrayBuffer[SLF4AServiceProvider]): Unit = {
         if (isAmbiguousProviderList(providerList)) {
-            Util.report("Class path contains multiple SLF4A providers.")
+            Report.report("Class path contains multiple SLF4A providers.")
             for (provider <- providerList) {
-                Util.report(s"Found provider [${provider}]")
+                Report.report(s"Found provider [${provider}]")
             }
             //
         }
@@ -165,13 +165,13 @@ object LoggerFactory {
 
     private def reportActualBinding(providerList: mutable.ArrayBuffer[SLF4AServiceProvider]): Unit = {
         if (providerList.nonEmpty && isAmbiguousProviderList(providerList)) {
-            Util.report(s"Actual provider is of type [${providerList.head}]")
+            Report.report(s"Actual provider is of type [${providerList.head}]")
         }
     }
 
     private def failedBinding(t: Throwable): Unit = {
         INITIALIZATION_STATE = FAILED_INITIALIZATION
-        Util.report("Failed to instantiate SLF4A LoggerFactory", t)
+        Report.report("Failed to instantiate SLF4A LoggerFactory", t)
     }
 
 }

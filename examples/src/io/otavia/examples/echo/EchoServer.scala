@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-package io.otavia.core.slf4a.helpers
+package io.otavia.examples.echo
 
-object Util {
+object EchoServer {
+    def main(args: Array[String]): Unit = {
 
-    final def report(msg: String): Unit = Console.err.println(s"SLF4A: $msg")
-
-    final def report(msg: String, t: Throwable): Unit = {
-        Console.err.println(msg)
-        Console.err.println("Reported exception:")
-        t.printStackTrace()
     }
-
 }

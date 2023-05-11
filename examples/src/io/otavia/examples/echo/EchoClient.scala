@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
-package io.otavia.core.slf4a
+package io.otavia.examples.echo
 
-import io.otavia.core.util.Report
-import org.scalatest.funsuite.AnyFunSuite
+import io.otavia.core.actor.ClientChannelsActor
 
-class UtilSuite extends AnyFunSuite {
+object EchoClient {
+    def main(args: Array[String]): Unit = {}
 
-    test("report error") {
-        Report.report("A SLF4A service provider failed to instantiate:\n")
-        Console.err.printf("format string {} is ok", "value")
-        val format = "format string {} is ok"
-
-
-
-        assert(true)
-    }
-
+//    class ClientActor extends ClientChannelsActor
 }

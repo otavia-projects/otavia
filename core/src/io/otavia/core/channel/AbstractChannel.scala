@@ -39,6 +39,26 @@ abstract class AbstractChannel extends DefaultAttributeMap, Channel, ChannelStat
 
     private var actor: ChannelsActor[?] | Null = _
 
+    // initial channel state on constructing
+    created = true
+    registering = false
+    registered = false
+
+    /** true if the channel has never been registered, false otherwise */
+    neverRegistered = true
+
+    neverActive = true
+
+    inputClosedSeenErrorOnRead = false
+
+    autoRead = true
+    autoClose = true
+    writable = true
+    allowHalfClosure = false
+    inWriteFlushed = false
+
+    closeInitiated = false
+
     override def id: Int = channelId
 
     override def executor: ChannelsActor[?] = actor match

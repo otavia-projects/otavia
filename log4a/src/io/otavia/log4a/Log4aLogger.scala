@@ -16,10 +16,9 @@
 
 package io.otavia.log4a
 
-import io.otavia.core.slf4a.helpers.Util
 import io.otavia.core.slf4a.{AbstractLogger, LogLevel}
 import io.otavia.core.system.ActorSystem
-import io.otavia.core.util.ThrowableUtil
+import io.otavia.core.util.{Report, ThrowableUtil}
 import io.otavia.log4a.InternalLogger.{AppenderLogger, BufferedLogger}
 
 import java.time.LocalDateTime

@@ -16,7 +16,7 @@
 
 package io.otavia.core.slf4a.helpers
 
-import io.otavia.core.util.ThrowableUtil
+import io.otavia.core.util.{Report, ThrowableUtil}
 
 import java.lang
 
@@ -33,7 +33,7 @@ object MessageFormatter {
             else sbuf.append(ThrowableUtil.stackTraceToString(obj.asInstanceOf[Throwable]))
         } catch {
             case t: Throwable =>
-                Util.report(s"SLF4A: Failed toString() invocation on an object of type [${obj.getClass.getName}]", t)
+                Report.report(s"SLF4A: Failed toString() invocation on an object of type [${obj.getClass.getName}]", t)
                 sbuf.append("[FAILED toString()]")
         }
     }

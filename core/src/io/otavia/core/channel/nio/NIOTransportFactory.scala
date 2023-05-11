@@ -14,21 +14,13 @@
  * limitations under the License.
  */
 
-package io.otavia.core.slf4a
+package io.otavia.core.channel.nio
 
-import io.otavia.core.util.Report
-import org.scalatest.funsuite.AnyFunSuite
+import io.otavia.core.channel.{Channel, TransportFactory}
+import io.otavia.core.system.ActorSystem
 
-class UtilSuite extends AnyFunSuite {
+class NIOTransportFactory() extends TransportFactory {
 
-    test("report error") {
-        Report.report("A SLF4A service provider failed to instantiate:\n")
-        Console.err.printf("format string {} is ok", "value")
-        val format = "format string {} is ok"
-
-
-
-        assert(true)
-    }
+    override def newServerChannel(): Channel = ???
 
 }

@@ -17,8 +17,8 @@
 package io.otavia.core.ioc
 
 import io.otavia.core.slf4a.Logger
-import io.otavia.core.slf4a.helpers.Util
 import io.otavia.core.system.ActorSystem
+import io.otavia.core.util.Report
 
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.language.unsafeNulls

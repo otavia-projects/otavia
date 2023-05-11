@@ -87,26 +87,6 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
       new MaxMessagesWriteHandleFactory(Int.MaxValue)
     )
 
-    // initial channel state on constructing
-    created = true
-    registering = false
-    registered = false
-
-    /** true if the channel has never been registered, false otherwise */
-    neverRegistered = true
-
-    neverActive = true
-
-    inputClosedSeenErrorOnRead = false
-
-    autoRead = true
-    autoClose = true
-    writable = true
-    allowHalfClosure = false
-    inWriteFlushed = false
-
-    closeInitiated = false
-
     private var outboundBuffer: ChannelOutboundBuffer | Null = new ChannelOutboundBuffer()
 
     private var readHandleFactory: ReadHandleFactory   = defaultReadHandleFactory

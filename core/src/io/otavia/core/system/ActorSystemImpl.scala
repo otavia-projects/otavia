@@ -20,7 +20,7 @@ import io.netty5.buffer.BufferAllocator
 import io.otavia.BuildInfo
 import io.otavia.core.actor.*
 import io.otavia.core.address.*
-import io.otavia.core.channel.ChannelFactory
+import io.otavia.core.channel.{ChannelFactory, TransportFactory}
 import io.otavia.core.ioc.{BeanDefinition, BeanManager, Module}
 import io.otavia.core.message.{Call, IdAllocator}
 import io.otavia.core.reactor.BlockTaskExecutor
@@ -73,6 +73,8 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     private val direct = BufferAllocator.offHeapPooled()
     private val heap   = BufferAllocator.onHeapPooled()
+
+    private val transportFactory: TransportFactory = TransportFactory.getTransportFactory()
 
     println(s"${Console.YELLOW}${SystemInfo.logo()}${Console.RESET}")
     println(SystemInfo.info())
