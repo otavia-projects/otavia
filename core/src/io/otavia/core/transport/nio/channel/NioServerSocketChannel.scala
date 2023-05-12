@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.nio
+package io.otavia.core.transport.nio.channel
 
 import io.netty5.buffer.Buffer
 import io.netty5.util.NetUtil
@@ -28,6 +28,7 @@ import io.otavia.core.channel.internal.{ReadSink, WriteSink}
 import io.otavia.core.channel.socket.SocketProtocolFamily
 
 import java.net.{ProtocolFamily, SocketAddress}
+import java.nio.channels.spi.SelectorProvider
 import java.nio.channels.{SelectableChannel, SelectionKey, ServerSocketChannel}
 import scala.language.unsafeNulls
 import scala.util.Try
@@ -163,5 +164,17 @@ class NioServerSocketChannel(socket: ServerSocketChannel, protocolFamily: Protoc
 
     override protected def filterOutboundMessage(msg: AnyRef): AnyRef =
         throw new UnsupportedOperationException()
+
+}
+
+object NioServerSocketChannel {
+
+    private val DEFAULT_SELECTOR_PROVIDER = SelectorProvider.provider()
+    def newInstance(): ServerSocketChannel = {
+
+        val ch = DEFAULT_SELECTOR_PROVIDER.openServerSocketChannel()
+
+        ServerSocketChannel.open()
+    }
 
 }

@@ -162,7 +162,7 @@ class IdleStateHandler(
     }
 
     override def write(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
-        ctx.write(ctx, msg)
+        ctx.write(msg)
         if (writerIdleTimeNanos > 0 || allIdleTimeNanos > 0) {
             lastWriteTime = ticksInNanos()
             firstWriterIdleEvent = true

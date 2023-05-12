@@ -717,7 +717,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
     /** Called once a [[Throwable]] hit the end of the [[ChannelPipeline]] without been handled by the user in
      *  [[ChannelHandler.channelExceptionCaught()]].
      */
-    private[channel] def onUnhandledInboundException(cause: Throwable): Unit = {
+    private[core] def onUnhandledInboundException(cause: Throwable): Unit = {
         logger.warn(
           "An exceptionCaught() event was fired, and it reached at the tail of the pipeline. " +
               "It usually means the last handler in the pipeline did not handle the exception.",
@@ -776,7 +776,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
     private def resetIndices(): Unit = handlers.indices.foreach(idx => handlers(idx).setIndex(idx))
 
-    private[channel] def findContextInbound(from: Int, mask: Int): OtaviaChannelHandlerContext = {
+    private[core] def findContextInbound(from: Int, mask: Int): OtaviaChannelHandlerContext = {
         var cursor                           = from
         var ctx: OtaviaChannelHandlerContext = null
         while {

@@ -43,7 +43,7 @@ final class OtaviaChannelHandlerContext(
 
     protected val logger: Logger = Logger.getLogger(getClass, pipeline.system)
 
-    private[channel] val executionMask = mask(handler.getClass)
+    private[core] val executionMask = mask(handler.getClass)
 
     private var currentPendingBytes: Long = 0
 
@@ -174,7 +174,7 @@ final class OtaviaChannelHandlerContext(
         this
     }
 
-    private[channel] def invokeChannelRegistered(): Unit = try {
+    private[core] def invokeChannelRegistered(): Unit = try {
         if (saveCurrentPendingBytesIfNeededInbound()) handler.channelRegistered(this)
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
@@ -186,7 +186,7 @@ final class OtaviaChannelHandlerContext(
         this
     }
 
-    private[channel] def invokeChannelUnregistered(): Unit = try {
+    private[core] def invokeChannelUnregistered(): Unit = try {
         if (saveCurrentPendingBytesIfNeededInbound()) handler.channelUnregistered(this)
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
@@ -198,7 +198,7 @@ final class OtaviaChannelHandlerContext(
         this
     }
 
-    private[channel] def invokeChannelActive(): Unit = try {
+    private[core] def invokeChannelActive(): Unit = try {
         if (saveCurrentPendingBytesIfNeededInbound()) handler.channelActive(this)
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
@@ -210,7 +210,7 @@ final class OtaviaChannelHandlerContext(
         this
     }
 
-    private[channel] def invokeChannelInactive(): Unit = try {
+    private[core] def invokeChannelInactive(): Unit = try {
         if (saveCurrentPendingBytesIfNeededInbound()) handler.channelInactive(this)
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
@@ -222,7 +222,7 @@ final class OtaviaChannelHandlerContext(
         this
     }
 
-    private[channel] def invokeChannelShutdown(direction: ChannelShutdownDirection): Unit = try {
+    private[core] def invokeChannelShutdown(direction: ChannelShutdownDirection): Unit = try {
         if (saveCurrentPendingBytesIfNeededInbound()) handler.channelShutdown(this, direction)
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
@@ -258,7 +258,7 @@ final class OtaviaChannelHandlerContext(
         this
     }
 
-    private[channel] def invokeChannelInboundEvent(event: AnyRef): Unit = try {
+    private[core] def invokeChannelInboundEvent(event: AnyRef): Unit = try {
         if (saveCurrentPendingBytesIfNeededInbound()) handler.channelInboundEvent(this, event)
         else Resource.dispose(event)
     } catch {
@@ -271,7 +271,7 @@ final class OtaviaChannelHandlerContext(
         this
     }
 
-    private[channel] def invokeChannelTimeoutEvent(id: Long): Unit = {
+    private[core] def invokeChannelTimeoutEvent(id: Long): Unit = {
         try handler.channelTimeoutEvent(this, id)
         catch {
             case t: Throwable => invokeChannelExceptionCaught(t)
@@ -284,7 +284,7 @@ final class OtaviaChannelHandlerContext(
         this
     }
 
-    private[channel] def invokeChannelRead(msg: AnyRef): Unit = if (saveCurrentPendingBytesIfNeededInbound()) {
+    private[core] def invokeChannelRead(msg: AnyRef): Unit = if (saveCurrentPendingBytesIfNeededInbound()) {
         try handler.channelRead(this, msg)
         catch {
             case t: Throwable => invokeChannelExceptionCaught(t)
@@ -297,7 +297,7 @@ final class OtaviaChannelHandlerContext(
         this
     }
 
-    private[channel] def invokeChannelRead(msg: AnyRef, id: Long): Unit =
+    private[core] def invokeChannelRead(msg: AnyRef, id: Long): Unit =
         if (saveCurrentPendingBytesIfNeededInbound()) {
             try handler.channelRead(this, msg, id)
             catch { case t: Throwable => invokeChannelExceptionCaught(t) }
@@ -310,7 +310,7 @@ final class OtaviaChannelHandlerContext(
         this
     }
 
-    private[channel] def invokeChannelReadComplete(): Unit = try {
+    private[core] def invokeChannelReadComplete(): Unit = try {
         if (saveCurrentPendingBytesIfNeededInbound()) handler.channelReadComplete(this)
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
@@ -369,7 +369,7 @@ final class OtaviaChannelHandlerContext(
         future
     }
 
-    private[channel] def invokeBind(local: SocketAddress, future: ChannelFuture): Unit = {
+    private[core] def invokeBind(local: SocketAddress, future: ChannelFuture): Unit = {
         saveCurrentPendingBytesIfNeededOutbound() match
             case Some(cause) => future.promise.setFailure(cause)
             case None =>

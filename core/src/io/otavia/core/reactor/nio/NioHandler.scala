@@ -19,12 +19,12 @@
 package io.otavia.core.reactor.nio
 
 import io.netty5.util.internal.*
-import io.otavia.core.channel.nio.{AbstractNioChannel, NioProcessor}
 import io.otavia.core.channel.{Channel, ChannelException}
 import io.otavia.core.message.ReactorEvent
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.reactor.*
 import io.otavia.core.reactor.nio.NioHandler.*
+import io.otavia.core.transport.nio.channel.{AbstractNioChannel, NioProcessor}
 
 import java.io.{IOException, UncheckedIOException}
 import java.nio.channels.spi.SelectorProvider

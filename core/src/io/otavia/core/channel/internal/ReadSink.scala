@@ -29,7 +29,7 @@ import java.net.PortUnreachableException
 /** Sink that will be used by [[AbstractNetChannel.doReadNow]] implementations to perform the actual read from the
  *  underlying transport (for example a socket).
  */
-private[channel] trait ReadSink {
+private[core] trait ReadSink {
     this: AbstractNetChannel[?, ?] =>
 
     private lazy val readHandle: ReadHandleFactory.ReadHandle = newReadHandle // TODO:

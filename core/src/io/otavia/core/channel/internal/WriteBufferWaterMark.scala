@@ -34,7 +34,7 @@ import io.netty5.util.internal.ObjectUtil.checkPositiveOrZero
  *    the high water mark for the write buffer.
  *  @param validate
  */
-final class WriteBufferWaterMark private[channel] (val low: Int, val high: Int, validate: Boolean = true) {
+final class WriteBufferWaterMark private[core] (val low: Int, val high: Int, validate: Boolean = true) {
 
     if (validate) {
         checkPositiveOrZero(low, "low")

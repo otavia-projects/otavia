@@ -31,16 +31,16 @@ import java.nio.file.{OpenOption, Path}
 /** Abstract channel for file, support aio. */
 abstract class AbstractFileChannel extends AbstractChannel {
 
-    override private[channel] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit =
+    override private[core] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit =
         channelPromise.setFailure(new UnsupportedOperationException())
 
-    override private[channel] def connectTransport(
+    override private[core] def connectTransport(
         remote: SocketAddress,
         local: Option[SocketAddress],
         promise: ChannelPromise
     ): Unit = promise.setFailure(new UnsupportedOperationException())
 
-    override private[channel] def openTransport(
+    override private[core] def openTransport(
         path: Path,
         options: Seq[OpenOption],
         attrs: Seq[FileAttribute[?]],
@@ -49,34 +49,34 @@ abstract class AbstractFileChannel extends AbstractChannel {
         ???
     }
 
-    override private[channel] def disconnectTransport(promise: ChannelPromise): Unit =
+    override private[core] def disconnectTransport(promise: ChannelPromise): Unit =
         promise.setFailure(new UnsupportedOperationException())
 
-    override private[channel] def closeTransport(promise: ChannelPromise): Unit = {
+    override private[core] def closeTransport(promise: ChannelPromise): Unit = {
         ???
     }
 
-    override private[channel] def shutdownTransport(
+    override private[core] def shutdownTransport(
         direction: ChannelShutdownDirection,
         promise: ChannelPromise
     ): Unit = promise.setFailure(new UnsupportedOperationException())
 
-    override private[channel] def registerTransport(promise: ChannelPromise): Unit = {
+    override private[core] def registerTransport(promise: ChannelPromise): Unit = {
         promise.setSuccess(this)
     }
 
-    override private[channel] def deregisterTransport(promise: ChannelPromise): Unit = {
+    override private[core] def deregisterTransport(promise: ChannelPromise): Unit = {
         promise.setSuccess(this)
     }
 
-    override private[channel] def readTransport(readPlan: ReadPlan): Unit = {
+    override private[core] def readTransport(readPlan: ReadPlan): Unit = {
         ???
     }
 
-    override private[channel] def writeTransport(msg: AnyRef): Unit = {
+    override private[core] def writeTransport(msg: AnyRef): Unit = {
         ???
     }
 
-    override private[channel] def flushTransport(): Unit = ???
+    override private[core] def flushTransport(): Unit = ???
 
 }

@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel
+package io.otavia.core.transport
 
-import io.otavia.core.channel.nio.NIOTransportServiceProvider
-import io.otavia.core.channel.spi.TransportServiceProvider
+import io.otavia.core.channel.Channel
+import io.otavia.core.channel.socket.SocketProtocolFamily
+import io.otavia.core.reactor.IoHandler
 import io.otavia.core.system.ActorSystem
+import io.otavia.core.transport.nio.NIOTransportServiceProvider
+import io.otavia.core.transport.spi.TransportServiceProvider
 import io.otavia.core.util.Report
 
 import java.security.{AccessController, PrivilegedAction}
@@ -28,7 +31,17 @@ import scala.language.unsafeNulls
 
 abstract class TransportFactory() {
 
-    def newServerChannel(): Channel
+    def openServerSocketChannel(): Channel
+
+    def openSocketChannel(): Channel
+
+    def openDatagramChannel(): Channel
+
+    def openDatagramChannel(family: SocketProtocolFamily): Channel
+
+    def openFileChannel(): Channel
+
+    def openIoHandler(): IoHandler
 
 }
 
@@ -44,6 +57,7 @@ object TransportFactory {
     @volatile private var PROVIDER: TransportServiceProvider = _
 
     private val NIO_SERVICE_PROVIDER = new NIOTransportServiceProvider()
+    NIO_SERVICE_PROVIDER.initialize()
 
     def getTransportFactory(): TransportFactory = {
         val provider = getProvider

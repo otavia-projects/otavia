@@ -23,7 +23,7 @@ import io.otavia.core.channel.internal.{ReadSink, WriteSink}
 
 import java.net.SocketAddress
 
-private[channel] trait ChannelInternal[L <: SocketAddress, R <: SocketAddress] {
+private[core] trait ChannelInternal[L <: SocketAddress, R <: SocketAddress] {
     this: AbstractNetChannel[L, R] =>
 
     /** Bind the [[Channel]] to the [[SocketAddress]]

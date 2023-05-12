@@ -46,7 +46,7 @@ object MaxMessagesReadHandleFactory {
      *  @param maxMessagesPerRead
      *    the maximum number of messages to read per read loop.
      */
-    private[channel] abstract class MaxMessageReadHandle(val maxMessagesPerRead: Int)
+    private[core] abstract class MaxMessageReadHandle(val maxMessagesPerRead: Int)
         extends ReadHandleFactory.ReadHandle {
 
         assert(maxMessagesPerRead > 0)

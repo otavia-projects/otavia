@@ -77,6 +77,7 @@ object LoggerFactory {
     @volatile private var PROVIDER: SLF4AServiceProvider = _
 
     private val NOP_SERVICE_PROVIDER = new NOPServiceProvider()
+    NOP_SERVICE_PROVIDER.initialize()
 
     private def getILoggerFactory: ILoggerFactory = getProvider.getLoggerFactory
 

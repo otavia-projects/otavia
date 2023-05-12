@@ -37,7 +37,7 @@ object ChannelOutboundBuffer {
     //  - 2 int fields
     //  - 1 boolean field
     //  - padding
-    private[channel] val CHANNEL_OUTBOUND_BUFFER_ENTRY_OVERHEAD =
+    private[core] val CHANNEL_OUTBOUND_BUFFER_ENTRY_OVERHEAD =
         SystemPropertyUtil.getInt("io.netty5.transport.outboundBufferEntrySizeOverhead", 96)
     private val logger = InternalLoggerFactory.getInstance(classOf[ChannelOutboundBuffer])
 
@@ -105,7 +105,7 @@ object ChannelOutboundBuffer {
 }
 
 @SuppressWarnings(Array("UnusedDeclaration"))
-private[channel] final class ChannelOutboundBuffer() {
+private[core] final class ChannelOutboundBuffer() {
 
     // MessageEntry(flushedEntry) --> ... MessageEntry(unflushedEntry) --> ... MessageEntry(tailEntry)
     //
@@ -129,7 +129,7 @@ private[channel] final class ChannelOutboundBuffer() {
     private def decrementPendingOutboundBytes(size: Long): Unit = totalPendingSize -= size
 
     /** Add given message to this [[ChannelOutboundBuffer]]. */
-    private[channel] def addMessage(msg: AnyRef, size: Int): Unit = {
+    private[core] def addMessage(msg: AnyRef, size: Int): Unit = {
         if (closed) throw new IllegalStateException("ChannelOutboundBuffer has been closed!")
 
         val entry = MessageEntry(msg, size)
@@ -147,7 +147,7 @@ private[channel] final class ChannelOutboundBuffer() {
     /** Add a flush to this [[ChannelOutboundBuffer]]. This means all previous added messages are marked as flushed and
      *  so you will be able to handle them.
      */
-    private[channel] def addFlush(): Unit = {
+    private[core] def addFlush(): Unit = {
 
         // There is no need to process all entries if there was already a flush before and no new messages
         // where added in the meantime.
@@ -165,19 +165,19 @@ private[channel] final class ChannelOutboundBuffer() {
     }
 
     /** Return the current message to write or null if nothing was flushed before and so is ready to be written. */
-    private[channel] def current: AnyRef | Null = flushedEntry match
+    private[core] def current: AnyRef | Null = flushedEntry match
         case null                => null
         case entry: MessageEntry => entry.msg
 
     /** Will remove the current message, and return true. If no flushed message exists at the time this method is called
      *  it will return false to signal that no more messages are ready to be handled.
      */
-    private[channel] def remove = remove0(null)
+    private[core] def remove = remove0(null)
 
     /** Will remove the current message, and return true. If no flushed message exists at the time this method is called
      *  it will return false to signal that no more messages are ready to be handled.
      */
-    private[channel] def remove(cause: Throwable) = remove0(cause)
+    private[core] def remove(cause: Throwable) = remove0(cause)
 
     private def remove0(cause: Throwable | Null): Boolean = {
         flushedEntry match
@@ -208,19 +208,19 @@ private[channel] final class ChannelOutboundBuffer() {
     }
 
     /** Returns the number of flushed messages in this {@link ChannelOutboundBuffer}. */
-    private[channel] def size = flushed
+    private[core] def size = flushed
 
     /** Returns {@code true} if there are flushed messages in this {@link ChannelOutboundBuffer} or {@code false}
      *  otherwise.
      */
-    private[channel] def isEmpty = flushed == 0
+    private[core] def isEmpty = flushed == 0
 
-    private[channel] def failFlushedAndClose(failCause: Throwable, closeCause: Throwable): Unit = {
+    private[core] def failFlushedAndClose(failCause: Throwable, closeCause: Throwable): Unit = {
         failFlushed(failCause)
         close(closeCause)
     }
 
-    private[channel] def failFlushed(cause: Throwable): Unit = {
+    private[core] def failFlushed(cause: Throwable): Unit = {
 
         // Make sure that this method does not reenter.  A listener added to the current promise can be notified by the
         // current thread in the tryFailure() call of the loop below, and the listener can trigger another fail() call
@@ -234,13 +234,13 @@ private[channel] final class ChannelOutboundBuffer() {
         ???
     }
 
-    private[channel] def totalPendingWriteBytes = totalPendingSize
+    private[core] def totalPendingWriteBytes = totalPendingSize
 
     /** Call {@link Function# apply ( Object )} for each flushed message in this {@link ChannelOutboundBuffer} until
      *  {@link Function# apply ( Object )} returns {@link Boolean# FALSE} or there are no more flushed messages to
      *  process.
      */
-    private[channel] def forEachFlushedMessage(processor: AnyRef => Boolean): Unit = {
+    private[core] def forEachFlushedMessage(processor: AnyRef => Boolean): Unit = {
 
         var entry = flushedEntry
         if (flushedEntry != null) {

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.nio
+package io.otavia.core.transport.nio.channel
 
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.estimator.{ReadHandleFactory, WriteHandleFactory}

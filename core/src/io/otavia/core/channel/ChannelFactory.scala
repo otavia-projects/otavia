@@ -16,12 +16,19 @@
 
 package io.otavia.core.channel
 
-import io.otavia.core.actor.ChannelsActor
+import io.otavia.core.channel.socket.SocketProtocolFamily
+import io.otavia.core.transport.TransportFactory
 
-/** Creates a new [[Channel]]. */
-trait ChannelFactory {
+class ChannelFactory(val transportFactory: TransportFactory) {
 
-    /** Create a new channel. */
-    def newChannel(executor: ChannelsActor[?]): Channel
+    def openServerSocketChannel(): Channel = transportFactory.openServerSocketChannel()
+
+    def openSocketChannel(): Channel = transportFactory.openSocketChannel()
+
+    def openDatagramChannel(): Channel = transportFactory.openDatagramChannel()
+
+    def openDatagramChannel(family: SocketProtocolFamily): Channel = transportFactory.openDatagramChannel(family)
+
+    def openFileChannel(): Channel = transportFactory.openFileChannel()
 
 }

@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.nio
+package io.otavia.core.rust
 
-import io.otavia.core.channel.TransportFactory
-import io.otavia.core.channel.spi.TransportServiceProvider
-import io.otavia.core.system.ActorSystem
+import io.otavia.core.transport.TransportFactory
+import io.otavia.core.transport.spi.TransportServiceProvider
 
-class NIOTransportServiceProvider extends TransportServiceProvider {
+class NativeTransportServiceProvider extends TransportServiceProvider {
 
-    private var transportFactory: TransportFactory = _
+    override def getTransportFactory(): TransportFactory = ???
 
-    override def getTransportFactory(): TransportFactory = transportFactory
+    override def initialize(): Unit = ???
 
-    override def initialize(): Unit = {
-        transportFactory = new NIOTransportFactory()
-    }
-
-    override def checkPlatformSupport(): Boolean = true
+    override def checkPlatformSupport(): Boolean = false // TODO:
 
 }

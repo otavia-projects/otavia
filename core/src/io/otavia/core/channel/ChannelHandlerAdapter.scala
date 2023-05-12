@@ -19,5 +19,5 @@
 package io.otavia.core.channel
 
 abstract class ChannelHandlerAdapter extends ChannelHandler {
-    private[channel] var added: Boolean = _
+    private[core] var added: Boolean = _
 }

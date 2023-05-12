@@ -281,7 +281,7 @@ trait ChannelHandler {
 
     protected def outboundAdaptiveStrategy: AdaptiveBuffer.AdaptiveStrategy = AdaptiveBuffer.FullPageStrategy
 
-    private[channel] def inboundStrategy: AdaptiveBuffer.AdaptiveStrategy  = inboundAdaptiveStrategy
-    private[channel] def outboundStrategy: AdaptiveBuffer.AdaptiveStrategy = outboundAdaptiveStrategy
+    private[core] def inboundStrategy: AdaptiveBuffer.AdaptiveStrategy  = inboundAdaptiveStrategy
+    private[core] def outboundStrategy: AdaptiveBuffer.AdaptiveStrategy = outboundAdaptiveStrategy
 
 }

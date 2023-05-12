@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.nio
+package io.otavia.core.rust.reactor
 
-import io.otavia.core.actor.ChannelsActor
-import io.otavia.core.channel.{Channel, ChannelFactory}
+import io.otavia.core.channel.Channel
+import io.otavia.core.reactor.aio.Submitter
+import io.otavia.core.stack.AioFuture
 
-class NioServerChannelFactory extends NioChannelFactory {
-    override def newChannel(executor: ChannelsActor[?]): Channel = ???
+class NativeSubmitter extends Submitter {
+
+    override def submitRead(channel: Channel): AioFuture[Int] = ???
+
+    override def submitWrite(channel: Channel): AioFuture[Int] = ???
+
+    override def submitClose(channel: Channel): AioFuture[Unit] = ???
 
 }

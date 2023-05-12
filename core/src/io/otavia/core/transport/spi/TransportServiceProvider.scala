@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.spi
+package io.otavia.core.transport.spi
 
-import io.otavia.core.channel.TransportFactory
 import io.otavia.core.system.ActorSystem
+import io.otavia.core.transport.TransportFactory
 
 trait TransportServiceProvider {
 

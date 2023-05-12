@@ -20,7 +20,7 @@ import io.netty5.buffer.BufferAllocator
 import io.otavia.BuildInfo
 import io.otavia.core.actor.*
 import io.otavia.core.address.*
-import io.otavia.core.channel.{ChannelFactory, TransportFactory}
+import io.otavia.core.channel.ChannelFactory
 import io.otavia.core.ioc.{BeanDefinition, BeanManager, Module}
 import io.otavia.core.message.{Call, IdAllocator}
 import io.otavia.core.reactor.BlockTaskExecutor
@@ -28,6 +28,7 @@ import io.otavia.core.reactor.aio.Submitter
 import io.otavia.core.slf4a.{LogLevel, Logger}
 import io.otavia.core.system.monitor.{ReactorMonitor, SystemMonitor, ThreadMonitor}
 import io.otavia.core.timer.{Timer, TimerImpl}
+import io.otavia.core.transport.TransportFactory
 import io.otavia.core.util.SystemPropertyUtil
 
 import java.io.File
@@ -74,7 +75,8 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     private val direct = BufferAllocator.offHeapPooled()
     private val heap   = BufferAllocator.onHeapPooled()
 
-    private val transportFactory: TransportFactory = TransportFactory.getTransportFactory()
+    private val transFactory: TransportFactory = TransportFactory.getTransportFactory()
+    private val chFactory: ChannelFactory      = new ChannelFactory(transFactory)
 
     println(s"${Console.YELLOW}${SystemInfo.logo()}${Console.RESET}")
     println(SystemInfo.info())
@@ -286,12 +288,6 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
         SystemMonitor(name, pool.size, beanManager.count, threadMonitor)
     }
 
-    override def serverChannelFactory: ChannelFactory = ???
-
-    override def channelFactory: ChannelFactory = ???
-
-    override def datagramChannelFactory: ChannelFactory = ???
-
-    override def fileChannelFactory: ChannelFactory = ???
+    override def channelFactory: ChannelFactory = chFactory
 
 }

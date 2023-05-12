@@ -66,7 +66,7 @@ abstract class ClientChannelsActor[M <: Call] extends ChannelsActor[M] {
 
     protected def afterConnected(channel: Channel): Unit = {}
 
-    override protected def newChannel(): Channel = system.channelFactory.newChannel(this)
+    override protected def newChannel(): Channel = system.channelFactory.openSocketChannel()
 
     override def init(channel: Channel): Unit = {
         handler match

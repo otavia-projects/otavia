@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.nio
+package io.otavia.core.transport.nio.channel
 
 import java.nio.channels.{ClosedChannelException, SelectionKey, Selector}
 

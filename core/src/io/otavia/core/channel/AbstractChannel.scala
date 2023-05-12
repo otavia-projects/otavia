@@ -102,35 +102,35 @@ abstract class AbstractChannel extends DefaultAttributeMap, Channel, ChannelStat
     // which means the execution of two inbound handler methods of the same handler overlap undesirably.
     protected def invokeLater(task: Runnable): Unit = laterTasks.append(task)
 
-    private[channel] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit
+    private[core] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit
 
-    private[channel] def connectTransport(
+    private[core] def connectTransport(
         remote: SocketAddress,
         local: Option[SocketAddress],
         promise: ChannelPromise
     ): Unit
 
-    private[channel] def openTransport(
+    private[core] def openTransport(
         path: Path,
         options: Seq[OpenOption],
         attrs: Seq[FileAttribute[?]],
         promise: ChannelPromise
     ): Unit
 
-    private[channel] def disconnectTransport(promise: ChannelPromise): Unit
+    private[core] def disconnectTransport(promise: ChannelPromise): Unit
 
-    private[channel] def closeTransport(promise: ChannelPromise): Unit
+    private[core] def closeTransport(promise: ChannelPromise): Unit
 
-    private[channel] def shutdownTransport(direction: ChannelShutdownDirection, promise: ChannelPromise): Unit
+    private[core] def shutdownTransport(direction: ChannelShutdownDirection, promise: ChannelPromise): Unit
 
-    private[channel] def registerTransport(promise: ChannelPromise): Unit
+    private[core] def registerTransport(promise: ChannelPromise): Unit
 
-    private[channel] def deregisterTransport(promise: ChannelPromise): Unit
+    private[core] def deregisterTransport(promise: ChannelPromise): Unit
 
-    private[channel] def readTransport(readPlan: ReadPlan): Unit
+    private[core] def readTransport(readPlan: ReadPlan): Unit
 
-    private[channel] def writeTransport(msg: AnyRef): Unit
+    private[core] def writeTransport(msg: AnyRef): Unit
 
-    private[channel] def flushTransport(): Unit
+    private[core] def flushTransport(): Unit
 
 }

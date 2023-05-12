@@ -33,7 +33,7 @@ class MaxMessagesWriteHandleFactory(private val maxMessagesPerWrite: Int) extend
 }
 
 object MaxMessagesWriteHandleFactory {
-    private[channel] class MaxMessagesWriteHandle(private val maxMessagesPerWrite: Int)
+    private[core] class MaxMessagesWriteHandle(private val maxMessagesPerWrite: Int)
         extends WriteHandleFactory.WriteHandle {
 
         assert(maxMessagesPerWrite > 0)

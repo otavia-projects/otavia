@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.nio
+package io.otavia.core.transport.nio.channel
 
 import io.netty5.buffer.Buffer
 import io.netty5.util.internal.SocketUtils

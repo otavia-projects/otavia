@@ -128,7 +128,7 @@ class DefaultFileRegion(override val position: Long, override val count: Long)
 
 private object DefaultFileRegion {
     @throws[IOException]
-    private[channel] def validate(region: DefaultFileRegion, position: Long): Unit = {
+    private[core] def validate(region: DefaultFileRegion, position: Long): Unit = {
         // If the amount of written data is 0 we need to check if the requested count is bigger then the
         // actual file itself as it may have been truncated on disk.
         //

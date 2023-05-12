@@ -26,35 +26,35 @@ import scala.collection.mutable
 object ChannelHandlerMask {
 
     // Using to mask which methods must be called for a ChannelHandler.
-    private[channel] val MASK_CHANNEL_EXCEPTION_CAUGHT    = 1
-    private[channel] val MASK_CHANNEL_REGISTERED          = 1 << 1
-    private[channel] val MASK_CHANNEL_UNREGISTERED        = 1 << 2
-    private[channel] val MASK_CHANNEL_ACTIVE              = 1 << 3
-    private[channel] val MASK_CHANNEL_INACTIVE            = 1 << 4
-    private[channel] val MASK_CHANNEL_SHUTDOWN            = 1 << 5
-    private[channel] val MASK_CHANNEL_READ                = 1 << 6
-    private[channel] val MASK_CHANNEL_READ_COMPLETE       = 1 << 7
-    private[channel] val MASK_CHANNEL_INBOUND_EVENT       = 1 << 8
-    private[channel] val MASK_CHANNEL_WRITABILITY_CHANGED = 1 << 9
-    private[channel] val MASK_BIND                        = 1 << 10
-    private[channel] val MASK_CONNECT                     = 1 << 11
-    private[channel] val MASK_DISCONNECT                  = 1 << 12
-    private[channel] val MASK_CLOSE                       = 1 << 13
-    private[channel] val MASK_SHUTDOWN                    = 1 << 14
-    private[channel] val MASK_REGISTER                    = 1 << 15
-    private[channel] val MASK_DEREGISTER                  = 1 << 16
-    private[channel] val MASK_READ                        = 1 << 17
-    private[channel] val MASK_WRITE                       = 1 << 18
-    private[channel] val MASK_FLUSH                       = 1 << 19
-    private[channel] val MASK_SEND_OUTBOUND_EVENT         = 1 << 20
+    private[core] val MASK_CHANNEL_EXCEPTION_CAUGHT    = 1
+    private[core] val MASK_CHANNEL_REGISTERED          = 1 << 1
+    private[core] val MASK_CHANNEL_UNREGISTERED        = 1 << 2
+    private[core] val MASK_CHANNEL_ACTIVE              = 1 << 3
+    private[core] val MASK_CHANNEL_INACTIVE            = 1 << 4
+    private[core] val MASK_CHANNEL_SHUTDOWN            = 1 << 5
+    private[core] val MASK_CHANNEL_READ                = 1 << 6
+    private[core] val MASK_CHANNEL_READ_COMPLETE       = 1 << 7
+    private[core] val MASK_CHANNEL_INBOUND_EVENT       = 1 << 8
+    private[core] val MASK_CHANNEL_WRITABILITY_CHANGED = 1 << 9
+    private[core] val MASK_BIND                        = 1 << 10
+    private[core] val MASK_CONNECT                     = 1 << 11
+    private[core] val MASK_DISCONNECT                  = 1 << 12
+    private[core] val MASK_CLOSE                       = 1 << 13
+    private[core] val MASK_SHUTDOWN                    = 1 << 14
+    private[core] val MASK_REGISTER                    = 1 << 15
+    private[core] val MASK_DEREGISTER                  = 1 << 16
+    private[core] val MASK_READ                        = 1 << 17
+    private[core] val MASK_WRITE                       = 1 << 18
+    private[core] val MASK_FLUSH                       = 1 << 19
+    private[core] val MASK_SEND_OUTBOUND_EVENT         = 1 << 20
 
-    private[channel] val MASK_PENDING_OUTBOUND_BYTES = 1 << 21
+    private[core] val MASK_PENDING_OUTBOUND_BYTES = 1 << 21
 
-    private[channel] val MASK_CHANNEL_TIMEOUT_EVENT = 1 << 22
+    private[core] val MASK_CHANNEL_TIMEOUT_EVENT = 1 << 22
 
-    private[channel] val MASK_CHANNEL_READ_ID = 1 << 23
-    private[channel] val MASK_WRITE_ID        = 1 << 24
-    private[channel] val MASK_OPEN            = 1 << 25
+    private[core] val MASK_CHANNEL_READ_ID = 1 << 23
+    private[core] val MASK_WRITE_ID        = 1 << 24
+    private[core] val MASK_OPEN            = 1 << 25
 
     private val MASK_ALL_INBOUND =
         MASK_CHANNEL_EXCEPTION_CAUGHT | MASK_CHANNEL_REGISTERED | MASK_CHANNEL_UNREGISTERED | MASK_CHANNEL_ACTIVE |
@@ -75,9 +75,9 @@ object ChannelHandlerMask {
     }
     private def mask0(handlerType: Class[? <: ChannelHandler]): Int = ???
 
-    private[channel] def isInbound(clazz: Class[? <: ChannelHandler]) = (mask(clazz) & MASK_ALL_INBOUND) != 0
+    private[core] def isInbound(clazz: Class[? <: ChannelHandler]) = (mask(clazz) & MASK_ALL_INBOUND) != 0
 
-    private[channel] def isOutbound(clazz: Class[? <: ChannelHandler]) = (mask(clazz) & MASK_ALL_OUTBOUND) != 0
+    private[core] def isOutbound(clazz: Class[? <: ChannelHandler]) = (mask(clazz) & MASK_ALL_OUTBOUND) != 0
 
     private def isSkippable(handlerType: Class[?], methodName: String, paramTypes: Class[?]*): Boolean = {
         ???

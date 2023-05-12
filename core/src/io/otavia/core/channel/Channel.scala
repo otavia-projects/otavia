@@ -53,7 +53,7 @@ trait Channel extends ChannelInflight, AttributeMap, EventHandle {
     final def reactor: Reactor = executor.reactor
 
     /** [[Timer]] of this actor system. */
-    final def timer: Timer = executor.system.timer
+    final def timer: Timer = executor.timer
 
     /** Return the value of the given [[ChannelOption]]
      *

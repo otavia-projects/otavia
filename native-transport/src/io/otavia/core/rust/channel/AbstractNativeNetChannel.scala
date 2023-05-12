@@ -16,26 +16,27 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.native
+package io.otavia.core.rust.channel
 
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*
 import io.otavia.core.channel.estimator.{ReadHandleFactory, WriteHandleFactory}
 import io.otavia.core.channel.internal.{ReadSink, WriteSink}
+import io.otavia.core.rust.NativeSocket
 
 import java.net.SocketAddress
 import java.nio.channels.SelectableChannel
 
 abstract class AbstractNativeNetChannel[L <: SocketAddress, R <: SocketAddress](
-                                                                             supportingDisconnect: Boolean,
-                                                                             initialFlag: Int,
-                                                                             defaultReadHandleFactory: ReadHandleFactory,
-                                                                             defaultWriteHandleFactory: WriteHandleFactory,
-                                                                             val socket: NativeSocket,
-                                                                             val remote: SocketAddress
+    supportingDisconnect: Boolean,
+    initialFlag: Int,
+    defaultReadHandleFactory: ReadHandleFactory,
+    defaultWriteHandleFactory: WriteHandleFactory,
+    val socket: NativeSocket,
+    val remote: SocketAddress
 ) extends AbstractNetChannel[L, R](supportingDisconnect, defaultReadHandleFactory, defaultWriteHandleFactory) {
 
-    override protected[channel] def doReadNow(readSink: ReadSink): Boolean = ???
+    override protected[core] def doReadNow(readSink: ReadSink): Boolean = ???
 
     override protected def doWriteNow(writeSink: WriteSink): Unit = ???
 

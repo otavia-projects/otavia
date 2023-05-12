@@ -25,14 +25,14 @@ trait ChannelInboundBuffer {
     private var accumulation: CompositeBuffer | Null = null
     private var firstAcc: Boolean                    = true
 
-    private[channel] def resetInboundBuffer(): Unit = {
+    private[core] def resetInboundBuffer(): Unit = {
         accumulation = directAllocator.compose()
         firstAcc = true
     }
 
-    private[channel] def closeInboundBuffer(): Unit = accumulation = null
+    private[core] def closeInboundBuffer(): Unit = accumulation = null
 
-    private[channel] def channelInboundBufferAccumulation: CompositeBuffer = accumulation.asInstanceOf[CompositeBuffer]
+    private[core] def channelInboundBufferAccumulation: CompositeBuffer = accumulation.asInstanceOf[CompositeBuffer]
 
     def channelInboundBuffer(ctx: ChannelHandlerContext, buffer: Buffer): Unit = {
         val acc = channelInboundBufferAccumulation

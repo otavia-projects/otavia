@@ -14,11 +14,30 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.nio
+package io.otavia.core.rust
 
-import io.otavia.core.actor.ChannelsActor
-import io.otavia.core.channel.Channel
+import io.netty5.buffer.ComponentIterator.Next
+import io.netty5.buffer.{Buffer, BufferComponent}
 
-class NioDatagramChannelFactory extends NioChannelFactory {
-    override def newChannel(executor: ChannelsActor[?]): Channel = ???
+import java.net.ProtocolFamily
+
+class NativeSocket {
+
+    private var boxSocket: Long = ???
+    def read(buffer: Buffer): Int = {
+        val iter               = buffer.forEachComponent()
+        val c: BufferComponent = iter.nn.firstWritable().nn
+        c.writableNativeAddress()
+
+        ???
+    }
+
+}
+
+object NativeSocket {
+
+    def newDatagramSocket(family: ProtocolFamily): NativeSocket = ???
+
+    def newSocket(family: ProtocolFamily): NativeSocket = ???
+
 }

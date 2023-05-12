@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.nio
+package io.otavia.core.transport.nio.channel
 
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.estimator.{ReadHandleFactory, WriteHandleFactory}
@@ -59,7 +59,7 @@ abstract class AbstractNioMessageChannel[L <: SocketAddress, R <: SocketAddress]
       readInterestOp
     ) {
 
-    override final protected[channel] def doReadNow(readSink: ReadSink): Boolean = {
+    override final protected[core] def doReadNow(readSink: ReadSink): Boolean = {
         val localRead = doReadMessages(readSink)
         localRead < 0
     }

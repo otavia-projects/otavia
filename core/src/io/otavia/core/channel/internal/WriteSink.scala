@@ -29,7 +29,7 @@ import java.net.PortUnreachableException
 import scala.beans.BeanProperty
 
 /** Sink that will be used by [[AbstractNetChannel.doWriteNow]] implementations. */
-private[channel] trait WriteSink {
+private[core] trait WriteSink {
     this: AbstractNetChannel[?, ?] =>
 
     private lazy val writeHandle: WriteHandleFactory.WriteHandle = newWriteHandle // TODO:

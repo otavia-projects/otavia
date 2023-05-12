@@ -14,30 +14,25 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.native
+package io.otavia.core.rust
 
-import io.netty5.buffer.ComponentIterator.Next
-import io.netty5.buffer.{Buffer, BufferComponent}
+import io.otavia.core.channel.Channel
+import io.otavia.core.channel.socket.SocketProtocolFamily
+import io.otavia.core.reactor.IoHandler
+import io.otavia.core.transport.TransportFactory
 
-import java.net.ProtocolFamily
+class NativeTransportFactory extends TransportFactory {
 
-class NativeSocket {
+    override def openServerSocketChannel(): Channel = ???
 
-    private var boxSocket: Long = ???
-    def read(buffer: Buffer): Int = {
-        val iter               = buffer.forEachComponent()
-        val c: BufferComponent = iter.nn.firstWritable().nn
-        c.writableNativeAddress()
+    override def openSocketChannel(): Channel = ???
 
-        ???
-    }
+    override def openDatagramChannel(): Channel = ???
 
-}
+    override def openDatagramChannel(family: SocketProtocolFamily): Channel = ???
 
-object NativeSocket {
+    override def openFileChannel(): Channel = ???
 
-    def newDatagramSocket(family: ProtocolFamily): NativeSocket = ???
-
-    def newSocket(family: ProtocolFamily): NativeSocket = ???
+    override def openIoHandler(): IoHandler = ???
 
 }

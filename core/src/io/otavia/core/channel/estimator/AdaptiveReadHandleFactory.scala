@@ -76,10 +76,10 @@ class AdaptiveReadHandleFactory(maxMessagesPerRead: Int, minimum: Int, val initi
 
 object AdaptiveReadHandleFactory {
 
-    private[channel] val DEFAULT_MINIMUM = 64
+    private[core] val DEFAULT_MINIMUM = 64
     // Use an initial value that is bigger than the common MTU of 1500
-    private[channel] val DEFAULT_INITIAL = 2048
-    private[channel] val DEFAULT_MAXIMUM = 65536
+    private[core] val DEFAULT_INITIAL = 2048
+    private[core] val DEFAULT_MAXIMUM = 65536
 
     private val INDEX_INCREMENT = 4
     private val INDEX_DECREMENT = 1

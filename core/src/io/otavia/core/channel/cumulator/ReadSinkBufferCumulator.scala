@@ -19,7 +19,7 @@ package io.otavia.core.channel.cumulator
 import io.netty5.buffer.{Buffer, BufferAllocator}
 
 /** A composed [[Cumulator]] used for [[io.otavia.core.channel.ChannelInboundBuffer]]. */
-private[channel] class ReadSinkBufferCumulator extends Cumulator {
+private[core] class ReadSinkBufferCumulator extends Cumulator {
 
     override def cumulate(alloc: BufferAllocator, accumulation: Buffer, in: Buffer): Buffer = ???
 

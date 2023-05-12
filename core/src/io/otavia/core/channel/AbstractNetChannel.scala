@@ -205,7 +205,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
      *
      *  send channel register to reactor, and handle reactor reply at [[handleChannelRegisterReplyEvent]]
      */
-    override private[channel] def registerTransport(promise: ChannelPromise): Unit = {
+    override private[core] def registerTransport(promise: ChannelPromise): Unit = {
         if (registering) promise.setFailure(new IllegalStateException(s"The channel $this is registering to reactor!"))
         else if (isRegistered) promise.setFailure(new IllegalStateException("registered to reactor already"))
         else {
@@ -237,7 +237,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
                 registerPromise = null
                 closeNowAndFail(promise, cause)
 
-    override private[channel] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit = {
+    override private[core] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit = {
         if (!mounted) channelPromise.setFailure(new IllegalStateException(s"channel $this is not mounted to actor!"))
         else if (!registered) { // if not register
             if (!registering) pipeline.register(newPromise())
@@ -285,7 +285,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
 
     }
 
-    override private[channel] def disconnectTransport(promise: ChannelPromise): Unit = {
+    override private[core] def disconnectTransport(promise: ChannelPromise): Unit = {
         val wasActive = isActive
         try {
             doDisconnect()
@@ -302,7 +302,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         closeIfClosed() // TCP channel disconnect is close, UDP is cancel local SocketAddress binding.
     }
 
-    override private[channel] def closeTransport(promise: ChannelPromise): Unit = {}
+    override private[core] def closeTransport(promise: ChannelPromise): Unit = {}
 
     private def close(promise: ChannelPromise, cause: Throwable, closeCause: ClosedChannelException): Unit = {
         if (closed) promise.setSuccess(this)
@@ -381,7 +381,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         promise.setFailure(cause)
     }
 
-    override private[channel] def shutdownTransport(
+    override private[core] def shutdownTransport(
         direction: ChannelShutdownDirection,
         promise: ChannelPromise
     ): Unit = {
@@ -447,7 +447,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         }
     }
 
-    override private[channel] def deregisterTransport(promise: ChannelPromise): Unit = {
+    override private[core] def deregisterTransport(promise: ChannelPromise): Unit = {
         if (!registered) promise.setSuccess(this)
         else if (!unregistering && !unregistered) {
             deregisterPromise = promise
@@ -495,7 +495,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         promise.setSuccess(this)
     }
 
-    override private[channel] def readTransport(readBufferAllocator: ReadPlan): Unit = if (!isActive) {
+    override private[core] def readTransport(readBufferAllocator: ReadPlan): Unit = if (!isActive) {
         throw new IllegalStateException(s"channel $this is not active!")
     } else if (isShutdown(ChannelShutdownDirection.Inbound)) {
         // Input was shutdown so not try to read.
@@ -529,7 +529,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
 
     private def clearScheduledRead(): Unit = doClearScheduledRead()
 
-    override private[channel] def writeTransport(msg: AnyRef): Unit = {
+    override private[core] def writeTransport(msg: AnyRef): Unit = {
         var size: Int = 0
         try {
             val message = filterOutboundMessage(msg)
@@ -540,7 +540,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
 
     }
 
-    override private[channel] def flushTransport(): Unit = {
+    override private[core] def flushTransport(): Unit = {
         outboundBuffer match
             case null =>
             case out: ChannelOutboundBuffer =>
@@ -572,7 +572,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
 
     protected def writeLoopComplete(allWriten: Boolean): Unit = if (!allWriten) invokeLater(() => writeFlushed())
 
-    override private[channel] def connectTransport(
+    override private[core] def connectTransport(
         remote: SocketAddress,
         local: Option[SocketAddress],
         promise: ChannelPromise
@@ -691,7 +691,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         }
     }
 
-    private[channel] def updateWritabilityIfNeeded(notify: Boolean, notifyLater: Boolean): Unit = {
+    private[core] def updateWritabilityIfNeeded(notify: Boolean, notifyLater: Boolean): Unit = {
         val totalPending = this.totalPending
         if (totalPending > waterMarkHigh) {
             writable = false
@@ -708,7 +708,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
             pipeline.fireChannelWritabilityChanged()
     }
 
-    override private[channel] def openTransport(
+    override private[core] def openTransport(
         path: Path,
         options: Seq[OpenOption],
         attrs: Seq[FileAttribute[?]],
@@ -810,7 +810,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
     }
 
     @SuppressWarnings(Array("unchecked"))
-    private[channel] def getReadHandleFactory[T <: ReadHandleFactory] = readHandleFactory.asInstanceOf[T]
+    private[core] def getReadHandleFactory[T <: ReadHandleFactory] = readHandleFactory.asInstanceOf[T]
 
     private def setReadHandleFactory(readHandleFactory: ReadHandleFactory): Unit = {
         this.readHandleFactory = requireNonNull(readHandleFactory, "readHandleFactory").nn

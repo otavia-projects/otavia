@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.nio
+package io.otavia.core.transport.nio.channel
 
 import io.netty5.buffer.Buffer
 import io.otavia.core.actor.ChannelsActor
@@ -51,7 +51,7 @@ abstract class AbstractNioByteChannel[L <: SocketAddress, R <: SocketAddress](
       SelectionKey.OP_READ
     ) {
 
-    override final protected[channel] def doReadNow(readSink: ReadSink): Boolean = {
+    override final protected[core] def doReadNow(readSink: ReadSink): Boolean = {
         val buffer         = channelInboundBufferAccumulation
         val adaptiveBuffer = channelInboundAdaptiveBuffer
         if (buffer.writableBytes() > 0) {

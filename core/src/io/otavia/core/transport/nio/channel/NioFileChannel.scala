@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.nio
+package io.otavia.core.transport.nio.channel
 
 import io.netty5.util.{Attribute, AttributeKey}
 import io.otavia.core.actor.ChannelsActor

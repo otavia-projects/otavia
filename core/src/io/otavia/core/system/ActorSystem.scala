@@ -114,17 +114,8 @@ trait ActorSystem {
 
     // IO transport layer
 
-    /** [[ChannelFactory]] for TCP server channel. */
-    def serverChannelFactory: ChannelFactory
-
     /** [[ChannelFactory]] for TCP socket channel. */
     def channelFactory: ChannelFactory
-
-    /** [[ChannelFactory]] for UDP socket channel. */
-    def datagramChannelFactory: ChannelFactory
-
-    /** [[ChannelFactory]] for file */
-    def fileChannelFactory: ChannelFactory
 
     def pool: ActorThreadPool
 

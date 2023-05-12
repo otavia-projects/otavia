@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package io.otavia.core.reactor.native
+package io.otavia.core.rust.reactor
 
 import io.otavia.core.channel.Channel
-import io.otavia.core.slf4a.Logger
 import io.otavia.core.reactor.*
+import io.otavia.core.slf4a.Logger
 
 import scala.language.unsafeNulls
 
