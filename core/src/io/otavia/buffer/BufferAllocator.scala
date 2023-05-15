@@ -18,6 +18,36 @@
 
 package io.otavia.buffer
 
+/** Interface for allocating [[Buffer]]s. */
 trait BufferAllocator {
+
+    /** Allocate a [[Buffer]] of the given size in bytes. This method may throw an [[OutOfMemoryError]] if there is not
+     *  enough free memory available to allocate a [[Buffer]] of the requested size. <p> The buffer will use big endian
+     *  byte order.
+     *
+     *  <p> <strong>Note:</strong> unlike the JDK [[ByteBuffer]]s, Netty [[Buffer]]s are not guaranteed to be zeroed
+     *  when allocated. In other words, the memory of a newly allocated buffer may contain garbage data from prior
+     *  allocations, and the memory is likewise not guaranteed to be erased when the buffer is closed. If the data is
+     *  sensitive and needs to be overwritten when the buffer is closed, then the buffer should be allocated with the
+     *  [[SensitiveBufferAllocator]].
+     *
+     *  @return
+     *    The newly allocated [[Buffer]].
+     *  @throws IllegalStateException
+     *    if this allocator has been closed.
+     */
+    def allocate(): Buffer
+
+    /** Determine if this allocator is pooling and reusing its allocated memory.
+     *
+     *  @return
+     *    true if this allocator is pooling and reusing its memory, false otherwise.
+     */
+    def isPooling: Boolean
+
+    /** Recycle the [[Buffer]]
+     *  @param buffer
+     */
+    def recycle(buffer: Buffer): Unit
 
 }
