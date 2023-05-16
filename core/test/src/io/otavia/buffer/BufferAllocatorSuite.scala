@@ -20,7 +20,7 @@ package io.otavia.buffer
 
 import org.scalatest.funsuite.AnyFunSuite
 
-class PoolAllocatorSuite extends AnyFunSuite {
+class BufferAllocatorSuite extends AnyFunSuite {
 
     test("buffer initial") {
         val allocator = new HeapPageAllocator

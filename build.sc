@@ -97,7 +97,7 @@ object core extends OtaviaModule with BuildInfo {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
 
-        override def javacOptions: T[Seq[String]] = Seq("java.base/sun.nio.ch=ALL-UNNAMED")
+        override def forkArgs: T[Seq[String]] = Seq("--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
 
     }
 

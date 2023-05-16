@@ -51,3 +51,14 @@ trait BufferAllocator {
     def recycle(buffer: Buffer): Unit
 
 }
+
+object BufferAllocator {
+
+    private val DEFAULT_HEAP_ALLOCATOR   = new HeapPageAllocator()
+    private val DEFAULT_DIRECT_ALLOCATOR = new DirectPageAllocator()
+
+    def heapPageAllocator: HeapPageAllocator = DEFAULT_HEAP_ALLOCATOR
+
+    def directPageAllocator: DirectPageAllocator = DEFAULT_DIRECT_ALLOCATOR
+
+}

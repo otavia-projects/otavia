@@ -24,6 +24,7 @@ import sun.nio.ch.DirectBuffer
 import java.nio.ByteBuffer
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
 import java.nio.charset.Charset
+import scala.language.unsafeNulls
 
 abstract class AbstractBuffer(protected val underlying: ByteBuffer) extends Buffer {
 
@@ -51,14 +52,18 @@ abstract class AbstractBuffer(protected val underlying: ByteBuffer) extends Buff
 
     override def capacity: Int = underlying.capacity()
 
-    override def copyInto(srcPos: Int, dest: Array[Byte], destPos: Int, length: Int): Unit =
-        underlying.put(srcPos, dest, destPos, length)
+    override def copyInto(srcPos: Int, dest: Array[Byte], destPos: Int, length: Int): Unit = {
+        underlying.get(srcPos, dest, destPos, length)
+    }
 
-    override def copyInto(srcPos: Int, dest: ByteBuffer, destPos: Int, length: Int): Unit =
-        underlying.put(srcPos, dest, destPos, length)
+    override def copyInto(srcPos: Int, dest: ByteBuffer, destPos: Int, length: Int): Unit = {
+        dest.put(destPos, underlying, srcPos, length)
+    }
 
     override def copyInto(srcPos: Int, dest: Buffer, destPos: Int, length: Int): Unit = {
-        ???
+        dest match
+            case buffer: AbstractBuffer => copyInto(srcPos, buffer.underlying, destPos, length)
+            case _                      => throw new UnsupportedOperationException()
     }
 
     override def transferTo(channel: WritableByteChannel, length: Int): Int = {
@@ -66,13 +71,29 @@ abstract class AbstractBuffer(protected val underlying: ByteBuffer) extends Buff
             underlying.position(ridx)
             if (length > readableBytes) underlying.limit(ridx + readableBytes) else underlying.limit(ridx + length)
             val write = channel.write(underlying)
-            skipReadableBytes(write)
+            if (write > 0) skipReadableBytes(write)
             write
         } else 0
     }
 
-    override def transferFrom(channel: FileChannel, position: Long, length: Int): Int = ???
+    override def transferFrom(channel: FileChannel, position: Long, length: Int): Int = {
+        if (length > 0) {
+            underlying.position(widx)
+            if (length > writableBytes) underlying.limit(widx + writableBytes) else underlying.limit(widx + length)
+            val read = channel.read(underlying, position)
+            if (read > 0) skipWritableBytes(read)
+            read
+        } else 0
+    }
 
-    override def transferFrom(channel: ReadableByteChannel, length: Int): Int = ???
+    override def transferFrom(channel: ReadableByteChannel, length: Int): Int = {
+        if (length > 0) {
+            underlying.position(widx)
+            if (length > writableBytes) underlying.limit(widx + writableBytes) else underlying.limit(widx + length)
+            val read = channel.read(underlying)
+            if (read > 0) skipWritableBytes(read)
+            read
+        } else 0
+    }
 
 }
