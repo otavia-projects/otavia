@@ -1289,7 +1289,8 @@ object Buffer {
      *  @return
      *    The new byte buffer
      */
-    def wrap(byteBuffer: ByteBuffer): Buffer = new WrapBuffer(byteBuffer)
+    def wrap(byteBuffer: ByteBuffer): Buffer =
+        if (byteBuffer.isDirect) DirectWrapBuffer(byteBuffer) else HeapWrapBuffer(byteBuffer)
 
     /** Wraps a byte array into a [[Buffer]].
      *
@@ -1304,30 +1305,6 @@ object Buffer {
      *  @return
      *    The new byte buffer
      */
-    def wrap(array: Array[Byte]) = new WrapBuffer(ByteBuffer.wrap(array))
-
-    /** Wraps a byte array into a [[Buffer]].
-     *
-     *  <p> The new buffer will be backed by the given byte array; that is, modifications to the buffer will cause the
-     *  array to be modified and vice versa. The new buffer's capacity will be [[array.length]], its readerOffset and
-     *  writerOffset will be zero, and its byte order will be
-     *
-     *  [[ByteOrder# BIG_ENDIAN]].
-     *
-     *  @param array
-     *    The array that will back the new buffer
-     *  @param offset
-     *    The offset of the subarray to be used; must be non-negative and no larger than [[array.length]]. The new
-     *    buffer's position will be set to this value.
-     *  @param length
-     *    The length of the subarray to be used; must be non-negative and no larger than [[array.length]] - [[offset]].
-     *    The new buffer's limit will be set to [[offset]] + [[length]].
-     *  @return
-     *    The new byte buffer
-     *  @throws IndexOutOfBoundsException
-     *    If the preconditions on the [[offset]] and [[length]] parameters do not hold
-     */
-    def wrap(array: Array[Byte], offset: Int, length: Int) =
-        new WrapBuffer(ByteBuffer.wrap(array, offset, length))
+    def wrap(array: Array[Byte]): Buffer = HeapWrapBuffer(ByteBuffer.wrap(array))
 
 }

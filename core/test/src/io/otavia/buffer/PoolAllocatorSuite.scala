@@ -23,7 +23,7 @@ import org.scalatest.funsuite.AnyFunSuite
 class PoolAllocatorSuite extends AnyFunSuite {
 
     test("buffer initial") {
-        val allocator = new PooledSinglePageAllocator()
+        val allocator = new HeapPageAllocator
         val buffer    = allocator.allocate()
 
         assert(buffer.readerOffset == 0)
@@ -33,7 +33,7 @@ class PoolAllocatorSuite extends AnyFunSuite {
     }
 
     test("allocate direct") {
-        val allocator = new PooledSinglePageAllocator(true)
+        val allocator = new DirectPageAllocator
         val buffer    = allocator.allocate()
 
         assert(buffer.isDirect)
@@ -41,11 +41,43 @@ class PoolAllocatorSuite extends AnyFunSuite {
     }
 
     test("allocate heap") {
-        val allocator = new PooledSinglePageAllocator(false)
+        val allocator = new HeapPageAllocator
 
         val buffer = allocator.allocate()
 
         assert(!buffer.isDirect)
+    }
+
+    test("heap buffer fill") {
+        val allocator = new HeapPageAllocator
+
+        val buffer = allocator.allocate()
+
+        buffer.fill('a')
+
+        assert(buffer.readerOffset == 0)
+        assert(buffer.writerOffset == 0)
+        assert(buffer.readableBytes == 0)
+        assert(buffer.writableBytes == buffer.capacity)
+
+        assert(buffer.getByte(10) == 'a')
+    }
+
+    test("direct buffer fill") {
+        val allocator = new DirectPageAllocator
+
+        val buffer = allocator.allocate()
+
+        buffer.fill('a')
+
+        assert(buffer.readerOffset == 0)
+        assert(buffer.writerOffset == 0)
+        assert(buffer.readableBytes == 0)
+        assert(buffer.writableBytes == buffer.capacity)
+
+        val bt = buffer.getByte(10)
+
+        assert(bt == 'a')
     }
 
 }

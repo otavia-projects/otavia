@@ -18,24 +18,37 @@
 
 package io.otavia.buffer
 
-import java.nio.ByteBuffer
-import scala.language.unsafeNulls
+import io.otavia.buffer.PageBuffer.{ST_PAGE_ALLOCATABLE, ST_PAGE_ALLOCATED}
 
-class PageBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
+trait PageBuffer extends Buffer {
 
     private var parent: BufferAllocator = _
+    private var n: PageBuffer           = _
+    private var status: Int             = ST_PAGE_ALLOCATABLE
 
     def setAllocator(allocator: BufferAllocator): Unit = parent = allocator
 
     def allocator: BufferAllocator = parent
 
+    def next_=(pageBuffer: PageBuffer): Unit = n = pageBuffer
+
+    private[buffer] def setAllocated(): Unit = status = ST_PAGE_ALLOCATED
+    private[buffer] def allocated: Boolean   = status == ST_PAGE_ALLOCATED
+
+    def next: PageBuffer = n
+
     override def close(): Unit = {
-        super.close()
         parent.recycle(this)
+        status = ST_PAGE_ALLOCATABLE
     }
 
 }
 
 object PageBuffer {
-    val PAGE_SIZE: Int = 4096
+
+    val PAGE_SIZE: Int = 1024 * 8
+
+    val ST_PAGE_ALLOCATABLE: Int = 0
+    val ST_PAGE_ALLOCATED: Int   = 1
+
 }

@@ -97,6 +97,8 @@ object core extends OtaviaModule with BuildInfo {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
 
+        override def javacOptions: T[Seq[String]] = Seq("java.base/sun.nio.ch=ALL-UNNAMED")
+
     }
 
 }
