@@ -242,3 +242,54 @@ object web extends OtaviaModule {
 object examples extends OtaviaModule {
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
 }
+
+trait SiteModule extends ScalaModule {
+
+    def docSource = T.source(millSourcePath / "docs")
+
+    def site = T {
+        import mill.eval.Result
+        val docs = T.dest / "docs"
+        for {
+            child <- os.walk(docSource().path) if os.isFile(child)
+        } os.copy.over(child, docs / child.subRelativeTo(docSource().path), createFolders = true)
+
+        val files = Lib.findSourceFiles(T.traverse(moduleDeps)(_.docSources)().flatten, Seq("tasty"))
+
+        val javadocDir = T.dest / "_site"
+        os.makeDir.all(javadocDir)
+
+        // format: off
+        val options = Seq(
+            "-siteroot", docs.toString,
+            "-d", javadocDir.toNIO.toString
+        ) ++ scalaDocPluginClasspath().map(pluginPathRef => s"-Xplugin:${pluginPathRef.path}")
+        // format: on
+
+        if (
+          zincWorker
+              .worker()
+              .docJar(
+                scalaVersion(),
+                scalaOrganization(),
+                scalaDocClasspath().map(_.path),
+                scalacPluginClasspath().map(_.path),
+                files.map(_.toString) ++ options
+              )
+        ) {
+            Result.Success(PathRef(javadocDir))
+        } else {
+            Result.Failure("doc generation failed")
+        }
+
+    }
+
+}
+
+object site extends SiteModule {
+
+    override def scalaVersion: T[String] = ProjectInfo.scalaVersion
+
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, examples)
+
+}
