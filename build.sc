@@ -245,7 +245,7 @@ object examples extends OtaviaModule {
 
 trait SiteModule extends ScalaModule {
 
-    def docSource = T.source(millSourcePath / "docs")
+    def docSource = T.source(millSourcePath)
 
     def site = T {
         import mill.eval.Result
@@ -286,7 +286,7 @@ trait SiteModule extends ScalaModule {
 
 }
 
-object site extends SiteModule {
+object docs extends SiteModule {
 
     override def scalaVersion: T[String] = ProjectInfo.scalaVersion
 
