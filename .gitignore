@@ -5,7 +5,6 @@
 /project/project
 /project/metals.sbt
 
-*.html
 
 target/
 !.mvn/wrapper/maven-wrapper.jar
