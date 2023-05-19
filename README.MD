@@ -1,5 +1,5 @@
 <div align=center>
-<img src="logo.drawio.svg" alt="otavia" >
+<img src="docs/_assets/images/logo.drawio.svg" alt="otavia" >
 </div>
 <h1 align=center>otavia</h1>
 

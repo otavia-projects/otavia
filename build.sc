@@ -15,6 +15,8 @@
  */
 
 import mill._, scalalib._, publish._
+import os.Path
+import mill.api.Result
 import $ivy.`io.github.otavia-projects::mill-rust_mill$MILL_BIN_PLATFORM:0.1.1-SNAPSHOT`
 import $ivy.`com.lihaoyi::mill-contrib-buildinfo:$MILL_VERSION`
 import mill.contrib.buildinfo.BuildInfo
@@ -25,6 +27,7 @@ object ProjectInfo {
     def description: String     = "A super fast IO & Actor programming model!"
     def organization: String    = "io.github.otavia-projects"
     def organizationUrl: String = "https://github.com/otavia-projects"
+    def projectUrl: String      = "https://github.com/otavia-projects/otavia"
     def github                  = VersionControl.github("otavia-projects", "otavia")
     def repository              = github.browsableRepository.get
     def licenses                = Seq(License.`Apache-2.0`)
@@ -245,10 +248,44 @@ object examples extends OtaviaModule {
 
 trait SiteModule extends ScalaModule {
 
+    private val RE = "(.*)<a href=\"(.*?)\" class=\"logo-container\">(.*)".r
+
+    def projectName: String
+
+    def projectVersion: String
+
+    def projectUrl: String
+
     def docSource = T.source(millSourcePath)
 
+    override def scalaDocOptions: T[Seq[String]] = T {
+        mandatoryScalacOptions() ++ scalacOptions()
+    }
+
+    private def replace(child: Path): Unit = {
+        val content: String = os.read(child)
+        val end             = content.indexOf("\" class=\"logo-container\">")
+        if (end != -1) {
+            var start = end - 1
+            while (content(start) != '\"') start -= 1
+
+            os.remove(child)
+            os.write(child, content.substring(0, start))
+            os.write.append(child, content.substring(start, end) + "home.html")
+            os.write.append(child, content.substring(end, content.length))
+        }
+    }
+
     def site = T {
-        import mill.eval.Result
+
+        val compileCp = Seq(
+          "-classpath",
+          compileClasspath().iterator
+              .filter(_.path.ext != "pom")
+              .map(_.path)
+              .mkString(java.io.File.pathSeparator)
+        )
+
         val docs = T.dest / "docs"
         for {
             child <- os.walk(docSource().path) if os.isFile(child)
@@ -261,8 +298,14 @@ trait SiteModule extends ScalaModule {
 
         // format: off
         val options = Seq(
-            "-siteroot", docs.toString,
-            "-d", javadocDir.toNIO.toString
+            "-d", javadocDir.toNIO.toString,
+            "-siteroot", docs.toNIO.toString,
+            "-project-version", projectVersion,
+            "-project", projectName,
+//            "-project-logo", "docs/_assets/images/logo.drawio.svg",
+            "-project-footer", "Copyright (c) 2022, Yan Kun/Otavia Project",
+            "-source-links:docs=github://otavia-projects/otavia/main#docs",
+            s"-social-links:github::$projectUrl"
         ) ++ scalaDocPluginClasspath().map(pluginPathRef => s"-Xplugin:${pluginPathRef.path}")
         // format: on
 
@@ -274,14 +317,20 @@ trait SiteModule extends ScalaModule {
                 scalaOrganization(),
                 scalaDocClasspath().map(_.path),
                 scalacPluginClasspath().map(_.path),
-                files.map(_.toString) ++ options
+                options ++ compileCp ++ scalaDocOptions() ++ files.map(_.toString)
               )
         ) {
+            replace(javadocDir / "index.html")
+            for (child <- os.walk(javadocDir / "io") if child.toNIO.toString.endsWith(".html")) replace(child)
+            for (child <- os.walk(javadocDir / "docs") if child.toNIO.toString.endsWith(".html")) replace(child)
+
+            os.copy.over(docs / "home.html", javadocDir / "home.html")
+            os.remove.all.apply(docs)
             Result.Success(PathRef(javadocDir))
         } else {
+            os.remove.all.apply(docs)
             Result.Failure("doc generation failed")
         }
-
     }
 
 }
@@ -291,5 +340,11 @@ object docs extends SiteModule {
     override def scalaVersion: T[String] = ProjectInfo.scalaVersion
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, examples)
+
+    override def projectName: String = "otavia"
+
+    override def projectVersion: String = ProjectInfo.version
+
+    override def projectUrl: String = ProjectInfo.projectUrl
 
 }

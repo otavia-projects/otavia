@@ -1,0 +1,12 @@
+index: index.md
+subsection:
+  - title: Quick Start
+    index: quick_start/index.md
+    directory: quick_start
+    subsection:
+      - title: Send notice message
+        page: quick_start/send_notice_message.md
+  - title: Guide
+    index: guide/index.md
+    directory: guide
+

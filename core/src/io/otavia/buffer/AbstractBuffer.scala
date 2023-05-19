@@ -52,7 +52,18 @@ abstract class AbstractBuffer(protected val underlying: ByteBuffer) extends Buff
 
     override def capacity: Int = underlying.capacity()
 
+    override def fill(value: Byte): Buffer = {
+        underlying.limit(capacity)
+        var i = 0
+        while (i < capacity) {
+            underlying.put(i, value)
+            i += 1
+        }
+        this
+    }
+
     override def copyInto(srcPos: Int, dest: Array[Byte], destPos: Int, length: Int): Unit = {
+        
         underlying.get(srcPos, dest, destPos, length)
     }
 

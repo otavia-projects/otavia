@@ -24,7 +24,7 @@ import sun.nio.ch.DirectBuffer as JDirectBuffer
 import java.nio.ByteBuffer
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
 import java.nio.charset.Charset
-import scala.language.{reflectiveCalls, unsafeNulls}
+import scala.language.unsafeNulls
 
 class DirectBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
 
@@ -67,7 +67,7 @@ class DirectBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
 
     override def readByte: Byte = ???
 
-    override def getByte(ridx: Int): Byte = Util.Unsafe.getByte(address + ridx)
+    override def getByte(ridx: Int): Byte = underlying.get(ridx)
 
     override def readUnsignedByte: Int = ???
 

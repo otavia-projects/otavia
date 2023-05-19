@@ -27,13 +27,12 @@ import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 
 /** Handles an I/O event or intercepts an I/O operation, and forwards it to its next handler in its [[ChannelPipeline]].
- *  <h3>The context object</h3> A [[ChannelHandler]] is provided with a [[ChannelHandlerContext]] object. A
- *  [[ChannelHandler]] is supposed to interact with the [[ChannelPipeline]] it belongs to via a context object. Using
- *  the context object, the [[ChannelHandler]] can pass events upstream or downstream, modify the pipeline dynamically,
- *  or store the information (using [[AttributeKey]]s) which is specific to the handler.
- *
- *  <h3>State management</h3>
- *
+ *  ===The context object===
+ *  A [[ChannelHandler]] is provided with a [[ChannelHandlerContext]] object. A [[ChannelHandler]] is supposed to
+ *  interact with the [[ChannelPipeline]] it belongs to via a context object. Using the context object, the
+ *  [[ChannelHandler]] can pass events upstream or downstream, modify the pipeline dynamically, or store the information
+ *  (using [[AttributeKey]]s) which is specific to the handler.
+ *  ===State management===
  *  A [[ChannelHandler]] often needs to store some stateful information. The simplest and recommended approach is to use
  *  member variables:
  *  {{{

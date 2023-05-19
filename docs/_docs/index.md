@@ -2,6 +2,4 @@
 layout: main
 ---
 
-### Start
-
-this is documents
+Otavia is a super fast IO & Actor programming model 
