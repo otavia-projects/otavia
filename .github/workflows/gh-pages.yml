@@ -19,4 +19,5 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
+      - run: cat millw
       - run: ./millw docs.site
