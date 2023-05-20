@@ -1897,5 +1897,6 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"docs/quick_start/index.html#","e":false,"i":"","n":"Quick Start","t":"Quick Start","d":"","k":"static"},
 {"l":"docs/quick_start/send_notice_message.html#","e":false,"i":"","n":"Send notice message","t":"Send notice message","d":"","k":"static"},
 {"l":"docs/guide/index.html#","e":false,"i":"","n":"Guide","t":"Guide","d":"","k":"static"},
+{"l":"docs/guide/channel_pipeline.html#","e":false,"i":"","n":"Channel Pipeline","t":"Channel Pipeline","d":"","k":"static"},
 {"l":"docs/blog/index.html#","e":false,"i":"","n":"Blog","t":"Blog","d":"","k":"static"},
 {"l":"docs/blog/2023/05/19/hello-world-blog.html#","e":false,"i":"","n":"hello world blog","t":"hello world blog","d":"","k":"static"}];
