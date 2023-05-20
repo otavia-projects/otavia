@@ -33,7 +33,7 @@ object ProjectInfo {
     def licenses                = Seq(License.`Apache-2.0`)
     def author                  = Seq("Yan Kun <yan_kun_1992@foxmail.com>")
     def version                 = "0.1.0-SNAPSHOT"
-    def scalaVersion            = "3.2.2"
+    def scalaVersion            = "3.3.0-RC6"
     def buildTool               = "mill"
     def buildToolVersion        = mill.BuildInfo.millVersion
 
@@ -289,7 +289,14 @@ trait SiteModule extends ScalaModule {
         val docs = T.dest / "docs"
         for {
             child <- os.walk(docSource().path) if os.isFile(child)
-        } os.copy.over(child, docs / child.subRelativeTo(docSource().path), createFolders = true)
+        } {
+            val fileName = child.toNIO.toString.toLowerCase.trim
+            if (fileName.endsWith(".md")) {
+                val content = os.read(child)
+                val newCtx  = content.replaceAll("\\(.*/_assets/images/", "(images/")
+                os.write(docs / child.subRelativeTo(docSource().path), newCtx, createFolders = true)
+            } else os.copy.over(child, docs / child.subRelativeTo(docSource().path), createFolders = true)
+        }
 
         val files = Lib.findSourceFiles(T.traverse(moduleDeps)(_.docSources)().flatten, Seq("tasty"))
 

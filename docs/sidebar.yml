@@ -9,4 +9,6 @@ subsection:
   - title: Guide
     index: guide/index.md
     directory: guide
-
+    subsection:
+      - title: Channel Pipeline
+        page: guide/channel_pipeline.md
