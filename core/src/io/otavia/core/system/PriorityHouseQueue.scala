@@ -167,7 +167,7 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
     def adjustPriority(house: ActorHouse): Unit = {
         readLock.lock()
         writeLock.lock()
-        if (house.statusReady && !house.inHighPriorityQueue) {
+        if (house.isReady && !house.inHighPriorityQueue) {
             val pre  = house.pre
             val next = house.next
             if (pre != null) {

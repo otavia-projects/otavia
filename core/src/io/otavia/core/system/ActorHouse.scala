@@ -25,8 +25,8 @@ import io.otavia.core.util.{Nextable, SystemPropertyUtil}
 import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
 
-/** House is [[io.otavia.core.actor.StateActor]] instance mount point. when a actor is creating by actor system, a house
- *  is creating at the same time, and mount the actor instance to the house instance.
+/** House is [[io.otavia.core.actor.AbstractActor]] instance mount point. when a actor is creating by actor system, a
+ *  house is creating at the same time, and mount the actor instance to the house instance.
  *
  *  @tparam M
  *    the message type of the mounted actor instance can handle
@@ -56,11 +56,11 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
     def inHighPriorityQueue_=(value: Boolean): Unit =
         _inHighPriorityQueue = value
 
-    def statusReady: Boolean = status.get() == READY
+    def isReady: Boolean = status.get() == READY
 
-    def statusRunning: Boolean = status.get() == RUNNING
+    def isRunning: Boolean = status.get() == RUNNING
 
-    def statusWaiting: Boolean = status.get() == RUNNING
+    def isWaiting: Boolean = status.get() == RUNNING
 
     def next_=(house: ActorHouse): Unit = nextHouse = house
 
@@ -110,7 +110,7 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
     def doMount(): Unit = {
         if (status.compareAndSet(MOUNTING, WAITING)) {
             dweller.mount()
-            if (this.nonEmpty) empty2ready()
+            if (this.nonEmpty) waiting2ready()
         }
     }
 
@@ -126,14 +126,12 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
         mailBox.put(nextable)
 
         if (status.get() == WAITING) {
-            empty2ready()
-        } else {
-//            manager.change(this)
+            waiting2ready()
         }
 
     }
 
-    private def empty2ready(): Unit = if (status.compareAndSet(WAITING, READY)) {
+    private def waiting2ready(): Unit = if (status.compareAndSet(WAITING, READY)) {
         manager.ready(this)
     }
 
