@@ -25,4 +25,6 @@ class HeapPageAllocator extends AbstractPageAllocator {
 
     override protected def newBuffer(): PageBuffer = HeapPageBuffer(ByteBuffer.allocate(PageBuffer.PAGE_SIZE))
 
+    override def isDirect: Boolean = false
+
 }

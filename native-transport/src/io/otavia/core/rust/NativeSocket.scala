@@ -16,8 +16,8 @@
 
 package io.otavia.core.rust
 
-import io.netty5.buffer.ComponentIterator.Next
-import io.netty5.buffer.{Buffer, BufferComponent}
+import io.otavia.buffer.ComponentIterator.Next
+import io.otavia.buffer.{Buffer, BufferComponent}
 
 import java.net.ProtocolFamily
 

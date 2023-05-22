@@ -18,8 +18,8 @@
 
 package io.otavia.handler.codec
 
-import io.netty5.buffer.internal.AdaptableBuffer
-import io.netty5.buffer.{Buffer, BufferAllocator, BufferStub, CompositeBuffer}
+import io.otavia.buffer.internal.AdaptableBuffer
+import io.otavia.buffer.{Buffer, BufferAllocator, BufferStub, CompositeBuffer}
 import io.netty5.util.Send
 import io.netty5.util.internal.{MathUtil, StringUtil}
 import io.otavia.core.channel.*
@@ -38,7 +38,7 @@ import java.util
  *  {{{
  *      class SquareDecoder extends ByteToMessageDecoder {
  *          override protected def decode(ctx: ChannelHandlerContext, in: Buffer): Unit = {
- *              val data = new Array[Byte](in.readableBytes())
+ *              val data = new Array[Byte](in.readableBytes)
  *              in.readBytes(data, 0, data.length)
  *              ctx.fireChannelRead(data)
  *          }
@@ -52,7 +52,7 @@ import java.util
  *
  *  If a custom frame decoder is required, then one needs to be careful when implementing one with
  *  [[ByteToMessageDecoder]]. Ensure there are enough bytes in the buffer for a complete frame by checking
- *  Buffer.readableBytes(). If there are not enough bytes for a complete frame, return without modifying the reader
+ *  Buffer.readableBytes. If there are not enough bytes for a complete frame, return without modifying the reader
  *  index to allow more bytes to arrive.
  *
  *  To check for complete frames without modifying the reader index, use methods like [[Buffer.getInt]]. One
@@ -104,7 +104,7 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
      *  not need to rely on this value to write a decoder. Use it only when you must use it at your own risk. This
      *  method is a shortcut to [[internalBuffer.nn.readableBytes]].
      */
-    protected def actualReadableBytes: Int = internalBuffer.nn.readableBytes()
+    protected def actualReadableBytes: Int = internalBuffer.nn.readableBytes
 
     /** Returns the internal cumulative buffer of this decoder, if exists, else null. You usually do not need to access
      *  the internal buffer directly to write a decoder. Use it only when you must use it at your own risk.
@@ -127,7 +127,7 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
             case buffer: Buffer =>
                 accumulation = null
                 numReads = 0
-                val readable = buffer.readableBytes()
+                val readable = buffer.readableBytes
                 if (readable > 0) {
                     ctx.fireChannelRead(buffer)
                     ctx.fireChannelReadComplete()
@@ -156,7 +156,7 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
                 case e: DecoderException => throw e
                 case e: Exception        => throw new DecoderException(e)
             } finally {
-                if (accumulation != null && accumulation.nn.readableBytes() == 0) {
+                if (accumulation != null && accumulation.nn.readableBytes == 0) {
                     numReads = 0
                     if (accumulation.nn.isAccessible) accumulation.nn.close()
                     accumulation = null
@@ -251,8 +251,8 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
      */
     def callDecode(ctx: ByteToMessageDecoderContext, in: Buffer): Unit = try {
         var continue: Boolean = true
-        while (in.readableBytes() > 0 && !ctx.isRemoved && continue) {
-            val oldLen     = in.readableBytes()
+        while (in.readableBytes > 0 && !ctx.isRemoved && continue) {
+            val oldLen     = in.readableBytes
             val readCalled = ctx.fireChannelReadCallCount
             decodeRemovalReentryProtection(ctx, in) // try decode
 
@@ -262,14 +262,14 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
             // See https://github.com/netty/netty/issues/1664
             if (!ctx.isRemoved) {
                 if (readCalled != ctx.fireChannelReadCallCount) { // sub class fireChannelRead in decode.
-                    if (oldLen == in.readableBytes()) {           // fire but not consumed any data.
+                    if (oldLen == in.readableBytes) {           // fire but not consumed any data.
                         val clzName = StringUtil.simpleClassName(getClass)
                         val msg     = s"$clzName.decode() did not read anything but decoded a message."
                         throw new DecoderException(msg)
                     }
                     if (isSingleDecode) continue = false
                 } else {                                               // sub class not fireChannelRead in decode.
-                    if (oldLen == in.readableBytes()) continue = false // sub class decode not consumed any data.
+                    if (oldLen == in.readableBytes) continue = false // sub class decode not consumed any data.
                     else continue = true                               // sub class decode skip some data.
                 }
             } else continue = false
@@ -308,7 +308,7 @@ abstract class ByteToMessageDecoder(private val cumulator: Cumulator)
      *  was triggered. By default this will just call [[decode]] but sub-classes may override this for some special
      *  cleanup operation.
      */
-    protected def decodeLast(ctx: ChannelHandlerContext, in: Buffer): Unit = if (in.readableBytes() > 0)
+    protected def decodeLast(ctx: ChannelHandlerContext, in: Buffer): Unit = if (in.readableBytes > 0)
         // Only call decode() if there is something left in the buffer to decode.
         // See https://github.com/netty/netty/issues/4386
         decodeRemovalReentryProtection(ctx, in)
@@ -360,10 +360,10 @@ object ByteToMessageDecoder {
     private final class CompositeBufferCumulator extends Cumulator {
 
         override def cumulate(alloc: BufferAllocator, accumulation: Buffer, in: Buffer): Buffer =
-            if (accumulation.readableBytes() == 0) {
+            if (accumulation.readableBytes == 0) {
                 accumulation.close()
                 in
-            } else if (in.readableBytes() == 0) {
+            } else if (in.readableBytes == 0) {
                 in.close()
                 accumulation
             } else {
@@ -404,12 +404,12 @@ object ByteToMessageDecoder {
     private final class MergeCumulator extends Cumulator {
 
         override def cumulate(alloc: BufferAllocator, accumulation: Buffer, in: Buffer): Buffer =
-            if (accumulation.readableBytes() == 0) {
+            if (accumulation.readableBytes == 0) {
                 accumulation.close()
                 in
             } else {
-                val required = in.readableBytes()
-                if (required > accumulation.writableBytes() || accumulation.readOnly())
+                val required = in.readableBytes
+                if (required > accumulation.writableBytes || accumulation.readOnly())
                     expandAccumulationAndWrite(alloc, accumulation, in)
                 else {
                     accumulation.writeBytes(in)
@@ -419,7 +419,7 @@ object ByteToMessageDecoder {
             }
 
         override def discardSomeReadBytes(accumulation: Buffer): Buffer = {
-            if (accumulation.readerOffset() > accumulation.writableBytes()) accumulation.compact()
+            if (accumulation.readerOffset > accumulation.writableBytes) accumulation.compact()
             accumulation
         }
 
@@ -429,7 +429,7 @@ object ByteToMessageDecoder {
 
     object MergeCumulator {
         private def expandAccumulationAndWrite(allocator: BufferAllocator, oldAcc: Buffer, in: Buffer): Buffer = {
-            val newSize = MathUtil.safeFindNextPositivePowerOfTwo(oldAcc.readableBytes() + in.readableBytes())
+            val newSize = MathUtil.safeFindNextPositivePowerOfTwo(oldAcc.readableBytes + in.readableBytes)
 
             if (oldAcc.readOnly()) {
                 val newAcc: Buffer = allocator.allocate(newSize).nn

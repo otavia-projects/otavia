@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel.internal
 
-import io.netty5.buffer.Buffer
+import io.otavia.buffer.Buffer
 import io.otavia.core.channel.estimator.{ReadHandleFactory, WriteHandleFactory}
 import io.otavia.core.channel.internal.ChannelOutboundBuffer
 import io.otavia.core.channel.message.ReadPlan
@@ -39,9 +39,9 @@ private[core] trait WriteSink {
 
     private val predicate: AnyRef => Boolean = {
         case buffer: Buffer =>
-            val readable = buffer.readableBytes()
+            val readable = buffer.readableBytes
             buffer.skipReadableBytes(math.min(readable, writtenBytes))
-            if (buffer.readableBytes() == 0) {
+            if (buffer.readableBytes == 0) {
                 writtenBytes -= readable
                 writtenMessages += 1
                 true

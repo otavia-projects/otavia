@@ -18,8 +18,7 @@
 
 package io.otavia.core.channel.udp
 
-import io.netty5.buffer.Buffer
-import io.netty5.util.{Resource, Send}
+import io.otavia.buffer.Buffer
 
 import java.net.SocketAddress
 
@@ -36,13 +35,12 @@ abstract class BufferAddressedEnvelope[A <: SocketAddress, T <: BufferAddressedE
     message: Buffer,
     recipient: A,
     sender: Option[A] = None
-) extends DefaultAddressedEnvelope[Buffer, A](message, recipient, sender),
-      Resource[T] {
+) extends DefaultAddressedEnvelope[Buffer, A](message, recipient, sender) {
 
-    override def send(): Send[T] = {
-        val contentSend = content.send().nn
-        Send.sending(getClass.asInstanceOf[Class[T]], () => replace(contentSend.receive().nn)).nn
-    }
+//    override def send(): Send[T] = {
+//        val contentSend = content.send().nn
+//        Send.sending(getClass.asInstanceOf[Class[T]], () => replace(contentSend.receive().nn)).nn
+//    }
 
     /** Create a new addressed envelope instance, that has the same recipient and sender as this one, but the given
      *  content.
@@ -54,8 +52,8 @@ abstract class BufferAddressedEnvelope[A <: SocketAddress, T <: BufferAddressedE
      */
     def replace(content: Buffer): T
 
-    override def close(): Unit = content.close()
+//    override def close(): Unit = content.close()
 
-    override def isAccessible: Boolean = content.isAccessible
+//    override def isAccessible: Boolean = content.isAccessible
 
 }

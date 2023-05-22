@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel.internal
 
-import io.netty5.buffer.Buffer
+import io.otavia.buffer.Buffer
 import io.otavia.core.channel.estimator.ReadHandleFactory
 import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.channel.{AbstractNetChannel, ChannelPipeline, ChannelShutdownDirection, ServerChannel}

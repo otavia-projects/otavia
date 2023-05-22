@@ -18,10 +18,8 @@
 
 package io.otavia.core.channel
 
-import io.netty5.buffer.{Buffer, BufferAllocator, StandardAllocationTypes}
-import io.netty5.util.concurrent.FastThreadLocal
-import io.netty5.util.internal.StringUtil
 import io.netty5.util.{Resource, ResourceLeakDetector}
+import io.otavia.buffer.{Buffer, BufferAllocator}
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
@@ -103,7 +101,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
     private def replaceBufferHead(newCtx: OtaviaChannelHandlerContext, oldFirst: OtaviaChannelHandlerContext): Unit = {
         assert(
-          channelInboundAdaptiveBuffer.readableBytes() == 0,
+          channelInboundAdaptiveBuffer.readableBytes == 0,
           s"inbound buffer of handler ${oldFirst.name} has some data."
         )
         val inbound = new AdaptiveBuffer(oldFirst.heapAllocator())

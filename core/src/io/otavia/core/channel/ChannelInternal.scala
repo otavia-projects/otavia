@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel
 
-import io.netty5.buffer.Buffer
+import io.otavia.buffer.Buffer
 import io.otavia.core.channel.internal.{ReadSink, WriteSink}
 
 import java.net.SocketAddress

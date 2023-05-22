@@ -16,7 +16,7 @@
 
 package io.otavia.core.channel
 
-import io.netty5.buffer.{Buffer, BufferAllocator, CompositeBuffer}
+import io.otavia.buffer.{Buffer, BufferAllocator, CompositeBuffer}
 import io.otavia.core.channel.cumulator.{Cumulator, ReadSinkBufferCumulator}
 
 trait ChannelInboundBuffer {
@@ -36,7 +36,7 @@ trait ChannelInboundBuffer {
 
     def channelInboundBuffer(ctx: ChannelHandlerContext, buffer: Buffer): Unit = {
         val acc = channelInboundBufferAccumulation
-        acc.extendWith(buffer.send())
+//        acc.extendWith(buffer.send())
         firstAcc = false
     }
 

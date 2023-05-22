@@ -16,8 +16,8 @@
 
 package io.otavia.core.system
 
-import io.netty5.buffer.BufferAllocator
 import io.otavia.BuildInfo
+import io.otavia.buffer.BufferAllocator
 import io.otavia.core.actor.*
 import io.otavia.core.address.*
 import io.otavia.core.channel.ChannelFactory
@@ -72,8 +72,8 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     private var mainActor: Address[MainActor.Args] = _
 
-    private val direct = BufferAllocator.offHeapPooled()
-    private val heap   = BufferAllocator.onHeapPooled()
+    private val direct = BufferAllocator.directPageAllocator
+    private val heap   = BufferAllocator.heapPageAllocator
 
     private val transFactory: TransportFactory = TransportFactory.getTransportFactory()
     private val chFactory: ChannelFactory      = new ChannelFactory(transFactory)

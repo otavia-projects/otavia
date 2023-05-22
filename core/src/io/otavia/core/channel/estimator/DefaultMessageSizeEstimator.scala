@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel.estimator
 
-import io.netty5.buffer.Buffer
+import io.otavia.buffer.Buffer
 import io.otavia.core.channel.FileRegion
 import io.otavia.core.channel.estimator.MessageSizeEstimator
 

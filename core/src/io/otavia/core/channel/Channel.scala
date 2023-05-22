@@ -18,8 +18,7 @@
 
 package io.otavia.core.channel
 
-import io.netty5.buffer.{Buffer, BufferAllocator}
-import io.netty5.util.AttributeMap
+import io.otavia.buffer.{Buffer, BufferAllocator}
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.address.ActorAddress
 import io.otavia.core.channel.message.ReadPlan
@@ -31,7 +30,7 @@ import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 
-trait Channel extends ChannelInflight, AttributeMap, EventHandle {
+trait Channel extends ChannelInflight, EventHandle {
 
     /** Unique id of this channel */
     def id: Int

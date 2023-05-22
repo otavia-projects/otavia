@@ -16,8 +16,7 @@
 
 package io.otavia.core.system
 
-import io.netty5.buffer.BufferAllocator
-import io.netty5.util.internal.SystemPropertyUtil
+import io.otavia.buffer.BufferAllocator
 import io.otavia.core.actor.{Actor, ActorFactory, MainActor, MessageOf}
 import io.otavia.core.address.Address
 import io.otavia.core.channel.{Channel, ChannelFactory}
@@ -29,6 +28,7 @@ import io.otavia.core.slf4a.LogLevel
 import io.otavia.core.stack.BlockFuture
 import io.otavia.core.system.monitor.SystemMonitor
 import io.otavia.core.timer.Timer
+import io.otavia.core.util.SystemPropertyUtil
 
 import java.net.InetAddress
 import scala.language.unsafeNulls

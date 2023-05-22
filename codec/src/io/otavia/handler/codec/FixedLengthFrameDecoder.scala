@@ -18,7 +18,7 @@
 
 package io.otavia.handler.codec
 
-import io.netty5.buffer.Buffer
+import io.otavia.buffer.Buffer
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.ChannelHandlerContext
 import io.otavia.handler.codec.ByteToMessageDecoder.{COMPOSITE_CUMULATOR, Cumulator}
@@ -48,10 +48,10 @@ class FixedLengthFrameDecoder(private val frameLength: Int) extends ByteToByteDe
         input: AdaptiveBuffer,
         output: AdaptiveBuffer
     ): Unit = {
-        if (input.readableBytes() >= frameLength) {
+        if (input.readableBytes >= frameLength) {
             // TODO: consider a new API to transfer the underlying Buffer. Maby readInto ?
             output.ensureWritable(frameLength)
-            input.copyInto(input.readerOffset(), output, output.writerOffset(), frameLength)
+            input.copyInto(input.readerOffset, output, output.writerOffset(), frameLength)
             input.skipReadableBytes(frameLength)
             output.writerOffset(output.writerOffset() + frameLength)
             ctx.fireChannelRead(ByteToByteHandler.AdaptiveBufferNotice)

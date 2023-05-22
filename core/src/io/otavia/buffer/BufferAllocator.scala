@@ -50,6 +50,15 @@ trait BufferAllocator {
      */
     def recycle(buffer: Buffer): Unit
 
+    /** Determine if this allocator is allocate direct memory or heap memory.
+     *
+     *  @return
+     *    true if this allocator is direct, false otherwise.
+     */
+    def isDirect: Boolean
+
+    def compose(): CompositeBuffer = ??? // TODO: remove
+
 }
 
 object BufferAllocator {

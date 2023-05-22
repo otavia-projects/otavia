@@ -21,7 +21,7 @@ More document can be find at [website](https://otavia-projects.github.io/otavia/
 ## Introduction
 
 [Otavia](https://otavia-projects.github.io/otavia/home.html) is an IO and Actor programming model power by Scala 3, it
-provides a toolkit to make writing high-performance concurrent programs very easy.
+provides a toolkit to make writing high-performance concurrent programs more easily.
 
 ## Features
 

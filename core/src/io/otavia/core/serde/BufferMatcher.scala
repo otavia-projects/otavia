@@ -16,7 +16,7 @@
 
 package io.otavia.core.serde
 
-import io.netty5.buffer.Buffer
+import io.otavia.buffer.Buffer
 
 /** Match byte data in [[Buffer]], then use [[decoder]] to decode byte data to object [[T]] */
 trait BufferMatcher[T <: AnyRef] {

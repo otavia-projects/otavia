@@ -18,7 +18,7 @@
 
 package io.otavia.core.transport.nio.channel
 
-import io.netty5.buffer.Buffer
+import io.otavia.buffer.Buffer
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*
 import io.otavia.core.channel.estimator.{AdaptiveReadHandleFactory, WriteHandleFactory}
@@ -54,8 +54,8 @@ abstract class AbstractNioByteChannel[L <: SocketAddress, R <: SocketAddress](
     override final protected[core] def doReadNow(readSink: ReadSink): Boolean = {
         val buffer         = channelInboundBufferAccumulation
         val adaptiveBuffer = channelInboundAdaptiveBuffer
-        if (buffer.writableBytes() > 0) {
-            val accLast = buffer.writableBytes()
+        if (buffer.writableBytes > 0) {
+            val accLast = buffer.writableBytes
             val read    = doReadBytes(buffer)
 
         }

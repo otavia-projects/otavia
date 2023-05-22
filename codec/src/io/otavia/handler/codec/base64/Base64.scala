@@ -18,8 +18,8 @@
 
 package io.otavia.handler.codec.base64
 
-import io.netty5.buffer.DefaultBufferAllocators.{offHeapAllocator, onHeapAllocator}
-import io.netty5.buffer.{Buffer, BufferAllocator}
+import io.otavia.buffer.DefaultBufferAllocators.{offHeapAllocator, onHeapAllocator}
+import io.otavia.buffer.{Buffer, BufferAllocator}
 import io.netty5.util.ByteProcessor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.handler.codec.base64.Base64.Decoder.decode4to3
@@ -83,7 +83,7 @@ object Base64 {
     }
 
     def encode(src: Buffer, breakLines: Boolean, dialect: Base64Dialect, dest: Buffer): Unit = {
-        encode(src, src.readerOffset(), src.readableBytes(), breakLines, dialect, dest)
+        encode(src, src.readerOffset, src.readableBytes, breakLines, dialect, dest)
     }
 
     def encode(

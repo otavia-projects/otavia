@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel.cumulator
 
-import io.netty5.buffer.{Buffer, BufferAllocator}
+import io.otavia.buffer.{Buffer, BufferAllocator}
 
 trait Cumulator {
 

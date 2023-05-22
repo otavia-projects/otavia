@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel
 
-import io.netty5.buffer.{Buffer, BufferAllocator}
+import io.otavia.buffer.{Buffer, BufferAllocator}
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.timer.Timer
 

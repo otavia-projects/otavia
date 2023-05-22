@@ -18,7 +18,7 @@
 
 package io.otavia.handler.codec
 
-import io.netty5.buffer.Buffer
+import io.otavia.buffer.Buffer
 import io.netty5.util.internal.{SilentDispose, TypeParameterMatcher}
 import io.otavia.core.channel.{ChannelHandlerAdapter, ChannelHandlerContext}
 
@@ -68,7 +68,7 @@ abstract class MessageToByteEncoder[I]() extends ChannelHandlerAdapter {
                         case null                     =>
                         case closeable: AutoCloseable => closeable.close()
                 }
-                if (buffer.readableBytes() > 0) {
+                if (buffer.readableBytes > 0) {
                     ctx.write(buffer)
                 } else {
                     ctx.write(ctx.directAllocator().allocate(0).nn)

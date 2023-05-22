@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel.estimator
 
-import io.netty5.buffer.{Buffer, BufferAllocator}
+import io.otavia.buffer.{Buffer, BufferAllocator}
 import io.otavia.core.channel.ChannelOutboundInvoker
 import io.otavia.core.channel.message.ReadPlan
 
@@ -35,8 +35,8 @@ object ReadBufferAllocator {
      *    a [[ReadBufferAllocator]].
      */
     def exact(numBytes: Int): ReadBufferAllocator = (allocator: BufferAllocator, estimatedCapacity: Int) => {
-        val buffer = allocator.allocate(numBytes).nn
-        if (numBytes != buffer.writableBytes()) buffer.split(buffer.writerOffset() + numBytes).nn else buffer
+        val buffer = allocator.allocate()
+        if (numBytes != buffer.writableBytes) ??? else buffer
     }
 }
 

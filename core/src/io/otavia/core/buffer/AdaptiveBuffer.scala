@@ -16,15 +16,16 @@
 
 package io.otavia.core.buffer
 
-import io.netty5.buffer.*
-import io.netty5.util.Send
+import io.otavia.buffer.{Buffer, BufferAllocator, ByteCursor}
 import io.otavia.core.buffer.AdaptiveBuffer.AdaptiveStrategy
 import io.otavia.core.cache.{PerThreadObjectPool, Poolable}
 import io.otavia.core.util.Chainable
 
 import java.nio.ByteBuffer
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
+import java.nio.charset.Charset
 import scala.collection.mutable
+import scala.language.unsafeNulls
 
 /** A Adaptive allocate and release memory [[Buffer]]. */
 class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
@@ -57,10 +58,10 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
         if (offset < startOffset) null
         else {
             var cursor    = head
-            var endOffset = startOffset + currentReaderBuffer.capacity()
+            var endOffset = startOffset + currentReaderBuffer.capacity
             while (endOffset <= offset && cursor != null) {
                 val entry: AdaptiveBuffer.BufferEntry = cursor.asInstanceOf[AdaptiveBuffer.BufferEntry]
-                endOffset += entry.buffer.capacity()
+                endOffset += entry.buffer.capacity
                 cursor = entry.next
             }
             cursor
@@ -71,17 +72,17 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
         if (offset < startOffset) (null, 0)
         else {
             var cursor    = head
-            var endOffset = startOffset + currentReaderBuffer.capacity()
+            var endOffset = startOffset + currentReaderBuffer.capacity
             while (endOffset <= offset && cursor != null) {
                 val entry: AdaptiveBuffer.BufferEntry = cursor.asInstanceOf[AdaptiveBuffer.BufferEntry]
-                endOffset += entry.buffer.capacity()
+                endOffset += entry.buffer.capacity
                 cursor = entry.next
             }
             val off =
                 if (cursor == null) 0
                 else {
                     val entry: AdaptiveBuffer.BufferEntry = cursor.asInstanceOf[AdaptiveBuffer.BufferEntry]
-                    entry.buffer.capacity() - (endOffset - offset)
+                    entry.buffer.capacity - (endOffset - offset)
                 }
             (cursor, off)
         }
@@ -92,8 +93,8 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
     } else {
         val oldHead = currentReaderEntry
         head = oldHead.next
-        startOffset += oldHead.buffer.capacity()
-        cap -= oldHead.buffer.capacity()
+        startOffset += oldHead.buffer.capacity
+        cap -= oldHead.buffer.capacity
         totalEntry -= 1
         oldHead.buffer.close()
         oldHead.recycle()
@@ -125,27 +126,27 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
     }
 
     private def extendBuffer(): Unit = {
-        val buffer: Buffer = allocator.allocate(strategy.nextSize).nn
+        val buffer: Buffer = allocator.allocate()
         val bufferEntry    = AdaptiveBuffer.BufferEntry(buffer)
         if (totalEntry == 0) {
             head = bufferEntry
             tail = bufferEntry
             woffIn = bufferEntry
             totalEntry += 1
-            cap += buffer.capacity()
+            cap += buffer.capacity
         } else {
             val oldTail = tailEntry
             oldTail.next = bufferEntry
             tail = bufferEntry
             totalEntry += 1
-            cap += buffer.capacity()
+            cap += buffer.capacity
             if (woffIn == null) woffIn = bufferEntry
         }
     }
 
-    override def capacity(): Int = cap
+    override def capacity: Int = cap
 
-    override def readerOffset(): Int = roff
+    override def readerOffset: Int = roff
 
     private def checkReadBounds(index: Int): Unit = {
         if (totalEntry == 0 && index != 0) throw new IndexOutOfBoundsException("The buffer is empty")
@@ -170,7 +171,7 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
         this
     }
 
-    override def writerOffset(): Int = woff
+    override def writerOffset: Int = woff
 
     private def checkWriteBound(index: Int): Unit = {
         if (index < roff)
@@ -195,15 +196,7 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
         this
     }
 
-    override def makeReadOnly(): Buffer = throw new UnsupportedOperationException()
-
-    override def readOnly(): Boolean = false
-
-    override def isDirect: Boolean = allocator.getAllocationType.nn.isDirect
-
-    override def implicitCapacityLimit(limit: Int): Buffer = ???
-
-    override def implicitCapacityLimit(): Int = ???
+    override def isDirect: Boolean = allocator.isDirect
 
     /** Writes into this [[AdaptiveBuffer]] from the source [[AdaptiveBuffer]]. This updates the write offset of this
      *  buffer and also the position of the source [[AdaptiveBuffer]].
@@ -249,49 +242,32 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     override def bytesBefore(needle: Buffer): Int = ???
 
-    override def openCursor(): ByteCursor = ???
-
     override def openCursor(fromOffset: Int, length: Int): ByteCursor = ???
 
     override def openReverseCursor(fromOffset: Int, length: Int): ByteCursor = ???
 
     override def ensureWritable(size: Int, minimumGrowth: Int, allowCompaction: Boolean): Buffer =
-        if (writableBytes() >= size) this
+        if (writableBytes >= size) this
         else {
             extendBuffer()
             // TODO
             this
         }
 
-    override def copy(offset: Int, length: Int, readOnly: Boolean): Buffer =
-        throw new UnsupportedOperationException()
+//    override def forEachComponent[T <: BufferComponent with ComponentIterator.Next](): ComponentIterator[T] = ???
 
-    override def split(splitOffset: Int): Buffer = throw new UnsupportedOperationException()
-
-    override def compact(): Buffer = ???
-
-    override def countComponents(): Int = ???
-
-    override def countReadableComponents(): Int = ???
-
-    override def countWritableComponents(): Int = ???
-
-    override def forEachComponent[T <: BufferComponent with ComponentIterator.Next](): ComponentIterator[T] = ???
-
-    override def send(): Send[Buffer] = ???
+//    override def send(): Send[Buffer] = ???
 
     override def close(): Unit = {
         recycleAll()
         closed = true
     }
 
-    override def isAccessible: Boolean = ???
-
-    override def readByte(): Byte = ???
+    override def readByte: Byte = ???
 
     override def getByte(roff: Int): Byte = ???
 
-    override def readUnsignedByte(): Int = ???
+    override def readUnsignedByte: Int = ???
 
     override def getUnsignedByte(roff: Int): Int = ???
 
@@ -303,7 +279,7 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     override def setUnsignedByte(woff: Int, value: Int): Buffer = ???
 
-    override def readChar(): Char = ???
+    override def readChar: Char = ???
 
     override def getChar(roff: Int): Char = ???
 
@@ -311,11 +287,11 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     override def setChar(woff: Int, value: Char): Buffer = ???
 
-    override def readShort(): Short = ???
+    override def readShort: Short = ???
 
     override def getShort(roff: Int): Short = ???
 
-    override def readUnsignedShort(): Int = ???
+    override def readUnsignedShort: Int = ???
 
     override def getUnsignedShort(roff: Int): Int = ???
 
@@ -327,11 +303,11 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     override def setUnsignedShort(woff: Int, value: Int): Buffer = ???
 
-    override def readMedium(): Int = ???
+    override def readMedium: Int = ???
 
     override def getMedium(roff: Int): Int = ???
 
-    override def readUnsignedMedium(): Int = ???
+    override def readUnsignedMedium: Int = ???
 
     override def getUnsignedMedium(roff: Int): Int = ???
 
@@ -343,11 +319,11 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     override def setUnsignedMedium(woff: Int, value: Int): Buffer = ???
 
-    override def readInt(): Int = ???
+    override def readInt: Int = ???
 
     override def getInt(roff: Int): Int = ???
 
-    override def readUnsignedInt(): Long = ???
+    override def readUnsignedInt: Long = ???
 
     override def getUnsignedInt(roff: Int): Long = ???
 
@@ -359,7 +335,7 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     override def setUnsignedInt(woff: Int, value: Long): Buffer = ???
 
-    override def readFloat(): Float = ???
+    override def readFloat: Float = ???
 
     override def getFloat(roff: Int): Float = ???
 
@@ -367,7 +343,7 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     override def setFloat(woff: Int, value: Float): Buffer = ???
 
-    override def readLong(): Long = ???
+    override def readLong: Long = ???
 
     override def getLong(roff: Int): Long = ???
 
@@ -375,7 +351,7 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     override def setLong(woff: Int, value: Long): Buffer = ???
 
-    override def readDouble(): Double = ???
+    override def readDouble: Double = ???
 
     override def getDouble(roff: Int): Double = ???
 
@@ -385,7 +361,25 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     override def toString: String = s"AdaptiveBuffer[roff:$roff, woff:$woff, cap:$cap, count:$totalEntry]"
 
-    override def writableBytes(): Int = endOffset - writerOffset()
+    override def writableBytes: Int = endOffset - writerOffset
+
+    override def writeCharSequence(source: CharSequence, charset: Charset): Buffer = ???
+
+    override def readCharSequence(length: Int, charset: Charset): CharSequence = ???
+
+    override def writeBytes(source: Buffer): Buffer = ???
+
+    override def writeBytes(source: Array[Byte], srcPos: Int, length: Int): Buffer = ???
+
+    override def writeBytes(source: ByteBuffer): Buffer = ???
+
+    override def readBytes(destination: ByteBuffer): Buffer = ???
+
+    override def readBytes(destination: Array[Byte], destPos: Int, length: Int): Buffer = ???
+
+    override def bytesBefore(needle1: Byte, needle2: Byte): Int = ???
+
+    override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int = ???
 
 }
 

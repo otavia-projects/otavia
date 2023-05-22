@@ -16,7 +16,7 @@
 
 package io.otavia.core.serde
 
-import io.netty5.buffer.Buffer
+import io.otavia.buffer.Buffer
 
 trait Decoder[T <: AnyRef] {
 

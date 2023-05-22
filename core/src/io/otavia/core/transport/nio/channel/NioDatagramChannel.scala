@@ -18,7 +18,7 @@
 
 package io.otavia.core.transport.nio.channel
 
-import io.netty5.buffer.Buffer
+import io.otavia.buffer.Buffer
 import io.netty5.util.internal.SocketUtils
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*

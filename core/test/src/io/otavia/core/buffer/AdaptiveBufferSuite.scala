@@ -16,7 +16,7 @@
 
 package io.otavia.core.buffer
 
-import io.netty5.buffer.{BufferAllocator, DefaultBufferAllocators}
+import io.otavia.buffer.{BufferAllocator, DefaultBufferAllocators}
 import org.scalatest.funsuite.AnyFunSuite
 
 import scala.language.unsafeNulls
@@ -31,7 +31,7 @@ class AdaptiveBufferSuite extends AnyFunSuite {
         buffer.ensureWritable(10)
         buffer.writerOffset(10)
         buffer.readerOffset(10)
-        assert(buffer.writableBytes() == 0)
+        assert(buffer.writableBytes == 0)
         println("")
         assert(true)
     }

@@ -18,20 +18,19 @@
 
 package io.otavia.core.channel.cumulator
 
-import io.netty5.buffer.{Buffer, BufferAllocator}
 import io.netty5.util.internal.MathUtil
+import io.otavia.buffer.{Buffer, BufferAllocator}
 import io.otavia.core.channel.cumulator.MergeCumulator.expandAccumulationAndWrite
 
 final class MergeCumulator extends Cumulator {
 
     override def cumulate(alloc: BufferAllocator, accumulation: Buffer, in: Buffer): Buffer =
-        if (accumulation.readableBytes() == 0) {
+        if (accumulation.readableBytes == 0) {
             accumulation.close()
             in
         } else {
-            val required = in.readableBytes()
-            if (required > accumulation.writableBytes() || accumulation.readOnly())
-                expandAccumulationAndWrite(alloc, accumulation, in)
+            val required = in.readableBytes
+            if (required > accumulation.writableBytes) expandAccumulationAndWrite(alloc, accumulation, in)
             else {
                 accumulation.writeBytes(in)
                 in.close()
@@ -40,7 +39,7 @@ final class MergeCumulator extends Cumulator {
         }
 
     override def discardSomeReadBytes(accumulation: Buffer): Buffer = {
-        if (accumulation.readerOffset() > accumulation.writableBytes()) accumulation.compact()
+        if (accumulation.readerOffset > accumulation.writableBytes) accumulation.compact()
         accumulation
     }
 
@@ -50,10 +49,10 @@ final class MergeCumulator extends Cumulator {
 
 object MergeCumulator {
     private def expandAccumulationAndWrite(allocator: BufferAllocator, oldAcc: Buffer, in: Buffer): Buffer = {
-        val newSize = MathUtil.safeFindNextPositivePowerOfTwo(oldAcc.readableBytes() + in.readableBytes())
+        val newSize = MathUtil.safeFindNextPositivePowerOfTwo(oldAcc.readableBytes + in.readableBytes)
 
-        if (oldAcc.readOnly()) {
-            val newAcc = allocator.allocate(newSize).nn
+        if (false /*oldAcc.readOnly()*/ ) {
+            val newAcc = allocator.allocate()
             newAcc.writeBytes(oldAcc)
             oldAcc.close()
             newAcc.writeBytes(in)

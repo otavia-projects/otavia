@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel
 
-import io.netty5.buffer.{Buffer, BufferAllocator}
+import io.otavia.buffer.{Buffer, BufferAllocator}
 import io.netty5.util.DefaultAttributeMap
 import io.netty5.util.internal.ObjectUtil.{checkNotNullArrayParam, checkPositiveOrZero, longValue}
 import io.netty5.util.internal.{PlatformDependent, StringUtil, ThrowableUtil}

@@ -18,7 +18,7 @@
 
 package io.otavia.core.transport.nio.channel
 
-import io.netty5.buffer.Buffer
+import io.otavia.buffer.Buffer
 import io.netty5.util.internal.SocketUtils
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
@@ -131,9 +131,9 @@ class NioSocketChannel(socket: SocketChannel, protocolFamily: ProtocolFamily)
 
     override protected def doDisconnect(): Unit = doClose()
 
-    override protected def doReadBytes(buf: Buffer): Int = buf.transferFrom(javaChannel, buf.writableBytes())
+    override protected def doReadBytes(buf: Buffer): Int = buf.transferFrom(javaChannel, buf.writableBytes)
 
-    override protected def doWriteBytes(buf: Buffer): Int = buf.transferTo(javaChannel, buf.readableBytes())
+    override protected def doWriteBytes(buf: Buffer): Int = buf.transferTo(javaChannel, buf.readableBytes)
 
     override protected def doWriteFileRegion(region: FileRegion): Long = region.transferTo(javaChannel, region.position)
 

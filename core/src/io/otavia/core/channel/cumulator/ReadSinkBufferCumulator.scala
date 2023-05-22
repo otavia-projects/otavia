@@ -16,7 +16,7 @@
 
 package io.otavia.core.channel.cumulator
 
-import io.netty5.buffer.{Buffer, BufferAllocator}
+import io.otavia.buffer.{Buffer, BufferAllocator}
 
 /** A composed [[Cumulator]] used for [[io.otavia.core.channel.ChannelInboundBuffer]]. */
 private[core] class ReadSinkBufferCumulator extends Cumulator {

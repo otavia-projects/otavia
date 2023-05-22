@@ -19,6 +19,7 @@
 package io.otavia.core.util
 
 import java.util.Locale
+import scala.language.unsafeNulls
 
 object Platform {
 

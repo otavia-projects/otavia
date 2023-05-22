@@ -16,7 +16,7 @@
 
 package io.otavia.core.serde
 
-import io.netty5.buffer.Buffer
+import io.otavia.buffer.Buffer
 
 trait Encoder[T <: AnyRef] {
     def format: Codec.SerdeFormat

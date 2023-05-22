@@ -24,5 +24,7 @@ import scala.language.unsafeNulls
 class DirectPageAllocator extends AbstractPageAllocator {
 
     override protected def newBuffer(): PageBuffer = DirectPageBuffer(ByteBuffer.allocateDirect(PageBuffer.PAGE_SIZE))
-    
+
+    override def isDirect: Boolean = true
+
 }

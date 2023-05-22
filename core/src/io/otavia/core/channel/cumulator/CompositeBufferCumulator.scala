@@ -18,33 +18,33 @@
 
 package io.otavia.core.channel.cumulator
 
-import io.netty5.buffer.{Buffer, BufferAllocator, CompositeBuffer}
 import io.netty5.util.Send
-import io.otavia.core.channel.cumulator.CompositeBufferCumulator.prepareInForCompose
+import io.otavia.buffer.{Buffer, BufferAllocator, CompositeBuffer}
 
 import java.util
 
 final class CompositeBufferCumulator extends Cumulator {
 
     override def cumulate(alloc: BufferAllocator, accumulation: Buffer, in: Buffer): Buffer =
-        if (accumulation.readableBytes() == 0) {
+        if (accumulation.readableBytes == 0) {
             accumulation.close()
             in
-        } else if (in.readableBytes() == 0) {
+        } else if (in.readableBytes == 0) {
             in.close()
             accumulation
         } else {
-            val buffer = if (accumulation.readOnly()) {
-                val tmp = accumulation.copy()
+            val buffer = if (false /* accumulation.readOnly() */ ) {
+                val tmp = ??? // accumulation.copy()
                 accumulation.close()
                 tmp
             } else accumulation
             val composite = buffer match
                 case composite: CompositeBuffer =>
-                    composite.extendWith(prepareInForCompose(in))
+//                    composite.extendWith(prepareInForCompose(in))
                     composite
                 case _ =>
-                    alloc.compose(util.Arrays.asList(buffer.nn.send(), prepareInForCompose(in)))
+//                    alloc.compose(util.Arrays.asList( ???, prepareInForCompose(in)))
+                    ???
             in.close()
             composite.nn
         }
@@ -54,7 +54,7 @@ final class CompositeBufferCumulator extends Cumulator {
         // Using readSplit(0), we grab zero readable bytes in the split-off buffer, but all the already-read
         // bytes get cut off from the accumulation buffer.
 
-        accumulation.readSplit(0).nn.close()
+//        accumulation.readSplit(0).nn.close()
         accumulation
 
     }
@@ -64,6 +64,7 @@ final class CompositeBufferCumulator extends Cumulator {
 }
 
 object CompositeBufferCumulator {
-    private def prepareInForCompose(in: Buffer): Send[Buffer] = if (in.readOnly()) in.copy().nn.send().nn else in.send().nn
+//    private def prepareInForCompose(in: Buffer): Send[Buffer] = ???
+//        if (in.readOnly()) in.copy().nn.send().nn else in.send().nn
 
 }

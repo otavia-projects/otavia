@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel.socket
 
-import io.netty5.buffer.Buffer
+import io.otavia.buffer.Buffer
 import io.otavia.core.channel.udp.BufferAddressedEnvelope
 
 import java.net.SocketAddress
@@ -29,8 +29,8 @@ class DatagramPacket(message: Buffer, recipient: SocketAddress, sender: Option[S
 
     override def replace(content: Buffer): DatagramPacket = new DatagramPacket(content, recipient, sender)
 
-    override def touch(hint: Any): DatagramPacket = {
-        super.touch(hint)
+    def touch(hint: Any): DatagramPacket = {
+//        super.touch(hint)
         this
     }
 

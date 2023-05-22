@@ -592,6 +592,15 @@ trait Buffer {
         this
     }
 
+    /** Discards the read bytes, and moves the buffer contents to the beginning of the buffer.
+     *
+     *  @return
+     *    This buffer instance.
+     *  @throws IllegalStateException
+     *    if this buffer is in a bad state.
+     */
+    def compact(): Buffer = ???
+
     /** Close this [[Buffer]] */
     def close(): Unit
 

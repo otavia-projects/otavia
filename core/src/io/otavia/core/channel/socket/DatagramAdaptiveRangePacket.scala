@@ -16,7 +16,7 @@
 
 package io.otavia.core.channel.socket
 
-import io.netty5.buffer.Buffer
+import io.otavia.buffer.Buffer
 import io.otavia.core.channel.message.AdaptiveBufferRange
 import io.otavia.core.channel.udp.AddressedEnvelope
 

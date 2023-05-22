@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel.internal
 
-import io.netty5.buffer.BufferAllocator
+import io.otavia.buffer.BufferAllocator
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.*
