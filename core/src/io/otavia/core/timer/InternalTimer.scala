@@ -25,6 +25,12 @@ trait InternalTimer {
 
     /** Schedules the specified [[TimerTask]] for one-time execution after the specified delay.
      *
+     *  @param task
+     *    task to execute.
+     *  @param delay
+     *    one-time execution delay.
+     *  @param unit
+     *    one-time execution delay time unit.
      *  @return
      *    a handle which is associated with the specified task
      *  @throws IllegalStateException
@@ -33,6 +39,28 @@ trait InternalTimer {
      *    if the pending timeouts are too many and creating new timeout can cause instability in the system.
      */
     def newTimeout(task: TimerTask, delay: Long, unit: TimeUnit): Timeout
+
+    /** Schedules the specified [[TimerTask]] for one-time execution after the specified [[delay]] and then periodic
+     *  execution with [[period]] delay.
+     *
+     *  @param task
+     *    task to execute.
+     *  @param delay
+     *    one-time execution delay.
+     *  @param unit
+     *    one-time execution delay time unit.
+     *  @param period
+     *    periodic execution delay.
+     *  @param punit
+     *    periodic execution delay time unit.
+     *  @return
+     *    a handle which is associated with the specified task
+     *  @throws IllegalStateException
+     *    if this timer has been [[stop]] stopped already
+     *  @throws RejectedExecutionException
+     *    if the pending timeouts are too many and creating new timeout can cause instability in the system.
+     */
+    def newTimeout(task: TimerTask, delay: Long, unit: TimeUnit, period: Long, punit: TimeUnit): Timeout
 
     /** Releases all resources acquired by this [[InternalTimer]] and cancels all tasks which were scheduled but not
      *  executed yet.

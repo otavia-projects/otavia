@@ -41,4 +41,7 @@ trait Timeout {
      */
     def cancel: Boolean
 
+    /** Returns true if and only if the [[Timeout]] is periodic. */
+    def periodic: Boolean
+
 }
