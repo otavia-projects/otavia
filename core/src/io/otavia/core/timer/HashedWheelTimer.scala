@@ -465,7 +465,7 @@ object HashedWheelTimer {
             while (continue) {
                 val currentTime = System.nanoTime() - timer.startTime
                 var sleepTimeMs = (deadline - currentTime + 999999) / 1000000
-                println(s"sleep ${sleepTimeMs}")
+                println(s"plan sleep ${sleepTimeMs}")
                 if (sleepTimeMs <= 0) {
                     ret = if (currentTime == Long.MaxValue) -Long.MaxValue else currentTime
                     continue = false
@@ -480,6 +480,7 @@ object HashedWheelTimer {
                         if (sleepTimeMs == 0) sleepTimeMs = 1
                     }
 
+                    println(s"sleep ${sleepTimeMs}")
                     try Thread.sleep(sleepTimeMs)
                     catch {
                         case ignored: InterruptedException =>

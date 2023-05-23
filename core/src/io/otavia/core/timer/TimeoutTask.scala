@@ -16,13 +16,14 @@
 
 package io.otavia.core.timer
 
-import io.netty5.util.{Timeout, TimerTask, Timer as NTimer}
 import io.otavia.core.address.EventableAddress
 import io.otavia.core.message.{TimeoutEvent, TimerEvent}
 import io.otavia.core.slf4a.Logger
+import io.otavia.core.timer.{InternalTimer, Timeout, TimerTask}
 
 import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 import scala.beans.BeanProperty
+import scala.language.unsafeNulls
 
 private[timer] abstract class TimeoutTask(val manager: TimerTaskManager) extends TimerTask {
 
@@ -69,8 +70,8 @@ private[timer] abstract class TimeoutTask(val manager: TimerTaskManager) extends
         logger.trace(s"task[${this}] timeout")
         address.inform(newEvent())
         if (period > 0) {
-            val timer: NTimer = timeout.timer().nn
-            val newTimeout    = timer.newTimeout(this, period, periodUnit).nn
+            val timer: InternalTimer = timeout.timer
+            val newTimeout           = timer.newTimeout(this, period, periodUnit).nn
             this.setHandle(newTimeout)
         } else {
             parent.remove(id)

@@ -16,7 +16,6 @@
 
 package io.otavia.core.timer
 
-import io.netty5.util.{HashedWheelTimer, TimerTask}
 import io.otavia.core.address.{Address, EventableAddress}
 import io.otavia.core.cache.ResourceTimer
 import io.otavia.core.channel.Channel
@@ -24,8 +23,8 @@ import io.otavia.core.message.{AskTimeoutEvent, ChannelTimeoutEvent, ResourceTim
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.system.monitor.TimerMonitor
-import io.otavia.core.timer.Timer
 import io.otavia.core.timer.Timer.*
+import io.otavia.core.timer.{HashedWheelTimer, Timer, TimerTask}
 
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, ThreadFactory, TimeUnit}
@@ -34,7 +33,7 @@ import scala.language.unsafeNulls
 /** Default implementation of [[Timer]] */
 final class TimerImpl(private[timer] val system: ActorSystem) extends Timer {
 
-    private val hashedWheelTimer = new HashedWheelTimer(new TimerThreadFactory())
+    private val hashedWheelTimer = new HashedWheelTimer(system, new TimerThreadFactory())
     private val taskManager      = new TimerTaskManager(this)
 
     private val nextId = new AtomicLong(Timer.INVALID_TIMEOUT_REGISTER_ID + 1)

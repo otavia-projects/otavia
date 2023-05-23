@@ -16,12 +16,11 @@
 
 package io.otavia.core.timer
 
-import io.netty5.util.{Timeout, Timer as NettyTimer}
 import io.otavia.core.address.EventableAddress
 import io.otavia.core.cache.ResourceTimer
 import io.otavia.core.channel.Channel
 import io.otavia.core.system.ActorSystem
-import io.otavia.core.timer.TimeoutTrigger
+import io.otavia.core.timer.{InternalTimer, Timeout, TimeoutTrigger}
 
 import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 
@@ -88,13 +87,13 @@ class TimerTaskManager(val timer: Timer) {
     def remove(id: Long): Unit = registeredTasks.remove(id) match
         case null =>
         case timerTask: TimeoutTask =>
-            timerTask.timeout.cancel()
+            timerTask.timeout.cancel
 
     def update(trigger: TimeoutTrigger, registerId: Long): Unit = {
         registeredTasks.remove(registerId) match
             case task: TimeoutTask =>
-                val nettyTimer: NettyTimer = task.timeout.timer().nn
-                task.timeout.cancel() // cancel old timer task
+                val nettyTimer: InternalTimer = task.timeout.timer
+                task.timeout.cancel // cancel old timer task
                 registeredTasks.put(registerId, task)
                 trigger match
                     case TimeoutTrigger.FixTime(date) =>
@@ -111,7 +110,7 @@ class TimerTaskManager(val timer: Timer) {
     }
 
     private def updateTimeoutTrigger(
-        nettyTimer: NettyTimer,
+        nettyTimer: InternalTimer,
         task: TimeoutTask,
         delay: Long,
         period: Long = -1,
