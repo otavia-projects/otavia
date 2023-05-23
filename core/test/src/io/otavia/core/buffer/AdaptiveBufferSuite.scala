@@ -16,14 +16,14 @@
 
 package io.otavia.core.buffer
 
-import io.otavia.buffer.{BufferAllocator, DefaultBufferAllocators}
+import io.otavia.buffer.BufferAllocator
 import org.scalatest.funsuite.AnyFunSuite
 
 import scala.language.unsafeNulls
 
 class AdaptiveBufferSuite extends AnyFunSuite {
 
-    val allocator: BufferAllocator = DefaultBufferAllocators.onHeapAllocator()
+    val allocator: BufferAllocator = BufferAllocator.heapPageAllocator
     val adaptiveBuffer             = new AdaptiveBuffer(allocator)
 
     test("set offset") {
