@@ -24,8 +24,8 @@ import io.otavia.core.timer.HashedWheelTimer.*
 import io.otavia.core.timer.HashedWheelTimer.HashedWheelBucket.LONG_DEADLINE
 import io.otavia.core.util.{Chainable, Nextable, Platform, SpinLockQueue}
 
-import java.util.concurrent.atomic.{AtomicIntegerFieldUpdater, AtomicLong}
-import java.util.concurrent.{CountDownLatch, Executor, Executors, ThreadFactory}
+import java.util.concurrent.*
+import java.util.concurrent.atomic.{AtomicInteger, AtomicIntegerFieldUpdater, AtomicLong}
 import scala.collection.mutable
 import scala.concurrent.duration.{Deadline, MILLISECONDS, TimeUnit}
 import scala.language.unsafeNulls
@@ -89,7 +89,8 @@ class HashedWheelTimer(
     leakDetection: Boolean,
     maxPendingTimeouts: Long,
     private val taskExecutor: Executor
-) extends InternalTimer {
+) extends AtomicInteger
+    with InternalTimer {
 
     private[timer] val logger: Logger = Logger.getLogger(getClass, system)
 
@@ -270,11 +271,24 @@ class HashedWheelTimer(
     private final val worker       = new Worker(this)
     private final val workerThread = threadFactory.newThread(worker)
 
-    @volatile private var workerState = 0 // 0 - init, 1 - started, 2 - shut down
+    @volatile var workerState = 0 // 0 - init, 1 - started, 2 - shut down
 
     private val wheel: Array[HashedWheelBucket] = createWheel(ticksPerWheel)
 
     private[timer] val mask = wheel.length - 1
+
+    val duration: Long = {
+        val d = unit.toNanos(tickDuration)
+        if (d >= Long.MaxValue / wheel.length)
+            throw new IllegalArgumentException(
+              s"tickDuration: ${tickDuration} (expected: 0 < tickDuration in nanos < ${Long.MaxValue / wheel.length}"
+            )
+
+        if (d < MILLISECOND_NANOS) {
+            logger.warn(s"Configured tickDuration $tickDuration smaller than 1ms, using 1ms.")
+            MILLISECOND_NANOS
+        } else d
+    }
 
     private val startTimeInitialized     = new CountDownLatch(1)
     private[timer] val timeouts          = new SpinLockQueue[HashedWheelTimeout]()
@@ -287,20 +301,20 @@ class HashedWheelTimer(
     override def newTimeout(task: TimerTask, delay: Long, unit: TimeUnit): Timeout = {
         assert(delay > 0, "delay must large than 0")
 
-        newTimeout0(task, delay, unit, 0, MILLISECONDS)
+        newTimeout0(task, unit.toNanos(delay), 0)
     }
 
     override def newTimeout(task: TimerTask, delay: Long, unit: TimeUnit, period: Long, punit: TimeUnit): Timeout = {
         assert(delay > 0, "delay must large than 0")
         assert(period > 0, "period must large than 0")
 
-        newTimeout0(task, delay, unit, period, punit)
+        newTimeout0(task, unit.toNanos(delay), punit.toNanos(period))
     }
 
-    private def newTimeout0(task: TimerTask, delay: Long, unit: TimeUnit, period: Long, punit: TimeUnit): Timeout = {
+    private def newTimeout0(task: TimerTask, delay: Long, period: Long): Timeout = {
         start()
 
-        val timeout = new HashedWheelTimeout(this, task, System.nanoTime(), unit.toNanos(delay), punit.toNanos(period))
+        val timeout = new HashedWheelTimeout(this, task, System.nanoTime(), delay, period)
 
         // Add the timeout to the timeout queue which will be processed on the next tick.
         // During processing all the queued HashedWheelTimeouts will be added to the correct HashedWheelBucket.
@@ -316,12 +330,12 @@ class HashedWheelTimer(
      *    if this timer has been [[stop]] stopped already
      */
     final def start(): Unit = {
-        if (workerState == WORKER_STATE_STARTED) { // help branch prediction
+        if (get() == WORKER_STATE_STARTED) { // help branch prediction
 
         } else {
-            WORKER_STATE_UPDATER.get(this) match
+            get() match
                 case WORKER_STATE_INIT =>
-                    if (WORKER_STATE_UPDATER.compareAndSet(this, WORKER_STATE_INIT, WORKER_STATE_STARTED)) {
+                    if (this.compareAndSet(WORKER_STATE_INIT, WORKER_STATE_STARTED)) {
                         workerThread.start()
                     }
                 case WORKER_STATE_STARTED =>
@@ -330,22 +344,44 @@ class HashedWheelTimer(
         }
     }
 
-    override def stop: Set[Timeout] = ???
+    override def stop: Set[Timeout] = {
+        if (Thread.currentThread() == workerThread) {
+            throw new IllegalStateException(
+              s"${getClass.getSimpleName}.stop cannot be called from ${classOf[TimerTask].getSimpleName}"
+            )
+        }
+
+        if (compareAndSet(WORKER_STATE_STARTED, WORKER_STATE_SHUTDOWN)) {
+            try {
+                var interrupted: Boolean = false
+                while (workerThread.isAlive) {
+                    workerThread.interrupt()
+                    try workerThread.join(100)
+                    catch {
+                        case ignored: InterruptedException => interrupted = true
+                    }
+                }
+                if (interrupted) Thread.currentThread().interrupt()
+            } catch { case _: Throwable => }
+            worker.unprocessedTimeouts()
+        } else Set.empty
+    }
 
 }
 
 object HashedWheelTimer {
 
+    private val MILLISECOND_NANOS: Long = 1 * 1000 * 1000
+
     private val WORKER_STATE_INIT     = 0
     private val WORKER_STATE_STARTED  = 1
     private val WORKER_STATE_SHUTDOWN = 2
 
-    private val WORKER_STATE_UPDATER = AtomicIntegerFieldUpdater.newUpdater(classOf[HashedWheelTimer], "workerState")
     private final class Worker(val timer: HashedWheelTimer) extends Runnable {
 
-        private val unprocessedTimeouts: mutable.Set[Timeout] = mutable.HashSet.empty
+        private val unprocessed: mutable.Set[Timeout] = mutable.HashSet.empty
 
-        private var startTime: Long = 0
+        private[timer] var startTime: Long = 0
 
         private var tick: Long = 0
 
@@ -353,11 +389,11 @@ object HashedWheelTimer {
 
             startTime = System.nanoTime()
 
-            while (WORKER_STATE_UPDATER.get(timer) == WORKER_STATE_STARTED) {
+            while (timer.get() == WORKER_STATE_STARTED) {
                 val deadline = waitForNextTick()
                 if (deadline > 0) {
                     val idx: Int = (tick & timer.mask).toInt
-//                    processCancelledTasks()
+                    processCancelledTasks()
                     val bucket = timer.wheel(idx)
                     transferTimeoutsToBuckets()
                     bucket.expireTimeouts(deadline)
@@ -365,14 +401,14 @@ object HashedWheelTimer {
                 }
             }
 
-            // Fill the unprocessedTimeouts so we can return them from stop() method.
+            // Fill the unprocessed so we can return them from stop() method.
             for (bucket <- timer.wheel) {
-                bucket.clearTimeouts(unprocessedTimeouts)
+                bucket.clearTimeouts(unprocessed)
             }
 
             while (timer.timeouts.nonEmpty) {
                 val timeout: HashedWheelTimeout = timer.timeouts.dequeue()
-                if (!timeout.isCancelled) unprocessedTimeouts.add(timeout)
+                if (!timeout.isCancelled) unprocessed.add(timeout)
             }
 
             processCancelledTasks()
@@ -394,7 +430,7 @@ object HashedWheelTimer {
         }
 
         def putBucket(timeout: HashedWheelTimeout, deadline: Long): Unit = {
-            val calculated = deadline / timer.tickDuration
+            val calculated = deadline / timer.duration
             timeout.remainingRounds = (calculated - tick) / timer.wheel.length
 
             val ticks        = math.max(calculated, tick)
@@ -423,12 +459,13 @@ object HashedWheelTimer {
          *    by +1)
          */
         private def waitForNextTick() = {
-            val deadline          = timer.tickDuration * (tick + 1)
+            val deadline          = timer.duration * (tick + 1)
             var ret: Long         = 0
             var continue: Boolean = true
             while (continue) {
                 val currentTime = System.nanoTime() - timer.startTime
                 var sleepTimeMs = (deadline - currentTime + 999999) / 1000000
+                println(s"sleep ${sleepTimeMs}")
                 if (sleepTimeMs <= 0) {
                     ret = if (currentTime == Long.MaxValue) -Long.MaxValue else currentTime
                     continue = false
@@ -446,7 +483,7 @@ object HashedWheelTimer {
                     try Thread.sleep(sleepTimeMs)
                     catch {
                         case ignored: InterruptedException =>
-                            if (WORKER_STATE_UPDATER.get(timer) == WORKER_STATE_SHUTDOWN) {
+                            if (timer.get() == WORKER_STATE_SHUTDOWN) {
                                 ret = Long.MinValue
                                 continue = false
                             }
@@ -456,6 +493,8 @@ object HashedWheelTimer {
             ret
         }
 
+        def unprocessedTimeouts(): Set[Timeout] = unprocessed.toSet
+
     }
 
     final class HashedWheelTimeout(
@@ -464,13 +503,12 @@ object HashedWheelTimer {
         val createTime: Long,
         val delay: Long,
         val period: Long
-    ) extends Timeout
+    ) extends AtomicInteger
+        with Timeout
         with Runnable
         with Nextable {
 
         import HashedWheelTimeout.*
-
-        @volatile private var status = ST_INIT
 
         // remainingRounds will be calculated and set by Worker.transferTimeoutsToBuckets() before the
         // HashedWheelTimeout will be added to the correct HashedWheelBucket.
@@ -486,22 +524,27 @@ object HashedWheelTimer {
 
         override def periodic: Boolean = period > 0
 
-        override def cancel: Boolean = if (compareAndSetState(ST_INIT, ST_CANCELLED)) true else false
+        override def cancel: Boolean = if (
+          this.compareAndSet(ST_INIT, ST_CANCELLED) ||
+          (periodic && compareAndSet(ST_EXPIRED, ST_CANCELLED))
+        ) {
+            if (bucket != null) timer.cancelledTimeouts.enqueue(this) // else still in timeouts
+            true
+        } else false
 
         def remove(): Unit = {
-            ???
+            if (bucket != null) {
+                if (remainingRounds < LONG_DEADLINE) bucket.remove(this) else bucket.removeLong(this)
+            } else timer.pendingTimeouts.decrementAndGet()
         }
 
-        inline def compareAndSetState(expected: Int, state: Int): Boolean =
-            STATE_UPDATER.compareAndSet(this, expected, state)
+        def state: Int = get()
 
-        def state: Int = status
+        override def isCancelled: Boolean = get() == ST_CANCELLED
 
-        override def isCancelled: Boolean = status == ST_CANCELLED
+        override def isExpired: Boolean = get() == ST_EXPIRED
 
-        override def isExpired: Boolean = status == ST_EXPIRED
-
-        def expire(): Unit = if (compareAndSetState(ST_INIT, ST_EXPIRED)) try {
+        def expire(): Unit = if (this.compareAndSet(ST_INIT, ST_EXPIRED) || (get() == ST_EXPIRED && periodic)) try {
             timer.taskExecutor.execute(this)
         } catch {
             case t: Throwable =>
@@ -528,9 +571,6 @@ object HashedWheelTimer {
         val ST_CANCELLED = 1
         val ST_EXPIRED   = 2
 
-        val STATE_UPDATER =
-            AtomicIntegerFieldUpdater.newUpdater(classOf[HashedWheelTimer.HashedWheelTimeout], "status")
-
     }
 
     /** Bucket that stores HashedWheelTimeouts. These are stored in a linked-list like datastructure to allow easy
@@ -547,7 +587,7 @@ object HashedWheelTimer {
         private var longHead: HashedWheelTimer.HashedWheelTimeout = _
         private var longTail: HashedWheelTimer.HashedWheelTimeout = _
 
-        /** Add [[HashedWheelTimeout]] tp this bucket. */
+        /** Add [[HashedWheelTimeout]] to this bucket. */
         def addTimeout(timeout: HashedWheelTimeout): Unit = {
             timeout.bucket = this
             if (timeout.remainingRounds < LONG_DEADLINE) {
@@ -573,14 +613,106 @@ object HashedWheelTimer {
         }
 
         /** Expire all [[HashedWheelTimeout]]s for the given deadline. */
-        def expireTimeouts(deadline: Long): Unit = ???
+        def expireTimeouts(deadline: Long): Unit = {
+            var timeout = head
 
-        def remove(timeout: HashedWheelTimeout): HashedWheelTimeout = ???
+            while (timeout != null) {
+                var next = timeout.nextNode
+                if (timeout.isCancelled) next = remove(timeout)
+                else if (timeout.remainingRounds <= 0) {
+                    next = remove(timeout)
+                    expire0(timeout)
+                } else timeout.remainingRounds -= 1
 
-        def removeLong(timeout: HashedWheelTimeout): HashedWheelTimeout = ???
+                timeout = next
+            }
+
+            // handle long lifetime timeout
+            expireLongTimeouts()
+        }
+
+        private def expire0(timeout: HashedWheelTimeout): Unit = {
+            val now = System.nanoTime()
+            timeout.expire()
+            timeout.bucket = null
+            if (timeout.periodic) {
+                val deadline = now - timeout.timer.worker.startTime + timeout.period
+                timeout.timer.worker.putBucket(timeout, deadline)
+            }
+        }
+
+        private def expireLongTimeouts(): Unit = {
+            longRemainingRounds -= 1
+            if (longRemainingRounds == 0) {
+                var timeout = longHead
+                while (timeout != null) {
+                    var next = timeout.nextNode
+                    if (timeout.isCancelled) next = removeLong(timeout)
+                    else if (timeout.remainingRounds <= LONG_DEADLINE) {
+                        next = removeLong(timeout)
+                        expire0(timeout)
+                    } else if (timeout.remainingRounds - LONG_DEADLINE < LONG_DEADLINE) { // move to short lifetime queue
+                        next = remove(timeout)
+                        timeout.remainingRounds -= LONG_DEADLINE
+                        addTimeout(timeout)
+                    } else timeout.remainingRounds -= LONG_DEADLINE
+
+                    timeout = next
+                }
+            }
+            longRemainingRounds = LONG_DEADLINE
+        }
+
+        def remove(timeout: HashedWheelTimeout): HashedWheelTimeout = {
+            val next = timeout.next.asInstanceOf[HashedWheelTimeout | Null]
+            // remove timeout that was either processed or cancelled by updating the linked-list
+            if (timeout.prevNode != null) timeout.prevNode.next = next
+            if (timeout.nextNode != null) timeout.nextNode.prevNode = timeout.prevNode
+
+            if (timeout == head) {
+                // if timeout is also the tail we need to adjust the entry too
+                if (timeout == tail) {
+                    tail = null
+                    head = null
+                } else head = next
+            } else if (timeout == tail)
+                tail = timeout.prevNode // if the timeout is the tail modify the tail to be the prev node.
+
+            // null out prev, next and bucket to allow for GC.
+            timeout.prevNode = null
+            timeout.nextNode = null
+            timeout.bucket = null
+            timeout.timer.pendingTimeouts.decrementAndGet()
+            next
+        }
+
+        def removeLong(timeout: HashedWheelTimeout): HashedWheelTimeout = {
+            val next = timeout.next.asInstanceOf[HashedWheelTimeout | Null]
+            // remove timeout that was either processed or cancelled by updating the linked-list
+            if (timeout.prevNode != null) timeout.prevNode.next = next
+            if (timeout.nextNode != null) timeout.nextNode.prevNode = timeout.prevNode
+
+            if (timeout == longHead) {
+                // if timeout is also the tail we need to adjust the entry too
+                if (timeout == longTail) {
+                    longTail = null
+                    longHead = null
+                } else longHead = next
+            } else if (timeout == longTail)
+                longTail = timeout.prevNode // if the timeout is the tail modify the tail to be the prev node.
+
+            // null out prev, next and bucket to allow for GC.
+            timeout.prevNode = null
+            timeout.nextNode = null
+            timeout.bucket = null
+            timeout.timer.pendingTimeouts.decrementAndGet()
+            next
+        }
 
         /** Clear this bucket and return all not expired / cancelled [[Timeout]]s. */
-        def clearTimeouts(set: mutable.Set[Timeout]): Unit = ???
+        def clearTimeouts(set: mutable.Set[Timeout]): Unit = {
+            // TODO
+        }
 
         private def pollTimeout(): HashedWheelTimeout = ???
 
@@ -590,7 +722,7 @@ object HashedWheelTimer {
         val LONG_DEADLINE = 4
     }
 
-    private def createWheel(ticksPerWheel: Int): Array[HashedWheelBucket] = {
+    def createWheel(ticksPerWheel: Int): Array[HashedWheelBucket] = {
         if (ticksPerWheel < 1 || ticksPerWheel > 1073741824)
             throw new IllegalArgumentException(s"ticksPerWheel: $ticksPerWheel (expected: [1, 1073741824])")
 
