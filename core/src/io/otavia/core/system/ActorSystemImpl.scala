@@ -32,6 +32,7 @@ import io.otavia.core.transport.TransportFactory
 import io.otavia.core.util.SystemPropertyUtil
 
 import java.io.File
+import java.lang.management.{ManagementFactory, MemoryMXBean}
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.StandardOpenOption
@@ -39,6 +40,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicLong
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.duration.{MILLISECONDS, TimeUnit}
 import scala.language.unsafeNulls
 
 class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFactory) extends ActorSystem {
@@ -78,6 +80,12 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     private val transFactory: TransportFactory = TransportFactory.getTransportFactory()
     private val chFactory: ChannelFactory      = new ChannelFactory(transFactory)
 
+    private val memoryMXBean: MemoryMXBean = ManagementFactory.getMemoryMXBean
+
+    @volatile private var busy: Boolean = false
+
+    timer.internalTimer.newTimeout(_ => calculateBusy(), 500, MILLISECONDS, 500, MILLISECONDS)
+
     println(s"${Console.YELLOW}${SystemInfo.logo()}${Console.RESET}")
     println(SystemInfo.info())
     println("\n")
@@ -116,7 +124,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     private val monitorThread = new Thread(monitorTask)
 
-    monitorThread.start()
+//    monitorThread.start()
 
     loadEarlyModules()
 
@@ -289,5 +297,16 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     }
 
     override def channelFactory: ChannelFactory = chFactory
+
+    override private[core] def getHeapMemoryUsage() = memoryMXBean.getHeapMemoryUsage
+
+    override def isBusy: Boolean = busy
+
+    private def calculateBusy(): Unit = {
+        val usage = getHeapMemoryUsage()
+        if (usage.getUsed.toFloat / usage.getMax.toFloat > 0.90 && usage.getMax - usage.getUsed < 100 * 1024 * 1024)
+            busy = true
+        else busy = false
+    }
 
 }

@@ -22,6 +22,7 @@ import io.otavia.core.message.*
 import io.otavia.core.system.ActorHouse.*
 import io.otavia.core.util.{Nextable, SystemPropertyUtil}
 
+import java.lang.management.*
 import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
 
@@ -90,6 +91,8 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
 
     def actor: AbstractActor[? <: Call] = this.dweller
 
+    def system: ActorSystem = manager.thread.system
+
     def actorType: Int = atp
 
     /** True if this house has not received [[Message]] or [[Event]] */
@@ -114,7 +117,11 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
         }
     }
 
-    def putNotice(notice: Notice): Unit = put(notice, noticeMailbox)
+    def putNotice(notice: Notice): Unit = {
+        if (system.isBusy && !ActorThread.currentThreadIsActorThread)
+            Thread.sleep(10)
+        put(notice, noticeMailbox)
+    }
 
     def putAsk(ask: Ask[?]): Unit = put(ask, askMailbox)
 

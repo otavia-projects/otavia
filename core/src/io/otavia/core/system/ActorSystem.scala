@@ -30,6 +30,7 @@ import io.otavia.core.system.monitor.SystemMonitor
 import io.otavia.core.timer.Timer
 import io.otavia.core.util.SystemPropertyUtil
 
+import java.lang.management.MemoryUsage
 import java.net.InetAddress
 import scala.language.unsafeNulls
 import scala.quoted
@@ -124,6 +125,10 @@ trait ActorSystem {
     private[system] def setActorContext[A <: Actor[? <: Call]](actor: A, thread: ActorThread): Address[MessageOf[A]]
 
     def monitor(): SystemMonitor
+
+    private[core] def getHeapMemoryUsage(): MemoryUsage
+
+    def isBusy: Boolean
 
 }
 
