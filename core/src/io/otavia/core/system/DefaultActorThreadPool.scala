@@ -42,6 +42,8 @@ class DefaultActorThreadPool(
         inited = true
     }
 
+    override def isInit: Boolean = inited
+
     override def nextThreadId(): Int = {
         cursor += 1
         cursor

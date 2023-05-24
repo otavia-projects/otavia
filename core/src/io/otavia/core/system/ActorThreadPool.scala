@@ -37,6 +37,8 @@ trait ActorThreadPool {
 
     def busiest: Option[ActorThread]
 
+    def isInit: Boolean
+
 }
 
 object ActorThreadPool {

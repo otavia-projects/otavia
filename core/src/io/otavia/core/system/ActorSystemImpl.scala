@@ -26,8 +26,8 @@ import io.otavia.core.message.{Call, IdAllocator}
 import io.otavia.core.reactor.BlockTaskExecutor
 import io.otavia.core.reactor.aio.Submitter
 import io.otavia.core.slf4a.{LogLevel, Logger}
-import io.otavia.core.system.monitor.{ReactorMonitor, SystemMonitor, ThreadMonitor}
-import io.otavia.core.timer.{Timer, TimerImpl}
+import io.otavia.core.system.monitor.{ReactorMonitor, SystemMonitor, SystemMonitorTask, ThreadMonitor}
+import io.otavia.core.timer.{Timeout, Timer, TimerImpl}
 import io.otavia.core.transport.TransportFactory
 import io.otavia.core.util.SystemPropertyUtil
 
@@ -40,7 +40,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicLong
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.duration.{MILLISECONDS, TimeUnit}
+import scala.concurrent.duration.{MILLISECONDS, MINUTES, TimeUnit}
 import scala.language.unsafeNulls
 
 class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFactory) extends ActorSystem {
@@ -56,7 +56,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     private val actorThreadPool: ActorThreadPool = new DefaultActorThreadPool(
       this,
       actorThreadFactory,
-      SystemPropertyUtil.getInt("io.otavia.actor.thread.pool.size", ActorSystem.DEFAULT_ACTOR_THREAD_POOL_SIZE)
+      ActorSystem.ACTOR_THREAD_POOL_SIZE
     )
 
     private val generator = new AtomicLong(1)
@@ -84,47 +84,29 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     @volatile private var busy: Boolean = false
 
-    timer.internalTimer.newTimeout(_ => calculateBusy(), 500, MILLISECONDS, 500, MILLISECONDS)
+    private var memoryMonitor: Timeout = _
 
-    println(s"${Console.YELLOW}${SystemInfo.logo()}${Console.RESET}")
-    println(SystemInfo.info())
-    println("\n")
-
-    inited = true
-
-    private val monitorTask = new Runnable {
-        override def run(): Unit = {
-            Thread.sleep(100)
-            val fs = pool.workers.map { thread =>
-                val file = new File(s"monitor.${thread.index}.log")
-                val f = FileChannel.open(
-                  file.toPath,
-                  StandardOpenOption.CREATE,
-                  StandardOpenOption.WRITE,
-                  StandardOpenOption.TRUNCATE_EXISTING
-                )
-                f
-            }
-            var i = 0
-            while (i < 1000_000) {
-                Thread.sleep(10)
-                val time  = System.currentTimeMillis()
-                val stats = monitor()
-                stats.threadMonitor.actorThreadMonitors.zipWithIndex.foreach { case (m, d) =>
-                    val sample =
-                        s"${time},${m.manager.mounts},${m.manager.serverActors},${m.manager.channelsActors},${m.manager.stateActors}\n"
-
-                    fs(d).write(ByteBuffer.wrap(sample.getBytes))
-                }
-                i += 1
-            }
-            fs.foreach(_.close())
-        }
+    if (ActorSystem.MEMORY_MONITOR) {
+        val duration = ActorSystem.MEMORY_MONITOR_DURATION * 100
+        memoryMonitor =
+            timer.internalTimer.newTimeout(_ => calculateBusy(), duration, MILLISECONDS, duration, MILLISECONDS)
     }
 
-    private val monitorThread = new Thread(monitorTask)
+    private val systemMonitorTask      = new SystemMonitorTask(this)
+    private var systemMonitor: Timeout = _
 
-//    monitorThread.start()
+    if (ActorSystem.SYSTEM_MONITOR) {
+        val duration = ActorSystem.SYSTEM_MONITOR_DURATION * 100
+        systemMonitor = timer.internalTimer.newTimeout(_ => doMonitor(), duration, MILLISECONDS, duration, MILLISECONDS)
+    }
+
+    if (ActorSystem.PRINT_BANNER) {
+        println(s"${Console.YELLOW}${SystemInfo.logo()}${Console.RESET}")
+        println(SystemInfo.info())
+        println("\n")
+    }
+
+    inited = true
 
     loadEarlyModules()
 
@@ -132,6 +114,8 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
         val module = earlyModules.poll()
         this.loadModule(module)
     }
+
+    private def doMonitor(): Unit = systemMonitorTask.run()
 
     override def initialed: Boolean = inited
 
@@ -297,13 +281,11 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     }
 
     override def channelFactory: ChannelFactory = chFactory
-
-    override private[core] def getHeapMemoryUsage() = memoryMXBean.getHeapMemoryUsage
-
+    
     override def isBusy: Boolean = busy
 
     private def calculateBusy(): Unit = {
-        val usage = getHeapMemoryUsage()
+        val usage = memoryMXBean.getHeapMemoryUsage
         if (usage.getUsed.toFloat / usage.getMax.toFloat > 0.90 && usage.getMax - usage.getUsed < 100 * 1024 * 1024)
             busy = true
         else busy = false

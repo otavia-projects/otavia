@@ -54,7 +54,7 @@ final class TimerImpl(private[timer] val system: ActorSystem) extends Timer {
         attach: Option[AnyRef]
     ): Long = {
         val (delay, period, delayUnit, periodUnit) = extract(trigger)
-        logger.trace(s"register timeout trigger with delay: ${delay} ${delayUnit} period: ${period} ${periodUnit}")
+        logger.trace(s"register timeout trigger with delay: $delay $delayUnit period: $period $periodUnit")
         if (delay <= 0 && period < 0) {
             val registerId = nextRegisterId()
             address.inform(TimeoutEvent(registerId, attach))

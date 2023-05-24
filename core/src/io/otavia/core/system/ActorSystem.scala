@@ -125,9 +125,7 @@ trait ActorSystem {
     private[system] def setActorContext[A <: Actor[? <: Call]](actor: A, thread: ActorThread): Address[MessageOf[A]]
 
     def monitor(): SystemMonitor
-
-    private[core] def getHeapMemoryUsage(): MemoryUsage
-
+    
     def isBusy: Boolean
 
 }
@@ -142,7 +140,27 @@ object ActorSystem {
     val DEFAULT_POOL_HOLDER_MAX_SIZE: Int =
         SystemPropertyUtil.getInt("io.otavia.pool.holder.maxSize", 1024)
 
-    val DEFAULT_ACTOR_THREAD_POOL_SIZE: Int = Runtime.getRuntime.availableProcessors()
+    private val DEFAULT_ACTOR_THREAD_POOL_SIZE: Int = Runtime.getRuntime.availableProcessors()
+    val ACTOR_THREAD_POOL_SIZE: Int =
+        SystemPropertyUtil.getInt("io.otavia.actor.thread.pool.size", ActorSystem.DEFAULT_ACTOR_THREAD_POOL_SIZE)
+
+    private val DEFAULT_MEMORY_MONITOR: Boolean = true
+    val MEMORY_MONITOR: Boolean =
+        SystemPropertyUtil.getBoolean("io.otavia.system.memory.monitor", DEFAULT_MEMORY_MONITOR)
+
+    private val DEFAULT_MEMORY_MONITOR_DURATION: Int = 8
+    val MEMORY_MONITOR_DURATION: Int =
+        SystemPropertyUtil.getInt("io.otavia.system.memory.monitor.duration", DEFAULT_MEMORY_MONITOR_DURATION)
+
+    private val DEFAULT_SYSTEM_MONITOR: Boolean = false
+    val SYSTEM_MONITOR: Boolean = SystemPropertyUtil.getBoolean("io.otavia.system.monitor", DEFAULT_SYSTEM_MONITOR)
+
+    private val DEFAULT_SYSTEM_MONITOR_DURATION: Int = 10
+    val SYSTEM_MONITOR_DURATION: Int =
+        SystemPropertyUtil.getInt("io.otavia.system.monitor.duration", DEFAULT_SYSTEM_MONITOR_DURATION)
+
+    private val DEFAULT_PRINT_BANNER: Boolean = true
+    val PRINT_BANNER: Boolean = SystemPropertyUtil.getBoolean("io.otavia.system.banner", DEFAULT_PRINT_BANNER)
 
     def apply(): ActorSystem =
         new ActorSystemImpl(DEFAULT_SYSTEM_NAME, new ActorThreadFactory.DefaultActorThreadFactory)
