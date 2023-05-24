@@ -23,6 +23,89 @@ import scala.concurrent.duration.*
 
 class HashedWheelTimerSuite extends AnyFunSuite {
 
+    test("Should not expire") {
+        val system = ActorSystem()
+        val timer  = new HashedWheelTimer(system)
+
+        val timeout = timer.newTimeout(_ => {}, 10, SECONDS)
+
+        Thread.sleep(50)
+
+        assert(!timeout.isCancelled)
+        assert(!timeout.isExpired)
+    }
+
+    test("Should expire") {
+        val system = ActorSystem()
+        val timer  = new HashedWheelTimer(system)
+
+        val timeout = timer.newTimeout(_ => {}, 1, MILLISECONDS)
+
+        Thread.sleep(200)
+
+        assert(timeout.isExpired)
+    }
+
+    test("Cancel timeout") {
+        val system = ActorSystem()
+        val timer  = new HashedWheelTimer(system)
+
+        val timeout = timer.newTimeout(_ => {}, 10, SECONDS)
+
+        Thread.sleep(50)
+
+        timeout.cancel
+
+        assert(!timeout.isExpired)
+        assert(timeout.isCancelled)
+    }
+
+    test("Period less than duration") {
+        val system = ActorSystem()
+        val timer  = new HashedWheelTimer(system)
+
+        @volatile var count       = 0
+        val start                 = System.currentTimeMillis()
+        @volatile var spend: Long = 0
+        // period duration is less than tick duration
+        val timeout = timer.newTimeout(
+          t => {
+              spend = System.currentTimeMillis() - start
+              count += 1
+              if (count == 11) t.cancel
+          },
+          1,
+          SECONDS,
+          10, // change to timer duration which is 100ms
+          MILLISECONDS
+        )
+
+        Thread.sleep(3 * 1000)
+
+        assert(spend > 1 * 1000 + 10 * 10)
+        assert((spend / 1000) == 2)
+
+    }
+
+    test("Stop before complete") {
+        val system = ActorSystem()
+        val timer  = new HashedWheelTimer(system)
+
+        val timeout1 = timer.newTimeout(_ => {}, 10, SECONDS)
+        val timeout2 = timer.newTimeout(_ => {}, 11, SECONDS)
+        val timeout3 = timer.newTimeout(_ => {}, 60, MILLISECONDS)
+
+        Thread.sleep(200)
+
+        val unprocessed = timer.stop
+
+        assert(unprocessed.size == 2)
+        assert(unprocessed.contains(timeout1))
+        assert(unprocessed.contains(timeout2))
+        assert(!unprocessed.contains(timeout3))
+
+    }
+
     test("Delay fixed time") {
         val system = ActorSystem()
         val timer  = new HashedWheelTimer(system)
@@ -37,7 +120,7 @@ class HashedWheelTimerSuite extends AnyFunSuite {
           SECONDS
         )
 
-        Thread.sleep(3 * 1000)
+        Thread.sleep(2 * 1000)
         assert(count == 1)
         timer.stop
     }
@@ -51,17 +134,16 @@ class HashedWheelTimerSuite extends AnyFunSuite {
         timer.newTimeout(
           timeout => {
               count += 1
-              println(System.currentTimeMillis())
-              if (count == 10) timeout.cancel
+              if (count == 4) timeout.cancel
           },
           1,
           SECONDS,
           1,
           SECONDS
         )
-
-        Thread.sleep(15 * 1000)
-        assert(count == 10)
+        Thread.sleep(6 * 1000)
+        timer.stop
+        assert(count == 4)
 
     }
 

@@ -44,6 +44,8 @@ final class TimerImpl(private[timer] val system: ActorSystem) extends Timer {
 
     override def cancelTimerTask(registerId: Long): Unit = taskManager.remove(registerId)
 
+    override private[core] def internalTimer = hashedWheelTimer
+
     override private[core] def monitor() = TimerMonitor(taskManager.count)
 
     override def registerActorTimeout(

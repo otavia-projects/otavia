@@ -39,6 +39,8 @@ trait Timer {
     /** The [[ActorSystem]] of this [[Timer]] belong. */
     private[timer] def system: ActorSystem
 
+    private[core] def internalTimer: InternalTimer
+
     private[core] def monitor(): TimerMonitor
 
     /** API for [[Actor]] to register timeout event to [[Timer]].

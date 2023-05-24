@@ -27,7 +27,7 @@ import io.otavia.core.util.{Chainable, Nextable, Platform, SpinLockQueue}
 import java.util.concurrent.*
 import java.util.concurrent.atomic.{AtomicInteger, AtomicIntegerFieldUpdater, AtomicLong}
 import scala.collection.mutable
-import scala.concurrent.duration.{Deadline, MILLISECONDS, TimeUnit}
+import scala.concurrent.duration.{MILLISECONDS, TimeUnit}
 import scala.language.unsafeNulls
 
 /** A [[InternalTimer]] optimized for approximated I/O timeout scheduling.
@@ -271,8 +271,6 @@ class HashedWheelTimer(
     private final val worker       = new Worker(this)
     private final val workerThread = threadFactory.newThread(worker)
 
-    @volatile var workerState = 0 // 0 - init, 1 - started, 2 - shut down
-
     private val wheel: Array[HashedWheelBucket] = createWheel(ticksPerWheel)
 
     private[timer] val mask = wheel.length - 1
@@ -290,13 +288,10 @@ class HashedWheelTimer(
         } else d
     }
 
-    private val startTimeInitialized     = new CountDownLatch(1)
     private[timer] val timeouts          = new SpinLockQueue[HashedWheelTimeout]()
     private[timer] val cancelledTimeouts = new SpinLockQueue[HashedWheelTimeout]()
 
     private val pendingTimeouts = new AtomicLong(0)
-
-    @volatile private[timer] var startTime = System.nanoTime()
 
     override def newTimeout(task: TimerTask, delay: Long, unit: TimeUnit): Timeout = {
         assert(delay > 0, "delay must large than 0")
@@ -383,7 +378,7 @@ object HashedWheelTimer {
 
         private[timer] var startTime: Long = 0
 
-        private var tick: Long = 0
+        private[timer] var tick: Long = 0
 
         override def run(): Unit = {
 
@@ -463,9 +458,8 @@ object HashedWheelTimer {
             var ret: Long         = 0
             var continue: Boolean = true
             while (continue) {
-                val currentTime = System.nanoTime() - timer.startTime
+                val currentTime = System.nanoTime() - startTime
                 var sleepTimeMs = (deadline - currentTime + 999999) / 1000000
-                println(s"plan sleep ${sleepTimeMs}")
                 if (sleepTimeMs <= 0) {
                     ret = if (currentTime == Long.MaxValue) -Long.MaxValue else currentTime
                     continue = false
@@ -480,7 +474,6 @@ object HashedWheelTimer {
                         if (sleepTimeMs == 0) sleepTimeMs = 1
                     }
 
-                    println(s"sleep ${sleepTimeMs}")
                     try Thread.sleep(sleepTimeMs)
                     catch {
                         case ignored: InterruptedException =>
@@ -637,7 +630,17 @@ object HashedWheelTimer {
             timeout.expire()
             timeout.bucket = null
             if (timeout.periodic) {
-                val deadline = now - timeout.timer.worker.startTime + timeout.period
+                val delay =
+                    if (timeout.period >= timeout.timer.duration) timeout.period
+                    else {
+                        val taskName  = timeout.task.getClass.getSimpleName
+                        val timerName = timeout.timer.getClass.getSimpleName
+                        timeout.timer.logger.warn(
+                          s"$taskName period is less than duration of $timerName, use $timerName.tickDuration"
+                        )
+                        timeout.timer.duration
+                    }
+                val deadline = timeout.timer.worker.tick * timeout.timer.duration + delay
                 timeout.timer.worker.putBucket(timeout, deadline)
             }
         }
@@ -712,10 +715,25 @@ object HashedWheelTimer {
 
         /** Clear this bucket and return all not expired / cancelled [[Timeout]]s. */
         def clearTimeouts(set: mutable.Set[Timeout]): Unit = {
-            // TODO
-        }
+            var timeout = head
+            while (timeout != null) {
+                val next = remove(timeout)
+                if (!timeout.isCancelled && (!timeout.isExpired || (timeout.isExpired && timeout.periodic))) {
+                    set.add(timeout)
+                }
+                timeout = next
+            }
 
-        private def pollTimeout(): HashedWheelTimeout = ???
+            // handle old lifetime queue
+            timeout = longHead
+            while (timeout != null) {
+                val next = remove(timeout)
+                if (!timeout.isCancelled && (!timeout.isExpired || (timeout.isExpired && timeout.periodic))) {
+                    set.add(timeout)
+                }
+                timeout = next
+            }
+        }
 
     }
 
@@ -723,7 +741,7 @@ object HashedWheelTimer {
         val LONG_DEADLINE = 4
     }
 
-    def createWheel(ticksPerWheel: Int): Array[HashedWheelBucket] = {
+    private def createWheel(ticksPerWheel: Int): Array[HashedWheelBucket] = {
         if (ticksPerWheel < 1 || ticksPerWheel > 1073741824)
             throw new IllegalArgumentException(s"ticksPerWheel: $ticksPerWheel (expected: [1, 1073741824])")
 
