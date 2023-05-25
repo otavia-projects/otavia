@@ -74,11 +74,6 @@ object Basic {
             logger.info("The PingActor has been mounted to ActorSystem.")
         }
 
-        override protected def beforeStop(): Unit = {
-            logger.info("PingActor stop!")
-            println("PingActor stop!")
-        }
-
         override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = {
             stack.stackState match
                 case StackState.start =>
@@ -100,10 +95,6 @@ object Basic {
             val trigger = TimeoutTrigger.DelayPeriod(1, 2, TimeUnit.SECONDS, TimeUnit.SECONDS)
 //            timer.registerActorTimeout(trigger, self)
 //            logger.info("PongActor register timeout trigger")
-        }
-
-        override protected def beforeStop(): Unit = {
-            logger.info("PongActor stop!")
         }
 
         override def continueAsk(stack: AskStack[Ping]): Option[StackState] = {

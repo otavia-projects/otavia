@@ -118,8 +118,10 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
     }
 
     def putNotice(notice: Notice): Unit = {
-        if (system.isBusy && !ActorThread.currentThreadIsActorThread)
-            Thread.sleep(10)
+        if (system.isBusy && !ActorThread.currentThreadIsActorThread) {
+            println(s"sleep ${Thread.currentThread()}")
+            Thread.sleep(ActorSystem.MEMORY_OVER_SLEEP)
+        }
         put(notice, noticeMailbox)
     }
 
@@ -203,11 +205,16 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
 
     private[core] def createActorAddress[M <: Call](): ActorAddress[M] = {
         val address = new ActorAddress[M](this)
+        if (actor.isInstanceOf[BeforeStop])
+            manager.thread.registerAddressRef(address)
         address
     }
 
     private[core] def createUntypedAddress(): ActorAddress[?] = {
-        new ActorAddress[Call](this)
+        val address = new ActorAddress[Call](this)
+        if (actor.isInstanceOf[BeforeStop])
+            manager.thread.registerAddressRef(address)
+        address
     }
 
     override def close(): Unit = dweller.stop()

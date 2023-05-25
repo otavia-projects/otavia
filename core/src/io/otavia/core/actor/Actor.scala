@@ -171,11 +171,6 @@ trait Actor[+M <: Call] {
     /** Actor system call this method after call restart */
     protected def afterRestart(): Unit = {}
 
-    /** if restart method throw NotImplementedError, actor system will call this method and mark the actor instance
-     *  dead, and release is resource
-     */
-    protected def beforeStop(): Unit = {}
-
 }
 
 object Actor {

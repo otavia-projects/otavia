@@ -17,13 +17,13 @@
 package io.otavia.core.system
 
 import io.otavia.core.actor.Actor
-import io.otavia.core.address.ActorThreadAddress
+import io.otavia.core.address.{ActorAddress, ActorThreadAddress}
 import io.otavia.core.message.{Event, ResourceTimeoutEvent}
 import io.otavia.core.system.ActorThread.{GC_PEER_ROUND, ST_RUNNING, ST_STARTING, ST_WAITING}
 import io.otavia.core.system.monitor.ActorThreadMonitor
 import io.otavia.core.util.SystemPropertyUtil
 
-import java.lang.ref.ReferenceQueue
+import java.lang.ref.{PhantomReference, ReferenceQueue, SoftReference, WeakReference}
 import java.util.concurrent.{ConcurrentLinkedQueue, CopyOnWriteArraySet}
 import scala.collection.mutable
 import scala.language.unsafeNulls
@@ -39,8 +39,8 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
     private val eventQueue                  = new ConcurrentLinkedQueue[Event]()
     private val address: ActorThreadAddress = new ActorThreadAddress(this)
 
-    private val referenceQueue = new ReferenceQueue[ActorHouse]()
-    private val refSet         = new CopyOnWriteArraySet[ActorHousePhantomRef]()
+    private val referenceQueue = new ReferenceQueue[ActorAddress[?]]()
+    private val refSet         = new CopyOnWriteArraySet[AddressPhantomReference]()
 
     @volatile private var status: Int = ST_STARTING
 
@@ -65,31 +65,28 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 
     private[core] def createActorHouse(): ActorHouse = {
         val house = new ActorHouse(manager)
-        this.registerHouseRef(house)
         house
     }
 
-    private def registerHouseRef(house: ActorHouse): Unit = {
-//        val ref = new ActorHousePhantomRef(house, referenceQueue)
-//        refSet.add(ref)
+    private[system] def registerAddressRef(address: ActorAddress[?]): Unit = {
+        val ref = new AddressPhantomReference(address, referenceQueue)
+        refSet.add(ref)
     }
 
     /** Stop [[Actor]] witch need be gc. */
     private def stopActor(): Int = {
         var count    = 0
         var continue = true
-//        System.gc()
         while (count < GC_PEER_ROUND && continue) {
-            val ref = referenceQueue.poll()
-            if (ref == null) continue = false
-            else {
-                println("--------GC----------")
-                refSet.remove(ref)
-                ref.clear()
-                count += 1
-            }
+            referenceQueue.poll match
+                case null => continue = false
+                case ref: AddressPhantomReference =>
+                    ref.finalizeResources()
+                    ref.clear()
+                    refSet.remove(ref)
+                    count += 1
+                case reference: PhantomReference[?] => reference.clear()
         }
-        if (count > 0) System.gc()
         count
     }
 

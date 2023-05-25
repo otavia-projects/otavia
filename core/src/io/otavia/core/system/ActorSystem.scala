@@ -125,7 +125,7 @@ trait ActorSystem {
     private[system] def setActorContext[A <: Actor[? <: Call]](actor: A, thread: ActorThread): Address[MessageOf[A]]
 
     def monitor(): SystemMonitor
-    
+
     def isBusy: Boolean
 
 }
@@ -148,9 +148,13 @@ object ActorSystem {
     val MEMORY_MONITOR: Boolean =
         SystemPropertyUtil.getBoolean("io.otavia.system.memory.monitor", DEFAULT_MEMORY_MONITOR)
 
-    private val DEFAULT_MEMORY_MONITOR_DURATION: Int = 8
+    private val DEFAULT_MEMORY_MONITOR_DURATION: Int = 20
     val MEMORY_MONITOR_DURATION: Int =
         SystemPropertyUtil.getInt("io.otavia.system.memory.monitor.duration", DEFAULT_MEMORY_MONITOR_DURATION)
+
+    private val DEFAULT_MEMORY_OVER_SLEEP: Int = 40
+    val MEMORY_OVER_SLEEP: Int =
+        SystemPropertyUtil.getInt("io.otavia.system.memory.over.sleep", DEFAULT_MEMORY_OVER_SLEEP)
 
     private val DEFAULT_SYSTEM_MONITOR: Boolean = false
     val SYSTEM_MONITOR: Boolean = SystemPropertyUtil.getBoolean("io.otavia.system.monitor", DEFAULT_SYSTEM_MONITOR)

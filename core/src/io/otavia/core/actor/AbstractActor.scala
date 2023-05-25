@@ -367,10 +367,15 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
         }
 
     /** Call by [[io.otavia.core.system.ActorHousePhantomRef]] to release [[Actor]] resource. */
-    private[core] def stop(): Unit = try {
-        beforeStop()
-    } catch {
-        case t: Throwable => logger.error("Error at beforeStop with ", t)
+    private[core] def stop(): Unit = {
+        this match
+            case beforeStop: BeforeStop =>
+                try {
+                    beforeStop.beforeStop()
+                } catch {
+                    case t: Throwable => logger.error("Error at beforeStop with ", t)
+                }
+            case _ =>
     }
 
 }
