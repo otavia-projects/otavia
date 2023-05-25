@@ -21,11 +21,17 @@ import io.otavia.core.channel.socket.SocketProtocolFamily
 import io.otavia.core.reactor.IoHandler
 import io.otavia.core.transport.TransportFactory
 
+import java.net.ProtocolFamily
+
 class NativeTransportFactory extends TransportFactory {
 
     override def openServerSocketChannel(): Channel = ???
 
+    override def openServerSocketChannel(family: ProtocolFamily): Channel = ???
+
     override def openSocketChannel(): Channel = ???
+
+    override def openSocketChannel(family: ProtocolFamily): Channel = ???
 
     override def openDatagramChannel(): Channel = ???
 

@@ -21,9 +21,12 @@ import io.otavia.core.channel.socket.SocketProtocolFamily
 import io.otavia.core.reactor.IoHandler
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.transport.TransportFactory
-import io.otavia.core.transport.nio.channel.NioServerSocketChannel
+import io.otavia.core.transport.nio.channel.{NioDatagramChannel, NioFileChannel, NioServerSocketChannel, NioSocketChannel}
+import sun.nio.ch.Net
 
+import java.net.{ProtocolFamily, StandardProtocolFamily}
 import java.nio.channels.spi.SelectorProvider
+import java.nio.channels.{DatagramChannel, FileChannel, ServerSocketChannel, SocketChannel}
 import scala.language.unsafeNulls
 
 class NIOTransportFactory() extends TransportFactory {
@@ -31,17 +34,68 @@ class NIOTransportFactory() extends TransportFactory {
     private val selectorProvider = SelectorProvider.provider()
 
     override def openServerSocketChannel(): Channel = {
-        val ch = selectorProvider.openServerSocketChannel()
-        new NioServerSocketChannel(ch, ???)
+        var family: ProtocolFamily  = null
+        var ch: ServerSocketChannel = null
+
+        try {
+            family = StandardProtocolFamily.INET6
+            ch = selectorProvider.openServerSocketChannel(family)
+        } catch {
+            case unsupportedOperationException: UnsupportedOperationException =>
+                family = StandardProtocolFamily.INET
+                ch = selectorProvider.openServerSocketChannel(family)
+        }
+
+        new NioServerSocketChannel(ch, family)
     }
 
-    override def openSocketChannel(): Channel = ???
+    override def openServerSocketChannel(family: ProtocolFamily): Channel = {
+        val ch = selectorProvider.openServerSocketChannel(family)
+        new NioServerSocketChannel(ch, family)
+    }
 
-    override def openDatagramChannel(): Channel = ???
+    override def openSocketChannel(): Channel = {
+        var family: ProtocolFamily = null
+        var ch: SocketChannel      = null
 
-    override def openDatagramChannel(family: SocketProtocolFamily): Channel = ???
+        try {
+            family = StandardProtocolFamily.INET6
+            ch = selectorProvider.openSocketChannel(family)
+        } catch {
+            case unsupportedOperationException: UnsupportedOperationException =>
+                family = StandardProtocolFamily.INET
+                ch = selectorProvider.openSocketChannel(family)
+        }
+        new NioSocketChannel(ch, family)
+    }
 
-    override def openFileChannel(): Channel = ???
+    override def openSocketChannel(family: ProtocolFamily): Channel = {
+        val ch = selectorProvider.openSocketChannel(family)
+        new NioSocketChannel(ch, family)
+    }
+
+    override def openDatagramChannel(): Channel = {
+        var family: ProtocolFamily = null
+        var ch: DatagramChannel    = null
+
+        try {
+            family = StandardProtocolFamily.INET6
+            ch = selectorProvider.openDatagramChannel(family)
+        } catch {
+            case unsupportedOperationException: UnsupportedOperationException =>
+                family = StandardProtocolFamily.INET
+                ch = selectorProvider.openDatagramChannel(family)
+        }
+
+        new NioDatagramChannel(ch, family)
+    }
+
+    override def openDatagramChannel(family: SocketProtocolFamily): Channel = {
+        val ch = selectorProvider.openDatagramChannel(family)
+        new NioDatagramChannel(ch, family)
+    }
+
+    override def openFileChannel(): Channel = new NioFileChannel()
 
     override def openIoHandler(): IoHandler = ???
 

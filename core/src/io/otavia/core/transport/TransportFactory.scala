@@ -24,6 +24,7 @@ import io.otavia.core.transport.nio.NIOTransportServiceProvider
 import io.otavia.core.transport.spi.TransportServiceProvider
 import io.otavia.core.util.Report
 
+import java.net.ProtocolFamily
 import java.security.{AccessController, PrivilegedAction}
 import java.util.ServiceLoader
 import scala.collection.mutable
@@ -33,7 +34,11 @@ abstract class TransportFactory() {
 
     def openServerSocketChannel(): Channel
 
+    def openServerSocketChannel(family: ProtocolFamily): Channel
+
     def openSocketChannel(): Channel
+
+    def openSocketChannel(family: ProtocolFamily): Channel
 
     def openDatagramChannel(): Channel
 

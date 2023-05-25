@@ -27,14 +27,18 @@ import io.otavia.core.stack.ChannelReplyFuture
 import java.io.File
 import java.net.SocketAddress
 import java.nio.channels.FileChannel
-import java.nio.file.{Path, StandardOpenOption}
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path, StandardOpenOption}
+import scala.jdk.CollectionConverters.*
 import scala.language.unsafeNulls
 
-class NioFileChannel(private val ch: FileChannel) extends AbstractFileChannel {
+class NioFileChannel() extends AbstractFileChannel {
 
-    def this(file: File) = this(FileChannel.open(file.toPath, StandardOpenOption.READ))
+    private var ch: FileChannel = _
 
-    def this(path: Path) = this(FileChannel.open(path, StandardOpenOption.READ))
+    def doOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = {
+        ch = FileChannel.open(path, options.toSet.asJava, attrs: _*)
+    }
 
     private def javaChannel: FileChannel = ch
 
