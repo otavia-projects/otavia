@@ -156,7 +156,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     @throws[Exception]
     protected def init(channel: Channel): Unit
 
-    protected def newFileChannel(): Channel
+    final protected def newFileChannel(): Channel = system.channelFactory.openFileChannel()
 
     protected def openFileChannel(
         path: Path,

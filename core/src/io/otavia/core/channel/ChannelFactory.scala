@@ -19,11 +19,17 @@ package io.otavia.core.channel
 import io.otavia.core.channel.socket.SocketProtocolFamily
 import io.otavia.core.transport.TransportFactory
 
+import java.net.ProtocolFamily
+
 class ChannelFactory(val transportFactory: TransportFactory) {
 
     def openServerSocketChannel(): Channel = transportFactory.openServerSocketChannel()
 
+    def openServerSocketChannel(family: ProtocolFamily): Channel = transportFactory.openServerSocketChannel(family)
+
     def openSocketChannel(): Channel = transportFactory.openSocketChannel()
+
+    def openSocketChannel(family: ProtocolFamily): Channel = transportFactory.openSocketChannel(family)
 
     def openDatagramChannel(): Channel = transportFactory.openDatagramChannel()
 

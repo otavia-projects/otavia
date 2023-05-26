@@ -21,16 +21,27 @@ import io.otavia.core.channel.ChannelOutboundInvoker
 import java.nio.channels.FileChannel
 
 /** [[ReadPlan]] is a trait usage by [[ChannelOutboundInvoker.read]] to describe how to read data read from a channel */
-trait ReadPlan
+trait ReadPlan {
 
-/** Read file channel from [[position]] with [[length]]， See also [[FileChannel]].
- *
- *  @param position
- *    If position is [[None]], bytes are read starting at this channel's current file position, and then the file
- *    position is updated with the number of bytes actually read. If [[position]] is not [[None]], then set the file
- *    current position to [[position]] and then read starting at this channel's current file position, and then the file
- *    position is updated with the number of bytes actually read.
- *  @param length
- *    Length of data want to read.
- */
-case class FileRead(length: Int = 4096, position: Option[Long] = None) extends ReadPlan
+    /** Guess the capacity for the next receive buffer size that is probably large enough to read all inbound data and
+     *  small enough not to waste its space.
+     */
+    def estimatedNextSize: Int
+
+    /** Notify the [[ReadHandle]] of the last read operation and its result.
+     *
+     *  @param attemptedBytesRead
+     *    The number of bytes the read operation did attempt to read.
+     *  @param actualBytesRead
+     *    The number of bytes from the previous read operation. This may be negative if a read error occurs.
+     *  @param numMessagesRead
+     *    The number of messages read.
+     *  @return
+     *    true if the read loop should continue reading, false otherwise.
+     */
+    def lastRead(attemptedBytesRead: Int, actualBytesRead: Int, numMessagesRead: Int): Boolean
+
+    /** Method that must be called once the read loop was completed. */
+    def readComplete(): Unit
+
+}
