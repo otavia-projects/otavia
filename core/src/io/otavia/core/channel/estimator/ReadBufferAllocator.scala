@@ -34,10 +34,10 @@ object ReadBufferAllocator {
      *  @return
      *    a [[ReadBufferAllocator]].
      */
-    def exact(numBytes: Int): ReadBufferAllocator = (allocator: BufferAllocator, estimatedCapacity: Int) => {
-        val buffer = allocator.allocate()
-        if (numBytes != buffer.writableBytes) ??? else buffer
-    }
+//    def exact(numBytes: Int): ReadBufferAllocator = (allocator: BufferAllocator, estimatedCapacity: Int) => {
+//        val buffer = allocator.allocate()
+//        if (numBytes != buffer.writableBytes) ??? else buffer
+//    }
 }
 
 trait ReadBufferAllocator extends ReadPlan {

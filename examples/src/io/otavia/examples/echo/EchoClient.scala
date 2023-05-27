@@ -16,7 +16,7 @@
 
 package io.otavia.examples.echo
 
-import io.otavia.core.actor.ClientChannelsActor
+import io.otavia.core.actor.SocketChannelsActor
 
 object EchoClient {
     def main(args: Array[String]): Unit = {}

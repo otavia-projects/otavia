@@ -17,7 +17,7 @@
 package io.otavia.core.actor
 
 import io.otavia.core.actor.ChannelsActor.{Connect, ConnectReply, RegisterWaitState}
-import io.otavia.core.actor.ClientChannelsActor.ConnectWaitState
+import io.otavia.core.actor.SocketChannelsActor.ConnectWaitState
 import io.otavia.core.channel.Channel
 import io.otavia.core.message.*
 import io.otavia.core.reactor.Reactor
@@ -26,7 +26,7 @@ import io.otavia.core.stack.*
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 
-abstract class ClientChannelsActor[M <: Call] extends ChannelsActor[M] {
+abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
 
     protected def connect(host: String, port: Int): Unit = connect(InetSocketAddress.createUnresolved(host, port).nn)
 
@@ -76,7 +76,7 @@ abstract class ClientChannelsActor[M <: Call] extends ChannelsActor[M] {
 
 }
 
-object ClientChannelsActor {
+object SocketChannelsActor {
 
     final class ConnectWaitState extends StackState {
         val connectFuture: ChannelFuture = ChannelFuture()
