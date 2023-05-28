@@ -37,7 +37,7 @@ object StackState {
     }
 
     class FutureState[R <: Reply : ClassTag] extends StackState {
-        val replyType = classTag[R]
+        val replyType: ClassTag[R] = classTag[R]
         val future: ReplyFuture[R] = ReplyFuture()
     }
 

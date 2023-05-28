@@ -246,6 +246,7 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
                     askStack.recycle()
         } catch {
             case cause: Throwable =>
+                cause.printStackTrace()
                 askStack.`throw`(ExceptionMessage(cause)) // completed stack with Exception
                 recycleUncompletedPromise(askStack.uncompletedIterator())
                 askStack.recycle()

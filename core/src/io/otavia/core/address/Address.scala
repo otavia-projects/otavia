@@ -18,6 +18,7 @@ package io.otavia.core.address
 
 import io.otavia.core.actor.{AbstractActor, Actor}
 import io.otavia.core.message.*
+import io.otavia.core.stack.StackState.FutureState
 import io.otavia.core.stack.{AskStack, ReplyFuture}
 
 /** Address is the facade of an actor. Actors cannot call each other directly, only send messages to the actor via its
@@ -49,6 +50,12 @@ trait Address[-M <: Call] extends EventableAddress {
     def ask[A <: M & Ask[? <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using
         sender: AbstractActor[?]
     ): ReplyFuture[ReplyOf[A]]
+
+    final def ask[A <: M & Ask[? <: Reply]](ask: A)(using sender: AbstractActor[?]): FutureState[ReplyOf[A]] = {
+        val state = new FutureState[ReplyOf[A]]
+        this.ask(ask, state.future)
+        state
+    }
 
     /** send ask message to this address, and set [[timeout]] milliseconds to get the respect [[Reply]], otherwise the
      *  [[ReplyFuture]] will set [[scala.concurrent.TimeoutException]].

@@ -73,6 +73,8 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
         // default do nothing
     }
 
+    override def continueAsk(stack: AskStack[Bind]): Option[StackState] = bind(stack)
+
     override def continueChannel(stack: ChannelStack[AnyRef]): Option[StackState] = {
         stack match
             case _: ChannelStack[?] if stack.message.isInstanceOf[Channel] =>

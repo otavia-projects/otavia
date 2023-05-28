@@ -39,6 +39,8 @@ abstract class AbstractChannel extends DefaultAttributeMap, Channel, ChannelStat
 
     private var actor: ChannelsActor[?] | Null = _
 
+    private var pipe: ChannelPipeline = _
+
     // initial channel state on constructing
     created = true
     registering = false
@@ -71,10 +73,11 @@ abstract class AbstractChannel extends DefaultAttributeMap, Channel, ChannelStat
         actor = channelsActor
         logger = Logger.getLogger(getClass, system)
         channelId = executor.generateChannelId()
+        pipe = newChannelPipeline()
         mounted = true
     }
 
-    override val pipeline: ChannelPipeline = newChannelPipeline()
+    override def pipeline: ChannelPipeline = pipe
 
     /** Returns a new [[ChannelPipeline]] instance. */
     private def newChannelPipeline(): ChannelPipeline = new OtaviaChannelPipeline(this)

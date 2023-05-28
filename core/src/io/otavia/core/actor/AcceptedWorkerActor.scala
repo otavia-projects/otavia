@@ -26,6 +26,8 @@ import scala.reflect.{ClassTag, classTag}
 
 abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | AcceptedChannel] {
 
+    override protected def newChannel(): Channel = throw new UnsupportedOperationException()
+
     /** handle [[AcceptedChannel]] message, this method will called by [[continueAsk]] */
     final protected def handleAccepted(stack: AskStack[AcceptedChannel]): Option[StackState] = {
         stack.stackState match
