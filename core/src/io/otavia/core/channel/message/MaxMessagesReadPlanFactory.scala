@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel.message
 
-import io.otavia.core.channel.Channel
+import io.otavia.core.channel.{Channel, ServerChannel}
 
 /** Base implementation of [[ReadPlanFactory]] which allows to limit the number of messages read per read loop. */
 abstract class MaxMessagesReadPlanFactory(private val maxMessagesPerRead: Int) extends ReadPlanFactory {
@@ -60,4 +60,16 @@ object MaxMessagesReadPlanFactory {
         override def readComplete(): Unit = totalMessages = 0
 
     }
+
+    /** [[MaxMessagesReadPlanFactory]] implementation which should be used for[[ServerChannel]]s. */
+    class ServerChannelReadPlanFactory(maxMessagesPerRead: Int = 16)
+        extends MaxMessagesReadPlanFactory(maxMessagesPerRead) {
+        override protected def newMaxMessagePlan(maxMessagesPerRead: Int): MaxMessageReadPlan =
+            new MaxMessageReadPlan(maxMessagesPerRead) {
+
+                override def estimatedNextSize: Int = 128
+
+            }
+    }
+
 }
