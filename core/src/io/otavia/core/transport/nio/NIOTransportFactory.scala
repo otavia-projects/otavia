@@ -18,10 +18,11 @@ package io.otavia.core.transport.nio
 
 import io.otavia.core.channel.Channel
 import io.otavia.core.channel.socket.SocketProtocolFamily
-import io.otavia.core.reactor.IoHandler
+import io.otavia.core.reactor.{DefaultSelectStrategy, IoHandler}
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.transport.TransportFactory
 import io.otavia.core.transport.nio.channel.{NioDatagramChannel, NioFileChannel, NioServerSocketChannel, NioSocketChannel}
+import io.otavia.core.transport.reactor.NioHandler
 import sun.nio.ch.Net
 
 import java.net.{ProtocolFamily, StandardProtocolFamily}
@@ -97,6 +98,6 @@ class NIOTransportFactory() extends TransportFactory {
 
     override def openFileChannel(): Channel = new NioFileChannel()
 
-    override def openIoHandler(): IoHandler = ???
+    override def openIoHandler(): IoHandler = new NioHandler(selectorProvider, DefaultSelectStrategy)
 
 }

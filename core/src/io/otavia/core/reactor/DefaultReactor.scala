@@ -16,33 +16,32 @@
 
 package io.otavia.core.reactor
 
-import io.netty5.util.HashedWheelTimer
-import io.netty5.util.internal.shaded.org.jctools.queues.MpscChunkedArrayQueue
 import io.otavia.core.channel.Channel
-import io.otavia.core.slf4a.Logger
+import io.otavia.core.reactor.DefaultReactor.ST_NOT_STARTED
 import io.otavia.core.reactor.Reactor.DEFAULT_MAX_TASKS_PER_RUN
-import io.otavia.core.reactor.ReactorImpl.ST_NOT_STARTED
+import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.ActorSystem
+import io.otavia.core.transport.TransportFactory
 
-import java.util.concurrent.{ConcurrentHashMap, ThreadFactory}
+import java.util.concurrent.ConcurrentLinkedQueue
 import scala.language.unsafeNulls
 
-final class ReactorImpl(
-    private[core] val system: ActorSystem,
-    private[core] val ioHandlerFactory: IoHandlerFactory,
-    private[core] val maxTasksPerRun: Int = DEFAULT_MAX_TASKS_PER_RUN
+class DefaultReactor(
+    val system: ActorSystem,
+    val transportFactory: TransportFactory,
+    val maxTasksPerRun: Int = DEFAULT_MAX_TASKS_PER_RUN
 ) extends Reactor {
 
-    protected val logger: Logger = Logger.getLogger(getClass, system)
+    private val logger: Logger = Logger.getLogger(getClass, system)
 
-    private val registerQueue   = new MpscChunkedArrayQueue[Channel](10240)
-    private val deregisterQueue = new MpscChunkedArrayQueue[Channel](10240)
+    private val registerQueue   = new ConcurrentLinkedQueue[Channel]() // new MpscChunkedArrayQueue[Channel](10240)
+    private val deregisterQueue = new ConcurrentLinkedQueue[Channel]() // new MpscChunkedArrayQueue[Channel](10240)
 
     private val executor              = LoopExecutor()
-    private var thread: Thread | Null = null
+    private var thread: Thread | Null = _
 
     private val ioHandler: IoHandler = {
-        val handler = ioHandlerFactory.newHandler
+        val handler = transportFactory.openIoHandler()
         handler.setSystem(system)
         handler
     }
@@ -57,7 +56,7 @@ final class ReactorImpl(
 
     }
 
-    @volatile private val state = ST_NOT_STARTED
+    @volatile private var state = ST_NOT_STARTED
 
     override def register(channel: Channel): Unit = {
         registerQueue.add(channel)
@@ -119,7 +118,7 @@ final class ReactorImpl(
 
 }
 
-object ReactorImpl {
+object DefaultReactor {
 
     private val ST_NOT_STARTED   = 1
     private val ST_STARTED       = 2

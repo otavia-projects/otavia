@@ -23,8 +23,8 @@ import io.otavia.core.address.*
 import io.otavia.core.channel.ChannelFactory
 import io.otavia.core.ioc.{BeanDefinition, BeanManager, Module}
 import io.otavia.core.message.{Call, IdAllocator}
-import io.otavia.core.reactor.BlockTaskExecutor
 import io.otavia.core.reactor.aio.Submitter
+import io.otavia.core.reactor.{BlockTaskExecutor, DefaultReactor}
 import io.otavia.core.slf4a.{LogLevel, Logger}
 import io.otavia.core.system.monitor.{ReactorMonitor, SystemMonitor, SystemMonitorTask, ThreadMonitor}
 import io.otavia.core.timer.{Timeout, Timer, TimerImpl}
@@ -67,11 +67,6 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     private val timerExecutor = new TimerImpl(this)
 
-    private val logLvl: LogLevel = SystemPropertyUtil
-        .get("io.otavia.actor.log.level")
-        .map(str => LogLevel.valueOf(str.trim.toUpperCase))
-        .getOrElse(LogLevel.INFO)
-
     private var mainActor: Address[MainActor.Args] = _
 
     private val direct = BufferAllocator.directPageAllocator
@@ -106,6 +101,10 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
         println("\n")
     }
 
+    private val defaultReactor = new DefaultReactor(this, transFactory)
+
+    private val gcTime = new AtomicLong(System.currentTimeMillis())
+
     inited = true
 
     loadEarlyModules()
@@ -121,7 +120,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     override def pool: ActorThreadPool = actorThreadPool
 
-    override private[core] def reactor = ???
+    override private[core] def reactor = defaultReactor
 
     override def timer: Timer = timerExecutor
 
@@ -134,8 +133,6 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     override def directAllocator: BufferAllocator = direct
 
     override def headAllocator: BufferAllocator = heap
-
-    override def logLevel: LogLevel = logLvl
 
     override def shutdown(): Unit = ???
 
@@ -281,7 +278,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     }
 
     override def channelFactory: ChannelFactory = chFactory
-    
+
     override def isBusy: Boolean = busy
 
     private def calculateBusy(): Unit = {
@@ -289,6 +286,15 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
         if (usage.getUsed.toFloat / usage.getMax.toFloat > 0.90 && usage.getMax - usage.getUsed < 100 * 1024 * 1024)
             busy = true
         else busy = false
+    }
+
+    override private[core] def gc(): Unit = {
+        val now  = System.currentTimeMillis()
+        val last = gcTime.get()
+        if (now - last > 1000 && gcTime.compareAndSet(last, now)) {
+            System.gc()
+            println(s"${Thread.currentThread()} GC")
+        }
     }
 
 }

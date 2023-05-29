@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel.internal
 
-import io.netty5.util.concurrent.FastThreadLocal
+import io.otavia.core.cache.ActorThreadLocal
 import io.otavia.core.channel.ChannelHandler
 
 import scala.collection.mutable
@@ -66,20 +66,35 @@ object ChannelHandlerMask {
             MASK_READ | MASK_WRITE | MASK_FLUSH | MASK_SEND_OUTBOUND_EVENT | MASK_PENDING_OUTBOUND_BYTES |
             MASK_WRITE_ID | MASK_OPEN
 
-    private val MASKS = new FastThreadLocal[mutable.HashMap[Class[? <: ChannelHandler], Int]] {
-        override def initialValue(): mutable.HashMap[Class[? <: ChannelHandler], Int] = mutable.HashMap.empty
+    private val MASKS = new ActorThreadLocal[mutable.HashMap[Class[? <: ChannelHandler], Int]] {
+        override protected def initialValue(): mutable.HashMap[Class[_ <: ChannelHandler], Int] = mutable.HashMap.empty
     }
 
     def mask(clazz: Class[? <: ChannelHandler]): Int = {
-        ???
+        // Try to obtain the mask from the cache first. If this fails calculate it and put it in the cache for fast
+        // lookup in the future.
+        val map       = MASKS.get()
+        var mask: Int = 0
+        if (!map.contains(clazz)) {
+            mask = mask0(clazz)
+            map.put(clazz, mask)
+        } else mask = map(clazz)
+
+        mask
     }
-    private def mask0(handlerType: Class[? <: ChannelHandler]): Int = ???
+
+    private def mask0(handlerType: Class[? <: ChannelHandler]): Int = {
+        var mask = MASK_ALL_INBOUND | MASK_ALL_OUTBOUND
+
+        mask
+    }
 
     private[core] def isInbound(clazz: Class[? <: ChannelHandler]) = (mask(clazz) & MASK_ALL_INBOUND) != 0
 
     private[core] def isOutbound(clazz: Class[? <: ChannelHandler]) = (mask(clazz) & MASK_ALL_OUTBOUND) != 0
 
     private def isSkippable(handlerType: Class[?], methodName: String, paramTypes: Class[?]*): Boolean = {
+
         ???
     }
 

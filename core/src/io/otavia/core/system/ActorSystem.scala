@@ -67,12 +67,6 @@ trait ActorSystem {
     /** A [[BufferAllocator]] which allocate heap memory. */
     def headAllocator: BufferAllocator
 
-    /** log level for actor log system
-     *
-     *  ALL 7 > TRACE 6 > DEBUG 5 > INFO 4 > WARN 3 > ERROR 2 > FATAL 1 > OFF 0
-     */
-    def logLevel: LogLevel
-
     def shutdown(): Unit
 
     def defaultMaxFetchPerRunning: Int
@@ -127,6 +121,8 @@ trait ActorSystem {
     def monitor(): SystemMonitor
 
     def isBusy: Boolean
+
+    private[core] def gc(): Unit
 
 }
 

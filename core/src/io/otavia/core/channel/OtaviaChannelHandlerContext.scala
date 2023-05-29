@@ -342,7 +342,7 @@ final class OtaviaChannelHandlerContext(
 
     override def read(): this.type = {
         val ctx = findContextOutbound(ChannelHandlerMask.MASK_READ)
-        ctx.invokeRead(OtaviaChannelPipeline.DEFAULT_READ_BUFFER_ALLOCATOR)
+        ctx.invokeRead(OtaviaChannelPipeline.DEFAULT_READ_PLAN)
         this
     }
 

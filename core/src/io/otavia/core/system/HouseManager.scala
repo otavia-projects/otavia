@@ -16,6 +16,7 @@
 
 package io.otavia.core.system
 
+import io.otavia.core.actor.Actor
 import io.otavia.core.message.Event
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.HouseManager.*
@@ -44,6 +45,10 @@ class HouseManager(val thread: ActorThread) {
     private var actorTimes: Long = 0
 
     @volatile private var runningStart: Long = Long.MaxValue
+
+    private var currentRunning: Actor[?] = _
+
+    private[core] def currentRunningActor: Actor[?] = currentRunning
 
     def mount(house: ActorHouse): Unit = {
         mountingQueue.enqueue(house)
@@ -104,7 +109,9 @@ class HouseManager(val thread: ActorThread) {
             logger.trace(s"${thread.getName} mounting size ${mountingQueue.readies}")
             val house = mountingQueue.dequeue()
             if (house != null) {
+                currentRunning = house.actor
                 house.doMount()
+                currentRunning = null
                 success = true
             }
         }
@@ -117,7 +124,9 @@ class HouseManager(val thread: ActorThread) {
     final private def run0(houseQueue: HouseQueue): Boolean = {
         val house = houseQueue.dequeue()
         if (house != null) {
+            currentRunning = house.actor
             house.run()
+            currentRunning = null
             true
         } else false
     }

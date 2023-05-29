@@ -52,7 +52,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 
     def houseManager: HouseManager = manager
 
-    private[core] def currentRunningActor(): Actor[?] = ???
+    private[core] def currentRunningActor(): Actor[?] = manager.currentRunningActor
 
     def laterTasks: mutable.ArrayDeque[Runnable] = channelLaterTasks
 
@@ -136,9 +136,8 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
                 this.suspendThread(20)
                 status = ST_RUNNING
                 if (currentNanoTime - spinStart > 1000 * 1000 * 1000 && !gc) {
-                    System.gc()
+                    system.gc()
                     gc = true
-                    println(s"$getName GC")
                 }
             }
         }

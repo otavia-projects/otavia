@@ -25,9 +25,11 @@ import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import io.otavia.core.channel.OtaviaChannelPipeline.*
 import io.otavia.core.channel.estimator.MessageSizeEstimator
-import io.otavia.core.channel.message.ReadPlan
+import io.otavia.core.channel.message.FixedReadPlanFactory.FixedReadPlan
+import io.otavia.core.channel.message.{FixedReadPlanFactory, ReadPlan}
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.stack.{ChannelFuture, ChannelPromise}
+import io.otavia.core.system.ActorSystem
 import io.otavia.core.util.ClassUtils
 
 import java.net.SocketAddress
@@ -917,8 +919,7 @@ object OtaviaChannelPipeline {
     private val HEAD_HANDLER = new HeadHandler
     private val TAIL_HANDLER = new TailHandler
 
-    final val DEFAULT_READ_BUFFER_ALLOCATOR: ReadPlan = ???
-//        (allocator: BufferAllocator, estimatedCapacity: Int) => allocator.allocate(estimatedCapacity).nn
+    final val DEFAULT_READ_PLAN: ReadPlan = new FixedReadPlan(Int.MaxValue, 4096)
 
     private def generateName0(handlerType: Class[?]) = ClassUtils.simpleClassName(handlerType) + "#0"
 
