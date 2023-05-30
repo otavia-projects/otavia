@@ -16,7 +16,7 @@
 
 package io.otavia.core.stack
 
-import io.otavia.core.actor.ChannelsActor
+import io.otavia.core.actor.{AbstractActor, ChannelsActor}
 import io.otavia.core.channel.Channel
 import io.otavia.core.timer.Timer
 
@@ -24,6 +24,7 @@ import scala.collection.mutable
 import scala.language.unsafeNulls
 
 trait ChannelFuture extends Future[Channel] {
+
     override private[core] def promise: ChannelPromise = this.asInstanceOf[ChannelPromise]
 
 }

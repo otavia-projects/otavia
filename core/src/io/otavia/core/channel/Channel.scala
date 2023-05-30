@@ -24,13 +24,14 @@ import io.otavia.core.address.ActorAddress
 import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.reactor.Reactor
 import io.otavia.core.stack.ChannelFuture
+import io.otavia.core.system.ActorSystem
 import io.otavia.core.timer.Timer
 
 import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 
-trait Channel extends ChannelInflight, EventHandle {
+trait Channel extends ChannelInflight, EventHandle, ChannelAddress {
 
     /** Unique id of this channel */
     def id: Int
@@ -38,6 +39,9 @@ trait Channel extends ChannelInflight, EventHandle {
     /** Executor of this channel instance, the channel inbound and outbound event must execute in the binding executor
      */
     def executor: ChannelsActor[?]
+
+    /** The [[ActorSystem]] of this [[Channel]] is created. */
+    final def system: ActorSystem = executor.system
 
     /** Set executor of this channel, this method will mount this [[Channel]] to the [[ChannelsActor]].
      *  @param channelsActor
@@ -170,54 +174,58 @@ trait Channel extends ChannelInflight, EventHandle {
 
     final def headAllocator: BufferAllocator = executor.system.headAllocator
 
-    // impl ChannelOutboundInvoker
-    override def bind(local: SocketAddress, future: ChannelFuture): ChannelFuture = pipeline.bind(local, future)
+//    // impl ChannelOutboundInvoker
+//    override def bind(local: SocketAddress, future: ChannelFuture): ChannelFuture = {
+//        // TODO: attachStack
+//        // executor.attachStack(executor.idAllocator.generate, future)
+//        pipeline.bind(local, future)
+//    }
+//
+//    override def connect(remote: SocketAddress, local: Option[SocketAddress], future: ChannelFuture): ChannelFuture =
+//        pipeline.connect(remote, local, future)
+//
+//    override def open(
+//        path: Path,
+//        options: Seq[OpenOption],
+//        attrs: Seq[FileAttribute[?]],
+//        future: ChannelFuture
+//    ): ChannelFuture = pipeline.open(path, options, attrs, future)
+//
+//    override def disconnect(future: ChannelFuture): ChannelFuture = pipeline.disconnect(future)
+//
+//    override def close(future: ChannelFuture): ChannelFuture = pipeline.close(future)
+//
+//    override def shutdown(direction: ChannelShutdownDirection, future: ChannelFuture): ChannelFuture =
+//        pipeline.shutdown(direction, future)
+//
+//    override def register(future: ChannelFuture): ChannelFuture = pipeline.register(future)
+//
+//    override def deregister(future: ChannelFuture): ChannelFuture = pipeline.deregister(future)
+//
+//    final override def read(readPlan: ReadPlan): this.type = {
+//        pipeline.read(readPlan)
+//        this
+//    }
+//
+//    override def read(): this.type = {
+//        pipeline.read()
+//        this
+//    }
+//
+    final def write(msg: AnyRef): Unit = pipeline.write(msg)
 
-    override def connect(remote: SocketAddress, local: Option[SocketAddress], future: ChannelFuture): ChannelFuture =
-        pipeline.connect(remote, local, future)
+    final def write(msg: AnyRef, msgId: Long): Unit = pipeline.write(msg, msgId)
 
-    override def open(
-        path: Path,
-        options: Seq[OpenOption],
-        attrs: Seq[FileAttribute[?]],
-        future: ChannelFuture
-    ): ChannelFuture = pipeline.open(path, options, attrs, future)
+    final def writeAndFlush(msg: AnyRef): Unit = pipeline.writeAndFlush(msg)
 
-    override def disconnect(future: ChannelFuture): ChannelFuture = pipeline.disconnect(future)
+    final def writeAndFlush(msg: AnyRef, msgId: Long): Unit = pipeline.writeAndFlush(msg, msgId)
 
-    override def close(future: ChannelFuture): ChannelFuture = pipeline.close(future)
-
-    override def shutdown(direction: ChannelShutdownDirection, future: ChannelFuture): ChannelFuture =
-        pipeline.shutdown(direction, future)
-
-    override def register(future: ChannelFuture): ChannelFuture = pipeline.register(future)
-
-    override def deregister(future: ChannelFuture): ChannelFuture = pipeline.deregister(future)
-
-    final override def read(readPlan: ReadPlan): this.type = {
-        pipeline.read(readPlan)
-        this
-    }
-
-    override def read(): this.type = {
-        pipeline.read()
-        this
-    }
-
-    final override def write(msg: AnyRef): Unit = pipeline.write(msg)
-
-    final override def write(msg: AnyRef, msgId: Long): Unit = pipeline.write(msg, msgId)
-
-    final override def writeAndFlush(msg: AnyRef): Unit = pipeline.writeAndFlush(msg)
-
-    final override def writeAndFlush(msg: AnyRef, msgId: Long): Unit = pipeline.writeAndFlush(msg, msgId)
-
-    final override def flush(): this.type = {
+    final def flush(): this.type = {
         pipeline.flush()
         this
     }
 
-    final override def sendOutboundEvent(event: AnyRef): Unit = pipeline.sendOutboundEvent(event)
+    final def sendOutboundEvent(event: AnyRef): Unit = pipeline.sendOutboundEvent(event)
 
     final def assertExecutor(): Unit =
         assert(executor.inExecutor(), "method must be called in ChannelsActor which this channel registered!")

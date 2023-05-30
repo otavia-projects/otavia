@@ -18,7 +18,7 @@ package io.otavia.core.actor
 
 import io.otavia.core.actor.AcceptorActor.AcceptedChannel
 import io.otavia.core.actor.ChannelsActor.RegisterWaitState
-import io.otavia.core.channel.Channel
+import io.otavia.core.channel.{Channel, ChannelAddress}
 import io.otavia.core.message.*
 import io.otavia.core.stack.{AskStack, StackState}
 
@@ -44,7 +44,7 @@ abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | Accepted
                 }
     }
 
-    protected def afterAccepted(channel: Channel): Unit = {
+    protected def afterAccepted(channel: ChannelAddress): Unit = {
         // default, do nothing
     }
 

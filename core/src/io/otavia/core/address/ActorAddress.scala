@@ -18,7 +18,6 @@ package io.otavia.core.address
 
 import io.otavia.core.actor.{Actor, StateActor}
 import io.otavia.core.message.{Ask, Call, Message, Notice, Reply}
-import io.otavia.core.stack.ReplyWaiter
 import io.otavia.core.system.ActorHouse
 
 /** Actor physical address

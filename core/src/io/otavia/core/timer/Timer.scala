@@ -17,7 +17,7 @@
 package io.otavia.core.timer
 
 import io.netty5.util.{Timeout, TimerTask}
-import io.otavia.core.actor.Actor
+import io.otavia.core.actor.{AbstractActor, Actor}
 import io.otavia.core.address.{Address, EventableAddress}
 import io.otavia.core.cache.{ResourceTimer, TimeoutResource}
 import io.otavia.core.channel.Channel
@@ -28,7 +28,8 @@ import io.otavia.core.system.monitor.TimerMonitor
 import io.otavia.core.timer.Timer.*
 
 import java.util.Date
-import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
+import java.util.concurrent.ConcurrentHashMap
+import scala.concurrent.duration.TimeUnit
 
 /** [[Timer]] can generate timeout event. */
 trait Timer {
@@ -96,6 +97,8 @@ trait Timer {
      *    Register id of ReactorTimerTask, Actor can use this id to cancel this trigger by cancelTimerTask.
      */
     private[core] def registerAskTimeout(trigger: TimeoutTrigger, sender: EventableAddress, askId: Long): Long
+
+//    def askTimeout(delay: Long, unit: TimeUnit)(sender: AbstractActor[?])
 
     /** Update an existed [[TimeoutTrigger]].
      *  @param trigger

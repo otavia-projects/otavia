@@ -24,7 +24,7 @@ import io.otavia.core.message.ReactorEvent
 import io.otavia.core.stack.*
 //import io.otavia.core.channel.impl.NioServerSocketChannel
 import io.otavia.core.message.*
-import io.otavia.core.stack.{ChannelFrame, ExceptionWaiter, ReplyWaiter, StackState}
+import io.otavia.core.stack.{ChannelFrame, StackState}
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 import scala.runtime.Nothing$
@@ -99,7 +99,7 @@ object AcceptorActor {
         override def newActor(): W
     }
 
-    final case class AcceptedChannel(channel: Channel) extends Ask[UnitReply]
+    final case class AcceptedChannel(channel: ChannelAddress) extends Ask[UnitReply]
 
     private class AcceptorHandler extends ChannelHandler {
         override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
@@ -109,7 +109,7 @@ object AcceptorActor {
         }
     }
 
-    final class DispatchState extends StackState {
+    private final class DispatchState extends StackState {
 
         val dispatchFuture: ReplyFuture[UnitReply] = ReplyFuture[UnitReply]()
 
@@ -117,7 +117,7 @@ object AcceptorActor {
 
     }
 
-    final class BindState extends StackState {
+    private final class BindState extends StackState {
         val bindFuture: ChannelFuture = ChannelFuture()
     }
 

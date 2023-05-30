@@ -120,7 +120,8 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
      *       [[ReactorEvent.RegisterReply]] event to this actor, then the [[afterChannelRegisterReplyEvent]] will be
      *       called to handle the register result [[Event]].
      */
-    final protected def initAndRegister(channel: Channel, stack: AskStack[?]): Option[StackState] = {
+    final protected def initAndRegister(channelAddress: ChannelAddress, stack: AskStack[?]): Option[StackState] = {
+        val channel = channelAddress.asInstanceOf[Channel]
         Try {
             init(channel)
         } match {
@@ -137,7 +138,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
     /** Create a new channel and set executor and init it. */
     @throws[Exception]
-    final protected def newChannelAndInit(): Channel = {
+    final protected def newChannelAndInit(): ChannelAddress = {
         val channel = newChannel()
         channel.mount(this)
         try {

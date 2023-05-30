@@ -21,7 +21,7 @@ import io.otavia.core.stack.{ChannelFuture, ChannelReplyFuture, DefaultFuture, F
 
 import java.net.SocketAddress
 
-trait ChannelInflight extends ChannelOutboundInvoker {
+trait ChannelInflight {
 
     /** Inbound message barrier function */
     def inboundMessageBarrier: AnyRef => Boolean

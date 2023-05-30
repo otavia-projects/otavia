@@ -19,7 +19,7 @@ package io.otavia.core.address
 import io.otavia.core.actor.{AbstractActor, Actor, ChannelsActor, StateActor}
 import io.otavia.core.message.*
 import io.otavia.core.slf4a.Appender
-import io.otavia.core.stack.{ReplyFuture, ReplyWaiter}
+import io.otavia.core.stack.ReplyFuture
 import io.otavia.core.system.{ActorHouse, House}
 import io.otavia.core.timer.TimeoutTrigger
 

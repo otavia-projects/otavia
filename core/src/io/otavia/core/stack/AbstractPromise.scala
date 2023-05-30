@@ -16,13 +16,18 @@
 
 package io.otavia.core.stack
 
-private[core] class ReplyWaiters {
-    val waiters: collection.mutable.HashMap[Long, ReplyWaiter[?]] = collection.mutable.HashMap.empty
+import io.otavia.core.cache.Poolable
 
-    def push(askId: Long, waiter: ReplyWaiter[?]): Unit = waiters.put(askId, waiter)
+/** An abstract class for [[Promise]] */
+abstract class AbstractPromise[V] extends Promise[V] with Poolable {
 
-    def pop(askId: Long): ReplyWaiter[?] = waiters.remove(askId).get
+    protected var stack: Stack = _
+    protected var aid: Long    = -1
 
-    def contains(id: Long): Boolean = waiters.contains(id)
+    final override def actorStack: Stack        = stack
+    final override def setStack(s: Stack): Unit = stack = s
+
+    final def id: Long              = aid
+    final def setId(id: Long): Unit = aid = id
 
 }
