@@ -18,16 +18,31 @@ package io.otavia.core.stack
 
 import io.otavia.core.cache.Poolable
 
+import scala.annotation.tailrec
+import scala.language.unsafeNulls
+
 /** An abstract class for [[Promise]] */
 abstract class AbstractPromise[V] extends Promise[V] with Poolable {
 
     protected var stack: Stack = _
     protected var aid: Long    = -1
 
+    /** Used by [[FutureDispatcher]], this class is see as Node in hashmap */
+    private[stack] var _next: AbstractPromise[?] = _
+    @tailrec
+    private[stack] final def findNode(id: Long): AbstractPromise[?] = {
+        if (id == aid) this else if (_next eq null) null else _next.findNode(id)
+    }
+
     final override def actorStack: Stack        = stack
     final override def setStack(s: Stack): Unit = stack = s
 
     final def id: Long              = aid
     final def setId(id: Long): Unit = aid = id
+
+    override protected def cleanInstance(): Unit = {
+        stack = null
+        aid = -1
+    }
 
 }

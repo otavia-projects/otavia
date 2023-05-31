@@ -35,25 +35,16 @@ object ReplyFuture {
     def apply[R <: Reply](): ReplyFuture[R] = ReplyPromise()
 }
 
-private[core] class ReplyPromise[R <: Reply] private () extends Promise[Reply] with ReplyFuture[R] {
+private[core] class ReplyPromise[R <: Reply] private () extends AbstractPromise[Reply] with ReplyFuture[R] {
 
-    private var stack: Stack         = _
-    private var aid: Long            = -1
     private var tid: Long            = Timer.INVALID_TIMEOUT_REGISTER_ID
     private var reply: Reply         = _
     private var throwable: Throwable = _
 
-    def setStack(s: Stack): Unit = stack = s
-
-    def actorStack: Stack = stack
-
-    def setAskId(id: Long): Unit = aid = id
-    def askId: Long              = aid
-
     def setTimeoutId(id: Long): Unit = tid = id
     def timeoutId: Long              = tid
 
-    override def future: Future[R] = this
+    override def future: ReplyFuture[R] = this
 
     override def isSuccess: Boolean = if (reply != null) true else false
 
@@ -78,11 +69,10 @@ private[core] class ReplyPromise[R <: Reply] private () extends Promise[Reply] w
     override def recycle(): Unit = ReplyPromise.promiseObjectPool.recycle(this)
 
     override protected def cleanInstance(): Unit = {
-        stack = null
-        aid = -1
         tid = Timer.INVALID_TIMEOUT_REGISTER_ID
         reply = null
         throwable = null
+        super.cleanInstance()
     }
 
     override def setSuccess(result: Reply): Promise[Reply] = {

@@ -30,7 +30,10 @@ import scala.concurrent.TimeoutException
 import scala.language.unsafeNulls
 import scala.reflect.ClassTag
 
-private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with ActorCoroutineRunner[M] {
+private[core] abstract class AbstractActor[M <: Call]
+    extends FutureDispatcher
+    with Actor[M]
+    with ActorCoroutineRunner[M] {
 
     protected var logger: Logger = _
 
@@ -82,14 +85,23 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
      *  @param future
      *    the reply message future for this ask message
      */
-    private[core] def attachStack(askId: Long, future: ReplyFuture[? <: Reply]): Unit = {
-        sendAsks += 1
-        val promise = future.promise
-        assert(promise.notInChain, "The ReplyFuture has been used, can't be use again!")
-        promise.setStack(currentStack)
-        promise.setAskId(askId)
-        currentStack.addUncompletedPromise(promise)
-        replyFutures.push(askId, promise)
+    private[core] def attachStack(askId: Long, future: Future[?]): Unit = {
+        future.promise match
+            case promise: ReplyPromise[? <: Reply] =>
+                sendAsks += 1
+                assert(promise.notInChain, "The ReplyFuture has been used, can't be use again!")
+                promise.setStack(currentStack)
+                promise.setId(askId)
+                currentStack.addUncompletedPromise(promise)
+                replyFutures.push(askId, promise)
+            case promise: TimeoutPromise =>
+                ???
+            case promise: AioPromise[?]       =>
+            case promise: BlockPromise[?]     =>
+            case promise: ChannelPromise      =>
+            case promise: ChannelReplyPromise =>
+            case promise: DefaultPromise[?]   =>
+            case _                            =>
     }
 
     /** Exception handler when this actor received notice message or resume notice stack frame
@@ -301,7 +313,7 @@ private[core] abstract class AbstractActor[M <: Call] extends Actor[M] with Acto
     private def recycleUncompletedPromise(uncompleted: Stack.UncompletedPromiseIterator): Unit = { // TODO: ChannelPromise
         while (uncompleted.hasNext) {
             val promise = uncompleted.nextCast[ReplyPromise[?]]()
-            replyFutures.remove(promise.askId)
+            replyFutures.remove(promise.id)
             promise.recycle()
         }
     }
