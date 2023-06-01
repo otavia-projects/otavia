@@ -28,17 +28,12 @@ object DefaultFuture {
     def apply[V](): DefaultFuture[V] = DefaultPromise()
 }
 
-class DefaultPromise[V] extends Promise[V] with DefaultFuture[V] {
+class DefaultPromise[V] extends AbstractPromise[V] with DefaultFuture[V] {
 
-    private var stack: Stack                  = _
     private var value: Any                    = _
     private var throwable: Throwable          = _
     private var completedFunc: () => Unit     = _
     private var downstream: DefaultPromise[V] = _
-
-    def setStack(s: Stack): Unit = stack = s
-
-    def actorStack: Stack = stack
 
     def isOnStack: Boolean = stack != null
 

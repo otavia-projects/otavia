@@ -39,9 +39,6 @@ private[core] abstract class AbstractActor[M <: Call]
 
     private var ctx: ActorContext = _
 
-    /** [[Reply]] message waiter */
-    private val replyFutures: ActorFutures = new ActorFutures()
-
     // current received msg
     private var currentReceived: Call | Reply | Seq[Call] = _
 
@@ -93,15 +90,36 @@ private[core] abstract class AbstractActor[M <: Call]
                 promise.setStack(currentStack)
                 promise.setId(askId)
                 currentStack.addUncompletedPromise(promise)
-                replyFutures.push(askId, promise)
-            case promise: TimeoutPromise =>
-                ???
+                this.push(promise)
+            case promise: TimeoutEventPromise =>
+                assert(promise.notInChain, "The TimeoutEventPromise has been used, can't be use again!")
+                promise.setStack(currentStack)
+                currentStack.addUncompletedPromise(promise)
+                this.push(promise)
+            case promise: ChannelPromise =>
+                assert(promise.notInChain, "The ChannelPromise has been used, can't be use again!")
+                promise.setStack(currentStack)
+                promise.setId(askId)
+                currentStack.addUncompletedPromise(promise)
+                this.push(promise)
             case promise: AioPromise[?]       =>
             case promise: BlockPromise[?]     =>
-            case promise: ChannelPromise      =>
             case promise: ChannelReplyPromise =>
             case promise: DefaultPromise[?]   =>
             case _                            =>
+    }
+
+    def receiveFuture(future: Future[?]): Unit = {
+        future match
+            case promise: DefaultPromise[?] =>
+//                val stack = promise.actorStack
+//                stack.addCompletedPromise(promise)
+//                currentStack = stack
+//                if (stack.stackState.resumable() || !stack.hasUncompletedPromise) resume()
+            case promise: ChannelPromise =>
+                ???
+            case promise: TimeoutEventPromise =>
+                ???
     }
 
     /** Exception handler when this actor received notice message or resume notice stack frame
@@ -313,7 +331,7 @@ private[core] abstract class AbstractActor[M <: Call]
     private def recycleUncompletedPromise(uncompleted: Stack.UncompletedPromiseIterator): Unit = { // TODO: ChannelPromise
         while (uncompleted.hasNext) {
             val promise = uncompleted.nextCast[ReplyPromise[?]]()
-            replyFutures.remove(promise.id)
+            this.pop(promise.id)
             promise.recycle()
         }
     }
@@ -326,15 +344,15 @@ private[core] abstract class AbstractActor[M <: Call]
     final private[core] def receiveReply(reply: Reply): Unit = {
         if (!reply.isBatch) {
             // reply future maybe has been recycled cause by time-out, or it stack has been throw an error.
-            if (replyFutures.contains(reply.replyId)) {
-                val promise = replyFutures.pop(reply.replyId)
+            if (this.contains(reply.replyId)) {
+                val promise = this.pop(reply.replyId).asInstanceOf[ReplyPromise[?]]
                 if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
                 receiveReply0(reply, promise)
             }    // drop reply otherwise
         } else { // reply is batch
             reply.replyIds.foreach { (senderId, rid) =>
-                if (replyFutures.contains(rid) && senderId == actorId) {
-                    val promise = replyFutures.pop(rid)
+                if (contains(rid) && senderId == actorId) {
+                    val promise = pop(rid).asInstanceOf[ReplyPromise[?]]
                     if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
                     receiveReply0(reply, promise)
                 }
@@ -367,17 +385,26 @@ private[core] abstract class AbstractActor[M <: Call]
         case timeoutEvent: TimeoutEvent       => handleActorTimeout(timeoutEvent)
         case _                                => receiveIOEvent(event)
 
-    private def handleAskTimeoutEvent(askTimeoutEvent: AskTimeoutEvent): Unit =
-        if (replyFutures.contains(askTimeoutEvent.askId)) {
-            val promise = replyFutures.pop(askTimeoutEvent.askId)
-            promise.setFailure(new TimeoutException())
-            val stack = promise.actorStack
-            stack.addCompletedPromise(promise)
-            if (stack.stackState.resumable() || !stack.hasUncompletedPromise) {
-                currentStack = stack
-                resume()
-            }
-        }
+    private def handleAskTimeoutEvent(askTimeoutEvent: AskTimeoutEvent): Unit = {
+        pop(askTimeoutEvent.askId) match
+            case promise: TimeoutEventPromise =>
+                promise.setSuccess(askTimeoutEvent)
+                val stack = promise.actorStack
+                stack.addCompletedPromise(promise)
+                if (stack.stackState.resumable() || !stack.hasUncompletedPromise) {
+                    currentStack = stack
+                    resume()
+                }
+            case promise: ReplyPromise[?] =>
+                promise.setFailure(new TimeoutException())
+                val stack = promise.actorStack
+                stack.addCompletedPromise(promise)
+                if (stack.stackState.resumable() || !stack.hasUncompletedPromise) {
+                    currentStack = stack
+                    resume()
+                }
+            case _ =>
+    }
 
     /** Call by [[io.otavia.core.system.ActorHousePhantomRef]] to release [[Actor]] resource. */
     private[core] def stop(): Unit = {

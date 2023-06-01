@@ -43,7 +43,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     private var channelCursor                  = 0
     private var currentChannelReceived: AnyRef = _
 
-    protected val channels: mutable.HashMap[Int, Channel] = mutable.HashMap.empty
+    protected val channels: mutable.HashMap[Int, ChannelAddress] = mutable.HashMap.empty
 
     override def self: ActorAddress[M] = super.self.asInstanceOf[ActorAddress[M]]
 
@@ -63,15 +63,6 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
     def runChannelStack(): Unit = {
         // TODO
-    }
-
-    def receiveFuture(future: Future[?]): Unit = {
-        future match
-            case promise: DefaultPromise[?] =>
-                val stack = promise.actorStack
-                stack.addCompletedPromise(promise)
-                currentStack = stack
-                if (stack.stackState.resumable() || !stack.hasUncompletedPromise) resume()
     }
 
     final override protected def receiveIOEvent(event: Event): Unit = event match
@@ -184,7 +175,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
                 }
             case closeState: CloseState =>
                 if (closeState.futures.forall(_.isSuccess))
-                    stack.`return`(CloseReply(closeState.futures.map(_.getNow.id)))
+                    stack.`return`(CloseReply(closeState.futures.map(_.channel.id)))
                 else {
                     val fails = closeState.futures.filter(_.isFailed)
                     val errors =

@@ -33,9 +33,6 @@ import java.nio.file.{OpenOption, Path}
 
 trait Channel extends ChannelInflight, EventHandle, ChannelAddress {
 
-    /** Unique id of this channel */
-    def id: Int
-
     /** Executor of this channel instance, the channel inbound and outbound event must execute in the binding executor
      */
     def executor: ChannelsActor[?]

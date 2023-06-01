@@ -45,4 +45,8 @@ abstract class AbstractPromise[V] extends Promise[V] with Poolable {
         aid = -1
     }
 
+    override def canTimeout: Boolean = false
+    
+    
+
 }

@@ -18,7 +18,7 @@ package io.otavia.core.actor
 
 import io.otavia.core.actor.ChannelsActor.{Connect, ConnectReply, RegisterWaitState}
 import io.otavia.core.actor.SocketChannelsActor.ConnectWaitState
-import io.otavia.core.channel.Channel
+import io.otavia.core.channel.{Channel, ChannelAddress}
 import io.otavia.core.message.*
 import io.otavia.core.reactor.Reactor
 import io.otavia.core.slf4a.Logger
@@ -53,18 +53,18 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
                 val channel = newChannelAndInit()
                 initAndRegister(channel, stack)
             case registerWaitState: RegisterWaitState =>
-                val channel: Channel = registerWaitState.registerFuture.getNow
-                val state            = new ConnectWaitState()
+                val channel: ChannelAddress = registerWaitState.registerFuture.channel
+                val state                   = new ConnectWaitState()
                 channel.connect(stack.ask.remote, stack.ask.local, state.connectFuture)
                 state.suspend()
             case connectWaitState: ConnectWaitState =>
-                val ch = connectWaitState.connectFuture.getNow
+                val ch = connectWaitState.connectFuture.channel
                 channels.put(ch.id, ch)
                 afterConnected(ch)
                 stack.`return`(ConnectReply(ch.id))
     }
 
-    protected def afterConnected(channel: Channel): Unit = {}
+    protected def afterConnected(channel: ChannelAddress): Unit = {}
 
     override protected def newChannel(): Channel = system.channelFactory.openSocketChannel()
 

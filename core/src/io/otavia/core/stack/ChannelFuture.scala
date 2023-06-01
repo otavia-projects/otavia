@@ -17,92 +17,102 @@
 package io.otavia.core.stack
 
 import io.otavia.core.actor.{AbstractActor, ChannelsActor}
-import io.otavia.core.channel.Channel
+import io.otavia.core.channel.{Channel, ChannelAddress}
+import io.otavia.core.message.ReactorEvent
 import io.otavia.core.timer.Timer
 
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-trait ChannelFuture extends Future[Channel] {
+trait ChannelFuture extends Future[ReactorEvent] {
 
     override private[core] def promise: ChannelPromise = this.asInstanceOf[ChannelPromise]
+
+    def channel: ChannelAddress
 
 }
 
 object ChannelFuture {
-    def apply(): ChannelFuture = ChannelPromise()
+
+    private[stack] val pool = new PromiseObjectPool[ChannelPromise] {
+        override protected def newObject(): ChannelPromise = new ChannelPromise()
+    }
+
+    def apply(): ChannelFuture = pool.get()
+
 }
 
-private[core] class ChannelPromise extends Promise[Channel] with ChannelFuture {
+private[core] class ChannelPromise extends TimeoutablePromise[ReactorEvent] with ChannelFuture {
 
-    private var stack: Stack                             = _
-    private var channel: Channel                         = _
+    private var ch: Channel                              = _
+    private var event: ReactorEvent                      = _
     private var throwable: Throwable                     = _
-    private var completedFunc: () => Unit                = _
     private var listeners: mutable.Queue[ChannelPromise] = _
-    private var callback: ChannelPromise => Unit         = _ => {}
+    private var succ: ChannelPromise => Unit             = _ => {}
     private var failure: ChannelPromise => Unit          = _ => {}
-    private var tid: Long                                = Timer.INVALID_TIMEOUT_REGISTER_ID
+    private var callback: ChannelPromise => Unit         = _
+
+    private[core] def setChannel(channel: Channel): Unit = ch = channel
+
+    def channel: ChannelAddress = ch
 
     def addListener(listener: ChannelPromise): Unit = {
         if (listeners == null) listeners = mutable.Queue.empty
         listeners.enqueue(listener)
     }
 
-    def addListener(listener: BlockPromise[?]): Unit = {}
-
-    def setTimeoutId(id: Long): Unit = tid = id
-
-    def timeoutId: Long = tid
-
-    private def onCompleted(): Unit = {
-        val channelsActor = stack.runtimeActor.asInstanceOf[ChannelsActor[?]]
-        channelsActor.receiveFuture(this)
+    private def completed(): Unit = {
+        if (isSuccess && (succ ne null)) execute(succ) else if (isFailed && (failure ne null)) execute(failure)
+        if (stack ne null) {
+            val actor = stack.runtimeActor
+            actor.receiveFuture(this)
+        }
     }
 
-    override def setSuccess(result: Channel): Promise[Channel] = ???
+    override def setSuccess(result: ReactorEvent): ChannelPromise = {
+        event = result
+        this.completed()
+        this
+    }
 
-    override def setFailure(cause: Throwable): Promise[Channel] =
-        ??? // TODO: bug if completed immediately, current stack is not execute completed, then execute to next state
+    override def setFailure(cause: Throwable): ChannelPromise = {
+        throwable = cause
+        this.completed()
+        this
+    }
 
-    override def future: Future[Channel] = ???
+    override def future: ChannelFuture = this
 
-    override def canTimeout: Boolean = tid != Timer.INVALID_TIMEOUT_REGISTER_ID
-
-    override def setStack(s: Stack): Unit = ???
-
-    override def actorStack: Stack = ???
-
-    override def recycle(): Unit = ???
+    override def recycle(): Unit = ChannelFuture.pool.recycle(this)
 
     override protected def cleanInstance(): Unit = ???
 
-    override def isSuccess: Boolean = ???
+    override def isSuccess: Boolean = event ne null
 
-    override def isFailed: Boolean = ???
+    override def isFailed: Boolean = throwable ne null
 
-    override def isDone: Boolean = ???
+    override def isDone: Boolean = isSuccess || isFailed
 
-    override def getNow: Channel = ???
+    override def getNow: ReactorEvent = if (event == null && throwable == null)
+        throw new IllegalStateException("not completed yet")
+    else if (throwable != null) throw throwable
+    else event
 
-    override def cause: Option[Throwable] = ???
+    override def cause: Option[Throwable] = Option(throwable)
 
-    override def causeUnsafe: Throwable = ???
+    override def causeUnsafe: Throwable = if (event == null && throwable == null)
+        throw new IllegalStateException("not completed yet")
+    else if (event != null) throw new IllegalStateException("the future is success")
+    else throwable
 
     def execute(task: ChannelPromise => Unit): Unit = task(this)
 
-    def onSuccess(task: ChannelPromise => Unit): Unit = callback = task
+    def onSuccess(task: ChannelPromise => Unit): Unit =
+        if (isSuccess) execute(task) else succ = task
 
-    def onFailure(task: ChannelPromise => Unit): Unit = failure = task
+    def onFailure(task: ChannelPromise => Unit): Unit =
+        if (isFailed) execute(task) else failure = task
 
-}
-
-object ChannelPromise {
-
-    private val pool = new PromiseObjectPool[ChannelPromise] {
-        override protected def newObject(): ChannelPromise = new ChannelPromise()
-    }
-
-    def apply(): ChannelPromise = pool.get()
+    def onCompleted(task: ChannelPromise => Unit): Unit = if (isDone) execute(task) else callback = task
 
 }

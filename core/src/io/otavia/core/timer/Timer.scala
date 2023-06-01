@@ -23,13 +23,14 @@ import io.otavia.core.cache.{ResourceTimer, TimeoutResource}
 import io.otavia.core.channel.Channel
 import io.otavia.core.message.TimeoutEvent
 import io.otavia.core.reactor.Reactor
+import io.otavia.core.stack.TimeoutEventFuture
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.system.monitor.TimerMonitor
 import io.otavia.core.timer.Timer.*
 
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
-import scala.concurrent.duration.TimeUnit
+import scala.concurrent.duration.{MILLISECONDS, TimeUnit}
 
 /** [[Timer]] can generate timeout event. */
 trait Timer {
@@ -98,7 +99,15 @@ trait Timer {
      */
     private[core] def registerAskTimeout(trigger: TimeoutTrigger, sender: EventableAddress, askId: Long): Long
 
-//    def askTimeout(delay: Long, unit: TimeUnit)(sender: AbstractActor[?])
+    final def askTimeout(future: TimeoutEventFuture, delay: Long, unit: TimeUnit = MILLISECONDS)(using
+        sender: AbstractActor[?]
+    ): TimeoutEventFuture = {
+        val aid = sender.idAllocator.generate
+        future.promise.setId(aid)
+        sender.attachStack(aid, future)
+        registerAskTimeout(TimeoutTrigger.DelayTime(delay, unit), sender.self, aid)
+        future
+    }
 
     /** Update an existed [[TimeoutTrigger]].
      *  @param trigger

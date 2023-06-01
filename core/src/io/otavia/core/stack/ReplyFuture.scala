@@ -35,14 +35,10 @@ object ReplyFuture {
     def apply[R <: Reply](): ReplyFuture[R] = ReplyPromise()
 }
 
-private[core] class ReplyPromise[R <: Reply] private () extends AbstractPromise[Reply] with ReplyFuture[R] {
+private[core] class ReplyPromise[R <: Reply] private () extends TimeoutablePromise[Reply] with ReplyFuture[R] {
 
-    private var tid: Long            = Timer.INVALID_TIMEOUT_REGISTER_ID
     private var reply: Reply         = _
     private var throwable: Throwable = _
-
-    def setTimeoutId(id: Long): Unit = tid = id
-    def timeoutId: Long              = tid
 
     override def future: ReplyFuture[R] = this
 
@@ -69,7 +65,6 @@ private[core] class ReplyPromise[R <: Reply] private () extends AbstractPromise[
     override def recycle(): Unit = ReplyPromise.promiseObjectPool.recycle(this)
 
     override protected def cleanInstance(): Unit = {
-        tid = Timer.INVALID_TIMEOUT_REGISTER_ID
         reply = null
         throwable = null
         super.cleanInstance()
@@ -84,8 +79,6 @@ private[core] class ReplyPromise[R <: Reply] private () extends AbstractPromise[
         throwable = cause
         this
     }
-
-    override def canTimeout: Boolean = tid != Timer.INVALID_TIMEOUT_REGISTER_ID
 
 }
 

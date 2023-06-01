@@ -60,16 +60,16 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
                 state.suspend()
             case bindState: BindState =>
                 if (bindState.bindFuture.isSuccess) {
-                    val channel = bindState.bindFuture.getNow
+                    val channel = bindState.bindFuture.channel
                     channels.put(channel.id, channel)
-                    afterBind(bindState.bindFuture.getNow)
+                    afterBind(bindState.bindFuture.channel)
                     stack.`return`(BindReply(channel.id))
                 } else {
                     stack.`throw`(ExceptionMessage(bindState.bindFuture.causeUnsafe))
                 }
     }
 
-    protected def afterBind(channel: Channel): Unit = {
+    protected def afterBind(channel: ChannelAddress): Unit = {
         // default do nothing
     }
 

@@ -37,7 +37,7 @@ abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | Accepted
             case registerWaitState: RegisterWaitState =>
                 val future = registerWaitState.registerFuture
                 if (future.isSuccess) {
-                    afterAccepted(future.getNow)
+                    afterAccepted(future.channel)
                     stack.`return`(UnitReply())
                 } else {
                     stack.`throw`(ExceptionMessage(future.causeUnsafe))

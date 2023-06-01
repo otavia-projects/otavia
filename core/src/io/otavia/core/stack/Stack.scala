@@ -24,8 +24,8 @@ import io.otavia.core.util.Chainable
 import scala.language.unsafeNulls
 
 object Stack {
-    class UncompletedPromiseIterator(private[core] var head: Promise[?], private[core] var tail: Promise[?])
-        extends Iterator[Promise[?]] {
+    class UncompletedPromiseIterator(private[core] var head: AbstractPromise[?], private[core] var tail: AbstractPromise[?])
+        extends Iterator[AbstractPromise[?]] {
 
         override def hasNext: Boolean = {
             val has = head != null
@@ -33,14 +33,14 @@ object Stack {
             has
         }
 
-        override def next(): Promise[?] = {
+        override def next(): AbstractPromise[?] = {
             val promise = head
-            head = promise.next.asInstanceOf[Promise[?] | Null]
+            head = promise.next.asInstanceOf[AbstractPromise[?] | Null]
             promise.deChain()
             promise
         }
 
-        def nextCast[P <: Promise[?]](): P = next().asInstanceOf[P]
+        def nextCast[P <: AbstractPromise[?]](): P = next().asInstanceOf[P]
 
         def clean(): Unit = {
             head = null
@@ -57,12 +57,12 @@ abstract class Stack extends Poolable {
     private var error: Boolean = false
 
     // completed promise
-    private var headPromise: Promise[?] = _
-    private var tailPromise: Promise[?] = _
+    private var headPromise: AbstractPromise[?] = _
+    private var tailPromise: AbstractPromise[?] = _
 
     // uncompleted promise
-    private var uhead: Promise[?] = _
-    private var utail: Promise[?] = _
+    private var uhead: AbstractPromise[?] = _
+    private var utail: AbstractPromise[?] = _
 
     // context
     private var actor: AbstractActor[?] = _
@@ -88,7 +88,7 @@ abstract class Stack extends Poolable {
         actor = null
     }
 
-    private[core] def addCompletedPromise(completed: Promise[?]): Unit = {
+    private[core] def addCompletedPromise(completed: AbstractPromise[?]): Unit = {
         // the completed already in uncompleted chain. move it
         // step 1: remove it from uncompleted chain
         val pre  = completed.pre
@@ -102,12 +102,12 @@ abstract class Stack extends Poolable {
                         utail = null
                     case nextNode: Chainable =>
                         nextNode.cleanPre()
-                        uhead = nextNode.asInstanceOf[Promise[?]]
+                        uhead = nextNode.asInstanceOf[AbstractPromise[?]]
             case preNode: Chainable =>
                 next match
                     case null =>
                         preNode.cleanNext()
-                        utail = preNode.asInstanceOf[Promise[?]]
+                        utail = preNode.asInstanceOf[AbstractPromise[?]]
                     case nextNode: Chainable => preNode.next = nextNode
 
         // step 2: add completed to completed chain
@@ -122,7 +122,7 @@ abstract class Stack extends Poolable {
         }
     }
 
-    private[core] def addUncompletedPromise(uncompleted: Promise[?]): Unit = {
+    private[core] def addUncompletedPromise(uncompleted: AbstractPromise[?]): Unit = {
         if (uhead == null) {
             uhead = uncompleted
             utail = uncompleted
@@ -173,7 +173,7 @@ abstract class Stack extends Poolable {
     private[core] def recycleAllPromises(): Unit = while (headPromise != null) {
         val promise = headPromise
         if (headPromise == tailPromise) tailPromise = null
-        headPromise = promise.next.asInstanceOf[Promise[?] | Null]
+        headPromise = promise.next.asInstanceOf[AbstractPromise[?] | Null]
         promise.recycle()
     }
 

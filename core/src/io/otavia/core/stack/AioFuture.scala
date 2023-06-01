@@ -26,19 +26,13 @@ trait AioFuture[V] extends Future[V] {
 
 object AioFuture {}
 
-class AioPromise[V] extends Promise[V] with AioFuture[V] with Runnable {
+class AioPromise[V] extends AbstractPromise[V] with AioFuture[V] with Runnable {
 
     override def setSuccess(result: V): Promise[V] = ???
 
     override def setFailure(cause: Throwable): Promise[V] = ???
 
     override def future: AioFuture[V] = ???
-
-    override def canTimeout: Boolean = ???
-
-    override def setStack(s: Stack): Unit = ???
-
-    override def actorStack: Stack = ???
 
     override def run(): Unit = ???
 

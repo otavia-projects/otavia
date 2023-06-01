@@ -51,7 +51,7 @@ trait ChannelInflightImpl extends ChannelInflight {
 
     final override def setOutboundMessageBarrier(barrier: AnyRef => Boolean): Unit = outboundMsgBarrier = barrier
 
-    private def attachStack(promise: Promise[?]): Unit = {
+    private def attachStack(promise: AbstractPromise[?]): Unit = {
         assert(promise.notInChain, "The Promise has been used, can't be use again!")
         promise.setStack(this.executor.currentStack)
         this.executor.currentStack.addUncompletedPromise(promise)

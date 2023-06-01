@@ -18,7 +18,7 @@ package io.otavia.examples.echo
 
 import io.otavia.core.actor.*
 import io.otavia.core.actor.ChannelsActor.*
-import io.otavia.core.channel.Channel
+import io.otavia.core.channel.{Channel, ChannelAddress}
 import io.otavia.core.stack.StackState.FutureState
 import io.otavia.core.stack.{NoticeStack, StackState}
 import io.otavia.core.system.ActorSystem
@@ -52,7 +52,7 @@ object EchoServer {
 
         override protected def init(channel: Channel): Unit = {}
 
-        override protected def afterAccepted(channel: Channel): Unit = channels.put(channel.id, channel)
+//        override protected def afterAccepted(channel: ChannelAddress): Unit = channels.put(channel.id, channel)
 
     }
 

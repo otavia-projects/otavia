@@ -49,7 +49,7 @@ abstract class FutureDispatcher {
     }
 
     final protected def push(promise: AbstractPromise[?]): Unit = {
-        if (table ne null) table = new Array[AbstractPromise[?]](tableSizeFor(initialCapacity))
+        if (table eq null) table = new Array[AbstractPromise[?]](tableSizeFor(initialCapacity))
         else if (contentSize + 1 >= threshold) resizeTable(table.length * 2)
         put0(promise)
     }
@@ -65,34 +65,32 @@ abstract class FutureDispatcher {
     }
 
     final protected def pop(id: Long): AbstractPromise[?] = {
-        if (table ne null) {
-            val idx = index(id)
-            val promise = table(idx) match
-                case null => null
-                case node if node.id == id =>
-                    table(idx) = node._next
+        val idx = index(id)
+        val promise = table(idx) match
+            case null => null
+            case node if node.id == id =>
+                table(idx) = node._next
+                contentSize -= 1
+                node._next = null
+                node
+            case node =>
+                var prev   = node
+                var cursor = node._next
+                while ((cursor ne null) && cursor.id != id) {
+                    prev = cursor
+                    cursor = cursor._next
+                }
+                if (cursor ne null) {
+                    prev._next = cursor._next
                     contentSize -= 1
-                    node._next = null
-                    node
-                case node =>
-                    var prev   = node
-                    var cursor = node._next
-                    while ((cursor ne null) && cursor.id != id) {
-                        prev = cursor
-                        cursor = cursor._next
-                    }
-                    if (cursor ne null) {
-                        prev._next = cursor._next
-                        contentSize -= 1
-                        cursor._next = null
-                    }
-                    cursor
+                    cursor._next = null
+                }
+                cursor
 
-            if (table.length >= initialCapacity * 4 && contentSize < table.length / 2) { // shrinkage the hash table
-                resizeTable(table.length / 2)
-            }
-            promise
-        } else null
+        if (table.length >= initialCapacity * 4 && contentSize < table.length / 2) { // shrinkage the hash table
+            resizeTable(table.length / 2)
+        }
+        promise
     }
 
     final protected def contains(id: Long): Boolean = findNode(id) ne null

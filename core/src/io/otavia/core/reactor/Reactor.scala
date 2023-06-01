@@ -35,6 +35,8 @@ trait Reactor {
      */
     def deregister(channel: Channel): Unit
 
+    def close(channel: Channel): Unit
+
 }
 
 object Reactor {

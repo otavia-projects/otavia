@@ -28,18 +28,13 @@ object ChannelReplyFuture {
     def apply(): ChannelReplyFuture = ChannelReplyPromise()
 }
 
-class ChannelReplyPromise private () extends Promise[AnyRef] with ChannelReplyFuture {
+class ChannelReplyPromise private () extends AbstractPromise[AnyRef] with ChannelReplyFuture {
 
-    private var stack: Stack         = _
     private var value: Any           = _
     private var throwable: Throwable = _
 
     private var msgId: Long      = -1
     private var barrier: Boolean = false
-
-    override def setStack(s: Stack): Unit = stack = s
-
-    override def actorStack: Stack = stack
 
     def setMessageId(id: Long): Unit = this.msgId = id
 
@@ -55,8 +50,6 @@ class ChannelReplyPromise private () extends Promise[AnyRef] with ChannelReplyFu
     override def setFailure(cause: Throwable): Promise[AnyRef] = ???
 
     override def future: Future[AnyRef] = ???
-
-    override def canTimeout: Boolean = ???
 
     override def isSuccess: Boolean = ???
 

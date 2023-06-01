@@ -32,7 +32,7 @@ object BlockFuture {
     def apply[V](func: () => V): BlockFuture[V] = new BlockPromise(func)
 }
 
-class BlockPromise[V](func: () => V) extends Promise[V] with BlockFuture[V] with Runnable {
+class BlockPromise[V](func: () => V) extends AbstractPromise[V] with BlockFuture[V] with Runnable {
 
     private var parent: Actor[?] | Channel = _
 
@@ -45,12 +45,6 @@ class BlockPromise[V](func: () => V) extends Promise[V] with BlockFuture[V] with
     override def setFailure(cause: Throwable): Promise[V] = ???
 
     override def future: Future[V] = ???
-
-    override def canTimeout: Boolean = ???
-
-    override def setStack(s: Stack): Unit = ???
-
-    override def actorStack: Stack = ???
 
     override def recycle(): Unit = ???
 

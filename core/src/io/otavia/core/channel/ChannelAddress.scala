@@ -33,6 +33,9 @@ import scala.language.unsafeNulls
 trait ChannelAddress {
     this: Channel =>
 
+    /** Unique id of this channel */
+    def id: Int
+
     /** Request to bind to the given [[SocketAddress]] and notify the [[ChannelFuture]] once the operation completes,
      *  either because the operation was successful or because of an error. This will result in having the
      *  [[ChannelHandler.bind(ChannelHandlerContext, SocketAddress)]] method called of the next [[ChannelHandler]]
@@ -46,7 +49,8 @@ trait ChannelAddress {
      *    same [[ChannelFuture]] in params [[future]]
      */
     def bind(local: SocketAddress, future: ChannelFuture): ChannelFuture = {
-        // TODO: attach future to stack
+        executor.attachStack(executor.idAllocator.generate, future)
+        future.promise.setChannel(this)
         this.pipeline.bind(local, future)
     }
 

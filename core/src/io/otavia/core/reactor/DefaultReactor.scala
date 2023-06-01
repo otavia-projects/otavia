@@ -65,6 +65,8 @@ class DefaultReactor(
 
     override def deregister(channel: Channel): Unit = deregisterQueue.add(channel)
 
+    override def close(channel: Channel): Unit = ???
+
     private def startThread(): Unit = if (state == ST_NOT_STARTED) {}
 
     private def doStartThread(): Unit = {

@@ -6,7 +6,7 @@ import io.otavia.core.timer.TimeoutTrigger
 
 import java.util.concurrent.TimeUnit
 
-abstract class PromiseObjectPool[P <: Promise[?]] extends ThreadIsolationObjectPool[P] {
+abstract class PromiseObjectPool[P <: AbstractPromise[?]] extends ThreadIsolationObjectPool[P] {
 
     private val threadLocal = new ActorThreadLocal[Poolable.SingleThreadPoolableHolder[P]] {
 

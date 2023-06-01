@@ -48,6 +48,8 @@ enum ReactorEvent extends Event {
     case ChannelReadiness(channel: Channel, readyOps: Int)
     case ChannelClose(channel: Channel)
 
+    case EMPTY_EVENT
+
 }
 
 case class BlockFutureCompletedEvent(promise: BlockPromise[?]) extends Event

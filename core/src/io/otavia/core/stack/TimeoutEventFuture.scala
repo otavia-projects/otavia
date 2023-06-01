@@ -20,15 +20,17 @@ import io.otavia.core.message.AskTimeoutEvent
 
 import scala.language.unsafeNulls
 
-trait TimeoutFuture extends Future[AskTimeoutEvent] {
+trait TimeoutEventFuture extends Future[AskTimeoutEvent] {
 
-    override private[core] def promise: TimeoutPromise = this.asInstanceOf[TimeoutPromise]
+    override private[core] def promise: TimeoutEventPromise = this.asInstanceOf[TimeoutEventPromise]
 
 }
 
-object TimeoutFuture {}
+object TimeoutEventFuture {
+    def apply(): TimeoutEventFuture = new TimeoutEventPromise()
+}
 
-private[core] class TimeoutPromise private () extends AbstractPromise[AskTimeoutEvent] with TimeoutFuture {
+private[core] class TimeoutEventPromise extends AbstractPromise[AskTimeoutEvent] with TimeoutEventFuture {
 
     private var event: AskTimeoutEvent = _
     override def setSuccess(result: AskTimeoutEvent): Promise[AskTimeoutEvent] = {
@@ -40,9 +42,9 @@ private[core] class TimeoutPromise private () extends AbstractPromise[AskTimeout
 
     override def future: Future[AskTimeoutEvent] = this
 
-    override def canTimeout: Boolean = false
-
-    override def recycle(): Unit = ???
+    override def recycle(): Unit = {
+        // TODO:
+    }
 
     override protected def cleanInstance(): Unit = {
         event = null

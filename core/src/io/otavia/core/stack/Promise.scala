@@ -28,7 +28,7 @@ import io.otavia.core.util.Chainable
  *  @tparam V
  *    type of result
  */
-private[core] trait Promise[V] extends Poolable {
+private[core] trait Promise[V] {
 
     /** Marks this promise as a success.
      *

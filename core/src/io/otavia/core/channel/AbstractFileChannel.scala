@@ -62,11 +62,11 @@ abstract class AbstractFileChannel extends AbstractChannel {
     ): Unit = promise.setFailure(new UnsupportedOperationException())
 
     override private[core] def registerTransport(promise: ChannelPromise): Unit = {
-        promise.setSuccess(this)
+        promise.setSuccess(ReactorEvent.EMPTY_EVENT)
     }
 
     override private[core] def deregisterTransport(promise: ChannelPromise): Unit = {
-        promise.setSuccess(this)
+        promise.setSuccess(ReactorEvent.EMPTY_EVENT)
     }
 
     override private[core] def readTransport(readPlan: ReadPlan): Unit = {

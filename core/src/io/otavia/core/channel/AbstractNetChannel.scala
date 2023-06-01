@@ -18,10 +18,10 @@
 
 package io.otavia.core.channel
 
-import io.otavia.buffer.{Buffer, BufferAllocator}
 import io.netty5.util.DefaultAttributeMap
 import io.netty5.util.internal.ObjectUtil.{checkNotNullArrayParam, checkPositiveOrZero, longValue}
 import io.netty5.util.internal.{PlatformDependent, StringUtil, ThrowableUtil}
+import io.otavia.buffer.{Buffer, BufferAllocator}
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.AbstractNetChannel.*
@@ -225,7 +225,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
                 pipeline.fireChannelRegistered()
                 val promise = registerPromise
                 registerPromise = null
-                promise.setSuccess(this)
+                promise.setSuccess(event)
                 // Only fire a channelActive if the channel has never been registered. This prevents firing
                 // multiple channel actives if the channel is deregistered and re-registered.
                 if (isActive) {
@@ -240,9 +240,18 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
     override private[core] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit = {
         if (!mounted) channelPromise.setFailure(new IllegalStateException(s"channel $this is not mounted to actor!"))
         else if (!registered) { // if not register
-            if (!registering) pipeline.register(newPromise())
-            registerPromise.addListener(channelPromise)
-            channelPromise.onSuccess { self => bindTransport0(local, self) }
+            if (registering) channelPromise.setFailure(new IllegalStateException("A registering operation is running"))
+            else {
+                pipeline.register(newPromise())
+                registerPromise.onCompleted {
+                    case self if self.isSuccess =>
+                        this.registerPromise = null
+                        bindTransport0(local, channelPromise)
+                    case self if self.isFailed =>
+                        this.registerPromise = null
+                        channelPromise.setFailure(self.causeUnsafe)
+                }
+            }
         } else bindTransport0(local, channelPromise)
     }
 
@@ -280,7 +289,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
             if (!wasActive && isActive) // first active
                 invokeLater(() => if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead())
 
-            promise.setSuccess(this)
+            promise.setSuccess(ReactorEvent.EMPTY_EVENT)
         }
 
     }
@@ -305,11 +314,10 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
     override private[core] def closeTransport(promise: ChannelPromise): Unit = {}
 
     private def close(promise: ChannelPromise, cause: Throwable, closeCause: ClosedChannelException): Unit = {
-        if (closed) promise.setSuccess(this)
-        else if (closing && !closed) closePromise.addListener(promise)
+        if (closed) promise.setSuccess(ReactorEvent.EMPTY_EVENT)
+        else if (closing && !closed) promise.setFailure(new IllegalStateException("A close operation is running"))
         else {
             closing = true
-            closePromise = promise
             val wasActive = isActive
             closeAdaptiveBuffers()
             val exception = new ClosedChannelException()
@@ -319,9 +327,14 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
                 closeAfterDeregister(wasActive)
             } else {
                 if (!unregistering && !unregistered) deregisterTransport(newPromise())
-                val promise = newPromise()
-                deregisterPromise.addListener(promise)
-                promise.onSuccess(self => closeAfterDeregister(wasActive))
+                deregisterPromise.onCompleted {
+                    case self if self.isSuccess =>
+                        this.deregisterPromise = null
+                        closeAfterDeregister(wasActive)
+                    case self if self.isFailed =>
+                        this.deregisterPromise = null
+                        promise.setFailure(self.causeUnsafe)
+                }
             }
         }
     }
@@ -350,7 +363,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         closePromise = null
         cause match
             case Some(value) => promise.setFailure(value)
-            case None        => promise.setSuccess(this)
+            case None        => promise.setSuccess(ReactorEvent.EMPTY_EVENT)
         closing = false
         closed = true
     }
@@ -388,7 +401,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         if (!isActive) {
             if (isOpen) promise.setFailure(new NotYetConnectedException())
             else promise.setFailure(new ClosedChannelException())
-        } else if (isShutdown(direction)) promise.setSuccess(this)
+        } else if (isShutdown(direction)) promise.setSuccess(ReactorEvent.EMPTY_EVENT)
         else {
             val fireEvent = direction match
                 case ChannelShutdownDirection.Outbound => shutdownOutput(promise, None)
@@ -417,7 +430,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
             try {
                 doShutdown(ChannelShutdownDirection.Outbound)
                 closeOutboundAdaptiveBuffers()
-                promise.setSuccess(this)
+                promise.setSuccess(ReactorEvent.EMPTY_EVENT)
             } catch {
                 case t: Throwable => promise.setFailure(t)
             } finally {
@@ -438,7 +451,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         try {
             doShutdown(ChannelShutdownDirection.Inbound)
             closeInboundAdaptiveBuffers()
-            promise.setSuccess(this)
+            promise.setSuccess(ReactorEvent.EMPTY_EVENT)
             true
         } catch {
             case cause: Throwable =>
@@ -448,7 +461,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
     }
 
     override private[core] def deregisterTransport(promise: ChannelPromise): Unit = {
-        if (!registered) promise.setSuccess(this)
+        if (!registered) promise.setSuccess(ReactorEvent.EMPTY_EVENT)
         else if (!unregistering && !unregistered) {
             deregisterPromise = promise
             deregisterPromise.onSuccess(self => deregisterDone(self))
@@ -457,7 +470,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         } else if (unregistering && !unregistered) {
             deregisterPromise.addListener(promise)
         } else {
-            promise.setSuccess(this)
+            promise.setSuccess(ReactorEvent.EMPTY_EVENT)
         }
     }
 
@@ -492,7 +505,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         // done deregister
         val promise = deregisterPromise
         deregisterPromise = null
-        promise.setSuccess(this)
+        promise.setSuccess(ReactorEvent.EMPTY_EVENT)
     }
 
     override private[core] def readTransport(readBufferAllocator: ReadPlan): Unit = if (!isActive) {
@@ -675,7 +688,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
             connecting = false
             if (promise.canTimeout)
                 timer.cancelTimerTask(promise.timeoutId)
-            promise.setSuccess(this)
+            promise.setSuccess(ReactorEvent.EMPTY_EVENT)
             if (!wasActive && active) if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead()
         }
     }

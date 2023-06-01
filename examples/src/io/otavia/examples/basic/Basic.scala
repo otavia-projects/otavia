@@ -71,7 +71,7 @@ object Basic {
     private class PingActor(val pongActor: Address[Ping]) extends StateActor[Start] {
 
         override protected def afterMount(): Unit = {
-            logger.info("The PingActor has been mounted to ActorSystem.")
+//            logger.info("The PingActor has been mounted to ActorSystem.")
         }
 
         override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = {
@@ -79,11 +79,11 @@ object Basic {
                 case StackState.start =>
                     val state = new FutureState[Pong]
                     pongActor.ask(Ping(), state.future)
-                    logger.info("Send ping to pongActor")
+//                    logger.info("Send ping to pongActor")
                     state.suspend()
                 case state: FutureState[Pong] =>
                     val pong = state.future.getNow
-                    logger.info(s"Get pong message $pong")
+//                    logger.info(s"Get pong message $pong")
                     stack.`return`()
         }
 
@@ -103,7 +103,7 @@ object Basic {
         }
 
         override protected def handleActorTimeout(timeoutEvent: TimeoutEvent): Unit = {
-            logger.info(s"PongActor handle timeout event ${timeoutEvent}")
+//            logger.info(s"PongActor handle timeout event ${timeoutEvent}")
         }
 
     }

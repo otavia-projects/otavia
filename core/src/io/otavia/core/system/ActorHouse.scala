@@ -120,6 +120,7 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
     def putNotice(notice: Notice): Unit = {
         if (system.isBusy && !ActorThread.currentThreadIsActorThread) {
             println(s"sleep ${Thread.currentThread()}")
+            System.gc()
             Thread.sleep(ActorSystem.MEMORY_OVER_SLEEP)
         }
         put(notice, noticeMailbox)
