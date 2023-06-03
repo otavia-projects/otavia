@@ -29,7 +29,7 @@ import io.otavia.core.channel.ChannelOption.*
 import io.otavia.core.channel.estimator.*
 import io.otavia.core.channel.inflight.ChannelInflightImpl
 import io.otavia.core.channel.internal.{ChannelOutboundBuffer, ReadSink, WriteBufferWaterMark, WriteSink}
-import io.otavia.core.channel.message.ReadPlan
+import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import io.otavia.core.message.{ReactorEvent, TimeoutEvent}
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.stack.*
@@ -48,13 +48,9 @@ import scala.util.{Failure, Success, Try}
 
 /** A skeletal Channel implementation.
  *
- *  @param executor
- *    the [[ChannelsActor]] which will be used.
  *  @param supportingDisconnect
  *    true if and only if the channel has the [[disconnect]] operation that allows a user to disconnect and then call
  *    [[Channel.connect]] again, such as UDP/IP.
- *  @param defaultReadHandleFactory
- *    the [[ReadHandleFactory]] that is used by default.
  *  @param defaultWriteHandleFactory
  *    the [[WriteHandleFactory]] that is used by default.
  *  @tparam L
@@ -64,7 +60,6 @@ import scala.util.{Failure, Success, Try}
  */
 abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protected (
     val supportingDisconnect: Boolean,
-    val defaultReadHandleFactory: ReadHandleFactory,
     val defaultWriteHandleFactory: WriteHandleFactory
 ) extends AbstractChannel,
       WriteSink,
@@ -75,21 +70,17 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
 
     /** Creates a new instance.
      *
-     *  @param executor
-     *    the [[ChannelsActor]] which will be used.
      *  @param supportingDisconnect
      *    true if and only if the channel has the [[disconnect]] operation that allows a user to disconnect and then
      *    call [[Channel.connect]] again, such as UDP/IP.
      */
     protected def this(supportingDisconnect: Boolean) = this(
       supportingDisconnect,
-      new AdaptiveReadHandleFactory(),
       new MaxMessagesWriteHandleFactory(Int.MaxValue)
     )
 
     private var outboundBuffer: ChannelOutboundBuffer | Null = new ChannelOutboundBuffer()
 
-    private var readHandleFactory: ReadHandleFactory   = defaultReadHandleFactory
     private var writeHandleFactory: WriteHandleFactory = defaultWriteHandleFactory
 
     private var msgSizeEstimator: MessageSizeEstimator = DEFAULT_MSG_SIZE_ESTIMATOR
@@ -276,6 +267,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
 
         var success: Boolean = false
         try {
+            setUnresolvedLocalAddress(local)
             doBind()
             success = true
         } catch {
@@ -287,7 +279,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
             bound = true
             binding = false
             if (!wasActive && isActive) // first active
-                invokeLater(() => if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead())
+                if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead()
 
             promise.setSuccess(ReactorEvent.EMPTY_EVENT)
         }
@@ -508,12 +500,12 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         promise.setSuccess(ReactorEvent.EMPTY_EVENT)
     }
 
-    override private[core] def readTransport(readBufferAllocator: ReadPlan): Unit = if (!isActive) {
+    override private[core] def readTransport(readPlan: ReadPlan): Unit = if (!isActive) {
         throw new IllegalStateException(s"channel $this is not active!")
     } else if (isShutdown(ChannelShutdownDirection.Inbound)) {
         // Input was shutdown so not try to read.
     } else {
-        readSink.setReadBufferAllocator(readBufferAllocator)
+        readSink.setReadPlan(readPlan)
         try { doRead() }
         catch {
             case e: Exception =>
@@ -522,8 +514,8 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         }
     }
 
-    /** Reading from the underlying transport now until there is nothing more to read or the
-     *  [[ReadHandleFactory.ReadHandle]] is telling us to stop.
+    /** Reading from the underlying transport now until there is nothing more to read or the [[ReadPlan]] is telling us
+     *  to stop.
      */
     protected final def readNow(): Unit = {
         if (isShutdown(ChannelShutdownDirection.Inbound) && (inputClosedSeenErrorOnRead || !isAllowHalfClosure)) {
@@ -822,14 +814,8 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         this.connectTimeoutMillis = checkPositiveOrZero(connectTimeoutMillis, "connectTimeoutMillis")
     }
 
-    @SuppressWarnings(Array("unchecked"))
-    private[core] def getReadHandleFactory[T <: ReadHandleFactory] = readHandleFactory.asInstanceOf[T]
+    protected def newReadPlan: ReadPlan = readPlanFactory.newPlan(this)
 
-    private def setReadHandleFactory(readHandleFactory: ReadHandleFactory): Unit = {
-        this.readHandleFactory = requireNonNull(readHandleFactory, "readHandleFactory").nn
-    }
-
-    protected def newReadHandle: ReadHandleFactory.ReadHandle    = readHandleFactory.newHandle(this)
     protected def newWriteHandle: WriteHandleFactory.WriteHandle = writeHandleFactory.newHandle(this)
 
     @SuppressWarnings(Array("unchecked"))

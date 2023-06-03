@@ -28,7 +28,7 @@ import io.otavia.core.stack.*
 import io.otavia.core.system.ActorThread
 import io.otavia.core.timer.Timer
 
-import java.net.{InetAddress, InetSocketAddress, SocketAddress}
+import java.net.*
 import java.nio.channels.SelectionKey
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
@@ -47,7 +47,11 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
     override def self: ActorAddress[M] = super.self.asInstanceOf[ActorAddress[M]]
 
+    def address: ActorAddress[M] = self
+
     final def reactor: Reactor = system.reactor
+
+    protected def family: ProtocolFamily = StandardProtocolFamily.INET
 
     private[core] def generateChannelId(): Int = {
         val channelId = channelCursor

@@ -18,8 +18,8 @@
 
 package io.otavia.core.transport.nio.channel
 
-import io.otavia.buffer.Buffer
 import io.netty5.util.internal.SocketUtils
+import io.otavia.buffer.Buffer
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*
 import io.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
@@ -53,7 +53,6 @@ import scala.util.Try
 class NioDatagramChannel(socket: JDatagramChannel, protocolFamily: ProtocolFamily)
     extends AbstractNioMessageChannel[SocketAddress, SocketAddress](
       true,
-      new FixedReadHandleFactory(2048),
       new MaxMessagesWriteHandleFactory(Int.MaxValue),
       socket,
       SelectionKey.OP_READ

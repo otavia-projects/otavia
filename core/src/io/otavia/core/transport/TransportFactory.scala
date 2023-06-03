@@ -46,7 +46,7 @@ abstract class TransportFactory() {
 
     def openFileChannel(): Channel
 
-    def openIoHandler(): IoHandler
+    def openIoHandler(system: ActorSystem): IoHandler
 
 }
 

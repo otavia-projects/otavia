@@ -28,7 +28,7 @@ trait ReadPlan {
      */
     def estimatedNextSize: Int
 
-    /** Notify the [[ReadHandle]] of the last read operation and its result.
+    /** Notify the [[ReadPlan]] of the last read operation and its result.
      *
      *  @param attemptedBytesRead
      *    The number of bytes the read operation did attempt to read.

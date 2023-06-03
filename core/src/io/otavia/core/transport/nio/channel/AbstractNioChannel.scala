@@ -20,22 +20,20 @@ package io.otavia.core.transport.nio.channel
 
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.estimator.{ReadHandleFactory, WriteHandleFactory}
-import io.otavia.core.channel.{AbstractNetChannel, Channel}
+import io.otavia.core.channel.message.ReadPlanFactory
+import io.otavia.core.channel.{AbstractNetChannel, Channel, ChannelException}
 import io.otavia.core.message.ReactorEvent
 
+import java.io.IOException
 import java.net.SocketAddress
 import java.nio.channels.{CancelledKeyException, SelectableChannel, SelectionKey, Selector}
 import scala.language.unsafeNulls
 
 /** Abstract base class for Channel implementations which use a Selector based approach.
  *
- *  @param executor
- *    the [[ChannelsActor]] which will be used.
  *  @param supportingDisconnect
  *    true if and only if the channel has the [[disconnect]] operation that allows a user to disconnect and then call
  *    [[Channel.connect()]] again, such as UDP/IP.
- *  @param defaultReadHandleFactory
- *    the [[ReadHandleFactory]] that is used by default.
  *  @param defaultWriteHandleFactory
  *    the [[WriteHandleFactory]] that is used by default.
  *  @param ch
@@ -49,14 +47,27 @@ import scala.language.unsafeNulls
  */
 abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
     supportingDisconnect: Boolean,
-    defaultReadHandleFactory: ReadHandleFactory,
     defaultWriteHandleFactory: WriteHandleFactory,
     val ch: SelectableChannel,
     val readInterestOp: Int
-) extends AbstractNetChannel[L, R](supportingDisconnect, defaultReadHandleFactory, defaultWriteHandleFactory)
+) extends AbstractNetChannel[L, R](supportingDisconnect, defaultWriteHandleFactory)
     with NioProcessor {
 
-    @volatile private var _selectionKey: SelectionKey | Null = null
+    try {
+        ch.configureBlocking(false)
+    } catch {
+        case e: IOException =>
+            try {
+                ch.close()
+            } catch {
+                case e2: IOException =>
+                    logger.warn("Failed to close a partially initialized socket.", e2)
+            }
+
+            throw new ChannelException("Failed to enter non-blocking mode.", e)
+    }
+
+    @volatile private var _selectionKey: SelectionKey | Null = _
 
     // Start implementation methods in NioProcessor.
     // The methods in NioProcessor is running at reactor thread, which is not same as the thread to running executor.
@@ -99,9 +110,9 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
             // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead
             // to a spin loop
             if ((readOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readOps == 0) {
-                executorAddress.inform(
-                  ReactorEvent.ChannelReadiness(this, SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)
-                )
+                readNow()
+                // val event = ReactorEvent.ChannelReadiness(this, SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)
+                // executorAddress.inform(event)
             }
         } catch {
             case ignored: CancelledKeyException => executorAddress.inform(ReactorEvent.ChannelClose(this))

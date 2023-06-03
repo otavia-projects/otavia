@@ -41,6 +41,7 @@ object EchoServer {
                     val server = system.buildActor(() => new EchoServer())
                     server.ask(Bind(8080)).suspend()
                 case state: FutureState[BindReply] =>
+                    println("echo bind port 8080 success")
                     logger.info("echo bind port 8080 success")
                     stack.`return`()
 

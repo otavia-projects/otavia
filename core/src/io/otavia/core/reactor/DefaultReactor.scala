@@ -17,20 +17,22 @@
 package io.otavia.core.reactor
 
 import io.otavia.core.channel.Channel
-import io.otavia.core.reactor.DefaultReactor.ST_NOT_STARTED
+import io.otavia.core.reactor.DefaultReactor.{ST_NOT_STARTED, ST_STARTED}
 import io.otavia.core.reactor.Reactor.DEFAULT_MAX_TASKS_PER_RUN
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.transport.TransportFactory
 
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
 
 class DefaultReactor(
     val system: ActorSystem,
     val transportFactory: TransportFactory,
     val maxTasksPerRun: Int = DEFAULT_MAX_TASKS_PER_RUN
-) extends Reactor {
+) extends AtomicInteger
+    with Reactor {
 
     private val logger: Logger = Logger.getLogger(getClass, system)
 
@@ -41,8 +43,7 @@ class DefaultReactor(
     private var thread: Thread | Null = _
 
     private val ioHandler: IoHandler = {
-        val handler = transportFactory.openIoHandler()
-        handler.setSystem(system)
+        val handler = transportFactory.openIoHandler(system)
         handler
     }
 
@@ -50,13 +51,13 @@ class DefaultReactor(
 
         override def canBlock: Boolean = registerQueue.isEmpty && deregisterQueue.isEmpty
 
-        override def delayNanos(currentTimeNanos: Long): Long = ???
+        override def delayNanos(currentTimeNanos: Long): Long = 50 * 1000 * 1000
 
         override def deadlineNanos: Long = ???
 
     }
 
-    @volatile private var state = ST_NOT_STARTED
+    set(ST_NOT_STARTED)
 
     override def register(channel: Channel): Unit = {
         registerQueue.add(channel)
@@ -67,7 +68,15 @@ class DefaultReactor(
 
     override def close(channel: Channel): Unit = ???
 
-    private def startThread(): Unit = if (state == ST_NOT_STARTED) {}
+    private def startThread(): Unit = if (get() == ST_NOT_STARTED && compareAndSet(ST_NOT_STARTED, ST_STARTED)) {
+        var success = false
+        try {
+            doStartThread()
+            success = true
+        } finally {
+            if (!success) compareAndSet(ST_STARTED, ST_NOT_STARTED)
+        }
+    }
 
     private def doStartThread(): Unit = {
         assert(thread == null)
@@ -80,10 +89,12 @@ class DefaultReactor(
     }
 
     private def run(): Unit = {
-        runIO()
+        while (!confirmShutdown()) {
+            runIO()
 
-        runRegisters(maxTasksPerRun)
-        runDeregisters(maxTasksPerRun)
+            runRegisters(maxTasksPerRun)
+            runDeregisters(maxTasksPerRun)
+        }
     }
 
     /** Called when IO will be processed for all the [[Channel]]s on this [[Reactor]]. This method returns the number of
@@ -98,7 +109,7 @@ class DefaultReactor(
     /** Run by [[executor]] executor */
     private def runRegisters(maxTasks: Int): Int = {
         var processedTasks: Int = 0
-        while (processedTasks < maxTasks && hasTask) {
+        while (processedTasks < maxTasks && !registerQueue.isEmpty) {
             runRegister(registerQueue.poll())
             processedTasks += 1
         }
@@ -109,7 +120,7 @@ class DefaultReactor(
 
     private def runDeregisters(maxTasks: Int): Int = {
         var processedTasks: Int = 0
-        while (processedTasks < maxTasks && hasTask) {
+        while (processedTasks < maxTasks && !deregisterQueue.isEmpty) {
             runDeregister(deregisterQueue.poll())
             processedTasks += 1
         }
@@ -117,6 +128,8 @@ class DefaultReactor(
     }
 
     private def runDeregister(channel: Channel): Unit = ioHandler.deregister(channel)
+
+    private def confirmShutdown(): Boolean = false
 
 }
 

@@ -19,6 +19,7 @@ package io.otavia.core.rust
 import io.otavia.core.channel.Channel
 import io.otavia.core.channel.socket.SocketProtocolFamily
 import io.otavia.core.reactor.IoHandler
+import io.otavia.core.system.ActorSystem
 import io.otavia.core.transport.TransportFactory
 
 import java.net.ProtocolFamily
@@ -39,6 +40,6 @@ class NativeTransportFactory extends TransportFactory {
 
     override def openFileChannel(): Channel = ???
 
-    override def openIoHandler(): IoHandler = ???
+    override def openIoHandler(system: ActorSystem): IoHandler = ???
 
 }

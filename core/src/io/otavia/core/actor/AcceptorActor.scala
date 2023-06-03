@@ -49,7 +49,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
         channel.pipeline.addLast(new AcceptorHandler)
     }
 
-    final override protected def newChannel(): Channel = system.channelFactory.openServerSocketChannel()
+    final override protected def newChannel(): Channel = system.channelFactory.openServerSocketChannel(family)
 
     final protected def bind(stack: AskStack[Bind]): Option[StackState] = {
         stack.stackState match

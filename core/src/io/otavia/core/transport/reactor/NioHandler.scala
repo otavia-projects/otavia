@@ -23,6 +23,7 @@ import io.otavia.core.channel.{Channel, ChannelException}
 import io.otavia.core.message.ReactorEvent
 import io.otavia.core.reactor.*
 import io.otavia.core.slf4a.Logger
+import io.otavia.core.system.ActorSystem
 import io.otavia.core.transport.nio.channel.{AbstractNioChannel, NioProcessor}
 import io.otavia.core.transport.reactor.NioHandler.*
 
@@ -39,11 +40,13 @@ import scala.jdk.CollectionConverters
 import scala.language.unsafeNulls
 import scala.util.*
 
-final class NioHandler(val selectorProvider: SelectorProvider, val selectStrategy: SelectStrategy) extends IoHandler {
+final class NioHandler(val selectorProvider: SelectorProvider, val selectStrategy: SelectStrategy, sys: ActorSystem)
+    extends IoHandler(sys) {
 
-    def this() = this(SelectorProvider.provider(), DefaultSelectStrategyFactory.newSelectStrategy())
+    def this(system: ActorSystem) =
+        this(SelectorProvider.provider(), DefaultSelectStrategyFactory.newSelectStrategy(), system)
 
-    val logger: Logger = Logger.getLogger(getClass, system)
+    private val logger: Logger = Logger.getLogger(getClass, sys)
 
     private val selectNowSupplier: IntSupplier = new IntSupplier {
         override def getAsInt: Int = try { selectNow() }
@@ -52,9 +55,9 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
 
     private val selectorTuple: SelectorTuple = openSelector()
 
-    private var selector: Selector                            = selectorTuple.selector
-    private var unwrappedSelector: Selector                   = selectorTuple.unwrappedSelector
-    private var selectedKeys: Option[SelectedSelectionKeySet] = None
+    private var selector: Selector                    = selectorTuple.selector
+    private var unwrappedSelector: Selector           = selectorTuple.unwrappedSelector
+    private var selectedKeys: SelectedSelectionKeySet = _
 
     /** Boolean that controls determines if a blocked Selector.select should break out of its selection process. In our
      *  case we use a timeout for the select method and the select method will block for that time unless waken up.
@@ -127,7 +130,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
                                 logger.trace(msg)
                                 SelectorTuple(unwrappedSelector)
                             case Success(_) =>
-                                selectedKeys = Some(selectedKeySet)
+                                selectedKeys = selectedKeySet
                                 logger.trace(s"instrumented a special java.util.Set into: $unwrappedSelector")
                                 SelectorTuple(
                                   unwrappedSelector,
@@ -183,7 +186,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         var handled = 0
         try {
             val strategy = selectStrategy.calculateStrategy(selectNowSupplier, !runner.canBlock)
-            if (strategy == SelectStrategy.CONTINUE) {} else {
+            if (strategy == SelectStrategy.SELECT) { // can block to select ready io events.
                 try {
                     select(runner, wakenUp.getAndSet(false))
                     if (wakenUp.get()) selector.wakeup()
@@ -193,12 +196,14 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
                         handleLoopException(e)
                         handled = 0
                 }
-                cancelledKeys = 0
-                needsToSelectAgain = false
-                handled = processSelectedKeys()
             }
+            cancelledKeys = 0
+            needsToSelectAgain = false
+            handled = processSelectedKeys()
         } catch {
-            case e: Error     => throw e
+            case e: Error =>
+                e.printStackTrace()
+                throw e
             case t: Throwable => handleLoopException(t)
         }
         handled
@@ -212,7 +217,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         catch { case e: InterruptedException => } // Ignore.
     }
 
-    private def processSelectedKeys(): Int = if (selectedKeys.nonEmpty)
+    private def processSelectedKeys(): Int = if (selectedKeys ne null)
         processSelectedKeysOptimized()
     else
         processSelectedKeysPlain()
@@ -254,7 +259,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
 
     private def processSelectedKeysOptimized(): Int = {
         var handled = 0
-        val keys    = selectedKeys.get
+        val keys    = selectedKeys
         var i       = 0
         val size    = keys.size()
         while (i < size) {
@@ -443,16 +448,6 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
 }
 
 object NioHandler {
-
-    def newFactory(): IoHandlerFactory = new IoHandlerFactory {
-        override def newHandler: IoHandler = new NioHandler()
-    }
-
-    def newFactory(selectorProvider: SelectorProvider, selectStrategyFactory: SelectStrategyFactory): IoHandlerFactory =
-        new IoHandlerFactory {
-            override def newHandler: IoHandler =
-                new NioHandler(selectorProvider, selectStrategyFactory.newSelectStrategy())
-        }
 
     final protected case class SelectorTuple(unwrappedSelector: Selector, selector: Selector) {
         def this(unwrappedSelector: Selector) = this(unwrappedSelector, unwrappedSelector)

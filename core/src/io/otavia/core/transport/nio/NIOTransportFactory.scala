@@ -98,6 +98,7 @@ class NIOTransportFactory() extends TransportFactory {
 
     override def openFileChannel(): Channel = new NioFileChannel()
 
-    override def openIoHandler(): IoHandler = new NioHandler(selectorProvider, DefaultSelectStrategy)
+    override def openIoHandler(system: ActorSystem): IoHandler =
+        new NioHandler(selectorProvider, DefaultSelectStrategy, system)
 
 }

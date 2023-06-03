@@ -19,10 +19,11 @@
 package io.otavia.core.reactor
 
 import java.util.concurrent.{Executor, ThreadFactory}
+import scala.language.unsafeNulls
 
 class LoopExecutor(private val threadFactory: ThreadFactory) extends Executor {
     override def execute(command: Runnable): Unit = {
-        val thread: Thread = threadFactory.newThread(command).nn
+        val thread: Thread = threadFactory.newThread(command)
         thread.start()
     }
 }
@@ -33,7 +34,7 @@ object LoopExecutor {
     def apply(): LoopExecutor                             = new LoopExecutor(threadFactory)
     private object DefaultThreadFactory extends ThreadFactory {
         override def newThread(r: Runnable): Thread = {
-            val thread = new Thread(r, "")
+            val thread = new Thread(r, "otavia-reactor")
             try {
                 if (thread.isDaemon) thread.setDaemon(false)
                 if (thread.getPriority != Thread.NORM_PRIORITY) thread.setPriority(Thread.NORM_PRIORITY)

@@ -22,6 +22,7 @@ import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*
 import io.otavia.core.channel.estimator.{ReadHandleFactory, WriteHandleFactory}
 import io.otavia.core.channel.internal.{ReadSink, WriteSink}
+import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import io.otavia.core.rust.NativeSocket
 
 import java.net.SocketAddress
@@ -30,11 +31,11 @@ import java.nio.channels.SelectableChannel
 abstract class AbstractNativeNetChannel[L <: SocketAddress, R <: SocketAddress](
     supportingDisconnect: Boolean,
     initialFlag: Int,
-    defaultReadHandleFactory: ReadHandleFactory,
+    defaultReadPlanFactory: ReadPlanFactory,
     defaultWriteHandleFactory: WriteHandleFactory,
     val socket: NativeSocket,
     val remote: SocketAddress
-) extends AbstractNetChannel[L, R](supportingDisconnect, defaultReadHandleFactory, defaultWriteHandleFactory) {
+) extends AbstractNetChannel[L, R](supportingDisconnect, defaultReadPlanFactory, defaultWriteHandleFactory) {
 
     override protected[core] def doReadNow(readSink: ReadSink): Boolean = ???
 

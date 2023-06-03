@@ -45,7 +45,6 @@ abstract class AbstractNioByteChannel[L <: SocketAddress, R <: SocketAddress](
     ch: SelectableChannel
 ) extends AbstractNioChannel[L, R](
       false,
-      new AdaptiveReadHandleFactory(),
       defaultWriteHandleFactory,
       ch,
       SelectionKey.OP_READ

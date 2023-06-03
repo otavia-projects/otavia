@@ -18,16 +18,17 @@
 
 package io.otavia.core.transport.nio.channel
 
-import io.otavia.buffer.Buffer
 import io.netty5.util.NetUtil
 import io.netty5.util.internal.SocketUtils
+import io.otavia.buffer.Buffer
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*
 import io.otavia.core.channel.estimator.{ServerChannelReadHandleFactory, ServerChannelWriteHandleFactory}
 import io.otavia.core.channel.internal.{ReadSink, WriteSink}
-import io.otavia.core.channel.socket.SocketProtocolFamily
+import io.otavia.core.channel.message.MaxMessagesReadPlanFactory.ServerChannelReadPlanFactory
+import io.otavia.core.message.ReactorEvent
 
-import java.net.{ProtocolFamily, SocketAddress}
+import java.net.{ProtocolFamily, SocketAddress, StandardProtocolFamily}
 import java.nio.channels.spi.SelectorProvider
 import java.nio.channels.{SelectableChannel, SelectionKey, ServerSocketChannel}
 import scala.language.unsafeNulls
@@ -40,25 +41,23 @@ import scala.util.Try
  *  In addition to the options provided by [[NioSocketChannel]] allows the following options in the option map:
  *
  *  <table border="1" cellspacing="0" cellpadding="6"> <tr> <th>[[ChannelOption]]</th>
- *  <th>[[SocketProtocolFamily.INET]]</th> <th>[[SocketProtocolFamily.INET6]]</th>
- *  <th>[[SocketProtocolFamily.UNIX]]</th> </tr><tr> <td>[[NioChannelOption]]</td> <td>X</td><td>X</td><td>X</td> </tr>
- *  </table>
+ *  <th>[[StandardProtocolFamily.INET]]</th> <th>[[StandardProtocolFamily.INET6]]</th>
+ *  <th>[[StandardProtocolFamily.UNIX]]</th> </tr><tr> <td>[[NioChannelOption]]</td> <td>X</td><td>X</td><td>X</td>
+ *  </tr> </table>
  */
-class NioServerSocketChannel(socket: ServerSocketChannel, protocolFamily: ProtocolFamily)
+class NioServerSocketChannel(socket: ServerSocketChannel, val family: ProtocolFamily)
     extends AbstractNioMessageChannel[SocketAddress, SocketAddress](
       false,
-      new ServerChannelReadHandleFactory(),
       new ServerChannelWriteHandleFactory(),
       socket,
       SelectionKey.OP_ACCEPT
     ) {
 
-    private val family = NioChannelUtil.toJdkFamily(protocolFamily)
-
     @volatile private var backlog = NetUtil.SOMAXCONN
-//    @volatile private var bound   = false
 
-    private var unresolvedLocal: SocketAddress | Null = null
+    private var unresolvedLocal: SocketAddress | Null = _
+
+    setReadPlanFactory(new ServerChannelReadPlanFactory())
 
     override def setUnresolvedLocalAddress(address: SocketAddress): Unit = unresolvedLocal = address
 
@@ -124,18 +123,20 @@ class NioServerSocketChannel(socket: ServerSocketChannel, protocolFamily: Protoc
     @throws[Exception]
     override protected def doBind(): Unit = {
         if (NioChannelUtil.isDomainSocket(family))
-            unresolvedLocal = NioChannelUtil.toUnixDomainSocketAddress(unresolvedLocal.nn)
+            unresolvedLocal = NioChannelUtil.toUnixDomainSocketAddress(unresolvedLocal)
 
-        javaChannel.bind(unresolvedLocal.nn, getBacklog())
+        javaChannel.bind(unresolvedLocal, getBacklog())
         bound = true
     }
 
     override protected def doReadMessages(readSink: ReadSink): Int = {
-        val client = SocketUtils.accept(javaChannel)
+        val client = javaChannel.accept()
         Option(client) match
             case Some(ch) =>
                 try {
-                    readSink.processRead(0, 0, new NioSocketChannel(ch, family))
+                    val channel = new NioSocketChannel(ch, family)
+                    val event   = ReactorEvent.AcceptedEvent(channel)
+                    readSink.processRead(0, 0, event)
                     1
                 } catch {
                     case t: Throwable =>

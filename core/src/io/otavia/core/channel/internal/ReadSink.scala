@@ -22,9 +22,11 @@ import io.otavia.buffer.Buffer
 import io.otavia.core.channel.estimator.ReadHandleFactory
 import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.channel.{AbstractNetChannel, ChannelPipeline, ChannelShutdownDirection, ServerChannel}
+import io.otavia.core.message.ReactorEvent
 
 import java.io.IOException
 import java.net.PortUnreachableException
+import scala.language.unsafeNulls
 
 /** Sink that will be used by [[AbstractNetChannel.doReadNow]] implementations to perform the actual read from the
  *  underlying transport (for example a socket).
@@ -32,14 +34,12 @@ import java.net.PortUnreachableException
 private[core] trait ReadSink {
     this: AbstractNetChannel[?, ?] =>
 
-    private lazy val readHandle: ReadHandleFactory.ReadHandle = newReadHandle // TODO:
-
     readSomething = false
     continueReading = false
 
-    private var readBufferAllocator: ReadPlan = _
+    private var readPlan: ReadPlan = _
 
-    def setReadBufferAllocator(allocator: ReadPlan): Unit = readBufferAllocator = allocator
+    def setReadPlan(plan: ReadPlan): Unit = readPlan = plan
 
     /** Process the read message and fire it through the [[ChannelPipeline]]
      *
@@ -50,7 +50,11 @@ private[core] trait ReadSink {
      *  @param message
      *    the read message or null if none was read.
      */
-    def processRead(attemptedBytesRead: Int, actualBytesRead: Int, message: AnyRef): Unit = {
+    def processRead(attemptedBytesRead: Int, actualBytesRead: Int, message: ReactorEvent): Unit = {
+        message match
+            case null =>
+            case event: ReactorEvent.AcceptedEvent =>
+                executor.address.inform(event)
         // TODO: impl
     }
 
@@ -60,8 +64,7 @@ private[core] trait ReadSink {
      *  @return
      *    the allocated [[Buffer]].
      */
-    def allocateBuffer: Buffer =
-        ??? // readBufferAllocator.allocate(directAllocator, readHandle.estimatedBufferCapacity)
+    def allocateBuffer: Buffer = channelInboundAdaptiveBuffer.ensureWritable(readPlan.estimatedNextSize)
 
     private def complete(): Unit = try {
         readSomething0()
@@ -90,7 +93,7 @@ private[core] trait ReadSink {
             readSomething = false
             pipeline.fireChannelReadComplete()
         }
-        readHandle.readComplete()
+        readPlan.readComplete()
     }
 
     def readLoop(): Unit = {
@@ -99,7 +102,7 @@ private[core] trait ReadSink {
         try {
             while {
                 try {
-                    closed = doReadNow(this) // TODO: submit blocking io task to reactor
+                    closed = doReadNow(this)
                 } catch {
                     case cause: Throwable =>
                         if (completeFailure(cause)) shutdownReadSide() else closeTransport(newPromise())

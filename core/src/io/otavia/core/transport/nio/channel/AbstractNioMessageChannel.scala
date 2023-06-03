@@ -27,13 +27,9 @@ import java.nio.channels.SelectableChannel
 
 /** [[AbstractNioChannel]] base class for [[Channel]]s that operate on messages.
  *
- *  @param executor
- *    the [[ChannelsActor]] which will be used.
  *  @param supportingDisconnect
  *    true if and only if the channel has the [[disconnect]] operation that allows a user to disconnect and then call
  *    [[Channel.connect()]] again, such as UDP/IP.
- *  @param defaultReadHandleFactory
- *    the [[ReadHandleFactory]] that is used by default.
  *  @param defaultWriteHandleFactory
  *    the [[WriteHandleFactory]] that is used by default.
  *  @param ch
@@ -47,13 +43,11 @@ import java.nio.channels.SelectableChannel
  */
 abstract class AbstractNioMessageChannel[L <: SocketAddress, R <: SocketAddress](
     supportingDisconnect: Boolean,
-    defaultReadHandleFactory: ReadHandleFactory,
     defaultWriteHandleFactory: WriteHandleFactory,
     ch: SelectableChannel,
     readInterestOp: Int
 ) extends AbstractNioChannel[L, R](
       supportingDisconnect,
-      defaultReadHandleFactory,
       defaultWriteHandleFactory,
       ch,
       readInterestOp

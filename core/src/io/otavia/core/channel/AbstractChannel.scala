@@ -21,7 +21,7 @@ package io.otavia.core.channel
 import io.netty5.util.DefaultAttributeMap
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
-import io.otavia.core.channel.message.ReadPlan
+import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.stack.ChannelPromise
 import io.otavia.core.system.ActorThread
@@ -29,6 +29,7 @@ import io.otavia.core.system.ActorThread
 import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
+import scala.language.unsafeNulls
 
 /** Abstract class of file channel and network channel. */
 abstract class AbstractChannel extends DefaultAttributeMap, Channel, ChannelState {
@@ -40,6 +41,8 @@ abstract class AbstractChannel extends DefaultAttributeMap, Channel, ChannelStat
     private var actor: ChannelsActor[?] | Null = _
 
     private var pipe: ChannelPipeline = _
+
+    private var readFactory: ReadPlanFactory = _
 
     // initial channel state on constructing
     created = true
@@ -75,6 +78,15 @@ abstract class AbstractChannel extends DefaultAttributeMap, Channel, ChannelStat
         channelId = executor.generateChannelId()
         pipe = newChannelPipeline()
         mounted = true
+    }
+
+    def readPlanFactory: ReadPlanFactory = readFactory
+
+    @SuppressWarnings(Array("unchecked"))
+    private[core] def getReadPlanFactory[T <: ReadPlanFactory] = readFactory.asInstanceOf[T]
+
+    protected def setReadPlanFactory(factory: ReadPlanFactory): Unit = {
+        this.readFactory = factory
     }
 
     override def pipeline: ChannelPipeline = pipe

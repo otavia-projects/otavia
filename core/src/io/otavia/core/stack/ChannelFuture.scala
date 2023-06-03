@@ -48,8 +48,6 @@ private[core] class ChannelPromise extends TimeoutablePromise[ReactorEvent] with
     private var event: ReactorEvent                      = _
     private var throwable: Throwable                     = _
     private var listeners: mutable.Queue[ChannelPromise] = _
-    private var succ: ChannelPromise => Unit             = _ => {}
-    private var failure: ChannelPromise => Unit          = _ => {}
     private var callback: ChannelPromise => Unit         = _
 
     private[core] def setChannel(channel: Channel): Unit = ch = channel
@@ -62,7 +60,7 @@ private[core] class ChannelPromise extends TimeoutablePromise[ReactorEvent] with
     }
 
     private def completed(): Unit = {
-        if (isSuccess && (succ ne null)) execute(succ) else if (isFailed && (failure ne null)) execute(failure)
+        if (callback ne null) execute(callback)
         if (stack ne null) {
             val actor = stack.runtimeActor
             actor.receiveFuture(this)
@@ -85,7 +83,13 @@ private[core] class ChannelPromise extends TimeoutablePromise[ReactorEvent] with
 
     override def recycle(): Unit = ChannelFuture.pool.recycle(this)
 
-    override protected def cleanInstance(): Unit = ???
+    override protected def cleanInstance(): Unit = {
+        ch = null
+        event = null
+        throwable = null
+        callback = null
+        super.cleanInstance()
+    }
 
     override def isSuccess: Boolean = event ne null
 
@@ -107,11 +111,9 @@ private[core] class ChannelPromise extends TimeoutablePromise[ReactorEvent] with
 
     def execute(task: ChannelPromise => Unit): Unit = task(this)
 
-    def onSuccess(task: ChannelPromise => Unit): Unit =
-        if (isSuccess) execute(task) else succ = task
+    def onSuccess(task: ChannelPromise => Unit): Unit = ???
 
-    def onFailure(task: ChannelPromise => Unit): Unit =
-        if (isFailed) execute(task) else failure = task
+    def onFailure(task: ChannelPromise => Unit): Unit = ???
 
     def onCompleted(task: ChannelPromise => Unit): Unit = if (isDone) execute(task) else callback = task
 

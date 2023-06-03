@@ -25,13 +25,7 @@ import io.otavia.core.system.ActorSystem
  *  [[isCompatible]] <strong>MUST</strong> be executed on the [[io.otavia.core.reactor.Reactor]] and should never be
  *  called from the user-directly.
  */
-abstract class IoHandler {
-
-    private var sys: ActorSystem = _
-
-    def setSystem(system: ActorSystem): Unit = sys = system
-
-    def system: ActorSystem = sys
+abstract class IoHandler(val system: ActorSystem) {
 
     /** Run the IO handled by this [[IoHandler]]. The [[IoExecutionContext]] should be used to ensure we not execute too
      *  long and so block the processing of other task that are scheduled on the [[io.otavia.core.actor.ChannelsActor]]
