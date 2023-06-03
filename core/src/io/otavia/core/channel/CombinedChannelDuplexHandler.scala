@@ -232,9 +232,9 @@ class CombinedChannelDuplexHandler[I <: ChannelHandler, O <: ChannelHandler] ext
             outbound.deregister(outboundCtx, future)
         else outboundCtx.deregister(future)
 
-    override def read(ctx: ChannelHandlerContext, readBufferAllocator: ReadPlan): Unit =
-        if (!outboundCtx.removed) outbound.read(outboundCtx, readBufferAllocator)
-        else outboundCtx.read(readBufferAllocator)
+    override def read(ctx: ChannelHandlerContext, readPlan: ReadPlan): Unit =
+        if (!outboundCtx.removed) outbound.read(outboundCtx, readPlan)
+        else outboundCtx.read(readPlan)
 
     override def write(ctx: ChannelHandlerContext, msg: AnyRef): Unit = if (outboundCtx.removed)
         outbound.write(outboundCtx, msg)

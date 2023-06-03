@@ -50,14 +50,24 @@ object MaxMessagesReadPlanFactory {
     abstract class MaxMessageReadPlan(val maxMessagesPerRead: Int) extends ReadPlan {
 
         assert(maxMessagesPerRead > 0)
-        private var totalMessages: Int = 0
+
+        private var messagesCompleted: Int = 0
+        private var messagesPrepared: Int  = 0
 
         override def lastRead(attemptedBytesRead: Int, actualBytesRead: Int, numMessagesRead: Int): Boolean = {
-            if (numMessagesRead > 0) totalMessages += numMessagesRead
-            totalMessages < maxMessagesPerRead
+            if (numMessagesRead > 0) messagesCompleted += numMessagesRead
+            messagesCompleted < maxMessagesPerRead
         }
 
-        override def readComplete(): Unit = totalMessages = 0
+        override def readComplete(): Unit = {
+            messagesCompleted = 0
+            messagesPrepared = 0
+        }
+
+        override def estimatedNextSize: Int = {
+            messagesPrepared += 1
+            if (messagesPrepared < maxMessagesPerRead) 1 else 0
+        }
 
     }
 
@@ -67,7 +77,7 @@ object MaxMessagesReadPlanFactory {
         override protected def newMaxMessagePlan(maxMessagesPerRead: Int): MaxMessageReadPlan =
             new MaxMessageReadPlan(maxMessagesPerRead) {
 
-                override def estimatedNextSize: Int = 128
+                override def estimatedNextSize: Int = 128 * super.estimatedNextSize
 
             }
     }

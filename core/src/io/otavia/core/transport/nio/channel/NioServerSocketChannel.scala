@@ -151,6 +151,10 @@ class NioServerSocketChannel(socket: ServerSocketChannel, val family: ProtocolFa
                 0
     }
 
+    override protected def readLoopComplete(): Unit = {
+        executor.address.inform(ReactorEvent.ReadCompletedEvent(this))
+    }
+
     override protected def doConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Boolean =
         throw new UnsupportedOperationException()
 

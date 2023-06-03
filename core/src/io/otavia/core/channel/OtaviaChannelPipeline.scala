@@ -859,9 +859,9 @@ object OtaviaChannelPipeline {
             future
         }
 
-        override def read(ctx: ChannelHandlerContext, readBufferAllocator: ReadPlan): Unit = {
+        override def read(ctx: ChannelHandlerContext, readPlan: ReadPlan): Unit = {
             val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
-            abstractChannel.readTransport(readBufferAllocator)
+            abstractChannel.readTransport(readPlan)
         }
 
         override def write(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {

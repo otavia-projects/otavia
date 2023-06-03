@@ -218,10 +218,10 @@ trait ChannelHandler {
      *
      *  @param ctx
      *    the [[ChannelHandlerContext]] for which the bind operation is made
-     *  @param readBufferAllocator
+     *  @param readPlan
      *    The [[ReadPlan]] that should be used to allocate a [[Buffer]] if needed (for reading the data).
      */
-    def read(ctx: ChannelHandlerContext, readBufferAllocator: ReadPlan): Unit = ctx.read(readBufferAllocator)
+    def read(ctx: ChannelHandlerContext, readPlan: ReadPlan): Unit = ctx.read(readPlan)
 
     /** Called once a write operation is made. The write operation will write the messages through the
      *  [[ChannelPipeline]]. Those are then ready to be flushed to the actual [[Channel]] once [[Channel.flush()]] is

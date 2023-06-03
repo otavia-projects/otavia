@@ -334,15 +334,16 @@ final class OtaviaChannelHandlerContext(
         this
     }
 
-    private def invokeRead(allocator: ReadPlan): Unit = try {
-        if (saveCurrentPendingBytesIfNeededInbound()) handler.read(this, allocator)
+    private def invokeRead(readPlan: ReadPlan): Unit = try {
+        if (saveCurrentPendingBytesIfNeededInbound()) handler.read(this, readPlan)
     } catch {
         case t: Throwable => handleOutboundHandlerException(t, false)
     } finally updatePendingBytesIfNeeded()
 
     override def read(): this.type = {
-        val ctx = findContextOutbound(ChannelHandlerMask.MASK_READ)
-        ctx.invokeRead(OtaviaChannelPipeline.DEFAULT_READ_PLAN)
+        val ctx  = findContextOutbound(ChannelHandlerMask.MASK_READ)
+        val plan = ctx.channel.asInstanceOf[AbstractChannel].readPlanFactory.newPlan(ctx.channel)
+        ctx.invokeRead(plan)
         this
     }
 

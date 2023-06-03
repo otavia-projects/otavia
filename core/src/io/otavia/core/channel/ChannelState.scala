@@ -107,11 +107,11 @@ trait ChannelState extends CompressionBooleanLong {
 
     override final def isMounted: Boolean = mounted
 
-    protected final def readSomething_=(value: Boolean): Unit = set(ST_READ_SOMETHING, value)
-    protected final def readSomething: Boolean                = get(ST_READ_SOMETHING)
+//    protected final def readSomething_=(value: Boolean): Unit = set(ST_READ_SOMETHING, value)
+//    protected final def readSomething: Boolean                = get(ST_READ_SOMETHING)
 
-    protected final def continueReading_=(value: Boolean): Unit = set(ST_CONTINUE_READING, value)
-    protected final def continueReading: Boolean                = get(ST_CONTINUE_READING)
+//    protected final def continueReading_=(value: Boolean): Unit = set(ST_CONTINUE_READING, value)
+//    protected final def continueReading: Boolean                = get(ST_CONTINUE_READING)
 
     /** Set the [[Channel]] inbound head-of-line
      *  @param value

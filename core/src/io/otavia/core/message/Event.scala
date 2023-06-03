@@ -52,6 +52,8 @@ enum ReactorEvent extends Event {
 
     case AcceptedEvent(channel: Channel)
 
+    case ReadCompletedEvent(channel: Channel)
+
 }
 
 case class BlockFutureCompletedEvent(promise: BlockPromise[?]) extends Event

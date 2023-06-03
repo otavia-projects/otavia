@@ -34,8 +34,8 @@ import scala.language.unsafeNulls
 private[core] trait ReadSink {
     this: AbstractNetChannel[?, ?] =>
 
-    readSomething = false
-    continueReading = false
+    private var readSomething   = false
+    private var continueReading = false
 
     private var readPlan: ReadPlan = _
 
@@ -53,8 +53,13 @@ private[core] trait ReadSink {
     def processRead(attemptedBytesRead: Int, actualBytesRead: Int, message: ReactorEvent): Unit = {
         message match
             case null =>
+                readPlan.lastRead(attemptedBytesRead, actualBytesRead, 0)
+                continueReading = false
             case event: ReactorEvent.AcceptedEvent =>
+                readSomething = true
+                continueReading = readPlan.lastRead(attemptedBytesRead, actualBytesRead, 1)
                 executor.address.inform(event)
+
         // TODO: impl
     }
 
@@ -88,12 +93,13 @@ private[core] trait ReadSink {
     }
 
     private def readSomething0(): Unit = {
+        // Complete the read handle, allowing channelReadComplete to schedule more reads.
+        readPlan.readComplete()
         // Check if something was read as in this case we wall need to call the *ReadComplete methods.
         if (readSomething) {
             readSomething = false
-            pipeline.fireChannelReadComplete()
+            // pipeline.fireChannelReadComplete()
         }
-        readPlan.readComplete()
     }
 
     def readLoop(): Unit = {
@@ -120,7 +126,9 @@ private[core] trait ReadSink {
             // See https://github.com/netty/netty/issues/2254
             // TODO: impl
         }
-        // TODO: impl
+
+        if (closed) shutdownReadSide() else readIfIsAutoRead() // TODO: do not call this in reactor thread
+
     }
 
 }
