@@ -50,7 +50,7 @@ enum ReactorEvent extends Event {
 
     case EMPTY_EVENT
 
-    case AcceptedEvent(channel: Channel)
+    case AcceptedEvent(channel: Channel, accepted: Channel)
 
     case ReadCompletedEvent(channel: Channel)
 

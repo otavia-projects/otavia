@@ -94,7 +94,7 @@ trait ChannelInflightImpl extends ChannelInflight {
         this.flush()
     }
 
-    override def generateMessageId: Long = ???
+    override def generateMessageId: Long = 1
 
     override private[core] def onInboundMessage(msg: AnyRef): Unit = ???
 
@@ -103,7 +103,6 @@ trait ChannelInflightImpl extends ChannelInflight {
 //        this.executor.continueChannelStack()
 
         this.executor.receiveChannelMessage(stack)
-        ???
     }
 
     final override def outboundInflightSize: Int = outboundInflightFutures.size

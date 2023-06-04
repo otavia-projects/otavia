@@ -65,11 +65,38 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         runChannelStack()
     }
 
-    def runChannelStack(): Unit = {
-        // TODO
+    private def runChannelStack(): Unit = {
+        val channelStack = currentStack.asInstanceOf[ChannelStack[?]]
+        try {
+            val uncompleted = channelStack.uncompletedIterator()
+            val oldState    = channelStack.stackState
+            continueChannel(channelStack) match // run stack and switch to next state
+                case Some(state) =>
+                    if (state != oldState) {
+                        channelStack.setState(state) // this also recycled all completed promise
+                        if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                    } else { // state == oldState, recover uncompleted promise
+                        if (uncompleted.hasNext) channelStack.addUncompletedPromiseIterator(uncompleted)
+                    }
+                    assert(channelStack.hasUncompletedPromise, s"has no future to wait for $channelStack")
+                case None =>
+                    if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                    recycleUncompletedPromise(channelStack.uncompletedIterator())
+                    assert(channelStack.isDone, "continueAsk is return None but not call return method!")
+                    channelStack.recycle()
+        } catch {
+            case cause: Throwable =>
+                cause.printStackTrace()
+                channelStack.`return`(cause) // completed stack with Exception
+                recycleUncompletedPromise(channelStack.uncompletedIterator())
+                channelStack.recycle()
+        } finally {
+            currentStack = null
+            currentReceived = null
+        }
     }
 
-    final override protected def receiveIOEvent(event: Event): Unit = event match
+    final override protected def receiveReactorEvent(event: Event): Unit = event match
         case e: ReactorEvent.RegisterReply =>
             e.channel.handleChannelRegisterReplyEvent(e)
             afterChannelRegisterReplyEvent(e)
@@ -85,6 +112,10 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         case channelTimeoutEvent: ChannelTimeoutEvent =>
             channelTimeoutEvent.channel.handleChannelTimeoutEvent(channelTimeoutEvent.registerId)
             afterChannelTimeoutEvent(channelTimeoutEvent)
+        case e: ReactorEvent.AcceptedEvent =>
+            e.channel.handleChannelAcceptedEvent(e)
+        case e: ReactorEvent.ReadCompletedEvent =>
+            e.channel.handleChannelReadCompletedEvent(e)
 
     // Event from Reactor
 

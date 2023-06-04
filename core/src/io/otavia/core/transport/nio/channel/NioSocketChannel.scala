@@ -18,10 +18,11 @@
 
 package io.otavia.core.transport.nio.channel
 
-import io.otavia.buffer.Buffer
 import io.netty5.util.internal.SocketUtils
+import io.otavia.buffer.Buffer
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
+import io.otavia.core.channel.message.FixedReadPlanFactory
 import io.otavia.core.channel.socket.SocketChannelWriteHandleFactory
 import io.otavia.core.channel.{ChannelOption, ChannelShutdownDirection, FileRegion}
 
@@ -56,6 +57,8 @@ class NioSocketChannel(socket: SocketChannel, protocolFamily: ProtocolFamily)
 
     private var unresolvedRemote: SocketAddress | Null = null
     private var unresolvedLocal: SocketAddress | Null  = null
+
+    setReadPlanFactory(new FixedReadPlanFactory())
 
     override def setUnresolvedRemoteAddress(address: SocketAddress): Unit = unresolvedRemote = address
 

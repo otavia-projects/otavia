@@ -109,8 +109,10 @@ private[core] trait ReadSink {
             while {
                 try {
                     closed = doReadNow(this)
+                    println(s"loop result closed: ${closed}")
                 } catch {
                     case cause: Throwable =>
+                        cause.printStackTrace()
                         if (completeFailure(cause)) shutdownReadSide() else closeTransport(newPromise())
                         return
                 }

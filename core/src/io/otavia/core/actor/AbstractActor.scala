@@ -40,7 +40,7 @@ private[core] abstract class AbstractActor[M <: Call]
     private var ctx: ActorContext = _
 
     // current received msg
-    private var currentReceived: Call | Reply | Seq[Call] = _
+    private[core] var currentReceived: Call | Reply | Seq[Call] | AnyRef = _
 
     private[core] var currentIsBatch: Boolean = false
 
@@ -329,9 +329,9 @@ private[core] abstract class AbstractActor[M <: Call]
         }
     }
 
-    private def recycleUncompletedPromise(uncompleted: Stack.UncompletedPromiseIterator): Unit = { // TODO: ChannelPromise
+    private[core] def recycleUncompletedPromise(uncompleted: Stack.UncompletedPromiseIterator): Unit = { // TODO: ChannelPromise
         while (uncompleted.hasNext) {
-            val promise = uncompleted.nextCast[ReplyPromise[?]]()
+            val promise = uncompleted.next()
             this.pop(promise.id)
             promise.recycle()
         }
@@ -384,7 +384,7 @@ private[core] abstract class AbstractActor[M <: Call]
     final override private[core] def receiveEvent(event: Event): Unit = event match
         case askTimeoutEvent: AskTimeoutEvent => handleAskTimeoutEvent(askTimeoutEvent)
         case timeoutEvent: TimeoutEvent       => handleActorTimeout(timeoutEvent)
-        case _                                => receiveIOEvent(event)
+        case _                                => receiveReactorEvent(event)
 
     private def handleAskTimeoutEvent(askTimeoutEvent: AskTimeoutEvent): Unit = {
         pop(askTimeoutEvent.askId) match

@@ -268,7 +268,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
             // See https://github.com/netty/netty/issues/2363
             keys.keys(i) = null
 
-            processSelectedKey(key)
+            processSelectedKey(key) // TODO: key is null
             handled += 1
 
             if (needsToSelectAgain) {

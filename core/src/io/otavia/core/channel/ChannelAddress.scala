@@ -36,6 +36,11 @@ trait ChannelAddress {
     /** Unique id of this channel */
     def id: Int
 
+    inline private def setFutureCtx(future: ChannelFuture): Unit = {
+        executor.attachStack(executor.idAllocator.generate, future)
+        future.promise.setChannel(this)
+    }
+
     /** Request to bind to the given [[SocketAddress]] and notify the [[ChannelFuture]] once the operation completes,
      *  either because the operation was successful or because of an error. This will result in having the
      *  [[ChannelHandler.bind(ChannelHandlerContext, SocketAddress)]] method called of the next [[ChannelHandler]]
@@ -49,8 +54,7 @@ trait ChannelAddress {
      *    same [[ChannelFuture]] in params [[future]]
      */
     def bind(local: SocketAddress, future: ChannelFuture): ChannelFuture = {
-        executor.attachStack(executor.idAllocator.generate, future)
-        future.promise.setChannel(this)
+        setFutureCtx(future)
         this.pipeline.bind(local, future)
     }
 
@@ -69,7 +73,7 @@ trait ChannelAddress {
      *    same [[ChannelFuture]] in params [[future]]
      */
     def connect(remote: SocketAddress, local: Option[SocketAddress], future: ChannelFuture): ChannelFuture = {
-        // TODO: attach future to stack
+        setFutureCtx(future)
         pipeline.connect(remote, local, future)
     }
 
@@ -121,7 +125,7 @@ trait ChannelAddress {
      *    [[FileChannel]]
      */
     def open(path: Path, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]], future: ChannelFuture): ChannelFuture = {
-        // TODO: attach future to stack
+        setFutureCtx(future)
         pipeline.open(path, opts, attrs, future)
     }
 
@@ -172,7 +176,7 @@ trait ChannelAddress {
      *    same [[ChannelFuture]] in params future
      */
     def disconnect(future: ChannelFuture): ChannelFuture = {
-        // TODO: attach future to stack
+        setFutureCtx(future)
         pipeline.disconnect(future)
     }
 
@@ -187,7 +191,7 @@ trait ChannelAddress {
      *    same [[ChannelFuture]] in params future
      */
     def close(future: ChannelFuture): ChannelFuture = {
-        // TODO: attach future to stack
+        setFutureCtx(future)
         pipeline.close(future)
     }
 
@@ -210,7 +214,7 @@ trait ChannelAddress {
      *    same [[ChannelFuture]] in params future
      */
     def shutdown(direction: ChannelShutdownDirection, future: ChannelFuture): ChannelFuture = {
-        // TODO: attach future to stack
+        setFutureCtx(future)
         pipeline.shutdown(direction, future)
     }
 
@@ -225,7 +229,7 @@ trait ChannelAddress {
      *    same [[ChannelFuture]] in params future
      */
     def register(future: ChannelFuture): ChannelFuture = {
-        // TODO: attach future to stack
+        setFutureCtx(future)
         pipeline.register(future)
     }
 
@@ -240,7 +244,7 @@ trait ChannelAddress {
      *    same [[ChannelFuture]] in params future
      */
     def deregister(future: ChannelFuture): ChannelFuture = {
-        // TODO: attach future to stack
+        setFutureCtx(future)
         pipeline.deregister(future)
     }
 

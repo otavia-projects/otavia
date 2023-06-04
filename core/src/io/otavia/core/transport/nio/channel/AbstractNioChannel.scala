@@ -137,6 +137,14 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
         case _: CancelledKeyException => closeTransport(newPromise())
     }
 
+    override private[core] def handleChannelAcceptedEvent(event: ReactorEvent.AcceptedEvent): Unit = {
+        event.channel.pipeline.fireChannelRead(event.accepted)
+    }
+
+    override private[core] def handleChannelReadCompletedEvent(event: ReactorEvent.ReadCompletedEvent): Unit = {
+        event.channel.pipeline.fireChannelReadComplete()
+    }
+
     // End implementation of EventHandle
 
     final def nioProcessor: NioProcessor = this
@@ -145,7 +153,7 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
 
     protected def javaChannel: SelectableChannel = ch
 
-    protected def selectionKey: SelectionKey = _selectionKey.nn
+    protected def selectionKey: SelectionKey = _selectionKey
 
     override protected def doClearScheduledRead(): Unit = {
         val key = _selectionKey
@@ -163,8 +171,8 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
     }
 
     // Channel.read() or ChannelHandlerContext.read() was called
-    override protected def doRead(): Unit = if (_selectionKey.nn.isValid()) {
-        val ops = selectionKey.nn.interestOps()
+    override protected def doRead(): Unit = if (_selectionKey.isValid) {
+        val ops = selectionKey.interestOps()
         if ((ops & readInterestOp) == 0)
             selectionKey.interestOps(ops | readInterestOp)
     }
@@ -175,8 +183,8 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
         // Check first if the key is still valid as it may be canceled as part of the deregistration
         // from the EventLoop
         // See https://github.com/netty/netty/issues/2104
-        if (_selectionKey != null && _selectionKey.nn.isValid()) {
-            val ops = _selectionKey.nn.interestOps()
+        if (_selectionKey != null && _selectionKey.isValid) {
+            val ops = _selectionKey.interestOps()
 
         }
     }

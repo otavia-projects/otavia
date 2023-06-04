@@ -26,6 +26,8 @@ class ChannelStack[+T <: AnyRef] private () extends Stack {
     private var belong: Channel = _
     private var msgId: Long     = -1
 
+    private var ret: AnyRef = _
+
     def message: T                                = msg.asInstanceOf[T]
     private[core] def setMessage(m: AnyRef): Unit = msg = m
 
@@ -42,6 +44,15 @@ class ChannelStack[+T <: AnyRef] private () extends Stack {
         msg = null
         belong = null
         msgId = -1
+        ret = null
+    }
+
+    def isDone: Boolean = ret != null
+
+    def `return`(ret: AnyRef): None.type = {
+        this.ret = ret
+        belong.write(ret, msgId)
+        None
     }
 
 }

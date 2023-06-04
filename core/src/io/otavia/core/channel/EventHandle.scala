@@ -42,4 +42,8 @@ trait EventHandle {
     /** Handle channel timeout event */
     private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit
 
+    private[core] def handleChannelAcceptedEvent(event: ReactorEvent.AcceptedEvent): Unit
+
+    private[core] def handleChannelReadCompletedEvent(event: ReactorEvent.ReadCompletedEvent): Unit
+
 }

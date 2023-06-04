@@ -108,4 +108,9 @@ class NioFileChannel() extends AbstractFileChannel {
 
     override private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit = ???
 
+    override private[core] def handleChannelAcceptedEvent(event: ReactorEvent.AcceptedEvent): Unit =
+        throw new UnsupportedOperationException()
+
+    override private[core] def handleChannelReadCompletedEvent(event: ReactorEvent.ReadCompletedEvent): Unit = ???
+
 }

@@ -28,10 +28,12 @@ import io.otavia.core.channel.message.FixedReadPlanFactory.FixedReadPlan
  *  @param maxMessagesPerRead
  *    max message per read.
  */
-class FixedReadPlanFactory(val bufferSize: Int, maxMessagesPerRead: Int = Int.MaxValue)
+class FixedReadPlanFactory(val bufferSize: Int = 2048, maxMessagesPerRead: Int = Int.MaxValue)
     extends MaxMessagesReadPlanFactory(maxMessagesPerRead) {
+
     override protected def newMaxMessagePlan(maxMessagesPerRead: Int): FixedReadPlan =
         new FixedReadPlan(maxMessagesPerRead, bufferSize)
+        
 }
 
 object FixedReadPlanFactory {

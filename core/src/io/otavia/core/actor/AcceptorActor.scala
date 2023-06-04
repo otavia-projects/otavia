@@ -83,12 +83,14 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
 
     private def handleAcceptedStack(stack: ChannelStack[Channel]): Option[StackState] = {
         stack.stackState match
-            case StackState.`start` =>
+            case StackState.start =>
                 val state = new DispatchState()
                 workers.ask(AcceptedChannel(stack.message), state.dispatchFuture)
                 state.suspend()
             case state: DispatchState =>
-                ???
+                if (state.dispatchFuture.isSuccess) stack.`return`(None)
+                else
+                    stack.`return`(state.dispatchFuture.causeUnsafe)
     }
 
 }
@@ -102,11 +104,18 @@ object AcceptorActor {
     final case class AcceptedChannel(channel: ChannelAddress) extends Ask[UnitReply]
 
     private class AcceptorHandler extends ChannelHandler {
+
         override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
             val accepted = msg.asInstanceOf[Channel]
             val msgId    = ctx.channel.generateMessageId
             ctx.fireChannelRead(accepted, msgId)
         }
+
+        override def write(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit = {
+            println("accepted success")
+            // truncate write event
+        }
+
     }
 
     private final class DispatchState extends StackState {

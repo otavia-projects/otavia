@@ -135,7 +135,7 @@ class NioServerSocketChannel(socket: ServerSocketChannel, val family: ProtocolFa
             case Some(ch) =>
                 try {
                     val channel = new NioSocketChannel(ch, family)
-                    val event   = ReactorEvent.AcceptedEvent(channel)
+                    val event   = ReactorEvent.AcceptedEvent(this, channel)
                     readSink.processRead(0, 0, event)
                     1
                 } catch {

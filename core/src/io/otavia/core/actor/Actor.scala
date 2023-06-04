@@ -152,7 +152,7 @@ trait Actor[+M <: Call] {
      *  @param event
      *    IO/timeout event
      */
-    protected def receiveIOEvent(event: Event): Unit = {}
+    protected def receiveReactorEvent(event: Event): Unit = {}
 
     // actor life cycle hook method
 
