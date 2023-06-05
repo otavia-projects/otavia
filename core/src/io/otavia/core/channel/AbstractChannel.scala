@@ -44,6 +44,8 @@ abstract class AbstractChannel extends DefaultAttributeMap, Channel, ChannelStat
 
     private var readFactory: ReadPlanFactory = _
 
+    private var unsafe: AbstractUnsafeChannel = _
+
     // initial channel state on constructing
     created = true
     registering = false
@@ -88,6 +90,10 @@ abstract class AbstractChannel extends DefaultAttributeMap, Channel, ChannelStat
     protected def setReadPlanFactory(factory: ReadPlanFactory): Unit = {
         this.readFactory = factory
     }
+
+    def unsafeChannel: AbstractUnsafeChannel = unsafe
+
+    private[core] def setUnsafeChannel(uch: AbstractUnsafeChannel): Unit = unsafe = uch
 
     override def pipeline: ChannelPipeline = pipe
 
@@ -142,7 +148,13 @@ abstract class AbstractChannel extends DefaultAttributeMap, Channel, ChannelStat
 
     private[core] def deregisterTransport(promise: ChannelPromise): Unit
 
-    private[core] def readTransport(readPlan: ReadPlan): Unit
+    private[core] def readTransport(readPlan: ReadPlan): Unit = if (!isActive) {
+        throw new IllegalStateException(s"channel $this is not active!")
+    } else if (isShutdown(ChannelShutdownDirection.Inbound)) {
+        // Input was shutdown so not try to read.
+    } else {
+        reactor.read(this, readPlan)
+    }
 
     private[core] def writeTransport(msg: AnyRef): Unit
 

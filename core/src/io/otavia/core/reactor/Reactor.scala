@@ -18,7 +18,10 @@ package io.otavia.core.reactor
 
 import io.netty5.util.internal.SystemPropertyUtil
 import io.otavia.core.channel.Channel
+import io.otavia.core.channel.message.ReadPlan
+import io.otavia.core.reactor.Reactor.Command
 import io.otavia.core.system.ActorSystem
+import io.otavia.core.util.Nextable
 
 /** [[Reactor]] is an io event generator for [[Channel]]. */
 trait Reactor {
@@ -27,20 +30,47 @@ trait Reactor {
      *  @param channel
      *    [[Channel]] to listen io event.
      */
-    def register(channel: Channel): Unit
+    final def register(channel: Channel): Unit = {
+        val command = Command.Register(channel)
+        submit(command)
+    }
 
     /** API for [[io.otavia.core.actor.ChannelsActor]] to deregister [[Channel]] to [[Reactor]].
      *  @param channel
      *    [[Channel]] to cancel listen io event.
      */
-    def deregister(channel: Channel): Unit
+    final def deregister(channel: Channel): Unit = {
+        val command = Command.Deregister(channel)
+        submit(command)
+    }
 
-    def close(channel: Channel): Unit
+    final def close(channel: Channel): Unit = {
+        val command = Command.Close(channel)
+        submit(command)
+    }
+
+    final def read(channel: Channel, plan: ReadPlan): Unit = {
+        val command = Command.Read(channel, plan)
+        submit(command)
+    }
+
+    def submit(command: Command): Unit
 
 }
 
 object Reactor {
 
     val DEFAULT_MAX_TASKS_PER_RUN: Int = ActorSystem.DEFAULT_MAX_TASKS_PER_RUN
+
+    enum Command extends Nextable {
+
+        case Register(channel: Channel)             extends Command
+        case Deregister(channel: Channel)           extends Command
+        case Connect(channel: Channel)              extends Command
+        case Disconnect(channel: Channel)           extends Command
+        case Close(channel: Channel)                extends Command
+        case Read(channel: Channel, plan: ReadPlan) extends Command
+
+    }
 
 }

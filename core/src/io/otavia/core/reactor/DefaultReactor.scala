@@ -18,10 +18,12 @@ package io.otavia.core.reactor
 
 import io.otavia.core.channel.Channel
 import io.otavia.core.reactor.DefaultReactor.{ST_NOT_STARTED, ST_STARTED}
-import io.otavia.core.reactor.Reactor.DEFAULT_MAX_TASKS_PER_RUN
+import io.otavia.core.reactor.Reactor.Command.*
+import io.otavia.core.reactor.Reactor.{Command, DEFAULT_MAX_TASKS_PER_RUN}
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.transport.TransportFactory
+import io.otavia.core.util.SpinLockQueue
 
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
@@ -36,8 +38,7 @@ class DefaultReactor(
 
     private val logger: Logger = Logger.getLogger(getClass, system)
 
-    private val registerQueue   = new ConcurrentLinkedQueue[Channel]() // new MpscChunkedArrayQueue[Channel](10240)
-    private val deregisterQueue = new ConcurrentLinkedQueue[Channel]() // new MpscChunkedArrayQueue[Channel](10240)
+    private val commandQueue = new SpinLockQueue[Command]()
 
     private val executor              = LoopExecutor()
     private var thread: Thread | Null = _
@@ -49,7 +50,7 @@ class DefaultReactor(
 
     private val context = new IoExecutionContext {
 
-        override def canBlock: Boolean = registerQueue.isEmpty && deregisterQueue.isEmpty
+        override def canBlock: Boolean = commandQueue.isEmpty
 
         override def delayNanos(currentTimeNanos: Long): Long = 50 * 1000 * 1000
 
@@ -59,14 +60,10 @@ class DefaultReactor(
 
     set(ST_NOT_STARTED)
 
-    override def register(channel: Channel): Unit = {
-        registerQueue.add(channel)
+    override def submit(command: Command): Unit = {
+        commandQueue.enqueue(command)
         startThread()
     }
-
-    override def deregister(channel: Channel): Unit = deregisterQueue.add(channel)
-
-    override def close(channel: Channel): Unit = ???
 
     private def startThread(): Unit = if (get() == ST_NOT_STARTED && compareAndSet(ST_NOT_STARTED, ST_STARTED)) {
         var success = false
@@ -91,9 +88,7 @@ class DefaultReactor(
     private def run(): Unit = {
         while (!confirmShutdown()) {
             runIO()
-
-            runRegisters(maxTasksPerRun)
-            runDeregisters(maxTasksPerRun)
+            runCommands(maxTasksPerRun)
         }
     }
 
@@ -104,30 +99,21 @@ class DefaultReactor(
      */
     private def runIO(): Unit = ioHandler.run(context)
 
-    private def hasTask: Boolean = !registerQueue.isEmpty && !deregisterQueue.isEmpty
+    private def hasTask: Boolean = commandQueue.nonEmpty
 
-    /** Run by [[executor]] executor */
-    private def runRegisters(maxTasks: Int): Int = {
+    private def runCommands(maxTasks: Int): Int = {
         var processedTasks: Int = 0
-        while (processedTasks < maxTasks && !registerQueue.isEmpty) {
-            runRegister(registerQueue.poll())
+        while (processedTasks < maxTasks && commandQueue.nonEmpty) {
+            runCommand(commandQueue.dequeue())
             processedTasks += 1
         }
         processedTasks
     }
 
-    private def runRegister(channel: Channel): Unit = ioHandler.register(channel)
-
-    private def runDeregisters(maxTasks: Int): Int = {
-        var processedTasks: Int = 0
-        while (processedTasks < maxTasks && !deregisterQueue.isEmpty) {
-            runDeregister(deregisterQueue.poll())
-            processedTasks += 1
-        }
-        processedTasks
-    }
-
-    private def runDeregister(channel: Channel): Unit = ioHandler.deregister(channel)
+    private def runCommand(command: Command): Unit = command match
+        case read: Read             => ???
+        case register: Register     => ioHandler.register(register.channel)
+        case deregister: Deregister => ioHandler.deregister(deregister.channel)
 
     private def confirmShutdown(): Boolean = false
 

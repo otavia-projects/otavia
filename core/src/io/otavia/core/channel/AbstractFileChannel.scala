@@ -40,15 +40,6 @@ abstract class AbstractFileChannel extends AbstractChannel {
         promise: ChannelPromise
     ): Unit = promise.setFailure(new UnsupportedOperationException())
 
-    override private[core] def openTransport(
-        path: Path,
-        options: Seq[OpenOption],
-        attrs: Seq[FileAttribute[?]],
-        promise: ChannelPromise
-    ): Unit = {
-        ???
-    }
-
     override private[core] def disconnectTransport(promise: ChannelPromise): Unit =
         promise.setFailure(new UnsupportedOperationException())
 
@@ -67,10 +58,6 @@ abstract class AbstractFileChannel extends AbstractChannel {
 
     override private[core] def deregisterTransport(promise: ChannelPromise): Unit = {
         promise.setSuccess(ReactorEvent.EMPTY_EVENT)
-    }
-
-    override private[core] def readTransport(readPlan: ReadPlan): Unit = {
-        ???
     }
 
     override private[core] def writeTransport(msg: AnyRef): Unit = {

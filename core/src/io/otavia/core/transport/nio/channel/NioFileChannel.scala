@@ -22,7 +22,7 @@ import io.netty5.util.{Attribute, AttributeKey}
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*
 import io.otavia.core.message.ReactorEvent
-import io.otavia.core.stack.ChannelReplyFuture
+import io.otavia.core.stack.{ChannelPromise, ChannelReplyFuture}
 
 import java.io.File
 import java.net.SocketAddress
@@ -34,13 +34,26 @@ import scala.language.unsafeNulls
 
 class NioFileChannel() extends AbstractFileChannel {
 
-    private var ch: FileChannel = _
+    setUnsafeChannel(new NioFileUnsafeChannel(this))
 
-    def doOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = {
-        ch = FileChannel.open(path, options.toSet.asJava, attrs: _*)
+    override def unsafeChannel: NioFileUnsafeChannel = super.unsafeChannel.asInstanceOf[NioFileUnsafeChannel]
+
+    override private[core] def openTransport(
+        path: Path,
+        options: Seq[OpenOption],
+        attrs: Seq[FileAttribute[_]],
+        promise: ChannelPromise
+    ): Unit = {
+        var success = false
+        try {
+            unsafeChannel.doOpen(path, options, attrs)
+            success = true
+        } catch {
+            case e: Throwable =>
+                promise.setFailure(e)
+        }
+        if (success) promise.setSuccess(ReactorEvent.EMPTY_EVENT)
     }
-
-    private def javaChannel: FileChannel = ch
 
     override def getOption[T](option: ChannelOption[T]): T = ???
 
