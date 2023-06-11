@@ -18,13 +18,19 @@
 
 package io.otavia.core.transport.nio.channel
 
-import io.otavia.core.channel.{AbstractUnsafeChannel, Channel}
+import io.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelShutdownDirection}
 
 class NioServerSocketUnsafeChannel(channel: Channel) extends AbstractUnsafeChannel(channel) {
 
     override protected def doReadNow(): Boolean = ???
 
+    override protected def unsafeBind(): Unit = ???
 
+    override protected def unsafeDisconnect(): Unit = ???
 
+    override protected def unsafeClose(): Unit = ???
 
+    override protected def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
+
+    override protected def unsafeRead(): Unit = ???
 }

@@ -18,7 +18,7 @@
 
 package io.otavia.core.transport.nio.channel
 
-import io.otavia.core.channel.{AbstractUnsafeChannel, Channel}
+import io.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelShutdownDirection}
 
 import java.nio.channels.FileChannel
 import java.nio.file.attribute.FileAttribute
@@ -38,4 +38,13 @@ class NioFileUnsafeChannel(channel: Channel) extends AbstractUnsafeChannel(chann
 
     override protected def doReadNow(): Boolean = ???
 
+    override protected def unsafeBind(): Unit = ???
+
+    override protected def unsafeDisconnect(): Unit = ???
+
+    override protected def unsafeClose(): Unit = ???
+
+    override protected def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
+
+    override protected def unsafeRead(): Unit = ???
 }

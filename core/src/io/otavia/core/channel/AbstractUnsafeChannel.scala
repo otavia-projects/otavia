@@ -28,7 +28,7 @@ import java.net.PortUnreachableException
 import scala.language.unsafeNulls
 
 /** The [[Channel]] in [[Reactor]] */
-abstract class AbstractUnsafeChannel(val channel: Channel) {
+abstract class AbstractUnsafeChannel(val channel: Channel) extends UnsafeChannel {
 
     private var inputClosedSeenErrorOnRead: Boolean = false
     private var isAllowHalfClosure: Boolean         = true
