@@ -24,7 +24,7 @@ import io.otavia.core.message.ReactorEvent
 import io.otavia.core.reactor.*
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.ActorSystem
-import io.otavia.core.transport.nio.channel.{AbstractNioChannel, NioProcessor}
+import io.otavia.core.transport.nio.channel.{AbstractNioChannel, AbstractNioUnsafeChannel, NioProcessor}
 import io.otavia.core.transport.reactor.NioHandler.*
 
 import java.io.{IOException, UncheckedIOException}
@@ -471,8 +471,8 @@ object NioHandler {
 
     SELECTOR_AUTO_REBUILD_THRESHOLD = selectorAutoRebuildThreshold
 
-    private def nioHandle(handle: Channel): NioProcessor = handle match
-        case channel: AbstractNioChannel[?, ?] => channel.nioProcessor
+    private def nioHandle(handle: Channel): NioProcessor = handle.unsafeChannel match
+        case unsafe: AbstractNioUnsafeChannel => unsafe
         case _ =>
             throw new IllegalArgumentException(s"Channel of type ${StringUtil.simpleClassName(handle)} not supported")
 

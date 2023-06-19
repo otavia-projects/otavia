@@ -46,5 +46,5 @@ class NioFileUnsafeChannel(channel: Channel) extends AbstractUnsafeChannel(chann
 
     override protected def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
 
-    override protected def unsafeRead(): Unit = ???
+    override def unsafeRead(): Unit = ???
 }

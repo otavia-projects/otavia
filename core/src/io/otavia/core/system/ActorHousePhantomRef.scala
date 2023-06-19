@@ -16,17 +16,18 @@
 
 package io.otavia.core.system
 
+import io.otavia.core.actor.{ActorCleaner, BeforeStop}
+
 import java.lang.ref.{PhantomReference, ReferenceQueue}
 import java.util.concurrent.CopyOnWriteArraySet
 
 class ActorHousePhantomRef(house: ActorHouse, queue: ReferenceQueue[ActorHouse])
     extends PhantomReference[ActorHouse](house, queue) {
 
-//    private val runnable: Runnable = () => house.close()
+    private val actorCleaner: ActorCleaner = house.actor.asInstanceOf[BeforeStop].beforeStop()
 
     override def clear(): Unit = {
-//        runnable.run()
-        house.close()
+        actorCleaner.run()
         super.clear()
     }
 

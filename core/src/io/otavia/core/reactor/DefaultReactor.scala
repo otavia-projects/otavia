@@ -111,7 +111,9 @@ class DefaultReactor(
     }
 
     private def runCommand(command: Command): Unit = command match
-        case read: Read             => ???
+        case read: Read =>
+            read.channel.unsafeChannel.setReadPlan(read.plan)
+            read.channel.unsafeChannel.unsafeRead()
         case register: Register     => ioHandler.register(register.channel)
         case deregister: Deregister => ioHandler.deregister(deregister.channel)
 

@@ -50,8 +50,7 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
     defaultWriteHandleFactory: WriteHandleFactory,
     val ch: SelectableChannel,
     val readInterestOp: Int
-) extends AbstractNetChannel[L, R](supportingDisconnect, defaultWriteHandleFactory)
-    with NioProcessor {
+) extends AbstractNetChannel[L, R](supportingDisconnect, defaultWriteHandleFactory) {
 
     try {
         ch.configureBlocking(false)
@@ -68,58 +67,6 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
     }
 
     @volatile private var _selectionKey: SelectionKey | Null = _
-
-    // Start implementation methods in NioProcessor.
-    // The methods in NioProcessor is running at reactor thread, which is not same as the thread to running executor.
-    // So it needs to be thread safe.
-    override def registerSelector(selector: Selector): Unit = {
-        var interestOps: Int = 0
-        if (_selectionKey != null) {
-            interestOps = _selectionKey.interestOps()
-            _selectionKey.cancel()
-        }
-        _selectionKey = ch.register(selector, interestOps, this)
-    }
-
-    override def deregisterSelector(): Unit = if (_selectionKey != null) {
-        _selectionKey.cancel()
-        _selectionKey = null
-    }
-
-    override def handle(key: SelectionKey): Unit = {
-        if (!key.isValid) executorAddress.inform(ReactorEvent.ChannelClose(this))
-        try {
-            val readOps = key.readyOps()
-            // We first need to call finishConnect() before try to trigger a read(...) or write(...) as otherwise
-            // the NIO JDK channel implementation may throw a NotYetConnectedException.
-            if ((readOps & SelectionKey.OP_CONNECT) != 0) {
-                // remove OP_CONNECT as otherwise Selector.select(..) will always return without blocking
-                // See https://github.com/netty/netty/issues/924
-                var ops = key.interestOps()
-                ops = ops & ~SelectionKey.OP_CONNECT
-                key.interestOps(ops)
-
-                executorAddress.inform(ReactorEvent.ChannelReadiness(this, SelectionKey.OP_CONNECT))
-            }
-            // Process OP_WRITE first as we may be able to write some queued buffers and so free memory.
-            if ((readOps & SelectionKey.OP_WRITE) != 0) {
-                // Notice to call forceFlush which will also take care of clear the OP_WRITE once there is nothing left to
-                // write
-                executorAddress.inform(ReactorEvent.ChannelReadiness(this, SelectionKey.OP_WRITE))
-            }
-            // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead
-            // to a spin loop
-            if ((readOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readOps == 0) {
-                readNow()
-                // val event = ReactorEvent.ChannelReadiness(this, SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)
-                // executorAddress.inform(event)
-            }
-        } catch {
-            case ignored: CancelledKeyException => executorAddress.inform(ReactorEvent.ChannelClose(this))
-        }
-    }
-
-    override def closeProcessor(): Unit = executorAddress.inform(ReactorEvent.ChannelClose(this))
 
     // End implementation of NioProcessor
 
@@ -146,8 +93,6 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
     }
 
     // End implementation of EventHandle
-
-    final def nioProcessor: NioProcessor = this
 
     override def isOpen: Boolean = ch.isOpen
 

@@ -64,7 +64,7 @@ object TransportFactory {
     private val NIO_SERVICE_PROVIDER = new NIOTransportServiceProvider()
     NIO_SERVICE_PROVIDER.initialize()
 
-    def getTransportFactory(): TransportFactory = {
+    def getTransportFactory: TransportFactory = {
         val provider = getProvider
         provider.getTransportFactory()
     }

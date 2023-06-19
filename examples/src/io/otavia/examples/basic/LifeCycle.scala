@@ -58,10 +58,6 @@ object LifeCycle {
             println("LifeActor: afterRestart")
         }
 
-        override def beforeStop(): Unit = {
-            println("LifeActor: beforeStop")
-        }
-
         override def continueNotice(stack: NoticeStack[Start]): Option[StackState] =
             // if occurs some error which developer is not catch, this will trigger the actor restart
             throw new Error("")

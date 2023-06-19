@@ -18,54 +18,59 @@
 
 package io.otavia.core.channel
 
+import io.otavia.core.address.ActorAddress
+import io.otavia.core.channel.message.ReadPlan
+
 trait UnsafeChannel {
 
     def channel: Channel
 
+    final def executorAddress: ActorAddress[?] = channel.executorAddress
+
     /** Bind the [[Channel]] to the [[SocketAddress]]
      *
-     * @param localAddress
-     * the [[SocketAddress]] to bound to.
-     * @throws Exception
-     * when an error happens.
+     *  @param localAddress
+     *    the [[SocketAddress]] to bound to.
+     *  @throws Exception
+     *    when an error happens.
      */
     @throws[Exception]
     protected def unsafeBind(): Unit
 
     /** Disconnect this [[Channel]] from its remote peer
      *
-     * @throws Exception
-     * thrown on error.
+     *  @throws Exception
+     *    thrown on error.
      */
     @throws[Exception]
     protected def unsafeDisconnect(): Unit
 
     /** Close the [[Channel]]
      *
-     * @throws Exception
-     * thrown on error.
+     *  @throws Exception
+     *    thrown on error.
      */
     @throws[Exception]
     protected def unsafeClose(): Unit
 
     /** Shutdown one direction of the [[Channel]].
      *
-     * @param direction
-     * the direction to shut unsafewn.
-     * @throws Exception
-     * thrown on error.
+     *  @param direction
+     *    the direction to shut unsafewn.
+     *  @throws Exception
+     *    thrown on error.
      */
     @throws[Exception]
     protected def unsafeShutdown(direction: ChannelShutdownDirection): Unit
 
+    def setReadPlan(plan: ReadPlan): Unit
+
     /** Schedule a read operation.
      *
-     * @throws Exception
-     * thrown on error.
+     *  @throws Exception
+     *    thrown on error.
      */
     @throws[Exception]
-    protected def unsafeRead(): Unit
-
-
+    def unsafeRead(): Unit
 
 }

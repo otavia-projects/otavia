@@ -230,4 +230,6 @@ trait Channel extends ChannelInflight, EventHandle, ChannelAddress {
     /** Close the channel before is register */
     private[core] def closeAfterCreate(): Unit
 
+    def unsafeChannel: UnsafeChannel
+
 }

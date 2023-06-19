@@ -16,12 +16,10 @@
 
 package io.otavia.core.actor
 
-trait BeforeStop {
-    this: AbstractActor[?] =>
+abstract class ActorCleaner extends Runnable {
 
-    /** if restart method throw NotImplementedError, actor system will call this method and mark the actor instance
-     *  dead, and release is resource
-     */
-    def beforeStop(): ActorCleaner = () => {}
+    final override def run(): Unit = clean()
+
+    protected def clean(): Unit
 
 }
