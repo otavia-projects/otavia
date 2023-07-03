@@ -18,11 +18,11 @@ package io.otavia.core.transport.nio
 
 import io.otavia.core.channel.Channel
 import io.otavia.core.channel.socket.SocketProtocolFamily
-import io.otavia.core.reactor.{DefaultSelectStrategy, IoHandler}
+import io.otavia.core.reactor.{DefaultSelectStrategy, IoHandler, Reactor}
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.transport.TransportFactory
 import io.otavia.core.transport.nio.channel.{NioDatagramChannel, NioFileChannel, NioServerSocketChannel, NioSocketChannel}
-import io.otavia.core.transport.reactor.NioHandler
+import io.otavia.core.transport.reactor.nio.{NioHandler, NioReactor}
 import sun.nio.ch.Net
 
 import java.net.{ProtocolFamily, StandardProtocolFamily}
@@ -33,6 +33,7 @@ import scala.language.unsafeNulls
 class NIOTransportFactory() extends TransportFactory {
 
     private val selectorProvider = SelectorProvider.provider()
+    private var reactor: Reactor = _
 
     override def openServerSocketChannel(): Channel = {
         var family: ProtocolFamily  = null
@@ -97,6 +98,12 @@ class NIOTransportFactory() extends TransportFactory {
     }
 
     override def openFileChannel(): Channel = new NioFileChannel()
+
+    override def openReactor(system: ActorSystem): Reactor = if (reactor != null) reactor
+    else {
+        reactor = new NioReactor(system, this)
+        reactor
+    }
 
     override def openIoHandler(system: ActorSystem): IoHandler =
         new NioHandler(selectorProvider, DefaultSelectStrategy, system)

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.transport.reactor
+package io.otavia.core.transport.reactor.nio
 
 import io.netty5.util.internal.*
 import io.otavia.core.channel.{Channel, ChannelException}
@@ -25,7 +25,7 @@ import io.otavia.core.reactor.*
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.transport.nio.channel.{AbstractNioChannel, AbstractNioUnsafeChannel, NioProcessor}
-import io.otavia.core.transport.reactor.NioHandler.*
+import io.otavia.core.transport.reactor.nio.NioHandler.*
 
 import java.io.{IOException, UncheckedIOException}
 import java.nio.channels.spi.SelectorProvider

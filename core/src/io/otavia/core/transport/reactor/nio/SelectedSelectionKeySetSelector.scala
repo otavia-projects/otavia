@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
-package io.otavia.core.transport.reactor
+package io.otavia.core.transport.reactor.nio
+
+import io.otavia.core.transport.reactor.nio.SelectedSelectionKeySet
 
 import java.io.IOException
 import java.nio.channels.spi.SelectorProvider

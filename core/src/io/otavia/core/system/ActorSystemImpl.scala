@@ -23,8 +23,8 @@ import io.otavia.core.address.*
 import io.otavia.core.channel.ChannelFactory
 import io.otavia.core.ioc.{BeanDefinition, BeanManager, Module}
 import io.otavia.core.message.{Call, IdAllocator}
+import io.otavia.core.reactor.BlockTaskExecutor
 import io.otavia.core.reactor.aio.Submitter
-import io.otavia.core.reactor.{BlockTaskExecutor, DefaultReactor}
 import io.otavia.core.slf4a.{LogLevel, Logger}
 import io.otavia.core.system.monitor.{ReactorMonitor, SystemMonitor, SystemMonitorTask, ThreadMonitor}
 import io.otavia.core.timer.{Timeout, Timer, TimerImpl}
@@ -101,7 +101,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
         println("\n")
     }
 
-    private val defaultReactor = new DefaultReactor(this, transFactory)
+    private val _reactor = transFactory.openReactor(this)
 
     private val gcTime = new AtomicLong(System.currentTimeMillis())
 
@@ -120,7 +120,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     override def pool: ActorThreadPool = actorThreadPool
 
-    override private[core] def reactor = defaultReactor
+    override private[core] def reactor = _reactor
 
     override def timer: Timer = timerExecutor
 

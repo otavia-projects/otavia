@@ -18,7 +18,7 @@ package io.otavia.core.transport
 
 import io.otavia.core.channel.Channel
 import io.otavia.core.channel.socket.SocketProtocolFamily
-import io.otavia.core.reactor.IoHandler
+import io.otavia.core.reactor.{IoHandler, Reactor}
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.transport.nio.NIOTransportServiceProvider
 import io.otavia.core.transport.spi.TransportServiceProvider
@@ -45,6 +45,8 @@ abstract class TransportFactory() {
     def openDatagramChannel(family: SocketProtocolFamily): Channel
 
     def openFileChannel(): Channel
+
+    def openReactor(system: ActorSystem): Reactor
 
     def openIoHandler(system: ActorSystem): IoHandler
 

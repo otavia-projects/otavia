@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-package io.otavia.core.reactor
+package io.otavia.core.transport.reactor.nio
 
 import io.otavia.core.channel.Channel
-import io.otavia.core.reactor.DefaultReactor.{ST_NOT_STARTED, ST_STARTED}
 import io.otavia.core.reactor.Reactor.Command.*
 import io.otavia.core.reactor.Reactor.{Command, DEFAULT_MAX_TASKS_PER_RUN}
+import io.otavia.core.reactor.{IoExecutionContext, IoHandler, LoopExecutor, Reactor}
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.transport.TransportFactory
+import io.otavia.core.transport.reactor.nio.NioReactor.{ST_NOT_STARTED, ST_STARTED}
 import io.otavia.core.util.SpinLockQueue
 
-import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.{ConcurrentLinkedQueue, ThreadFactory}
 import scala.language.unsafeNulls
 
-class DefaultReactor(
+class NioReactor(
     val system: ActorSystem,
     val transportFactory: TransportFactory,
     val maxTasksPerRun: Int = DEFAULT_MAX_TASKS_PER_RUN
@@ -40,7 +41,23 @@ class DefaultReactor(
 
     private val commandQueue = new SpinLockQueue[Command]()
 
-    private val executor              = LoopExecutor()
+    private val executor = LoopExecutor(new ThreadFactory {
+
+        private var tid = 0
+
+        override def newThread(r: Runnable): Thread = {
+            val thread = new Thread(r, s"otavia-reactor-$tid")
+            try {
+                if (thread.isDaemon) thread.setDaemon(false)
+                if (thread.getPriority != Thread.NORM_PRIORITY) thread.setPriority(Thread.NORM_PRIORITY)
+            } catch {
+                case ignore: Exception =>
+            }
+            tid += 1
+            thread
+        }
+
+    })
     private var thread: Thread | Null = _
 
     private val ioHandler: IoHandler = {
@@ -121,7 +138,7 @@ class DefaultReactor(
 
 }
 
-object DefaultReactor {
+object NioReactor {
 
     private val ST_NOT_STARTED   = 1
     private val ST_STARTED       = 2

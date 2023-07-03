@@ -309,7 +309,7 @@ trait SiteModule extends ScalaModule {
             "-siteroot", docs.toNIO.toString,
             "-project-version", projectVersion,
             "-project", projectName,
-//            "-project-logo", "docs/_assets/images/logo.drawio.svg",
+            // "-project-logo", "docs/_assets/images/logo.drawio.svg",
             "-project-footer", "Copyright (c) 2022, Yan Kun/Otavia Project",
             "-source-links:docs=github://otavia-projects/otavia/main#docs",
             s"-social-links:github::$projectUrl"
