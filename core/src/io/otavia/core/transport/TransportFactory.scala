@@ -64,25 +64,26 @@ object TransportFactory {
     @volatile private var PROVIDER: TransportServiceProvider = _
 
     private val NIO_SERVICE_PROVIDER = new NIOTransportServiceProvider()
-    NIO_SERVICE_PROVIDER.initialize()
 
-    def getTransportFactory: TransportFactory = {
-        val provider = getProvider
+    def getTransportFactory(system: ActorSystem): TransportFactory = {
+        val provider = getProvider(system)
         provider.getTransportFactory()
     }
 
-    private def getProvider: TransportServiceProvider = this.synchronized {
+    private def getProvider(system: ActorSystem): TransportServiceProvider = this.synchronized {
         if (INITIALIZATION_STATE == UNINITIALIZED) {
             INITIALIZATION_STATE = ONGOING_INITIALIZATION
-            bind()
+            bind(system)
         }
         INITIALIZATION_STATE match
-            case SUCCESSFUL_INITIALIZATION   => PROVIDER
-            case NOP_FALLBACK_INITIALIZATION => NIO_SERVICE_PROVIDER
-            case FAILED_INITIALIZATION       => throw new IllegalStateException()
+            case SUCCESSFUL_INITIALIZATION => PROVIDER
+            case NOP_FALLBACK_INITIALIZATION =>
+                NIO_SERVICE_PROVIDER.initialize(system)
+                NIO_SERVICE_PROVIDER
+            case FAILED_INITIALIZATION => throw new IllegalStateException()
     }
 
-    final private def bind(): Unit = try {
+    final private def bind(system: ActorSystem): Unit = try {
         val providerList = findServiceProviders()
         if (providerList.length > 1) {
             Report.report("Class path contains multiple Transport providers.", "TRANSPORT")
@@ -92,7 +93,7 @@ object TransportFactory {
         }
         if (providerList.nonEmpty) {
             PROVIDER = providerList.head
-            PROVIDER.initialize()
+            PROVIDER.initialize(system)
             INITIALIZATION_STATE = SUCCESSFUL_INITIALIZATION
             Report.report(s"Actual provider is of type [${providerList.head}]", "TRANSPORT")
         } else {

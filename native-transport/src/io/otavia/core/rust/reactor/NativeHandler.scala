@@ -19,12 +19,13 @@ package io.otavia.core.rust.reactor
 import io.otavia.core.channel.Channel
 import io.otavia.core.reactor.*
 import io.otavia.core.slf4a.Logger
+import io.otavia.core.system.ActorSystem
 
 import scala.language.unsafeNulls
 
-class NativeHandler(val maxEvents: Int, val strategy: SelectStrategy) extends IoHandler {
+class NativeHandler(val maxEvents: Int, val strategy: SelectStrategy, sys: ActorSystem) extends IoHandler(sys) {
 
-    def this() = this(0, DefaultSelectStrategyFactory.newSelectStrategy())
+    def this(sys: ActorSystem) = this(0, DefaultSelectStrategyFactory.newSelectStrategy(), sys)
 
     val logger: Logger = Logger.getLogger(getClass, system) // TODO: null bug for system
 
@@ -47,9 +48,4 @@ class NativeHandler(val maxEvents: Int, val strategy: SelectStrategy) extends Io
 
 }
 
-object NativeHandler {
-    def newFactory(): IoHandlerFactory = new IoHandlerFactory {
-        override def newHandler: IoHandler = new NativeHandler()
-    }
-
-}
+object NativeHandler {}

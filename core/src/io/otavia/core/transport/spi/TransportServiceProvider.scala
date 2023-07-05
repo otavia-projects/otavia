@@ -33,7 +33,7 @@ trait TransportServiceProvider {
      *  <p><b>WARNING:</b> This method is intended to be called once by [[TransportFactory]] class and from nowhere
      *  else.
      */
-    def initialize(): Unit
+    def initialize(system: ActorSystem): Unit
 
     /** Check the [[TransportServiceProvider]] whether support this platform.
      *

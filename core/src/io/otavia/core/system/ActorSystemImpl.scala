@@ -71,7 +71,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     private val direct = BufferAllocator.directPageAllocator
     private val heap   = BufferAllocator.heapPageAllocator
 
-    private val transFactory: TransportFactory = TransportFactory.getTransportFactory
+    private val transFactory: TransportFactory = TransportFactory.getTransportFactory(this)
     private val chFactory: ChannelFactory      = new ChannelFactory(transFactory)
 
     private val memoryMXBean: MemoryMXBean = ManagementFactory.getMemoryMXBean

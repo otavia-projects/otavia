@@ -23,6 +23,7 @@ import io.otavia.core.channel.*
 import io.otavia.core.channel.estimator.{ReadHandleFactory, WriteHandleFactory}
 import io.otavia.core.channel.internal.{ReadSink, WriteSink}
 import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
+import io.otavia.core.message.ReactorEvent
 import io.otavia.core.rust.NativeSocket
 
 import java.net.SocketAddress
@@ -41,4 +42,33 @@ abstract class AbstractNativeNetChannel[L <: SocketAddress, R <: SocketAddress](
 
     override protected def doWriteNow(writeSink: WriteSink): Unit = ???
 
+    override def isOpen: Boolean = ???
+
+    override def isActive: Boolean = ???
+
+    override def isShutdown(direction: ChannelShutdownDirection): Boolean = ???
+
+    override private[core] def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = ???
+
+    override private[core] def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit = ???
+
+    override private[core] def handleChannelAcceptedEvent(event: ReactorEvent.AcceptedEvent): Unit = ???
+
+    override private[core] def handleChannelReadCompletedEvent(event: ReactorEvent.ReadCompletedEvent): Unit = ???
+
+    override protected def doDisconnect(): Unit = ???
+
+    override protected def doClose(): Unit = ???
+
+    override protected def doShutdown(direction: ChannelShutdownDirection): Unit = ???
+
+    override protected def doRead(): Unit = ???
+
+    override protected def doConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Boolean = ???
+
+    override protected def doFinishConnect(requestedRemoteAddress: R): Boolean = ???
+
+    override protected def localAddress0: Option[L] = ???
+
+    override protected def remoteAddress0: Option[R] = ???
 }

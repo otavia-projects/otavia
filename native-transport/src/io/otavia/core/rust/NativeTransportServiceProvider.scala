@@ -16,6 +16,7 @@
 
 package io.otavia.core.rust
 
+import io.otavia.core.system.ActorSystem
 import io.otavia.core.transport.TransportFactory
 import io.otavia.core.transport.spi.TransportServiceProvider
 
@@ -23,7 +24,7 @@ class NativeTransportServiceProvider extends TransportServiceProvider {
 
     override def getTransportFactory(): TransportFactory = ???
 
-    override def initialize(): Unit = ???
+    override def initialize(system: ActorSystem): Unit = ???
 
     override def checkPlatformSupport(): Boolean = false // TODO:
 

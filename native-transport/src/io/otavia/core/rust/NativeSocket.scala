@@ -16,21 +16,11 @@
 
 package io.otavia.core.rust
 
-import io.otavia.buffer.ComponentIterator.Next
-import io.otavia.buffer.{Buffer, BufferComponent}
-
 import java.net.ProtocolFamily
 
 class NativeSocket {
 
     private var boxSocket: Long = ???
-    def read(buffer: Buffer): Int = {
-        val iter               = buffer.forEachComponent()
-        val c: BufferComponent = iter.nn.firstWritable().nn
-        c.writableNativeAddress()
-
-        ???
-    }
 
 }
 

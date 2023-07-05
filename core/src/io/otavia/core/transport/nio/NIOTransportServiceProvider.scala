@@ -20,14 +20,19 @@ import io.otavia.core.system.ActorSystem
 import io.otavia.core.transport.TransportFactory
 import io.otavia.core.transport.spi.TransportServiceProvider
 
+import java.util.concurrent.atomic.AtomicBoolean
+import scala.language.unsafeNulls
+
 class NIOTransportServiceProvider extends TransportServiceProvider {
 
     private var transportFactory: TransportFactory = _
 
     override def getTransportFactory(): TransportFactory = transportFactory
 
-    override def initialize(): Unit = {
-        transportFactory = new NIOTransportFactory()
+    override def initialize(system: ActorSystem): Unit = {
+        this.synchronized {
+            if (transportFactory == null) transportFactory = new NIOTransportFactory(system)
+        }
     }
 
     override def checkPlatformSupport(): Boolean = true

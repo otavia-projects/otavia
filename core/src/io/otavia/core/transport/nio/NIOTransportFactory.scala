@@ -16,24 +16,41 @@
 
 package io.otavia.core.transport.nio
 
-import io.otavia.core.channel.Channel
 import io.otavia.core.channel.socket.SocketProtocolFamily
+import io.otavia.core.channel.{Channel, ChannelException}
 import io.otavia.core.reactor.{DefaultSelectStrategy, IoHandler, Reactor}
+import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.transport.TransportFactory
 import io.otavia.core.transport.nio.channel.{NioDatagramChannel, NioFileChannel, NioServerSocketChannel, NioSocketChannel}
 import io.otavia.core.transport.reactor.nio.{NioHandler, NioReactor}
 import sun.nio.ch.Net
 
+import java.io.IOException
 import java.net.{ProtocolFamily, StandardProtocolFamily}
+import java.nio.channels.*
 import java.nio.channels.spi.SelectorProvider
-import java.nio.channels.{DatagramChannel, FileChannel, ServerSocketChannel, SocketChannel}
 import scala.language.unsafeNulls
 
-class NIOTransportFactory() extends TransportFactory {
+class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
 
     private val selectorProvider = SelectorProvider.provider()
     private var reactor: Reactor = _
+
+    private val logger: Logger = Logger.getLogger(this.getClass, system)
+
+    private def initialJdkChannel(ch: SelectableChannel): Unit = try {
+        ch.configureBlocking(false)
+    } catch {
+        case e: IOException =>
+            try {
+                ch.close()
+            } catch {
+                case e2: IOException => logger.warn("Failed to close a partially initialized socket.", e2)
+            }
+
+            throw new ChannelException("Failed to enter non-blocking mode.", e)
+    }
 
     override def openServerSocketChannel(): Channel = {
         var family: ProtocolFamily  = null
