@@ -18,9 +18,6 @@
 
 package io.otavia.core.channel
 
-import io.netty5.util.DefaultAttributeMap
-import io.netty5.util.internal.ObjectUtil.{checkNotNullArrayParam, checkPositiveOrZero, longValue}
-import io.netty5.util.internal.{PlatformDependent, StringUtil, ThrowableUtil}
 import io.otavia.buffer.{Buffer, BufferAllocator}
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
@@ -35,15 +32,15 @@ import io.otavia.core.slf4a.Logger
 import io.otavia.core.stack.*
 import io.otavia.core.system.ActorThread
 import io.otavia.core.timer.{TimeoutTrigger, Timer}
+import io.otavia.core.util.{Platform, ThrowableUtil}
 
 import java.net.*
 import java.nio.channels.{AlreadyConnectedException, ClosedChannelException, ConnectionPendingException, NotYetConnectedException}
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
-import java.util.Objects.{requireNonNull, requireNonNullElseGet}
 import scala.collection.mutable
 import scala.concurrent.Future.{find, never}
-import scala.language.{existentials, unsafeNulls}
+import scala.language.unsafeNulls
 import scala.util.{Failure, Success, Try}
 
 /** A skeletal Channel implementation.
@@ -251,8 +248,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         local match {
             case address: InetSocketAddress
                 if isOptionSupported(ChannelOption.SO_BROADCAST) && getOption[Boolean](ChannelOption.SO_BROADCAST) &&
-                    !address.getAddress.isAnyLocalAddress && !PlatformDependent.isWindows && !PlatformDependent
-                        .maybeSuperUser() =>
+                    !address.getAddress.isAnyLocalAddress && !Platform.isWindows && !Platform.maybeSuperUser =>
                 // Warn a user about the fact that a non-root user can't receive a
                 // broadcast packet on *nix if the socket is bound on non-wildcard address.
                 logger.warn(
@@ -811,7 +807,8 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
     private def getConnectTimeoutMillis = connectTimeoutMillis
 
     private def setConnectTimeoutMillis(connectTimeoutMillis: Int): Unit = {
-        this.connectTimeoutMillis = checkPositiveOrZero(connectTimeoutMillis, "connectTimeoutMillis")
+        assert(connectTimeoutMillis >= 0, s"connectTimeoutMillis $connectTimeoutMillis (expected: >= 0)")
+        this.connectTimeoutMillis = connectTimeoutMillis
     }
 
     protected def newReadPlan: ReadPlan = readPlanFactory.newPlan(this)
@@ -822,7 +819,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
     private def getWriteHandleFactory[T <: WriteHandleFactory] = writeHandleFactory.asInstanceOf[T]
 
     private def setWriteHandleFactory(writeHandleFactory: WriteHandleFactory): Unit = {
-        this.writeHandleFactory = requireNonNull(writeHandleFactory, "writeHandleFactory").nn
+        this.writeHandleFactory = writeHandleFactory
     }
 
     private def isAutoRead = autoRead
@@ -841,7 +838,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
     private def getMessageSizeEstimator = msgSizeEstimator
 
     private def setMessageSizeEstimator(estimator: MessageSizeEstimator): Unit =
-        msgSizeEstimator = requireNonNull(estimator, "estimator").nn
+        msgSizeEstimator = estimator
 
     private def isAllowHalfClosure = allowHalfClosure
 

@@ -23,10 +23,14 @@ import scala.language.unsafeNulls
 
 object Platform {
 
-    val NORMALIZED_ARCH: String = normalizeArch(SystemPropertyUtil.get("os.arch", ""))
-    private val NORMALIZED_OS: String   = normalizeOs(SystemPropertyUtil.get("os.name", ""))
+    val NORMALIZED_ARCH: String       = normalizeArch(SystemPropertyUtil.get("os.arch", ""))
+    private val NORMALIZED_OS: String = normalizeOs(SystemPropertyUtil.get("os.name", ""))
+
+    private val MAYBE_SUPER_USER = maybeSuperUser0
 
     def isWindows: Boolean = NORMALIZED_OS == "windows"
+
+    def maybeSuperUser: Boolean = MAYBE_SUPER_USER
 
     private final def normalize(value: String): String =
         value.toLowerCase(Locale.US).replaceAll("[^a-z0-9]+", "")
@@ -62,6 +66,14 @@ object Platform {
         else if (normal.startsWith("solaris") || normal.startsWith("sunos")) "solaris"
         else if (normal.startsWith("windows")) "windows"
         else "unknown"
+    }
+
+    private def maybeSuperUser0: Boolean = {
+        val username = SystemPropertyUtil.get("user.name", "").trim
+        if (isWindows) "Administrator" == username
+        else
+            // Check for root and toor as some BSDs have a toor user that is basically the same as root.
+            "root" == username || "toor" == username
     }
 
 }

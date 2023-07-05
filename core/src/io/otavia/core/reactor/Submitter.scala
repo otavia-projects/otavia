@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.reactor.aio
+package io.otavia.core.reactor
 
 import io.otavia.core.channel.Channel
 import io.otavia.core.stack.AioFuture

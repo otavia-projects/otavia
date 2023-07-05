@@ -17,7 +17,7 @@
 package io.otavia.core.rust.reactor
 
 import io.otavia.core.channel.Channel
-import io.otavia.core.reactor.aio.Submitter
+import io.otavia.core.reactor.Submitter
 import io.otavia.core.stack.AioFuture
 
 class NativeSubmitter extends Submitter {
