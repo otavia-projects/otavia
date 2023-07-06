@@ -73,4 +73,10 @@ trait UnsafeChannel {
     @throws[Exception]
     def unsafeRead(): Unit
 
+    /** Returns true if the [[UnsafeChannel]] is open and may get active later */
+    def isOpen: Boolean
+
+    /** Return true if the [[UnsafeChannel]] is active and so connected. */
+    def isActive: Boolean
+
 }

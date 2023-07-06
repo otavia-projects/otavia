@@ -65,11 +65,14 @@ class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
                 ch = selectorProvider.openServerSocketChannel(family)
         }
 
+        initialJdkChannel(ch)
+
         new NioServerSocketChannel(ch, family)
     }
 
     override def openServerSocketChannel(family: ProtocolFamily): Channel = {
         val ch = selectorProvider.openServerSocketChannel(family)
+        initialJdkChannel(ch)
         new NioServerSocketChannel(ch, family)
     }
 

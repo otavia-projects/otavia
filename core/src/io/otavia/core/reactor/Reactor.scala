@@ -23,6 +23,8 @@ import io.otavia.core.reactor.Reactor.Command
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.util.Nextable
 
+import java.net.SocketAddress
+
 /** [[Reactor]] is an io event generator for [[Channel]]. */
 trait Reactor {
 
@@ -41,6 +43,11 @@ trait Reactor {
      */
     final def deregister(channel: Channel): Unit = {
         val command = Command.Deregister(channel)
+        submit(command)
+    }
+
+    final def bind(channel: Channel, local: SocketAddress): Unit = {
+        val command = Command.Bind(channel, local)
         submit(command)
     }
 
@@ -64,12 +71,13 @@ object Reactor {
 
     enum Command extends Nextable {
 
-        case Register(channel: Channel)             extends Command
-        case Deregister(channel: Channel)           extends Command
-        case Connect(channel: Channel)              extends Command
-        case Disconnect(channel: Channel)           extends Command
-        case Close(channel: Channel)                extends Command
-        case Read(channel: Channel, plan: ReadPlan) extends Command
+        case Register(channel: Channel)                   extends Command
+        case Deregister(channel: Channel)                 extends Command
+        case Bind(channel: Channel, local: SocketAddress) extends Command
+        case Connect(channel: Channel)                    extends Command
+        case Disconnect(channel: Channel)                 extends Command
+        case Close(channel: Channel)                      extends Command
+        case Read(channel: Channel, plan: ReadPlan)       extends Command
 
     }
 

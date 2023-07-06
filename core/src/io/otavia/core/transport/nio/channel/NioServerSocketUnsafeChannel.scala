@@ -20,10 +20,13 @@ package io.otavia.core.transport.nio.channel
 
 import io.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelShutdownDirection}
 
+import java.net.ProtocolFamily
 import java.nio.channels.{SelectionKey, ServerSocketChannel}
 
-class NioServerSocketUnsafeChannel(channel: Channel, ch: ServerSocketChannel)
+class NioServerSocketUnsafeChannel(channel: Channel, ch: ServerSocketChannel, val family: ProtocolFamily)
     extends AbstractNioUnsafeChannel(channel, ch, SelectionKey.OP_ACCEPT) {
+
+    private var bound: Boolean = false
 
     override protected def doReadNow(): Boolean = ???
 
@@ -34,5 +37,9 @@ class NioServerSocketUnsafeChannel(channel: Channel, ch: ServerSocketChannel)
     override protected def unsafeClose(): Unit = ???
 
     override protected def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
+
+    override def isOpen: Boolean = ch.isOpen
+
+    override def isActive: Boolean = isOpen && bound
 
 }
