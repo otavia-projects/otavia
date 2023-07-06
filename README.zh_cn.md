@@ -7,6 +7,8 @@
 
 ![GitHub](https://img.shields.io/github/license/yankun1992/otavia)
 [![GitHub Pages](https://github.com/otavia-projects/otavia/actions/workflows/gh-pages.yml/badge.svg)](https://otavia-projects.github.io/otavia/home.html)
+![Static Badge](https://img.shields.io/badge/JDK-17%2B-blue)
+![Static Badge](https://img.shields.io/badge/Scala-3.3-blue)
 
 > 这个项目目前处于孵化状态， API 设计还不稳定，请不要用于生产环境中。
 
