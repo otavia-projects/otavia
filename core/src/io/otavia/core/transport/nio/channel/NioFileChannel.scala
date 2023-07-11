@@ -87,10 +87,6 @@ class NioFileChannel() extends AbstractFileChannel {
 
     override private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit = ???
 
-    override def attr[T](key: AttributeKey[T]): Attribute[T] = ???
-
-    override def hasAttr[T](key: AttributeKey[T]): Boolean = ???
-
     override def inboundMessageBarrier: AnyRef => Boolean = ???
 
     override def setInboundMessageBarrier(barrier: AnyRef => Boolean): Unit = ???

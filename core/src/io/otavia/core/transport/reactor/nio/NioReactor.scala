@@ -133,6 +133,7 @@ class NioReactor(
             read.channel.unsafeChannel.unsafeRead()
         case register: Register     => ioHandler.register(register.channel)
         case deregister: Deregister => ioHandler.deregister(deregister.channel)
+        case bind: Bind             => bind.channel.unsafeChannel.unsafeBind(bind.local)
 
     private def confirmShutdown(): Boolean = false
 

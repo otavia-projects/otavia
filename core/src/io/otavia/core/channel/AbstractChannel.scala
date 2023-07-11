@@ -18,7 +18,6 @@
 
 package io.otavia.core.channel
 
-import io.netty5.util.DefaultAttributeMap
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
@@ -32,7 +31,7 @@ import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
 /** Abstract class of file channel and network channel. */
-abstract class AbstractChannel extends DefaultAttributeMap, Channel, ChannelState {
+abstract class AbstractChannel extends Channel, ChannelState {
 
     protected var logger: Logger = _
 

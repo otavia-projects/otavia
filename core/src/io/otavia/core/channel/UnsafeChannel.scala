@@ -21,6 +21,8 @@ package io.otavia.core.channel
 import io.otavia.core.address.ActorAddress
 import io.otavia.core.channel.message.ReadPlan
 
+import java.net.SocketAddress
+
 trait UnsafeChannel {
 
     def channel: Channel
@@ -35,7 +37,7 @@ trait UnsafeChannel {
      *    when an error happens.
      */
     @throws[Exception]
-    protected def unsafeBind(): Unit
+    def unsafeBind(local: SocketAddress): Unit
 
     /** Disconnect this [[Channel]] from its remote peer
      *

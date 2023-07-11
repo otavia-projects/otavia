@@ -18,19 +18,33 @@
 
 package io.otavia.core.transport.nio.channel
 
+import io.netty5.util.NetUtil
 import io.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelShutdownDirection}
 
-import java.net.ProtocolFamily
+import java.net.{ProtocolFamily, SocketAddress, StandardProtocolFamily}
 import java.nio.channels.{SelectionKey, ServerSocketChannel}
+import scala.language.unsafeNulls
 
 class NioServerSocketUnsafeChannel(channel: Channel, ch: ServerSocketChannel, val family: ProtocolFamily)
     extends AbstractNioUnsafeChannel(channel, ch, SelectionKey.OP_ACCEPT) {
 
     private var bound: Boolean = false
 
+    @volatile private var backlog = NetUtil.SOMAXCONN
+
+    private def getBacklog(): Int = backlog
+
+    private def setBacklog(back: Int): Unit = {
+        assert(back >= 0, s"in setBacklog(back: Int) back:$back (expected: >= 0)")
+        this.backlog = back
+    }
+
     override protected def doReadNow(): Boolean = ???
 
-    override protected def unsafeBind(): Unit = ???
+    override def unsafeBind(local: SocketAddress): Unit = {
+        ch.bind(local, getBacklog())
+        bound = true // TODO: Thread Safe
+    }
 
     override protected def unsafeDisconnect(): Unit = ???
 
