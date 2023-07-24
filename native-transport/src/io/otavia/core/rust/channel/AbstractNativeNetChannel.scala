@@ -36,7 +36,7 @@ abstract class AbstractNativeNetChannel[L <: SocketAddress, R <: SocketAddress](
     defaultWriteHandleFactory: WriteHandleFactory,
     val socket: NativeSocket,
     val remote: SocketAddress
-) extends AbstractNetChannel[L, R](supportingDisconnect, defaultReadPlanFactory, defaultWriteHandleFactory) {
+) extends AbstractNetChannel[L, R](supportingDisconnect, defaultWriteHandleFactory) {
 
     override protected[core] def doReadNow(readSink: ReadSink): Boolean = ???
 
@@ -48,14 +48,6 @@ abstract class AbstractNativeNetChannel[L <: SocketAddress, R <: SocketAddress](
 
     override def isShutdown(direction: ChannelShutdownDirection): Boolean = ???
 
-    override private[core] def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = ???
-
-    override private[core] def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit = ???
-
-    override private[core] def handleChannelAcceptedEvent(event: ReactorEvent.AcceptedEvent): Unit = ???
-
-    override private[core] def handleChannelReadCompletedEvent(event: ReactorEvent.ReadCompletedEvent): Unit = ???
-
     override protected def doDisconnect(): Unit = ???
 
     override protected def doClose(): Unit = ???
@@ -64,11 +56,13 @@ abstract class AbstractNativeNetChannel[L <: SocketAddress, R <: SocketAddress](
 
     override protected def doRead(): Unit = ???
 
-    override protected def doConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Boolean = ???
+    override protected def doConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Boolean =
+        ???
 
     override protected def doFinishConnect(requestedRemoteAddress: R): Boolean = ???
 
     override protected def localAddress0: Option[L] = ???
 
     override protected def remoteAddress0: Option[R] = ???
+
 }

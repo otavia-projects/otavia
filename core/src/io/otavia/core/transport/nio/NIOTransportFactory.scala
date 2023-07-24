@@ -52,7 +52,7 @@ class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
             throw new ChannelException("Failed to enter non-blocking mode.", e)
     }
 
-    override def openServerSocketChannel(): Channel = {
+    override def createServerSocketChannel(): Channel = {
         var family: ProtocolFamily  = null
         var ch: ServerSocketChannel = null
 
@@ -70,13 +70,13 @@ class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
         new NioServerSocketChannel(ch, family)
     }
 
-    override def openServerSocketChannel(family: ProtocolFamily): Channel = {
+    override def createServerSocketChannel(family: ProtocolFamily): Channel = {
         val ch = selectorProvider.openServerSocketChannel(family)
         initialJdkChannel(ch)
         new NioServerSocketChannel(ch, family)
     }
 
-    override def openSocketChannel(): Channel = {
+    override def createSocketChannel(): Channel = {
         var family: ProtocolFamily = null
         var ch: SocketChannel      = null
 
@@ -88,15 +88,17 @@ class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
                 family = StandardProtocolFamily.INET
                 ch = selectorProvider.openSocketChannel(family)
         }
+        initialJdkChannel(ch)
         new NioSocketChannel(ch, family)
     }
 
-    override def openSocketChannel(family: ProtocolFamily): Channel = {
+    override def createSocketChannel(family: ProtocolFamily): Channel = {
         val ch = selectorProvider.openSocketChannel(family)
+        initialJdkChannel(ch)
         new NioSocketChannel(ch, family)
     }
 
-    override def openDatagramChannel(): Channel = {
+    override def createDatagramChannel(): Channel = {
         var family: ProtocolFamily = null
         var ch: DatagramChannel    = null
 
@@ -108,16 +110,17 @@ class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
                 family = StandardProtocolFamily.INET
                 ch = selectorProvider.openDatagramChannel(family)
         }
-
+        initialJdkChannel(ch)
         new NioDatagramChannel(ch, family)
     }
 
-    override def openDatagramChannel(family: SocketProtocolFamily): Channel = {
+    override def createDatagramChannel(family: SocketProtocolFamily): Channel = {
         val ch = selectorProvider.openDatagramChannel(family)
+        initialJdkChannel(ch)
         new NioDatagramChannel(ch, family)
     }
 
-    override def openFileChannel(): Channel = new NioFileChannel()
+    override def createFileChannel(): Channel = new NioFileChannel()
 
     override def openReactor(system: ActorSystem): Reactor = if (reactor != null) reactor
     else {

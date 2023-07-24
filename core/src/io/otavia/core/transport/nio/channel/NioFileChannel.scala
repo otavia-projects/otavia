@@ -77,49 +77,4 @@ class NioFileChannel() extends AbstractFileChannel {
 
     override private[core] def closeAfterCreate(): Unit = ???
 
-    override private[core] def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = ???
-
-    override private[core] def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = ???
-
-    override private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = ???
-
-    override private[core] def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit = ???
-
-    override private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit = ???
-
-    override def inboundMessageBarrier: AnyRef => Boolean = ???
-
-    override def setInboundMessageBarrier(barrier: AnyRef => Boolean): Unit = ???
-
-    override def outboundMessageBarrier: AnyRef => Boolean = ???
-
-    override def setOutboundMessageBarrier(barrier: AnyRef => Boolean): Unit = ???
-
-    override def outboundInflightSize: Int = ???
-
-    override def outboundPendingSize: Int = ???
-
-    override def inboundInflightSize: Int = ???
-
-    override def inboundPendingSize: Int = ???
-
-    override def ask(value: AnyRef, future: ChannelReplyFuture): ChannelReplyFuture = ???
-
-    override def batchAsk(asks: Seq[AnyRef], futures: Seq[ChannelReplyFuture]): Seq[ChannelReplyFuture] = ???
-
-    override def notice(value: AnyRef): Unit = ???
-
-    override def batchNotice(notices: Seq[AnyRef]): Unit = ???
-
-    override def generateMessageId: Long = ???
-
-    override private[core] def onInboundMessage(msg: AnyRef): Unit = ???
-
-    override private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit = ???
-
-    override private[core] def handleChannelAcceptedEvent(event: ReactorEvent.AcceptedEvent): Unit =
-        throw new UnsupportedOperationException()
-
-    override private[core] def handleChannelReadCompletedEvent(event: ReactorEvent.ReadCompletedEvent): Unit = ???
-
 }

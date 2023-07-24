@@ -26,19 +26,19 @@ import java.net.ProtocolFamily
 
 class NativeTransportFactory extends TransportFactory {
 
-    override def openServerSocketChannel(): Channel = ???
+    override def createServerSocketChannel(): Channel = ???
 
-    override def openServerSocketChannel(family: ProtocolFamily): Channel = ???
+    override def createServerSocketChannel(family: ProtocolFamily): Channel = ???
 
-    override def openSocketChannel(): Channel = ???
+    override def createSocketChannel(): Channel = ???
 
-    override def openSocketChannel(family: ProtocolFamily): Channel = ???
+    override def createSocketChannel(family: ProtocolFamily): Channel = ???
 
-    override def openDatagramChannel(): Channel = ???
+    override def createDatagramChannel(): Channel = ???
 
-    override def openDatagramChannel(family: SocketProtocolFamily): Channel = ???
+    override def createDatagramChannel(family: SocketProtocolFamily): Channel = ???
 
-    override def openFileChannel(): Channel = ???
+    override def createFileChannel(): Channel = ???
 
     override def openReactor(system: ActorSystem): Reactor = ???
 

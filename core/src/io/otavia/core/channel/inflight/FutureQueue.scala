@@ -39,6 +39,10 @@ class FutureQueue {
 
     def size: Int = count
 
+    def isEmpty: Boolean = count == 0
+
+    def nonEmpty: Boolean = count > 0
+
     def append(promise: ChannelReplyPromise): Unit = if (count == 0) {
         recentlyAppend = promise
         count += 1

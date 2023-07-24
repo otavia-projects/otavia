@@ -23,18 +23,18 @@ import java.net.ProtocolFamily
 
 class ChannelFactory(val transportFactory: TransportFactory) {
 
-    def openServerSocketChannel(): Channel = transportFactory.openServerSocketChannel()
+    def openServerSocketChannel(): Channel = transportFactory.createServerSocketChannel()
 
-    def openServerSocketChannel(family: ProtocolFamily): Channel = transportFactory.openServerSocketChannel(family)
+    def openServerSocketChannel(family: ProtocolFamily): Channel = transportFactory.createServerSocketChannel(family)
 
-    def openSocketChannel(): Channel = transportFactory.openSocketChannel()
+    def openSocketChannel(): Channel = transportFactory.createSocketChannel()
 
-    def openSocketChannel(family: ProtocolFamily): Channel = transportFactory.openSocketChannel(family)
+    def openSocketChannel(family: ProtocolFamily): Channel = transportFactory.createSocketChannel(family)
 
-    def openDatagramChannel(): Channel = transportFactory.openDatagramChannel()
+    def openDatagramChannel(): Channel = transportFactory.createDatagramChannel()
 
-    def openDatagramChannel(family: SocketProtocolFamily): Channel = transportFactory.openDatagramChannel(family)
+    def openDatagramChannel(family: SocketProtocolFamily): Channel = transportFactory.createDatagramChannel(family)
 
-    def openFileChannel(): Channel = transportFactory.openFileChannel()
+    def openFileChannel(): Channel = transportFactory.createFileChannel()
 
 }

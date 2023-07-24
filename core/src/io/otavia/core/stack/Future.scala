@@ -93,8 +93,3 @@ trait Future[+V] {
     private[core] def promise: Promise[?] = this.asInstanceOf[Promise[?]]
 
 }
-
-object Future {
-    def apply[V](): DefaultFuture[V] = DefaultPromise()
-
-}

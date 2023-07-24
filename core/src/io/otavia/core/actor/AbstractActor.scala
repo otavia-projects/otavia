@@ -105,7 +105,6 @@ private[core] abstract class AbstractActor[M <: Call]
             case promise: AioPromise[?]       =>
             case promise: BlockPromise[?]     =>
             case promise: ChannelReplyPromise =>
-            case promise: DefaultPromise[?]   =>
             case _                            =>
     }
 

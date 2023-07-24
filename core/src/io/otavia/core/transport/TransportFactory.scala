@@ -25,26 +25,25 @@ import io.otavia.core.transport.spi.TransportServiceProvider
 import io.otavia.core.util.Report
 
 import java.net.ProtocolFamily
-import java.security.{AccessController, PrivilegedAction}
 import java.util.ServiceLoader
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
 abstract class TransportFactory() {
 
-    def openServerSocketChannel(): Channel
+    def createServerSocketChannel(): Channel
 
-    def openServerSocketChannel(family: ProtocolFamily): Channel
+    def createServerSocketChannel(family: ProtocolFamily): Channel
 
-    def openSocketChannel(): Channel
+    def createSocketChannel(): Channel
 
-    def openSocketChannel(family: ProtocolFamily): Channel
+    def createSocketChannel(family: ProtocolFamily): Channel
 
-    def openDatagramChannel(): Channel
+    def createDatagramChannel(): Channel
 
-    def openDatagramChannel(family: SocketProtocolFamily): Channel
+    def createDatagramChannel(family: SocketProtocolFamily): Channel
 
-    def openFileChannel(): Channel
+    def createFileChannel(): Channel
 
     def openReactor(system: ActorSystem): Reactor
 
@@ -123,16 +122,7 @@ object TransportFactory {
         providerList
     }
 
-    private def getServiceLoader(classLoaderOfLoggerFactory: ClassLoader): ServiceLoader[TransportServiceProvider] = {
-        val securityManager = System.getSecurityManager
-        val serviceLoader = if (securityManager == null) {
-            ServiceLoader.load(classOf[TransportServiceProvider], classLoaderOfLoggerFactory)
-        } else {
-            val action: PrivilegedAction[ServiceLoader[TransportServiceProvider]] = () =>
-                ServiceLoader.load(classOf[TransportServiceProvider], classLoaderOfLoggerFactory)
-            AccessController.doPrivileged[ServiceLoader[TransportServiceProvider]](action)
-        }
-        serviceLoader
-    }
+    private def getServiceLoader(classLoaderOfLoggerFactory: ClassLoader): ServiceLoader[TransportServiceProvider] =
+        ServiceLoader.load(classOf[TransportServiceProvider], classLoaderOfLoggerFactory)
 
 }

@@ -121,7 +121,7 @@ private[core] trait ChannelInternal[L <: SocketAddress, R <: SocketAddress] {
      *  @return
      *    true if the channel should be shutdown / closed.
      */
-    protected[channel] def doReadNow(readSink: ReadSink): Boolean
+    protected[core] def doReadNow(readSink: ReadSink): Boolean
 
     /** Returns the [[SocketAddress]] which is bound locally.
      *

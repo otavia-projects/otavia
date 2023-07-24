@@ -24,7 +24,6 @@ import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.AbstractNetChannel.*
 import io.otavia.core.channel.ChannelOption.*
 import io.otavia.core.channel.estimator.*
-import io.otavia.core.channel.inflight.ChannelInflightImpl
 import io.otavia.core.channel.internal.{ChannelOutboundBuffer, ReadSink, WriteBufferWaterMark, WriteSink}
 import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import io.otavia.core.message.{ReactorEvent, TimeoutEvent}
@@ -61,7 +60,6 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
 ) extends AbstractChannel,
       WriteSink,
       ReadSink,
-      ChannelInflightImpl,
       ChannelInternal[L, R],
       ChannelInboundBuffer {
 
@@ -850,8 +848,6 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
     protected def readLoopComplete(): Unit = {
         // NOOP
     }
-
-    final protected def newPromise(): ChannelPromise = ChannelPromise()
 
 }
 

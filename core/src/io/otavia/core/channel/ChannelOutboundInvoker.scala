@@ -21,7 +21,7 @@ package io.otavia.core.channel
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.reactor.Reactor
-import io.otavia.core.stack.{ChannelFuture, DefaultFuture, Future}
+import io.otavia.core.stack.{ChannelFuture, Future}
 import io.otavia.core.system.ActorSystem
 
 import java.io.File

@@ -19,7 +19,7 @@ package io.otavia.core.channel
 import io.otavia.core.actor.{Actor, ChannelsActor}
 import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.reactor.Reactor
-import io.otavia.core.stack.{ChannelFuture, DefaultFuture, Future}
+import io.otavia.core.stack.{ChannelFuture, ChannelReplyFuture, Future}
 import io.otavia.core.system.ActorSystem
 
 import java.io.File
@@ -268,6 +268,21 @@ trait ChannelAddress {
         this
     }
 
-//    def ask(value: AnyRef, future: ChannelReplyFuture[repof[T]]): ChannelReplyFuture[repof[T]]
+    /** actor send ask message to channel, in underlying, it call channel.write
+     *  @param value
+     *    ask message which need this [[Channel]] relpy a message.
+     *  @param future
+     *    the reply message future.
+     *  @return
+     *    the reply message future.
+     */
+    def ask(value: AnyRef, future: ChannelReplyFuture): ChannelReplyFuture
+
+    def batchAsk(asks: Seq[AnyRef], futures: Seq[ChannelReplyFuture]): Seq[ChannelReplyFuture]
+
+    // actor send notice message to channel
+    def notice(value: AnyRef): Unit
+
+    def batchNotice(notices: Seq[AnyRef]): Unit
 
 }

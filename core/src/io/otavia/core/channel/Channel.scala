@@ -23,7 +23,7 @@ import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.address.ActorAddress
 import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.reactor.Reactor
-import io.otavia.core.stack.ChannelFuture
+import io.otavia.core.stack.{ChannelFuture, ChannelPromise}
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.timer.Timer
 
@@ -171,44 +171,6 @@ trait Channel extends ChannelInflight, EventHandle, ChannelAddress {
 
     final def headAllocator: BufferAllocator = executor.system.headAllocator
 
-//    // impl ChannelOutboundInvoker
-//    override def bind(local: SocketAddress, future: ChannelFuture): ChannelFuture = {
-//        // TODO: attachStack
-//        // executor.attachStack(executor.idAllocator.generate, future)
-//        pipeline.bind(local, future)
-//    }
-//
-//    override def connect(remote: SocketAddress, local: Option[SocketAddress], future: ChannelFuture): ChannelFuture =
-//        pipeline.connect(remote, local, future)
-//
-//    override def open(
-//        path: Path,
-//        options: Seq[OpenOption],
-//        attrs: Seq[FileAttribute[?]],
-//        future: ChannelFuture
-//    ): ChannelFuture = pipeline.open(path, options, attrs, future)
-//
-//    override def disconnect(future: ChannelFuture): ChannelFuture = pipeline.disconnect(future)
-//
-//    override def close(future: ChannelFuture): ChannelFuture = pipeline.close(future)
-//
-//    override def shutdown(direction: ChannelShutdownDirection, future: ChannelFuture): ChannelFuture =
-//        pipeline.shutdown(direction, future)
-//
-//    override def register(future: ChannelFuture): ChannelFuture = pipeline.register(future)
-//
-//    override def deregister(future: ChannelFuture): ChannelFuture = pipeline.deregister(future)
-//
-//    final override def read(readPlan: ReadPlan): this.type = {
-//        pipeline.read(readPlan)
-//        this
-//    }
-//
-//    override def read(): this.type = {
-//        pipeline.read()
-//        this
-//    }
-//
     final def write(msg: AnyRef): Unit = pipeline.write(msg)
 
     final def write(msg: AnyRef, msgId: Long): Unit = pipeline.write(msg, msgId)
@@ -231,5 +193,46 @@ trait Channel extends ChannelInflight, EventHandle, ChannelAddress {
     private[core] def closeAfterCreate(): Unit
 
     def unsafeChannel: UnsafeChannel
+
+    private[core] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit
+
+    private[core] def connectTransport(
+        remote: SocketAddress,
+        local: Option[SocketAddress],
+        promise: ChannelPromise
+    ): Unit
+
+    private[core] def openTransport(
+        path: Path,
+        options: Seq[OpenOption],
+        attrs: Seq[FileAttribute[?]],
+        promise: ChannelPromise
+    ): Unit
+
+    private[core] def disconnectTransport(promise: ChannelPromise): Unit
+
+    private[core] def closeTransport(promise: ChannelPromise): Unit
+
+    private[core] def shutdownTransport(direction: ChannelShutdownDirection, promise: ChannelPromise): Unit
+
+    /** Call by head handler on pipeline register outbound event.
+     *
+     *  send channel register to reactor, and handle reactor reply at [[handleChannelRegisterReplyEvent]]
+     */
+    private[core] def registerTransport(promise: ChannelPromise): Unit
+
+    private[core] def deregisterTransport(promise: ChannelPromise): Unit
+
+    private[core] def readTransport(readPlan: ReadPlan): Unit = if (!isActive) {
+        throw new IllegalStateException(s"channel $this is not active!")
+    } else if (isShutdown(ChannelShutdownDirection.Inbound)) {
+        // Input was shutdown so not try to read.
+    } else {
+        reactor.read(this, readPlan)
+    }
+
+    private[core] def writeTransport(msg: AnyRef): Unit
+
+    private[core] def flushTransport(): Unit
 
 }

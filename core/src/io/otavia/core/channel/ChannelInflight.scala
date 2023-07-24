@@ -17,7 +17,7 @@
 package io.otavia.core.channel
 
 import io.otavia.core.message.{Event, ReactorEvent}
-import io.otavia.core.stack.{ChannelFuture, ChannelReplyFuture, DefaultFuture, Future}
+import io.otavia.core.stack.{ChannelFuture, ChannelReplyFuture, Future}
 
 import java.net.SocketAddress
 
@@ -41,23 +41,14 @@ trait ChannelInflight {
      */
     def setOutboundMessageBarrier(barrier: AnyRef => Boolean): Unit
 
-    def maxOutboundInflight: Int = 1
+    def maxOutboundInflight: Int
+    def setMaxOutboundInflight(max: Int): Unit
 
     def outboundInflightSize: Int
     def outboundPendingSize: Int
 
     def inboundInflightSize: Int
     def inboundPendingSize: Int
-
-    // actor send ask message to channel, in underlying, it call channel.write
-    def ask(value: AnyRef, future: ChannelReplyFuture): ChannelReplyFuture
-
-    def batchAsk(asks: Seq[AnyRef], futures: Seq[ChannelReplyFuture]): Seq[ChannelReplyFuture]
-
-    // actor send notice message to channel
-    def notice(value: AnyRef): Unit
-
-    def batchNotice(notices: Seq[AnyRef]): Unit
 
     /** generate a unique id for the channel message
      *

@@ -37,6 +37,8 @@ trait EventHandle {
     /** Handle channel readiness event */
     private[core] def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit
 
+    private[core] def handleChannelBindReplyEvent(event: ReactorEvent.BindReply): Unit
+
     // Event from Timer
 
     /** Handle channel timeout event */
