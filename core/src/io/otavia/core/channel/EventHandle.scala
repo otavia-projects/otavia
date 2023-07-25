@@ -39,6 +39,12 @@ trait EventHandle {
 
     private[core] def handleChannelBindReplyEvent(event: ReactorEvent.BindReply): Unit
 
+    private[core] def handleChannelConnectReplyEvent(event: ReactorEvent.ConnectReply): Unit
+
+    private[core] def handleChannelDisconnectReplyEvent(event: ReactorEvent.DisconnectReply): Unit
+
+    private[core] def handleChannelOpenReplyEvent(event: ReactorEvent.OpenReply): Unit
+
     // Event from Timer
 
     /** Handle channel timeout event */

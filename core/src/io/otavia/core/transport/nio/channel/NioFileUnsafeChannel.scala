@@ -31,21 +31,23 @@ class NioFileUnsafeChannel(channel: Channel) extends AbstractUnsafeChannel(chann
 
     private var ch: FileChannel = _
 
-    def doOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = this.synchronized {
-        ch = FileChannel.open(path, options.toSet.asJava, attrs: _*)
-    }
-
     private def javaChannel: FileChannel = ch
 
     override protected def doReadNow(): Boolean = ???
 
-    override def unsafeBind(local: SocketAddress): Unit = ???
+    override def unsafeBind(local: SocketAddress): Unit =
+        throw new UnsupportedOperationException()
 
-    override protected def unsafeDisconnect(): Unit = ???
+    override def unsafeOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = {
+        ch = FileChannel.open(path, options.toSet.asJava, attrs: _*)
+        ch.close()
+    }
 
-    override protected def unsafeClose(): Unit = ???
+    override def unsafeDisconnect(): Unit = ???
 
-    override protected def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
+    override def unsafeClose(): Unit = ???
+
+    override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
 
     override def unsafeRead(): Unit = ???
 

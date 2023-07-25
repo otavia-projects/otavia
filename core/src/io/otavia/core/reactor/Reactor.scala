@@ -24,6 +24,8 @@ import io.otavia.core.system.ActorSystem
 import io.otavia.core.util.Nextable
 
 import java.net.SocketAddress
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
 
 /** [[Reactor]] is an io event generator for [[Channel]]. */
 trait Reactor {
@@ -51,6 +53,21 @@ trait Reactor {
         submit(command)
     }
 
+    final def open(channel: Channel, path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = {
+        val command = Command.Open(channel, path, options, attrs)
+        submit(command)
+    }
+
+    final def connect(channel: Channel, remote: SocketAddress, local: Option[SocketAddress], fast: Boolean): Unit = {
+        val command = Command.Connect(channel, remote, local, fast)
+        submit(command)
+    }
+
+    final def disconnect(channel: Channel): Unit = {
+        val command = Command.Disconnect(channel)
+        submit(command)
+    }
+
     final def close(channel: Channel): Unit = {
         val command = Command.Close(channel)
         submit(command)
@@ -69,15 +86,29 @@ object Reactor {
 
     val DEFAULT_MAX_TASKS_PER_RUN: Int = ActorSystem.DEFAULT_MAX_TASKS_PER_RUN
 
-    enum Command extends Nextable {
+    abstract sealed class Command extends Nextable {
+        def channel: Channel
+    }
 
-        case Register(channel: Channel)                   extends Command
-        case Deregister(channel: Channel)                 extends Command
-        case Bind(channel: Channel, local: SocketAddress) extends Command
-        case Connect(channel: Channel)                    extends Command
-        case Disconnect(channel: Channel)                 extends Command
-        case Close(channel: Channel)                      extends Command
-        case Read(channel: Channel, plan: ReadPlan)       extends Command
+    object Command {
+
+        case class Register(channel: Channel) extends Command
+
+        case class Deregister(channel: Channel) extends Command
+
+        case class Bind(channel: Channel, local: SocketAddress) extends Command
+
+        case class Connect(channel: Channel, remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean)
+            extends Command
+
+        case class Disconnect(channel: Channel) extends Command
+
+        case class Open(channel: Channel, path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]])
+            extends Command
+
+        case class Close(channel: Channel) extends Command
+
+        case class Read(channel: Channel, plan: ReadPlan) extends Command
 
     }
 

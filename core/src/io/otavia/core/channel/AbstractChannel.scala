@@ -66,6 +66,8 @@ abstract class AbstractChannel extends Channel, ChannelState {
 
     private var channelMsgId: Long = ChannelInflight.INVALID_CHANNEL_MESSAGE_ID
 
+    protected var ongoingChannelPromise: ChannelPromise = _
+
     // initial channel state on constructing
     created = true
     registering = false
@@ -279,6 +281,12 @@ abstract class AbstractChannel extends Channel, ChannelState {
     override private[core] def handleChannelReadCompletedEvent(event: ReactorEvent.ReadCompletedEvent): Unit = ???
 
     override private[core] def handleChannelBindReplyEvent(event: ReactorEvent.BindReply): Unit = ???
+
+    override private[core] def handleChannelConnectReplyEvent(event: ReactorEvent.ConnectReply): Unit = ???
+
+    override private[core] def handleChannelDisconnectReplyEvent(event: ReactorEvent.DisconnectReply): Unit = {}
+
+    override private[core] def handleChannelOpenReplyEvent(event: ReactorEvent.OpenReply): Unit = {}
 
     // end impl EventHandle
 

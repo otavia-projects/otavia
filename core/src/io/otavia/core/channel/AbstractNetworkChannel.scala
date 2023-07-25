@@ -18,18 +18,22 @@
 
 package io.otavia.core.channel
 
+import io.otavia.core.channel.AbstractNetChannel.DEFAULT_CONNECT_TIMEOUT
 import io.otavia.core.message.ReactorEvent
 import io.otavia.core.stack.{ChannelPromise, Promise}
+import io.otavia.core.timer.{TimeoutTrigger, Timer}
 import io.otavia.core.util.Platform
 
 import java.net.{InetSocketAddress, SocketAddress}
+import java.nio.channels.{AlreadyConnectedException, ClosedChannelException, ConnectionPendingException}
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
 abstract class AbstractNetworkChannel extends AbstractChannel {
 
-    protected var ongoingChannelPromise: ChannelPromise = _
+    private var connectTimeoutMillis: Int      = DEFAULT_CONNECT_TIMEOUT
+    private var connectTimeoutRegisterId: Long = Timer.INVALID_TIMEOUT_REGISTER_ID
 
     override private[core] def registerTransport(promise: ChannelPromise): Unit =
         if (registering) promise.setFailure(new IllegalStateException(s"The channel $this is registering to reactor!"))
@@ -114,14 +118,86 @@ abstract class AbstractNetworkChannel extends AbstractChannel {
                 promise.setSuccess(ReactorEvent.EMPTY_EVENT)
             case Some(cause) =>
                 promise.setFailure(cause)
-                closeIfClosed()
+                closeTransport(newPromise())
     }
 
     override private[core] def connectTransport(
         remote: SocketAddress,
         local: Option[SocketAddress],
         promise: ChannelPromise
-    ): Unit = ???
+    ): Unit = {
+        if (!mounted) promise.setFailure(new IllegalStateException(s"channel $this is not mounted to actor!"))
+        else if (connected) promise.setFailure(new AlreadyConnectedException())
+        else if (connecting) promise.setFailure(new ConnectionPendingException())
+        else if (closed || closing) promise.setFailure(new ClosedChannelException())
+        else if (registering) promise.setFailure(new IllegalStateException("A registering operation is running"))
+        else if (!registered) { // if not register
+            if (!registering) pipeline.register(newPromise())
+            ongoingChannelPromise.onCompleted {
+                case self if self.isSuccess =>
+                    this.ongoingChannelPromise = null
+                    connectTransport0(remote, local, promise)
+                case self if self.isFailed =>
+                    this.ongoingChannelPromise = null
+                    promise.setFailure(self.causeUnsafe)
+            }
+        } else connectTransport0(remote, local, promise)
+    }
+
+    private def connectTransport0(
+        remote: SocketAddress,
+        local: Option[SocketAddress],
+        promise: ChannelPromise
+    ): Unit = {
+        connecting = true
+        ongoingChannelPromise = promise
+        val fastOption = ChannelOption.TCP_FASTOPEN_CONNECT
+        val fastOpen   = if (isOptionSupported(fastOption) && getOption(fastOption)) true else false
+
+        reactor.connect(this, remote, local, fastOpen)
+
+        // setup connect timeout
+        // register connect timeout trigger. When timeout, the timer will send a timeout event, the
+        // handleConnectTimeout method will handle this timeout event.
+        if (connectTimeoutMillis > 0) {
+            val tid = timer.registerChannelTimeout(TimeoutTrigger.DelayTime(connectTimeoutMillis), this)
+            connectTimeoutRegisterId = tid
+            promise.setTimeoutId(tid)
+        }
+    }
+
+    override private[core] def handleChannelConnectReplyEvent(event: ReactorEvent.ConnectReply): Unit = {
+        val promise = ongoingChannelPromise
+        this.ongoingChannelPromise = null
+        connecting = false
+        event.cause match
+            case None =>
+                connected = true
+                if (promise.canTimeout) timer.cancelTimerTask(promise.timeoutId) // cancel timeout trigger
+                promise.setSuccess(event)
+                if (event.firstActive) if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead()
+            case Some(cause) =>
+                promise.setFailure(cause)
+                closeTransport(newPromise())
+    }
+
+    private def handleConnectTimeout(): Unit = {
+        val promise = ongoingChannelPromise
+        this.ongoingChannelPromise = null
+        closeTransport(newPromise()) // close the channel and ignore close result.
+
+        promise.setFailure(new ConnectTimeoutException(s"connection timed out: $this"))
+    }
+
+    override private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit = {
+        if (eventRegisterId == connectTimeoutRegisterId) {
+            // handle connect timeout event.
+            if (connecting) handleConnectTimeout() // else ignore the event
+        } else {
+            // fire other timeout event to pipeline.
+            pipeline.fireChannelTimeoutEvent(eventRegisterId)
+        }
+    }
 
     override private[core] def openTransport(
         path: Path,
@@ -129,8 +205,6 @@ abstract class AbstractNetworkChannel extends AbstractChannel {
         attrs: Seq[FileAttribute[?]],
         promise: ChannelPromise
     ): Unit = promise.setFailure(new UnsupportedOperationException())
-
-    override private[core] def disconnectTransport(promise: ChannelPromise): Unit = ???
 
     override private[core] def closeTransport(promise: ChannelPromise): Unit = ???
 

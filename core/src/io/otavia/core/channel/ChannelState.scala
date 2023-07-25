@@ -105,6 +105,12 @@ trait ChannelState extends CompressionBooleanLong {
     protected final def mounted_=(value: Boolean): Unit = set(ST_MOUNTED, value)
     protected final def mounted: Boolean                = get(ST_MOUNTED)
 
+    protected final def opening_=(value: Boolean): Unit = set(ST_OPENING, value)
+    protected final def opening: Boolean                = get(ST_OPENING)
+
+    protected final def opened_=(value: Boolean): Unit = set(ST_OPENED, value)
+    protected final def opened: Boolean                = get(ST_OPENED)
+
     override final def isMounted: Boolean = mounted
 
 //    protected final def readSomething_=(value: Boolean): Unit = set(ST_READ_SOMETHING, value)
@@ -189,6 +195,12 @@ object ChannelState {
 
     private val ST_MOUNTED_OFFSET: Long = 19
     private val ST_MOUNTED: Long        = 1 << ST_MOUNTED_OFFSET
+
+    private val ST_OPENING_OFFSET: Long = 20
+    private val ST_OPENING: Long        = 1 << ST_OPENING_OFFSET
+
+    private val ST_OPENED_OFFSET: Long = 21
+    private val ST_OPENED: Long        = 1 << ST_OPENED_OFFSET
     // End channel lifecycle state
 
     // state in ReadSink

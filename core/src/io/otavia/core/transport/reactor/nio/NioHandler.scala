@@ -28,9 +28,11 @@ import io.otavia.core.transport.nio.channel.{AbstractNioChannel, AbstractNioUnsa
 import io.otavia.core.transport.reactor.nio.NioHandler.*
 
 import java.io.{IOException, UncheckedIOException}
+import java.net.SocketAddress
 import java.nio.channels.spi.SelectorProvider
 import java.nio.channels.{CancelledKeyException, SelectionKey, Selector}
-import java.security.{AccessController, PrivilegedAction}
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
 import java.util
 import java.util.Set
 import java.util.concurrent.TimeUnit
@@ -324,6 +326,28 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         if (cancelledKeys >= CLEANUP_INTERVAL) {
             cancelledKeys = 0
             needsToSelectAgain = true
+        }
+    }
+
+    override def bind(channel: Channel, local: SocketAddress): Unit = {
+        try {
+            val wasActive = channel.unsafeChannel.isActive
+            channel.unsafeChannel.unsafeBind(local)
+            val firstActive = !wasActive && channel.unsafeChannel.isActive
+            channel.executorAddress.inform(ReactorEvent.BindReply(channel, firstActive, None))
+        } catch {
+            case t: Throwable =>
+                channel.executorAddress.inform(ReactorEvent.BindReply(channel, cause = Some(t)))
+        }
+    }
+
+    override def open(channel: Channel, path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = {
+        try {
+            channel.unsafeChannel.unsafeOpen(path, options, attrs)
+            channel.executorAddress.inform(ReactorEvent.OpenReply(channel))
+        } catch {
+            case t: Throwable =>
+                channel.executorAddress.inform(ReactorEvent.OpenReply(channel, Some(t)))
         }
     }
 

@@ -22,6 +22,8 @@ import io.otavia.core.address.ActorAddress
 import io.otavia.core.channel.message.ReadPlan
 
 import java.net.SocketAddress
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
 
 trait UnsafeChannel {
 
@@ -39,13 +41,16 @@ trait UnsafeChannel {
     @throws[Exception]
     def unsafeBind(local: SocketAddress): Unit
 
+    @throws[Exception]
+    def unsafeOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit
+
     /** Disconnect this [[Channel]] from its remote peer
      *
      *  @throws Exception
      *    thrown on error.
      */
     @throws[Exception]
-    protected def unsafeDisconnect(): Unit
+    def unsafeDisconnect(): Unit
 
     /** Close the [[Channel]]
      *
@@ -53,7 +58,7 @@ trait UnsafeChannel {
      *    thrown on error.
      */
     @throws[Exception]
-    protected def unsafeClose(): Unit
+    def unsafeClose(): Unit
 
     /** Shutdown one direction of the [[Channel]].
      *
@@ -63,7 +68,7 @@ trait UnsafeChannel {
      *    thrown on error.
      */
     @throws[Exception]
-    protected def unsafeShutdown(direction: ChannelShutdownDirection): Unit
+    def unsafeShutdown(direction: ChannelShutdownDirection): Unit
 
     def setReadPlan(plan: ReadPlan): Unit
 

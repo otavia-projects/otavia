@@ -27,9 +27,12 @@ import io.otavia.core.stack.{ChannelPromise, ChannelReplyFuture}
 import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
+import scala.language.unsafeNulls
 
 /** Abstract channel for file, support aio. */
 abstract class AbstractFileChannel extends AbstractChannel {
+
+    private var path: Path = _
 
     override private[core] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit =
         channelPromise.setFailure(new UnsupportedOperationException())
@@ -43,16 +46,13 @@ abstract class AbstractFileChannel extends AbstractChannel {
     override private[core] def disconnectTransport(promise: ChannelPromise): Unit =
         promise.setFailure(new UnsupportedOperationException())
 
-    override private[core] def closeTransport(promise: ChannelPromise): Unit = {
-        ???
-    }
-
     override private[core] def shutdownTransport(
         direction: ChannelShutdownDirection,
         promise: ChannelPromise
     ): Unit = promise.setFailure(new UnsupportedOperationException())
 
     override private[core] def registerTransport(promise: ChannelPromise): Unit = {
+        registered = true
         promise.setSuccess(ReactorEvent.EMPTY_EVENT)
     }
 
@@ -65,5 +65,59 @@ abstract class AbstractFileChannel extends AbstractChannel {
     }
 
     override private[core] def flushTransport(): Unit = ???
+
+    override private[core] def openTransport(
+        path: Path,
+        options: Seq[OpenOption],
+        attrs: Seq[FileAttribute[?]],
+        promise: ChannelPromise
+    ): Unit = {
+        if (!mounted) promise.setFailure(new IllegalStateException(s"channel $this is not mounted to actor!"))
+        else if (opening) promise.setFailure(new IllegalStateException("Channel is opening!"))
+        else if (opened) promise.setFailure(new IllegalStateException("Open already!"))
+        else {
+            opening = true
+            this.ongoingChannelPromise = promise
+            this.path = path
+            reactor.open(this, path, options, attrs)
+        }
+    }
+
+    override private[core] def handleChannelOpenReplyEvent(event: ReactorEvent.OpenReply): Unit = {
+        val promise = ongoingChannelPromise
+        ongoingChannelPromise = null
+        event.cause match
+            case None =>
+                opening = false
+                opened = true
+                pipeline.fireChannelActive()
+                promise.setSuccess(event)
+            case Some(cause) =>
+                promise.setFailure(cause)
+                closeTransport(newPromise())
+    }
+
+    override private[core] def closeTransport(promise: ChannelPromise): Unit = {
+        if (!opened) promise.setFailure(new IllegalStateException("File not opened!"))
+        else if (closeInitiated || closed) promise.setSuccess(ReactorEvent.EMPTY_EVENT)
+        else {
+            closeInitiated = true
+            this.ongoingChannelPromise = promise
+            reactor.close(this)
+        }
+    }
+
+    override private[core] def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = {
+        val promise = ongoingChannelPromise
+        ongoingChannelPromise = null
+        event.cause match
+            case None =>
+                closed = true
+                closeInitiated = false
+                pipeline.fireChannelInactive()
+                promise.setSuccess(event)
+            case Some(cause) =>
+                promise.setFailure(cause)
+    }
 
 }

@@ -22,12 +22,13 @@ import io.otavia.core.reactor.Reactor.{Command, DEFAULT_MAX_TASKS_PER_RUN}
 import io.otavia.core.reactor.{IoExecutionContext, IoHandler, LoopExecutor, Reactor}
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.ActorSystem
+import io.otavia.core.system.ActorSystem.DEFAULT_PRINT_BANNER
 import io.otavia.core.transport.TransportFactory
-import io.otavia.core.transport.reactor.nio.NioReactor.{ST_NOT_STARTED, ST_STARTED}
-import io.otavia.core.util.SpinLockQueue
+import io.otavia.core.transport.reactor.nio.NioReactor.{NIO_REACTOR_WORKERS, NioThreadFactory}
+import io.otavia.core.util.{SpinLockQueue, SystemPropertyUtil}
 
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{ConcurrentLinkedQueue, ThreadFactory}
+import java.util.concurrent.{ConcurrentLinkedQueue, Executors, ThreadFactory}
 import scala.language.unsafeNulls
 
 class NioReactor(
@@ -39,113 +40,52 @@ class NioReactor(
 
     private val logger: Logger = Logger.getLogger(getClass, system)
 
-    private val commandQueue = new SpinLockQueue[Command]()
+    private val threadFactory = new NioThreadFactory()
 
-    private val executor = LoopExecutor(new ThreadFactory {
+    private val workers: Array[NioReactorWorker] = new Array[NioReactorWorker](NIO_REACTOR_WORKERS)
 
-        private var tid = 0
+    workers.indices.foreach { idx =>
+        workers(idx) = new NioReactorWorker(LoopExecutor(threadFactory), system, maxTasksPerRun, new NioHandler(system))
+    }
+
+    override def submit(command: Command): Unit = {
+        val idx    = math.abs(command.channel.hashCode()) % NIO_REACTOR_WORKERS
+        val worker = workers(idx)
+        worker.submitCommand(command)
+    }
+
+}
+
+object NioReactor {
+
+    private val DEFAULT_NIO_REACTOR_WORKERS = 2
+    val NIO_REACTOR_WORKERS: Int =
+        SystemPropertyUtil.getInt("io.otavia.reactor.nio.workers", DEFAULT_NIO_REACTOR_WORKERS)
+
+    final class NioThreadFactory extends ThreadFactory {
+
+        private val tid: AtomicInteger = new AtomicInteger(0)
+
+        private def getThreadId(): Int = {
+            var cid: Int = tid.get()
+            while (!tid.compareAndSet(cid, cid + 1)) {
+                cid = tid.get()
+            }
+            cid
+        }
 
         override def newThread(r: Runnable): Thread = {
-            val thread = new Thread(r, s"otavia-reactor-$tid")
+
+            val thread = new Thread(r, s"otavia-nio-reactor-${getThreadId()}")
             try {
                 if (thread.isDaemon) thread.setDaemon(false)
                 if (thread.getPriority != Thread.NORM_PRIORITY) thread.setPriority(Thread.NORM_PRIORITY)
             } catch {
                 case ignore: Exception =>
             }
-            tid += 1
             thread
         }
 
-    })
-    private var thread: Thread | Null = _
-
-    private val ioHandler: IoHandler = {
-        val handler = transportFactory.openIoHandler(system)
-        handler
     }
 
-    private val context = new IoExecutionContext {
-
-        override def canBlock: Boolean = commandQueue.isEmpty
-
-        override def delayNanos(currentTimeNanos: Long): Long = 50 * 1000 * 1000
-
-        override def deadlineNanos: Long = ???
-
-    }
-
-    set(ST_NOT_STARTED)
-
-    override def submit(command: Command): Unit = {
-        commandQueue.enqueue(command)
-        startThread()
-    }
-
-    private def startThread(): Unit = if (get() == ST_NOT_STARTED && compareAndSet(ST_NOT_STARTED, ST_STARTED)) {
-        var success = false
-        try {
-            doStartThread()
-            success = true
-        } finally {
-            if (!success) compareAndSet(ST_STARTED, ST_NOT_STARTED)
-        }
-    }
-
-    private def doStartThread(): Unit = {
-        assert(thread == null)
-        executor.execute(() => {
-            thread = Thread.currentThread()
-            try { run() }
-            catch { case t: Throwable => logger.warn("Unexpected exception from an event executor:") }
-            finally {}
-        })
-    }
-
-    private def run(): Unit = {
-        while (!confirmShutdown()) {
-            runIO()
-            runCommands(maxTasksPerRun)
-        }
-    }
-
-    /** Called when IO will be processed for all the [[Channel]]s on this [[Reactor]]. This method returns the number of
-     *  [[Channel]]s for which IO was processed.
-     *
-     *  This method must be called from the [[executor]] executor.
-     */
-    private def runIO(): Unit = ioHandler.run(context)
-
-    private def hasTask: Boolean = commandQueue.nonEmpty
-
-    private def runCommands(maxTasks: Int): Int = {
-        var processedTasks: Int = 0
-        while (processedTasks < maxTasks && commandQueue.nonEmpty) {
-            runCommand(commandQueue.dequeue())
-            processedTasks += 1
-        }
-        processedTasks
-    }
-
-    private def runCommand(command: Command): Unit = command match
-        case read: Read =>
-            read.channel.unsafeChannel.setReadPlan(read.plan)
-            read.channel.unsafeChannel.unsafeRead()
-        case register: Register     => ioHandler.register(register.channel)
-        case deregister: Deregister => ioHandler.deregister(deregister.channel)
-        case bind: Bind             => bind.channel.unsafeChannel.unsafeBind(bind.local)
-
-    private def confirmShutdown(): Boolean = false
-
-}
-
-object NioReactor {
-
-    private val ST_NOT_STARTED   = 1
-    private val ST_STARTED       = 2
-    private val ST_SHUTTING_DOWN = 3
-    private val ST_SHUTDOWN      = 4
-    private val ST_TERMINATED    = 5
-
-//    final case class ChannelTask(channel: Channel, address: ChannelsActorAddress[?])
 }

@@ -23,6 +23,8 @@ import io.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelShutdownDi
 
 import java.net.{ProtocolFamily, SocketAddress, StandardProtocolFamily}
 import java.nio.channels.{SelectionKey, ServerSocketChannel}
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
 class NioServerSocketUnsafeChannel(channel: Channel, ch: ServerSocketChannel, val family: ProtocolFamily)
@@ -46,11 +48,14 @@ class NioServerSocketUnsafeChannel(channel: Channel, ch: ServerSocketChannel, va
         bound = true // TODO: Thread Safe
     }
 
-    override protected def unsafeDisconnect(): Unit = ???
+    override def unsafeOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit =
+        throw new UnsupportedOperationException()
 
-    override protected def unsafeClose(): Unit = ???
+    override def unsafeDisconnect(): Unit = ???
 
-    override protected def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
+    override def unsafeClose(): Unit = ???
+
+    override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
 
     override def isOpen: Boolean = ch.isOpen
 

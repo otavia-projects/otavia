@@ -21,6 +21,9 @@ import io.otavia.core.reactor.*
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.ActorSystem
 
+import java.net.SocketAddress
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
 class NativeHandler(val maxEvents: Int, val strategy: SelectStrategy, sys: ActorSystem) extends IoHandler(sys) {
@@ -41,6 +44,10 @@ class NativeHandler(val maxEvents: Int, val strategy: SelectStrategy, sys: Actor
     override def register(channel: Channel): Unit = ???
 
     override def deregister(channel: Channel): Unit = ???
+
+    override def bind(channel: Channel, local: SocketAddress): Unit = ???
+
+    override def open(channel: Channel, path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = ???
 
     override def wakeup(inEventLoop: Boolean): Unit = ???
 

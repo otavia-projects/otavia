@@ -43,12 +43,18 @@ enum ReactorEvent extends Event {
 
     // event for
     case RegisterReply(channel: Channel, cause: Option[Throwable] = None)
-    case DeregisterReply(channel: Channel, cause: Option[Throwable] = None)
+    case DeregisterReply(channel: Channel, firstInactive: Boolean = false, cause: Option[Throwable] = None)
 
     case BindReply(channel: Channel, firstActive: Boolean = false, cause: Option[Throwable] = None)
 
+    case OpenReply(channel: Channel, cause: Option[Throwable] = None)
+
+    case ConnectReply(channel: Channel, firstActive: Boolean = false, cause: Option[Throwable] = None)
+
+    case DisconnectReply(channel: Channel, cause: Option[Throwable] = None)
+
     case ChannelReadiness(channel: Channel, readyOps: Int)
-    case ChannelClose(channel: Channel)
+    case ChannelClose(channel: Channel, cause: Option[Throwable] = None)
 
     case EMPTY_EVENT
 

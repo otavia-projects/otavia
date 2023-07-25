@@ -38,23 +38,6 @@ class NioFileChannel() extends AbstractFileChannel {
 
     override def unsafeChannel: NioFileUnsafeChannel = super.unsafeChannel.asInstanceOf[NioFileUnsafeChannel]
 
-    override private[core] def openTransport(
-        path: Path,
-        options: Seq[OpenOption],
-        attrs: Seq[FileAttribute[_]],
-        promise: ChannelPromise
-    ): Unit = {
-        var success = false
-        try {
-            unsafeChannel.doOpen(path, options, attrs)
-            success = true
-        } catch {
-            case e: Throwable =>
-                promise.setFailure(e)
-        }
-        if (success) promise.setSuccess(ReactorEvent.EMPTY_EVENT)
-    }
-
     override def getOption[T](option: ChannelOption[T]): T = ???
 
     override def setOption[T](option: ChannelOption[T], value: T): Channel = ???

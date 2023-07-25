@@ -21,6 +21,10 @@ package io.otavia.core.reactor
 import io.otavia.core.channel.Channel
 import io.otavia.core.system.ActorSystem
 
+import java.net.SocketAddress
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
+
 /** Handles IO dispatching for an [[io.otavia.core.actor.ChannelsActor]] All operations except [[wakeup]] and
  *  [[isCompatible]] <strong>MUST</strong> be executed on the [[io.otavia.core.reactor.Reactor]] and should never be
  *  called from the user-directly.
@@ -60,6 +64,10 @@ abstract class IoHandler(val system: ActorSystem) {
      */
     @throws[Exception]
     def deregister(channel: Channel): Unit
+
+    def bind(channel: Channel, local: SocketAddress): Unit
+
+    def open(channel: Channel, path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit
 
     /** Wakeup the [[IoHandler]], which means if any operation blocks it should be unblocked and return as soon as
      *  possible.
