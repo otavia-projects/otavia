@@ -44,6 +44,9 @@ trait UnsafeChannel {
     @throws[Exception]
     def unsafeOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit
 
+    @throws[Exception]
+    def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit
+
     /** Disconnect this [[Channel]] from its remote peer
      *
      *  @throws Exception
@@ -78,7 +81,7 @@ trait UnsafeChannel {
      *    thrown on error.
      */
     @throws[Exception]
-    def unsafeRead(): Unit
+    def unsafeRead(readPlan: ReadPlan): Unit
 
     /** Returns true if the [[UnsafeChannel]] is open and may get active later */
     def isOpen: Boolean

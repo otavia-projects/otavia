@@ -18,32 +18,25 @@
 
 package io.otavia.core.transport.nio.channel
 
+import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelException}
 import io.otavia.core.message.ReactorEvent
 
 import java.io.IOException
 import java.nio.channels.{CancelledKeyException, SelectableChannel, SelectionKey, Selector}
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
 abstract class AbstractNioUnsafeChannel(channel: Channel, val ch: SelectableChannel, val readInterestOp: Int)
     extends AbstractUnsafeChannel(channel)
-    with NioProcessor {
-
-    try {
-        ch.configureBlocking(false)
-    } catch {
-        case e: IOException =>
-            try {
-                ch.close()
-            } catch {
-                case e2: IOException =>
-//                    logger.warn("Failed to close a partially initialized socket.", e2) // TODO
-            }
-
-            throw new ChannelException("Failed to enter non-blocking mode.", e)
-    }
+    with NioUnsafeChannel {
 
     private var _selectionKey: SelectionKey = _
+
+    private var readPlan: ReadPlan = _
+
+    protected def javaChannel: SelectableChannel = ch
 
     override def registerSelector(selector: Selector): Unit = {
         var interestOps: Int = 0
@@ -94,10 +87,17 @@ abstract class AbstractNioUnsafeChannel(channel: Channel, val ch: SelectableChan
 
     override def closeProcessor(): Unit = executorAddress.inform(ReactorEvent.ChannelClose(channel))
 
-    override def unsafeRead(): Unit = if (_selectionKey.isValid) {
+    override def unsafeRead(readPlan: ReadPlan): Unit = if (_selectionKey.isValid) {
+        this.readPlan = readPlan
         val ops = _selectionKey.interestOps()
         if ((ops & readInterestOp) == 0)
             _selectionKey.interestOps(ops | readInterestOp)
+    }
+
+    override def unsafeOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = {
+        channel.executorAddress.inform(
+          ReactorEvent.OpenReply(channel, cause = Some(new UnsupportedOperationException()))
+        )
     }
 
 }

@@ -18,31 +18,34 @@
 
 package io.otavia.core.transport.nio.channel
 
+import io.otavia.core.channel.UnsafeChannel
+
 import java.nio.channels.{ClosedChannelException, SelectionKey, Selector}
 
 /** Process IO. */
-trait NioProcessor {
+trait NioUnsafeChannel extends UnsafeChannel {
 
-  /** Register to a [[Selector]].
-   *
-   *  @param selector
-   *    the [[Selector]] to register to.
-   *  @throws ClosedChannelException
-   *    if already closed.
-   */
-  @throws[ClosedChannelException]
-  def registerSelector(selector: Selector): Unit
+    /** Register to a [[Selector]].
+     *
+     *  @param selector
+     *    the [[Selector]] to register to.
+     *  @throws ClosedChannelException
+     *    if already closed.
+     */
+    @throws[ClosedChannelException]
+    def registerSelector(selector: Selector): Unit
 
-  /** Deregister from previous registered [[Selector]]. */
-  def deregisterSelector(): Unit
+    /** Deregister from previous registered [[Selector]]. */
+    def deregisterSelector(): Unit
 
-  /** Handle some IO for the given [[SelectionKey]].
-   *
-   *  @param key
-   *    the [[SelectionKey]] that needs to be handled.
-   */
-  def handle(key: SelectionKey): Unit
+    /** Handle some IO for the given [[SelectionKey]].
+     *
+     *  @param key
+     *    the [[SelectionKey]] that needs to be handled.
+     */
+    def handle(key: SelectionKey): Unit
 
-  /** Close this processor. */
-  def closeProcessor(): Unit
+    /** Close this processor. */
+    def closeProcessor(): Unit
+
 }

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.rust.channel
+package io.otavia.core.transport.rust.channel
 
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*
@@ -24,7 +24,7 @@ import io.otavia.core.channel.estimator.{ReadHandleFactory, WriteHandleFactory}
 import io.otavia.core.channel.internal.{ReadSink, WriteSink}
 import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import io.otavia.core.message.ReactorEvent
-import io.otavia.core.rust.NativeSocket
+import io.otavia.core.transport.rust.NativeSocket
 
 import java.net.SocketAddress
 import java.nio.channels.SelectableChannel

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.rust
+package io.otavia.core.transport.rust
 
 import io.otavia.core.channel.Channel
 import io.otavia.core.channel.socket.SocketProtocolFamily

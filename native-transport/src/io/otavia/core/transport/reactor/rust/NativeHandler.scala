@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package io.otavia.core.rust.reactor
+package io.otavia.core.transport.reactor.rust
 
 import io.otavia.core.channel.Channel
+import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.reactor.*
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.ActorSystem
@@ -48,6 +49,15 @@ class NativeHandler(val maxEvents: Int, val strategy: SelectStrategy, sys: Actor
     override def bind(channel: Channel, local: SocketAddress): Unit = ???
 
     override def open(channel: Channel, path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = ???
+
+    override def connect(
+        channel: Channel,
+        remote: SocketAddress,
+        local: Option[SocketAddress],
+        fastOpen: Boolean
+    ): Unit = ???
+
+    override def read(channel: Channel, plan: ReadPlan): Unit = ???
 
     override def wakeup(inEventLoop: Boolean): Unit = ???
 

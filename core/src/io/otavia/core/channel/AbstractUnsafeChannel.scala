@@ -25,6 +25,8 @@ import io.otavia.core.reactor.Reactor
 
 import java.io.IOException
 import java.net.PortUnreachableException
+import java.nio.file.attribute.FileAttribute
+import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
 /** The [[Channel]] in [[Reactor]] */

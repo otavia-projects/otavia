@@ -217,12 +217,6 @@ abstract class AbstractChannel extends Channel, ChannelState {
     /** Returns a new [[ChannelPipeline]] instance. */
     private def newChannelPipeline(): ChannelPipeline = new OtaviaChannelPipeline(this)
 
-    // read socket data to this buffer
-    protected def channelInboundAdaptiveBuffer: AdaptiveBuffer = pipeline.channelInboundBuffer
-
-    // write data to socket from this buffer
-    protected def channelOutboundAdaptiveBuffer: AdaptiveBuffer = pipeline.channelOutboundBuffer
-
     protected def currentThread: ActorThread = Thread.currentThread().asInstanceOf[ActorThread]
 
     private def laterTasks = currentThread.laterTasks

@@ -18,44 +18,48 @@
 
 package io.otavia.core.transport.nio.channel
 
-import io.netty5.util.NetUtil
-import io.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelShutdownDirection}
+import io.otavia.core.channel.{Channel, ChannelShutdownDirection}
+import io.otavia.core.message.ReactorEvent
 
-import java.net.{ProtocolFamily, SocketAddress, StandardProtocolFamily}
-import java.nio.channels.{SelectionKey, ServerSocketChannel}
+import java.net.SocketAddress
+import java.nio.channels.{SelectableChannel, ServerSocketChannel}
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
-import scala.language.unsafeNulls
 
-class NioServerSocketUnsafeChannel(channel: Channel, ch: ServerSocketChannel, val family: ProtocolFamily)
-    extends AbstractNioUnsafeChannel(channel, ch, SelectionKey.OP_ACCEPT) {
+class NioUnsafeServerSocketChannel(channel: Channel, ch: SelectableChannel, readInterestOp: Int)
+    extends AbstractNioUnsafeChannel(channel, ch, readInterestOp) {
+
+    private var backlog: Int = -1 // NetUtil.SOMAXCONN
 
     private var bound: Boolean = false
 
-    @volatile private var backlog = NetUtil.SOMAXCONN
-
     private def getBacklog(): Int = backlog
 
-    private def setBacklog(back: Int): Unit = {
+    private[nio] def setBacklog(back: Int): Unit = {
         assert(back >= 0, s"in setBacklog(back: Int) back:$back (expected: >= 0)")
         this.backlog = back
     }
 
+    override protected def javaChannel: ServerSocketChannel = super.javaChannel.asInstanceOf[ServerSocketChannel]
+
     override protected def doReadNow(): Boolean = ???
 
     override def unsafeBind(local: SocketAddress): Unit = {
-        ch.bind(local, getBacklog())
-        bound = true // TODO: Thread Safe
+        val bindWasActive = isActive
+        javaChannel.bind(local, getBacklog())
+        bound = true
+        val firstActive = !bindWasActive && channel.unsafeChannel.isActive
+        channel.executorAddress.inform(ReactorEvent.BindReply(channel, firstActive, None))
     }
 
     override def unsafeOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit =
         throw new UnsupportedOperationException()
 
-    override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit = ???
-
     override def unsafeDisconnect(): Unit = ???
 
     override def unsafeClose(): Unit = ???
+
+    override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit = ???
 
     override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
 

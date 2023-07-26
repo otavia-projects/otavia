@@ -21,6 +21,7 @@ package io.otavia.core.channel
 import io.otavia.buffer.{Buffer, BufferAllocator}
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.address.ActorAddress
+import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.reactor.Reactor
 import io.otavia.core.stack.{ChannelFuture, ChannelPromise}
@@ -234,5 +235,11 @@ trait Channel extends ChannelInflight, EventHandle, ChannelAddress {
     private[core] def writeTransport(msg: AnyRef): Unit
 
     private[core] def flushTransport(): Unit
+
+    // read socket data to this buffer
+    def channelInboundAdaptiveBuffer: AdaptiveBuffer = pipeline.channelInboundBuffer
+
+    // write data to socket from this buffer
+    def channelOutboundAdaptiveBuffer: AdaptiveBuffer = pipeline.channelOutboundBuffer
 
 }

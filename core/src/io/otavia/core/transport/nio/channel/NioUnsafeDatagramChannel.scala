@@ -18,30 +18,19 @@
 
 package io.otavia.core.transport.nio.channel
 
-import io.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelShutdownDirection}
+import io.otavia.core.channel.{Channel, ChannelShutdownDirection}
 
 import java.net.SocketAddress
-import java.nio.channels.FileChannel
-import java.nio.file.attribute.FileAttribute
-import java.nio.file.{OpenOption, Path}
-import scala.jdk.CollectionConverters.*
-import scala.language.unsafeNulls
+import java.nio.channels.SelectableChannel
 
-class NioFileUnsafeChannel(channel: Channel) extends AbstractUnsafeChannel(channel) {
-
-    private var ch: FileChannel = _
-
-    private def javaChannel: FileChannel = ch
+class NioUnsafeDatagramChannel(channel: Channel, ch: SelectableChannel, readInterestOp: Int)
+    extends AbstractNioUnsafeChannel(channel, ch, readInterestOp) {
 
     override protected def doReadNow(): Boolean = ???
 
-    override def unsafeBind(local: SocketAddress): Unit =
-        throw new UnsupportedOperationException()
+    override def unsafeBind(local: SocketAddress): Unit = ???
 
-    override def unsafeOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = {
-        ch = FileChannel.open(path, options.toSet.asJava, attrs: _*)
-        ch.close()
-    }
+    override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit = ???
 
     override def unsafeDisconnect(): Unit = ???
 
@@ -49,10 +38,8 @@ class NioFileUnsafeChannel(channel: Channel) extends AbstractUnsafeChannel(chann
 
     override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
 
-    override def unsafeRead(): Unit = ???
+    override def isOpen: Boolean = ???
 
-    override def isOpen: Boolean = ch != null && ch.isOpen
-
-    override def isActive: Boolean = isOpen
+    override def isActive: Boolean = ???
 
 }

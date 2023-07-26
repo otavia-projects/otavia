@@ -19,6 +19,7 @@
 package io.otavia.core.reactor
 
 import io.otavia.core.channel.Channel
+import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.system.ActorSystem
 
 import java.net.SocketAddress
@@ -68,6 +69,10 @@ abstract class IoHandler(val system: ActorSystem) {
     def bind(channel: Channel, local: SocketAddress): Unit
 
     def open(channel: Channel, path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit
+
+    def connect(channel: Channel, remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit
+
+    def read(channel: Channel, plan: ReadPlan): Unit
 
     /** Wakeup the [[IoHandler]], which means if any operation blocks it should be unblocked and return as soon as
      *  possible.

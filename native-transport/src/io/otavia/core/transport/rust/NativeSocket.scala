@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.otavia.core.rust
+package io.otavia.core.transport.rust
 
 import java.net.ProtocolFamily
 

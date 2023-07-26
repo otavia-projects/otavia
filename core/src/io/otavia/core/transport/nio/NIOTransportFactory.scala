@@ -22,7 +22,7 @@ import io.otavia.core.reactor.{DefaultSelectStrategy, IoHandler, Reactor}
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.ActorSystem
 import io.otavia.core.transport.TransportFactory
-import io.otavia.core.transport.nio.channel.{NioDatagramChannel, NioFileChannel, NioServerSocketChannel, NioSocketChannel}
+import io.otavia.core.transport.nio.channel.*
 import io.otavia.core.transport.reactor.nio.{NioHandler, NioReactor}
 import sun.nio.ch.Net
 
@@ -30,6 +30,7 @@ import java.io.IOException
 import java.net.{ProtocolFamily, StandardProtocolFamily}
 import java.nio.channels.*
 import java.nio.channels.spi.SelectorProvider
+import java.util.Random
 import scala.language.unsafeNulls
 
 class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
@@ -67,13 +68,21 @@ class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
 
         initialJdkChannel(ch)
 
-        new NioServerSocketChannel(ch, family)
+        createServerChannel0(ch)
     }
 
     override def createServerSocketChannel(family: ProtocolFamily): Channel = {
         val ch = selectorProvider.openServerSocketChannel(family)
         initialJdkChannel(ch)
-        new NioServerSocketChannel(ch, family)
+        createServerChannel0(ch)
+    }
+
+    private def createServerChannel0(ch: ServerSocketChannel): Channel = {
+        val channel = new NioServerSocketChannel()
+        val unsafe  = new NioUnsafeServerSocketChannel(channel, ch, readInterestOp = SelectionKey.OP_READ)
+        channel.setUnsafeChannel(unsafe)
+
+        channel
     }
 
     override def createSocketChannel(): Channel = {
@@ -120,7 +129,11 @@ class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
         new NioDatagramChannel(ch, family)
     }
 
-    override def createFileChannel(): Channel = new NioFileChannel()
+    override def createFileChannel(): Channel = {
+        val channel = new NioFileChannel()
+        val unsafe  = new NioUnsafeFileChannel(channel)
+        channel
+    }
 
     override def openReactor(system: ActorSystem): Reactor = if (reactor != null) reactor
     else {

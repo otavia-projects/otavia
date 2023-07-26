@@ -53,6 +53,8 @@ enum ReactorEvent extends Event {
 
     case DisconnectReply(channel: Channel, cause: Option[Throwable] = None)
 
+    case ShutdownReply(channel: Channel, cause: Option[Throwable] = None)
+
     case ChannelReadiness(channel: Channel, readyOps: Int)
     case ChannelClose(channel: Channel, cause: Option[Throwable] = None)
 

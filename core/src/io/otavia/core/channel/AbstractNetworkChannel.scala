@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel
 
-import io.otavia.core.channel.AbstractNetChannel.DEFAULT_CONNECT_TIMEOUT
+import io.otavia.core.channel.AbstractNetChannel.{DEFAULT_CONNECT_TIMEOUT, SUPPORTED_CHANNEL_OPTIONS}
 import io.otavia.core.message.ReactorEvent
 import io.otavia.core.stack.{ChannelPromise, Promise}
 import io.otavia.core.timer.{TimeoutTrigger, Timer}
@@ -34,6 +34,39 @@ abstract class AbstractNetworkChannel extends AbstractChannel {
 
     private var connectTimeoutMillis: Int      = DEFAULT_CONNECT_TIMEOUT
     private var connectTimeoutRegisterId: Long = Timer.INVALID_TIMEOUT_REGISTER_ID
+
+    /** Override to add support for more [[ChannelOption]]s. You need to also call super after handling the extra
+     *  options.
+     *
+     *  @param option
+     *    the [[ChannelOption]].
+     *  @param <
+     *    T> the value type.
+     *  @throws UnsupportedOperationException
+     *    if the [[ChannelOption]] is not supported.
+     */
+    protected def setExtendedOption[T](option: ChannelOption[T], value: T): Unit =
+        throw new UnsupportedOperationException(s"ChannelOption not supported: $option")
+
+    override def isOptionSupported(option: ChannelOption[?]): Boolean = SUPPORTED_CHANNEL_OPTIONS.contains(option) ||
+        isExtendedOptionSupported(option)
+
+    /** Override to add support for more [[ChannelOption]]s. You need to also call super after handling the extra
+     *  options.
+     *
+     *  @param option
+     *    the [[ChannelOption]].
+     *  @return
+     *    true if supported, false otherwise.
+     */
+    protected def isExtendedOptionSupported(option: ChannelOption[?]) = false
+
+    private def getConnectTimeoutMillis = connectTimeoutMillis
+
+    private def setConnectTimeoutMillis(connectTimeoutMillis: Int): Unit = {
+        assert(connectTimeoutMillis >= 0, s"connectTimeoutMillis $connectTimeoutMillis (expected: >= 0)")
+        this.connectTimeoutMillis = connectTimeoutMillis
+    }
 
     override private[core] def registerTransport(promise: ChannelPromise): Unit =
         if (registering) promise.setFailure(new IllegalStateException(s"The channel $this is registering to reactor!"))
@@ -165,6 +198,8 @@ abstract class AbstractNetworkChannel extends AbstractChannel {
             promise.setTimeoutId(tid)
         }
     }
+
+    override private[core] def disconnectTransport(promise: ChannelPromise): Unit = ???
 
     override private[core] def handleChannelConnectReplyEvent(event: ReactorEvent.ConnectReply): Unit = {
         val promise = ongoingChannelPromise

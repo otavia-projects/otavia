@@ -34,9 +34,9 @@ import scala.language.unsafeNulls
 
 class NioFileChannel() extends AbstractFileChannel {
 
-    setUnsafeChannel(new NioFileUnsafeChannel(this))
+    setUnsafeChannel(new NioUnsafeFileChannel(this))
 
-    override def unsafeChannel: NioFileUnsafeChannel = super.unsafeChannel.asInstanceOf[NioFileUnsafeChannel]
+    override def unsafeChannel: NioUnsafeFileChannel = super.unsafeChannel.asInstanceOf[NioUnsafeFileChannel]
 
     override def getOption[T](option: ChannelOption[T]): T = ???
 

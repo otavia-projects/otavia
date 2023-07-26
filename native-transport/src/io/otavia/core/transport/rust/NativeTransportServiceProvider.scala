@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package io.otavia.core.rust.reactor
+package io.otavia.core.transport.rust
 
-import io.otavia.core.channel.Channel
-import io.otavia.core.reactor.Submitter
-import io.otavia.core.stack.AioFuture
+import io.otavia.core.system.ActorSystem
+import io.otavia.core.transport.TransportFactory
+import io.otavia.core.transport.spi.TransportServiceProvider
 
-class NativeSubmitter extends Submitter {
+class NativeTransportServiceProvider extends TransportServiceProvider {
 
-    override def submitRead(channel: Channel): AioFuture[Int] = ???
+    override def getTransportFactory(): TransportFactory = ???
 
-    override def submitWrite(channel: Channel): AioFuture[Int] = ???
+    override def initialize(system: ActorSystem): Unit = ???
 
-    override def submitClose(channel: Channel): AioFuture[Unit] = ???
+    override def checkPlatformSupport(): Boolean = false // TODO:
 
 }

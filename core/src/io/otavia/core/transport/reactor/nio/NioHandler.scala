@@ -19,12 +19,13 @@
 package io.otavia.core.transport.reactor.nio
 
 import io.netty5.util.internal.*
+import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.channel.{Channel, ChannelException}
 import io.otavia.core.message.ReactorEvent
 import io.otavia.core.reactor.*
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.system.ActorSystem
-import io.otavia.core.transport.nio.channel.{AbstractNioChannel, AbstractNioUnsafeChannel, NioProcessor}
+import io.otavia.core.transport.nio.channel.{AbstractNioChannel, AbstractNioUnsafeChannel, NioUnsafeChannel}
 import io.otavia.core.transport.reactor.nio.NioHandler.*
 
 import java.io.{IOException, UncheckedIOException}
@@ -155,7 +156,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
                 // Register all channels to the new Selector.
                 var nChannels = 0
                 oldSelector.keys().forEach { key =>
-                    val processor = key.attachment().asInstanceOf[NioProcessor]
+                    val processor = key.attachment().asInstanceOf[NioUnsafeChannel]
                     try {
                         if (!key.isValid || key.channel().keyFor(newSelectorTuple.unwrappedSelector) != null) {} else {
                             processor.registerSelector(newSelectorTuple.unwrappedSelector)
@@ -287,7 +288,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
     }
 
     private def processSelectedKey(key: SelectionKey): Unit = {
-        val processor = key.attachment().asInstanceOf[NioProcessor]
+        val processor = key.attachment().asInstanceOf[NioUnsafeChannel]
         processor.handle(key)
     }
 
@@ -295,7 +296,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         selectAgain()
         val keys = selector.keys()
         keys.forEach { key =>
-            val processor = key.attachment().asInstanceOf[NioProcessor]
+            val processor = key.attachment().asInstanceOf[NioUnsafeChannel]
             processor.closeProcessor()
         }
     }
@@ -331,10 +332,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
 
     override def bind(channel: Channel, local: SocketAddress): Unit = {
         try {
-            val wasActive = channel.unsafeChannel.isActive
             channel.unsafeChannel.unsafeBind(local)
-            val firstActive = !wasActive && channel.unsafeChannel.isActive
-            channel.executorAddress.inform(ReactorEvent.BindReply(channel, firstActive, None))
         } catch {
             case t: Throwable =>
                 channel.executorAddress.inform(ReactorEvent.BindReply(channel, cause = Some(t)))
@@ -344,11 +342,28 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
     override def open(channel: Channel, path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = {
         try {
             channel.unsafeChannel.unsafeOpen(path, options, attrs)
-            channel.executorAddress.inform(ReactorEvent.OpenReply(channel))
         } catch {
             case t: Throwable =>
                 channel.executorAddress.inform(ReactorEvent.OpenReply(channel, Some(t)))
         }
+    }
+
+    override def connect(
+        channel: Channel,
+        remote: SocketAddress,
+        local: Option[SocketAddress],
+        fastOpen: Boolean
+    ): Unit = {
+        try {
+            channel.unsafeChannel.unsafeConnect(remote, local, fastOpen) // non-blocking
+        } catch {
+            case t: Throwable =>
+                channel.executorAddress.inform(ReactorEvent.ConnectReply(channel, cause = Some(t)))
+        }
+    }
+
+    override def read(channel: Channel, plan: ReadPlan): Unit = {
+        channel.unsafeChannel.unsafeRead(plan)
     }
 
     override def wakeup(inEventLoop: Boolean): Unit = if (wakenUp.compareAndSet(false, true))
@@ -495,7 +510,7 @@ object NioHandler {
 
     SELECTOR_AUTO_REBUILD_THRESHOLD = selectorAutoRebuildThreshold
 
-    private def nioHandle(handle: Channel): NioProcessor = handle.unsafeChannel match
+    private def nioHandle(handle: Channel): NioUnsafeChannel = handle.unsafeChannel match
         case unsafe: AbstractNioUnsafeChannel => unsafe
         case _ =>
             throw new IllegalArgumentException(s"Channel of type ${StringUtil.simpleClassName(handle)} not supported")

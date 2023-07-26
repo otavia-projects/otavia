@@ -21,14 +21,14 @@ import java.nio.channels.FileChannel
 /** Read file channel from [[position]] with [[length]]， See also [[FileChannel]].
  *
  *  @param position
- *    If position is -1, bytes are read starting at this channel's current file position, and then the file
- *    position is updated with the number of bytes actually read. If [[position]] is not -1, then set the file
- *    current position to [[position]] and then read starting at this channel's current file position, and then the file
- *    position is updated with the number of bytes actually read.
+ *    If position is -1, bytes are read starting at this channel's current file position, and then the file position is
+ *    updated with the number of bytes actually read. If [[position]] is not -1, then set the file current position to
+ *    [[position]] and then read starting at this channel's current file position, and then the file position is updated
+ *    with the number of bytes actually read.
  *  @param length
  *    Length of data want to read.
  */
-class FileReadPlan(val length: Int = 4096, val position: Long = -1) extends ReadPlan {
+case class FileReadPlan(length: Int = 4096, position: Long = -1) extends ReadPlan {
 
     override def estimatedNextSize: Int = 0
 
