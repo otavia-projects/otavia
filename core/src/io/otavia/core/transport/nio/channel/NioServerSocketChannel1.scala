@@ -38,7 +38,7 @@ import scala.util.Try
  *
  *  <h3>Available options</h3>
  *
- *  In addition to the options provided by [[NioSocketChannel]] allows the following options in the option map:
+ *  In addition to the options provided by [[NioSocketChannel1]] allows the following options in the option map:
  *
  *  <table border="1" cellspacing="0" cellpadding="6"> <tr> <th>[[ChannelOption]]</th>
  *  <th>[[StandardProtocolFamily.INET]]</th> <th>[[StandardProtocolFamily.INET6]]</th>
@@ -134,7 +134,7 @@ class NioServerSocketChannel1(socket: ServerSocketChannel, val family: ProtocolF
         Option(client) match
             case Some(ch) =>
                 try {
-                    val channel = new NioSocketChannel(ch, family)
+                    val channel = new NioSocketChannel1(ch, family)
                     val event   = ReactorEvent.AcceptedEvent(this, channel)
                     readSink.processRead(0, 0, event)
                     1

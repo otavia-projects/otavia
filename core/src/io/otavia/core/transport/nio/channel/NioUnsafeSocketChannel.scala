@@ -39,7 +39,7 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SelectableChannel, readIntere
 
     override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
 
-    override def isOpen: Boolean = ???
+    override def isOpen: Boolean = ch.isOpen
 
     override def isActive: Boolean = ???
 

@@ -35,8 +35,8 @@ import scala.language.unsafeNulls
 
 class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
 
-    private val selectorProvider = SelectorProvider.provider()
-    private var reactor: Reactor = _
+    private val selectorProvider: SelectorProvider = SelectorProvider.provider()
+    private var reactor: Reactor                   = _
 
     private val logger: Logger = Logger.getLogger(this.getClass, system)
 
@@ -98,13 +98,20 @@ class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
                 ch = selectorProvider.openSocketChannel(family)
         }
         initialJdkChannel(ch)
-        new NioSocketChannel(ch, family)
+        createSocketChannel0(ch)
     }
 
     override def createSocketChannel(family: ProtocolFamily): Channel = {
         val ch = selectorProvider.openSocketChannel(family)
         initialJdkChannel(ch)
-        new NioSocketChannel(ch, family)
+        createSocketChannel0(ch)
+    }
+
+    private def createSocketChannel0(ch: SocketChannel): Channel = {
+        val channel = new NioSocketChannel()
+        val unsafe  = new NioUnsafeSocketChannel(channel, ch, SelectionKey.OP_READ)
+        channel.setUnsafeChannel(unsafe)
+        channel
     }
 
     override def createDatagramChannel(): Channel = {
@@ -120,13 +127,20 @@ class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
                 ch = selectorProvider.openDatagramChannel(family)
         }
         initialJdkChannel(ch)
-        new NioDatagramChannel(ch, family)
+        createDatagramChannel0(ch)
     }
 
     override def createDatagramChannel(family: SocketProtocolFamily): Channel = {
         val ch = selectorProvider.openDatagramChannel(family)
         initialJdkChannel(ch)
-        new NioDatagramChannel(ch, family)
+        createDatagramChannel0(ch)
+    }
+
+    private def createDatagramChannel0(ch: DatagramChannel): Channel = {
+        val channel = new NioDatagramChannel()
+        val unsafe  = new NioUnsafeDatagramChannel(channel, ch, SelectionKey.OP_READ)
+        channel.setUnsafeChannel(unsafe)
+        channel
     }
 
     override def createFileChannel(): Channel = {

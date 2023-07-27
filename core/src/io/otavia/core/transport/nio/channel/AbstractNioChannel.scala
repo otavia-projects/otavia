@@ -52,20 +52,6 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
     val readInterestOp: Int
 ) extends AbstractNetChannel[L, R](supportingDisconnect, defaultWriteHandleFactory) {
 
-    try {
-        ch.configureBlocking(false)
-    } catch {
-        case e: IOException =>
-            try {
-                ch.close()
-            } catch {
-                case e2: IOException =>
-                    logger.warn("Failed to close a partially initialized socket.", e2)
-            }
-
-            throw new ChannelException("Failed to enter non-blocking mode.", e)
-    }
-
     @volatile private var _selectionKey: SelectionKey | Null = _
 
     // End implementation of NioProcessor
