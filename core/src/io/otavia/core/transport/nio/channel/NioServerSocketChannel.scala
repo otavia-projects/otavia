@@ -21,11 +21,15 @@ package io.otavia.core.transport.nio.channel
 import io.otavia.core.channel.*
 import io.otavia.core.channel.estimator.ServerChannelWriteHandleFactory
 import io.otavia.core.channel.internal.{ReadSink, WriteSink}
+import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import io.otavia.core.message.ReactorEvent
+import io.otavia.core.transport.nio.channel.NioServerSocketChannel.NioServerSocketReadPlan
 
 import java.net.SocketAddress
 
 class NioServerSocketChannel extends AbstractNetworkChannel {
+
+    setReadPlanFactory((channel: Channel) => new NioServerSocketReadPlan())
 
     override def unsafeChannel: NioUnsafeServerSocketChannel =
         super.unsafeChannel.asInstanceOf[NioUnsafeServerSocketChannel]
@@ -39,6 +43,20 @@ class NioServerSocketChannel extends AbstractNetworkChannel {
             } else
                 super.setExtendedOption(option, value)
         }
+    }
+
+}
+
+object NioServerSocketChannel {
+
+    class NioServerSocketReadPlan extends ReadPlan {
+
+        override def estimatedNextSize: Int = 0
+
+        override def lastRead(attemptedBytesRead: Int, actualBytesRead: Int, numMessagesRead: Int): Boolean = false
+
+        override def readComplete(): Unit = {}
+
     }
 
 }

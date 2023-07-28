@@ -36,9 +36,9 @@ abstract class AbstractUnsafeChannel(val channel: Channel) extends UnsafeChannel
     private var isAllowHalfClosure: Boolean         = true
 
     // read sink
-    private var readSomething      = false
-    private var continueReading    = false
-    private var readPlan: ReadPlan = _
+    private var readSomething        = false
+    private var continueReading      = false
+    protected var readPlan: ReadPlan = _
 
     // write sink
 

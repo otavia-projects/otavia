@@ -302,26 +302,29 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
     }
 
     override def register(channel: Channel): Unit = {
-        val nioProcessor      = nioHandle(channel)
+        val nioUnsafeChannel  = nioUnsafe(channel)
         var selected: Boolean = false
         var success: Boolean  = false
         while (!success) {
             try {
-                nioProcessor.registerSelector(unwrappedSelector)
-                channel.executorAddress.inform(ReactorEvent.RegisterReply(channel))
+                val wasActive = nioUnsafeChannel.isActive
+                nioUnsafeChannel.registerSelector(unwrappedSelector)
+                channel.executorAddress.inform(
+                  ReactorEvent.RegisterReply(channel, !wasActive && nioUnsafeChannel.isActive)
+                )
                 success = true
             } catch {
                 case e: CancelledKeyException =>
                     if (!selected) {
                         selectNow()
                         selected = true
-                    } else channel.executorAddress.inform(ReactorEvent.RegisterReply(channel, Some(e)))
+                    } else channel.executorAddress.inform(ReactorEvent.RegisterReply(channel, cause = Some(e)))
             }
         }
     }
 
     override def deregister(channel: Channel): Unit = {
-        val nioProcessor = nioHandle(channel)
+        val nioProcessor = nioUnsafe(channel)
         nioProcessor.deregisterSelector()
         cancelledKeys += 1
         if (cancelledKeys >= CLEANUP_INTERVAL) {
@@ -510,8 +513,8 @@ object NioHandler {
 
     SELECTOR_AUTO_REBUILD_THRESHOLD = selectorAutoRebuildThreshold
 
-    private def nioHandle(handle: Channel): NioUnsafeChannel = handle.unsafeChannel match
-        case unsafe: AbstractNioUnsafeChannel => unsafe
+    private def nioUnsafe(handle: Channel): NioUnsafeChannel = handle.unsafeChannel match
+        case unsafe: AbstractNioUnsafeChannel[?] => unsafe
         case _ =>
             throw new IllegalArgumentException(s"Channel of type ${StringUtil.simpleClassName(handle)} not supported")
 

@@ -70,7 +70,7 @@ abstract class AbstractNetworkChannel extends AbstractChannel {
 
     override private[core] def registerTransport(promise: ChannelPromise): Unit =
         if (registering) promise.setFailure(new IllegalStateException(s"The channel $this is registering to reactor!"))
-        else if (isRegistered) promise.setFailure(new IllegalStateException("registered to reactor already"))
+        else if (registered) promise.setFailure(new IllegalStateException("registered to reactor already"))
         else {
             registering = true
             ongoingChannelPromise = promise
@@ -90,7 +90,7 @@ abstract class AbstractNetworkChannel extends AbstractChannel {
                 promise.setSuccess(event)
                 // Only fire a channelActive if the channel has never been registered. This prevents firing
                 // multiple channel actives if the channel is deregistered and re-registered.
-                if (isActive) {
+                if (event.firstInactive) {
                     if (firstRegistration) fireChannelActiveIfNotActiveBefore()
                     readIfIsAutoRead()
                 }

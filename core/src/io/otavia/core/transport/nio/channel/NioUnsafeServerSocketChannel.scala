@@ -26,8 +26,8 @@ import java.nio.channels.{SelectableChannel, ServerSocketChannel}
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 
-class NioUnsafeServerSocketChannel(channel: Channel, ch: SelectableChannel, readInterestOp: Int)
-    extends AbstractNioUnsafeChannel(channel, ch, readInterestOp) {
+class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, readInterestOp: Int)
+    extends AbstractNioUnsafeChannel[ServerSocketChannel](channel, ch, readInterestOp) {
 
     private var backlog: Int = -1 // NetUtil.SOMAXCONN
 
@@ -39,8 +39,6 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: SelectableChannel, read
         assert(back >= 0, s"in setBacklog(back: Int) back:$back (expected: >= 0)")
         this.backlog = back
     }
-
-    override protected def javaChannel: ServerSocketChannel = super.javaChannel.asInstanceOf[ServerSocketChannel]
 
     override protected def doReadNow(): Boolean = ???
 
@@ -55,13 +53,15 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: SelectableChannel, read
     override def unsafeOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit =
         throw new UnsupportedOperationException()
 
-    override def unsafeDisconnect(): Unit = ???
+    override def unsafeDisconnect(): Unit = throw new UnsupportedOperationException()
 
     override def unsafeClose(): Unit = ???
 
-    override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit = ???
+    override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit =
+        throw new UnsupportedOperationException()
 
-    override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
+    override def unsafeShutdown(direction: ChannelShutdownDirection): Unit =
+        throw new UnsupportedOperationException()
 
     override def isOpen: Boolean = ch.isOpen
 

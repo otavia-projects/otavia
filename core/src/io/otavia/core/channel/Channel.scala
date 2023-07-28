@@ -224,13 +224,7 @@ trait Channel extends ChannelInflight, EventHandle, ChannelAddress {
 
     private[core] def deregisterTransport(promise: ChannelPromise): Unit
 
-    private[core] def readTransport(readPlan: ReadPlan): Unit = if (!isActive) {
-        throw new IllegalStateException(s"channel $this is not active!")
-    } else if (isShutdown(ChannelShutdownDirection.Inbound)) {
-        // Input was shutdown so not try to read.
-    } else {
-        reactor.read(this, readPlan)
-    }
+    private[core] def readTransport(readPlan: ReadPlan): Unit = reactor.read(this, readPlan)
 
     private[core] def writeTransport(msg: AnyRef): Unit
 

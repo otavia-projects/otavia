@@ -79,7 +79,7 @@ class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
 
     private def createServerChannel0(ch: ServerSocketChannel): Channel = {
         val channel = new NioServerSocketChannel()
-        val unsafe  = new NioUnsafeServerSocketChannel(channel, ch, readInterestOp = SelectionKey.OP_READ)
+        val unsafe  = new NioUnsafeServerSocketChannel(channel, ch, readInterestOp = SelectionKey.OP_ACCEPT)
         channel.setUnsafeChannel(unsafe)
 
         channel

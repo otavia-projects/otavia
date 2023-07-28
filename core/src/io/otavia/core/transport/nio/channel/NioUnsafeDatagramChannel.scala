@@ -19,27 +19,45 @@
 package io.otavia.core.transport.nio.channel
 
 import io.otavia.core.channel.{Channel, ChannelShutdownDirection}
+import io.otavia.core.message.ReactorEvent
 
 import java.net.SocketAddress
-import java.nio.channels.SelectableChannel
+import java.nio.channels.{DatagramChannel, SelectableChannel}
 
-class NioUnsafeDatagramChannel(channel: Channel, ch: SelectableChannel, readInterestOp: Int)
-    extends AbstractNioUnsafeChannel(channel, ch, readInterestOp) {
+class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readInterestOp: Int)
+    extends AbstractNioUnsafeChannel[DatagramChannel](channel, ch, readInterestOp) {
+
+    private var bound: Boolean = false
 
     override protected def doReadNow(): Boolean = ???
 
-    override def unsafeBind(local: SocketAddress): Unit = ???
+    override def unsafeBind(local: SocketAddress): Unit = {
+        javaChannel.bind(local)
+        bound = true
+    }
 
-    override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit = ???
+    override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit = {
+        local match
+            case None        =>
+            case Some(value) => unsafeBind(value)
+
+        try {
+            javaChannel.connect(remote)
+            // When connected we are also bound
+            bound = true
+            executorAddress.inform(ReactorEvent.ConnectReply(channel, true))
+        } catch {
+            case t: Throwable =>
+                executorAddress.inform(ReactorEvent.ConnectReply(channel, cause = Some(t)))
+        }
+    }
 
     override def unsafeDisconnect(): Unit = ???
 
-    override def unsafeClose(): Unit = ???
-
     override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
 
-    override def isOpen: Boolean = ???
+    override def isOpen: Boolean = ch.isOpen
 
-    override def isActive: Boolean = ???
+    override def isActive: Boolean = isOpen && bound
 
 }

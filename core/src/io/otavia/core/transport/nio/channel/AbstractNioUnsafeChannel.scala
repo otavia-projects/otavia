@@ -28,15 +28,13 @@ import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
-abstract class AbstractNioUnsafeChannel(channel: Channel, val ch: SelectableChannel, val readInterestOp: Int)
+abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel, val ch: C, val readInterestOp: Int)
     extends AbstractUnsafeChannel(channel)
     with NioUnsafeChannel {
 
-    private var _selectionKey: SelectionKey = _
+    protected var _selectionKey: SelectionKey = _
 
-    private var readPlan: ReadPlan = _
-
-    protected def javaChannel: SelectableChannel = ch
+    protected def javaChannel: C = ch
 
     override def registerSelector(selector: Selector): Unit = {
         var interestOps: Int = 0
@@ -65,6 +63,7 @@ abstract class AbstractNioUnsafeChannel(channel: Channel, val ch: SelectableChan
                 ops = ops & ~SelectionKey.OP_CONNECT
                 key.interestOps(ops)
 
+                finishConnect()
                 executorAddress.inform(ReactorEvent.ChannelReadiness(channel, SelectionKey.OP_CONNECT))
             }
             // Process OP_WRITE first as we may be able to write some queued buffers and so free memory.
@@ -99,5 +98,9 @@ abstract class AbstractNioUnsafeChannel(channel: Channel, val ch: SelectableChan
           ReactorEvent.OpenReply(channel, cause = Some(new UnsupportedOperationException()))
         )
     }
+
+    override def unsafeClose(): Unit = ch.close()
+
+    protected def finishConnect(): Unit = {}
 
 }

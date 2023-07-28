@@ -42,7 +42,7 @@ case class ResourceTimeoutEvent(registerId: Long, cache: ResourceTimer) extends 
 enum ReactorEvent extends Event {
 
     // event for
-    case RegisterReply(channel: Channel, cause: Option[Throwable] = None)
+    case RegisterReply(channel: Channel, firstInactive: Boolean = false, cause: Option[Throwable] = None)
     case DeregisterReply(channel: Channel, firstInactive: Boolean = false, cause: Option[Throwable] = None)
 
     case BindReply(channel: Channel, firstActive: Boolean = false, cause: Option[Throwable] = None)

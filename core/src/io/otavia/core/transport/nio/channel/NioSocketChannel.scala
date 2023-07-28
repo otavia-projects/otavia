@@ -25,3 +25,5 @@ class NioSocketChannel extends AbstractNetworkChannel {
     override def unsafeChannel: NioUnsafeSocketChannel = super.unsafeChannel.asInstanceOf[NioUnsafeSocketChannel]
 
 }
+
+object NioSocketChannel {}

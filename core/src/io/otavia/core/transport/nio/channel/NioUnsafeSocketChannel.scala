@@ -19,23 +19,51 @@
 package io.otavia.core.transport.nio.channel
 
 import io.otavia.core.channel.{Channel, ChannelShutdownDirection}
+import io.otavia.core.message.ReactorEvent
 
 import java.net.SocketAddress
-import java.nio.channels.SelectableChannel
+import java.nio.channels.{SelectableChannel, SelectionKey, SocketChannel}
 
-class NioUnsafeSocketChannel(channel: Channel, ch: SelectableChannel, readInterestOp: Int)
-    extends AbstractNioUnsafeChannel(channel, ch, readInterestOp) {
+class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp: Int)
+    extends AbstractNioUnsafeChannel[SocketChannel](channel, ch, readInterestOp) {
 
     override protected def doReadNow(): Boolean = ???
 
-    override def unsafeBind(local: SocketAddress): Unit =
-        throw new UnsupportedOperationException()
+    override def unsafeBind(local: SocketAddress): Unit = try {
+        javaChannel.bind(local)
+        executorAddress.inform(ReactorEvent.BindReply(channel))
+    } catch {
+        case t: Throwable =>
+            executorAddress.inform(ReactorEvent.BindReply(channel, cause = Some(t)))
+    }
 
-    override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit = ???
+    override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit = {
+        local match
+            case None        =>
+            case Some(value) => javaChannel.bind(value)
+
+        try {
+            val connected = javaChannel.connect(remote)
+            if (!connected) {
+                _selectionKey.interestOps(SelectionKey.OP_CONNECT)
+            } else {
+                executorAddress.inform(ReactorEvent.ConnectReply(channel, true))
+            }
+        } catch {
+            case t: Throwable => executorAddress.inform(ReactorEvent.ConnectReply(channel, cause = Some(t)))
+        }
+    }
+
+    override protected def finishConnect(): Unit = {
+        try {
+            javaChannel.finishConnect()
+            executorAddress.inform(ReactorEvent.ConnectReply(channel, true))
+        } catch {
+            case t: Throwable => executorAddress.inform(ReactorEvent.ConnectReply(channel, cause = Some(t)))
+        }
+    }
 
     override def unsafeDisconnect(): Unit = ???
-
-    override def unsafeClose(): Unit = ???
 
     override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
 
