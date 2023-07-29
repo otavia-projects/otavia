@@ -70,10 +70,6 @@ abstract class AbstractNioChannel[L <: SocketAddress, R <: SocketAddress](
         case _: CancelledKeyException => closeTransport(newPromise())
     }
 
-    override private[core] def handleChannelAcceptedEvent(event: ReactorEvent.AcceptedEvent): Unit = {
-        event.channel.pipeline.fireChannelRead(event.accepted)
-    }
-
     override private[core] def handleChannelReadCompletedEvent(event: ReactorEvent.ReadCompletedEvent): Unit = {
         event.channel.pipeline.fireChannelReadComplete()
     }

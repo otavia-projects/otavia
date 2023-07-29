@@ -307,10 +307,9 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         var success: Boolean  = false
         while (!success) {
             try {
-                val wasActive = nioUnsafeChannel.isActive
                 nioUnsafeChannel.registerSelector(unwrappedSelector)
                 channel.executorAddress.inform(
-                  ReactorEvent.RegisterReply(channel, !wasActive && nioUnsafeChannel.isActive)
+                  ReactorEvent.RegisterReply(channel, nioUnsafeChannel.isActive)
                 )
                 success = true
             } catch {

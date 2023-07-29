@@ -150,11 +150,11 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
      */
     final protected def initAndRegister(channelAddress: ChannelAddress, stack: AskStack[?]): Option[StackState] = {
         val channel = channelAddress.asInstanceOf[Channel]
+        channel.mount(this)
         Try {
             init(channel)
         } match {
             case Success(_) =>
-                channel.mount(this)
                 val state = new RegisterWaitState()
                 channel.register(state.registerFuture)
                 state.suspend()

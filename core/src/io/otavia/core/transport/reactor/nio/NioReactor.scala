@@ -76,7 +76,7 @@ object NioReactor {
 
         override def newThread(r: Runnable): Thread = {
 
-            val thread = new Thread(r, s"otavia-nio-reactor-${getThreadId()}")
+            val thread = new Thread(r, s"otavia-reactor-nio-${getThreadId()}")
             try {
                 if (thread.isDaemon) thread.setDaemon(false)
                 if (thread.getPriority != Thread.NORM_PRIORITY) thread.setPriority(Thread.NORM_PRIORITY)

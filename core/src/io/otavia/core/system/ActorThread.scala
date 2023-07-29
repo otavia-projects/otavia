@@ -44,7 +44,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 
     @volatile private var status: Int = ST_STARTING
 
-    setName(s"otavia-actor-thread-$index")
+    setName(s"otavia-actor-worker-$index")
 
     def parent: ActorThreadPool = system.pool
 

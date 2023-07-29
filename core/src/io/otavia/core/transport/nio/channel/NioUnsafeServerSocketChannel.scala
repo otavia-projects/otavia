@@ -20,16 +20,18 @@ package io.otavia.core.transport.nio.channel
 
 import io.otavia.core.channel.{Channel, ChannelShutdownDirection}
 import io.otavia.core.message.ReactorEvent
+import io.otavia.core.transport.nio.channel.NioUnsafeServerSocketChannel.BACKLOG
+import io.otavia.core.util.SystemPropertyUtil
 
 import java.net.SocketAddress
-import java.nio.channels.{SelectableChannel, ServerSocketChannel}
+import java.nio.channels.{SelectableChannel, SelectionKey, ServerSocketChannel}
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 
 class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, readInterestOp: Int)
     extends AbstractNioUnsafeChannel[ServerSocketChannel](channel, ch, readInterestOp) {
 
-    private var backlog: Int = -1 // NetUtil.SOMAXCONN
+    private var backlog: Int = BACKLOG
 
     private var bound: Boolean = false
 
@@ -39,7 +41,6 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, re
         assert(back >= 0, s"in setBacklog(back: Int) back:$back (expected: >= 0)")
         this.backlog = back
     }
-
 
     override def unsafeBind(local: SocketAddress): Unit = {
         val bindWasActive = isActive
@@ -54,8 +55,6 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, re
 
     override def unsafeDisconnect(): Unit = throw new UnsupportedOperationException()
 
-    override def unsafeClose(): Unit = ???
-
     override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit =
         throw new UnsupportedOperationException()
 
@@ -65,5 +64,32 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, re
     override def isOpen: Boolean = ch.isOpen
 
     override def isActive: Boolean = isOpen && bound
+
+    override protected def readNow(): Unit = {
+        try {
+            var continue = true
+            while (continue) {
+                val socket = javaChannel.accept()
+                socket match
+                    case null => continue = false
+                    case _ =>
+                        socket.configureBlocking(false)
+                        val c = new NioSocketChannel(channel.system)
+                        val u = new NioUnsafeSocketChannel(c, socket, SelectionKey.OP_READ)
+                        c.setUnsafeChannel(u)
+                        executorAddress.inform(ReactorEvent.AcceptedEvent(channel, c))
+            }
+        } catch {
+            case t: Throwable =>
+        }
+
+    }
+
+}
+
+object NioUnsafeServerSocketChannel {
+
+    private val DEFAULT_BACKLOG: Int = 200
+    private val BACKLOG: Int = SystemPropertyUtil.getInt("io.otavia.core.transport.nio.backlog", DEFAULT_BACKLOG)
 
 }

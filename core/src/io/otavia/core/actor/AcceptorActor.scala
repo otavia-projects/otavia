@@ -46,7 +46,6 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
         if (handler.nonEmpty) {
             channel.pipeline.addLast(handler.get)
         }
-        channel.pipeline.addLast(new AcceptorHandler)
     }
 
     final override protected def newChannel(): Channel = system.channelFactory.openServerSocketChannel(family)
@@ -102,21 +101,6 @@ object AcceptorActor {
     }
 
     final case class AcceptedChannel(channel: ChannelAddress) extends Ask[UnitReply]
-
-    private class AcceptorHandler extends ChannelHandler {
-
-        override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
-            val accepted = msg.asInstanceOf[Channel]
-            val msgId    = ctx.channel.generateMessageId
-            ctx.fireChannelRead(accepted, msgId)
-        }
-
-        override def write(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit = {
-            println("accepted success")
-            // truncate write event
-        }
-
-    }
 
     private final class DispatchState extends StackState {
 

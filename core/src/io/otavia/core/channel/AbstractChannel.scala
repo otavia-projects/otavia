@@ -261,15 +261,14 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     override private[core] def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = ???
 
-    override private[core] def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = ???
-
     override private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = ???
 
     override private[core] def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit = ???
 
     override private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit = ???
 
-    override private[core] def handleChannelAcceptedEvent(event: ReactorEvent.AcceptedEvent): Unit = ???
+    override private[core] def handleChannelAcceptedEvent(event: ReactorEvent.AcceptedEvent): Unit =
+        event.channel.pipeline.fireChannelRead(event.accepted)
 
     override private[core] def handleChannelReadCompletedEvent(event: ReactorEvent.ReadCompletedEvent): Unit = ???
 

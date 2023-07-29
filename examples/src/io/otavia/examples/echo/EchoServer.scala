@@ -19,7 +19,7 @@ package io.otavia.examples.echo
 import io.otavia.core.actor.*
 import io.otavia.core.actor.AcceptorActor.AcceptedChannel
 import io.otavia.core.actor.ChannelsActor.*
-import io.otavia.core.channel.{Channel, ChannelAddress}
+import io.otavia.core.channel.{Channel, ChannelAddress, ChannelHandler, ChannelHandlerContext}
 import io.otavia.core.message.{Ask, Reply}
 import io.otavia.core.stack.StackState.FutureState
 import io.otavia.core.stack.{AskStack, NoticeStack, StackState}
@@ -53,7 +53,9 @@ object EchoServer {
 
     private class EchoServerWorker extends AcceptedWorkerActor[Nothing] {
 
-        override protected def init(channel: Channel): Unit = {}
+        override protected def init(channel: Channel): Unit = {
+            channel.pipeline.addLast(new WorkerHandler())
+        }
 
         override def continueAsk(stack: AskStack[AcceptedChannel]): Option[StackState] = handleAccepted(stack)
 
@@ -67,6 +69,18 @@ object EchoServer {
     private class EchoServer extends AcceptorActor[EchoServerWorker] {
         override protected def workerFactory: AcceptorActor.WorkerFactory[EchoServerWorker] =
             () => new EchoServerWorker()
+
+    }
+
+    private class WorkerHandler extends ChannelHandler {
+
+        override def channelRegistered(ctx: ChannelHandlerContext): Unit = {
+            println(s"${ctx.channel} registered")
+        }
+
+        override def channelActive(ctx: ChannelHandlerContext): Unit = {
+            println(s"${ctx.channel} active")
+        }
 
     }
 

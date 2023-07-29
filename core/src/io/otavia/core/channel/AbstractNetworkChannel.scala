@@ -91,7 +91,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
                 promise.setSuccess(event)
                 // Only fire a channelActive if the channel has never been registered. This prevents firing
                 // multiple channel actives if the channel is deregistered and re-registered.
-                if (event.firstInactive) {
+                if (event.active) {
                     if (firstRegistration) fireChannelActiveIfNotActiveBefore()
                     readIfIsAutoRead()
                 }
@@ -253,7 +253,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
 
     override private[core] def flushTransport(): Unit = ???
 
-    protected final def readIfIsAutoRead(): Unit = if (autoRead) read()
+    protected final def readIfIsAutoRead(): Unit = if (autoRead) pipeline.read()
 
     /** Calls [[ChannelPipeline.fireChannelActive]] if it was not done yet.
      *

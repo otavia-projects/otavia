@@ -57,6 +57,8 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
         promise.setSuccess(ReactorEvent.EMPTY_EVENT)
     }
 
+    override private[core] def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {}
+
     override private[core] def deregisterTransport(promise: ChannelPromise): Unit = {
         promise.setSuccess(ReactorEvent.EMPTY_EVENT)
     }
