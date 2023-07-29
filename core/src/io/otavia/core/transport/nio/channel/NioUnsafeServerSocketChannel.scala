@@ -40,7 +40,6 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, re
         this.backlog = back
     }
 
-    override protected def doReadNow(): Boolean = ???
 
     override def unsafeBind(local: SocketAddress): Unit = {
         val bindWasActive = isActive

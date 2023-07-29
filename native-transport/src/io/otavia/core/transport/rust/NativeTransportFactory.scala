@@ -42,6 +42,4 @@ class NativeTransportFactory extends TransportFactory {
 
     override def openReactor(system: ActorSystem): Reactor = ???
 
-    override def openIoHandler(system: ActorSystem): IoHandler = ???
-
 }

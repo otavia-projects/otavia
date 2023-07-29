@@ -20,10 +20,11 @@ package io.otavia.core.channel
 
 import io.otavia.core.message.ReactorEvent
 import io.otavia.core.stack.ChannelPromise
+import io.otavia.core.system.ActorSystem
 
 import scala.language.unsafeNulls
 
-abstract class AbstractDatagramChannel extends AbstractNetworkChannel {
+abstract class AbstractDatagramChannel(system: ActorSystem) extends AbstractNetworkChannel(system) {
 
     override private[core] def disconnectTransport(promise: ChannelPromise): Unit = {
         if (!connected) promise.setFailure(new IllegalStateException())

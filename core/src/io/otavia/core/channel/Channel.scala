@@ -39,7 +39,7 @@ trait Channel extends ChannelInflight, EventHandle, ChannelAddress {
     def executor: ChannelsActor[?]
 
     /** The [[ActorSystem]] of this [[Channel]] is created. */
-    final def system: ActorSystem = executor.system
+    def system: ActorSystem
 
     /** Set executor of this channel, this method will mount this [[Channel]] to the [[ChannelsActor]].
      *  @param channelsActor

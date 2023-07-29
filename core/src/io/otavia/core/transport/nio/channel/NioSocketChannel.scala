@@ -18,9 +18,10 @@
 
 package io.otavia.core.transport.nio.channel
 
-import io.otavia.core.channel.{AbstractNetworkChannel, AbstractUnsafeChannel}
+import io.otavia.core.channel.AbstractSocketChannel
+import io.otavia.core.system.ActorSystem
 
-class NioSocketChannel extends AbstractNetworkChannel {
+class NioSocketChannel(system: ActorSystem) extends AbstractSocketChannel(system) {
 
     override def unsafeChannel: NioUnsafeSocketChannel = super.unsafeChannel.asInstanceOf[NioUnsafeSocketChannel]
 

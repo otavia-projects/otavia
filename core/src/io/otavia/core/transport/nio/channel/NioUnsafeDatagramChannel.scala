@@ -29,8 +29,6 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
 
     private var bound: Boolean = false
 
-    override protected def doReadNow(): Boolean = ???
-
     override def unsafeBind(local: SocketAddress): Unit = {
         javaChannel.bind(local)
         bound = true

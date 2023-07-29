@@ -21,6 +21,7 @@ package io.otavia.core.channel
 import io.otavia.core.channel.AbstractNetChannel.{DEFAULT_CONNECT_TIMEOUT, SUPPORTED_CHANNEL_OPTIONS}
 import io.otavia.core.message.ReactorEvent
 import io.otavia.core.stack.{ChannelPromise, Promise}
+import io.otavia.core.system.ActorSystem
 import io.otavia.core.timer.{TimeoutTrigger, Timer}
 import io.otavia.core.util.Platform
 
@@ -30,7 +31,7 @@ import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
-abstract class AbstractNetworkChannel extends AbstractChannel {
+abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChannel(system) {
 
     private var connectTimeoutMillis: Int      = DEFAULT_CONNECT_TIMEOUT
     private var connectTimeoutRegisterId: Long = Timer.INVALID_TIMEOUT_REGISTER_ID

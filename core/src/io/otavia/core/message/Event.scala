@@ -60,9 +60,10 @@ enum ReactorEvent extends Event {
 
     case EMPTY_EVENT
 
-    case AcceptedEvent(channel: Channel, accepted: Channel)
+    case ReadEvent(channel: Channel, cause: Option[Throwable] = None)
+    case ReadCompletedEvent(channel: Channel, cause: Option[Throwable] = None)
 
-    case ReadCompletedEvent(channel: Channel)
+    case AcceptedEvent(channel: Channel, accepted: Channel)
 
 }
 

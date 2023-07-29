@@ -36,8 +36,6 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
 
     private def javaChannel: FileChannel = ch
 
-    override protected def doReadNow(): Boolean = ???
-
     override def unsafeBind(local: SocketAddress): Unit =
         executorAddress.inform(ReactorEvent.BindReply(channel, cause = Some(new UnsupportedOperationException())))
 
@@ -63,10 +61,29 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
 
     override def unsafeRead(readPlan: ReadPlan): Unit = {
         readPlan match
-            case FileReadPlan(length, position) => // channel.channelInboundAdaptiveBuffer.writeBytes()
-                if (position != -1) {} else {}
+            case FileReadPlan(length, position) =>
+                if (length > 0) {
+                    try {
+                        if (position != -1) {
+                            channel.channelInboundAdaptiveBuffer.transferFrom(ch, position, length)
+                        } else {
+                            channel.channelInboundAdaptiveBuffer.transferFrom(ch, length)
+                        }
+                        executorAddress.inform(ReactorEvent.ReadEvent(channel))
+                    } catch {
+                        case t: Throwable =>
+                            executorAddress.inform(ReactorEvent.ReadEvent(channel, cause = Some(t)))
+                    }
+
+                } else {
+                    val cause = new IndexOutOfBoundsException(s"read length is $length")
+                    executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel, cause = Some(cause)))
+                }
             case _ =>
-        ???
+                val cause = new IllegalArgumentException(
+                  s"${getClass.getSimpleName} not support ${readPlan.getClass.getSimpleName} read plan"
+                )
+                executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel, cause = Some(cause)))
     }
 
     override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit =

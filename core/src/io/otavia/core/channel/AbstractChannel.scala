@@ -25,7 +25,7 @@ import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import io.otavia.core.message.ReactorEvent
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.stack.{AbstractPromise, ChannelPromise, ChannelReplyFuture, ChannelStack}
-import io.otavia.core.system.ActorThread
+import io.otavia.core.system.{ActorSystem, ActorThread}
 
 import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
@@ -33,9 +33,9 @@ import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
 /** Abstract class of file channel and network channel. */
-abstract class AbstractChannel extends Channel, ChannelState {
+abstract class AbstractChannel(val system: ActorSystem) extends Channel, ChannelState {
 
-    protected var logger: Logger = _
+    protected val logger: Logger = Logger.getLogger(getClass, system)
 
     private var channelId: Int = -1
 
@@ -193,7 +193,6 @@ abstract class AbstractChannel extends Channel, ChannelState {
     final private[core] def mount(channelsActor: ChannelsActor[?]): Unit = {
         assert(!mounted, s"The channel $this has been mounted already, you can't mount it twice!")
         actor = channelsActor
-        logger = Logger.getLogger(getClass, system)
         channelId = executor.generateChannelId()
         pipe = newChannelPipeline()
         mounted = true

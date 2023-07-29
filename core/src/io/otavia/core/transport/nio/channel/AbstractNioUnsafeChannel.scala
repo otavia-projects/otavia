@@ -103,4 +103,6 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
 
     protected def finishConnect(): Unit = {}
 
+    protected def readNow(): Unit = {}
+
 }

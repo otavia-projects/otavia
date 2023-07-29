@@ -57,7 +57,7 @@ import scala.util.{Failure, Success, Try}
 abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protected (
     val supportingDisconnect: Boolean,
     val defaultWriteHandleFactory: WriteHandleFactory
-) extends AbstractChannel,
+) extends AbstractChannel(null),
       WriteSink,
       ReadSink,
       ChannelInternal[L, R],

@@ -47,8 +47,6 @@ abstract class TransportFactory() {
 
     def openReactor(system: ActorSystem): Reactor
 
-    def openIoHandler(system: ActorSystem): IoHandler
-
 }
 
 object TransportFactory {

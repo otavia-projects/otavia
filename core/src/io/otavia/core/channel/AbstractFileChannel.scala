@@ -23,6 +23,7 @@ import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.message.ReactorEvent
 import io.otavia.core.stack.{ChannelPromise, ChannelReplyFuture}
+import io.otavia.core.system.ActorSystem
 
 import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
@@ -30,7 +31,7 @@ import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
 /** Abstract channel for file, support aio. */
-abstract class AbstractFileChannel extends AbstractChannel {
+abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(system) {
 
     private var path: Path = _
 

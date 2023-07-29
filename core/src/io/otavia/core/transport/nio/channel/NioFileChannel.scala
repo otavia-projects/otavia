@@ -21,8 +21,10 @@ package io.otavia.core.transport.nio.channel
 import io.netty5.util.{Attribute, AttributeKey}
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.channel.*
+import io.otavia.core.channel.message.{FileReadPlan, ReadPlan, ReadPlanFactory}
 import io.otavia.core.message.ReactorEvent
 import io.otavia.core.stack.{ChannelPromise, ChannelReplyFuture}
+import io.otavia.core.system.ActorSystem
 
 import java.io.File
 import java.net.SocketAddress
@@ -32,9 +34,9 @@ import java.nio.file.{OpenOption, Path, StandardOpenOption}
 import scala.jdk.CollectionConverters.*
 import scala.language.unsafeNulls
 
-class NioFileChannel() extends AbstractFileChannel {
+class NioFileChannel(system: ActorSystem) extends AbstractFileChannel(system) {
 
-    setUnsafeChannel(new NioUnsafeFileChannel(this))
+    setReadPlanFactory((channel: Channel) => FileReadPlan())
 
     override def unsafeChannel: NioUnsafeFileChannel = super.unsafeChannel.asInstanceOf[NioUnsafeFileChannel]
 

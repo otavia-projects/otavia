@@ -27,8 +27,6 @@ import java.nio.channels.{SelectableChannel, SelectionKey, SocketChannel}
 class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp: Int)
     extends AbstractNioUnsafeChannel[SocketChannel](channel, ch, readInterestOp) {
 
-    override protected def doReadNow(): Boolean = ???
-
     override def unsafeBind(local: SocketAddress): Unit = try {
         javaChannel.bind(local)
         executorAddress.inform(ReactorEvent.BindReply(channel))

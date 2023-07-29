@@ -23,11 +23,12 @@ import io.otavia.core.channel.estimator.ServerChannelWriteHandleFactory
 import io.otavia.core.channel.internal.{ReadSink, WriteSink}
 import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import io.otavia.core.message.ReactorEvent
+import io.otavia.core.system.ActorSystem
 import io.otavia.core.transport.nio.channel.NioServerSocketChannel.NioServerSocketReadPlan
 
 import java.net.SocketAddress
 
-class NioServerSocketChannel extends AbstractNetworkChannel {
+class NioServerSocketChannel(system: ActorSystem) extends AbstractServerChannel(system) {
 
     setReadPlanFactory((channel: Channel) => new NioServerSocketReadPlan())
 

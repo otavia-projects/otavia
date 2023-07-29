@@ -19,8 +19,9 @@
 package io.otavia.core.channel
 
 import io.otavia.core.stack.ChannelPromise
+import io.otavia.core.system.ActorSystem
 
-abstract class AbstractServerChannel extends AbstractNetworkChannel {
+abstract class AbstractServerChannel(system: ActorSystem) extends AbstractNetworkChannel(system) {
 
     override private[core] def disconnectTransport(promise: ChannelPromise): Unit =
         promise.setFailure(new UnsupportedOperationException())

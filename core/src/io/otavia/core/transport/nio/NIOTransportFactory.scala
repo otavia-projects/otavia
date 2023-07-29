@@ -33,7 +33,7 @@ import java.nio.channels.spi.SelectorProvider
 import java.util.Random
 import scala.language.unsafeNulls
 
-class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
+class NIOTransportFactory(val system: ActorSystem) extends TransportFactory {
 
     private val selectorProvider: SelectorProvider = SelectorProvider.provider()
     private var reactor: Reactor                   = _
@@ -78,7 +78,7 @@ class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
     }
 
     private def createServerChannel0(ch: ServerSocketChannel): Channel = {
-        val channel = new NioServerSocketChannel()
+        val channel = new NioServerSocketChannel(system)
         val unsafe  = new NioUnsafeServerSocketChannel(channel, ch, readInterestOp = SelectionKey.OP_ACCEPT)
         channel.setUnsafeChannel(unsafe)
 
@@ -108,7 +108,7 @@ class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
     }
 
     private def createSocketChannel0(ch: SocketChannel): Channel = {
-        val channel = new NioSocketChannel()
+        val channel = new NioSocketChannel(system)
         val unsafe  = new NioUnsafeSocketChannel(channel, ch, SelectionKey.OP_READ)
         channel.setUnsafeChannel(unsafe)
         channel
@@ -137,15 +137,16 @@ class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
     }
 
     private def createDatagramChannel0(ch: DatagramChannel): Channel = {
-        val channel = new NioDatagramChannel()
+        val channel = new NioDatagramChannel(system)
         val unsafe  = new NioUnsafeDatagramChannel(channel, ch, SelectionKey.OP_READ)
         channel.setUnsafeChannel(unsafe)
         channel
     }
 
     override def createFileChannel(): Channel = {
-        val channel = new NioFileChannel()
+        val channel = new NioFileChannel(system)
         val unsafe  = new NioUnsafeFileChannel(channel)
+        channel.setUnsafeChannel(unsafe)
         channel
     }
 
@@ -154,8 +155,5 @@ class NIOTransportFactory(system: ActorSystem) extends TransportFactory {
         reactor = new NioReactor(system, this)
         reactor
     }
-
-    override def openIoHandler(system: ActorSystem): IoHandler =
-        new NioHandler(selectorProvider, DefaultSelectStrategy, system)
 
 }

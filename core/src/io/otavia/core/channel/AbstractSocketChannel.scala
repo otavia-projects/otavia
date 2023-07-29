@@ -19,8 +19,9 @@
 package io.otavia.core.channel
 
 import io.otavia.core.stack.ChannelPromise
+import io.otavia.core.system.ActorSystem
 
-abstract class AbstractSocketChannel extends AbstractNetworkChannel {
+abstract class AbstractSocketChannel(system: ActorSystem) extends AbstractNetworkChannel(system) {
 
     override private[core] def disconnectTransport(promise: ChannelPromise): Unit =
         closeTransport(promise)
