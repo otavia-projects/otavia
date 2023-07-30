@@ -18,7 +18,7 @@
 
 package io.otavia.core.transport.nio.channel
 
-import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
+import io.otavia.core.channel.message.{AutoReadPlan, ReadPlan, ReadPlanFactory}
 import io.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelException, ChannelShutdownDirection}
 import io.otavia.core.message.ReactorEvent
 
@@ -90,7 +90,9 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
     override def closeProcessor(): Unit = executorAddress.inform(ReactorEvent.ChannelClose(channel))
 
     override def unsafeRead(readPlan: ReadPlan): Unit = if (_selectionKey.isValid) {
-        this.currentReadPlan = readPlan
+        if (readPlan == AutoReadPlan) {
+            this.currentReadPlan = readPlanFactory.newPlan(channel)
+        } else this.currentReadPlan = readPlan
         val ops = _selectionKey.interestOps()
         if ((ops & readInterestOp) == 0)
             _selectionKey.interestOps(ops | readInterestOp)
