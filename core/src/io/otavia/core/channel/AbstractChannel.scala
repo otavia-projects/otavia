@@ -71,6 +71,9 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     registering = false
     registered = false
 
+    connecting = false
+    connected = false
+
     /** true if the channel has never been registered, false otherwise */
     neverRegistered = true
 

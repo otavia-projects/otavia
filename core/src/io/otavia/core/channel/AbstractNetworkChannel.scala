@@ -70,8 +70,12 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
     }
 
     override private[core] def registerTransport(promise: ChannelPromise): Unit =
-        if (registering) promise.setFailure(new IllegalStateException(s"The channel $this is registering to reactor!"))
-        else if (registered) promise.setFailure(new IllegalStateException("registered to reactor already"))
+        if (registering)
+            invokeLater(() =>
+                promise.setFailure(new IllegalStateException(s"The channel $this is registering to reactor!"))
+            )
+        else if (registered)
+            invokeLater(() => promise.setFailure(new IllegalStateException("registered to reactor already")))
         else {
             registering = true
             ongoingChannelPromise = promise
@@ -100,22 +104,24 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
                 closeNowAndFail(promise, cause)
     }
 
-    override private[core] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit = {
-        if (!mounted) channelPromise.setFailure(new IllegalStateException(s"channel $this is not mounted to actor!"))
+    override private[core] def bindTransport(local: SocketAddress, promise: ChannelPromise): Unit = {
+        if (!mounted)
+            invokeLater(() => promise.setFailure(new IllegalStateException(s"channel $this is not mounted to actor!")))
         else if (!registered) { // if not register
-            if (registering) channelPromise.setFailure(new IllegalStateException("A registering operation is running"))
+            if (registering)
+                invokeLater(() => promise.setFailure(new IllegalStateException("A registering operation is running")))
             else {
                 pipeline.register(newPromise())
                 ongoingChannelPromise.onCompleted {
                     case self if self.isSuccess =>
                         this.ongoingChannelPromise = null
-                        bindTransport0(local, channelPromise)
+                        bindTransport0(local, promise)
                     case self if self.isFailed =>
                         this.ongoingChannelPromise = null
-                        channelPromise.setFailure(self.causeUnsafe)
+                        promise.setFailure(self.causeUnsafe)
                 }
             }
-        } else bindTransport0(local, channelPromise)
+        } else bindTransport0(local, promise)
     }
 
     private def bindTransport0(local: SocketAddress, promise: ChannelPromise): Unit = {
@@ -160,11 +166,13 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         local: Option[SocketAddress],
         promise: ChannelPromise
     ): Unit = {
-        if (!mounted) promise.setFailure(new IllegalStateException(s"channel $this is not mounted to actor!"))
-        else if (connected) promise.setFailure(new AlreadyConnectedException())
-        else if (connecting) promise.setFailure(new ConnectionPendingException())
-        else if (closed || closing) promise.setFailure(new ClosedChannelException())
-        else if (registering) promise.setFailure(new IllegalStateException("A registering operation is running"))
+        if (!mounted)
+            invokeLater(() => promise.setFailure(new IllegalStateException(s"channel $this is not mounted to actor!")))
+        else if (connected) invokeLater(() => promise.setFailure(new AlreadyConnectedException()))
+        else if (connecting) invokeLater(() => promise.setFailure(new ConnectionPendingException()))
+        else if (closed || closing) invokeLater(() => promise.setFailure(new ClosedChannelException()))
+        else if (registering)
+            invokeLater(() => promise.setFailure(new IllegalStateException("A registering operation is running")))
         else if (!registered) { // if not register
             if (!registering) pipeline.register(newPromise())
             ongoingChannelPromise.onCompleted {
@@ -240,7 +248,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         options: Seq[OpenOption],
         attrs: Seq[FileAttribute[?]],
         promise: ChannelPromise
-    ): Unit = promise.setFailure(new UnsupportedOperationException())
+    ): Unit = invokeLater(() => promise.setFailure(new UnsupportedOperationException()))
 
     override private[core] def closeTransport(promise: ChannelPromise): Unit = ???
 

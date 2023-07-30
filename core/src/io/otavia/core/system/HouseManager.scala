@@ -50,6 +50,8 @@ class HouseManager(val thread: ActorThread) {
 
     private[core] def currentRunningActor: Actor[?] = currentRunning
 
+    def laterTasks = thread.laterTasks
+
     def mount(house: ActorHouse): Unit = {
         mountingQueue.enqueue(house)
         logger.trace(s"Schedule mount ${house.actor}")

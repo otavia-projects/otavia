@@ -23,10 +23,11 @@ import io.otavia.core.message.*
 import io.otavia.core.reactor.Reactor
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.stack.*
+import io.otavia.core.stack.StackState.FutureState
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 
-abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
+abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M | Connect] {
 
     protected def connect(host: String, port: Int): Unit = connect(InetSocketAddress.createUnresolved(host, port).nn)
 
@@ -49,13 +50,9 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
             case StackState.start =>
                 // TODO: check remote whether resolved, if not send ask message AddressResolver actor
                 val remote = stack.ask.remote
-
                 val channel = newChannelAndInit()
-                initAndRegister(channel, stack)
-            case registerWaitState: RegisterWaitState =>
-                val channel: ChannelAddress = registerWaitState.registerFuture.channel
-                val state                   = new ConnectWaitState()
-                channel.connect(stack.ask.remote, stack.ask.local, state.connectFuture)
+                val state   = new ConnectWaitState()
+                channel.connect(remote, stack.ask.local, state.connectFuture)
                 state.suspend()
             case connectWaitState: ConnectWaitState =>
                 val ch = connectWaitState.connectFuture.channel
@@ -66,7 +63,7 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
 
     protected def afterConnected(channel: ChannelAddress): Unit = {}
 
-    override protected def newChannel(): Channel = system.channelFactory.openSocketChannel()
+    override protected def newChannel(): Channel = system.channelFactory.openSocketChannel(family)
 
     override def init(channel: Channel): Unit = {
         handler match

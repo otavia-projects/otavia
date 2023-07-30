@@ -31,7 +31,7 @@ trait CompressionBooleanLong {
     }
 
     protected final inline def set(mask: Long, value: Boolean): Unit =
-        if (value) compression = compression | mask else compression = compression & (~mask)
+        if (value) compression = (compression | mask) else compression = (compression & (~mask))
 
     protected final inline def get(mask: Long): Boolean = (compression & mask) != 0
 

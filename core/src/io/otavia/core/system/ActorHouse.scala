@@ -156,6 +156,7 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
                     cursor = msg.next
                     msg.dechain()
                     dweller.receiveReply(msg.asInstanceOf[Reply])
+                    runLaterTasks()
                 }
             } else {
                 if (replyMailbox.nonEmpty) {
@@ -165,6 +166,7 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
                         cursor = msg.next
                         msg.dechain()
                         dweller.receiveReply(msg.asInstanceOf[Reply])
+                        runLaterTasks()
                     }
                 }
                 if (eventMailbox.nonEmpty) {
@@ -174,6 +176,7 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
                         cursor = msg.next
                         msg.dechain()
                         dweller.receiveEvent(msg.asInstanceOf[Event])
+                        runLaterTasks()
                     }
                 }
                 if (askMailbox.nonEmpty) {
@@ -183,6 +186,7 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
                         cursor = msg.next
                         msg.dechain()
                         dweller.receiveAsk(msg.asInstanceOf[Ask[? <: Reply]])
+                        runLaterTasks()
                     }
                 }
                 if (noticeMailbox.nonEmpty) {
@@ -192,6 +196,7 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
                         cursor = msg.next
                         msg.dechain()
                         dweller.receiveNotice(msg.asInstanceOf[Notice])
+                        runLaterTasks()
                     }
                 }
             }
@@ -200,6 +205,20 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
                 if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
             } else {
                 status.compareAndSet(RUNNING, WAITING)
+            }
+        }
+    }
+
+    private def runLaterTasks(): Unit = {
+        if (actorType == CHANNELS_ACTOR) {
+            while (manager.laterTasks.nonEmpty) {
+                val task = manager.laterTasks.removeHead()
+                try {
+                    task.run()
+                } catch {
+                    case t: Throwable =>
+                        throw t
+                }
             }
         }
     }
