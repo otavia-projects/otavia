@@ -24,13 +24,10 @@ import io.otavia.core.channel.internal.{ReadSink, WriteSink}
 import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import io.otavia.core.message.ReactorEvent
 import io.otavia.core.system.ActorSystem
-import io.otavia.core.transport.nio.channel.NioServerSocketChannel.NioServerSocketReadPlan
 
 import java.net.SocketAddress
 
 class NioServerSocketChannel(system: ActorSystem) extends AbstractServerChannel(system) {
-
-    setReadPlanFactory((channel: Channel) => new NioServerSocketReadPlan())
 
     override def unsafeChannel: NioUnsafeServerSocketChannel =
         super.unsafeChannel.asInstanceOf[NioUnsafeServerSocketChannel]
@@ -44,20 +41,6 @@ class NioServerSocketChannel(system: ActorSystem) extends AbstractServerChannel(
             } else
                 super.setExtendedOption(option, value)
         }
-    }
-
-}
-
-object NioServerSocketChannel {
-
-    class NioServerSocketReadPlan extends ReadPlan {
-
-        override def estimatedNextSize: Int = 0
-
-        override def lastRead(attemptedBytesRead: Int, actualBytesRead: Int, numMessagesRead: Int): Boolean = false
-
-        override def readComplete(): Unit = {}
-
     }
 
 }

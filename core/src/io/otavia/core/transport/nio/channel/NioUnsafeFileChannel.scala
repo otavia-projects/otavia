@@ -34,6 +34,8 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
 
     private var ch: FileChannel = _
 
+    setReadPlanFactory((channel: Channel) => FileReadPlan())
+
     private def javaChannel: FileChannel = ch
 
     override def unsafeBind(local: SocketAddress): Unit =
@@ -92,5 +94,7 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
     override def isOpen: Boolean = ch != null && ch.isOpen
 
     override def isActive: Boolean = isOpen
+
+    override def isShutdown(direction: ChannelShutdownDirection): Boolean = ???
 
 }

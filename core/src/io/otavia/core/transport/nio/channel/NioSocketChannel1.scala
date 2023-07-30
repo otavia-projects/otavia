@@ -59,8 +59,6 @@ class NioSocketChannel1(socket: SocketChannel, protocolFamily: ProtocolFamily)
     private var unresolvedRemote: SocketAddress | Null = null
     private var unresolvedLocal: SocketAddress | Null  = null
 
-    setReadPlanFactory(new FixedReadPlanFactory())
-
     override def setUnresolvedRemoteAddress(address: SocketAddress): Unit = unresolvedRemote = address
 
     override protected def unresolvedRemoteAddress: Option[SocketAddress] = Option(unresolvedRemote)

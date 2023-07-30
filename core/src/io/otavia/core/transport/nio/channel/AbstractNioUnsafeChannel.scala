@@ -18,11 +18,12 @@
 
 package io.otavia.core.transport.nio.channel
 
-import io.otavia.core.channel.message.ReadPlan
-import io.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelException}
+import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
+import io.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelException, ChannelShutdownDirection}
 import io.otavia.core.message.ReactorEvent
 
 import java.io.IOException
+import java.net.PortUnreachableException
 import java.nio.channels.{CancelledKeyException, SelectableChannel, SelectionKey, Selector}
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
@@ -31,6 +32,8 @@ import scala.language.unsafeNulls
 abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel, val ch: C, val readInterestOp: Int)
     extends AbstractUnsafeChannel(channel)
     with NioUnsafeChannel {
+
+    private var inputClosedSeenErrorOnRead: Boolean = false
 
     protected var _selectionKey: SelectionKey = _
 
@@ -87,7 +90,7 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
     override def closeProcessor(): Unit = executorAddress.inform(ReactorEvent.ChannelClose(channel))
 
     override def unsafeRead(readPlan: ReadPlan): Unit = if (_selectionKey.isValid) {
-        this.readPlan = readPlan
+        this.currentReadPlan = readPlan
         val ops = _selectionKey.interestOps()
         if ((ops & readInterestOp) == 0)
             _selectionKey.interestOps(ops | readInterestOp)
@@ -103,6 +106,64 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
 
     protected def finishConnect(): Unit = {}
 
-    protected def readNow(): Unit = {}
+    protected def readNow(): Unit = {
+        if (isShutdown(ChannelShutdownDirection.Inbound) && (inputClosedSeenErrorOnRead || !isAllowHalfClosure)) {
+            clearScheduledRead()
+        } else {
+            readLoop()
+        }
+    }
+
+    private def readLoop(): Unit = {
+        var closed = false
+        try {
+            while {
+                try {
+                    closed = doReadNow()
+                } catch {
+                    case cause: Throwable =>
+                        executorAddress.inform(ReactorEvent.ExceptionEvent(channel, cause))
+                        cause match
+                            case _: PortUnreachableException =>
+                                shutdownReadSide()
+                            case _: IOException if !this.isInstanceOf[NioUnsafeServerSocketChannel] =>
+                                unsafeClose()
+                }
+                currentReadPlan.continueReading && !closed && !isShutdown(ChannelShutdownDirection.Inbound)
+            } do ()
+            completed()
+        } finally {
+            if (!autoRead) {
+                clearScheduledRead()
+            }
+        }
+
+        if (closed) {
+            shutdownReadSide()
+        }
+    }
+
+    private def completed(): Unit = {
+        currentReadPlan.readComplete()
+        executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel))
+    }
+
+    protected def processRead(attemptedBytesRead: Int, actualBytesRead: Int, numMessagesRead: Int): Unit = {
+        currentReadPlan.lastRead(attemptedBytesRead, actualBytesRead, numMessagesRead)
+    }
+
+    protected def doReadNow(): Boolean
+
+    protected def shutdownReadSide(): Unit = {
+        if (!isShutdown(ChannelShutdownDirection.Inbound)) {
+            if (isAllowHalfClosure) {
+                unsafeShutdown(ChannelShutdownDirection.Inbound)
+            } else {
+                unsafeClose()
+            }
+        } else {
+            inputClosedSeenErrorOnRead = true
+        }
+    }
 
 }

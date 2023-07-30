@@ -43,8 +43,6 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     private var pipe: ChannelPipeline = _
 
-    private var readFactory: ReadPlanFactory = _
-
     private var unsafe: AbstractUnsafeChannel = _
 
     private var inboundMsgBarrier: AnyRef => Boolean  = _ => false
@@ -196,15 +194,6 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         channelId = executor.generateChannelId()
         pipe = newChannelPipeline()
         mounted = true
-    }
-
-    def readPlanFactory: ReadPlanFactory = readFactory
-
-    @SuppressWarnings(Array("unchecked"))
-    private[core] def getReadPlanFactory[T <: ReadPlanFactory] = readFactory.asInstanceOf[T]
-
-    protected def setReadPlanFactory(factory: ReadPlanFactory): Unit = {
-        this.readFactory = factory
     }
 
     def unsafeChannel: AbstractUnsafeChannel = unsafe

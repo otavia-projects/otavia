@@ -89,4 +89,11 @@ trait UnsafeChannel {
     /** Return true if the [[UnsafeChannel]] is active and so connected. */
     def isActive: Boolean
 
+    /** Returns true if the [[ChannelShutdownDirection]] of the [[UnsafeChannel]] was shutdown before.
+     *  @param direction
+     *    shutdown direction
+     *  @return
+     */
+    def isShutdown(direction: ChannelShutdownDirection): Boolean
+
 }

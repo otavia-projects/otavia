@@ -809,7 +809,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         this.connectTimeoutMillis = connectTimeoutMillis
     }
 
-    protected def newReadPlan: ReadPlan = readPlanFactory.newPlan(this)
+    // protected def newReadPlan: ReadPlan = readPlanFactory.newPlan(this)
 
     protected def newWriteHandle: WriteHandleFactory.WriteHandle = writeHandleFactory.newHandle(this)
 

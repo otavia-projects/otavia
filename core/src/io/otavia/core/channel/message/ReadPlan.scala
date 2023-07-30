@@ -44,4 +44,6 @@ trait ReadPlan {
     /** Method that must be called once the read loop was completed. */
     def readComplete(): Unit
 
+    def continueReading: Boolean = false
+
 }

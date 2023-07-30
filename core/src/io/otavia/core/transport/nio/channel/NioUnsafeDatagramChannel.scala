@@ -58,4 +58,8 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
 
     override def isActive: Boolean = isOpen && bound
 
+    override def isShutdown(direction: ChannelShutdownDirection): Boolean = ???
+
+    override protected def doReadNow(): Boolean = ???
+
 }

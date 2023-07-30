@@ -69,4 +69,8 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
 
     override def isActive: Boolean = ch.isOpen && ch.isConnected
 
+    override def isShutdown(direction: ChannelShutdownDirection): Boolean = ???
+
+    override protected def doReadNow(): Boolean = ???
+
 }

@@ -25,7 +25,7 @@ import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.OtaviaChannelHandlerContext.*
 import io.otavia.core.channel.internal.ChannelHandlerMask
 import io.otavia.core.channel.internal.ChannelHandlerMask.*
-import io.otavia.core.channel.message.ReadPlan
+import io.otavia.core.channel.message.{AutoReadPlan, ReadPlan}
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.stack.ChannelFuture
 import io.otavia.core.util.ThrowableUtil
@@ -342,7 +342,7 @@ final class OtaviaChannelHandlerContext(
 
     override def read(): this.type = {
         val ctx  = findContextOutbound(ChannelHandlerMask.MASK_READ)
-        val plan = ctx.channel.asInstanceOf[AbstractChannel].readPlanFactory.newPlan(ctx.channel)
+        val plan = AutoReadPlan
         ctx.invokeRead(plan)
         this
     }

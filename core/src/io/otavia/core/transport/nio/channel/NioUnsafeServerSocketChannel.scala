@@ -18,9 +18,10 @@
 
 package io.otavia.core.transport.nio.channel
 
+import io.otavia.core.channel.message.ReadPlan
 import io.otavia.core.channel.{Channel, ChannelShutdownDirection}
 import io.otavia.core.message.ReactorEvent
-import io.otavia.core.transport.nio.channel.NioUnsafeServerSocketChannel.BACKLOG
+import io.otavia.core.transport.nio.channel.NioUnsafeServerSocketChannel.{BACKLOG, NioServerSocketReadPlan}
 import io.otavia.core.util.SystemPropertyUtil
 
 import java.net.SocketAddress
@@ -34,6 +35,8 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, re
     private var backlog: Int = BACKLOG
 
     private var bound: Boolean = false
+
+    setReadPlanFactory((channel: Channel) => new NioServerSocketReadPlan())
 
     private def getBacklog(): Int = backlog
 
@@ -65,24 +68,23 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, re
 
     override def isActive: Boolean = isOpen && bound
 
-    override protected def readNow(): Unit = {
-        try {
-            var continue = true
-            while (continue) {
-                val socket = javaChannel.accept()
-                socket match
-                    case null => continue = false
-                    case _ =>
-                        socket.configureBlocking(false)
-                        val c = new NioSocketChannel(channel.system)
-                        val u = new NioUnsafeSocketChannel(c, socket, SelectionKey.OP_READ)
-                        c.setUnsafeChannel(u)
-                        executorAddress.inform(ReactorEvent.AcceptedEvent(channel, c))
-            }
-        } catch {
-            case t: Throwable =>
-        }
+    override def isShutdown(direction: ChannelShutdownDirection): Boolean = !isActive
 
+    override protected def doReadNow(): Boolean = {
+        val socket = javaChannel.accept()
+
+        socket match
+            case null =>
+                processRead(0, 0, 0)
+            case _ =>
+                socket.configureBlocking(false)
+                val c = new NioSocketChannel(channel.system)
+                val u = new NioUnsafeSocketChannel(c, socket, SelectionKey.OP_READ)
+                c.setUnsafeChannel(u)
+                executorAddress.inform(ReactorEvent.AcceptedEvent(channel, c))
+                processRead(0, 0, 1)
+
+        false
     }
 
 }
@@ -91,5 +93,27 @@ object NioUnsafeServerSocketChannel {
 
     private val DEFAULT_BACKLOG: Int = 200
     private val BACKLOG: Int = SystemPropertyUtil.getInt("io.otavia.core.transport.nio.backlog", DEFAULT_BACKLOG)
+
+    class NioServerSocketReadPlan extends ReadPlan {
+
+        private var continue: Boolean  = true
+        private var readCompleted: Int = 0
+
+        override def estimatedNextSize: Int = 0
+
+        override def lastRead(attemptedBytesRead: Int, actualBytesRead: Int, numMessagesRead: Int): Boolean = {
+            readCompleted += actualBytesRead
+            continue = numMessagesRead != 0
+            continue
+        }
+
+        override def readComplete(): Unit = {
+            continue = true
+            readCompleted = 0
+        }
+
+        override def continueReading: Boolean = continue
+
+    }
 
 }

@@ -19,7 +19,7 @@
 package io.otavia.core.channel
 
 import io.otavia.core.actor.ChannelsActor
-import io.otavia.core.channel.message.ReadPlan
+import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import io.otavia.core.message.ReactorEvent
 import io.otavia.core.reactor.Reactor
 
@@ -33,19 +33,37 @@ import scala.language.unsafeNulls
 abstract class AbstractUnsafeChannel(val channel: Channel) extends UnsafeChannel {
 
     private var inputClosedSeenErrorOnRead: Boolean = false
-    private var isAllowHalfClosure: Boolean         = true
+    protected var isAllowHalfClosure: Boolean       = true
+
+    protected var autoRead: Boolean = true
 
     // read sink
-    protected var readPlan: ReadPlan = _
+    protected var currentReadPlan: ReadPlan = _
 
+    private var readFactory: ReadPlanFactory = _
 
+    def readPlanFactory: ReadPlanFactory = readFactory
+
+    protected def setReadPlanFactory(factory: ReadPlanFactory): Unit = {
+        this.readFactory = factory
+    }
 
     // write sink
 
-    def setReadPlan(plan: ReadPlan): Unit = readPlan = plan
+    def setReadPlan(plan: ReadPlan): Unit = currentReadPlan = plan
 
-    protected def clearScheduledRead(): Unit = readPlan = null
+    protected def clearScheduledRead(): Unit = {
+        currentReadPlan = null
+        doClearScheduledRead()
+    }
 
     def executor: ChannelsActor[?] = channel.executor
+
+    /** Clear any previous scheduled read. By default, this method does nothing but implementations might override it to
+     *  add extra logic.
+     */
+    protected def doClearScheduledRead(): Unit = {
+        // Do nothing by default
+    }
 
 }
