@@ -67,7 +67,6 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
                 key.interestOps(ops)
 
                 finishConnect()
-                executorAddress.inform(ReactorEvent.ChannelReadiness(channel, SelectionKey.OP_CONNECT))
             }
             // Process OP_WRITE first as we may be able to write some queued buffers and so free memory.
             if ((readOps & SelectionKey.OP_WRITE) != 0) {

@@ -19,6 +19,8 @@ package io.otavia.core.channel
 import io.otavia.core.channel.ChannelState.*
 import io.otavia.core.util.CompressionBooleanLong
 
+import scala.language.unsafeNulls
+
 /** A trait for manage lifecycle for [[Channel]] */
 trait ChannelState extends CompressionBooleanLong {
     this: Channel =>
@@ -131,114 +133,149 @@ trait ChannelState extends CompressionBooleanLong {
     protected final def outboundHeadOfLine_=(value: Boolean): Unit = set(ST_OUTBOUND_HOL, value)
     protected final def outboundHeadOfLine: Boolean                = get(ST_OUTBOUND_HOL)
 
+    protected def getStateString(): String = {
+        val sb = new StringBuilder(toBinaryString())
+        sb.append(" = ")
+        if (created) sb.append("created ")
+        if (neverRegistered) sb.append("neverRegistered ")
+        if (registering) sb.append("registering ")
+        if (registered) sb.append("registered ")
+        if (binding) sb.append("binding ")
+        if (bound) sb.append("bound ")
+        if (connecting) sb.append("connecting ")
+        if (connected) sb.append("connected ")
+        if (disconnecting) sb.append("disconnecting ")
+        if (disconnected) sb.append("disconnected ")
+        if (closing) sb.append("closing ")
+        if (closed) sb.append("closed ")
+        if (unregistering) sb.append("unregistering ")
+        if (unregistered) sb.append("unregistered ")
+        if (shutdowningInbound) sb.append("shutdowningInbound ")
+        if (shutdownedInbound) sb.append("shutdownedInbound ")
+        if (shutdowningOutbound) sb.append("shutdowningOutbound ")
+        if (shutdownedOutbound) sb.append("shutdownedOutbound ")
+        if (autoRead) sb.append("autoRead ")
+        if (autoClose) sb.append("autoClose ")
+        if (allowHalfClosure) sb.append("allowHalfClosure ")
+        if (closeInitiated) sb.append("closeInitiated ")
+        if (inWriteFlushed) sb.append("inWriteFlushed ")
+        if (writable) sb.append("writable ")
+        if (neverActive) sb.append("neverActive ")
+        if (mounted) sb.append("mounted ")
+        if (opening) sb.append("opening ")
+        if (opened) sb.append("opened ")
+
+        sb.toString().trim
+    }
+
 }
 
 object ChannelState {
 
     // Channel lifecycle state
     private val ST_CREATED_OFFSET: Long = 0
-    private val ST_CREATED: Long        = 1 << ST_CREATED_OFFSET
+    private val ST_CREATED: Long        = 1L << ST_CREATED_OFFSET
 
     private val ST_NEVER_REGISTERED_OFFSET: Long = 1
-    private val ST_NEVER_REGISTERED: Long        = 1 << ST_NEVER_REGISTERED_OFFSET
+    private val ST_NEVER_REGISTERED: Long        = 1L << ST_NEVER_REGISTERED_OFFSET
 
     private val ST_REGISTERING_OFFSET: Long = 2
-    private val ST_REGISTERING: Long        = 1 << ST_REGISTERING_OFFSET
+    private val ST_REGISTERING: Long        = 1L << ST_REGISTERING_OFFSET
 
     private val ST_REGISTERED_OFFSET: Long = 3
-    private val ST_REGISTERED: Long        = 1 << ST_REGISTERED_OFFSET
+    private val ST_REGISTERED: Long        = 1L << ST_REGISTERED_OFFSET
 
     private val ST_BINDING_OFFSET: Long = 4
-    private val ST_BINDING: Long        = 1 << ST_BINDING_OFFSET
+    private val ST_BINDING: Long        = 1L << ST_BINDING_OFFSET
 
     private val ST_BOUND_OFFSET: Long = 5
-    private val ST_BOUND: Long        = 1 << ST_BOUND_OFFSET
+    private val ST_BOUND: Long        = 1L << ST_BOUND_OFFSET
 
     private val ST_CONNECTING_OFFSET: Long = 6
-    private val ST_CONNECTING: Long        = 1 << ST_CONNECTING_OFFSET
+    private val ST_CONNECTING: Long        = 1L << ST_CONNECTING_OFFSET
 
     private val ST_CONNECTED_OFFSET: Long = 7
-    private val ST_CONNECTED: Long        = 1 << ST_CONNECTED_OFFSET
+    private val ST_CONNECTED: Long        = 1L << ST_CONNECTED_OFFSET
 
     private val ST_DISCONNECTING_OFFSET: Long = 8
-    private val ST_DISCONNECTING: Long        = 1 << ST_DISCONNECTING_OFFSET
+    private val ST_DISCONNECTING: Long        = 1L << ST_DISCONNECTING_OFFSET
 
     private val ST_DISCONNECTED_OFFSET: Long = 9
-    private val ST_DISCONNECTED: Long        = 1 << ST_DISCONNECTED_OFFSET
+    private val ST_DISCONNECTED: Long        = 1L << ST_DISCONNECTED_OFFSET
 
     private val ST_CLOSING_OFFSET: Long = 10
-    private val ST_CLOSING: Long        = 1 << ST_CLOSING_OFFSET
+    private val ST_CLOSING: Long        = 1L << ST_CLOSING_OFFSET
 
     private val ST_CLOSED_OFFSET: Long = 11
-    private val ST_CLOSED: Long        = 1 << ST_CLOSED_OFFSET
+    private val ST_CLOSED: Long        = 1L << ST_CLOSED_OFFSET
 
     private val ST_UNREGISTERING_OFFSET: Long = 12
-    private val ST_UNREGISTERING: Long        = 1 << ST_UNREGISTERING_OFFSET
+    private val ST_UNREGISTERING: Long        = 1L << ST_UNREGISTERING_OFFSET
 
     private val ST_UNREGISTERED_OFFSET: Long = 13
-    private val ST_UNREGISTERED: Long        = 1 << ST_UNREGISTERED_OFFSET
+    private val ST_UNREGISTERED: Long        = 1L << ST_UNREGISTERED_OFFSET
 
     private val ST_SHUTDOWNING_INBOUND_OFFSET: Long = 14
-    private val ST_SHUTDOWNING_INBOUND: Long        = 1 << ST_SHUTDOWNING_INBOUND_OFFSET
+    private val ST_SHUTDOWNING_INBOUND: Long        = 1L << ST_SHUTDOWNING_INBOUND_OFFSET
 
     private val ST_SHUTDOWNED_INBOUND_OFFSET: Long = 15
-    private val ST_SHUTDOWNED_INBOUND: Long        = 1 << ST_SHUTDOWNED_INBOUND_OFFSET
+    private val ST_SHUTDOWNED_INBOUND: Long        = 1L << ST_SHUTDOWNED_INBOUND_OFFSET
 
     private val ST_SHUTDOWNING_OUTBOUND_OFFSET: Long = 16
-    private val ST_SHUTDOWNING_OUTBOUND: Long        = 1 << ST_SHUTDOWNING_OUTBOUND_OFFSET
+    private val ST_SHUTDOWNING_OUTBOUND: Long        = 1L << ST_SHUTDOWNING_OUTBOUND_OFFSET
 
     private val ST_SHUTDOWNED_OUTBOUND_OFFSET: Long = 17
-    private val ST_SHUTDOWNED_OUTBOUND: Long        = 1 << ST_SHUTDOWNED_OUTBOUND_OFFSET
+    private val ST_SHUTDOWNED_OUTBOUND: Long        = 1L << ST_SHUTDOWNED_OUTBOUND_OFFSET
 
     private val ST_NEVER_ACTIVE_OFFSET: Long = 18
-    private val ST_NEVER_ACTIVE: Long        = 1 << ST_NEVER_ACTIVE_OFFSET
+    private val ST_NEVER_ACTIVE: Long        = 1L << ST_NEVER_ACTIVE_OFFSET
 
     private val ST_MOUNTED_OFFSET: Long = 19
-    private val ST_MOUNTED: Long        = 1 << ST_MOUNTED_OFFSET
+    private val ST_MOUNTED: Long        = 1L << ST_MOUNTED_OFFSET
 
     private val ST_OPENING_OFFSET: Long = 20
-    private val ST_OPENING: Long        = 1 << ST_OPENING_OFFSET
+    private val ST_OPENING: Long        = 1L << ST_OPENING_OFFSET
 
     private val ST_OPENED_OFFSET: Long = 21
-    private val ST_OPENED: Long        = 1 << ST_OPENED_OFFSET
-    // End channel lifecycle state
+    private val ST_OPENED: Long        = 1L << ST_OPENED_OFFSET
+    // End channel lifecycle state , 22 is connecting
 
     // state in ReadSink
     private val ST_READ_SOMETHING_OFFSET: Long = 20
-    private val ST_READ_SOMETHING: Long        = 1 << ST_READ_SOMETHING_OFFSET
+    private val ST_READ_SOMETHING: Long        = 1L << ST_READ_SOMETHING_OFFSET
 
     private val ST_CONTINUE_READING_OFFSET: Long = 21
-    private val ST_CONTINUE_READING: Long        = 1 << ST_CONTINUE_READING_OFFSET
+    private val ST_CONTINUE_READING: Long        = 1L << ST_CONTINUE_READING_OFFSET
 
     // end ReadSink
 
     private val ST_AUTO_READ_OFFSET: Long = 32
-    private val ST_AUTO_READ: Long        = 1 << ST_AUTO_READ_OFFSET
+    private val ST_AUTO_READ: Long        = 1L << ST_AUTO_READ_OFFSET
 
     private val ST_AUTO_CLOSE_OFFSET: Long = 33
-    private val ST_AUTO_CLOSE: Long        = 1 << ST_AUTO_CLOSE_OFFSET
+    private val ST_AUTO_CLOSE: Long        = 1L << ST_AUTO_CLOSE_OFFSET
 
     private val ST_ALLOW_HALF_CLOSURE_OFFSET: Long = 34
-    private val ST_ALLOW_HALF_CLOSURE: Long        = 1 << ST_ALLOW_HALF_CLOSURE_OFFSET
+    private val ST_ALLOW_HALF_CLOSURE: Long        = 1L << ST_ALLOW_HALF_CLOSURE_OFFSET
 
     private val ST_CLOSE_INITIATED_OFFSET: Long = 35
-    private val ST_CLOSE_INITIATED: Long        = 1 << ST_CLOSE_INITIATED_OFFSET
+    private val ST_CLOSE_INITIATED: Long        = 1L << ST_CLOSE_INITIATED_OFFSET
 
     private val ST_IN_WRITE_FLUSHED_OFFSET: Long = 36
-    private val ST_IN_WRITE_FLUSHED: Long        = 1 << ST_IN_WRITE_FLUSHED_OFFSET
+    private val ST_IN_WRITE_FLUSHED: Long        = 1L << ST_IN_WRITE_FLUSHED_OFFSET
 
     private val ST_INPUT_CLOSED_SEEN_ERROR_ON_READ_OFFSET: Long = 37
-    private val ST_INPUT_CLOSED_SEEN_ERROR_ON_READ: Long        = 1 << ST_INPUT_CLOSED_SEEN_ERROR_ON_READ_OFFSET
+    private val ST_INPUT_CLOSED_SEEN_ERROR_ON_READ: Long        = 1L << ST_INPUT_CLOSED_SEEN_ERROR_ON_READ_OFFSET
 
     private val ST_WRITABLE_OFFSET: Long = 38
-    private val ST_WRITABLE: Long        = 1 << ST_WRITABLE_OFFSET
+    private val ST_WRITABLE: Long        = 1L << ST_WRITABLE_OFFSET
 
     // Channel inflight state
     private val ST_OUTBOUND_HOL_OFFSET: Long = 39
-    private val ST_OUTBOUND_HOL: Long        = 1 << ST_OUTBOUND_HOL_OFFSET
+    private val ST_OUTBOUND_HOL: Long        = 1L << ST_OUTBOUND_HOL_OFFSET
 
     private val ST_INBOUND_HOL_OFFSET: Long = 40
-    private val ST_INBOUND_HOL: Long        = 1 << ST_INBOUND_HOL_OFFSET
+    private val ST_INBOUND_HOL: Long        = 1L << ST_INBOUND_HOL_OFFSET
 
     // End channel inflight state
 

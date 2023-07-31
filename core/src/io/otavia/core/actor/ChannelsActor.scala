@@ -118,6 +118,8 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
             e.channel.handleChannelReadCompletedEvent(e)
         case e: ReactorEvent.BindReply =>
             e.channel.handleChannelBindReplyEvent(e)
+        case e: ReactorEvent.ConnectReply =>
+            e.channel.handleChannelConnectReplyEvent(e)
 
     // Event from Reactor
 
@@ -253,7 +255,7 @@ object ChannelsActor {
     object Connect {
 
         def apply(host: String, port: Int): Connect = Connect(
-          InetSocketAddress.createUnresolved(host, port).nn
+          InetSocketAddress.createUnresolved(host, port)
         )
 
         def apply(host: InetAddress, port: Int): Connect = Connect(new InetSocketAddress(host, port))

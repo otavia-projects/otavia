@@ -16,23 +16,28 @@
 
 package io.otavia.core.util
 
+import java.lang.Long as JLong
+import scala.language.unsafeNulls
+
 trait CompressionBooleanLong {
 
     private var compression: Long = 0
 
-    protected final inline def setAt(position: Int, value: Boolean): Unit = {
-        val mask = 1 << position
+    final def setAt(position: Int, value: Boolean): Unit = {
+        val mask = 1L << position
         if (value) compression = compression | mask else compression = compression & (~mask)
     }
 
-    protected final inline def getAt(position: Int): Boolean = {
-        val mask = 1 << position
+    final def getAt(position: Int): Boolean = {
+        val mask = 1L << position
         (compression & mask) != 0
     }
 
-    protected final inline def set(mask: Long, value: Boolean): Unit =
+    protected final def set(mask: Long, value: Boolean): Unit =
         if (value) compression = (compression | mask) else compression = (compression & (~mask))
 
-    protected final inline def get(mask: Long): Boolean = (compression & mask) != 0
+    protected final def get(mask: Long): Boolean = (compression & mask) != 0
+
+    protected def toBinaryString(): String = JLong.toBinaryString(compression)
 
 }

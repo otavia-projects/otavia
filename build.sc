@@ -17,7 +17,7 @@
 import mill._, scalalib._, publish._
 import os.Path
 import mill.api.Result
-import $ivy.`io.github.otavia-projects::mill-rust_mill$MILL_BIN_PLATFORM:0.1.1-SNAPSHOT`
+import $ivy.`io.github.otavia-projects::mill-rust_mill$MILL_BIN_PLATFORM:0.2.3`
 import $ivy.`com.lihaoyi::mill-contrib-buildinfo:$MILL_VERSION`
 import mill.contrib.buildinfo.BuildInfo
 import io.github.otavia.jni.plugin.RustJniModule
@@ -346,7 +346,7 @@ object docs extends SiteModule {
 
     override def scalaVersion: T[String] = ProjectInfo.scalaVersion
 
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, examples)
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
 
     override def projectName: String = "otavia"
 

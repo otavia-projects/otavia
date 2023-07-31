@@ -26,7 +26,7 @@ trait ChannelInboundBuffer {
     private var firstAcc: Boolean                    = true
 
     private[core] def resetInboundBuffer(): Unit = {
-        accumulation = directAllocator.compose()
+        accumulation = ??? // directAllocator.compose()
         firstAcc = true
     }
 

@@ -57,8 +57,6 @@ trait BufferAllocator {
      */
     def isDirect: Boolean
 
-    def compose(): CompositeBuffer = ??? // TODO: remove
-
 }
 
 object BufferAllocator {
