@@ -30,10 +30,10 @@ import scala.language.unsafeNulls
 /** A Adaptive allocate and release memory [[Buffer]]. */
 class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
-    private var head: AdaptiveBuffer.BufferEntry | Null   = _
-    private var tail: AdaptiveBuffer.BufferEntry | Null   = _
-    private var woffIn: AdaptiveBuffer.BufferEntry | Null = _
-    private var totalEntry: Int                           = 0
+    private var head: AdaptiveBuffer.BufferEntry   = _
+    private var tail: AdaptiveBuffer.BufferEntry   = _
+    private var woffIn: AdaptiveBuffer.BufferEntry = _
+    private var totalEntry: Int                    = 0
 
     private var cap            = 0
     private var startOffset    = 0
@@ -47,9 +47,9 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     def setStrategy(adaptiveStrategy: AdaptiveStrategy): Unit = strategy = adaptiveStrategy
 
-    inline private def currentReaderEntry: AdaptiveBuffer.BufferEntry = head.nn
-    inline private def currentWriterEntry: AdaptiveBuffer.BufferEntry = woffIn.nn
-    inline private def tailEntry: AdaptiveBuffer.BufferEntry          = tail.nn
+    inline private def currentReaderEntry: AdaptiveBuffer.BufferEntry = head
+    inline private def currentWriterEntry: AdaptiveBuffer.BufferEntry = woffIn
+    inline private def tailEntry: AdaptiveBuffer.BufferEntry          = tail
     inline private def writerEntryIsNull: Boolean                     = woffIn == null
     inline private def currentReaderBuffer: Buffer                    = currentReaderEntry.buffer
     inline private def currentWriterBuffer: Buffer                    = currentWriterEntry.buffer

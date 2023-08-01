@@ -203,7 +203,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
                               ctx.isBufferHandlerContext,
                               s"buffered handler $handler can't add after no buffered handler ${ctx.handler}"
                             )
-                            setAdaptiveBuffer(newCtx, channel.headAllocator)
+                            setAdaptiveBuffer(newCtx, channel.heapAllocator)
                         }
                         handlers.insert(index, newCtx)
                         resetIndices()
@@ -234,7 +234,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
                           before.isBufferHandlerContext,
                           s"buffered handler $handler can't add after no buffered handler ${before.handler}"
                         )
-                        setAdaptiveBuffer(newCtx, channel.headAllocator)
+                        setAdaptiveBuffer(newCtx, channel.heapAllocator)
                     }
                     handlers.insert(index + 1, newCtx)
                     resetIndices()

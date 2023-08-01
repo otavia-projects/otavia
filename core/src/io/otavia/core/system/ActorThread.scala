@@ -16,6 +16,7 @@
 
 package io.otavia.core.system
 
+import io.otavia.buffer.{AbstractPageAllocator, BufferAllocator, DirectPageAllocator, HeapPageAllocator}
 import io.otavia.core.actor.Actor
 import io.otavia.core.address.{ActorAddress, ActorThreadAddress}
 import io.otavia.core.message.{Event, ResourceTimeoutEvent}
@@ -44,7 +45,16 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 
     @volatile private var status: Int = ST_STARTING
 
+    private val direct = new DirectPageAllocator()
+    private val heap   = new HeapPageAllocator()
+
     setName(s"otavia-actor-worker-$index")
+
+    /** A [[BufferAllocator]] which allocate heap memory. */
+    def directAllocator: AbstractPageAllocator = direct
+
+    /** A [[BufferAllocator]] which allocate heap memory. */
+    def heapAllocator: AbstractPageAllocator = heap
 
     def parent: ActorThreadPool = system.pool
 

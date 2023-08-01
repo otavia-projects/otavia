@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel
 
-import io.otavia.buffer.{Buffer, BufferAllocator}
+import io.otavia.buffer.{AbstractPageAllocator, Buffer, BufferAllocator}
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.address.ActorAddress
 import io.otavia.core.buffer.AdaptiveBuffer
@@ -168,9 +168,9 @@ trait Channel extends ChannelInflight, EventHandle, ChannelAddress {
     def pipeline: ChannelPipeline
 
     /** Return the assigned [[BufferAllocator]] which will be used to allocate [[Buffer]]s. */
-    final def directAllocator: BufferAllocator = executor.system.directAllocator
+    def directAllocator: AbstractPageAllocator
 
-    final def headAllocator: BufferAllocator = executor.system.headAllocator
+    def heapAllocator: AbstractPageAllocator
 
     final def write(msg: AnyRef): Unit = pipeline.write(msg)
 

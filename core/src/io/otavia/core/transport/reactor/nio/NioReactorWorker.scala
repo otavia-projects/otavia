@@ -77,7 +77,7 @@ class NioReactorWorker(
             try {
                 run()
             } catch {
-                case t: Throwable => logger.warn("Unexpected exception from an event executor:")
+                case t: Throwable => logger.warn("Unexpected exception from an event executor:", t)
             } finally {}
         })
     }

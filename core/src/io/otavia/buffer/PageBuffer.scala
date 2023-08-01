@@ -20,27 +20,31 @@ package io.otavia.buffer
 
 import io.otavia.buffer.PageBuffer.{ST_PAGE_ALLOCATABLE, ST_PAGE_ALLOCATED}
 
+import java.nio.ByteBuffer
+
 trait PageBuffer extends Buffer {
 
     private var parent: BufferAllocator = _
-    private var n: PageBuffer           = _
+    private var nxt: PageBuffer         = _
     private var status: Int             = ST_PAGE_ALLOCATABLE
 
     def setAllocator(allocator: BufferAllocator): Unit = parent = allocator
 
     def allocator: BufferAllocator = parent
 
-    def next_=(pageBuffer: PageBuffer): Unit = n = pageBuffer
+    def next_=(pageBuffer: PageBuffer): Unit = nxt = pageBuffer
 
     private[buffer] def setAllocated(): Unit = status = ST_PAGE_ALLOCATED
     private[buffer] def allocated: Boolean   = status == ST_PAGE_ALLOCATED
 
-    def next: PageBuffer = n
+    def next: PageBuffer = nxt
 
     override def close(): Unit = {
         parent.recycle(this)
         status = ST_PAGE_ALLOCATABLE
     }
+
+    private[otavia] def byteBuffer: ByteBuffer
 
 }
 

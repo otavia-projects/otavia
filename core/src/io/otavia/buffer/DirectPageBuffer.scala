@@ -25,6 +25,8 @@ class DirectPageBuffer(underlying: ByteBuffer) extends DirectBuffer(underlying) 
 
     override def close(): Unit = super.close()
 
+    override private[otavia] def byteBuffer = underlying
+
 }
 
 object DirectPageBuffer {

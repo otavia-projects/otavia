@@ -289,6 +289,6 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
 
     private def closeIfClosed(): Unit = if (!isOpen) closeTransport(newPromise())
 
-    override def toString: String = s"NetworkChannel(state=${getStateString()})"
+    override def toString: String = s"${getClass.getSimpleName}(id=${id}, state=${getStateString()})"
 
 }

@@ -27,7 +27,7 @@ import io.otavia.core.stack.StackState.FutureState
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 
-abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
+abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M | Connect] {
 
     protected def connect(host: String, port: Int): Unit = connect(InetSocketAddress.createUnresolved(host, port).nn)
 

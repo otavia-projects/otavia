@@ -18,16 +18,25 @@
 
 package io.otavia.core.transport.nio.channel
 
+import io.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
+import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import io.otavia.core.channel.{Channel, ChannelShutdownDirection}
 import io.otavia.core.message.ReactorEvent
+import io.otavia.core.transport.nio.channel.NioUnsafeDatagramChannel.NioDatagramChannelReadPlan
 
 import java.net.SocketAddress
 import java.nio.channels.{DatagramChannel, SelectableChannel}
+import scala.language.unsafeNulls
 
 class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readInterestOp: Int)
     extends AbstractNioUnsafeChannel[DatagramChannel](channel, ch, readInterestOp) {
 
     private var bound: Boolean = false
+
+    private var inputShutdown  = false
+    private var outputShutdown = false
+
+    setReadPlanFactory((channel: Channel) => new NioDatagramChannelReadPlan())
 
     override def unsafeBind(local: SocketAddress): Unit = {
         javaChannel.bind(local)
@@ -52,14 +61,67 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
 
     override def unsafeDisconnect(): Unit = ???
 
-    override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
+    override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = direction match
+        case ChannelShutdownDirection.Inbound  => inputShutdown = true
+        case ChannelShutdownDirection.Outbound => outputShutdown = true
 
     override def isOpen: Boolean = ch.isOpen
 
     override def isActive: Boolean = isOpen && bound
 
-    override def isShutdown(direction: ChannelShutdownDirection): Boolean = ???
+    override def isShutdown(direction: ChannelShutdownDirection): Boolean = if (!isActive) true
+    else {
+        direction match
+            case Inbound  => inputShutdown
+            case Outbound => outputShutdown
+    }
 
-    override protected def doReadNow(): Boolean = ???
+    override protected def doReadNow(): Boolean = {
+        val page                   = directAllocator.allocate()
+        val attempted              = page.writableBytes
+        var read: Int              = 0
+        var address: SocketAddress = null
+        try {
+            val byteBuffer = page.byteBuffer
+            address = ch.receive(page.byteBuffer)
+            read = byteBuffer.position()
+            if (address != null) processRead(attempted, read, 1)
+            else processRead(attempted, read, 0)
+        } catch {
+            case t: Throwable =>
+                unsafeClose()
+                executorAddress.inform(ReactorEvent.ChannelClose(channel, cause = Some(t)))
+        }
 
+        if (read > 0) {
+            executorAddress.inform(ReactorEvent.ReadBuffer(channel, page, address = Some(address)))
+            false
+        } else if (read == 0) {
+            page.close()
+            channel.directAllocator.recycle(page)
+            false
+        } else true
+    }
+
+}
+
+object NioUnsafeDatagramChannel {
+    class NioDatagramChannelReadPlan extends ReadPlan {
+
+        private var continue: Boolean = true
+
+        override def estimatedNextSize: Int = 0
+
+        override def lastRead(attemptedBytesRead: Int, actualBytesRead: Int, numMessagesRead: Int): Boolean = {
+            continue = attemptedBytesRead == actualBytesRead && actualBytesRead > 0
+            continue
+        }
+
+        override def readComplete(): Unit = {
+            continue = true
+        }
+
+        override def continueReading: Boolean = continue
+
+    }
 }

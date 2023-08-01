@@ -18,6 +18,7 @@
 
 package io.otavia.core.channel
 
+import io.otavia.buffer.{AbstractPageAllocator, BufferAllocator, DirectPageAllocator, HeapPageAllocator}
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.inflight.{FutureQueue, StackQueue}
@@ -65,6 +66,9 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     private var channelMsgId: Long = ChannelInflight.INVALID_CHANNEL_MESSAGE_ID
 
     protected var ongoingChannelPromise: ChannelPromise = _
+
+    private var direct: AbstractPageAllocator = _
+    private var heap: AbstractPageAllocator   = _
 
     // initial channel state on constructing
     created = true
@@ -194,10 +198,16 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     final private[core] def mount(channelsActor: ChannelsActor[?]): Unit = {
         assert(!mounted, s"The channel $this has been mounted already, you can't mount it twice!")
         actor = channelsActor
+        direct = ActorThread.currentThread().directAllocator
+        heap = ActorThread.currentThread().heapAllocator
         channelId = executor.generateChannelId()
         pipe = newChannelPipeline()
         mounted = true
     }
+
+    override def directAllocator: AbstractPageAllocator = direct
+
+    override def heapAllocator: AbstractPageAllocator = heap
 
     def unsafeChannel: AbstractUnsafeChannel = unsafe
 

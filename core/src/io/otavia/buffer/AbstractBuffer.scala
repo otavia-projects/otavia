@@ -26,14 +26,17 @@ import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
 import java.nio.charset.Charset
 import scala.language.unsafeNulls
 
-abstract class AbstractBuffer(protected val underlying: ByteBuffer) extends Buffer {
+abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
 
     protected var ridx: Int = 0
     protected var widx: Int = 0
 
+    override def toString: String = s"Buffer[ridx:${ridx}, widx:${widx}, cap:${capacity}]"
+
     override def readerOffset: Int = ridx
 
     override def readerOffset(offset: Int): Buffer = {
+        checkRead(offset, 0)
         ridx = offset
         this
     }
@@ -41,6 +44,7 @@ abstract class AbstractBuffer(protected val underlying: ByteBuffer) extends Buff
     override def writerOffset: Int = widx
 
     override def writerOffset(offset: Int): Buffer = {
+        checkWrite(offset, 0)
         widx = offset
         this
     }
@@ -48,12 +52,13 @@ abstract class AbstractBuffer(protected val underlying: ByteBuffer) extends Buff
     override def close(): Unit = {
         ridx = 0
         widx = 0
+        underlying.clear()
     }
 
     override def capacity: Int = underlying.capacity()
 
     override def fill(value: Byte): Buffer = {
-        underlying.limit(capacity)
+        underlying.clear()
         var i = 0
         while (i < capacity) {
             underlying.put(i, value)
@@ -63,7 +68,6 @@ abstract class AbstractBuffer(protected val underlying: ByteBuffer) extends Buff
     }
 
     override def copyInto(srcPos: Int, dest: Array[Byte], destPos: Int, length: Int): Unit = {
-        
         underlying.get(srcPos, dest, destPos, length)
     }
 
@@ -106,5 +110,22 @@ abstract class AbstractBuffer(protected val underlying: ByteBuffer) extends Buff
             read
         } else 0
     }
+
+    inline private def checkRead(index: Int, size: Int): Unit =
+        if (index < 0 || widx < index + size) throw outOfBounds(index, size)
+
+    inline private def checkGet(index: Int, size: Int): Unit =
+        if (index < 0 || capacity < index + size) throw outOfBounds(index, size)
+
+    inline private def checkWrite(index: Int, size: Int): Unit =
+        if (index < ridx || capacity < index + size) throw outOfBounds(index, size)
+
+    inline private def checkSet(index: Int, size: Int): Unit =
+        if (index < 0 || capacity < index + size) throw outOfBounds(index, size)
+
+    inline private def outOfBounds(index: Int, size: Int): IndexOutOfBoundsException =
+        new IndexOutOfBoundsException(
+          s"Access at index ${index} of size ${size} is out of bounds: [read 0 to ${widx}, write 0 to ${capacity}]."
+        )
 
 }

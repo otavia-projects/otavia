@@ -82,13 +82,7 @@ class NioSocketChannel1(socket: SocketChannel, protocolFamily: ProtocolFamily)
             case Outbound => outputShutdown
     }
 
-    override protected def doShutdown(direction: ChannelShutdownDirection): Unit = direction match
-        case Inbound =>
-            javaChannel.shutdownInput()
-            inputShutdown = true
-        case Outbound =>
-            javaChannel.shutdownOutput()
-            outputShutdown = true
+    override protected def doShutdown(direction: ChannelShutdownDirection): Unit = {}
 
     override protected def localAddress0: Option[SocketAddress] = Try {
         val address = javaChannel.getLocalAddress

@@ -50,7 +50,7 @@ trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundIn
     final def directAllocator(): BufferAllocator = channel.directAllocator
 
     /** Return the assigned [[BufferAllocator]] which will be used to allocate heap [[Buffer]]s. */
-    final def heapAllocator(): BufferAllocator = channel.headAllocator
+    final def heapAllocator(): BufferAllocator = channel.heapAllocator
 
     def isBufferHandlerContext: Boolean = false
 

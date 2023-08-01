@@ -19,7 +19,6 @@
 package io.otavia.buffer
 
 import sun.misc.Unsafe
-import sun.nio.ch.DirectBuffer as JDirectBuffer
 
 import java.nio.ByteBuffer
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
@@ -28,12 +27,12 @@ import scala.language.unsafeNulls
 
 class DirectBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
 
-    private val address: Long = underlying.asInstanceOf[JDirectBuffer].address()
+    // private val address: Long = underlying.asInstanceOf[JDirectBuffer].address()
 
-    override def fill(value: Byte): Buffer = {
-        Util.Unsafe.setMemory(address, capacity, value)
-        this
-    }
+    // override def fill(value: Byte): Buffer = {
+    //     Util.Unsafe.setMemory(address, capacity, value)
+    //     this
+    // }
 
     override def isDirect: Boolean = true
 

@@ -16,11 +16,14 @@
 
 package io.otavia.core.message
 
+import io.otavia.buffer.{Buffer, PageBuffer}
 import io.otavia.core.cache.ResourceTimer
 import io.otavia.core.channel.Channel
 import io.otavia.core.message.{Event, TimerEvent}
 import io.otavia.core.stack.BlockPromise
 import io.otavia.core.util.Nextable
+
+import java.net.SocketAddress
 
 /** Event for [[io.otavia.core.actor.Actor]] */
 sealed abstract class Event extends Nextable
@@ -64,6 +67,8 @@ enum ReactorEvent extends Event {
     case ReadCompletedEvent(channel: Channel, cause: Option[Throwable] = None)
 
     case AcceptedEvent(channel: Channel, accepted: Channel)
+
+    case ReadBuffer(channel: Channel, buffer: PageBuffer, address: Option[SocketAddress] = None)
 
     case ExceptionEvent(channel: Channel, cause: Throwable)
 

@@ -18,14 +18,24 @@
 
 package io.otavia.core.transport.nio.channel
 
+import io.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
+import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import io.otavia.core.channel.{Channel, ChannelShutdownDirection}
 import io.otavia.core.message.ReactorEvent
+import io.otavia.core.transport.nio.channel.NioUnsafeSocketChannel.NioSocketChannelReadPlan
 
 import java.net.SocketAddress
+import java.nio.ByteBuffer
 import java.nio.channels.{SelectableChannel, SelectionKey, SocketChannel}
+import scala.language.unsafeNulls
 
 class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp: Int)
     extends AbstractNioUnsafeChannel[SocketChannel](channel, ch, readInterestOp) {
+
+    private var inputShutdown  = false
+    private var outputShutdown = false
+
+    setReadPlanFactory((channel: Channel) => new NioSocketChannelReadPlan())
 
     override def unsafeBind(local: SocketAddress): Unit = try {
         javaChannel.bind(local)
@@ -63,14 +73,68 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
 
     override def unsafeDisconnect(): Unit = ???
 
-    override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = ???
+    override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = direction match
+        case Inbound =>
+            javaChannel.shutdownInput()
+            inputShutdown = true
+        case Outbound =>
+            javaChannel.shutdownOutput()
+            outputShutdown = true
 
     override def isOpen: Boolean = ch.isOpen
 
     override def isActive: Boolean = ch.isOpen && ch.isConnected
 
-    override def isShutdown(direction: ChannelShutdownDirection): Boolean = ???
+    override def isShutdown(direction: ChannelShutdownDirection): Boolean = if (!isActive) true
+    else {
+        direction match
+            case Inbound  => inputShutdown
+            case Outbound => outputShutdown
+    }
 
-    override protected def doReadNow(): Boolean = ???
+    override protected def doReadNow(): Boolean = {
+        val page      = directAllocator.allocate()
+        val attempted = page.writableBytes
+        var read: Int = 0
+        try {
+            read = page.transferFrom(ch, attempted)
+            processRead(attempted, read, 1)
+        } catch {
+            case t: Throwable =>
+                unsafeClose()
+                executorAddress.inform(ReactorEvent.ChannelClose(channel, cause = Some(t)))
+        }
 
+        if (read > 0) {
+            executorAddress.inform(ReactorEvent.ReadBuffer(channel, page))
+            false
+        } else if (read == 0) {
+            page.close()
+            channel.directAllocator.recycle(page)
+            false
+        } else true
+
+    }
+
+}
+
+object NioUnsafeSocketChannel {
+    class NioSocketChannelReadPlan extends ReadPlan {
+
+        private var continue: Boolean = true
+
+        override def estimatedNextSize: Int = 0
+
+        override def lastRead(attemptedBytesRead: Int, actualBytesRead: Int, numMessagesRead: Int): Boolean = {
+            continue = attemptedBytesRead == actualBytesRead && actualBytesRead > 0
+            continue
+        }
+
+        override def readComplete(): Unit = {
+            continue = true
+        }
+
+        override def continueReading: Boolean = continue
+
+    }
 }

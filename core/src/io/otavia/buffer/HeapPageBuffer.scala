@@ -21,7 +21,11 @@ package io.otavia.buffer
 import java.nio.ByteBuffer
 import scala.language.unsafeNulls
 
-class HeapPageBuffer(byteBuffer: ByteBuffer) extends HeapBuffer(byteBuffer) with PageBuffer {}
+class HeapPageBuffer(underlying: ByteBuffer) extends HeapBuffer(underlying) with PageBuffer {
+
+    override private[otavia] def byteBuffer = underlying
+
+}
 
 object HeapPageBuffer {
 
