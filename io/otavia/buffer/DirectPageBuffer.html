@@ -184,12 +184,12 @@ node7 -> node6;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="bytesBefore-fffff04d" data-f-keywords="override" data-f-inherited="DirectBuffer">
+        <div class="documentableElement" id="bytesBefore-f35" data-f-keywords="override" data-f-inherited="AbstractBuffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DirectPageBuffer.html#bytesBefore-fffff04d" t="n" class="documentableName ">bytesBefore</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">needle</span>: <a href="Buffer.html" t="t">Buffer</a>): <span data-unresolved-link="" t="t">Int</span>
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DirectPageBuffer.html#bytesBefore-f35" t="n" class="documentableName ">bytesBefore</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">needle</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>]): <span data-unresolved-link="" t="t">Int</span>
            </div>
           </div>
          </div>
@@ -199,12 +199,12 @@ node7 -> node6;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Get the number of <a href="DirectBuffer.html#readableBytes-0">readableBytes</a>, until the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> is found in this buffer. The found offset will be the offset into this buffer, relative to its <a href="DirectBuffer.html#readerOffset-fffff113">readerOffset</a>, of the first byte of a sequence that matches all readable bytes in the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> buffer. If the needle is not found, -1 is returned.</p> 
+             <p>Get the number of <a href="AbstractBuffer.html#readableBytes-0">readableBytes</a>, until the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> is found in this buffer. The found offset will be the offset into this buffer, relative to its <a href="AbstractBuffer.html#readerOffset-fffff113">readerOffset</a>, of the first byte of a sequence that matches all readable bytes in the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> buffer. If the needle is not found, -1 is returned.</p> 
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Get the number of <a href="DirectBuffer.html#readableBytes-0">readableBytes</a>, until the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> is found in this buffer. The found offset will be the offset into this buffer, relative to its <a href="DirectBuffer.html#readerOffset-fffff113">readerOffset</a>, of the first byte of a sequence that matches all readable bytes in the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> buffer. If the needle is not found, -1 is returned.</p> 
-              <p>This method does not modify the <a href="DirectBuffer.html#readerOffset-fffff113">readerOffset</a> or the <a href="DirectBuffer.html#writerOffset-fffff113">writerOffset</a>.</p> 
+              <p>Get the number of <a href="AbstractBuffer.html#readableBytes-0">readableBytes</a>, until the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> is found in this buffer. The found offset will be the offset into this buffer, relative to its <a href="AbstractBuffer.html#readerOffset-fffff113">readerOffset</a>, of the first byte of a sequence that matches all readable bytes in the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> buffer. If the needle is not found, -1 is returned.</p> 
+              <p>This method does not modify the <a href="AbstractBuffer.html#readerOffset-fffff113">readerOffset</a> or the <a href="AbstractBuffer.html#writerOffset-fffff113">writerOffset</a>.</p> 
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
@@ -221,21 +221,98 @@ node7 -> node6;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>The offset, relative to the current <a href="DirectBuffer.html#readerOffset-fffff113">readerOffset</a>, of the found value, or -1 if none was found.</p> 
+               <p>The offset, relative to the current <a href="AbstractBuffer.html#readerOffset-fffff113">readerOffset</a>, of the found value, or -1 if none was found.</p> 
               </dd>
               <dt class="body-small">
                Definition Classes
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#bytesBefore-fffff04d">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="AbstractBuffer.html#bytesBefore-f35">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
                Inherited from:
               </dt>
               <dd class="body-medium">
-               <a href="DirectBuffer.html#bytesBefore-fffff04d">DirectBuffer</a>
+               <a href="AbstractBuffer.html#bytesBefore-f35">AbstractBuffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="bytesBefore-fffffbe7" data-f-keywords="override" data-f-inherited="AbstractBuffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DirectPageBuffer.html#bytesBefore-fffffbe7" t="n" class="documentableName ">bytesBefore</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">needle1</span>: <span data-unresolved-link="" t="t">Byte</span>, <span t="k"></span><span data-unresolved-link="" t="n">needle2</span>: <span data-unresolved-link="" t="t">Byte</span>, <span t="k"></span><span data-unresolved-link="" t="n">needle3</span>: <span data-unresolved-link="" t="t">Byte</span>, <span t="k"></span><span data-unresolved-link="" t="n">needle4</span>: <span data-unresolved-link="" t="t">Byte</span>): <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Get the number of <a href="AbstractBuffer.html#readableBytes-0">readableBytes</a>, until the given <span data-unresolved-link="" title="Problem linking needle1: No DRI found for query">needle1</span>,<span data-unresolved-link="" title="Problem linking needle2: No DRI found for query">needle2</span>,<span data-unresolved-link="" title="Problem linking needle3: No DRI found for query">needle3</span> bytes is found in this buffer. If the needle is not found, -1 is returned.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Get the number of <a href="AbstractBuffer.html#readableBytes-0">readableBytes</a>, until the given <span data-unresolved-link="" title="Problem linking needle1: No DRI found for query">needle1</span>,<span data-unresolved-link="" title="Problem linking needle2: No DRI found for query">needle2</span>,<span data-unresolved-link="" title="Problem linking needle3: No DRI found for query">needle3</span> bytes is found in this buffer. If the needle is not found, -1 is returned.</p> 
+              <p>This method does not modify the <a href="AbstractBuffer.html#readerOffset-fffff113">readerOffset</a> or the <a href="AbstractBuffer.html#writerOffset-fffff113">writerOffset</a>.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               needle1
+              </dt>
+              <dd class="body-medium">
+               <p>The first byte value to search for.</p> 
+              </dd>
+              <dt class="body-small">
+               needle2
+              </dt>
+              <dd class="body-medium">
+               <p>The second byte value to search for.</p> 
+              </dd>
+              <dt class="body-small">
+               needle3
+              </dt>
+              <dd class="body-medium">
+               <p>The third byte value to search for.</p> 
+              </dd>
+              <dt class="body-small">
+               needle4
+              </dt>
+              <dd class="body-medium">
+               <p>The fourth byte value to search for.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>The offset, relative to the current <a href="AbstractBuffer.html#readerOffset-fffff113">readerOffset</a>, of the found value, or -1 if none was found.</p> 
+              </dd>
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="AbstractBuffer.html#bytesBefore-fffffbe7">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="AbstractBuffer.html#bytesBefore-fffffbe7">AbstractBuffer</a>
               </dd>
              </dl>
             </div>
@@ -299,7 +376,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#bytesBefore-fffff6b7">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#bytesBefore-fffff6b7">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -364,7 +441,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#bytesBefore-fffff587">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#bytesBefore-fffff587">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -423,7 +500,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#bytesBefore-857">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#bytesBefore-857">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -958,7 +1035,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#ensureWritable-fffff49a">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#ensureWritable-fffff49a">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -1116,7 +1193,7 @@ node7 -> node6;
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
-               ridx
+               idx
               </dt>
               <dd class="body-medium">
                <p>The read offset, an absolute offset into this buffer, to read from.</p> 
@@ -1146,7 +1223,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#getByte-fffffb37">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#getByte-fffffb37">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -1215,7 +1292,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#getChar-fffffd85">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#getChar-fffffd85">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -1284,7 +1361,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#getDouble-640">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#getDouble-640">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -1353,7 +1430,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#getFloat-fffffe0d">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#getFloat-fffffe0d">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -1422,7 +1499,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#getInt-fffffbe0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#getInt-fffffbe0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -1491,7 +1568,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#getLong-fffff0ab">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#getLong-fffff0ab">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -1560,7 +1637,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#getMedium-fffffbe0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#getMedium-fffffbe0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -1629,7 +1706,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#getShort-fffff02d">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#getShort-fffff02d">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -1698,7 +1775,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#getUnsignedByte-fffffbe0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#getUnsignedByte-fffffbe0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -1767,7 +1844,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#getUnsignedInt-fffff0ab">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#getUnsignedInt-fffff0ab">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -1836,7 +1913,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#getUnsignedMedium-fffffbe0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#getUnsignedMedium-fffffbe0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -1905,7 +1982,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#getUnsignedShort-fffffbe0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#getUnsignedShort-fffffbe0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -2090,7 +2167,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#openCursor-fffffd78">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#openCursor-fffffd78">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -2166,7 +2243,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#openReverseCursor-fffffd78">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#openReverseCursor-fffffd78">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -2320,7 +2397,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#readByte-0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#readByte-0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -2390,7 +2467,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#readBytes-fffffc48">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#readBytes-fffffc48">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -2449,7 +2526,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#readBytes-fffff36c">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#readBytes-fffff36c">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -2509,7 +2586,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#readChar-0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#readChar-0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -2584,7 +2661,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#readCharSequence-fffff956">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#readCharSequence-fffff956">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -2644,7 +2721,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#readDouble-0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#readDouble-0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -2704,7 +2781,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#readFloat-0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#readFloat-0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -2764,7 +2841,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#readInt-0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#readInt-0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -2824,7 +2901,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#readLong-0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#readLong-0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -2884,7 +2961,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#readMedium-0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#readMedium-0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -2944,7 +3021,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#readShort-0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#readShort-0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -3004,7 +3081,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#readUnsignedByte-0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#readUnsignedByte-0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -3064,7 +3141,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#readUnsignedInt-0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#readUnsignedInt-0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -3124,7 +3201,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#readUnsignedMedium-0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#readUnsignedMedium-0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -3184,7 +3261,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#readUnsignedShort-0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#readUnsignedShort-0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -3554,7 +3631,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#setByte-fffff303">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#setByte-fffff303">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -3629,7 +3706,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#setChar-8f5">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#setChar-8f5">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -3704,7 +3781,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#setDouble-fffffdda">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#setDouble-fffffdda">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -3779,7 +3856,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#setFloat-ffffff6d">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#setFloat-ffffff6d">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -3854,7 +3931,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#setInt-fffff43a">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#setInt-fffff43a">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -3929,7 +4006,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#setLong-fffffb0f">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#setLong-fffffb0f">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -4004,7 +4081,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#setMedium-fffff43a">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#setMedium-fffff43a">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -4079,7 +4156,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#setShort-fffff94d">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#setShort-fffff94d">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -4154,7 +4231,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#setUnsignedByte-fffff43a">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#setUnsignedByte-fffff43a">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -4229,7 +4306,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#setUnsignedInt-fffffb0f">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#setUnsignedInt-fffffb0f">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -4304,7 +4381,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#setUnsignedMedium-fffff43a">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#setUnsignedMedium-fffff43a">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -4379,7 +4456,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#setUnsignedShort-fffff43a">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#setUnsignedShort-fffff43a">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -4963,7 +5040,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeByte-fffff14a">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeByte-fffff14a">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -5022,7 +5099,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeBytes-fffff36c">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeBytes-fffff36c">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -5142,7 +5219,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeBytes-fffffc48">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeBytes-fffffc48">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -5200,7 +5277,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeBytes-fffff2c0">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeBytes-fffff2c0">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -5269,7 +5346,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeChar-73c">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeChar-73c">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -5333,7 +5410,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeCharSequence-6cb">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeCharSequence-6cb">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -5402,7 +5479,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeDouble-661">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeDouble-661">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -5471,7 +5548,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeFloat-a06">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeFloat-a06">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -5540,7 +5617,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeInt-fffff113">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeInt-fffff113">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -5609,7 +5686,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeLong-956">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeLong-956">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -5678,7 +5755,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeMedium-fffff113">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeMedium-fffff113">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -5747,7 +5824,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeShort-3e6">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeShort-3e6">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -5816,7 +5893,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeUnsignedByte-fffff113">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeUnsignedByte-fffff113">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -5885,7 +5962,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeUnsignedInt-956">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeUnsignedInt-956">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -5954,7 +6031,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeUnsignedMedium-fffff113">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeUnsignedMedium-fffff113">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
@@ -6023,7 +6100,7 @@ node7 -> node6;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="DirectBuffer.html#writeUnsignedShort-fffff113">DirectBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="DirectBuffer.html#writeUnsignedShort-fffff113">DirectBuffer</a> -&gt; <a href="AbstractBuffer.html">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">

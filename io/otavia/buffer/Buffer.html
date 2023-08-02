@@ -326,12 +326,75 @@ node13 -> node0;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="bytesBefore-fffff04d">
+        <div class="documentableElement" id="bytesBefore-fffffbe7">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Buffer.html#bytesBefore-fffff04d" t="n" class="documentableName ">bytesBefore</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">needle</span>: <a href="Buffer.html" t="t">Buffer</a>): <span data-unresolved-link="" t="t">Int</span>
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Buffer.html#bytesBefore-fffffbe7" t="n" class="documentableName ">bytesBefore</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">needle1</span>: <span data-unresolved-link="" t="t">Byte</span>, <span t="k"></span><span data-unresolved-link="" t="n">needle2</span>: <span data-unresolved-link="" t="t">Byte</span>, <span t="k"></span><span data-unresolved-link="" t="n">needle3</span>: <span data-unresolved-link="" t="t">Byte</span>, <span t="k"></span><span data-unresolved-link="" t="n">needle4</span>: <span data-unresolved-link="" t="t">Byte</span>): <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Get the number of <a href="Buffer.html#readableBytes-0">readableBytes</a>, until the given <span data-unresolved-link="" title="Problem linking needle1: No DRI found for query">needle1</span>,<span data-unresolved-link="" title="Problem linking needle2: No DRI found for query">needle2</span>,<span data-unresolved-link="" title="Problem linking needle3: No DRI found for query">needle3</span> bytes is found in this buffer. If the needle is not found, -1 is returned.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Get the number of <a href="Buffer.html#readableBytes-0">readableBytes</a>, until the given <span data-unresolved-link="" title="Problem linking needle1: No DRI found for query">needle1</span>,<span data-unresolved-link="" title="Problem linking needle2: No DRI found for query">needle2</span>,<span data-unresolved-link="" title="Problem linking needle3: No DRI found for query">needle3</span> bytes is found in this buffer. If the needle is not found, -1 is returned.</p> 
+              <p>This method does not modify the <a href="Buffer.html#readerOffset-fffff113">readerOffset</a> or the <a href="Buffer.html#writerOffset-fffff113">writerOffset</a>.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               needle1
+              </dt>
+              <dd class="body-medium">
+               <p>The first byte value to search for.</p> 
+              </dd>
+              <dt class="body-small">
+               needle2
+              </dt>
+              <dd class="body-medium">
+               <p>The second byte value to search for.</p> 
+              </dd>
+              <dt class="body-small">
+               needle3
+              </dt>
+              <dd class="body-medium">
+               <p>The third byte value to search for.</p> 
+              </dd>
+              <dt class="body-small">
+               needle4
+              </dt>
+              <dd class="body-medium">
+               <p>The fourth byte value to search for.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>The offset, relative to the current <a href="Buffer.html#readerOffset-fffff113">readerOffset</a>, of the found value, or -1 if none was found.</p> 
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="bytesBefore-f35">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Buffer.html#bytesBefore-f35" t="n" class="documentableName ">bytesBefore</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">needle</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>]): <span data-unresolved-link="" t="t">Int</span>
            </div>
           </div>
          </div>
@@ -796,7 +859,7 @@ node13 -> node0;
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Buffer.html#getByte-fffffb37" t="n" class="documentableName ">getByte</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">ridx</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Byte</span>
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Buffer.html#getByte-fffffb37" t="n" class="documentableName ">getByte</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">idx</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Byte</span>
            </div>
           </div>
          </div>
@@ -815,7 +878,7 @@ node13 -> node0;
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
-               ridx
+               idx
               </dt>
               <dd class="body-medium">
                <p>The read offset, an absolute offset into this buffer, to read from.</p> 
