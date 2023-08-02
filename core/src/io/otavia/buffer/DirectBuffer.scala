@@ -56,8 +56,6 @@ class DirectBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
 
     override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int = ???
 
-    override def bytesBefore(needle: Buffer): Int = ???
-
     override def openCursor(fromOffset: Int, length: Int): ByteCursor = ???
 
     override def openReverseCursor(fromOffset: Int, length: Int): ByteCursor = ???

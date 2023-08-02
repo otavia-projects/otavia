@@ -473,6 +473,24 @@ trait Buffer {
      */
     def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int
 
+    /** Get the number of [[readableBytes]], until the given [[needle1]],[[needle2]],[[needle3]] bytes is found in this
+     *  buffer. If the needle is not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param needle1
+     *    The first byte value to search for.
+     *  @param needle2
+     *    The second byte value to search for.
+     *  @param needle3
+     *    The third byte value to search for.
+     *  @param needle4
+     *    The fourth byte value to search for.
+     *  @return
+     *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
+     */
+    def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte, needle4: Byte): Int
+
     /** Get the number of [[readableBytes]], until the given [[needle]] is found in this buffer. The found offset will
      *  be the offset into this buffer, relative to its [[readerOffset]], of the first byte of a sequence that matches
      *  all readable bytes in the given [[needle]] buffer. If the needle is not found, -1 is returned.
@@ -484,7 +502,7 @@ trait Buffer {
      *  @return
      *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
      */
-    def bytesBefore(needle: Buffer): Int
+    def bytesBefore(needle: Array[Byte]): Int
 
     /** Opens a cursor to iterate the given number bytes of this buffer, starting at the given offset. The
      *  [[readerOffset]] and [[writerOffset]] are not modified by the cursor. <p> Care should be taken to ensure that
@@ -619,14 +637,14 @@ trait Buffer {
     /** Get the byte value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
      *  two's complement 8-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param ridx
+     *  @param idx
      *    The read offset, an absolute offset into this buffer, to read from.
      *  @return
      *    The byte value at the given offset.
      *  @throws IndexOutOfBoundsException
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus 1.
      */
-    def getByte(ridx: Int): Byte
+    def getByte(idx: Int): Byte
 
     /** Read the boolean value at the current [[readerOffset]], and increases the reader offset by
      *  [[java.lang.Byte.BYTES]]. A boolean gets read as a byte from this buffer. All byte values which are not equal to

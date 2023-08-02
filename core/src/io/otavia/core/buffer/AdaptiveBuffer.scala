@@ -240,7 +240,7 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     override def bytesBefore(needle: Byte): Int = ???
 
-    override def bytesBefore(needle: Buffer): Int = ???
+    override def bytesBefore(needle: Array[Byte]): Int = ???
 
     override def openCursor(fromOffset: Int, length: Int): ByteCursor = ???
 
@@ -380,6 +380,8 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
     override def bytesBefore(needle1: Byte, needle2: Byte): Int = ???
 
     override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int = ???
+
+    override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte, needle4: Byte): Int = ???
 
 }
 
