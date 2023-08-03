@@ -19,6 +19,7 @@
 package io.otavia.buffer
 
 import java.io.IOException
+import java.lang.{Double as JDouble, Float as JFloat, Long as JLong, Short as JShort}
 import java.nio.ByteBuffer
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
 import java.nio.charset.Charset
@@ -689,7 +690,7 @@ trait Buffer {
      *  written as a byte to this buffer. All byte values which are not equal to zero are considered as the boolean
      *  value true, zero represents false.
      *
-     *  @param woff
+     *  @param index
      *    The write offset, an absolute offset into this buffer to write to.
      *  @param value
      *    The boolean value to write.
@@ -699,7 +700,7 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Byte.BYTES]].
      */
-    def setBoolean(woff: Int, value: Boolean): Buffer = setByte(woff, (if (value) 1 else 0).toByte)
+    def setBoolean(index: Int, value: Boolean): Buffer = setByte(index, (if (value) 1 else 0).toByte)
 
     /** Read the unsigned byte value at the current [[readerOffset]], and increases the reader offset by
      *  [[java.lang.Byte.BYTES]]. The value is read using an unsigned two's complement 8-bit encoding, in
@@ -715,7 +716,7 @@ trait Buffer {
     /** Get the unsigned byte value at the given reader offset. The [[readerOffset]] is not modified. The value is read
      *  using an unsigned two's complement 8-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param roff
+     *  @param index
      *    The read offset, an absolute offset into this buffer, to read from.
      *  @return
      *    The unsigned byte value at the given offset.
@@ -723,7 +724,7 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Byte.BYTES]].
      */
-    def getUnsignedByte(roff: Int): Int
+    def getUnsignedByte(index: Int): Int
 
     /** Write the given byte value at the current [[writerOffset]], and increase the writer offset by
      *  [[java.lang.Byte.BYTES]]. The value is written using a two's complement 8-bit encoding, in
@@ -742,7 +743,7 @@ trait Buffer {
     /** Set the given byte value at the given write offset. The [[writerOffset]] is not modified. The value is written
      *  using a two's complement 8-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param woff
+     *  @param index
      *    The write offset, an absolute offset into this buffer to write to.
      *  @param value
      *    The byte value to write.
@@ -752,7 +753,7 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Byte.BYTES]].
      */
-    def setByte(woff: Int, value: Byte): Buffer
+    def setByte(index: Int, value: Byte): Buffer
 
     /** Write the given unsigned byte value at the current [[writerOffset]], and increase the writer offset by
      *  [[java.lang.Byte.BYTES]]. The value is written using an unsigned two's complement 8-bit encoding, in
@@ -771,7 +772,7 @@ trait Buffer {
     /** Set the given unsigned byte value at the given write offset. The [[writerOffset]] is not modified. The value is
      *  written using an unsigned two's complement 8-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param woff
+     *  @param index
      *    The write offset, an absolute offset into this buffer to write to.
      *  @param value
      *    The int value to write.
@@ -781,7 +782,7 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Byte.BYTES]].
      */
-    def setUnsignedByte(woff: Int, value: Int): Buffer
+    def setUnsignedByte(index: Int, value: Int): Buffer
 
     /** Read the char value at the current [[readerOffset]], and increases the reader offset by 2. The value is read
      *  using a 2-byte UTF-16 encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
@@ -796,14 +797,14 @@ trait Buffer {
     /** Get the char value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
      *  2-byte UTF-16 encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param roff
+     *  @param index
      *    The read offset, an absolute offset into this buffer, to read from.
      *  @return
      *    The char value at the given offset.
      *  @throws IndexOutOfBoundsException
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus 2.
      */
-    def getChar(roff: Int): Char
+    def getChar(index: Int): Char
 
     /** Write the given char value at the current [[writerOffset]], and increase the writer offset by 2. The value is
      *  written using a 2-byte UTF-16 encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
@@ -820,7 +821,7 @@ trait Buffer {
     /** Set the given char value at the given write offset. The [[writerOffset]] is not modified. The value is written
      *  using a 2-byte UTF-16 encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param woff
+     *  @param index
      *    The write offset, an absolute offset into this buffer to write to.
      *  @param value
      *    The char value to write.
@@ -829,7 +830,7 @@ trait Buffer {
      *  @throws IndexOutOfBoundsException
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus 2.
      */
-    def setChar(woff: Int, value: Char): Buffer
+    def setChar(index: Int, value: Char): Buffer
 
     /** Read the short value at the current [[readerOffset]], and increases the reader offset by
      *  [[java.lang.Short.BYTES]] [[java.lang.Short.BYTES]]. The value is read using a two's complement 16-bit encoding,
@@ -842,10 +843,21 @@ trait Buffer {
      */
     def readShort: Short
 
+    /** Read the short value at the current [[readerOffset]], and increases the reader offset by
+     *  [[java.lang.Short.BYTES]] [[java.lang.Short.BYTES]]. The value is read using a two's complement 16-bit encoding,
+     *  in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @return
+     *    The short value at the current reader offset.
+     *  @throws IndexOutOfBoundsException
+     *    If [[readableBytes]] is less than [[java.lang.Short.BYTES]].
+     */
+    final def readShortLE: Short = JShort.reverseBytes(readShort)
+
     /** Get the short value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
      *  two's complement 16-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param roff
+     *  @param index
      *    The read offset, an absolute offset into this buffer, to read from.
      *  @return
      *    The short value at the given offset.
@@ -853,7 +865,20 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Short.BYTES]].
      */
-    def getShort(roff: Int): Short
+    def getShort(index: Int): Short
+
+    /** Get the short value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
+     *  two's complement 16-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @return
+     *    The short value at the given offset.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Short.BYTES]].
+     */
+    final def getShortLE(index: Int): Short = JShort.reverseBytes(getShort(index))
 
     /** Read the unsigned short value at the current [[readerOffset]], and increases the reader offset by
      *  [[java.lang.Short.BYTES]]. The value is read using an unsigned two's complement 16-bit encoding, in
@@ -866,10 +891,21 @@ trait Buffer {
      */
     def readUnsignedShort: Int
 
+    /** Read the unsigned short value at the current [[readerOffset]], and increases the reader offset by
+     *  [[java.lang.Short.BYTES]]. The value is read using an unsigned two's complement 16-bit encoding, in
+     *  [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @return
+     *    The unsigned short value at the current reader offset.
+     *  @throws IndexOutOfBoundsException
+     *    If [[readableBytes]] is less than [[java.lang.Short.BYTES]].
+     */
+    final def readUnsignedShortLE: Int = readShortLE & 0xffff
+
     /** Get the unsigned short value at the given reader offset. The [[readerOffset]] is not modified. The value is read
      *  using an unsigned two's complement 16-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param roff
+     *  @param index
      *    The read offset, an absolute offset into this buffer, to read from.
      *  @return
      *    The unsigned short value at the given offset.
@@ -877,7 +913,20 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Short.BYTES]].
      */
-    def getUnsignedShort(roff: Int): Int
+    def getUnsignedShort(index: Int): Int
+
+    /** Get the unsigned short value at the given reader offset. The [[readerOffset]] is not modified. The value is read
+     *  using an unsigned two's complement 16-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @return
+     *    The unsigned short value at the given offset.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Short.BYTES]].
+     */
+    final def getUnsignedShortLE(index: Int): Int = getShortLE(index) & 0xffff
 
     /** Write the given short value at the current [[writerOffset]], and increase the writer offset by
      *  [[java.lang.Short.BYTES]]. The value is written using a two's complement 16-bit encoding, in
@@ -893,10 +942,24 @@ trait Buffer {
      */
     def writeShort(value: Short): Buffer
 
+    /** Write the given short value at the current [[writerOffset]], and increase the writer offset by
+     *  [[java.lang.Short.BYTES]]. The value is written using a two's complement 16-bit encoding, in
+     *  [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param value
+     *    The short value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    If [[writableBytes]] is less than [[java.lang.Short.BYTES]], and the [[capacity]] buffer capacity cannot be
+     *    automatically increased.
+     */
+    final def writeShortLE(value: Short): Buffer = writeShort(JShort.reverseBytes(value))
+
     /** Set the given short value at the given write offset. The [[writerOffset]] is not modified. The value is written
      *  using a two's complement 16-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param woff
+     *  @param index
      *    The write offset, an absolute offset into this buffer to write to.
      *  @param value
      *    The short value to write.
@@ -906,7 +969,22 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Short.BYTES]].
      */
-    def setShort(woff: Int, value: Short): Buffer
+    def setShort(index: Int, value: Short): Buffer
+
+    /** Set the given short value at the given write offset. The [[writerOffset]] is not modified. The value is written
+     *  using a two's complement 16-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The write offset, an absolute offset into this buffer to write to.
+     *  @param value
+     *    The short value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Short.BYTES]].
+     */
+    final def setShortLE(index: Int, value: Short): Buffer = setShort(index, JShort.reverseBytes(value))
 
     /** Write the given unsigned short value at the current [[writerOffset]], and increase the writer offset by
      *  [[java.lang.Short.BYTES]]. The value is written using an unsigned two's complement 16-bit encoding, in
@@ -922,10 +1000,24 @@ trait Buffer {
      */
     def writeUnsignedShort(value: Int): Buffer
 
+    /** Write the given unsigned short value at the current [[writerOffset]], and increase the writer offset by
+     *  [[java.lang.Short.BYTES]]. The value is written using an unsigned two's complement 16-bit encoding, in
+     *  [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param value
+     *    The int value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    If [[writableBytes]] is less than [[java.lang.Short.BYTES]], and the [[capacity]] buffer capacity cannot be
+     *    automatically increased.
+     */
+    final def writeUnsignedShortLE(value: Int): Buffer = writeShort(JShort.reverseBytes((value & 0xffff).toShort))
+
     /** Set the given unsigned short value at the given write offset. The [[writerOffset]] is not modified. The value is
      *  written using an unsigned two's complement 16-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param woff
+     *  @param index
      *    The write offset, an absolute offset into this buffer to write to.
      *  @param value
      *    The int value to write.
@@ -935,7 +1027,23 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Short.BYTES]].
      */
-    def setUnsignedShort(woff: Int, value: Int): Buffer
+    def setUnsignedShort(index: Int, value: Int): Buffer
+
+    /** Set the given unsigned short value at the given write offset. The [[writerOffset]] is not modified. The value is
+     *  written using an unsigned two's complement 16-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The write offset, an absolute offset into this buffer to write to.
+     *  @param value
+     *    The int value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Short.BYTES]].
+     */
+    final def setUnsignedShortLE(index: Int, value: Int): Buffer =
+        setShort(index, JShort.reverseBytes((value & 0xffff).toShort))
 
     /** Read the int value at the current [[readerOffset]], and increases the reader offset by 3. The value is read
      *  using a two's complement 24-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
@@ -947,17 +1055,39 @@ trait Buffer {
      */
     def readMedium: Int
 
+    /** Read the int value at the current [[readerOffset]], and increases the reader offset by 3. The value is read
+     *  using a two's complement 24-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @return
+     *    The int value at the current reader offset.
+     *  @throws IndexOutOfBoundsException
+     *    If [[readableBytes]] is less than 3.
+     */
+    def readMediumLE: Int
+
     /** Get the int value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
      *  two's complement 24-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param roff
+     *  @param index
      *    The read offset, an absolute offset into this buffer, to read from.
      *  @return
      *    The int value at the given offset.
      *  @throws IndexOutOfBoundsException
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus 3.
      */
-    def getMedium(roff: Int): Int
+    def getMedium(index: Int): Int
+
+    /** Get the int value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
+     *  two's complement 24-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @return
+     *    The int value at the given offset.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus 3.
+     */
+    def getMediumLE(index: Int): Int
 
     /** Read the unsigned int value at the current [[readerOffset]], and increases the reader offset by 3. The value is
      *  read using an unsigned two's complement 24-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
@@ -969,17 +1099,39 @@ trait Buffer {
      */
     def readUnsignedMedium: Int
 
+    /** Read the unsigned int value at the current [[readerOffset]], and increases the reader offset by 3. The value is
+     *  read using an unsigned two's complement 24-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @return
+     *    The unsigned int value at the current reader offset.
+     *  @throws IndexOutOfBoundsException
+     *    If [[readableBytes]] is less than 3.
+     */
+    def readUnsignedMediumLE: Int
+
     /** Get the unsigned int value at the given reader offset. The [[readerOffset]] is not modified. The value is read
      *  using an unsigned two's complement 24-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param roff
+     *  @param index
      *    The read offset, an absolute offset into this buffer, to read from.
      *  @return
      *    The unsigned int value at the given offset.
      *  @throws IndexOutOfBoundsException
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus 3.
      */
-    def getUnsignedMedium(roff: Int): Int
+    def getUnsignedMedium(index: Int): Int
+
+    /** Get the unsigned int value at the given reader offset. The [[readerOffset]] is not modified. The value is read
+     *  using an unsigned two's complement 24-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @return
+     *    The unsigned int value at the given offset.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus 3.
+     */
+    def getUnsignedMediumLE(index: Int): Int
 
     /** Write the given int value at the current [[writerOffset]], and increase the writer offset by 3. The value is
      *  written using a two's complement 24-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
@@ -993,10 +1145,22 @@ trait Buffer {
      */
     def writeMedium(value: Int): Buffer
 
+    /** Write the given int value at the current [[writerOffset]], and increase the writer offset by 3. The value is
+     *  written using a two's complement 24-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param value
+     *    The int value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    If [[writableBytes]] is less than 3, and the [[capacity]] buffer capacity cannot be automatically increased.
+     */
+    def writeMediumLE(value: Int): Buffer
+
     /** Set the given int value at the given write offset. The [[writerOffset]] is not modified. The value is written
      *  using a two's complement 24-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param woff
+     *  @param index
      *    The write offset, an absolute offset into this buffer to write to.
      *  @param value
      *    The int value to write.
@@ -1005,7 +1169,21 @@ trait Buffer {
      *  @throws IndexOutOfBoundsException
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus 3.
      */
-    def setMedium(woff: Int, value: Int): Buffer
+    def setMedium(index: Int, value: Int): Buffer
+
+    /** Set the given int value at the given write offset. The [[writerOffset]] is not modified. The value is written
+     *  using a two's complement 24-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The write offset, an absolute offset into this buffer to write to.
+     *  @param value
+     *    The int value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus 3.
+     */
+    def setMediumLE(index: Int, value: Int): Buffer
 
     /** Write the given unsigned int value at the current [[writerOffset]], and increase the writer offset by 3. The
      *  value is written using an unsigned two's complement 24-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte
@@ -1020,10 +1198,23 @@ trait Buffer {
      */
     def writeUnsignedMedium(value: Int): Buffer
 
+    /** Write the given unsigned int value at the current [[writerOffset]], and increase the writer offset by 3. The
+     *  value is written using an unsigned two's complement 24-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]]
+     *  byte order.
+     *
+     *  @param value
+     *    The int value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    If [[writableBytes]] is less than 3, and the [[capacity]] buffer capacity cannot be automatically increased.
+     */
+    def writeUnsignedMediumLE(value: Int): Buffer
+
     /** Set the given unsigned int value at the given write offset. The [[writerOffset]] is not modified. The value is
      *  written using an unsigned two's complement 24-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param woff
+     *  @param index
      *    The write offset, an absolute offset into this buffer to write to.
      *  @param value
      *    The int value to write.
@@ -1032,7 +1223,21 @@ trait Buffer {
      *  @throws IndexOutOfBoundsException
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus 3.
      */
-    def setUnsignedMedium(woff: Int, value: Int): Buffer
+    def setUnsignedMedium(index: Int, value: Int): Buffer
+
+    /** Set the given unsigned int value at the given write offset. The [[writerOffset]] is not modified. The value is
+     *  written using an unsigned two's complement 24-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The write offset, an absolute offset into this buffer to write to.
+     *  @param value
+     *    The int value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus 3.
+     */
+    def setUnsignedMediumLE(index: Int, value: Int): Buffer
 
     /** Read the int value at the current [[readerOffset]], and increases the reader offset by
      *  [[java.lang.Integer.BYTES]]. The value is read using a two's complement 32-bit encoding, in
@@ -1045,10 +1250,21 @@ trait Buffer {
      */
     def readInt: Int
 
+    /** Read the int value at the current [[readerOffset]], and increases the reader offset by
+     *  [[java.lang.Integer.BYTES]]. The value is read using a two's complement 32-bit encoding, in
+     *  [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @return
+     *    The int value at the current reader offset.
+     *  @throws IndexOutOfBoundsException
+     *    If [[readableBytes]] is less than [[java.lang.Integer.BYTES]].
+     */
+    final def readIntLE: Int = Integer.reverseBytes(readInt)
+
     /** Get the int value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
      *  two's complement 32-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param roff
+     *  @param index
      *    The read offset, an absolute offset into this buffer, to read from.
      *  @return
      *    The int value at the given offset.
@@ -1056,7 +1272,20 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Integer.BYTES]].
      */
-    def getInt(roff: Int): Int
+    def getInt(index: Int): Int
+
+    /** Get the int value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
+     *  two's complement 32-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @return
+     *    The int value at the given offset.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Integer.BYTES]].
+     */
+    final def getIntLE(index: Int): Int = Integer.reverseBytes(getInt(index))
 
     /** Read the unsigned int value at the current [[readerOffset]], and increases the reader offset by
      *  [[java.lang.Integer.BYTES]]. The value is read using an unsigned two's complement 32-bit encoding, in
@@ -1069,10 +1298,21 @@ trait Buffer {
      */
     def readUnsignedInt: Long
 
+    /** Read the unsigned int value at the current [[readerOffset]], and increases the reader offset by
+     *  [[java.lang.Integer.BYTES]]. The value is read using an unsigned two's complement 32-bit encoding, in
+     *  [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @return
+     *    The unsigned int value at the current reader offset.
+     *  @throws IndexOutOfBoundsException
+     *    If [[readableBytes]] is less than [[java.lang.Integer.BYTES]].
+     */
+    final def readUnsignedIntLE: Long = readIntLE & 0xffffffffL
+
     /** Get the unsigned int value at the given reader offset. The [[readerOffset]] is not modified. The value is read
      *  using an unsigned two's complement 32-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param roff
+     *  @param index
      *    The read offset, an absolute offset into this buffer, to read from.
      *  @return
      *    The unsigned int value at the given offset.
@@ -1080,7 +1320,20 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Integer.BYTES]].
      */
-    def getUnsignedInt(roff: Int): Long
+    def getUnsignedInt(index: Int): Long
+
+    /** Get the unsigned int value at the given reader offset. The [[readerOffset]] is not modified. The value is read
+     *  using an unsigned two's complement 32-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @return
+     *    The unsigned int value at the given offset.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Integer.BYTES]].
+     */
+    final def getUnsignedIntLE(index: Int): Long = getIntLE(index) & 0xffffffffL
 
     /** Write the given int value at the current [[writerOffset]], and increase the writer offset by
      *  [[java.lang.Integer.BYTES]]. The value is written using a two's complement 32-bit encoding, in
@@ -1096,10 +1349,24 @@ trait Buffer {
      */
     def writeInt(value: Int): Buffer
 
+    /** Write the given int value at the current [[writerOffset]], and increase the writer offset by
+     *  [[java.lang.Integer.BYTES]]. The value is written using a two's complement 32-bit encoding, in
+     *  [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param value
+     *    The int value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    If [[writableBytes]] is less than [[java.lang.Integer.BYTES]], and the [[capacity]] buffer capacity cannot be
+     *    automatically increased.
+     */
+    final def writeIntLE(value: Int): Buffer = writeInt(Integer.reverseBytes(value))
+
     /** Set the given int value at the given write offset. The [[writerOffset]] is not modified. The value is written
      *  using a two's complement 32-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param woff
+     *  @param index
      *    The write offset, an absolute offset into this buffer to write to.
      *  @param value
      *    The int value to write.
@@ -1109,7 +1376,22 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Integer.BYTES]].
      */
-    def setInt(woff: Int, value: Int): Buffer
+    def setInt(index: Int, value: Int): Buffer
+
+    /** Set the given int value at the given write offset. The [[writerOffset]] is not modified. The value is written
+     *  using a two's complement 32-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The write offset, an absolute offset into this buffer to write to.
+     *  @param value
+     *    The int value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Integer.BYTES]].
+     */
+    final def setIntLE(index: Int, value: Int): Buffer = setInt(index, Integer.reverseBytes(value))
 
     /** Write the given unsigned int value at the current [[writerOffset]], and increase the writer offset by
      *  [[java.lang.Integer.BYTES]]. The value is written using an unsigned two's complement 32-bit encoding, in
@@ -1125,10 +1407,24 @@ trait Buffer {
      */
     def writeUnsignedInt(value: Long): Buffer
 
+    /** Write the given unsigned int value at the current [[writerOffset]], and increase the writer offset by
+     *  [[java.lang.Integer.BYTES]]. The value is written using an unsigned two's complement 32-bit encoding, in
+     *  [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param value
+     *    The long value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    If [[writableBytes]] is less than [[java.lang.Integer.BYTES]], and the [[capacity]] buffer capacity cannot be
+     *    automatically increased.
+     */
+    final def writeUnsignedIntLE(value: Long): Buffer = writeIntLE((value & 0xffffffffL).toInt)
+
     /** Set the given unsigned int value at the given write offset. The [[writerOffset]] is not modified. The value is
      *  written using an unsigned two's complement 32-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param woff
+     *  @param index
      *    The write offset, an absolute offset into this buffer to write to.
      *  @param value
      *    The long value to write.
@@ -1138,7 +1434,22 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Integer.BYTES]].
      */
-    def setUnsignedInt(woff: Int, value: Long): Buffer
+    def setUnsignedInt(index: Int, value: Long): Buffer
+
+    /** Set the given unsigned int value at the given write offset. The [[writerOffset]] is not modified. The value is
+     *  written using an unsigned two's complement 32-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The write offset, an absolute offset into this buffer to write to.
+     *  @param value
+     *    The long value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Integer.BYTES]].
+     */
+    def setUnsignedIntLE(index: Int, value: Long): Buffer = setIntLE(index, (value & 0xffffffffL).toInt)
 
     /** Read the float value at the current [[readerOffset]], and increases the reader offset by
      *  [[java.lang.Float.BYTES]]. The value is read using a 32-bit IEEE floating point encoding, in
@@ -1151,10 +1462,21 @@ trait Buffer {
      */
     def readFloat: Float
 
+    /** Read the float value at the current [[readerOffset]], and increases the reader offset by
+     *  [[java.lang.Float.BYTES]]. The value is read using a 32-bit IEEE floating point encoding, in
+     *  [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @return
+     *    The float value at the current reader offset.
+     *  @throws IndexOutOfBoundsException
+     *    If [[readableBytes]] is less than [[java.lang.Float.BYTES]].
+     */
+    final def readFloatLE: Float = JFloat.intBitsToFloat(readIntLE)
+
     /** Get the float value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
      *  32-bit IEEE floating point encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param roff
+     *  @param index
      *    The read offset, an absolute offset into this buffer, to read from.
      *  @return
      *    The float value at the given offset.
@@ -1162,7 +1484,20 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Float.BYTES]].
      */
-    def getFloat(roff: Int): Float
+    def getFloat(index: Int): Float
+
+    /** Get the float value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
+     *  32-bit IEEE floating point encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @return
+     *    The float value at the given offset.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Float.BYTES]].
+     */
+    final def getFloatLE(index: Int): Float = JFloat.intBitsToFloat(getIntLE(index))
 
     /** Write the given float value at the current [[writerOffset]], and increase the writer offset by
      *  [[java.lang.Float.BYTES]]. The value is written using a 32-bit IEEE floating point encoding, in
@@ -1178,10 +1513,24 @@ trait Buffer {
      */
     def writeFloat(value: Float): Buffer
 
+    /** Write the given float value at the current [[writerOffset]], and increase the writer offset by
+     *  [[java.lang.Float.BYTES]]. The value is written using a 32-bit IEEE floating point encoding, in
+     *  [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param value
+     *    The float value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    If [[writableBytes]] is less than [[java.lang.Float.BYTES]], and the [[capacity]] buffer capacity cannot be
+     *    automatically increased.
+     */
+    final def writeFloatLE(value: Float): Buffer = writeIntLE(JFloat.floatToIntBits(value))
+
     /** Set the given float value at the given write offset. The [[writerOffset]] is not modified. The value is written
      *  using a 32-bit IEEE floating point encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param woff
+     *  @param index
      *    The write offset, an absolute offset into this buffer to write to.
      *  @param value
      *    The float value to write.
@@ -1191,7 +1540,22 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Float.BYTES]].
      */
-    def setFloat(woff: Int, value: Float): Buffer
+    def setFloat(index: Int, value: Float): Buffer
+
+    /** Set the given float value at the given write offset. The [[writerOffset]] is not modified. The value is written
+     *  using a 32-bit IEEE floating point encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The write offset, an absolute offset into this buffer to write to.
+     *  @param value
+     *    The float value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Float.BYTES]].
+     */
+    def setFloatLE(index: Int, value: Float): Buffer = setIntLE(index, JFloat.floatToIntBits(value))
 
     /** Read the long value at the current [[readerOffset]], and increases the reader offset by [[java.lang.Long.BYTES]]
      *  [[java.lang.Long.BYTES]]. The value is read using a two's complement 64-bit encoding, in
@@ -1204,10 +1568,21 @@ trait Buffer {
      */
     def readLong: Long
 
+    /** Read the long value at the current [[readerOffset]], and increases the reader offset by [[java.lang.Long.BYTES]]
+     *  [[java.lang.Long.BYTES]]. The value is read using a two's complement 64-bit encoding, in
+     *  [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @return
+     *    The long value at the current reader offset.
+     *  @throws IndexOutOfBoundsException
+     *    If [[readableBytes]] is less than [[java.lang.Long.BYTES]].
+     */
+    final def readLongLE: Long = JLong.reverseBytes(readLong)
+
     /** Get the long value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
      *  two's complement 64-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param roff
+     *  @param index
      *    The read offset, an absolute offset into this buffer, to read from.
      *  @return
      *    The long value at the given offset.
@@ -1215,7 +1590,20 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Long.BYTES]].
      */
-    def getLong(roff: Int): Long
+    def getLong(index: Int): Long
+
+    /** Get the long value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
+     *  two's complement 64-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @return
+     *    The long value at the given offset.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Long.BYTES]].
+     */
+    final def getLongLE(index: Int): Long = JLong.reverseBytes(getLong(index))
 
     /** Write the given long value at the current [[writerOffset]], and increase the writer offset by
      *  [[java.lang.Long.BYTES]]. The value is written using a two's complement 64-bit encoding, in
@@ -1231,10 +1619,24 @@ trait Buffer {
      */
     def writeLong(value: Long): Buffer
 
+    /** Write the given long value at the current [[writerOffset]], and increase the writer offset by
+     *  [[java.lang.Long.BYTES]]. The value is written using a two's complement 64-bit encoding, in
+     *  [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param value
+     *    The long value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    If [[writableBytes]] is less than [[java.lang.Long.BYTES]], and the [[capacity]] buffer capacity cannot be
+     *    automatically increased.
+     */
+    final def writeLongLE(value: Long): Buffer = writeLong(JLong.reverseBytes(value))
+
     /** Set the given long value at the given write offset. The [[writerOffset]] is not modified. The value is written
      *  using a two's complement 64-bit encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param woff
+     *  @param index
      *    The write offset, an absolute offset into this buffer to write to.
      *  @param value
      *    The long value to write.
@@ -1244,7 +1646,22 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Long.BYTES]].
      */
-    def setLong(woff: Int, value: Long): Buffer
+    def setLong(index: Int, value: Long): Buffer
+
+    /** Set the given long value at the given write offset. The [[writerOffset]] is not modified. The value is written
+     *  using a two's complement 64-bit encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The write offset, an absolute offset into this buffer to write to.
+     *  @param value
+     *    The long value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Long.BYTES]].
+     */
+    def setLongLE(index: Int, value: Long): Buffer = setLong(index, JLong.reverseBytes(value))
 
     /** Read the double value at the current [[readerOffset]], and increases the reader offset by
      *  [[java.lang.Double.BYTES]]. The value is read using a 64-bit IEEE floating point encoding, in
@@ -1257,10 +1674,21 @@ trait Buffer {
      */
     def readDouble: Double
 
+    /** Read the double value at the current [[readerOffset]], and increases the reader offset by
+     *  [[java.lang.Double.BYTES]]. The value is read using a 64-bit IEEE floating point encoding, in
+     *  [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @return
+     *    The double value at the current reader offset.
+     *  @throws IndexOutOfBoundsException
+     *    If [[readableBytes]] is less than [[java.lang.Double.BYTES]].
+     */
+    final def readDoubleLE: Double = JDouble.longBitsToDouble(readLongLE)
+
     /** Get the double value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
      *  64-bit IEEE floating point encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param roff
+     *  @param index
      *    The read offset, an absolute offset into this buffer, to read from.
      *  @return
      *    The double value at the given offset.
@@ -1268,7 +1696,20 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Double.BYTES]].
      */
-    def getDouble(roff: Int): Double
+    def getDouble(index: Int): Double
+
+    /** Get the double value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
+     *  64-bit IEEE floating point encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @return
+     *    The double value at the given offset.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Double.BYTES]].
+     */
+    final def getDoubleLE(index: Int): Double = JDouble.longBitsToDouble(getLongLE(index))
 
     /** Write the given double value at the current [[writerOffset]], and increase the writer offset by
      *  [[java.lang.Double.BYTES]]. The value is written using a 64-bit IEEE floating point encoding, in
@@ -1284,10 +1725,24 @@ trait Buffer {
      */
     def writeDouble(value: Double): Buffer
 
+    /** Write the given double value at the current [[writerOffset]], and increase the writer offset by
+     *  [[java.lang.Double.BYTES]]. The value is written using a 64-bit IEEE floating point encoding, in
+     *  [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param value
+     *    The double value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    If [[writableBytes]] is less than [[java.lang.Double.BYTES]], and the [[capacity]] buffer capacity cannot be
+     *    automatically increased.
+     */
+    final def writeDoubleLE(value: Double): Buffer = writeLongLE(JDouble.doubleToRawLongBits(value))
+
     /** Set the given double value at the given write offset. The [[writerOffset]] is not modified. The value is written
      *  using a 64-bit IEEE floating point encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
-     *  @param woff
+     *  @param index
      *    The write offset, an absolute offset into this buffer to write to.
      *  @param value
      *    The double value to write.
@@ -1297,7 +1752,22 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Double.BYTES]].
      */
-    def setDouble(woff: Int, value: Double): Buffer
+    def setDouble(index: Int, value: Double): Buffer
+
+    /** Set the given double value at the given write offset. The [[writerOffset]] is not modified. The value is written
+     *  using a 64-bit IEEE floating point encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The write offset, an absolute offset into this buffer to write to.
+     *  @param value
+     *    The double value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Double.BYTES]].
+     */
+    final def setDoubleLE(index: Int, value: Double): Buffer = setLongLE(index, JDouble.doubleToRawLongBits(value))
 
 }
 

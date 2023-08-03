@@ -265,99 +265,115 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     override def readByte: Byte = ???
 
-    override def getByte(roff: Int): Byte = ???
+    override def getByte(index: Int): Byte = ???
 
     override def readUnsignedByte: Int = ???
 
-    override def getUnsignedByte(roff: Int): Int = ???
+    override def getUnsignedByte(index: Int): Int = ???
 
     override def writeByte(value: Byte): Buffer = ???
 
-    override def setByte(woff: Int, value: Byte): Buffer = ???
+    override def setByte(index: Int, value: Byte): Buffer = ???
 
     override def writeUnsignedByte(value: Int): Buffer = ???
 
-    override def setUnsignedByte(woff: Int, value: Int): Buffer = ???
+    override def setUnsignedByte(index: Int, value: Int): Buffer = ???
 
     override def readChar: Char = ???
 
-    override def getChar(roff: Int): Char = ???
+    override def getChar(index: Int): Char = ???
 
     override def writeChar(value: Char): Buffer = ???
 
-    override def setChar(woff: Int, value: Char): Buffer = ???
+    override def setChar(index: Int, value: Char): Buffer = ???
 
     override def readShort: Short = ???
 
-    override def getShort(roff: Int): Short = ???
+    override def getShort(index: Int): Short = ???
 
     override def readUnsignedShort: Int = ???
 
-    override def getUnsignedShort(roff: Int): Int = ???
+    override def getUnsignedShort(index: Int): Int = ???
 
     override def writeShort(value: Short): Buffer = ???
 
-    override def setShort(woff: Int, value: Short): Buffer = ???
+    override def setShort(index: Int, value: Short): Buffer = ???
 
     override def writeUnsignedShort(value: Int): Buffer = ???
 
-    override def setUnsignedShort(woff: Int, value: Int): Buffer = ???
+    override def setUnsignedShort(index: Int, value: Int): Buffer = ???
 
     override def readMedium: Int = ???
 
-    override def getMedium(roff: Int): Int = ???
+    override def readMediumLE: Int = ???
+
+    override def getMedium(index: Int): Int = ???
+
+    override def getMediumLE(index: Int): Int = ???
 
     override def readUnsignedMedium: Int = ???
 
-    override def getUnsignedMedium(roff: Int): Int = ???
+    override def readUnsignedMediumLE: Int = ???
+
+    override def getUnsignedMedium(index: Int): Int = ???
+
+    override def getUnsignedMediumLE(index: Int): Int = ???
 
     override def writeMedium(value: Int): Buffer = ???
 
-    override def setMedium(woff: Int, value: Int): Buffer = ???
+    override def writeMediumLE(value: Int): Buffer = ???
+
+    override def setMedium(index: Int, value: Int): Buffer = ???
+
+    override def setMediumLE(index: Int, value: Int): Buffer = ???
 
     override def writeUnsignedMedium(value: Int): Buffer = ???
 
-    override def setUnsignedMedium(woff: Int, value: Int): Buffer = ???
+    override def writeUnsignedMediumLE(value: Int): Buffer = ???
+
+    override def setUnsignedMedium(index: Int, value: Int): Buffer = ???
+
+    override def setUnsignedMediumLE(index: Int, value: Int): Buffer = ???
 
     override def readInt: Int = ???
 
-    override def getInt(roff: Int): Int = ???
+    override def getInt(index: Int): Int = ???
 
     override def readUnsignedInt: Long = ???
 
-    override def getUnsignedInt(roff: Int): Long = ???
+    override def getUnsignedInt(index: Int): Long = ???
 
     override def writeInt(value: Int): Buffer = ???
 
-    override def setInt(woff: Int, value: Int): Buffer = ???
+    override def setInt(index: Int, value: Int): Buffer = ???
 
     override def writeUnsignedInt(value: Long): Buffer = ???
 
-    override def setUnsignedInt(woff: Int, value: Long): Buffer = ???
+    override def setUnsignedInt(index: Int, value: Long): Buffer = ???
 
     override def readFloat: Float = ???
 
-    override def getFloat(roff: Int): Float = ???
+    override def getFloat(index: Int): Float = ???
 
     override def writeFloat(value: Float): Buffer = ???
 
-    override def setFloat(woff: Int, value: Float): Buffer = ???
+    override def setFloat(index: Int, value: Float): Buffer = ???
 
     override def readLong: Long = ???
 
-    override def getLong(roff: Int): Long = ???
+    override def getLong(index: Int): Long = ???
 
     override def writeLong(value: Long): Buffer = ???
 
-    override def setLong(woff: Int, value: Long): Buffer = ???
+    override def setLong(index: Int, value: Long): Buffer = ???
 
     override def readDouble: Double = ???
 
-    override def getDouble(roff: Int): Double = ???
+    override def getDouble(index: Int): Double = ???
 
     override def writeDouble(value: Double): Buffer = ???
 
-    override def setDouble(woff: Int, value: Double): Buffer = ???
+    override def setDouble(index: Int, value: Double): Buffer = ???
 
     override def toString: String = s"AdaptiveBuffer[roff:$roff, woff:$woff, cap:$cap, count:$totalEntry]"
 
