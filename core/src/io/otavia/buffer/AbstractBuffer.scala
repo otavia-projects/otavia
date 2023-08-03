@@ -518,6 +518,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         if (length > 0) {
             underlying.position(ridx)
             if (length > readableBytes) underlying.limit(ridx + readableBytes) else underlying.limit(ridx + length)
+            underlying.clear()
             val write = channel.write(underlying)
             if (write > 0) skipReadableBytes(write)
             write
@@ -528,6 +529,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         if (length > 0) {
             underlying.position(widx)
             if (length > writableBytes) underlying.limit(widx + writableBytes) else underlying.limit(widx + length)
+            underlying.clear()
             val read = channel.read(underlying, position)
             if (read > 0) skipWritableBytes(read)
             read
@@ -538,6 +540,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         if (length > 0) {
             underlying.position(widx)
             if (length > writableBytes) underlying.limit(widx + writableBytes) else underlying.limit(widx + length)
+            underlying.clear()
             val read = channel.read(underlying)
             if (read > 0) skipWritableBytes(read)
             read
