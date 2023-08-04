@@ -24,6 +24,7 @@ import io.otavia.core.channel.{Channel, ChannelShutdownDirection}
 import io.otavia.core.message.ReactorEvent
 import io.otavia.core.transport.nio.channel.NioUnsafeDatagramChannel.NioDatagramChannelReadPlan
 
+import java.io.IOException
 import java.net.SocketAddress
 import java.nio.channels.{DatagramChannel, SelectableChannel}
 import scala.language.unsafeNulls
@@ -37,6 +38,12 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
     private var outputShutdown = false
 
     setReadPlanFactory((channel: Channel) => new NioDatagramChannelReadPlan())
+
+    override def localAddress: SocketAddress = try {
+        javaChannel.getLocalAddress
+    } catch {
+        case e: IOException => null
+    }
 
     override def unsafeBind(local: SocketAddress): Unit = {
         javaChannel.bind(local)
@@ -94,7 +101,9 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
         }
 
         if (read > 0) {
-            executorAddress.inform(ReactorEvent.ReadBuffer(channel, page, address = Some(address)))
+            executorAddress.inform(
+              ReactorEvent.ReadBuffer(channel, page, sender = Some(address), recipient = localAddress)
+            )
             false
         } else if (read == 0) {
             page.close()

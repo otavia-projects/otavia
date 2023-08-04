@@ -68,7 +68,7 @@ enum ReactorEvent extends Event {
 
     case AcceptedEvent(channel: Channel, accepted: Channel)
 
-    case ReadBuffer(channel: Channel, buffer: PageBuffer, address: Option[SocketAddress] = None)
+    case ReadBuffer(channel: Channel, buffer: PageBuffer, sender: Option[SocketAddress] = None, recipient: SocketAddress)
 
     case ExceptionEvent(channel: Channel, cause: Throwable)
 

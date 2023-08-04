@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package io.otavia.core.channel.socket
+package io.otavia.core.channel.message
 
 import io.otavia.buffer.Buffer
 import io.otavia.core.channel.message.AdaptiveBufferRange
-import io.otavia.core.channel.udp.AddressedEnvelope
 
 import java.net.SocketAddress
 
-class DatagramAdaptiveRangePacket(
-    override val content: AdaptiveBufferRange,
-    override val recipient: SocketAddress,
-    override val sender: Option[SocketAddress] = None
-) extends AddressedEnvelope[AdaptiveBufferRange, SocketAddress]
+case class DatagramAdaptiveRangePacket(
+    start: Int,
+    length: Int,
+    recipient: SocketAddress,
+    sender: Option[SocketAddress] = None
+) extends AdaptiveBufferMessage

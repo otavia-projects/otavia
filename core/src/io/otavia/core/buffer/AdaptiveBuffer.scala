@@ -16,7 +16,7 @@
 
 package io.otavia.core.buffer
 
-import io.otavia.buffer.{Buffer, BufferAllocator, ByteCursor}
+import io.otavia.buffer.*
 import io.otavia.core.buffer.AdaptiveBuffer.AdaptiveStrategy
 import io.otavia.core.cache.{PerThreadObjectPool, Poolable}
 import io.otavia.core.util.Chainable
@@ -27,19 +27,26 @@ import java.nio.charset.Charset
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-/** A Adaptive allocate and release memory [[Buffer]]. */
-class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
+/** A Adaptive allocate and release memory [[PageBuffer]]. This type of [[Buffer]]
+ *
+ *  @param allocator
+ *    [[PageBufferAllocator]] of this [[AdaptiveBuffer]]
+ */
+class AdaptiveBuffer(val allocator: PageBufferAllocator) extends Buffer {
 
-    private var head: AdaptiveBuffer.BufferEntry   = _
-    private var tail: AdaptiveBuffer.BufferEntry   = _
-    private var woffIn: AdaptiveBuffer.BufferEntry = _
-    private var totalEntry: Int                    = 0
+    private val buffers: mutable.ArrayDeque[PageBuffer] = mutable.ArrayDeque.empty[PageBuffer]
 
-    private var cap            = 0
-    private var startOffset    = 0
-    private var roff           = 0
-    private var woff           = 0
-    private def endOffset: Int = startOffset + cap
+    private var head: PageBuffer   = _
+    private var tail: PageBuffer   = _
+    private var woffIn: PageBuffer = _
+
+    /** count of [[PageBuffer]] */
+    private var count: Int = 0
+
+    private var startOffset = 0
+
+    private var ridx = 0
+    private var widx = 0
 
     private var closed = false
 
@@ -47,110 +54,86 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     def setStrategy(adaptiveStrategy: AdaptiveStrategy): Unit = strategy = adaptiveStrategy
 
-    inline private def currentReaderEntry: AdaptiveBuffer.BufferEntry = head
-    inline private def currentWriterEntry: AdaptiveBuffer.BufferEntry = woffIn
-    inline private def tailEntry: AdaptiveBuffer.BufferEntry          = tail
-    inline private def writerEntryIsNull: Boolean                     = woffIn == null
-    inline private def currentReaderBuffer: Buffer                    = currentReaderEntry.buffer
-    inline private def currentWriterBuffer: Buffer                    = currentWriterEntry.buffer
-
-    inline private def offsetIn(offset: Int): AdaptiveBuffer.BufferEntry | Null = if (head != null) {
+    inline private def offsetIn(offset: Int): PageBuffer = if (head != null) {
         if (offset < startOffset) null
         else {
             var cursor    = head
-            var endOffset = startOffset + currentReaderBuffer.capacity
+            var endOffset = startOffset + head.capacity
             while (endOffset <= offset && cursor != null) {
-                val entry: AdaptiveBuffer.BufferEntry = cursor.asInstanceOf[AdaptiveBuffer.BufferEntry]
-                endOffset += entry.buffer.capacity
+                val entry: PageBuffer = cursor
+                endOffset += entry.capacity
                 cursor = entry.next
             }
             cursor
         }
     } else null
 
-    private def offsetInOffset(offset: Int): (AdaptiveBuffer.BufferEntry | Null, Int) = if (head != null) {
+    private def offsetInOffset(offset: Int): (PageBuffer, Int) = if (head != null) {
         if (offset < startOffset) (null, 0)
         else {
             var cursor    = head
-            var endOffset = startOffset + currentReaderBuffer.capacity
+            var endOffset = startOffset + head.capacity
             while (endOffset <= offset && cursor != null) {
-                val entry: AdaptiveBuffer.BufferEntry = cursor.asInstanceOf[AdaptiveBuffer.BufferEntry]
-                endOffset += entry.buffer.capacity
+                val entry: PageBuffer = cursor
+                endOffset += entry.capacity
                 cursor = entry.next
             }
             val off =
                 if (cursor == null) 0
                 else {
-                    val entry: AdaptiveBuffer.BufferEntry = cursor.asInstanceOf[AdaptiveBuffer.BufferEntry]
-                    entry.buffer.capacity - (endOffset - offset)
+                    val entry: PageBuffer = cursor
+                    entry.capacity - (endOffset - offset)
                 }
             (cursor, off)
         }
     } else (null, 0)
 
-    private def recycleHead(): Unit = if (totalEntry == 0) {
-        // Empty Buffer, do nothing
-    } else {
-        val oldHead = currentReaderEntry
-        head = oldHead.next
-        startOffset += oldHead.buffer.capacity
-        cap -= oldHead.buffer.capacity
-        totalEntry -= 1
-        oldHead.buffer.close()
-        oldHead.recycle()
-        if (totalEntry == 0) {
-            tail = null
-            woffIn = null
-            startOffset = 0
-            roff = 0
-            woff = 0
+    private def recycleHead(compact: Boolean = false): Unit = {
+        if (buffers.nonEmpty) {
+            val buffer = buffers.removeHead()
+            buffer.close()
+        }
+        if (compact) {
+            widx = widx - ridx
+            ridx = 0
         }
     }
 
-    private def recycleAll(): Unit = if (totalEntry == 0) {
-        // Empty Buffer, do nothing
-    } else {
-        var cursor = head
-        while (cursor != null) {
-            val entry: AdaptiveBuffer.BufferEntry = cursor
-            cursor = entry.next
-            entry.buffer.close()
-            entry.recycle()
+    private def recycleAll(compact: Boolean = false): Unit = {
+        while (buffers.nonEmpty) {
+            val buffer = buffers.removeHead()
+            buffer.close()
         }
-        tail = null
-        woffIn = null
-        cap = 0
-        startOffset = 0
-        roff = 0
-        woff = 0
+        if (compact) {
+            ridx = 0
+            widx = 0
+            buffers.clearAndShrink()
+        }
     }
 
     private def extendBuffer(): Unit = {
-        val buffer: Buffer = allocator.allocate()
-        val bufferEntry    = AdaptiveBuffer.BufferEntry(buffer)
-        if (totalEntry == 0) {
-            head = bufferEntry
-            tail = bufferEntry
-            woffIn = bufferEntry
-            totalEntry += 1
-            cap += buffer.capacity
-        } else {
-            val oldTail = tailEntry
-            oldTail.next = bufferEntry
-            tail = bufferEntry
-            totalEntry += 1
-            cap += buffer.capacity
-            if (woffIn == null) woffIn = bufferEntry
-        }
+        val buffer: PageBuffer = allocator.allocate()
+        buffers.addOne(buffer)
+        widx += buffer.readableBytes
     }
 
-    override def capacity: Int = cap
+    /** Append this [[PageBuffer]] to the end of this [[AdaptiveBuffer]]
+     *
+     *  @param buffer
+     *    [[PageBuffer]] allocated by this [[allocator]]
+     */
+    final private[otavia] def extend(buffer: PageBuffer): Unit = {
+        buffers.addOne(buffer)
+        widx += buffer.readableBytes
+    }
 
-    override def readerOffset: Int = roff
+    override def capacity: Int = Int.MaxValue
+
+    override def readerOffset: Int = ridx
 
     private def checkReadBounds(index: Int): Unit = {
-        if (totalEntry == 0 && index != 0) throw new IndexOutOfBoundsException("The buffer is empty")
-        if (index > woff) throw new IndexOutOfBoundsException("The new readerOffset is bigger than writerOffset")
+        if (count == 0 && index != 0) throw new IndexOutOfBoundsException("The buffer is empty")
+        if (index > widx) throw new IndexOutOfBoundsException("The new readerOffset is bigger than writerOffset")
         if (index < startOffset)
             throw new IndexOutOfBoundsException(
               s"The memory set by $index has been release already! " +
@@ -160,37 +143,37 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     override def readerOffset(offset: Int): Buffer = {
         checkReadBounds(offset)
-        if (offset == woff) recycleAll()
+        if (offset == widx) recycleAll()
         else {
             val newReaderEntry = offsetIn(offset)
             while ((head != newReaderEntry) && (head != null)) {
                 recycleHead()
             }
-            roff = offset
+            ridx = offset
         }
         this
     }
 
-    override def writerOffset: Int = woff
+    override def writerOffset: Int = widx
 
     private def checkWriteBound(index: Int): Unit = {
-        if (index < roff)
-            throw new IndexOutOfBoundsException(s"Set writerOffset $index is little than readerOffset $roff")
+        if (index < ridx)
+            throw new IndexOutOfBoundsException(s"Set writerOffset $index is little than readerOffset $ridx")
     }
 
     override def writerOffset(offset: Int): Buffer = {
         checkWriteBound(offset)
-        if (offset > woff) ensureWritable(offset - woff)
-        woff = offset
-        woffIn = offsetIn(woff)
+        if (offset > widx) ensureWritable(offset - widx)
+        widx = offset
+        woffIn = offsetIn(widx)
         this
     }
 
     override def fill(value: Byte): Buffer = {
         var cursor = head
         while (cursor != null) {
-            val entry: AdaptiveBuffer.BufferEntry = cursor
-            entry.buffer.fill(value)
+            val entry: PageBuffer = cursor
+            entry.fill(value)
             cursor = entry.next
         }
         this
@@ -375,9 +358,9 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     override def setDouble(index: Int, value: Double): Buffer = ???
 
-    override def toString: String = s"AdaptiveBuffer[roff:$roff, woff:$woff, cap:$cap, count:$totalEntry]"
+    override def toString: String = s"AdaptiveBuffer[ridx:$ridx, widx:$widx, cap:$capacity, count:$count]"
 
-    override def writableBytes: Int = endOffset - writerOffset
+    override def writableBytes: Int = capacity - widx
 
     override def writeCharSequence(source: CharSequence, charset: Charset): Buffer = ???
 
@@ -399,12 +382,20 @@ class AdaptiveBuffer(val allocator: BufferAllocator) extends Buffer {
 
     override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte, needle4: Byte): Int = ???
 
+    /** Split the [[PageBuffer]] chain from this [[AdaptiveBuffer]]
+     *  @param offset
+     *    split offset
+     *  @return
+     */
+    private[otavia] def splitBefore(offset: Int): PageBuffer = ???
+
 }
 
 object AdaptiveBuffer {
 
-    val MAX_BUFFER_SIZE: Int                              = Int.MaxValue - 8
-    def apply(allocator: BufferAllocator): AdaptiveBuffer = new AdaptiveBuffer(allocator)
+    val MAX_BUFFER_SIZE: Int = Int.MaxValue - 8
+
+    def apply(allocator: PageBufferAllocator): AdaptiveBuffer = new AdaptiveBuffer(allocator)
 
     private object BufferEntry {
 
@@ -425,7 +416,7 @@ object AdaptiveBuffer {
         private var buf: Buffer | Null = _
 
         private def setBuffer(buffer: Buffer): Unit = buf = buffer
-        def buffer: Buffer                          = buf.nn
+        def buffer: Buffer                          = buf
 
         override def recycle(): Unit = BufferEntry.recycler.recycle(this)
 

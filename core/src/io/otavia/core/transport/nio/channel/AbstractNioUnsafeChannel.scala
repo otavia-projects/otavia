@@ -23,7 +23,7 @@ import io.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelException,
 import io.otavia.core.message.ReactorEvent
 
 import java.io.IOException
-import java.net.PortUnreachableException
+import java.net.{PortUnreachableException, SocketAddress}
 import java.nio.channels.{CancelledKeyException, SelectableChannel, SelectionKey, Selector}
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
@@ -38,6 +38,8 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
     protected var _selectionKey: SelectionKey = _
 
     protected def javaChannel: C = ch
+
+    def localAddress: SocketAddress
 
     override def registerSelector(selector: Selector): Unit = {
         var interestOps: Int = 0

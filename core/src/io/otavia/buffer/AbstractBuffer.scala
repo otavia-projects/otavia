@@ -26,13 +26,13 @@ import scala.language.unsafeNulls
 
 abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
 
-    protected var ridx: Int = 0
-    protected var widx: Int = 0
+    private var ridx: Int = 0
+    private var widx: Int = 0
 
     underlying.limit(underlying.capacity())
     underlying.order(ByteOrder.BIG_ENDIAN)
 
-    override def toString: String = s"Buffer[ridx:${ridx}, widx:${widx}, cap:${capacity}]"
+    override def toString: String = s"Buffer[ridx:$ridx, widx:$widx, cap:${capacity}]"
 
     override def readerOffset: Int = ridx
 

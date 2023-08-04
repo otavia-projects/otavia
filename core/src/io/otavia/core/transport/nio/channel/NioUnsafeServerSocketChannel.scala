@@ -28,6 +28,7 @@ import java.net.SocketAddress
 import java.nio.channels.{SelectableChannel, SelectionKey, ServerSocketChannel}
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
+import scala.language.unsafeNulls
 
 class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, readInterestOp: Int)
     extends AbstractNioUnsafeChannel[ServerSocketChannel](channel, ch, readInterestOp) {
@@ -37,6 +38,8 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, re
     private var bound: Boolean = false
 
     setReadPlanFactory((channel: Channel) => new NioServerSocketReadPlan())
+
+    override def localAddress: SocketAddress = javaChannel.getLocalAddress
 
     private def getBacklog(): Int = backlog
 

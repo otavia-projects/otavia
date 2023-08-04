@@ -18,7 +18,7 @@
 
 package io.otavia.core.channel
 
-import io.otavia.buffer.{Buffer, BufferAllocator}
+import io.otavia.buffer.{Buffer, PageBuffer, PageBufferAllocator}
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.timer.Timer
 
@@ -46,11 +46,11 @@ trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundIn
      */
     def isRemoved: Boolean
 
-    /** Return the assigned [[BufferAllocator]] which will be used to allocate off-heap [[Buffer]]s. */
-    final def directAllocator(): BufferAllocator = channel.directAllocator
+    /** Return the assigned [[PageBufferAllocator]] which will be used to allocate off-heap [[PageBuffer]]s. */
+    final def directAllocator(): PageBufferAllocator = channel.directAllocator
 
-    /** Return the assigned [[BufferAllocator]] which will be used to allocate heap [[Buffer]]s. */
-    final def heapAllocator(): BufferAllocator = channel.heapAllocator
+    /** Return the assigned [[PageBufferAllocator]] which will be used to allocate heap [[PageBuffer]]s. */
+    final def heapAllocator(): PageBufferAllocator = channel.heapAllocator
 
     def isBufferHandlerContext: Boolean = false
 

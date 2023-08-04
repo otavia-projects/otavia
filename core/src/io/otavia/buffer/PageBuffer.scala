@@ -19,18 +19,20 @@
 package io.otavia.buffer
 
 import io.otavia.buffer.PageBuffer.{ST_PAGE_ALLOCATABLE, ST_PAGE_ALLOCATED}
+import io.otavia.core.util.{Report, SystemPropertyUtil}
 
 import java.nio.ByteBuffer
+import scala.language.unsafeNulls
 
-trait PageBuffer extends Buffer {
+abstract class PageBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
 
-    private var parent: BufferAllocator = _
-    private var nxt: PageBuffer         = _
-    private var status: Int             = ST_PAGE_ALLOCATABLE
+    private var parent: PageBufferAllocator = _
+    private var nxt: PageBuffer             = _
+    private var status: Int                 = ST_PAGE_ALLOCATABLE
 
-    def setAllocator(allocator: BufferAllocator): Unit = parent = allocator
+    def setAllocator(allocator: PageBufferAllocator): Unit = parent = allocator
 
-    def allocator: BufferAllocator = parent
+    def allocator: PageBufferAllocator = parent
 
     def next_=(pageBuffer: PageBuffer): Unit = nxt = pageBuffer
 
@@ -42,6 +44,8 @@ trait PageBuffer extends Buffer {
     override def close(): Unit = {
         parent.recycle(this)
         status = ST_PAGE_ALLOCATABLE
+        nxt = null
+        super.close()
     }
 
     private[otavia] def byteBuffer: ByteBuffer
@@ -50,7 +54,21 @@ trait PageBuffer extends Buffer {
 
 object PageBuffer {
 
-    val PAGE_SIZE: Int = 1024 * 8
+    private val DEFAULT_PAGE_SIZE: Int      = 4
+    private val ENABLE_PAGE_SIZES: Set[Int] = Set(1, 2, 4, 8, 16)
+    private val K: Int                      = 1024
+
+    val PAGE_SIZE: Int = {
+        val size = SystemPropertyUtil.getInt("io.otavia.buffer.page.size", DEFAULT_PAGE_SIZE)
+        if (ENABLE_PAGE_SIZES.contains(size)) size * K
+        else {
+            Report.report(
+              s"io.otavia.buffer.page.size is set to $size, but only support ${ENABLE_PAGE_SIZES.mkString("[", ", ", "]")}",
+              "Buffer"
+            )
+            DEFAULT_PAGE_SIZE * K
+        }
+    }
 
     val ST_PAGE_ALLOCATABLE: Int = 0
     val ST_PAGE_ALLOCATED: Int   = 1

@@ -123,6 +123,8 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
                 promise.setFailure(cause)
     }
 
+    override private[core] def handleChannelReadBufferEvent(event: ReactorEvent.ReadBuffer): Unit = ???
+
     override def toString: String = s"FileChannel(path=${path.toAbsolutePath}, state=${getStateString()})"
 
 }

@@ -1,8 +1,6 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
- * This file fork from netty.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,19 +16,12 @@
 
 package io.otavia.buffer
 
-import java.nio.ByteBuffer
-import scala.language.unsafeNulls
+trait PageBufferAllocator extends BufferAllocator {
 
-class DirectPageBuffer(underlying: ByteBuffer) extends PageBuffer(underlying) {
+    override def isPooling: Boolean = true
 
-    assert(underlying.isDirect)
+    override def allocate(): PageBuffer
 
-    override private[otavia] def byteBuffer = underlying
+    protected def newBuffer(): PageBuffer
 
-    override def isDirect: Boolean = true
-
-}
-
-object DirectPageBuffer {
-    def apply(underlying: ByteBuffer): DirectPageBuffer = new DirectPageBuffer(underlying)
 }

@@ -37,6 +37,8 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
 
     setReadPlanFactory((channel: Channel) => new NioSocketChannelReadPlan())
 
+    override def localAddress: SocketAddress = javaChannel.getLocalAddress
+
     override def unsafeBind(local: SocketAddress): Unit = try {
         javaChannel.bind(local)
         executorAddress.inform(ReactorEvent.BindReply(channel))
@@ -106,7 +108,7 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
         }
 
         if (read > 0) {
-            executorAddress.inform(ReactorEvent.ReadBuffer(channel, page))
+            executorAddress.inform(ReactorEvent.ReadBuffer(channel, page, recipient = null))
             false
         } else if (read == 0) {
             page.close()

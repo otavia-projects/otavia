@@ -19,7 +19,7 @@
 package io.otavia.core.channel
 
 import io.netty5.util.{Resource, ResourceLeakDetector}
-import io.otavia.buffer.{Buffer, BufferAllocator}
+import io.otavia.buffer.{Buffer, BufferAllocator, PageBufferAllocator}
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
@@ -122,7 +122,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         newCtx.setOutboundAdaptiveBuffer(outbound)
     }
 
-    private def setAdaptiveBuffer(ctx: OtaviaChannelHandlerContext, allocator: BufferAllocator): Unit = {
+    private def setAdaptiveBuffer(ctx: OtaviaChannelHandlerContext, allocator: PageBufferAllocator): Unit = {
         val inbound = new AdaptiveBuffer(allocator)
         inbound.setStrategy(ctx.handler.inboundStrategy)
         ctx.setInboundAdaptiveBuffer(inbound)

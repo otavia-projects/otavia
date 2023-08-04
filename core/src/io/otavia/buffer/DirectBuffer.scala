@@ -25,6 +25,8 @@ import scala.language.unsafeNulls
 
 class DirectBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
 
+    assert(underlying.isDirect)
+
     override def isDirect: Boolean = true
 
 }

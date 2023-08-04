@@ -21,7 +21,7 @@ package io.otavia.buffer
 import java.nio.ByteBuffer
 import scala.language.unsafeNulls
 
-abstract class AbstractPageAllocator extends BufferAllocator {
+abstract class AbstractPageAllocator extends PageBufferAllocator {
 
     private var count: Int       = 0
     private var head: PageBuffer = _
@@ -75,7 +75,5 @@ abstract class AbstractPageAllocator extends BufferAllocator {
         buffer.setAllocated()
         buffer
     }
-
-    protected def newBuffer(): PageBuffer
 
 }

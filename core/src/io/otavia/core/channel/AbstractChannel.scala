@@ -18,11 +18,11 @@
 
 package io.otavia.core.channel
 
-import io.otavia.buffer.{AbstractPageAllocator, BufferAllocator, DirectPageAllocator, HeapPageAllocator}
+import io.otavia.buffer.*
 import io.otavia.core.actor.ChannelsActor
 import io.otavia.core.buffer.AdaptiveBuffer
 import io.otavia.core.channel.inflight.{FutureQueue, StackQueue}
-import io.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
+import io.otavia.core.channel.message.{AdaptiveBufferChangeNotice, DatagramAdaptiveRangePacket, ReadPlan, ReadPlanFactory}
 import io.otavia.core.message.ReactorEvent
 import io.otavia.core.slf4a.Logger
 import io.otavia.core.stack.{AbstractPromise, ChannelPromise, ChannelReplyFuture, ChannelStack}
@@ -209,6 +209,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     override def heapAllocator: AbstractPageAllocator = heap
 
+    override private[otavia] def allocateDirectBuffer: AbstractBuffer = ???
+
     def unsafeChannel: AbstractUnsafeChannel = unsafe
 
     private[core] def setUnsafeChannel(uch: AbstractUnsafeChannel): Unit = unsafe = uch
@@ -282,6 +284,18 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     override private[core] def handleChannelDisconnectReplyEvent(event: ReactorEvent.DisconnectReply): Unit = {}
 
     override private[core] def handleChannelOpenReplyEvent(event: ReactorEvent.OpenReply): Unit = {}
+
+    override private[core] def handleChannelReadBufferEvent(event: ReactorEvent.ReadBuffer): Unit = {
+        event.sender match
+            case Some(address) => // fire UDP message
+                val start = channelInboundAdaptiveBuffer.writerOffset
+                channelInboundAdaptiveBuffer.extend(event.buffer)
+                val length = channelInboundAdaptiveBuffer.writerOffset - start
+                pipeline.fireChannelRead(DatagramAdaptiveRangePacket(start, length, event.recipient, event.sender))
+            case None => // fire other message
+                channelInboundAdaptiveBuffer.extend(event.buffer)
+                pipeline.fireChannelRead(AdaptiveBufferChangeNotice)
+    }
 
     // end impl EventHandle
 
