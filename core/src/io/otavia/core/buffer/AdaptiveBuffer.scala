@@ -21,6 +21,7 @@ import io.otavia.core.buffer.AdaptiveBuffer.AdaptiveStrategy
 import io.otavia.core.cache.{PerThreadObjectPool, Poolable}
 import io.otavia.core.util.Chainable
 
+import java.lang.{Byte as JByte, Double as JDouble, Float as JFloat, Long as JLong, Short as JShort}
 import java.nio.ByteBuffer
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
 import java.nio.charset.Charset
@@ -36,15 +37,6 @@ class AdaptiveBuffer(val allocator: PageBufferAllocator) extends Buffer {
 
     private val buffers: mutable.ArrayDeque[PageBuffer] = mutable.ArrayDeque.empty[PageBuffer]
 
-    private var head: PageBuffer   = _
-    private var tail: PageBuffer   = _
-    private var woffIn: PageBuffer = _
-
-    /** count of [[PageBuffer]] */
-    private var count: Int = 0
-
-    private var startOffset = 0
-
     private var ridx = 0
     private var widx = 0
 
@@ -54,39 +46,33 @@ class AdaptiveBuffer(val allocator: PageBufferAllocator) extends Buffer {
 
     def setStrategy(adaptiveStrategy: AdaptiveStrategy): Unit = strategy = adaptiveStrategy
 
-    inline private def offsetIn(offset: Int): PageBuffer = if (head != null) {
-        if (offset < startOffset) null
-        else {
-            var cursor    = head
-            var endOffset = startOffset + head.capacity
-            while (endOffset <= offset && cursor != null) {
-                val entry: PageBuffer = cursor
-                endOffset += entry.capacity
-                cursor = entry.next
+    private def startIndex = ridx - buffers.head.readerOffset
+
+    private def endIndex: Int = widx + buffers.last.writableBytes
+
+    private def offsetAt(offset: Int): Int = if (buffers.nonEmpty) {
+        if (offset >= startIndex && offset < endIndex) {
+            var cursor = 0
+            var len    = offset - ridx
+            while (len > 0 && cursor < buffers.size) {
+                len -= buffers(cursor).readableBytes
+                cursor += 1
             }
             cursor
-        }
-    } else null
+        } else -1
+    } else -1
 
-    private def offsetInOffset(offset: Int): (PageBuffer, Int) = if (head != null) {
-        if (offset < startOffset) (null, 0)
-        else {
-            var cursor    = head
-            var endOffset = startOffset + head.capacity
-            while (endOffset <= offset && cursor != null) {
-                val entry: PageBuffer = cursor
-                endOffset += entry.capacity
-                cursor = entry.next
+    private def offsetAtOffset(offset: Int): (Int, Int) = if (buffers.nonEmpty) {
+        if (offset >= startIndex && offset < endIndex) {
+            var len    = offset - ridx
+            var cursor = 0
+            while (len > 0 && cursor < buffers.size) {
+                len -= buffers(cursor).readableBytes
+                cursor += 1
             }
-            val off =
-                if (cursor == null) 0
-                else {
-                    val entry: PageBuffer = cursor
-                    entry.capacity - (endOffset - offset)
-                }
-            (cursor, off)
-        }
-    } else (null, 0)
+            (cursor, len)
+        } else (-1, 0)
+    } else (-1, 0)
 
     private def recycleHead(compact: Boolean = false): Unit = {
         if (buffers.nonEmpty) {
@@ -132,12 +118,12 @@ class AdaptiveBuffer(val allocator: PageBufferAllocator) extends Buffer {
     override def readerOffset: Int = ridx
 
     private def checkReadBounds(index: Int): Unit = {
-        if (count == 0 && index != 0) throw new IndexOutOfBoundsException("The buffer is empty")
+        if (buffers.isEmpty && index > 0) throw new IndexOutOfBoundsException("The buffer is empty")
         if (index > widx) throw new IndexOutOfBoundsException("The new readerOffset is bigger than writerOffset")
-        if (index < startOffset)
+        if (index < startIndex)
             throw new IndexOutOfBoundsException(
               s"The memory set by $index has been release already! " +
-                  s"Current the minimum readerOffset can be set as $startOffset"
+                  s"Current the minimum readerOffset can be set as $startIndex"
             )
     }
 
@@ -145,10 +131,13 @@ class AdaptiveBuffer(val allocator: PageBufferAllocator) extends Buffer {
         checkReadBounds(offset)
         if (offset == widx) recycleAll()
         else {
-            val newReaderEntry = offsetIn(offset)
-            while ((head != newReaderEntry) && (head != null)) {
+            val (index, off) = offsetAtOffset(offset)
+            var cursor       = index
+            while (cursor > 0) {
                 recycleHead()
+                cursor -= 1
             }
+            buffers.head.readerOffset(buffers.head.readerOffset + off)
             ridx = offset
         }
         this
@@ -163,18 +152,31 @@ class AdaptiveBuffer(val allocator: PageBufferAllocator) extends Buffer {
 
     override def writerOffset(offset: Int): Buffer = {
         checkWriteBound(offset)
-        if (offset > widx) ensureWritable(offset - widx)
+        if (offset > widx) {
+            if (offset > endIndex) {
+                var len = offset - endIndex
+                buffers.last.writerOffset(buffers.last.capacity)
+                while {
+                    val buffer = allocator.allocate()
+                    val cap    = buffer.capacity
+                    if (len > cap) {
+                        buffer.writerOffset(buffer.capacity)
+                        len -= cap
+                    } else {
+                        buffer.writerOffset(len)
+                        len = 0
+                    }
+                    len > 0
+                } do ()
+            } else {}
+        } else {}
         widx = offset
-        woffIn = offsetIn(widx)
         this
     }
 
     override def fill(value: Byte): Buffer = {
-        var cursor = head
-        while (cursor != null) {
-            val entry: PageBuffer = cursor
-            entry.fill(value)
-            cursor = entry.next
+        for (buffer <- buffers) {
+            buffer.fill(value)
         }
         this
     }
@@ -193,7 +195,10 @@ class AdaptiveBuffer(val allocator: PageBufferAllocator) extends Buffer {
      *  @return
      *    This buffer.
      */
-    def writeBytes(source: AdaptiveBuffer, length: Int): this.type = ???
+    def writeBytes(source: AdaptiveBuffer, length: Int): this.type = {
+
+        ???
+    }
 
     /** Read from this [[AdaptiveBuffer]], into the destination [[AdaptiveBuffer]] This updates the read offset of this
      *  buffer and also the position of the destination [[AdaptiveBuffer]].
@@ -246,35 +251,121 @@ class AdaptiveBuffer(val allocator: PageBufferAllocator) extends Buffer {
         closed = true
     }
 
-    override def readByte: Byte = ???
+    override def readByte: Byte = {
+        ridx += JByte.BYTES
+        val value = buffers.head.readByte
+        if (buffers.head.readableBytes == 0) recycleHead()
+        value
+    }
 
-    override def getByte(index: Int): Byte = ???
+    override def getByte(index: Int): Byte = {
+        val (idx, off) = offsetAtOffset(index)
+        val buffer     = buffers(idx)
+        buffer.getByte(buffer.readerOffset + off)
+    }
 
-    override def readUnsignedByte: Int = ???
+    override def readUnsignedByte: Int = {
+        ridx += JByte.BYTES
+        val value = buffers.head.readUnsignedByte
+        if (buffers.head.readableBytes == 0) recycleHead()
+        value
+    }
 
-    override def getUnsignedByte(index: Int): Int = ???
+    override def getUnsignedByte(index: Int): Int = {
+        val (idx, off) = offsetAtOffset(index)
+        val buffer     = buffers(idx)
+        buffer.getUnsignedByte(buffer.readerOffset + off)
+    }
 
-    override def writeByte(value: Byte): Buffer = ???
+    override def writeByte(value: Byte): Buffer = {
+        if (realWritableBytes >= JByte.BYTES) {
+            widx += JByte.BYTES
+            buffers.last.writeByte(value)
+        } else {
+            extendBuffer()
+            widx += JByte.BYTES
+            buffers.last.writeByte(value)
+        }
+        this
+    }
 
-    override def setByte(index: Int, value: Byte): Buffer = ???
+    override def setByte(index: Int, value: Byte): Buffer = {
+        val (idx, off) = offsetAtOffset(index)
+        val buffer     = buffers(idx)
+        buffer.setByte(buffer.readerOffset + off, value)
+        this
+    }
 
-    override def writeUnsignedByte(value: Int): Buffer = ???
+    override def writeUnsignedByte(value: Int): Buffer = {
+        if (realWritableBytes >= JByte.BYTES) {
+            widx += JByte.BYTES
+            buffers.last.writeUnsignedByte(value)
+        } else {
+            extendBuffer()
+            widx += JByte.BYTES
+            buffers.last.writeUnsignedByte(value)
+        }
+        this
+    }
 
-    override def setUnsignedByte(index: Int, value: Int): Buffer = ???
+    override def setUnsignedByte(index: Int, value: Int): Buffer = {
+        val (idx, off) = offsetAtOffset(index)
+        val buffer     = buffers(idx)
+        buffer.setUnsignedByte(buffer.readerOffset + off, value)
+        this
+    }
 
-    override def readChar: Char = ???
+    override def readChar: Char = {
+        ridx += Character.BYTES
+        val value = buffers.head.readChar
+        if (buffers.head.readableBytes == 0) recycleHead()
+        value
+    }
 
-    override def getChar(index: Int): Char = ???
+    override def getChar(index: Int): Char = {
+        val (idx, off) = offsetAtOffset(index)
+        val buffer     = buffers(idx)
+        buffer.getChar(buffer.readerOffset + off)
+    }
 
-    override def writeChar(value: Char): Buffer = ???
+    override def writeChar(value: Char): Buffer = {
+        if (realWritableBytes >= Character.BYTES) {
+            widx += Character.BYTES
+            buffers.last.writeChar(value)
+        } else {
+            extendBuffer()
+            widx += Character.BYTES
+            buffers.last.writeChar(value)
+        }
+        this
+    }
 
-    override def setChar(index: Int, value: Char): Buffer = ???
+    override def setChar(index: Int, value: Char): Buffer = {
+        val (idx, off) = offsetAtOffset(index)
+        val buffer     = buffers(idx)
+        buffer.setChar(buffer.readerOffset + off, value)
+        this
+    }
 
-    override def readShort: Short = ???
+    override def readShort: Short = {
+        ridx += JShort.BYTES
+        val value = buffers.head.readShort
+        if (buffers.head.readableBytes == 0) recycleHead()
+        value
+    }
 
-    override def getShort(index: Int): Short = ???
+    override def getShort(index: Int): Short = {
+        val (idx, off) = offsetAtOffset(index)
+        val buffer     = buffers(idx)
+        buffer.getShort(buffer.readerOffset + off)
+    }
 
-    override def readUnsignedShort: Int = ???
+    override def readUnsignedShort: Int = {
+        ridx += JShort.BYTES
+        val value = buffers.head.readUnsignedShort
+        if (buffers.head.readableBytes == 0) recycleHead()
+        value
+    }
 
     override def getUnsignedShort(index: Int): Int = ???
 
@@ -358,9 +449,11 @@ class AdaptiveBuffer(val allocator: PageBufferAllocator) extends Buffer {
 
     override def setDouble(index: Int, value: Double): Buffer = ???
 
-    override def toString: String = s"AdaptiveBuffer[ridx:$ridx, widx:$widx, cap:$capacity, count:$count]"
+    override def toString: String = s"AdaptiveBuffer[ridx:$ridx, widx:$widx, cap:$capacity, count:${buffers.size}]"
 
     override def writableBytes: Int = capacity - widx
+
+    private def realWritableBytes: Int = if (buffers.nonEmpty) buffers.last.writableBytes else 0
 
     override def writeCharSequence(source: CharSequence, charset: Charset): Buffer = ???
 
