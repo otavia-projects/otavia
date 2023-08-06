@@ -656,13 +656,13 @@ trait Buffer {
      *  @throws IndexOutOfBoundsException
      *    If [[readableBytes]] is less than [[java.lang.Byte.BYTES]].
      */
-    def readBoolean: Boolean = readByte != 0
+    final def readBoolean: Boolean = readByte != 0
 
     /** Get the boolean value at the given reader offset. The [[readerOffset]] is not modified. A boolean gets read as a
      *  byte from this buffer. All byte values which are not equal to zero are considered as the boolean value true,
      *  zero represents false.
      *
-     *  @param roff
+     *  @param index
      *    The read offset, an absolute offset into this buffer, to read from.
      *  @return
      *    The boolean value at the given offset.
@@ -670,7 +670,7 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Byte.BYTES]].
      */
-    def getBoolean(roff: Int): Boolean = getByte(roff) != 0
+    final def getBoolean(index: Int): Boolean = getByte(index) != 0
 
     /** Write the given boolean value at the current [[writerOffset]], and increase the writer offset by
      *  [[java.lang.Byte.BYTES]]. A boolean gets written as a byte to this buffer. All byte values which are not equal
@@ -684,7 +684,7 @@ trait Buffer {
      *    If [[writableBytes]] is less than [[java.lang.Byte.BYTES]], and the [[capacity]] buffer capacity cannot be
      *    automatically increased.
      */
-    def writeBoolean(value: Boolean): Buffer = writeByte((if (value) 1 else 0).toByte)
+    final def writeBoolean(value: Boolean): Buffer = writeByte((if (value) 1 else 0).toByte)
 
     /** Set the given boolean value at the given write offset. The [[writerOffset]] is not modified. A boolean gets
      *  written as a byte to this buffer. All byte values which are not equal to zero are considered as the boolean
@@ -700,7 +700,7 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
      *    [[java.lang.Byte.BYTES]].
      */
-    def setBoolean(index: Int, value: Boolean): Buffer = setByte(index, (if (value) 1 else 0).toByte)
+    final def setBoolean(index: Int, value: Boolean): Buffer = setByte(index, (if (value) 1 else 0).toByte)
 
     /** Read the unsigned byte value at the current [[readerOffset]], and increases the reader offset by
      *  [[java.lang.Byte.BYTES]]. The value is read using an unsigned two's complement 8-bit encoding, in
@@ -794,6 +794,16 @@ trait Buffer {
      */
     def readChar: Char
 
+    /** Read the char value at the current [[readerOffset]], and increases the reader offset by 2. The value is read
+     *  using a 2-byte UTF-16 encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @return
+     *    The char value at the current reader offset.
+     *  @throws IndexOutOfBoundsException
+     *    If [[readableBytes]] is less than 2.
+     */
+    final def readCharLE: Char = Character.reverseBytes(readChar)
+
     /** Get the char value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
      *  2-byte UTF-16 encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
@@ -806,6 +816,18 @@ trait Buffer {
      */
     def getChar(index: Int): Char
 
+    /** Get the char value at the given reader offset. The [[readerOffset]] is not modified. The value is read using a
+     *  2-byte UTF-16 encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @return
+     *    The char value at the given offset.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus 2.
+     */
+    final def getCharLE(index: Int): Char = Character.reverseBytes(getChar(index))
+
     /** Write the given char value at the current [[writerOffset]], and increase the writer offset by 2. The value is
      *  written using a 2-byte UTF-16 encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
      *
@@ -817,6 +839,18 @@ trait Buffer {
      *    If [[writableBytes]] is less than 2, and the [[capacity]] buffer capacity cannot be automatically increased.
      */
     def writeChar(value: Char): Buffer
+
+    /** Write the given char value at the current [[writerOffset]], and increase the writer offset by 2. The value is
+     *  written using a 2-byte UTF-16 encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param value
+     *    The char value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    If [[writableBytes]] is less than 2, and the [[capacity]] buffer capacity cannot be automatically increased.
+     */
+    final def writeCharLE(value: Char): Buffer = writeChar(Character.reverseBytes(value))
 
     /** Set the given char value at the given write offset. The [[writerOffset]] is not modified. The value is written
      *  using a 2-byte UTF-16 encoding, in [[java.nio.ByteOrder.BIG_ENDIAN]] byte order.
@@ -831,6 +865,20 @@ trait Buffer {
      *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus 2.
      */
     def setChar(index: Int, value: Char): Buffer
+
+    /** Set the given char value at the given write offset. The [[writerOffset]] is not modified. The value is written
+     *  using a 2-byte UTF-16 encoding, in [[java.nio.ByteOrder.LITTLE_ENDIAN]] byte order.
+     *
+     *  @param index
+     *    The write offset, an absolute offset into this buffer to write to.
+     *  @param value
+     *    The char value to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus 2.
+     */
+    final def setCharLE(index: Int, value: Char): Buffer = setChar(index, Character.reverseBytes(value))
 
     /** Read the short value at the current [[readerOffset]], and increases the reader offset by
      *  [[java.lang.Short.BYTES]] [[java.lang.Short.BYTES]]. The value is read using a two's complement 16-bit encoding,

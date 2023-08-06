@@ -46,7 +46,7 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
         if (offset >= startIndex && offset < endIndex) {
             var len    = offset - ridx
             var cursor = 0
-            while (len > 0 && cursor < size) {
+            while (len > apply(cursor).readableBytes && cursor < size) {
                 len -= apply(cursor).readableBytes
                 cursor += 1
             }
@@ -178,6 +178,12 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
 
     override def bytesBefore(needle: Byte): Int = ???
 
+    override def bytesBefore(needle1: Byte, needle2: Byte): Int = ???
+
+    override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int = ???
+
+    override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte, needle4: Byte): Int = ???
+
     override def bytesBefore(needle: Array[Byte]): Int = ???
 
     override def openCursor(fromOffset: Int, length: Int): ByteCursor = ???
@@ -191,10 +197,6 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
             // TODO
             this
         }
-
-    //    override def forEachComponent[T <: BufferComponent with ComponentIterator.Next](): ComponentIterator[T] = ???
-
-    //    override def send(): Send[Buffer] = ???
 
     override def close(): Unit = {
         recycleAll()
@@ -267,15 +269,36 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
 
     override def readChar: Char = {
         ridx += Character.BYTES
-        val value = head.readChar
-        if (head.readableBytes == 0) recycleHead()
-        value
+        val headReadable = head.readableBytes
+        if (headReadable > Character.BYTES) {
+            head.readChar
+        } else if (headReadable == Character.BYTES) {
+            val value = head.readChar
+            recycleHead()
+            value
+        } else {
+            val b1 = head.readByte
+            recycleHead()
+            val b2 = head.readByte
+            (((b1 & 0xff) << 8) | (b2 & 0xff)).toShort.toChar
+        }
     }
 
     override def getChar(index: Int): Char = {
         val (idx, off) = offsetAtOffset(index)
         val buffer     = apply(idx)
-        buffer.getChar(buffer.readerOffset + off)
+        val len        = buffer.readableBytes - off
+        if (len >= Character.BYTES) {
+            buffer.getChar(buffer.readerOffset + off)
+        } else if (len > 0) {
+            val b1         = buffer.getByte(buffer.readerOffset + off)
+            val nextBuffer = apply(idx + 1)
+            val b2         = nextBuffer.getByte(nextBuffer.readerOffset)
+            (((b1 & 0xff) << 8) | (b2 & 0xff)).toShort.toChar
+        } else {
+            val next = apply(idx + 1)
+            buffer.getChar(buffer.readerOffset)
+        }
     }
 
     override def writeChar(value: Char): Buffer = {
@@ -293,41 +316,168 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
     override def setChar(index: Int, value: Char): Buffer = {
         val (idx, off) = offsetAtOffset(index)
         val buffer     = apply(idx)
-        buffer.setChar(buffer.readerOffset + off, value)
+        val len        = buffer.readableBytes - off
+        if (len >= Character.BYTES) {
+            buffer.setChar(buffer.readerOffset + off, value)
+        } else if (len == 0) {
+            val next = apply(idx + 1)
+            next.setChar(next.readerOffset, value)
+        } else {
+            val next = apply(idx + 1)
+            buffer.setByte(buffer.readerOffset + off, (value.toShort >>> 0).toByte)
+            next.setByte(next.readableBytes, (value.toShort >>> 8).toByte)
+        }
         this
     }
 
     override def readShort: Short = {
         ridx += JShort.BYTES
-        val value = head.readShort
-        if (head.readableBytes == 0) recycleHead()
-        value
+        val headReadable = head.readableBytes
+        if (headReadable > JShort.BYTES) {
+            head.readShort
+        } else if (headReadable == JShort.BYTES) {
+            val value = head.readShort
+            recycleHead()
+            value
+        } else {
+            val b1 = head.readByte
+            recycleHead()
+            val b2 = head.readByte
+            (((b1 & 0xff) << 8) | (b2 & 0xff)).toShort
+        }
+    }
+
+    override def writeShort(value: Short): Buffer = {
+        if (realWritableBytes >= JShort.BYTES) {
+            widx += JShort.BYTES
+            last.writeShort(value)
+        } else {
+            extendBuffer()
+            widx += JShort.BYTES
+            last.writeShort(value)
+        }
+        this
+    }
+
+    override def setShort(index: Int, value: Short): Buffer = {
+        val (idx, off) = offsetAtOffset(index)
+        val buffer     = apply(idx)
+        val len        = buffer.readableBytes - off
+        if (len >= JShort.BYTES) {
+            buffer.setShort(buffer.readerOffset + off, value)
+        } else if (len == 0) {
+            val next = apply(idx + 1)
+            next.setShort(next.readerOffset, value)
+        } else {
+            val next = apply(idx + 1)
+            buffer.setByte(buffer.readerOffset + off, (value >>> 0).toByte)
+            next.setByte(next.readableBytes, (value >>> 8).toByte)
+        }
+        this
     }
 
     override def getShort(index: Int): Short = {
         val (idx, off) = offsetAtOffset(index)
         val buffer     = apply(idx)
-        buffer.getShort(buffer.readerOffset + off)
+        val len        = buffer.readableBytes - off
+        if (len >= JShort.BYTES) {
+            buffer.getShort(buffer.readerOffset + off)
+        } else if (len > 0) {
+            val next = apply(idx + 1)
+            val b1   = buffer.getByte(buffer.readerOffset + off)
+            val b2   = next.getByte(next.readerOffset)
+            (((b1 & 0xff) << 8) | (b2 & 0xff)).toShort
+        } else {
+            val next = apply(idx + 1)
+            buffer.getShort(buffer.readerOffset)
+        }
     }
 
     override def readUnsignedShort: Int = {
         ridx += JShort.BYTES
-        val value = head.readUnsignedShort
-        if (head.readableBytes == 0) recycleHead()
-        value
+        val headReadable = head.readableBytes
+        if (headReadable > JShort.BYTES) {
+            head.readUnsignedShort
+        } else if (headReadable == JShort.BYTES) {
+            val value = head.readUnsignedShort
+            recycleHead()
+            value
+        } else {
+            val b1 = head.readByte
+            recycleHead()
+            val b2 = head.readByte
+            (((b1 & 0xff) << 8) | (b2 & 0xff)) & 0xffff
+        }
     }
 
-    override def getUnsignedShort(index: Int): Int = ???
+    override def getUnsignedShort(index: Int): Int = {
+        val (idx, off) = offsetAtOffset(index)
+        val buffer     = apply(idx)
+        val len        = buffer.readableBytes - off
+        if (len >= JShort.BYTES) {
+            buffer.getUnsignedShort(buffer.readerOffset + off)
+        } else if (len > 0) {
+            val next = apply(idx + 1)
+            val b1   = buffer.getByte(buffer.readerOffset + off)
+            val b2   = next.getByte(next.readerOffset)
+            (((b1 & 0xff) << 8) | (b2 & 0xff)) & 0xffff
+        } else {
+            val next = apply(idx + 1)
+            buffer.getUnsignedShort(buffer.readerOffset)
+        }
+    }
 
-    override def writeShort(value: Short): Buffer = ???
+    override def writeUnsignedShort(value: Int): Buffer = {
+        if (realWritableBytes >= JShort.BYTES) {
+            widx += JShort.BYTES
+            last.writeUnsignedShort(value)
+        } else {
+            extendBuffer()
+            widx += JShort.BYTES
+            last.writeUnsignedShort(value)
+        }
+        this
+    }
 
-    override def setShort(index: Int, value: Short): Buffer = ???
+    override def setUnsignedShort(index: Int, value: Int): Buffer = {
+        val (idx, off) = offsetAtOffset(index)
+        val buffer     = apply(idx)
+        val len        = buffer.readableBytes - off
+        if (len >= JShort.BYTES) {
+            buffer.setUnsignedShort(buffer.readerOffset + off, value)
+        } else if (len == 0) {
+            val next = apply(idx + 1)
+            next.setUnsignedShort(next.readerOffset, value)
+        } else {
+            val next     = apply(idx + 1)
+            val newValue = (value & 0xffff).toShort
+            buffer.setByte(buffer.readerOffset + off, (newValue >>> 0).toByte)
+            next.setByte(next.readableBytes, (newValue >>> 8).toByte)
+        }
+        this
+    }
 
-    override def writeUnsignedShort(value: Int): Buffer = ???
-
-    override def setUnsignedShort(index: Int, value: Int): Buffer = ???
-
-    override def readMedium: Int = ???
+    override def readMedium: Int = {
+        ridx += 3
+        val headReadable = head.readableBytes
+        if (headReadable > 3) {
+            head.readMedium
+        } else if (headReadable == 3) {
+            val value = head.readMedium
+            recycleHead()
+            value
+        } else {
+            var value: Int = 0
+            var i          = 3
+            while (i > 0) {
+                val b = head.readByte & 0xff
+                value = value | (b << 8)
+                i -= 1
+                if (head.readableBytes == 0) recycleHead()
+            }
+            value
+        }
+    }
 
     override def readMediumLE: Int = ???
 
@@ -418,11 +568,5 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
     override def readBytes(destination: ByteBuffer): Buffer = ???
 
     override def readBytes(destination: Array[Byte], destPos: Int, length: Int): Buffer = ???
-
-    override def bytesBefore(needle1: Byte, needle2: Byte): Int = ???
-
-    override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int = ???
-
-    override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte, needle4: Byte): Int = ???
 
 }
