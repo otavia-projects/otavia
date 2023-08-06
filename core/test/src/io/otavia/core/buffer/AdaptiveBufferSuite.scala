@@ -24,7 +24,7 @@ import scala.language.unsafeNulls
 class AdaptiveBufferSuite extends AnyFunSuite {
 
     val allocator: PageBufferAllocator = BufferAllocator.heapPageAllocator
-    val adaptiveBuffer                 = new AdaptiveBuffer(allocator)
+    val adaptiveBuffer: AdaptiveBuffer = AdaptiveBuffer(allocator)
 
     test("set offset") {
         val buffer = adaptiveBuffer

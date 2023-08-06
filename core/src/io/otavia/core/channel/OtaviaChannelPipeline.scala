@@ -42,8 +42,8 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
     protected val logger: Logger = Logger.getLogger(getClass, channel.system)
 
-    private val channelInboundAdaptiveBuffer: AdaptiveBuffer  = new AdaptiveBuffer(channel.directAllocator)
-    private val channelOutboundAdaptiveBuffer: AdaptiveBuffer = new AdaptiveBuffer(channel.directAllocator)
+    private val channelInboundAdaptiveBuffer: AdaptiveBuffer  = AdaptiveBuffer(channel.directAllocator)
+    private val channelOutboundAdaptiveBuffer: AdaptiveBuffer = AdaptiveBuffer(channel.directAllocator)
 
     private val head = new OtaviaChannelHandlerContext(this, HEAD_NAME, HEAD_HANDLER)
     private val tail = new OtaviaChannelHandlerContext(this, TAIL_NAME, TAIL_HANDLER)
@@ -106,7 +106,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
           channelInboundAdaptiveBuffer.readableBytes == 0,
           s"inbound buffer of handler ${oldFirst.name} has some data."
         )
-        val inbound = new AdaptiveBuffer(oldFirst.heapAllocator())
+        val inbound = AdaptiveBuffer(oldFirst.heapAllocator())
         inbound.setStrategy(oldFirst.handler.inboundStrategy)
         oldFirst.setInboundAdaptiveBuffer(inbound)
 
@@ -117,17 +117,17 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         channelInboundAdaptiveBuffer.setStrategy(newCtx.handler.inboundStrategy)
         newCtx.setInboundAdaptiveBuffer(channelInboundAdaptiveBuffer)
 
-        val outbound = new AdaptiveBuffer(newCtx.heapAllocator())
+        val outbound = AdaptiveBuffer(newCtx.heapAllocator())
         outbound.setStrategy(newCtx.handler.outboundStrategy)
         newCtx.setOutboundAdaptiveBuffer(outbound)
     }
 
     private def setAdaptiveBuffer(ctx: OtaviaChannelHandlerContext, allocator: PageBufferAllocator): Unit = {
-        val inbound = new AdaptiveBuffer(allocator)
+        val inbound = AdaptiveBuffer(allocator)
         inbound.setStrategy(ctx.handler.inboundStrategy)
         ctx.setInboundAdaptiveBuffer(inbound)
 
-        val outbound = new AdaptiveBuffer(allocator)
+        val outbound = AdaptiveBuffer(allocator)
         outbound.setStrategy(ctx.handler.outboundStrategy)
         ctx.setOutboundAdaptiveBuffer(outbound)
     }

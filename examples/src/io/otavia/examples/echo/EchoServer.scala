@@ -82,6 +82,10 @@ object EchoServer {
             println(s"${ctx.channel} active")
         }
 
+        override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
+            println("read")
+        }
+
     }
 
 }
