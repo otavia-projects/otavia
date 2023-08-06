@@ -1069,12 +1069,12 @@ node6 -> node3;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="getBoolean-ffffff99" data-f-inherited="Buffer">
+        <div class="documentableElement" id="getBoolean-ffffff99" data-f-keywords="final" data-f-inherited="Buffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="DirectWrapBuffer.html#getBoolean-ffffff99" t="n" class="documentableName ">getBoolean</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">roff</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Boolean</span>
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="DirectWrapBuffer.html#getBoolean-ffffff99" t="n" class="documentableName ">getBoolean</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Boolean</span>
            </div>
           </div>
          </div>
@@ -1093,7 +1093,7 @@ node6 -> node3;
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
-               roff
+               index
               </dt>
               <dd class="body-medium">
                <p>The read offset, an absolute offset into this buffer, to read from.</p> 
@@ -1261,6 +1261,67 @@ node6 -> node3;
               </dt>
               <dd class="body-medium">
                <a href="AbstractBuffer.html#getChar-fffffd85">AbstractBuffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="getCharLE-fffffd85" data-f-keywords="final" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="DirectWrapBuffer.html#getCharLE-fffffd85" t="n" class="documentableName ">getCharLE</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Char</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Get the char value at the given reader offset. The <a href="Buffer.html#readerOffset-fffff113">readerOffset</a> is not modified. The value is read using a 2-byte UTF-16 encoding, in <span data-unresolved-link="">java.nio.ByteOrder.LITTLE_ENDIAN</span> byte order.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Get the char value at the given reader offset. The <a href="Buffer.html#readerOffset-fffff113">readerOffset</a> is not modified. The value is read using a 2-byte UTF-16 encoding, in <span data-unresolved-link="">java.nio.ByteOrder.LITTLE_ENDIAN</span> byte order.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               index
+              </dt>
+              <dd class="body-medium">
+               <p>The read offset, an absolute offset into this buffer, to read from.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>The char value at the given offset.</p> 
+              </dd>
+              <dt class="body-small">
+               Throws
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <div>
+                 <span data-unresolved-link="">IndexOutOfBoundsException</span> 
+                 <p>if the given offset is out of bounds of the buffer, that is, less than 0 or greater than <a href="Buffer.html#capacity-0">capacity</a> minus 2.</p> 
+                </div>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="Buffer.html#getCharLE-fffffd85">Buffer</a>
               </dd>
              </dl>
             </div>
@@ -2766,12 +2827,12 @@ node6 -> node3;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="readBoolean-0" data-f-inherited="Buffer">
+        <div class="documentableElement" id="readBoolean-0" data-f-keywords="final" data-f-inherited="Buffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="DirectWrapBuffer.html#readBoolean-0" t="n" class="documentableName ">readBoolean</a>: <span data-unresolved-link="" t="t">Boolean</span>
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="DirectWrapBuffer.html#readBoolean-0" t="n" class="documentableName ">readBoolean</a>: <span data-unresolved-link="" t="t">Boolean</span>
            </div>
           </div>
          </div>
@@ -3060,6 +3121,58 @@ node6 -> node3;
               </dt>
               <dd class="body-medium">
                <a href="AbstractBuffer.html#readChar-0">AbstractBuffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="readCharLE-0" data-f-keywords="final" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="DirectWrapBuffer.html#readCharLE-0" t="n" class="documentableName ">readCharLE</a>: <span data-unresolved-link="" t="t">Char</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Read the char value at the current <a href="Buffer.html#readerOffset-fffff113">readerOffset</a>, and increases the reader offset by 2. The value is read using a 2-byte UTF-16 encoding, in <span data-unresolved-link="">java.nio.ByteOrder.LITTLE_ENDIAN</span> byte order.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Read the char value at the current <a href="Buffer.html#readerOffset-fffff113">readerOffset</a>, and increases the reader offset by 2. The value is read using a 2-byte UTF-16 encoding, in <span data-unresolved-link="">java.nio.ByteOrder.LITTLE_ENDIAN</span> byte order.</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>The char value at the current reader offset.</p> 
+              </dd>
+              <dt class="body-small">
+               Throws
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <div>
+                 <span data-unresolved-link="">IndexOutOfBoundsException</span> 
+                 <p>If <a href="Buffer.html#readableBytes-0">readableBytes</a> is less than 2.</p> 
+                </div>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="Buffer.html#readCharLE-0">Buffer</a>
               </dd>
              </dl>
             </div>
@@ -4424,12 +4537,12 @@ node6 -> node3;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="setBoolean-fffff061" data-f-inherited="Buffer">
+        <div class="documentableElement" id="setBoolean-fffff061" data-f-keywords="final" data-f-inherited="Buffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="DirectWrapBuffer.html#setBoolean-fffff061" t="n" class="documentableName ">setBoolean</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">value</span>: <span data-unresolved-link="" t="t">Boolean</span>): <a href="Buffer.html" t="t">Buffer</a>
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="DirectWrapBuffer.html#setBoolean-fffff061" t="n" class="documentableName ">setBoolean</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">value</span>: <span data-unresolved-link="" t="t">Boolean</span>): <a href="Buffer.html" t="t">Buffer</a>
            </div>
           </div>
          </div>
@@ -4634,6 +4747,73 @@ node6 -> node3;
               </dt>
               <dd class="body-medium">
                <a href="AbstractBuffer.html#setChar-8f5">AbstractBuffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="setCharLE-8f5" data-f-keywords="final" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="DirectWrapBuffer.html#setCharLE-8f5" t="n" class="documentableName ">setCharLE</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">value</span>: <span data-unresolved-link="" t="t">Char</span>): <a href="Buffer.html" t="t">Buffer</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Set the given char value at the given write offset. The <a href="Buffer.html#writerOffset-fffff113">writerOffset</a> is not modified. The value is written using a 2-byte UTF-16 encoding, in <span data-unresolved-link="">java.nio.ByteOrder.LITTLE_ENDIAN</span> byte order.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Set the given char value at the given write offset. The <a href="Buffer.html#writerOffset-fffff113">writerOffset</a> is not modified. The value is written using a 2-byte UTF-16 encoding, in <span data-unresolved-link="">java.nio.ByteOrder.LITTLE_ENDIAN</span> byte order.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               index
+              </dt>
+              <dd class="body-medium">
+               <p>The write offset, an absolute offset into this buffer to write to.</p> 
+              </dd>
+              <dt class="body-small">
+               value
+              </dt>
+              <dd class="body-medium">
+               <p>The char value to write.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>This Buffer.</p> 
+              </dd>
+              <dt class="body-small">
+               Throws
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <div>
+                 <span data-unresolved-link="">IndexOutOfBoundsException</span> 
+                 <p>if the given offset is out of bounds of the buffer, that is, less than 0 or greater than <a href="Buffer.html#capacity-0">capacity</a> minus 2.</p> 
+                </div>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="Buffer.html#setCharLE-8f5">Buffer</a>
               </dd>
              </dl>
             </div>
@@ -6464,12 +6644,12 @@ node6 -> node3;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="writeBoolean-8ba" data-f-inherited="Buffer">
+        <div class="documentableElement" id="writeBoolean-8ba" data-f-keywords="final" data-f-inherited="Buffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="DirectWrapBuffer.html#writeBoolean-8ba" t="n" class="documentableName ">writeBoolean</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">value</span>: <span data-unresolved-link="" t="t">Boolean</span>): <a href="Buffer.html" t="t">Buffer</a>
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="DirectWrapBuffer.html#writeBoolean-8ba" t="n" class="documentableName ">writeBoolean</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">value</span>: <span data-unresolved-link="" t="t">Boolean</span>): <a href="Buffer.html" t="t">Buffer</a>
            </div>
           </div>
          </div>
@@ -6893,6 +7073,67 @@ node6 -> node3;
               </dt>
               <dd class="body-medium">
                <a href="AbstractBuffer.html#writeChar-73c">AbstractBuffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="writeCharLE-73c" data-f-keywords="final" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="DirectWrapBuffer.html#writeCharLE-73c" t="n" class="documentableName ">writeCharLE</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">value</span>: <span data-unresolved-link="" t="t">Char</span>): <a href="Buffer.html" t="t">Buffer</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Write the given char value at the current <a href="Buffer.html#writerOffset-fffff113">writerOffset</a>, and increase the writer offset by 2. The value is written using a 2-byte UTF-16 encoding, in <span data-unresolved-link="">java.nio.ByteOrder.LITTLE_ENDIAN</span> byte order.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Write the given char value at the current <a href="Buffer.html#writerOffset-fffff113">writerOffset</a>, and increase the writer offset by 2. The value is written using a 2-byte UTF-16 encoding, in <span data-unresolved-link="">java.nio.ByteOrder.LITTLE_ENDIAN</span> byte order.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               value
+              </dt>
+              <dd class="body-medium">
+               <p>The char value to write.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>This Buffer.</p> 
+              </dd>
+              <dt class="body-small">
+               Throws
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <div>
+                 <span data-unresolved-link="">IndexOutOfBoundsException</span> 
+                 <p>If <a href="Buffer.html#writableBytes-0">writableBytes</a> is less than 2, and the <a href="Buffer.html#capacity-0">capacity</a> buffer capacity cannot be automatically increased.</p> 
+                </div>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="Buffer.html#writeCharLE-73c">Buffer</a>
               </dd>
              </dl>
             </div>
