@@ -1,6 +1,6 @@
 <configuration>
 
-    <appender name="CONSOLE" class="io.otavia.log4a.appender.ConsoleAppender">
+    <appender name="CONSOLE" class="cc.otavia.log4a.appender.ConsoleAppender">
 
     </appender>
 

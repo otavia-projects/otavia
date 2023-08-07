@@ -1,1 +1,1 @@
-io.otavia.core.transport.rust.NativeTransportServiceProvider
+cc.otavia.core.transport.rust.NativeTransportServiceProvider

@@ -25,7 +25,7 @@ import io.github.otavia.jni.plugin.RustJniModule
 object ProjectInfo {
 
     def description: String     = "A super fast IO & Actor programming model!"
-    def organization: String    = "io.github.otavia-projects"
+    def organization: String    = "cc.otavia"
     def organizationUrl: String = "https://github.com/otavia-projects"
     def projectUrl: String      = "https://github.com/otavia-projects/otavia"
     def github                  = VersionControl.github("otavia-projects", "otavia")
@@ -92,7 +92,7 @@ object core extends OtaviaModule with BuildInfo {
       "copyright" -> "2022"
     )
 
-    override def buildInfoPackageName: Option[String] = Some("io.otavia")
+    override def buildInfoPackageName: Option[String] = Some("cc.otavia")
 
     override def artifactName = "core"
 
@@ -193,14 +193,6 @@ object `codec-memcache` extends OtaviaModule {
 object `codec-smtp` extends OtaviaModule {
 
     override def artifactName: T[String] = "codec-smtp"
-
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
-
-}
-
-object `codec-xml` extends OtaviaModule {
-
-    override def artifactName: T[String] = "codec-xml"
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
