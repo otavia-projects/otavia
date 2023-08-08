@@ -37,8 +37,6 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
     override def readerOffset: Int = ridx
 
     override def readerOffset(offset: Int): Buffer = {
-        Integer.reverse(0)
-        Integer.reverseBytes(0)
         checkRead(offset, 0)
         ridx = offset
         this

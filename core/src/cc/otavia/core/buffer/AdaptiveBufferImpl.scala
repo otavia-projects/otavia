@@ -88,7 +88,37 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
         widx += buffer.readableBytes
     }
 
-    override private[otavia] def splitBefore(offset: Int) = ???
+    override private[otavia] def splitBefore(offset: Int): PageBuffer = {
+        val (idx, off) = offsetAtOffset(offset)
+        val split      = apply(idx)
+        val len        = split.readableBytes - off
+        val first      = head
+        var cursor     = head
+        var continue   = true
+        while (continue) {
+            if (cursor == split) {
+                if (len == 0) {
+                    removeHead()
+                    continue = false
+                } else { // len > 0, copy from head buffer
+                    val buf = allocator.allocate()
+                    cursor.copyInto(cursor.readerOffset + off, buf, cursor.readerOffset + off, len)
+                    buf.writerOffset(cursor.writerOffset)
+                    buf.readerOffset(cursor.readerOffset + off)
+                    cursor.writerOffset(cursor.writerOffset - len)
+                    removeHead()
+                    insert(0, buf)
+                    continue = false
+                }
+            } else {
+                removeHead()
+                cursor.next = head
+                cursor = cursor.next
+            }
+        }
+        ridx = offset
+        first
+    }
 
     override def capacity: Int = Int.MaxValue
 
@@ -832,7 +862,7 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
     }
 
     override def writeInt(value: Int): Buffer = {
-        if (realWritableBytes >= 3) {
+        if (realWritableBytes >= Integer.BYTES) {
             last.writeInt(value)
         } else {
             extendBuffer()
