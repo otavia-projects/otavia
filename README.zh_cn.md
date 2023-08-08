@@ -63,13 +63,13 @@ Language: [English](./README.md)
 sbt
 
 ```scala
-libraryDependencies += "io.github.otavia-projects" %% "core" % "{version}"
+libraryDependencies += "cc.otavia" %% "core" % "{version}"
 ```
 
 mill
 
 ```scala
-ivy"io.github.otavia-projects:core:{version}"
+ivy"cc.otavia::core:{version}"
 ```
 
 maven
@@ -77,7 +77,7 @@ maven
 ```xml
 
 <dependency>
-    <groupId>io.github.otavia-projects</groupId>
+    <groupId>cc.otavia</groupId>
     <artifactId>core</artifactId>
     <version>{version}</version>
 </dependency>

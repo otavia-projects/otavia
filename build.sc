@@ -320,7 +320,7 @@ trait SiteModule extends ScalaModule {
               )
         ) {
             replace(javadocDir / "index.html")
-            for (child <- os.walk(javadocDir / "io") if child.toNIO.toString.endsWith(".html")) replace(child)
+            for (child <- os.walk(javadocDir / "cc") if child.toNIO.toString.endsWith(".html")) replace(child)
             for (child <- os.walk(javadocDir / "docs") if child.toNIO.toString.endsWith(".html")) replace(child)
 
             os.copy.over(docs / "home.html", javadocDir / "home.html")

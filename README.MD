@@ -16,7 +16,7 @@
 
 Language: [简体中文](./README.zh_cn.md)
 
-More document can be find at [website](https://otavia-projects.github.io/otavia/home.html)
+More document can be found at [website](https://otavia-projects.github.io/otavia/home.html)
 
 <hr>
 
@@ -31,7 +31,7 @@ provides a toolkit to make writing high-performance concurrent programs more eas
   efficiently, and out.
 - **Resilient by Design**: Building on the principles of The Reactive Manifesto Otavia allows you to write systems that
   self-heal and stay responsive in the face of failures.
-- **High Performance**: build Millions actor instance and send billion message in seconds.
+- **High Performance**: build Millions actor instance and send many billion message in seconds.
 - **Type Safe**: Message send between actor is type safe in compile time.
 - **IOC of Actor**: The actor system is also see as a IOC container, user can autowire actor by actor type.
 - **Powerful IO Stack**: The IO stack is fork from [Netty](https://netty.io), but support AIO and file channel.
@@ -70,13 +70,13 @@ In `otavia`, developer only focus on
 sbt
 
 ```scala
-libraryDependencies += "io.github.otavia-projects" %% "core" % "{version}"
+libraryDependencies += "cc.otavia" %% "core" % "{version}"
 ```
 
 mill
 
 ```scala
-ivy"io.github.otavia-projects:core:{version}"
+ivy"cc.otavia::core:{version}"
 ```
 
 maven
@@ -84,7 +84,7 @@ maven
 ```xml
 
 <dependency>
-    <groupId>io.github.otavia-projects</groupId>
+    <groupId>cc.otavia</groupId>
     <artifactId>core</artifactId>
     <version>{version}</version>
 </dependency>
@@ -96,4 +96,4 @@ See document to learn the [tutorials](https://otavia-projects.github.io/otavia/d
 
 ## Contributes
 
-Any contributions is wellcome!
+Any contributions are welcome!
