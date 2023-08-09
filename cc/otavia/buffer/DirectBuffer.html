@@ -574,12 +574,12 @@ node6 -> node0;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="compact-fffff520" data-f-inherited="Buffer">
+        <div class="documentableElement" id="compact-fffff520" data-f-keywords="override" data-f-inherited="AbstractBuffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#compact-fffff520" t="n" class="documentableName ">compact</a>(): <a href="Buffer.html" t="t">Buffer</a>
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#compact-fffff520" t="n" class="documentableName ">compact</a>(): <a href="Buffer.html" t="t">Buffer</a>
            </div>
           </div>
          </div>
@@ -615,10 +615,18 @@ node6 -> node0;
                </div>
               </dd>
               <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="AbstractBuffer.html#compact-fffff520">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+               </div>
+              </dd>
+              <dt class="body-small">
                Inherited from:
               </dt>
               <dd class="body-medium">
-               <a href="Buffer.html#compact-fffff520">Buffer</a>
+               <a href="AbstractBuffer.html#compact-fffff520">AbstractBuffer</a>
               </dd>
              </dl>
             </div>
@@ -2939,6 +2947,71 @@ node6 -> node0;
           </div>
          </div>
         </div>
+        <div class="documentableElement" id="readBytes-ffffff39" data-f-keywords="override" data-f-inherited="AbstractBuffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#readBytes-ffffff39" t="n" class="documentableName ">readBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">destination</span>: <a href="Buffer.html" t="t">Buffer</a>, <span t="k"></span><span data-unresolved-link="" t="n">length</span>: <span data-unresolved-link="" t="t">Int</span>): <a href="Buffer.html" t="t">Buffer</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Read from this buffer, into the destination <a href="Buffer.html">Buffer</a> This updates the <a href="AbstractBuffer.html#readerOffset-fffffa19">readerOffset</a> of this buffer and also the position of the destination <a href="Buffer.html">Buffer</a>.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Read from this buffer, into the destination <a href="Buffer.html">Buffer</a> This updates the <a href="AbstractBuffer.html#readerOffset-fffffa19">readerOffset</a> of this buffer and also the position of the destination <a href="Buffer.html">Buffer</a>.</p> 
+              <p>Note: the behaviour is undefined if the given <a href="Buffer.html">Buffer</a> is an alias for the memory in this buffer.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               destination
+              </dt>
+              <dd class="body-medium">
+               <p>The <a href="Buffer.html">Buffer</a> to write into.</p> 
+              </dd>
+              <dt class="body-small">
+               length
+              </dt>
+              <dd class="body-medium">
+               <p>The number of bytes to read.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>This buffer.</p> 
+              </dd>
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="AbstractBuffer.html#readBytes-ffffff39">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="AbstractBuffer.html#readBytes-ffffff39">AbstractBuffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
         <div class="documentableElement" id="readBytes-fffff54e" data-f-keywords="override" data-f-inherited="AbstractBuffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -3009,12 +3082,12 @@ node6 -> node0;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="readBytes-fffffc72" data-f-keywords="override" data-f-inherited="AbstractBuffer">
+        <div class="documentableElement" id="readBytes-f07" data-f-keywords="override" data-f-inherited="AbstractBuffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#readBytes-fffffc72" t="n" class="documentableName ">readBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">destination</span>: <span data-unresolved-link="" t="t">ByteBuffer</span>): <a href="Buffer.html" t="t">Buffer</a>
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#readBytes-f07" t="n" class="documentableName ">readBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">destination</span>: <span data-unresolved-link="" t="t">ByteBuffer</span>, <span t="k"></span><span data-unresolved-link="" t="n">length</span>: <span data-unresolved-link="" t="t">Int</span>): <a href="Buffer.html" t="t">Buffer</a>
            </div>
           </div>
          </div>
@@ -3039,6 +3112,17 @@ node6 -> node0;
               <dd class="body-medium">
                <p>The <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> to write into.</p> 
               </dd>
+              <dt class="body-small">
+               length
+              </dt>
+              <dd class="body-medium">
+               <p>The number of bytes to copy. The real length is</p> 
+               <div class="snippet mono-small-block">
+                <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span>math.min(math.min(readableBytes, length), destination.remaining())
+</span></code></pre>
+                <div class="buttons"></div>
+               </div> 
+              </dd>
              </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -3053,14 +3137,166 @@ node6 -> node0;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="AbstractBuffer.html#readBytes-fffffc72">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="AbstractBuffer.html#readBytes-f07">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
                Inherited from:
               </dt>
               <dd class="body-medium">
-               <a href="AbstractBuffer.html#readBytes-fffffc72">AbstractBuffer</a>
+               <a href="AbstractBuffer.html#readBytes-f07">AbstractBuffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="readBytes-c00" data-f-keywords="final" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#readBytes-c00" t="n" class="documentableName ">readBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">destination</span>: <a href="Buffer.html" t="t">Buffer</a>): <a href="Buffer.html" t="t">Buffer</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Read from this buffer, into the destination <a href="Buffer.html">Buffer</a> This updates the <a href="Buffer.html#readerOffset-fffffa19">readerOffset</a> of this buffer and also the position of the destination <a href="Buffer.html">Buffer</a>.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Read from this buffer, into the destination <a href="Buffer.html">Buffer</a> This updates the <a href="Buffer.html#readerOffset-fffffa19">readerOffset</a> of this buffer and also the position of the destination <a href="Buffer.html">Buffer</a>.</p> 
+              <p>Note: the behaviour is undefined if the given <a href="Buffer.html">Buffer</a> is an alias for the memory in this buffer.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               destination
+              </dt>
+              <dd class="body-medium">
+               <p>The <a href="Buffer.html">Buffer</a> to write into.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>This buffer.</p> 
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="Buffer.html#readBytes-c00">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="readBytes-4ae" data-f-keywords="final" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#readBytes-4ae" t="n" class="documentableName ">readBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">destination</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>]): <a href="Buffer.html" t="t">Buffer</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Read from this buffer, into the destination array, the given number of bytes. This updates the <a href="Buffer.html#readerOffset-fffffa19">readerOffset</a> of this buffer by the length argument.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Read from this buffer, into the destination array, the given number of bytes. This updates the <a href="Buffer.html#readerOffset-fffffa19">readerOffset</a> of this buffer by the length argument.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               destination
+              </dt>
+              <dd class="body-medium">
+               <p>The byte array to write into.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>This buffer.</p> 
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="Buffer.html#readBytes-4ae">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="readBytes-fffffc72" data-f-keywords="final" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#readBytes-fffffc72" t="n" class="documentableName ">readBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">destination</span>: <span data-unresolved-link="" t="t">ByteBuffer</span>): <a href="Buffer.html" t="t">Buffer</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Read from this buffer, into the destination <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> This updates the <a href="Buffer.html#readerOffset-fffffa19">readerOffset</a> of this buffer and also the position of the destination <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span>.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Read from this buffer, into the destination <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> This updates the <a href="Buffer.html#readerOffset-fffffa19">readerOffset</a> of this buffer and also the position of the destination <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span>.</p> 
+              <p>Note: the behaviour is undefined if the given <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> is an alias for the memory in this buffer.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               destination
+              </dt>
+              <dd class="body-medium">
+               <p>The <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> to write into.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>This buffer.</p> 
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="Buffer.html#readBytes-fffffc72">Buffer</a>
               </dd>
              </dl>
             </div>
@@ -6774,12 +7010,12 @@ node6 -> node0;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="writeBytes-fffffc72" data-f-keywords="override" data-f-inherited="AbstractBuffer">
+        <div class="documentableElement" id="writeBytes-f07" data-f-keywords="override" data-f-inherited="AbstractBuffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#writeBytes-fffffc72" t="n" class="documentableName ">writeBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">source</span>: <span data-unresolved-link="" t="t">ByteBuffer</span>): <a href="Buffer.html" t="t">Buffer</a>
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#writeBytes-f07" t="n" class="documentableName ">writeBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">source</span>: <span data-unresolved-link="" t="t">ByteBuffer</span>, <span t="k"></span><span data-unresolved-link="" t="n">length</span>: <span data-unresolved-link="" t="t">Int</span>): <a href="Buffer.html" t="t">Buffer</a>
            </div>
           </div>
          </div>
@@ -6798,6 +7034,12 @@ node6 -> node0;
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
+              <dt class="body-small">
+               length
+              </dt>
+              <dd class="body-medium">
+               <p>The number of bytes to copy.</p> 
+              </dd>
               <dt class="body-small">
                source
               </dt>
@@ -6818,14 +7060,14 @@ node6 -> node0;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="AbstractBuffer.html#writeBytes-fffffc72">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="AbstractBuffer.html#writeBytes-f07">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
                Inherited from:
               </dt>
               <dd class="body-medium">
-               <a href="AbstractBuffer.html#writeBytes-fffffc72">AbstractBuffer</a>
+               <a href="AbstractBuffer.html#writeBytes-f07">AbstractBuffer</a>
               </dd>
              </dl>
             </div>
@@ -6903,12 +7145,12 @@ node6 -> node0;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="writeBytes-c00" data-f-keywords="override" data-f-inherited="AbstractBuffer">
+        <div class="documentableElement" id="writeBytes-ffffff39" data-f-keywords="override" data-f-inherited="AbstractBuffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#writeBytes-c00" t="n" class="documentableName ">writeBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">source</span>: <a href="Buffer.html" t="t">Buffer</a>): <a href="Buffer.html" t="t">Buffer</a>
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#writeBytes-ffffff39" t="n" class="documentableName ">writeBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">source</span>: <a href="Buffer.html" t="t">Buffer</a>, <span t="k"></span><span data-unresolved-link="" t="n">length</span>: <span data-unresolved-link="" t="t">Int</span>): <a href="Buffer.html" t="t">Buffer</a>
            </div>
           </div>
          </div>
@@ -6918,14 +7160,20 @@ node6 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Writes into this buffer, all the readable bytes from the given buffer. This updates the <a href="AbstractBuffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer, and the <a href="AbstractBuffer.html#readerOffset-fffffa19">readerOffset</a> of the given buffer.</p> 
+             <p>Writes into this buffer, the given number of bytes from the <span data-unresolved-link="" title="Problem linking source: No DRI found for query">source</span>. This updates the <a href="AbstractBuffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer, and the <a href="AbstractBuffer.html#readerOffset-fffffa19">readerOffset</a> of the given buffer.</p> 
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Writes into this buffer, all the readable bytes from the given buffer. This updates the <a href="AbstractBuffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer, and the <a href="AbstractBuffer.html#readerOffset-fffffa19">readerOffset</a> of the given buffer.</p> 
+              <p>Writes into this buffer, the given number of bytes from the <span data-unresolved-link="" title="Problem linking source: No DRI found for query">source</span>. This updates the <a href="AbstractBuffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer, and the <a href="AbstractBuffer.html#readerOffset-fffffa19">readerOffset</a> of the given buffer.</p> 
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
+              <dt class="body-small">
+               length
+              </dt>
+              <dd class="body-medium">
+               <p>The number of bytes to copy.</p> 
+              </dd>
               <dt class="body-small">
                source
               </dt>
@@ -6946,14 +7194,14 @@ node6 -> node0;
               </dt>
               <dd class="body-medium">
                <div>
-                <a href="AbstractBuffer.html#writeBytes-c00">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
+                <a href="AbstractBuffer.html#writeBytes-ffffff39">AbstractBuffer</a> -&gt; <a href="Buffer.html">Buffer</a>
                </div>
               </dd>
               <dt class="body-small">
                Inherited from:
               </dt>
               <dd class="body-medium">
-               <a href="AbstractBuffer.html#writeBytes-c00">AbstractBuffer</a>
+               <a href="AbstractBuffer.html#writeBytes-ffffff39">AbstractBuffer</a>
               </dd>
              </dl>
             </div>
@@ -6961,12 +7209,63 @@ node6 -> node0;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="writeBytes-4ae" data-f-inherited="Buffer">
+        <div class="documentableElement" id="writeBytes-fffffc72" data-f-keywords="final" data-f-inherited="Buffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#writeBytes-4ae" t="n" class="documentableName ">writeBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">source</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>]): <a href="Buffer.html" t="t">Buffer</a>
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#writeBytes-fffffc72" t="n" class="documentableName ">writeBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">source</span>: <span data-unresolved-link="" t="t">ByteBuffer</span>): <a href="Buffer.html" t="t">Buffer</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Writes into this buffer from the source <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span>. This updates the <a href="Buffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer and also the position of the source <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span>.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Writes into this buffer from the source <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span>. This updates the <a href="Buffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer and also the position of the source <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span>.</p> 
+              <p>Note: the behaviour is undefined if the given <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> is an alias for the memory in this buffer.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               source
+              </dt>
+              <dd class="body-medium">
+               <p>The <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> to read from.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>This buffer.</p> 
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="Buffer.html#writeBytes-fffffc72">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="writeBytes-4ae" data-f-keywords="final" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#writeBytes-4ae" t="n" class="documentableName ">writeBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">source</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>]): <a href="Buffer.html" t="t">Buffer</a>
            </div>
           </div>
          </div>
@@ -7004,6 +7303,56 @@ node6 -> node0;
               </dt>
               <dd class="body-medium">
                <a href="Buffer.html#writeBytes-4ae">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="writeBytes-c00" data-f-keywords="final" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="DirectBuffer.html#writeBytes-c00" t="n" class="documentableName ">writeBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">source</span>: <a href="Buffer.html" t="t">Buffer</a>): <a href="Buffer.html" t="t">Buffer</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Writes into this buffer, all the readable bytes from the given buffer. This updates the <a href="Buffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer, and the <a href="Buffer.html#readerOffset-fffffa19">readerOffset</a> of the given buffer.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Writes into this buffer, all the readable bytes from the given buffer. This updates the <a href="Buffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer, and the <a href="Buffer.html#readerOffset-fffffa19">readerOffset</a> of the given buffer.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               source
+              </dt>
+              <dd class="body-medium">
+               <p>The buffer to read from.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>This buffer.</p> 
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="Buffer.html#writeBytes-c00">Buffer</a>
               </dd>
              </dl>
             </div>
