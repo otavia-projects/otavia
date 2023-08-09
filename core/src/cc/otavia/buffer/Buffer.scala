@@ -357,7 +357,19 @@ trait Buffer {
      *  @return
      *    This buffer.
      */
-    def writeBytes(source: Buffer): Buffer
+    final def writeBytes(source: Buffer): Buffer = writeBytes(source, source.readableBytes)
+
+    /** Writes into this buffer, the given number of bytes from the [[source]]. This updates the [[writerOffset]] of
+     *  this buffer, and the [[readerOffset]] of the given buffer.
+     *
+     *  @param source
+     *    The buffer to read from.
+     *  @param length
+     *    The number of bytes to copy.
+     *  @return
+     *    This buffer.
+     */
+    def writeBytes(source: Buffer, length: Int): Buffer
 
     /** Writes into this buffer, the given number of bytes from the byte array. This updates the [[writerOffset]] of
      *  this buffer by the length argument.
@@ -381,7 +393,7 @@ trait Buffer {
      *  @return
      *    This buffer.
      */
-    def writeBytes(source: Array[Byte]): Buffer = writeBytes(source, 0, source.length)
+    final def writeBytes(source: Array[Byte]): Buffer = writeBytes(source, 0, source.length)
 
     /** Writes into this buffer from the source [[ByteBuffer]]. This updates the [[writerOffset]] of this buffer and
      *  also the position of the source [[ByteBuffer]].
@@ -393,7 +405,21 @@ trait Buffer {
      *  @return
      *    This buffer.
      */
-    def writeBytes(source: ByteBuffer): Buffer
+    final def writeBytes(source: ByteBuffer): Buffer = writeBytes(source, source.remaining())
+
+    /** Writes into this buffer from the source [[ByteBuffer]]. This updates the [[writerOffset]] of this buffer and
+     *  also the position of the source [[ByteBuffer]].
+     *
+     *  <p> Note: the behaviour is undefined if the given [[ByteBuffer]] is an alias for the memory in this buffer.
+     *
+     *  @param source
+     *    The [[ByteBuffer]] to read from.
+     *  @param length
+     *    The number of bytes to copy.
+     *  @return
+     *    This buffer.
+     */
+    def writeBytes(source: ByteBuffer, length: Int): Buffer
 
     /** Read from this buffer, into the destination [[ByteBuffer]] This updates the [[readerOffset]] of this buffer and
      *  also the position of the destination [[ByteBuffer]].
@@ -405,7 +431,32 @@ trait Buffer {
      *  @return
      *    This buffer.
      */
-    def readBytes(destination: ByteBuffer): Buffer
+    final def readBytes(destination: ByteBuffer): Buffer = readBytes(destination, destination.remaining())
+
+    /** Read from this buffer, into the destination [[ByteBuffer]] This updates the [[readerOffset]] of this buffer and
+     *  also the position of the destination [[ByteBuffer]].
+     *
+     *  <p> Note: the behaviour is undefined if the given [[ByteBuffer]] is an alias for the memory in this buffer.
+     *
+     *  @param destination
+     *    The [[ByteBuffer]] to write into.
+     *  @param length
+     *    The number of bytes to copy. The real length is
+     *    {{{math.min(math.min(readableBytes, length), destination.remaining())}}}
+     *  @return
+     *    This buffer.
+     */
+    def readBytes(destination: ByteBuffer, length: Int): Buffer
+
+    /** Read from this buffer, into the destination array, the given number of bytes. This updates the [[readerOffset]]
+     *  of this buffer by the length argument.
+     *
+     *  @param destination
+     *    The byte array to write into.
+     *  @return
+     *    This buffer.
+     */
+    final def readBytes(destination: Array[Byte]): Buffer = readBytes(destination, 0, destination.length)
 
     /** Read from this buffer, into the destination array, the given number of bytes. This updates the [[readerOffset]]
      *  of this buffer by the length argument.
@@ -420,6 +471,32 @@ trait Buffer {
      *    This buffer.
      */
     def readBytes(destination: Array[Byte], destPos: Int, length: Int): Buffer
+
+    /** Read from this buffer, into the destination [[Buffer]] This updates the [[readerOffset]] of this buffer and also
+     *  the position of the destination [[Buffer]].
+     *
+     *  <p> Note: the behaviour is undefined if the given [[Buffer]] is an alias for the memory in this buffer.
+     *
+     *  @param destination
+     *    The [[Buffer]] to write into.
+     *  @return
+     *    This buffer.
+     */
+    final def readBytes(destination: Buffer): Buffer = readBytes(destination, readableBytes)
+
+    /** Read from this buffer, into the destination [[Buffer]] This updates the [[readerOffset]] of this buffer and also
+     *  the position of the destination [[Buffer]].
+     *
+     *  <p> Note: the behaviour is undefined if the given [[Buffer]] is an alias for the memory in this buffer.
+     *
+     *  @param destination
+     *    The [[Buffer]] to write into.
+     *  @param length
+     *    The number of bytes to read.
+     *  @return
+     *    This buffer.
+     */
+    def readBytes(destination: Buffer, length: Int): Buffer
 
     /** Resets the [[readerOffset]] and the [[writerOffset]] on this buffer to zero, and return this buffer.
      *
@@ -618,7 +695,7 @@ trait Buffer {
      *  @throws IllegalStateException
      *    if this buffer is in a bad state.
      */
-    def compact(): Buffer = ???
+    def compact(): Buffer
 
     /** Close this [[Buffer]] */
     def close(): Unit

@@ -49,34 +49,6 @@ trait AdaptiveBuffer extends Buffer {
      */
     private[otavia] def extend(buffer: PageBuffer): Unit
 
-    /** Writes into this [[AdaptiveBuffer]] from the source [[AdaptiveBuffer]]. This updates the write offset of this
-     *  buffer and also the position of the source [[AdaptiveBuffer]].
-     *
-     *  Note: the behaviour is undefined if the given [[AdaptiveBuffer]] is an alias for the memory in this buffer.
-     *
-     *  @param source
-     *    The [[AdaptiveBuffer]] to read from.
-     *  @param length
-     *    length of data to write.
-     *  @return
-     *    This buffer.
-     */
-    def writeBytes(source: AdaptiveBuffer, length: Int): AdaptiveBuffer
-
-    /** Read from this [[AdaptiveBuffer]], into the destination [[AdaptiveBuffer]] This updates the read offset of this
-     *  buffer and also the position of the destination [[AdaptiveBuffer]].
-     *
-     *  Note: the behaviour is undefined if the given [[AdaptiveBuffer]] is an alias for the memory in this buffer.
-     *
-     *  @param destination
-     *    The [[AdaptiveBuffer]] to write into.
-     *  @param length
-     *    length of data to read.
-     *  @return
-     *    This buffer.
-     */
-    def readBytes(destination: AdaptiveBuffer, length: Int): AdaptiveBuffer
-
 }
 
 object AdaptiveBuffer {
@@ -84,6 +56,18 @@ object AdaptiveBuffer {
     val MAX_BUFFER_SIZE: Int = Int.MaxValue - 8
 
     def apply(allocator: PageBufferAllocator): AdaptiveBuffer = new AdaptiveBufferImpl(allocator)
+
+    def apply(pageBuffer: PageBuffer): AdaptiveBuffer = {
+        val adaptiveBuffer = new AdaptiveBufferImpl(pageBuffer.allocator)
+        var cursor = pageBuffer
+        while (cursor != null) {
+            val buffer = cursor
+            cursor = cursor.next
+            buffer.next = null
+            adaptiveBuffer.extend(buffer)
+        }
+        adaptiveBuffer
+    }
 
     private object BufferEntry {
 

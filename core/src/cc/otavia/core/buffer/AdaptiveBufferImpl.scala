@@ -16,7 +16,7 @@
 
 package cc.otavia.core.buffer
 
-import cc.otavia.buffer.{Buffer, ByteCursor, PageBuffer, PageBufferAllocator}
+import cc.otavia.buffer.*
 import cc.otavia.core.buffer.AdaptiveBuffer.AdaptiveStrategy
 
 import java.lang.{Byte as JByte, Double as JDouble, Float as JFloat, Long as JLong, Short as JShort}
@@ -24,6 +24,7 @@ import java.nio.ByteBuffer
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
 import java.nio.charset.Charset
 import scala.collection.mutable
+import scala.language.unsafeNulls
 
 private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
     extends mutable.ArrayDeque[PageBuffer]
@@ -75,6 +76,12 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
             widx = 0
             clearAndShrink()
         }
+    }
+
+    override def compact(): Buffer = {
+        widx -= ridx
+        ridx = 0
+        this
     }
 
     private def extendBuffer(): Unit = {
@@ -190,23 +197,45 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
 
     override def isDirect: Boolean = allocator.isDirect
 
-    override def writeBytes(source: AdaptiveBuffer, length: Int): AdaptiveBuffer = ???
+    override def copyInto(srcPos: Int, dest: Array[Byte], destPos: Int, length: Int): Unit =
+        throw new UnsupportedOperationException("AdaptiveBuffer not support copyInto")
 
-    override def readBytes(destination: AdaptiveBuffer, length: Int): AdaptiveBuffer = ???
+    override def copyInto(srcPos: Int, dest: ByteBuffer, destPos: Int, length: Int): Unit =
+        throw new UnsupportedOperationException("AdaptiveBuffer not support copyInto")
 
-    override def copyInto(srcPos: Int, dest: Array[Byte], destPos: Int, length: Int): Unit = ???
+    override def copyInto(srcPos: Int, dest: Buffer, destPos: Int, length: Int): Unit =
+        throw new UnsupportedOperationException("AdaptiveBuffer not support copyInto")
 
-    override def copyInto(srcPos: Int, dest: ByteBuffer, destPos: Int, length: Int): Unit = ???
+    override def transferTo(channel: WritableByteChannel, length: Int): Int =
+        throw new UnsupportedOperationException("AdaptiveBuffer not support transferTo")
 
-    override def copyInto(srcPos: Int, dest: Buffer, destPos: Int, length: Int): Unit = ???
+    override def transferFrom(channel: FileChannel, position: Long, length: Int): Int =
+        throw new UnsupportedOperationException("AdaptiveBuffer not support transferFrom")
 
-    override def transferTo(channel: WritableByteChannel, length: Int): Int = ???
+    override def transferFrom(channel: ReadableByteChannel, length: Int): Int =
+        throw new UnsupportedOperationException("AdaptiveBuffer not support transferFrom")
 
-    override def transferFrom(channel: FileChannel, position: Long, length: Int): Int = ???
-
-    override def transferFrom(channel: ReadableByteChannel, length: Int): Int = ???
-
-    override def bytesBefore(needle: Byte): Int = ???
+    override def bytesBefore(needle: Byte): Int = {
+        var offset: Int       = ridx
+        var continue: Boolean = true
+        var idx               = 0
+        var idxOffset         = ridx
+        while (continue && idx < size) {
+            val buffer     = apply(idx)
+            val len        = buffer.readableBytes
+            val byteBuffer = buffer.underlying
+            while (continue && offset < idxOffset + len) {
+                if (byteBuffer.get(buffer.readerOffset + offset - idxOffset) == needle) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) {
+                idxOffset += len
+                idx += 1
+            }
+        }
+        if (continue) -1 else offset - ridx
+    }
 
     override def bytesBefore(needle1: Byte, needle2: Byte): Int = ???
 
@@ -220,13 +249,7 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
 
     override def openReverseCursor(fromOffset: Int, length: Int): ByteCursor = ???
 
-    override def ensureWritable(size: Int, minimumGrowth: Int, allowCompaction: Boolean): Buffer =
-        if (writableBytes >= size) this
-        else {
-            extendBuffer()
-            // TODO
-            this
-        }
+    override def ensureWritable(size: Int, minimumGrowth: Int, allowCompaction: Boolean): Buffer = this
 
     override def close(): Unit = {
         recycleAll()
@@ -1251,18 +1274,71 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
 
     private def realWritableBytes: Int = if (nonEmpty) last.writableBytes else 0
 
-    override def writeCharSequence(source: CharSequence, charset: Charset): Buffer = ???
+    override def writeCharSequence(source: CharSequence, charset: Charset): Buffer = {
+        val array = source.toString.getBytes(charset)
+        writeBytes(array)
+        this
+    }
 
-    override def readCharSequence(length: Int, charset: Charset): CharSequence = ???
+    override def readCharSequence(length: Int, charset: Charset): CharSequence = {
+        val array = new Array[Byte](length)
+        readBytes(array)
+        new String(array, 0, length, charset)
+    }
 
-    override def writeBytes(source: Buffer): Buffer = ???
+    override def writeBytes(source: Buffer, length: Int): Buffer = {
+        val remaining = if (source.readableBytes > length) source.readableBytes - length else 0
+        source match
+            case buffer: AbstractBuffer =>
+                while {
+                    last.writeBytes(buffer) // TODO: bug
+                    val continue = buffer.readableBytes > remaining
+                    if (continue) extendBuffer()
+                    continue
+                } do ()
+            case buffer: AdaptiveBuffer =>
+                if (allocator == buffer.allocator) {
+                    // TODO
+                } else {
+                    val pageChain = buffer.splitBefore(buffer.readerOffset + length)
+                    var cursor    = pageChain
+                    while (cursor != null) {
+                        val buffer = cursor
+                        cursor = cursor.next
+                        buffer.next = null
+                        this.writeBytes(buffer)
+                    }
+                }
+            case _ =>
+                while (source.readableBytes > 0) this.writeByte(source.readByte)
+        this
+    }
 
     override def writeBytes(source: Array[Byte], srcPos: Int, length: Int): Buffer = ???
 
-    override def writeBytes(source: ByteBuffer): Buffer = ???
+    override def writeBytes(source: ByteBuffer, length: Int): Buffer = ???
 
-    override def readBytes(destination: ByteBuffer): Buffer = ???
+    override def readBytes(destination: ByteBuffer, length: Int): Buffer = {
+        val len = math.min(destination.remaining(), readableBytes)
+        if (len <= head.readableBytes) { // read from head buffer
+            head.readBytes(destination)
+            ridx += len
+            if (head.readableBytes == 0) recycleHead()
+        } else {
+            val chain  = splitBefore(ridx + len)
+            var cursor = chain
+            while (cursor != null) {
+                val buffer = cursor
+                cursor = cursor.next
+                buffer.readBytes(destination)
+                buffer.close()
+            }
+        }
+        this
+    }
 
     override def readBytes(destination: Array[Byte], destPos: Int, length: Int): Buffer = ???
+
+    override def readBytes(destination: Buffer, length: Int): Buffer = ???
 
 }

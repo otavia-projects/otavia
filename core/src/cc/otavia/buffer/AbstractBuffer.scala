@@ -50,6 +50,18 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         this
     }
 
+    override def compact(): Buffer = {
+        if (readableBytes == 0) {
+            ridx = 0
+            widx = 0
+        } else {
+            underlying.put(0, underlying, ridx, widx - ridx)
+            widx -= ridx
+            ridx = 0
+        }
+        this
+    }
+
     override def writeCharSequence(source: CharSequence, charset: Charset): Buffer = {
         val array = source.toString.getBytes(charset)
         underlying.put(widx, array)
@@ -64,11 +76,11 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         new String(array, 0, length, charset)
     }
 
-    override def writeBytes(source: Buffer): Buffer = {
-        val length = source.readableBytes
+    override def writeBytes(source: Buffer, length: Int): Buffer = {
         underlying.position(widx)
-        source.readBytes(underlying)
-        widx += length
+        source.readBytes(underlying, length)
+        widx = underlying.position()
+        underlying.clear()
         this
     }
 
@@ -78,26 +90,35 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         this
     }
 
-    override def writeBytes(source: ByteBuffer): Buffer = {
-        val len    = source.remaining()
-        val offset = source.position()
+    override def writeBytes(source: ByteBuffer, length: Int): Buffer = {
+        val len = math.min(length, source.remaining())
+        checkWrite(widx, len)
         underlying.put(widx, source, source.position(), len)
         widx += len
+        source.position(source.position() + len)
         this
     }
 
-    override def readBytes(destination: ByteBuffer): Buffer = {
-        val length = widx - ridx
+    override def readBytes(destination: ByteBuffer, length: Int): Buffer = {
+        val len    = math.min(math.min(readableBytes, length), destination.remaining())
         val desPos = destination.position()
-        destination.put(desPos, underlying, ridx, widx)
-        destination.position(desPos + length)
-        ridx += length
+        destination.put(desPos, underlying, ridx, len)
+        destination.position(desPos + len)
+        ridx += len
         this
     }
 
     override def readBytes(destination: Array[Byte], destPos: Int, length: Int): Buffer = {
         underlying.get(ridx, destination, destPos, length)
         ridx += length
+        this
+    }
+
+    override def readBytes(destination: Buffer, length: Int): Buffer = {
+        underlying.position(ridx)
+        destination.writeBytes(underlying, length)
+        ridx = underlying.position()
+        underlying.clear()
         this
     }
 
@@ -169,10 +190,17 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
             if (continue) -1 else offset - ridx
         } else -1
 
-    override def bytesBefore(needle: Array[Byte]): Int = {
-
-        ???
-    }
+    override def bytesBefore(needle: Array[Byte]): Int = if (readableBytes >= needle.length) {
+        val length            = needle.length
+        val copy              = new Array[Byte](length)
+        var offset: Int       = ridx
+        var continue: Boolean = true
+        while (continue && offset < widx - length) {
+            this.copyInto(offset, copy, 0, length)
+            if (copy sameElements needle) continue = false else offset += 1
+        }
+        if (continue) -1 else offset - ridx
+    } else -1
 
     override def openCursor(fromOffset: Int, length: Int): ByteCursor = ???
 

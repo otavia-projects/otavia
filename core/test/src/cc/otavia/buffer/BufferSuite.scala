@@ -18,12 +18,19 @@
 
 package cc.otavia.buffer
 
+import cc.otavia.core.buffer.AdaptiveBuffer
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 import scala.language.unsafeNulls
 
 class BufferSuite extends AnyFunSuite {
+
+    private val heapPageAllocator: PageBufferAllocator   = BufferAllocator.heapPageAllocator
+    private val directPageAllocator: PageBufferAllocator = BufferAllocator.directPageAllocator
+
+    private val adaptiveBuffer: AdaptiveBuffer = AdaptiveBuffer(heapPageAllocator)
 
     test("heap buffer copy") {
         val allocator = BufferAllocator.heapPageAllocator
@@ -62,6 +69,101 @@ class BufferSuite extends AnyFunSuite {
         assert(array.forall(bt => bt == 'a'))
         assert(byteBuffer.get(0) == 'a')
         assert(buffer1.getByte(1) == 'a')
+    }
+
+    test("string op in buffer") {
+        val allocator = BufferAllocator.directPageAllocator
+        val buffer    = allocator.allocate()
+
+        buffer.writeChar('b')
+        assert(buffer.writerOffset == 2)
+
+        val pos1 = buffer.writerOffset
+        buffer.writeCharSequence("hello world", StandardCharsets.UTF_8)
+        val pos2 = buffer.writerOffset
+
+        assert(buffer.readChar == 'b')
+        assert(buffer.readCharSequence(pos2 - pos1, StandardCharsets.UTF_8).toString == "hello world")
+
+        buffer.writeCharSequence("hello 你好！", StandardCharsets.UTF_8)
+        val pos3 = buffer.writerOffset
+
+        assert(buffer.readCharSequence(pos3 - pos2, StandardCharsets.UTF_8).toString == "hello 你好！")
+
+        assert(buffer.readableBytes == 0)
+
+        buffer.compact()
+        assert(buffer.readableBytes == 0)
+        assert(buffer.readerOffset == 0)
+        assert(buffer.writerOffset == 0)
+
+        buffer.writeCharLE('B')
+        assert(buffer.readChar != 'B')
+
+        buffer.compact()
+        buffer.writeCharLE('B')
+        assert(buffer.readCharLE == 'B')
+
+        buffer.compact()
+        buffer.writeCharLE('B')
+        assert(Character.reverseBytes(buffer.readChar) == 'B')
+
+    }
+
+    test("compact buffer") {
+        val allocator = BufferAllocator.directPageAllocator
+        val buffer    = allocator.allocate()
+
+        buffer.writeInt(2)
+        assert(buffer.readerOffset == 0)
+        assert(buffer.writerOffset == Integer.BYTES)
+
+        buffer.readInt
+        assert(buffer.readerOffset == 4)
+        assert(buffer.writerOffset == Integer.BYTES)
+        assert(buffer.readableBytes == 0)
+
+        buffer.compact()
+        assert(buffer.readerOffset == 0)
+        assert(buffer.writerOffset == 0)
+
+        buffer.writeMedium(12)
+        buffer.writeCharSequence("hello world!", StandardCharsets.US_ASCII)
+
+        assert(buffer.readableBytes == 3 + 12)
+
+        buffer.readMedium
+        assert(buffer.readableBytes == 12)
+
+        assert(buffer.readerOffset == 3)
+
+        buffer.compact()
+        assert(buffer.readableBytes == 12)
+
+        assert(buffer.readerOffset == 0)
+
+        assert(buffer.readCharSequence(12, StandardCharsets.US_ASCII).toString == "hello world!")
+
+        assert(buffer.readableBytes == 0)
+        assert(buffer.readerOffset == 12)
+
+        buffer.compact()
+
+        assert(buffer.readerOffset == 0)
+
+    }
+
+    test("write bytes to buffer") {
+        val buffer = heapPageAllocator.allocate()
+
+        val adaptiveBuffer = AdaptiveBuffer(heapPageAllocator)
+
+        for (idx <- 0 until 1600) adaptiveBuffer.writeInt(idx)
+
+        for (idx <- 0 until 800) adaptiveBuffer.readInt
+
+        buffer.writeBytes(adaptiveBuffer)
+
     }
 
 }
