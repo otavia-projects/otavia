@@ -24,7 +24,6 @@ import cc.otavia.core.buffer.{DirectPageAllocator, HeapPageAllocator}
 import cc.otavia.core.channel.ChannelFactory
 import cc.otavia.core.ioc.{BeanDefinition, BeanManager, Module}
 import cc.otavia.core.message.{Call, IdAllocator}
-import cc.otavia.core.reactor.{BlockTaskExecutor, Submitter}
 import cc.otavia.core.slf4a.{LogLevel, Logger}
 import cc.otavia.core.system.monitor.{ReactorMonitor, SystemMonitor, SystemMonitorTask, ThreadMonitor}
 import cc.otavia.core.timer.{Timeout, Timer, TimerImpl}
@@ -123,10 +122,6 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     override private[core] def reactor = _reactor
 
     override def timer: Timer = timerExecutor
-
-    override def blockingExecutor: BlockTaskExecutor = ???
-
-    override def aio: Submitter = ???
 
     override def distributor: IdAllocator = ???
 

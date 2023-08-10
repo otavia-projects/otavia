@@ -326,12 +326,12 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
 
     private def closeAfterDeregister(wasActive: Boolean): Unit = {
         if (isOpen && getOption(ChannelOption.SO_LINGER) > 0) {
-            val future = system.aio.submitClose(this) // TODO: replace by aio
-            future.onCompleted { self => fireChannelInactive(wasActive, self.cause) }
-            val blockFuture = system.executeBlocking(() => doClose(), this)
-            blockFuture.promise.onCompleted { self =>
-                fireChannelInactive(wasActive, self.cause)
-            }
+            // val future = system.aio.submitClose(this) // TODO: replace by aio
+            // future.onCompleted { self => fireChannelInactive(wasActive, self.cause) }
+            // val blockFuture = system.executeBlocking(() => doClose(), this)
+            // blockFuture.promise.onCompleted { self =>
+            //     fireChannelInactive(wasActive, self.cause)
+            // }
         } else {
             var cause: Option[Throwable] = None
             try { doClose() }

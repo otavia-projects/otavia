@@ -22,7 +22,7 @@ import cc.otavia.core.address.Address
 import cc.otavia.core.channel.{Channel, ChannelFactory}
 import cc.otavia.core.ioc.{BeanDefinition, Module}
 import cc.otavia.core.message.*
-import cc.otavia.core.reactor.{BlockTaskExecutor, Reactor, Submitter}
+import cc.otavia.core.reactor.Reactor
 import cc.otavia.core.slf4a.LogLevel
 import cc.otavia.core.stack.BlockFuture
 import cc.otavia.core.system.monitor.SystemMonitor
@@ -49,13 +49,6 @@ trait ActorSystem {
 
     /** Timeout event dispatcher of this actor system */
     def timer: Timer
-
-    def blockingExecutor: BlockTaskExecutor
-
-    final def executeBlocking[V](task: () => V, owner: Channel): BlockFuture[V] =
-        blockingExecutor.executeBlocking(task, owner)
-
-    def aio: Submitter
 
     /** message id distributor usage for create [[Notice]] message */
     def distributor: IdAllocator
