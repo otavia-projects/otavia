@@ -68,9 +68,6 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     private var mainActor: Address[MainActor.Args] = _
 
-    private val direct = new DirectPageAllocator()
-    private val heap   = new HeapPageAllocator()
-
     private val transFactory: TransportFactory = TransportFactory.getTransportFactory(this)
     private val chFactory: ChannelFactory      = new ChannelFactory(transFactory)
 
@@ -124,10 +121,6 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     override def timer: Timer = timerExecutor
 
     override def distributor: IdAllocator = ???
-
-    override def directAllocator: BufferAllocator = direct
-
-    override def headAllocator: BufferAllocator = heap
 
     override def shutdown(): Unit = ???
 

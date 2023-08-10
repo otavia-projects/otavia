@@ -53,12 +53,6 @@ trait ActorSystem {
     /** message id distributor usage for create [[Notice]] message */
     def distributor: IdAllocator
 
-    /** A [[BufferAllocator]] which allocate heap memory. */
-    def directAllocator: BufferAllocator
-
-    /** A [[BufferAllocator]] which allocate heap memory. */
-    def headAllocator: BufferAllocator
-
     def shutdown(): Unit
 
     def defaultMaxFetchPerRunning: Int
