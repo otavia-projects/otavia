@@ -16,7 +16,6 @@
 
 package cc.otavia.core.channel.message
 
-import cc.otavia.buffer.Buffer
 import cc.otavia.core.channel.message.AdaptiveBufferRange
 
 import java.net.SocketAddress

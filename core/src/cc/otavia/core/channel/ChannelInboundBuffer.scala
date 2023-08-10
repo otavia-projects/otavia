@@ -16,7 +16,7 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.buffer.{Buffer, BufferAllocator, CompositeBuffer}
+import cc.otavia.buffer.{Buffer, CompositeBuffer}
 import cc.otavia.core.channel.cumulator.{Cumulator, ReadSinkBufferCumulator}
 
 trait ChannelInboundBuffer {

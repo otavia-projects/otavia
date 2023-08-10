@@ -16,7 +16,7 @@
 
 package cc.otavia.core.buffer
 
-import cc.otavia.buffer.*
+import cc.otavia.buffer.{AbstractBuffer, Buffer, ByteCursor}
 import cc.otavia.core.buffer.AdaptiveBuffer.AdaptiveStrategy
 
 import java.lang.{Byte as JByte, Double as JDouble, Float as JFloat, Long as JLong, Short as JShort}
@@ -1291,14 +1291,21 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
         source match
             case buffer: AbstractBuffer =>
                 while {
-                    last.writeBytes(buffer) // TODO: bug
+                    last.writeBytes(buffer, buffer.readableBytes - remaining)
                     val continue = buffer.readableBytes > remaining
                     if (continue) extendBuffer()
                     continue
                 } do ()
             case buffer: AdaptiveBuffer =>
                 if (allocator == buffer.allocator) {
-                    // TODO
+                    val pageChain = buffer.splitBefore(buffer.readerOffset + length)
+                    var cursor    = pageChain
+                    while (cursor != null) {
+                        val buffer = cursor
+                        cursor = cursor.next
+                        buffer.next = null
+                        this.extend(buffer)
+                    }
                 } else {
                     val pageChain = buffer.splitBefore(buffer.readerOffset + length)
                     var cursor    = pageChain

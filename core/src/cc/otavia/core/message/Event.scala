@@ -16,8 +16,7 @@
 
 package cc.otavia.core.message
 
-import cc.otavia.buffer.PageBuffer
-import cc.otavia.buffer.{Buffer, PageBuffer}
+import cc.otavia.core.buffer.PageBuffer
 import cc.otavia.core.cache.ResourceTimer
 import cc.otavia.core.channel.Channel
 import cc.otavia.core.message.{Event, TimerEvent}

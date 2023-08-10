@@ -18,14 +18,13 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.buffer.{AbstractBuffer, AbstractPageAllocator}
+import cc.otavia.buffer.AbstractBuffer
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.inflight.{FutureQueue, StackQueue}
 import cc.otavia.core.channel.message.AdaptiveBufferChangeNotice
 import cc.otavia.core.slf4a.Logger
-import cc.otavia.buffer.*
 import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.buffer.AdaptiveBuffer
+import cc.otavia.core.buffer.{AbstractPageAllocator, AdaptiveBuffer}
 import cc.otavia.core.channel.inflight.{FutureQueue, StackQueue}
 import cc.otavia.core.channel.message.{AdaptiveBufferChangeNotice, DatagramAdaptiveRangePacket, ReadPlan, ReadPlanFactory}
 import cc.otavia.core.message.ReactorEvent

@@ -18,7 +18,6 @@
 
 package cc.otavia.handler.codec
 
-import cc.otavia.buffer.Buffer
 import io.netty5.util.internal.{SilentDispose, TypeParameterMatcher}
 import cc.otavia.core.channel.{ChannelHandlerAdapter, ChannelHandlerContext}
 

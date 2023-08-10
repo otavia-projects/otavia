@@ -1,6 +1,8 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
+ * This file fork from netty.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,14 +16,23 @@
  * limitations under the License.
  */
 
-package cc.otavia.buffer
+package cc.otavia.core.buffer
 
-trait PageBufferAllocator extends BufferAllocator {
+import java.nio.ByteBuffer
+import scala.language.unsafeNulls
 
-    override def isPooling: Boolean = true
+class HeapPageBuffer(underlying: ByteBuffer) extends PageBuffer(underlying) {
 
-    override def allocate(): PageBuffer
+    assert(underlying.hasArray)
 
-    protected def newBuffer(): PageBuffer
+    override private[otavia] def byteBuffer = underlying
+
+    override def isDirect: Boolean = false
+
+}
+
+object HeapPageBuffer {
+
+    def apply(byteBuffer: ByteBuffer): HeapPageBuffer = new HeapPageBuffer(byteBuffer)
 
 }

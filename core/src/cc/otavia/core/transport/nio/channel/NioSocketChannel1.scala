@@ -18,8 +18,8 @@
 
 package cc.otavia.core.transport.nio.channel
 
-import io.netty5.util.internal.SocketUtils
 import cc.otavia.buffer.Buffer
+import io.netty5.util.internal.SocketUtils
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
 import cc.otavia.core.channel.message.FixedReadPlanFactory

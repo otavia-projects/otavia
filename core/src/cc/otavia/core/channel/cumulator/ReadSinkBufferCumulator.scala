@@ -16,7 +16,7 @@
 
 package cc.otavia.core.channel.cumulator
 
-import cc.otavia.buffer.{Buffer, BufferAllocator}
+import cc.otavia.buffer.{Buffer, BufferAllocator, CompositeBuffer}
 
 /** A composed [[Cumulator]] used for [[cc.otavia.core.channel.ChannelInboundBuffer]]. */
 private[core] class ReadSinkBufferCumulator extends Cumulator {

@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 
-package cc.otavia.buffer
+package cc.otavia.core.buffer
 
+import cc.otavia.core.buffer.{DirectPageAllocator, HeapPageAllocator}
 import org.scalatest.funsuite.AnyFunSuite
 
 class BufferAllocatorSuite extends AnyFunSuite {

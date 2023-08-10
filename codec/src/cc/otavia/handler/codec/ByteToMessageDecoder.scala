@@ -18,8 +18,6 @@
 
 package cc.otavia.handler.codec
 
-import cc.otavia.buffer.internal.AdaptableBuffer
-import cc.otavia.buffer.{Buffer, BufferAllocator, BufferStub, CompositeBuffer}
 import io.netty5.util.Send
 import io.netty5.util.internal.{MathUtil, StringUtil}
 import cc.otavia.core.channel.*

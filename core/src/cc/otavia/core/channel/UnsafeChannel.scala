@@ -18,8 +18,8 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.buffer.{AbstractPageAllocator, PageBufferAllocator}
 import cc.otavia.core.address.ActorAddress
+import cc.otavia.core.buffer.{AbstractPageAllocator, PageBufferAllocator}
 import cc.otavia.core.channel.message.ReadPlan
 
 import java.net.SocketAddress

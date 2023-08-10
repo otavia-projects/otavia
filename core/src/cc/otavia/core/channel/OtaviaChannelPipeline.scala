@@ -19,9 +19,8 @@
 package cc.otavia.core.channel
 
 import io.netty5.util.{Resource, ResourceLeakDetector}
-import cc.otavia.buffer.{Buffer, BufferAllocator, PageBufferAllocator}
 import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.buffer.AdaptiveBuffer
+import cc.otavia.core.buffer.{AdaptiveBuffer, PageBufferAllocator}
 import cc.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import cc.otavia.core.channel.OtaviaChannelPipeline.*
 import cc.otavia.core.channel.estimator.MessageSizeEstimator

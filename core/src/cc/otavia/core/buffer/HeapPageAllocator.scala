@@ -16,21 +16,17 @@
  * limitations under the License.
  */
 
-package cc.otavia.buffer
+package cc.otavia.core.buffer
+
+import cc.otavia.core.buffer.HeapPageBuffer
 
 import java.nio.ByteBuffer
 import scala.language.unsafeNulls
 
-class DirectPageBuffer(underlying: ByteBuffer) extends PageBuffer(underlying) {
+class HeapPageAllocator extends AbstractPageAllocator {
 
-    assert(underlying.isDirect)
+    override protected def newBuffer(): PageBuffer = HeapPageBuffer(ByteBuffer.allocate(PageBuffer.PAGE_SIZE))
 
-    override private[otavia] def byteBuffer = underlying
+    override def isDirect: Boolean = false
 
-    override def isDirect: Boolean = true
-
-}
-
-object DirectPageBuffer {
-    def apply(underlying: ByteBuffer): DirectPageBuffer = new DirectPageBuffer(underlying)
 }

@@ -19,7 +19,6 @@
 package cc.otavia.core.channel.internal
 
 import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.buffer.BufferAllocator
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.buffer.AdaptiveBuffer
 import cc.otavia.core.channel.*

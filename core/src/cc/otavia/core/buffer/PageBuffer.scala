@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-package cc.otavia.buffer
+package cc.otavia.core.buffer
 
-import cc.otavia.buffer.PageBuffer.{ST_PAGE_ALLOCATABLE, ST_PAGE_ALLOCATED}
+import cc.otavia.buffer.{AbstractBuffer, Buffer}
+import cc.otavia.core.buffer.PageBuffer.{ST_PAGE_ALLOCATABLE, ST_PAGE_ALLOCATED}
 import cc.otavia.core.util.{Report, SystemPropertyUtil}
 
 import java.nio.ByteBuffer
@@ -63,7 +64,8 @@ object PageBuffer {
         if (ENABLE_PAGE_SIZES.contains(size)) size * K
         else {
             Report.report(
-              s"cc.otavia.buffer.page.size is set to $size, but only support ${ENABLE_PAGE_SIZES.mkString("[", ", ", "]")}",
+              s"cc.otavia.buffer.page.size is set to $size, but only support ${ENABLE_PAGE_SIZES
+                      .mkString("[", ", ", "]")}, set to default ${DEFAULT_PAGE_SIZE * K} ",
               "Buffer"
             )
             DEFAULT_PAGE_SIZE * K

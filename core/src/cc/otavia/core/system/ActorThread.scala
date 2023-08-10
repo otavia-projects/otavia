@@ -16,14 +16,13 @@
 
 package cc.otavia.core.system
 
-import cc.otavia.buffer.AbstractPageAllocator
 import cc.otavia.core.actor.Actor
 import cc.otavia.core.address.{ActorAddress, ActorThreadAddress}
 import cc.otavia.core.message.{Event, ResourceTimeoutEvent}
 import cc.otavia.core.system.monitor.ActorThreadMonitor
-import cc.otavia.buffer.{AbstractPageAllocator, BufferAllocator, DirectPageAllocator, HeapPageAllocator}
 import cc.otavia.core.actor.Actor
 import cc.otavia.core.address.{ActorAddress, ActorThreadAddress}
+import cc.otavia.core.buffer.{AbstractPageAllocator, DirectPageAllocator, HeapPageAllocator}
 import cc.otavia.core.message.{Event, ResourceTimeoutEvent}
 import cc.otavia.core.system.ActorThread.{GC_PEER_ROUND, ST_RUNNING, ST_STARTING, ST_WAITING}
 import cc.otavia.core.system.monitor.ActorThreadMonitor

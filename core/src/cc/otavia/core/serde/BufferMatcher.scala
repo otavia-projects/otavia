@@ -16,8 +16,6 @@
 
 package cc.otavia.core.serde
 
-import cc.otavia.buffer.Buffer
-
 /** Match byte data in [[Buffer]], then use [[decoder]] to decode byte data to object [[T]] */
 trait BufferMatcher[T <: AnyRef] {
     def decoder: Decoder[T]

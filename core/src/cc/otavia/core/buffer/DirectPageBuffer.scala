@@ -16,23 +16,21 @@
  * limitations under the License.
  */
 
-package cc.otavia.buffer
+package cc.otavia.core.buffer
 
 import java.nio.ByteBuffer
 import scala.language.unsafeNulls
 
-class HeapPageBuffer(underlying: ByteBuffer) extends PageBuffer(underlying) {
+class DirectPageBuffer(underlying: ByteBuffer) extends PageBuffer(underlying) {
 
-    assert(underlying.hasArray)
+    assert(underlying.isDirect)
 
     override private[otavia] def byteBuffer = underlying
 
-    override def isDirect: Boolean = false
+    override def isDirect: Boolean = true
 
 }
 
-object HeapPageBuffer {
-
-    def apply(byteBuffer: ByteBuffer): HeapPageBuffer = new HeapPageBuffer(byteBuffer)
-
+object DirectPageBuffer {
+    def apply(underlying: ByteBuffer): DirectPageBuffer = new DirectPageBuffer(underlying)
 }

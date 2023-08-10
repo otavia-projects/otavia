@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
-package cc.otavia.buffer
+package cc.otavia.core.buffer
+
+import cc.otavia.buffer.Buffer
 
 import java.nio.ByteBuffer
 import scala.language.unsafeNulls

@@ -18,7 +18,6 @@
 
 package cc.otavia.handler.codec
 
-import cc.otavia.buffer.Buffer
 import cc.otavia.core.buffer.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContext
 import cc.otavia.handler.codec.ByteToMessageDecoder.{COMPOSITE_CUMULATOR, Cumulator}

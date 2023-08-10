@@ -18,9 +18,6 @@
 
 package cc.otavia.handler.codec.base64
 
-import cc.otavia.buffer.{Buffer, BufferAllocator}
-import cc.otavia.buffer.DefaultBufferAllocators.{offHeapAllocator, onHeapAllocator}
-import cc.otavia.buffer.{Buffer, BufferAllocator}
 import io.netty5.util.ByteProcessor
 import cc.otavia.core.buffer.AdaptiveBuffer
 import cc.otavia.handler.codec.base64.Base64.Decoder.decode4to3

@@ -20,6 +20,7 @@ import cc.otavia.BuildInfo
 import cc.otavia.buffer.BufferAllocator
 import cc.otavia.core.actor.*
 import cc.otavia.core.address.*
+import cc.otavia.core.buffer.{DirectPageAllocator, HeapPageAllocator}
 import cc.otavia.core.channel.ChannelFactory
 import cc.otavia.core.ioc.{BeanDefinition, BeanManager, Module}
 import cc.otavia.core.message.{Call, IdAllocator}
@@ -68,8 +69,8 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     private var mainActor: Address[MainActor.Args] = _
 
-    private val direct = BufferAllocator.directPageAllocator
-    private val heap   = BufferAllocator.heapPageAllocator
+    private val direct = new DirectPageAllocator()
+    private val heap   = new HeapPageAllocator()
 
     private val transFactory: TransportFactory = TransportFactory.getTransportFactory(this)
     private val chFactory: ChannelFactory      = new ChannelFactory(transFactory)

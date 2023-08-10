@@ -22,10 +22,9 @@ import cc.otavia.buffer.AbstractBuffer
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.reactor.Reactor
-import cc.otavia.buffer.{AbstractBuffer, AbstractPageAllocator, Buffer, PageBuffer, PageBufferAllocator}
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.address.ActorAddress
-import cc.otavia.core.buffer.AdaptiveBuffer
+import cc.otavia.core.buffer.{AbstractPageAllocator, AdaptiveBuffer, PageBuffer, PageBufferAllocator}
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.reactor.Reactor
 import cc.otavia.core.stack.{ChannelFuture, ChannelPromise}

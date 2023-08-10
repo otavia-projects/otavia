@@ -18,7 +18,6 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.buffer.Buffer
 import cc.otavia.core.channel.internal.{ReadSink, WriteSink}
 
 import java.net.SocketAddress

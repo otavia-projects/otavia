@@ -18,8 +18,7 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.buffer.{Buffer, PageBuffer, PageBufferAllocator}
-import cc.otavia.core.buffer.AdaptiveBuffer
+import cc.otavia.core.buffer.{AdaptiveBuffer, PageBuffer, PageBufferAllocator}
 import cc.otavia.core.timer.Timer
 
 trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundInvoker {

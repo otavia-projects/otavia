@@ -16,7 +16,7 @@
 
 package cc.otavia.core.buffer
 
-import cc.otavia.buffer.*
+import cc.otavia.buffer.Buffer
 import cc.otavia.core.buffer.AdaptiveBuffer.AdaptiveStrategy
 import cc.otavia.core.cache.{PerThreadObjectPool, Poolable}
 import cc.otavia.core.util.Chainable
@@ -59,7 +59,7 @@ object AdaptiveBuffer {
 
     def apply(pageBuffer: PageBuffer): AdaptiveBuffer = {
         val adaptiveBuffer = new AdaptiveBufferImpl(pageBuffer.allocator)
-        var cursor = pageBuffer
+        var cursor         = pageBuffer
         while (cursor != null) {
             val buffer = cursor
             cursor = cursor.next

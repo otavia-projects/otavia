@@ -68,6 +68,18 @@ trait OtaviaModule extends ScalaModule with PublishModule {
 
 }
 
+object buffer extends OtaviaModule {
+
+    override def artifactName = "buffer"
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
+
+}
+
 object core extends OtaviaModule with BuildInfo {
 
     override def ivyDeps = Agg(
@@ -95,6 +107,8 @@ object core extends OtaviaModule with BuildInfo {
     override def buildInfoPackageName: Option[String] = Some("cc.otavia")
 
     override def artifactName = "core"
+
+    override def moduleDeps = Seq(buffer)
 
     object test extends Tests with TestModule.ScalaTest {
 

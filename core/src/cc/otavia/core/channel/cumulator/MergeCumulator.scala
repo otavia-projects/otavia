@@ -18,10 +18,9 @@
 
 package cc.otavia.core.channel.cumulator
 
-import cc.otavia.buffer.{Buffer, BufferAllocator}
-import io.netty5.util.internal.MathUtil
-import cc.otavia.buffer.{Buffer, BufferAllocator}
+import cc.otavia.buffer.{Buffer, BufferAllocator, CompositeBuffer}
 import cc.otavia.core.channel.cumulator.MergeCumulator.expandAccumulationAndWrite
+import io.netty5.util.internal.MathUtil
 
 final class MergeCumulator extends Cumulator {
 

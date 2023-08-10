@@ -18,8 +18,8 @@
 
 package cc.otavia.core.channel.cumulator
 
-import io.netty5.util.Send
 import cc.otavia.buffer.{Buffer, BufferAllocator, CompositeBuffer}
+import io.netty5.util.Send
 
 import java.util
 
