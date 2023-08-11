@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-package cc.otavia.handler.codec
+package cc.otavia.core.channel.handler
 
 import cc.otavia.core.buffer.AdaptiveBuffer
 import cc.otavia.core.channel.{ChannelHandler, ChannelHandlerContext}
 
-private[codec] trait ByteToByteDecoderTrait extends ChannelHandler {
+/** channel io transport --> Byte2ByteDecoder --> Byte2MessageDecoder --> Message2MessageDecoder --> channel inflight
+ *
+ *  channel io transport <-- Byte2ByteEncoder <-- Message2ByteEncoder <-- Message2MessageEncoder <-- channel inflight
+ */
+trait Byte2ByteEncoder extends ChannelHandler {
 
-    override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = msg match
-        case adaptiveBufferMessage: ByteToByteHandler.AdaptiveBufferMessage =>
-            val buffer = ctx.inboundAdaptiveBuffer
-            val out    = ctx.nextInboundAdaptiveBuffer
-            decode(ctx, adaptiveBufferMessage, buffer, out)
-        case _ => ctx.fireChannelRead(msg)
+    final override def hasOutboundAdaptive: Boolean = true
+
+    override def write(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
+        msg match
+            case buffer: AdaptiveBuffer => encode(ctx, buffer, ctx.outboundAdaptiveBuffer)
+            case _                      => ctx.write(msg)
+    }
 
     @throws[Exception]
-    protected def decode(
-        ctx: ChannelHandlerContext,
-        msg: ByteToByteHandler.AdaptiveBufferMessage,
-        input: AdaptiveBuffer,
-        output: AdaptiveBuffer
-    ): Unit
+    protected def encode(ctx: ChannelHandlerContext, input: AdaptiveBuffer, output: AdaptiveBuffer): Unit
 
 }

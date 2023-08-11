@@ -18,8 +18,6 @@
 
 package cc.otavia.core.channel
 
-import io.netty5.util.Resource
-import io.netty5.util.internal.StringUtil
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.buffer.AdaptiveBuffer
 import cc.otavia.core.channel.OtaviaChannelHandlerContext.*
@@ -29,6 +27,8 @@ import cc.otavia.core.channel.message.{AutoReadPlan, ReadPlan}
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.ChannelFuture
 import cc.otavia.core.util.ThrowableUtil
+import io.netty5.util.Resource
+import io.netty5.util.internal.StringUtil
 
 import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
@@ -58,10 +58,10 @@ final class OtaviaChannelHandlerContext(
     private var inboundAdaptive: AdaptiveBuffer  = _
     private var outboundAdaptive: AdaptiveBuffer = _
 
-    def setInboundAdaptiveBuffer(inboundAdaptiveBuffer: AdaptiveBuffer): Unit =
+    private[channel] def setInboundAdaptiveBuffer(inboundAdaptiveBuffer: AdaptiveBuffer): Unit =
         inboundAdaptive = inboundAdaptiveBuffer
 
-    def setOutboundAdaptiveBuffer(outboundAdaptiveBuffer: AdaptiveBuffer): Unit =
+    private[channel] def setOutboundAdaptiveBuffer(outboundAdaptiveBuffer: AdaptiveBuffer): Unit =
         outboundAdaptive = outboundAdaptiveBuffer
 
     def index: Int = idx
@@ -71,10 +71,10 @@ final class OtaviaChannelHandlerContext(
     override def isBufferHandlerContext: Boolean = handler.isBufferHandler
 
     override def inboundAdaptiveBuffer: AdaptiveBuffer =
-        if (isBufferHandlerContext) inboundAdaptive else throw new UnsupportedOperationException()
+        if (hasInboundAdaptive) inboundAdaptive else throw new UnsupportedOperationException()
 
     override def outboundAdaptiveBuffer: AdaptiveBuffer =
-        if (isBufferHandlerContext) outboundAdaptive else throw new UnsupportedOperationException()
+        if (hasOutboundAdaptive) outboundAdaptive else throw new UnsupportedOperationException()
 
     override def nextInboundAdaptiveBuffer: AdaptiveBuffer = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_READ)

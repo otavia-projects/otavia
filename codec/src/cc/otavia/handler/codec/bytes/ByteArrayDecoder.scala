@@ -16,36 +16,18 @@
  * limitations under the License.
  */
 
-package cc.otavia.handler.codec
+package cc.otavia.handler.codec.bytes
 
 import cc.otavia.core.buffer.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContext
+import cc.otavia.handler.codec.ByteToMessageDecoder
 
-/** A decoder that splits the received [[Buffer]]s by the fixed number of bytes. For example, if you received the
- *  following four fragmented packets:
- *  <pre>
- *  +---+----+------+----+\
- *  | A | BC | DEFG | HI |\
- *  +---+----+------+----+\</pre>
- *
- *  A [[FixedLengthFrameDecoder]](3) will decode them into the following three packets with the fixed length:
- *  <pre>
- *  +-----+-----+-----+\
- *  | ABC | DEF | GHI |\
- *  +-----+-----+-----+\</pre>
- *
- *  @param frameLength the length of the frame
- */
-class FixedLengthFrameDecoder(private val frameLength: Int) extends ByteToMessageDecoder {
-
-    assert(frameLength > 0)
+class ByteArrayDecoder extends ByteToMessageDecoder {
 
     override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = {
-        if (input.readableBytes >= frameLength) {
-            val data = new Array[Byte](frameLength)
-            input.readBytes(data)
-            ctx.fireChannelRead(data)
-        }
+        val array = new Array[Byte](input.readableBytes)
+        input.readBytes(array)
+        ctx.fireChannelRead(array)
     }
 
 }

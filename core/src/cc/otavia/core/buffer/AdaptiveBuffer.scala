@@ -42,6 +42,13 @@ trait AdaptiveBuffer extends Buffer {
      */
     private[otavia] def splitBefore(offset: Int): PageBuffer
 
+    /** Split the last [[PageBuffer]] from this [[AdaptiveBuffer]]
+     *  @return
+     */
+    private[otavia] def splitLast(): PageBuffer
+
+    def allocatedWritableBytes: Int
+
     /** Append this [[PageBuffer]] to the end of this [[AdaptiveBuffer]]
      *
      *  @param buffer

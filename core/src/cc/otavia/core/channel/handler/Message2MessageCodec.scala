@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package cc.otavia.handler.codec
+package cc.otavia.core.channel.handler
 
-import cc.otavia.core.buffer.AdaptiveBuffer
-import cc.otavia.core.channel.handler.Byte2ByteDecoder
-import cc.otavia.core.channel.{ChannelHandlerAdapter, ChannelHandlerContext}
+import cc.otavia.core.channel.ChannelHandler
 
-abstract class ByteToByteDecoder extends ChannelHandlerAdapter with Byte2ByteDecoder
+trait Message2MessageCodec extends Message2MessageEncoder, Message2MessageDecoder

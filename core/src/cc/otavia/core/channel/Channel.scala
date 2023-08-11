@@ -20,9 +20,6 @@ package cc.otavia.core.channel
 
 import cc.otavia.buffer.AbstractBuffer
 import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.channel.message.ReadPlan
-import cc.otavia.core.reactor.Reactor
-import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.address.ActorAddress
 import cc.otavia.core.buffer.{AbstractPageAllocator, AdaptiveBuffer, PageBuffer, PageBufferAllocator}
 import cc.otavia.core.channel.message.ReadPlan
@@ -238,7 +235,5 @@ trait Channel extends ChannelInflight, EventHandle, ChannelAddress {
 
     // write data to socket from this buffer
     def channelOutboundAdaptiveBuffer: AdaptiveBuffer = pipeline.channelOutboundBuffer
-
-    private[otavia] def allocateDirectBuffer: AbstractBuffer
 
 }

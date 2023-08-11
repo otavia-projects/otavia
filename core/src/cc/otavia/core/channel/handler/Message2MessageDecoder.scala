@@ -14,10 +14,16 @@
  * limitations under the License.
  */
 
-package cc.otavia.handler.codec
+package cc.otavia.core.channel.handler
 
-import cc.otavia.core.buffer.AdaptiveBuffer
-import cc.otavia.core.channel.handler.Byte2ByteDecoder
-import cc.otavia.core.channel.{ChannelHandlerAdapter, ChannelHandlerContext}
+import cc.otavia.core.channel.ChannelHandler
 
-abstract class ByteToByteDecoder extends ChannelHandlerAdapter with Byte2ByteDecoder
+/** channel io transport --> Byte2ByteDecoder --> Byte2MessageDecoder --> Message2MessageDecoder --> channel inflight
+ *
+ *  channel io transport <-- Byte2ByteEncoder <-- Message2ByteEncoder <-- Message2MessageEncoder <-- channel inflight
+ */
+trait Message2MessageDecoder extends ChannelHandler {
+
+    final override def hasInboundAdaptive: Boolean = false
+
+}

@@ -283,4 +283,10 @@ trait ChannelHandler {
     private[core] def inboundStrategy: AdaptiveBuffer.AdaptiveStrategy  = inboundAdaptiveStrategy
     private[core] def outboundStrategy: AdaptiveBuffer.AdaptiveStrategy = outboundAdaptiveStrategy
 
+    /** If the handler has inbound [[AdaptiveBuffer]] */
+    def hasInboundAdaptive: Boolean = false
+
+    /** If the handler has outbound [[AdaptiveBuffer]] */
+    def hasOutboundAdaptive: Boolean = false
+
 }

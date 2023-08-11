@@ -18,6 +18,9 @@
 
 package cc.otavia.buffer
 
+import java.nio.ByteBuffer
+import scala.language.unsafeNulls
+
 /** Interface for allocating [[Buffer]]s. */
 trait BufferAllocator {
 
@@ -36,7 +39,7 @@ trait BufferAllocator {
      *  @throws IllegalStateException
      *    if this allocator has been closed.
      */
-    def allocate(): Buffer
+    def allocate(size: Int): Buffer
 
     /** Determine if this allocator is pooling and reusing its allocated memory.
      *
@@ -56,5 +59,37 @@ trait BufferAllocator {
      *    true if this allocator is direct, false otherwise.
      */
     def isDirect: Boolean
+
+}
+
+object BufferAllocator {
+
+    private val DEFAULT_OFF_HEAP_ALLOCATOR = new BufferAllocator {
+
+        override def allocate(size: Int): Buffer = new DirectBuffer(ByteBuffer.allocateDirect(size))
+
+        override def isPooling: Boolean = false
+
+        override def recycle(buffer: Buffer): Unit = buffer.close()
+
+        override def isDirect: Boolean = true
+
+    }
+
+    private val DEFAULT_ON_HEAP_ALLOCATOR = new BufferAllocator {
+
+        override def allocate(size: Int): Buffer = new HeapBuffer(ByteBuffer.allocate(size))
+
+        override def isPooling: Boolean = false
+
+        override def recycle(buffer: Buffer): Unit = buffer.close()
+
+        override def isDirect: Boolean = false
+
+    }
+
+    def onHeapAllocator(): BufferAllocator = DEFAULT_ON_HEAP_ALLOCATOR
+
+    def offHeapAllocator(): BufferAllocator = DEFAULT_OFF_HEAP_ALLOCATOR
 
 }

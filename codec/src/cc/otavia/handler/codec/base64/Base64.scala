@@ -18,11 +18,14 @@
 
 package cc.otavia.handler.codec.base64
 
-import io.netty5.util.ByteProcessor
+import cc.otavia.buffer.BufferAllocator.{offHeapAllocator, onHeapAllocator}
+import cc.otavia.buffer.{Buffer, BufferAllocator}
 import cc.otavia.core.buffer.AdaptiveBuffer
 import cc.otavia.handler.codec.base64.Base64.Decoder.decode4to3
+import cc.otavia.buffer.ByteProcessor
 
 import java.util.Objects.requireNonNull
+import scala.language.unsafeNulls
 
 /** Utility class for [[Buffer]] that encodes and decodes to and from <a
  *  href="https://en.wikipedia.org/wiki/Base64">Base64</a> notation. <p> The encoding and decoding algorithm in this
@@ -70,7 +73,7 @@ object Base64 {
         encode(src, off, len, breakLines, Base64Dialect.STANDARD)
 
     def encode(src: Buffer, off: Int, len: Int, breakLines: Boolean, dialect: Base64Dialect): Buffer = {
-        val allocator: BufferAllocator = if (src.isDirect) offHeapAllocator.nn else onHeapAllocator.nn
+        val allocator: BufferAllocator = if (src.isDirect) offHeapAllocator() else onHeapAllocator()
         encode(src, off, len, breakLines, dialect, allocator)
     }
 
@@ -92,7 +95,7 @@ object Base64 {
         dialect: Base64Dialect,
         allocator: BufferAllocator
     ): Buffer = {
-        val dest: Buffer = allocator.allocate(encodedBufferSize(len, breakLines)).nn
+        val dest: Buffer = allocator.allocate(encodedBufferSize(len, breakLines))
         encode(src, off, len, breakLines, dialect, dest)
         dest
     }
@@ -214,7 +217,7 @@ object Base64 {
     def decode(src: Buffer, off: Int, len: Int): Buffer = decode(src, off, len, Base64Dialect.STANDARD)
 
     def decode(src: Buffer, off: Int, len: Int, dialect: Base64Dialect): Buffer = {
-        val allocator: BufferAllocator = if (src.isDirect) offHeapAllocator.nn else onHeapAllocator.nn
+        val allocator: BufferAllocator = if (src.isDirect) offHeapAllocator() else onHeapAllocator()
         decode(src, off, len, dialect, allocator)
     }
 
@@ -240,7 +243,7 @@ object Base64 {
         private var dest: Buffer           = _
 
         def decode(src: Buffer, off: Int, len: Int, allocator: BufferAllocator, dialect: Base64Dialect): Buffer = {
-            val dst: Buffer = allocator.allocate(decodedBufferSize(len)).nn
+            val dst: Buffer = allocator.allocate(decodedBufferSize(len))
             this.decode(src: Buffer, off: Int, len: Int, dst, dialect)
             dest
         }
@@ -250,7 +253,7 @@ object Base64 {
             dest = dst
             try {
                 decodabet = Base64.decodabet(dialect)
-                src.openCursor(off, len).nn.process(this)
+                src.openCursor(off, len).process(this)
                 dest.writerOffset(outBuffPosn)
             } catch {
                 case cause: Throwable =>

@@ -65,4 +65,10 @@ trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundIn
     /** The next outbound [[ChannelHandlerContext.outboundAdaptiveBuffer]] */
     def nextOutboundAdaptiveBuffer: AdaptiveBuffer
 
+    /** If the handler has inbound [[AdaptiveBuffer]] */
+    final def hasInboundAdaptive: Boolean = handler.hasInboundAdaptive
+
+    /** If the handler has outbound [[AdaptiveBuffer]] */
+    final def hasOutboundAdaptive: Boolean = handler.hasOutboundAdaptive
+
 }

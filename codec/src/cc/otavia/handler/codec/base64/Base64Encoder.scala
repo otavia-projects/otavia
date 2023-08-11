@@ -20,7 +20,7 @@ package cc.otavia.handler.codec.base64
 
 import cc.otavia.core.buffer.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContext
-import cc.otavia.handler.codec.{ByteToByteEncoder, ByteToByteHandler}
+import cc.otavia.handler.codec.ByteToByteEncoder
 
 class Base64Encoder(private val breakLines: Boolean, private val dialect: Base64Dialect) extends ByteToByteEncoder {
 
@@ -30,12 +30,7 @@ class Base64Encoder(private val breakLines: Boolean, private val dialect: Base64
 
     override def isSharable: Boolean = true
 
-    override protected def encode(
-        ctx: ChannelHandlerContext,
-        msg: ByteToByteHandler.AdaptiveBufferMessage,
-        input: AdaptiveBuffer,
-        output: AdaptiveBuffer
-    ): Unit = {
+    override protected def encode(ctx: ChannelHandlerContext, input: AdaptiveBuffer, output: AdaptiveBuffer): Unit = {
         // TODO
         ???
     }

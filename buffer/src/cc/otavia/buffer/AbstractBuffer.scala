@@ -54,7 +54,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         if (readableBytes == 0) {
             ridx = 0
             widx = 0
-        } else {
+        } else if (ridx == 0) {} else {
             underlying.put(0, underlying, ridx, widx - ridx)
             widx -= ridx
             ridx = 0

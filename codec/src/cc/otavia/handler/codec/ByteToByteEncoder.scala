@@ -17,6 +17,7 @@
 package cc.otavia.handler.codec
 
 import cc.otavia.core.buffer.AdaptiveBuffer
-import cc.otavia.core.channel.ChannelHandlerContext
+import cc.otavia.core.channel.handler.{Byte2ByteDecoder, Byte2ByteEncoder}
+import cc.otavia.core.channel.{ChannelHandlerAdapter, ChannelHandlerContext}
 
-abstract class ByteToByteEncoder extends ByteToByteHandler with ByteToByteEncoderTrait
+abstract class ByteToByteEncoder extends ChannelHandlerAdapter with Byte2ByteEncoder

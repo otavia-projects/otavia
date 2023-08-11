@@ -23,7 +23,9 @@ trait PageBufferAllocator extends BufferAllocator {
 
     override def isPooling: Boolean = true
 
-    override def allocate(): PageBuffer
+    override def allocate(size: Int): PageBuffer = allocate()
+
+    def allocate(): PageBuffer
 
     protected def newBuffer(): PageBuffer
 

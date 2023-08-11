@@ -14,26 +14,16 @@
  * limitations under the License.
  */
 
-package cc.otavia.handler.codec
+package cc.otavia.core.channel.handler
 
-import cc.otavia.core.buffer.AdaptiveBuffer
-import cc.otavia.core.channel.{ChannelHandler, ChannelHandlerAdapter}
+import cc.otavia.core.channel.ChannelHandler
 
-/** io transport --> ByteToByteDecoder --> ByteToMessageDecoder --> MessageToMessageDecoder
+/** channel io transport --> Byte2ByteDecoder --> Byte2MessageDecoder --> Message2MessageDecoder --> channel inflight
  *
- *  io transport <-- ByteToByteEncoder <-- MessageToByteEncoder <-- MessageToMessageEncoder
+ *  channel io transport <-- Byte2ByteEncoder <-- Message2ByteEncoder <-- Message2MessageEncoder <-- channel inflight
  */
-abstract class ByteToByteHandler extends ChannelHandlerAdapter {
-    override final def isBufferHandler: Boolean = true
+trait Message2MessageEncoder extends ChannelHandler {
 
-}
-
-object ByteToByteHandler {
-
-    val ADAPTIVE_BUFFER_NOTICE: AnyRef = new Object
-
-    trait AdaptiveBufferMessage
-
-    object AdaptiveBufferNotice extends AdaptiveBufferMessage
+    final override def hasOutboundAdaptive: Boolean = false
 
 }

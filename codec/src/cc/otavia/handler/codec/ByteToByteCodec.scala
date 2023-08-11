@@ -16,4 +16,7 @@
 
 package cc.otavia.handler.codec
 
-abstract class ByteToByteCodec extends ByteToByteHandler with ByteToByteEncoderTrait with ByteToByteDecoderTrait
+import cc.otavia.core.channel.ChannelHandlerAdapter
+import cc.otavia.core.channel.handler.Byte2ByteCodec
+
+abstract class ByteToByteCodec extends ChannelHandlerAdapter with Byte2ByteCodec

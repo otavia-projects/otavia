@@ -20,10 +20,6 @@ package cc.otavia.core.channel
 
 import cc.otavia.buffer.AbstractBuffer
 import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.channel.inflight.{FutureQueue, StackQueue}
-import cc.otavia.core.channel.message.AdaptiveBufferChangeNotice
-import cc.otavia.core.slf4a.Logger
-import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.buffer.{AbstractPageAllocator, AdaptiveBuffer}
 import cc.otavia.core.channel.inflight.{FutureQueue, StackQueue}
 import cc.otavia.core.channel.message.{AdaptiveBufferChangeNotice, DatagramAdaptiveRangePacket, ReadPlan, ReadPlanFactory}
@@ -213,8 +209,6 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     override def heapAllocator: AbstractPageAllocator = heap
 
-    override private[otavia] def allocateDirectBuffer: AbstractBuffer = ???
-
     def unsafeChannel: AbstractUnsafeChannel = unsafe
 
     private[core] def setUnsafeChannel(uch: AbstractUnsafeChannel): Unit = unsafe = uch
@@ -297,8 +291,23 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
                 val length = channelInboundAdaptiveBuffer.writerOffset - start
                 pipeline.fireChannelRead(DatagramAdaptiveRangePacket(start, length, event.recipient, event.sender))
             case None => // fire other message
-                channelInboundAdaptiveBuffer.extend(event.buffer)
-                pipeline.fireChannelRead(AdaptiveBufferChangeNotice)
+                if (channelInboundAdaptiveBuffer.readableBytes == 0) {
+                    channelInboundAdaptiveBuffer.extend(event.buffer)
+                } else if (channelInboundAdaptiveBuffer.allocatedWritableBytes >= event.buffer.readableBytes) {
+                    channelInboundAdaptiveBuffer.writeBytes(event.buffer)
+                } else {
+                    val last = channelInboundAdaptiveBuffer.splitLast()
+                    if (last.capacity - last.readableBytes >= event.buffer.readableBytes) {
+                        last.compact()
+                        last.writeBytes(event.buffer)
+                        event.buffer.close()
+                        channelInboundAdaptiveBuffer.extend(last)
+                    } else {
+                        channelInboundAdaptiveBuffer.extend(last)
+                        channelInboundAdaptiveBuffer.extend(event.buffer)
+                    }
+                }
+                pipeline.fireChannelRead(channelInboundAdaptiveBuffer)
     }
 
     // end impl EventHandle

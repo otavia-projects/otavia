@@ -127,6 +127,8 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
         first
     }
 
+    override private[otavia] def splitLast() = ???
+
     override def capacity: Int = Int.MaxValue
 
     override def readerOffset: Int = ridx
@@ -1274,6 +1276,8 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
 
     private def realWritableBytes: Int = if (nonEmpty) last.writableBytes else 0
 
+    override def allocatedWritableBytes: Int = realWritableBytes
+
     override def writeCharSequence(source: CharSequence, charset: Charset): Buffer = {
         val array = source.toString.getBytes(charset)
         writeBytes(array)
@@ -1344,7 +1348,27 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
         this
     }
 
-    override def readBytes(destination: Array[Byte], destPos: Int, length: Int): Buffer = ???
+    override def readBytes(destination: Array[Byte], destPos: Int, length: Int): Buffer = {
+        val len = math.min(math.min(length, destination.length - destPos), readableBytes)
+        if (len <= head.readableBytes) {
+            head.readBytes(destination, destPos, length)
+            ridx += len
+            if (head.readableBytes == 0) recycleHead()
+        } else {
+            val chain  = splitBefore(ridx + len)
+            var cursor = chain
+            var desOff = destPos
+            while (cursor != null) {
+                val buffer = cursor
+                cursor = cursor.next
+                val l = buffer.readableBytes
+                buffer.readBytes(destination, desOff, l)
+                desOff += l
+                buffer.close()
+            }
+        }
+        this
+    }
 
     override def readBytes(destination: Buffer, length: Int): Buffer = ???
 

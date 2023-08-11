@@ -19,6 +19,8 @@ import os.Path
 import mill.api.Result
 import $ivy.`io.github.otavia-projects::mill-rust_mill$MILL_BIN_PLATFORM:0.2.3`
 import $ivy.`com.lihaoyi::mill-contrib-buildinfo:$MILL_VERSION`
+import $ivy.`com.lihaoyi::mill-contrib-scoverage:`
+import mill.contrib.scoverage.ScoverageModule
 import mill.contrib.buildinfo.BuildInfo
 import io.github.otavia.jni.plugin.RustJniModule
 
@@ -34,6 +36,7 @@ object ProjectInfo {
     def author                  = Seq("Yan Kun <yan_kun_1992@foxmail.com>")
     def version                 = "0.2.0-SNAPSHOT"
     def scalaVersion            = "3.3.0"
+    def scoverageVersion        = "2.0.10"
     def buildTool               = "mill"
     def buildToolVersion        = mill.BuildInfo.millVersion
 
@@ -113,8 +116,6 @@ object core extends OtaviaModule with BuildInfo {
     object test extends Tests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
-
-        override def forkArgs: T[Seq[String]] = Seq("--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
 
     }
 
@@ -249,7 +250,7 @@ object web extends OtaviaModule {
 }
 
 object examples extends OtaviaModule {
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 }
 
 trait SiteModule extends ScalaModule {
@@ -352,7 +353,7 @@ object docs extends SiteModule {
 
     override def scalaVersion: T[String] = ProjectInfo.scalaVersion
 
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(buffer, core)
 
     override def projectName: String = "otavia"
 

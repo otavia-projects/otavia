@@ -19,12 +19,17 @@ package cc.otavia.examples.echo
 import cc.otavia.core.actor.*
 import cc.otavia.core.actor.AcceptorActor.AcceptedChannel
 import cc.otavia.core.actor.ChannelsActor.*
+import cc.otavia.core.buffer.AdaptiveBuffer
 import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelHandler, ChannelHandlerContext}
 import cc.otavia.core.message.{Ask, Reply}
 import cc.otavia.core.stack.StackState.FutureState
 import cc.otavia.core.stack.{AskStack, NoticeStack, StackState}
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.examples.HandleStateActor
+import cc.otavia.handler.codec.ByteToMessageDecoder
+
+import java.nio.charset.StandardCharsets
+import scala.language.unsafeNulls
 
 object EchoServer {
 
@@ -72,7 +77,12 @@ object EchoServer {
 
     }
 
-    private class WorkerHandler extends ChannelHandler {
+    private class WorkerHandler extends ByteToMessageDecoder {
+
+        override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = {
+            val text = input.readCharSequence(input.readableBytes, StandardCharsets.UTF_8)
+            println(text)
+        }
 
         override def channelRegistered(ctx: ChannelHandlerContext): Unit = {
             println(s"${ctx.channel} registered")
@@ -80,10 +90,6 @@ object EchoServer {
 
         override def channelActive(ctx: ChannelHandlerContext): Unit = {
             println(s"${ctx.channel} active")
-        }
-
-        override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
-            println("read")
         }
 
     }

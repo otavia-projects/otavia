@@ -18,7 +18,6 @@
 
 package cc.otavia.core.channel
 
-import io.netty5.util.{Resource, ResourceLeakDetector}
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.buffer.{AdaptiveBuffer, PageBufferAllocator}
 import cc.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
@@ -30,6 +29,7 @@ import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.{ChannelFuture, ChannelPromise}
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.util.ClassUtils
+import io.netty5.util.{Resource, ResourceLeakDetector}
 
 import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
