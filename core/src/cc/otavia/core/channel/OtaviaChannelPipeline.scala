@@ -51,7 +51,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
     tail.prev = head
 
     head.setInboundAdaptiveBuffer(channelInboundAdaptiveBuffer)
-    head.setOutboundAdaptiveBuffer(channelOutboundAdaptiveBuffer)
+    // head.setOutboundAdaptiveBuffer(channelOutboundAdaptiveBuffer)
 
     head.setAddComplete()
     tail.setAddComplete()
@@ -71,12 +71,12 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
     private[core] override def closeInboundAdaptiveBuffers(): Unit = {
         channelInboundAdaptiveBuffer.close()
-        for { ctx <- handlers if ctx.isBufferHandlerContext } ctx.inboundAdaptiveBuffer.close()
+        for { ctx <- handlers if ctx.hasInboundAdaptive } ctx.inboundAdaptiveBuffer.close()
     }
 
     private[core] override def closeOutboundAdaptiveBuffers(): Unit = {
         channelOutboundAdaptiveBuffer.close()
-        for { ctx <- handlers if ctx.isBufferHandlerContext } ctx.outboundAdaptiveBuffer.close()
+        for { ctx <- handlers if ctx.hasOutboundAdaptive } ctx.outboundAdaptiveBuffer.close()
     }
 
     final def touch(msg: AnyRef, next: OtaviaChannelHandlerContext): AnyRef = {
@@ -101,34 +101,36 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         if (context(name).nonEmpty) throw new IllegalArgumentException(s"Duplicate handler name: $name")
 
     private def replaceBufferHead(newCtx: OtaviaChannelHandlerContext, oldFirst: OtaviaChannelHandlerContext): Unit = {
-        assert(
-          channelInboundAdaptiveBuffer.readableBytes == 0,
-          s"inbound buffer of handler ${oldFirst.name} has some data."
-        )
-        val inbound = AdaptiveBuffer(oldFirst.heapAllocator())
-        inbound.setStrategy(oldFirst.handler.inboundStrategy)
-        oldFirst.setInboundAdaptiveBuffer(inbound)
+        setHeadAdaptiveBuffer(newCtx)
 
-        resetHead(newCtx)
-    }
+        val outbound = AdaptiveBuffer(channel.heapAllocator)
+        oldFirst.setOutboundAdaptiveBuffer(outbound)
 
-    private def resetHead(newCtx: OtaviaChannelHandlerContext): Unit = {
-        channelInboundAdaptiveBuffer.setStrategy(newCtx.handler.inboundStrategy)
-        newCtx.setInboundAdaptiveBuffer(channelInboundAdaptiveBuffer)
-
-        val outbound = AdaptiveBuffer(newCtx.heapAllocator())
-        outbound.setStrategy(newCtx.handler.outboundStrategy)
-        newCtx.setOutboundAdaptiveBuffer(outbound)
+        if (newCtx.outboundAdaptiveBuffer.readableBytes > 0) {
+            outbound.writeBytes(newCtx.outboundAdaptiveBuffer)
+        }
     }
 
     private def setAdaptiveBuffer(ctx: OtaviaChannelHandlerContext, allocator: PageBufferAllocator): Unit = {
-        val inbound = AdaptiveBuffer(allocator)
-        inbound.setStrategy(ctx.handler.inboundStrategy)
-        ctx.setInboundAdaptiveBuffer(inbound)
+        if (ctx.hasInboundAdaptive) {
+            val inbound = AdaptiveBuffer(allocator)
+            ctx.setInboundAdaptiveBuffer(inbound)
+        }
 
-        val outbound = AdaptiveBuffer(allocator)
-        outbound.setStrategy(ctx.handler.outboundStrategy)
-        ctx.setOutboundAdaptiveBuffer(outbound)
+        if (ctx.hasOutboundAdaptive) {
+            val outbound = AdaptiveBuffer(allocator)
+            ctx.setOutboundAdaptiveBuffer(outbound)
+        }
+    }
+
+    private def setHeadAdaptiveBuffer(newCtx: OtaviaChannelHandlerContext): Unit = {
+        if (newCtx.hasInboundAdaptive) {
+            val inbound = AdaptiveBuffer(channel.heapAllocator)
+            newCtx.setInboundAdaptiveBuffer(inbound)
+        }
+        if (newCtx.hasOutboundAdaptive) {
+            newCtx.setOutboundAdaptiveBuffer(channelOutboundAdaptiveBuffer)
+        }
     }
 
     override def addFirst(name: Option[String], handler: ChannelHandler): ChannelPipeline = {
@@ -136,16 +138,16 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         val newCtx = newContext(name, handler)
         if (handlers.nonEmpty) {
             val oldFirst = handlers.head
-            if (newCtx.isBufferHandlerContext && oldFirst.isBufferHandlerContext) {
+            if (newCtx.hasOutboundAdaptive && oldFirst.hasOutboundAdaptive) {
                 replaceBufferHead(newCtx, oldFirst)
-            } else if (!newCtx.isBufferHandlerContext && oldFirst.isBufferHandlerContext) {
-                throw new IllegalStateException("can't add no buffered handler before at buffered handler!")
+            } else if (!newCtx.hasOutboundAdaptive && oldFirst.hasOutboundAdaptive) {
+                throw new IllegalStateException(
+                  "can't add no outbound buffered handler before at outbound buffered handler!"
+                )
             } else if (newCtx.isBufferHandlerContext && !oldFirst.isBufferHandlerContext) {
-                resetHead(newCtx)
+                setHeadAdaptiveBuffer(newCtx)
             }
-        } else {
-            if (newCtx.isBufferHandlerContext) resetHead(newCtx)
-        }
+        } else if (newCtx.isBufferHandlerContext) setHeadAdaptiveBuffer(newCtx)
 
         handlers.insert(0, newCtx)
         resetIndices()
@@ -168,7 +170,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         channel.assertExecutor() // check the method is called in ChannelsActor which it registered
 
         val newCtx = newContext(name, handler)
-        if (handlers.isEmpty && newCtx.isBufferHandlerContext) resetHead(newCtx)
+        if (handlers.isEmpty && newCtx.isBufferHandlerContext) setHeadAdaptiveBuffer(newCtx)
         if (newCtx.isBufferHandlerContext && !handlers.last.isBufferHandlerContext)
             throw new IllegalStateException(
               s"buffered handler $handler can't add after no buffered handler ${handlers.last.handler}"

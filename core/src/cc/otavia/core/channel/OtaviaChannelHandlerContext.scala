@@ -68,23 +68,11 @@ final class OtaviaChannelHandlerContext(
 
     def setIndex(id: Int): Unit = idx = id
 
-    override def isBufferHandlerContext: Boolean = handler.isBufferHandler
-
     override def inboundAdaptiveBuffer: AdaptiveBuffer =
         if (hasInboundAdaptive) inboundAdaptive else throw new UnsupportedOperationException()
 
     override def outboundAdaptiveBuffer: AdaptiveBuffer =
         if (hasOutboundAdaptive) outboundAdaptive else throw new UnsupportedOperationException()
-
-    override def nextInboundAdaptiveBuffer: AdaptiveBuffer = {
-        val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_READ)
-        ctx.inboundAdaptiveBuffer
-    }
-
-    override def nextOutboundAdaptiveBuffer: AdaptiveBuffer = {
-        val ctx = findContextOutbound(ChannelHandlerMask.MASK_WRITE)
-        ctx.outboundAdaptiveBuffer
-    }
 
     private def handleOutboundHandlerException(cause: Throwable, closeDidThrow: Boolean): IllegalStateException = {
         val msg = s"$handler threw an exception while handling an outbound event. This is most likely a bug"

@@ -51,20 +51,14 @@ trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundIn
     /** Return the assigned [[PageBufferAllocator]] which will be used to allocate heap [[PageBuffer]]s. */
     final def heapAllocator(): PageBufferAllocator = channel.heapAllocator
 
-    def isBufferHandlerContext: Boolean = false
+    final def isBufferHandlerContext: Boolean = hasOutboundAdaptive || hasInboundAdaptive
 
     /** Write data by upstream. */
     def inboundAdaptiveBuffer: AdaptiveBuffer
 
     /** Write data by upstream. */
     def outboundAdaptiveBuffer: AdaptiveBuffer
-
-    /** The next inbound [[ChannelHandlerContext.inboundAdaptiveBuffer]] */
-    def nextInboundAdaptiveBuffer: AdaptiveBuffer
-
-    /** The next outbound [[ChannelHandlerContext.outboundAdaptiveBuffer]] */
-    def nextOutboundAdaptiveBuffer: AdaptiveBuffer
-
+    
     /** If the handler has inbound [[AdaptiveBuffer]] */
     final def hasInboundAdaptive: Boolean = handler.hasInboundAdaptive
 

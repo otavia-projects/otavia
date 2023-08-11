@@ -19,7 +19,6 @@
 package cc.otavia.core.channel.internal
 
 import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.buffer.AdaptiveBuffer
 import cc.otavia.core.channel.*
 import cc.otavia.core.channel.message.ReadPlan
@@ -153,14 +152,8 @@ abstract class DelegatingChannelHandlerContext(private val ctx: ChannelHandlerCo
 
     override def writeAndFlush(msg: AnyRef, msgId: Long): Unit = ctx.writeAndFlush(msg, msgId)
 
-    override def isBufferHandlerContext: Boolean = ctx.isBufferHandlerContext
-
     override def inboundAdaptiveBuffer: AdaptiveBuffer = ctx.inboundAdaptiveBuffer
 
     override def outboundAdaptiveBuffer: AdaptiveBuffer = ctx.outboundAdaptiveBuffer
-
-    override def nextInboundAdaptiveBuffer: AdaptiveBuffer = ctx.nextInboundAdaptiveBuffer
-
-    override def nextOutboundAdaptiveBuffer: AdaptiveBuffer = ctx.nextOutboundAdaptiveBuffer
 
 }
