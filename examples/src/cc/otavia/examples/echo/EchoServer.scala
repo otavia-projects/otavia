@@ -26,7 +26,7 @@ import cc.otavia.core.stack.StackState.FutureState
 import cc.otavia.core.stack.{AskStack, NoticeStack, StackState}
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.examples.HandleStateActor
-import cc.otavia.handler.codec.ByteToMessageDecoder
+import cc.otavia.handler.codec.{ByteToMessageCodec, ByteToMessageDecoder}
 
 import java.nio.charset.StandardCharsets
 import scala.language.unsafeNulls
@@ -77,11 +77,15 @@ object EchoServer {
 
     }
 
-    private class WorkerHandler extends ByteToMessageDecoder {
+    private class WorkerHandler extends ByteToMessageCodec {
 
         override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = {
             val text = input.readCharSequence(input.readableBytes, StandardCharsets.UTF_8)
             println(text)
+        }
+
+        override protected def encode(ctx: ChannelHandlerContext, input: AnyRef, output: AdaptiveBuffer): Unit = {
+            output.writeCharSequence(input.asInstanceOf[String], StandardCharsets.UTF_8)
         }
 
         override def channelRegistered(ctx: ChannelHandlerContext): Unit = {
