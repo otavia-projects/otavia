@@ -32,8 +32,6 @@ trait AdaptiveBuffer extends Buffer {
 
     def allocator: PageBufferAllocator
 
-    def setStrategy(adaptiveStrategy: AdaptiveStrategy): Unit
-
     /** Split the [[PageBuffer]] chain from this [[AdaptiveBuffer]]
      *
      *  @param offset

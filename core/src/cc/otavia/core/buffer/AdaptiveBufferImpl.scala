@@ -35,10 +35,6 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
 
     private var closed: Boolean = false
 
-    private var strategy: AdaptiveStrategy = AdaptiveBuffer.FullPageStrategy
-
-    def setStrategy(adaptiveStrategy: AdaptiveStrategy): Unit = strategy = adaptiveStrategy
-
     private def startIndex = ridx - head.readerOffset
 
     private def endIndex: Int = widx + last.writableBytes

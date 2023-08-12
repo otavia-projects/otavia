@@ -21,7 +21,7 @@ package cc.otavia.core.channel
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.buffer.{AdaptiveBuffer, PageBufferAllocator}
 import cc.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
-import cc.otavia.core.channel.OtaviaChannelPipeline.*
+import cc.otavia.core.channel.ChannelPipelineImpl.*
 import cc.otavia.core.channel.estimator.MessageSizeEstimator
 import cc.otavia.core.channel.message.FixedReadPlanFactory.FixedReadPlan
 import cc.otavia.core.channel.message.{FixedReadPlanFactory, ReadPlan}
@@ -37,15 +37,15 @@ import java.nio.file.{OpenOption, Path}
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeline {
+class ChannelPipelineImpl(override val channel: Channel) extends ChannelPipeline {
 
     protected val logger: Logger = Logger.getLogger(getClass, channel.system)
 
     private val channelInboundAdaptiveBuffer: AdaptiveBuffer  = AdaptiveBuffer(channel.directAllocator)
     private val channelOutboundAdaptiveBuffer: AdaptiveBuffer = AdaptiveBuffer(channel.directAllocator)
 
-    private val head = new OtaviaChannelHandlerContext(this, HEAD_NAME, HEAD_HANDLER)
-    private val tail = new OtaviaChannelHandlerContext(this, TAIL_NAME, TAIL_HANDLER)
+    private val head = new ChannelHandlerContextImpl(this, HEAD_NAME, HEAD_HANDLER)
+    private val tail = new ChannelHandlerContextImpl(this, TAIL_NAME, TAIL_HANDLER)
 
     head.next = tail
     tail.prev = head
@@ -58,7 +58,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
     private val touch: Boolean = ResourceLeakDetector.isEnabled
 
-    private final val handlers = new mutable.ArrayBuffer[OtaviaChannelHandlerContext](4)
+    private final val handlers = new mutable.ArrayBuffer[ChannelHandlerContextImpl](4)
 
     final lazy val estimatorHandle: MessageSizeEstimator.Handle =
         channel.getOption(ChannelOption.MESSAGE_SIZE_ESTIMATOR).newHandle
@@ -79,12 +79,12 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         for { ctx <- handlers if ctx.hasOutboundAdaptive } ctx.outboundAdaptiveBuffer.close()
     }
 
-    final def touch(msg: AnyRef, next: OtaviaChannelHandlerContext): AnyRef = {
+    final def touch(msg: AnyRef, next: ChannelHandlerContextImpl): AnyRef = {
         if (touch) Resource.touch(msg, next)
         msg
     }
 
-    private def newContext(name: Option[String], handler: ChannelHandler): OtaviaChannelHandlerContext = {
+    private def newContext(name: Option[String], handler: ChannelHandler): ChannelHandlerContextImpl = {
         checkMultiplicity(handler) // check multi add
         val value = name match
             case Some(value) =>
@@ -93,14 +93,14 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
             case None =>
                 generateName(handler)
 
-        new OtaviaChannelHandlerContext(this, value, handler)
+        new ChannelHandlerContextImpl(this, value, handler)
     }
 
     @throws[IllegalArgumentException]
     private def checkDuplicateName(name: String): Unit =
         if (context(name).nonEmpty) throw new IllegalArgumentException(s"Duplicate handler name: $name")
 
-    private def replaceBufferHead(newCtx: OtaviaChannelHandlerContext, oldFirst: OtaviaChannelHandlerContext): Unit = {
+    private def replaceBufferHead(newCtx: ChannelHandlerContextImpl, oldFirst: ChannelHandlerContextImpl): Unit = {
         setHeadAdaptiveBuffer(newCtx)
 
         val outbound = AdaptiveBuffer(channel.heapAllocator)
@@ -111,7 +111,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         }
     }
 
-    private def setAdaptiveBuffer(ctx: OtaviaChannelHandlerContext, allocator: PageBufferAllocator): Unit = {
+    private def setAdaptiveBuffer(ctx: ChannelHandlerContextImpl, allocator: PageBufferAllocator): Unit = {
         if (ctx.hasInboundAdaptive) {
             val inbound = AdaptiveBuffer(allocator)
             ctx.setInboundAdaptiveBuffer(inbound)
@@ -123,7 +123,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         }
     }
 
-    private def setHeadAdaptiveBuffer(newCtx: OtaviaChannelHandlerContext): Unit = {
+    private def setHeadAdaptiveBuffer(newCtx: ChannelHandlerContextImpl): Unit = {
         if (newCtx.hasInboundAdaptive) {
             val inbound = AdaptiveBuffer(channel.heapAllocator)
             newCtx.setInboundAdaptiveBuffer(inbound)
@@ -171,7 +171,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
         val newCtx = newContext(name, handler)
         if (handlers.isEmpty && newCtx.isBufferHandlerContext) setHeadAdaptiveBuffer(newCtx)
-        if (newCtx.isBufferHandlerContext && !handlers.last.isBufferHandlerContext)
+        if (handlers.nonEmpty && newCtx.isBufferHandlerContext && !handlers.last.isBufferHandlerContext)
             throw new IllegalStateException(
               s"buffered handler $handler can't add after no buffered handler ${handlers.last.handler}"
             )
@@ -250,7 +250,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
         this
     }
 
-    private def callHandlerAdded0(ctx: OtaviaChannelHandlerContext): Unit = try {
+    private def callHandlerAdded0(ctx: ChannelHandlerContextImpl): Unit = try {
         ctx.callHandlerAdded()
     } catch {
         case t: Throwable =>
@@ -280,7 +280,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
             }
     }
 
-    private final def callHandlerRemoved0(ctx: OtaviaChannelHandlerContext): Unit = try {
+    private final def callHandlerRemoved0(ctx: ChannelHandlerContextImpl): Unit = try {
         ctx.callHandlerRemoved()
     } catch {
         case t: Throwable =>
@@ -342,7 +342,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
     override def remove[T <: ChannelHandler](handlerType: Class[T]): Option[T] =
         removeIfExists(ctx => handlerType.isAssignableFrom(ctx.handler.getClass))
 
-    private def remove0(ctx: OtaviaChannelHandlerContext): Unit = try {
+    private def remove0(ctx: ChannelHandlerContextImpl): Unit = try {
         callHandlerRemoved0(ctx)
     } finally { ctx.remove(true) }
 
@@ -777,9 +777,9 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
     private def resetIndices(): Unit = handlers.indices.foreach(idx => handlers(idx).setIndex(idx))
 
-    private[core] def findContextInbound(from: Int, mask: Int): OtaviaChannelHandlerContext = {
-        var cursor                           = from
-        var ctx: OtaviaChannelHandlerContext = null
+    private[core] def findContextInbound(from: Int, mask: Int): ChannelHandlerContextImpl = {
+        var cursor                         = from
+        var ctx: ChannelHandlerContextImpl = null
         while {
             ctx = if (cursor < handlers.length) handlers(cursor) else tail
             cursor += 1
@@ -791,7 +791,7 @@ class OtaviaChannelPipeline(override val channel: Channel) extends ChannelPipeli
 
 }
 
-object OtaviaChannelPipeline {
+object ChannelPipelineImpl {
 
     private final class HeadHandler extends ChannelHandler {
 
@@ -903,7 +903,7 @@ object OtaviaChannelPipeline {
         override def channelTimeoutEvent(ctx: ChannelHandlerContext, id: Long): Unit = {} // Just swallow event
 
         override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit =
-            ctx.pipeline.asInstanceOf[OtaviaChannelPipeline].onUnhandledInboundException(cause)
+            ctx.pipeline.asInstanceOf[ChannelPipelineImpl].onUnhandledInboundException(cause)
 
         override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit =
             ctx.pipeline.channel.onInboundMessage(msg)

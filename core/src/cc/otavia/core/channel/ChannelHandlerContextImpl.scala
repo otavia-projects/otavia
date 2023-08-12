@@ -20,7 +20,7 @@ package cc.otavia.core.channel
 
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.buffer.AdaptiveBuffer
-import cc.otavia.core.channel.OtaviaChannelHandlerContext.*
+import cc.otavia.core.channel.ChannelHandlerContextImpl.*
 import cc.otavia.core.channel.internal.ChannelHandlerMask
 import cc.otavia.core.channel.internal.ChannelHandlerMask.*
 import cc.otavia.core.channel.message.{AutoReadPlan, ReadPlan}
@@ -35,10 +35,10 @@ import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import scala.util.Try
 
-final class OtaviaChannelHandlerContext(
-    override val pipeline: OtaviaChannelPipeline,
-    override val name: String,
-    override val handler: ChannelHandler
+final class ChannelHandlerContextImpl(
+                                         override val pipeline: ChannelPipelineImpl,
+                                         override val name: String,
+                                         override val handler: ChannelHandler
 ) extends ChannelHandlerContext {
 
     protected val logger: Logger = Logger.getLogger(getClass, pipeline.system)
@@ -52,8 +52,8 @@ final class OtaviaChannelHandlerContext(
 
     private var idx: Int = -1
 
-    protected[channel] var next: OtaviaChannelHandlerContext = _
-    protected[channel] var prev: OtaviaChannelHandlerContext = _
+    protected[channel] var next: ChannelHandlerContextImpl = _
+    protected[channel] var prev: ChannelHandlerContextImpl = _
 
     private var inboundAdaptive: AdaptiveBuffer  = _
     private var outboundAdaptive: AdaptiveBuffer = _
@@ -81,7 +81,7 @@ final class OtaviaChannelHandlerContext(
         new IllegalStateException(msg, cause)
     }
 
-    private def findContextInbound(mask: Int): OtaviaChannelHandlerContext = if (!removed) {
+    private def findContextInbound(mask: Int): ChannelHandlerContextImpl = if (!removed) {
         var ctx = this
         while {
             ctx = ctx.next
@@ -95,7 +95,7 @@ final class OtaviaChannelHandlerContext(
         )
     }
 
-    private def findContextOutbound(mask: Int): OtaviaChannelHandlerContext = if (!removed) {
+    private def findContextOutbound(mask: Int): ChannelHandlerContextImpl = if (!removed) {
         var ctx = this
         while {
             ctx = ctx.prev
@@ -119,7 +119,7 @@ final class OtaviaChannelHandlerContext(
         // We must call setAddComplete before calling handlerAdded. Otherwise if the handlerAdded method generates
         // any pipeline events ctx.handler() will miss them because the state will not allow it.
         handler.handlerAdded(this)
-        if (OtaviaChannelHandlerContext.handlesPendingOutboundBytes(executionMask)) {
+        if (ChannelHandlerContextImpl.handlesPendingOutboundBytes(executionMask)) {
             val pending = pendingOutboundBytes()
             currentPendingBytes = -1
             if (pending > 0) pipeline.incrementPendingOutboundBytes(pending)
@@ -638,7 +638,7 @@ final class OtaviaChannelHandlerContext(
 
 }
 
-object OtaviaChannelHandlerContext {
+object ChannelHandlerContextImpl {
 
     /** Neither [[ChannelHandler.handlerAdded(ChannelHandlerContext)]] nor
      *  [[ChannelHandler.handlerRemoved(ChannelHandlerContext)]] was called.

@@ -42,7 +42,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     private var actor: ChannelsActor[?] | Null = _
 
-    private var pipe: ChannelPipeline = _
+    private var pipe: ChannelPipelineImpl = _
 
     private var unsafe: AbstractUnsafeChannel = _
 
@@ -216,7 +216,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     override def pipeline: ChannelPipeline = pipe
 
     /** Returns a new [[ChannelPipeline]] instance. */
-    private def newChannelPipeline(): ChannelPipeline = new OtaviaChannelPipeline(this)
+    private def newChannelPipeline(): ChannelPipelineImpl = new ChannelPipelineImpl(this)
 
     protected def currentThread: ActorThread = Thread.currentThread().asInstanceOf[ActorThread]
 
