@@ -16,7 +16,6 @@
 
 package cc.otavia.redis
 
-import cc.otavia.core.message.{Ask, IdAllocator, Reply}
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.*
 import cc.otavia.core.message.*
@@ -58,6 +57,7 @@ import java.nio.channels.{SelectionKey, SocketChannel}
 //}
 
 object Client {
+
     type MSG = Connect | Select
 
     final case class Connect(host: String, port: Int, username: String, password: String, poolSize: Int)(using
@@ -69,8 +69,10 @@ object Client {
     final case class SelectReply(status: String) extends Reply
 
     private final class ConnectingState(size: Int) extends StackState {
-        val waiters                       = new Array[ChannelReplyWaiter[Unit]](size)
-        override def resumable(): Boolean = waiters.forall(_.received)
+
+        val waiters                       = ??? // new Array[ChannelReplyWaiter[Unit]](size)
+        override def resumable(): Boolean = ??? // waiters.forall(_.received)
+
     }
 
 }

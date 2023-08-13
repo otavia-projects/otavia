@@ -17,12 +17,8 @@
 import mill._, scalalib._, publish._
 import os.Path
 import mill.api.Result
-import $ivy.`io.github.otavia-projects::mill-rust_mill$MILL_BIN_PLATFORM:0.2.3`
 import $ivy.`com.lihaoyi::mill-contrib-buildinfo:$MILL_VERSION`
-import $ivy.`com.lihaoyi::mill-contrib-scoverage:`
-import mill.contrib.scoverage.ScoverageModule
 import mill.contrib.buildinfo.BuildInfo
-import io.github.otavia.jni.plugin.RustJniModule
 
 object ProjectInfo {
 
@@ -41,6 +37,12 @@ object ProjectInfo {
     def buildToolVersion        = mill.BuildInfo.millVersion
 
     def testDep = ivy"org.scalatest::scalatest:3.2.15"
+
+    def jsoniter      = ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core:2.23.2"
+    def jsoniterMacro = ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:2.23.2"
+    def booPickle     = ivy"io.suzaku::boopickle:1.4.0"
+    def netty5        = ivy"io.netty:netty5-codec:5.0.0.Alpha5"
+    def xml           = ivy"org.scala-lang.modules::scala-xml:2.1.0"
 
 }
 
@@ -85,9 +87,7 @@ object buffer extends OtaviaModule {
 
 object core extends OtaviaModule with BuildInfo {
 
-    override def ivyDeps = Agg(
-      ivy"io.netty:netty5-buffer:5.0.0.Alpha5"
-    )
+    override def ivyDeps = Agg(ProjectInfo.netty5)
 
     override def buildInfoMembers = Map(
       "scalaVersion"    -> scalaVersion(),
@@ -143,7 +143,43 @@ object codec extends OtaviaModule {
 
     object test extends Tests with TestModule.ScalaTest {
 
-        override def ivyDeps = Agg(ProjectInfo.testDep, ivy"io.netty:netty5-codec:5.0.0.Alpha5")
+        override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.netty5)
+
+    }
+
+}
+
+object json extends OtaviaModule {
+
+    override def artifactName = "json"
+
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, buffer)
+
+    override def ivyDeps = Agg(ProjectInfo.jsoniter)
+
+    override def compileIvyDeps = Agg(ProjectInfo.jsoniterMacro)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.jsoniter)
+
+        override def compileIvyDeps = Agg(ProjectInfo.jsoniterMacro)
+
+    }
+
+}
+
+object pickle extends OtaviaModule {
+
+    override def artifactName = "json"
+
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, buffer)
+
+    override def ivyDeps = Agg(ProjectInfo.booPickle)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.booPickle)
 
     }
 
@@ -213,15 +249,11 @@ object `codec-smtp` extends OtaviaModule {
 
 }
 
-object `native-transport` extends OtaviaModule with RustJniModule {
+object `native-transport` extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
 
     override def artifactName: T[String] = "native-transport"
-
-    override def defaultNativeName = "nativetransport"
-
-    override def release: Boolean = false
 
 }
 
@@ -231,7 +263,7 @@ object log4a extends OtaviaModule {
 
     override def artifactName: T[String] = "log4a"
 
-    override def ivyDeps = Agg(ivy"org.scala-lang.modules::scala-xml:2.1.0")
+    override def ivyDeps = Agg(ProjectInfo.xml)
 
     object test extends Tests with TestModule.ScalaTest {
 
