@@ -149,42 +149,6 @@ object codec extends OtaviaModule {
 
 }
 
-object json extends OtaviaModule {
-
-    override def artifactName = "json"
-
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, buffer)
-
-    override def ivyDeps = Agg(ProjectInfo.jsoniter)
-
-    override def compileIvyDeps = Agg(ProjectInfo.jsoniterMacro)
-
-    object test extends Tests with TestModule.ScalaTest {
-
-        override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.jsoniter)
-
-        override def compileIvyDeps = Agg(ProjectInfo.jsoniterMacro)
-
-    }
-
-}
-
-object pickle extends OtaviaModule {
-
-    override def artifactName = "json"
-
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, buffer)
-
-    override def ivyDeps = Agg(ProjectInfo.booPickle)
-
-    object test extends Tests with TestModule.ScalaTest {
-
-        override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.booPickle)
-
-    }
-
-}
-
 object `codec-http` extends OtaviaModule {
 
     override def artifactName = "codec-http"
