@@ -195,7 +195,7 @@ class IdleStateHandler(
             firstAllIdleEvent = false
             try {
                 val event = newIdleStateEvent(IdleState.ALL_IDLE, first)
-                channelIdle(ctx, first)
+                //TODO channelIdle(ctx, first)
             } catch { case t: Throwable => ctx.fireChannelExceptionCaught(t) }
         } else ctx.fireChannelTimeoutEvent(id)
     }
