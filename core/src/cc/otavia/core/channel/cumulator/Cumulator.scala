@@ -18,7 +18,7 @@
 
 package cc.otavia.core.channel.cumulator
 
-import cc.otavia.buffer.{Buffer, BufferAllocator, CompositeBuffer}
+import cc.otavia.buffer.{Buffer, BufferAllocator}
 
 trait Cumulator {
 

@@ -16,7 +16,7 @@
 
 package cc.otavia.core.channel.message
 
-import cc.otavia.core.buffer.AdaptiveBuffer
+import cc.otavia.buffer.pool.AdaptiveBuffer
 
 /** A [[AdaptiveBufferMessage]] use for describe a data range in [[AdaptiveBuffer]]
  *  @param start

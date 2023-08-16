@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.buffer
+package cc.otavia.buffer.pool
 
-import cc.otavia.buffer.BufferAllocator
-import cc.otavia.core.buffer.PageBuffer
+import cc.otavia.buffer.{BufferAllocator, FixedCapacityAllocator}
+import cc.otavia.buffer.pool.RecyclablePageBuffer
 
-trait PageBufferAllocator extends BufferAllocator {
+trait PagePooledAllocator extends RecyclableAllocator with FixedCapacityAllocator {
 
     override def isPooling: Boolean = true
 
-    override def allocate(size: Int): PageBuffer = allocate()
+    override def allocate(size: Int): RecyclablePageBuffer = allocate()
 
-    def allocate(): PageBuffer
+    def allocate(): RecyclablePageBuffer
 
-    protected def newBuffer(): PageBuffer
+    protected def newBuffer(): RecyclablePageBuffer
 
 }

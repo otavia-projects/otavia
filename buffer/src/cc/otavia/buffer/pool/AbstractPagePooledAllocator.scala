@@ -16,20 +16,23 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.buffer
+package cc.otavia.buffer.pool
 
-import cc.otavia.buffer.Buffer
+import cc.otavia.buffer.pool.{PagePooledAllocator, RecyclablePageBuffer}
+import cc.otavia.buffer.{Buffer, FixedCapacityAllocator}
 
 import java.nio.ByteBuffer
 import scala.language.unsafeNulls
 
-abstract class AbstractPageAllocator extends PageBufferAllocator {
+abstract class AbstractPagePooledAllocator(val fixedCapacity: Int) extends PagePooledAllocator {
 
-    private var count: Int       = 0
-    private var head: PageBuffer = _
-    private var tail: PageBuffer = _
+    private var count: Int                 = 0
+    private var head: RecyclablePageBuffer = _
+    private var tail: RecyclablePageBuffer = _
 
-    protected def push(pageBuffer: PageBuffer): Unit = this.synchronized {
+    def this() = this(FixedCapacityAllocator.DEFAULT_PAGE_SIZE)
+
+    protected def push(pageBuffer: RecyclablePageBuffer): Unit = this.synchronized {
         if (count == 0) {
             head = pageBuffer
             tail = pageBuffer
@@ -40,7 +43,7 @@ abstract class AbstractPageAllocator extends PageBufferAllocator {
         count += 1
     }
 
-    protected def pop(): PageBuffer = this.synchronized {
+    protected def pop(): RecyclablePageBuffer = this.synchronized {
         val page = head
         if (count == 1) {
             head = null
@@ -61,12 +64,12 @@ abstract class AbstractPageAllocator extends PageBufferAllocator {
 
     override def recycle(buffer: Buffer): Unit = {
         buffer match
-            case pageBuffer: PageBuffer =>
+            case pageBuffer: RecyclablePageBuffer =>
                 if (pageBuffer.allocator.eq(this)) push(pageBuffer)
             case _ =>
     }
 
-    override def allocate(): PageBuffer = {
+    override def allocate(): RecyclablePageBuffer = {
         val buffer =
             if (nonEmpty) pop()
             else {

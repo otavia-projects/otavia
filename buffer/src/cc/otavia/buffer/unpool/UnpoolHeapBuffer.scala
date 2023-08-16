@@ -16,21 +16,31 @@
  * limitations under the License.
  */
 
-package cc.otavia.handler.codec.base64
+package cc.otavia.buffer.unpool
 
-import cc.otavia.buffer.pool.AdaptiveBuffer
-import cc.otavia.core.channel.ChannelHandlerContext
-import cc.otavia.handler.codec.ByteToByteDecoder
+import cc.otavia.buffer.{AbstractBuffer, Buffer}
 
-class Base64Decoder(private val dialect: Base64Dialect) extends ByteToByteDecoder {
+import java.nio.ByteBuffer
+import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
+import java.nio.charset.Charset
+import java.util
+import scala.language.unsafeNulls
 
-    def this() = this(Base64Dialect.STANDARD)
+class UnpoolHeapBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
 
-    override def isSharable: Boolean = true
+    assert(underlying.hasArray)
 
-    override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer, output: AdaptiveBuffer): Unit = {
-        // TODO
-        ???
+    private val array: Array[Byte] = underlying.array()
+
+    override def fill(value: Byte): Buffer = {
+        var i = 0
+        while (i < capacity) {
+            array(i) = value
+            i += 1
+        }
+        this
     }
+
+    override def isDirect: Boolean = false
 
 }

@@ -16,31 +16,32 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.buffer
+package cc.otavia.buffer.pool
 
+import cc.otavia.buffer.pool.PagePooledAllocator
 import cc.otavia.buffer.{AbstractBuffer, Buffer}
-import cc.otavia.core.buffer.PageBuffer.{ST_PAGE_ALLOCATABLE, ST_PAGE_ALLOCATED}
-import cc.otavia.core.util.{Report, SystemPropertyUtil}
 
 import java.nio.ByteBuffer
 import scala.language.unsafeNulls
 
-abstract class PageBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
+abstract class RecyclablePageBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
 
-    private var parent: PageBufferAllocator = _
-    private var nxt: PageBuffer             = _
+    import RecyclablePageBuffer.*
+
+    private var parent: PagePooledAllocator = _
+    private var nxt: RecyclablePageBuffer   = _
     private var status: Int                 = ST_PAGE_ALLOCATABLE
 
-    def setAllocator(allocator: PageBufferAllocator): Unit = parent = allocator
+    def setAllocator(allocator: PagePooledAllocator): Unit = parent = allocator
 
-    def allocator: PageBufferAllocator = parent
+    def allocator: PagePooledAllocator = parent
 
-    def next_=(pageBuffer: PageBuffer): Unit = nxt = pageBuffer
+    def next_=(pageBuffer: RecyclablePageBuffer): Unit = nxt = pageBuffer
 
     private[buffer] def setAllocated(): Unit = status = ST_PAGE_ALLOCATED
     private[buffer] def allocated: Boolean   = status == ST_PAGE_ALLOCATED
 
-    def next: PageBuffer = nxt
+    def next: RecyclablePageBuffer = nxt
 
     override def close(): Unit = {
         parent.recycle(this)
@@ -53,24 +54,7 @@ abstract class PageBuffer(underlying: ByteBuffer) extends AbstractBuffer(underly
 
 }
 
-object PageBuffer {
-
-    private val DEFAULT_PAGE_SIZE: Int      = 4
-    private val ENABLE_PAGE_SIZES: Set[Int] = Set(1, 2, 4, 8, 16)
-    private val K: Int                      = 1024
-
-    val PAGE_SIZE: Int = {
-        val size = SystemPropertyUtil.getInt("cc.otavia.buffer.page.size", DEFAULT_PAGE_SIZE)
-        if (ENABLE_PAGE_SIZES.contains(size)) size * K
-        else {
-            Report.report(
-              s"cc.otavia.buffer.page.size is set to $size, but only support ${ENABLE_PAGE_SIZES
-                      .mkString("[", ", ", "]")}, set to default ${DEFAULT_PAGE_SIZE * K} ",
-              "Buffer"
-            )
-            DEFAULT_PAGE_SIZE * K
-        }
-    }
+object RecyclablePageBuffer {
 
     val ST_PAGE_ALLOCATABLE: Int = 0
     val ST_PAGE_ALLOCATED: Int   = 1

@@ -16,7 +16,7 @@
 
 package cc.otavia.core.channel.handler
 
-import cc.otavia.core.buffer.AdaptiveBuffer
+import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.{ChannelHandler, ChannelHandlerContext}
 
 /** channel io transport --> Byte2ByteDecoder --> Byte2MessageDecoder --> Message2MessageDecoder --> channel inflight

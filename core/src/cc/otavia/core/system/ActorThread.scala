@@ -16,13 +16,9 @@
 
 package cc.otavia.core.system
 
+import cc.otavia.buffer.pool.{AbstractPagePooledAllocator, DirectPagePooledAllocator, HeapPagePooledAllocator}
 import cc.otavia.core.actor.Actor
 import cc.otavia.core.address.{ActorAddress, ActorThreadAddress}
-import cc.otavia.core.message.{Event, ResourceTimeoutEvent}
-import cc.otavia.core.system.monitor.ActorThreadMonitor
-import cc.otavia.core.actor.Actor
-import cc.otavia.core.address.{ActorAddress, ActorThreadAddress}
-import cc.otavia.core.buffer.{AbstractPageAllocator, DirectPageAllocator, HeapPageAllocator}
 import cc.otavia.core.message.{Event, ResourceTimeoutEvent}
 import cc.otavia.core.system.ActorThread.{GC_PEER_ROUND, ST_RUNNING, ST_STARTING, ST_WAITING}
 import cc.otavia.core.system.monitor.ActorThreadMonitor
@@ -49,16 +45,16 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 
     @volatile private var status: Int = ST_STARTING
 
-    private val direct = new DirectPageAllocator()
-    private val heap   = new HeapPageAllocator()
+    private val direct = new DirectPagePooledAllocator(ActorSystem.PAGE_SIZE)
+    private val heap   = new HeapPagePooledAllocator(ActorSystem.PAGE_SIZE)
 
     setName(s"otavia-actor-worker-$index")
 
     /** A [[BufferAllocator]] which allocate heap memory. */
-    def directAllocator: AbstractPageAllocator = direct
+    def directAllocator: AbstractPagePooledAllocator = direct
 
     /** A [[BufferAllocator]] which allocate heap memory. */
-    def heapAllocator: AbstractPageAllocator = heap
+    def heapAllocator: AbstractPagePooledAllocator = heap
 
     def parent: ActorThreadPool = system.pool
 

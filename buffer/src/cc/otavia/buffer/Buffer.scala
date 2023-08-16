@@ -18,6 +18,8 @@
 
 package cc.otavia.buffer
 
+import cc.otavia.buffer.unpool.{UnpoolDirectBuffer, UnpoolHeapBuffer}
+
 import java.io.IOException
 import java.lang.{Double as JDouble, Float as JFloat, Long as JLong, Short as JShort}
 import java.nio.ByteBuffer
@@ -1912,7 +1914,7 @@ object Buffer {
      *    The new byte buffer
      */
     def wrap(byteBuffer: ByteBuffer): Buffer =
-        if (byteBuffer.isDirect) DirectWrapBuffer(byteBuffer) else HeapWrapBuffer(byteBuffer)
+        if (byteBuffer.isDirect) UnpoolDirectBuffer(byteBuffer) else UnpoolHeapBuffer(byteBuffer)
 
     /** Wraps a byte array into a [[Buffer]].
      *
@@ -1927,6 +1929,6 @@ object Buffer {
      *  @return
      *    The new byte buffer
      */
-    def wrap(array: Array[Byte]): Buffer = HeapWrapBuffer(ByteBuffer.wrap(array))
+    def wrap(array: Array[Byte]): Buffer = UnpoolHeapBuffer(ByteBuffer.wrap(array))
 
 }

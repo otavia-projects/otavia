@@ -16,21 +16,23 @@
  * limitations under the License.
  */
 
-package cc.otavia.handler.codec.base64
+package cc.otavia.buffer.pool
 
-import cc.otavia.buffer.pool.AdaptiveBuffer
-import cc.otavia.core.channel.ChannelHandlerContext
-import cc.otavia.handler.codec.ByteToByteDecoder
+import cc.otavia.buffer.pool.RecyclablePageBuffer
 
-class Base64Decoder(private val dialect: Base64Dialect) extends ByteToByteDecoder {
+import java.nio.ByteBuffer
+import scala.language.unsafeNulls
 
-    def this() = this(Base64Dialect.STANDARD)
+class DirectRecyclablePageBuffer(underlying: ByteBuffer) extends RecyclablePageBuffer(underlying) {
 
-    override def isSharable: Boolean = true
+    assert(underlying.isDirect)
 
-    override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer, output: AdaptiveBuffer): Unit = {
-        // TODO
-        ???
-    }
+    override private[otavia] def byteBuffer = underlying
 
+    override def isDirect: Boolean = true
+
+}
+
+object DirectRecyclablePageBuffer {
+    def apply(underlying: ByteBuffer): DirectRecyclablePageBuffer = new DirectRecyclablePageBuffer(underlying)
 }

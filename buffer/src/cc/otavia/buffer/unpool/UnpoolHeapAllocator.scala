@@ -16,28 +16,16 @@
  * limitations under the License.
  */
 
-package cc.otavia.buffer
+package cc.otavia.buffer.unpool
+
+import cc.otavia.buffer.{Buffer, BufferAllocator}
 
 import java.nio.ByteBuffer
-import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
-import java.nio.charset.Charset
-import java.util
 import scala.language.unsafeNulls
 
-class HeapBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
+class UnpoolHeapAllocator extends BufferAllocator {
 
-    assert(underlying.hasArray)
-
-    private val array: Array[Byte] = underlying.array()
-
-    override def fill(value: Byte): Buffer = {
-        var i = 0
-        while (i < capacity) {
-            array(i) = value
-            i += 1
-        }
-        this
-    }
+    override def allocate(size: Int): Buffer = new UnpoolHeapBuffer(ByteBuffer.allocate(size))
 
     override def isDirect: Boolean = false
 

@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.buffer
+package cc.otavia.buffer.pool
 
+import cc.otavia.buffer.pool.{AdaptiveBuffer, HeapPagePooledAllocator, PagePooledAllocator}
 import org.scalatest.funsuite.AnyFunSuite
 
 import scala.language.unsafeNulls
 
 class AdaptiveBufferSuite extends AnyFunSuite {
 
-    val allocator: PageBufferAllocator = new HeapPageAllocator()
+    val allocator: PagePooledAllocator = new HeapPagePooledAllocator()
     val adaptiveBuffer: AdaptiveBuffer = AdaptiveBuffer(allocator)
 
     test("splitBefore one buffer") {

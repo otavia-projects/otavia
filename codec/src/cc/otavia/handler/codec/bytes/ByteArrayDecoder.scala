@@ -18,7 +18,7 @@
 
 package cc.otavia.handler.codec.bytes
 
-import cc.otavia.core.buffer.AdaptiveBuffer
+import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContext
 import cc.otavia.handler.codec.ByteToMessageDecoder
 

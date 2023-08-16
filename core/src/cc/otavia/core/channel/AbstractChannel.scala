@@ -19,8 +19,8 @@
 package cc.otavia.core.channel
 
 import cc.otavia.buffer.AbstractBuffer
+import cc.otavia.buffer.pool.{AbstractPagePooledAllocator, AdaptiveBuffer}
 import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.buffer.{AbstractPageAllocator, AdaptiveBuffer}
 import cc.otavia.core.channel.inflight.{FutureQueue, StackQueue}
 import cc.otavia.core.channel.message.{AdaptiveBufferChangeNotice, DatagramAdaptiveRangePacket, ReadPlan, ReadPlanFactory}
 import cc.otavia.core.message.ReactorEvent
@@ -67,8 +67,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     protected var ongoingChannelPromise: ChannelPromise = _
 
-    private var direct: AbstractPageAllocator = _
-    private var heap: AbstractPageAllocator   = _
+    private var direct: AbstractPagePooledAllocator = _
+    private var heap: AbstractPagePooledAllocator   = _
 
     // initial channel state on constructing
     created = true
@@ -205,9 +205,9 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         mounted = true
     }
 
-    override def directAllocator: AbstractPageAllocator = direct
+    override def directAllocator: AbstractPagePooledAllocator = direct
 
-    override def heapAllocator: AbstractPageAllocator = heap
+    override def heapAllocator: AbstractPagePooledAllocator = heap
 
     def unsafeChannel: AbstractUnsafeChannel = unsafe
 

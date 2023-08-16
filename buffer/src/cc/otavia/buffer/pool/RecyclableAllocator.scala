@@ -1,8 +1,6 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
- * This file fork from netty.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,17 +14,23 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.buffer
+package cc.otavia.buffer.pool
 
-import cc.otavia.core.buffer.HeapPageBuffer
+import cc.otavia.buffer.{Buffer, BufferAllocator}
 
-import java.nio.ByteBuffer
-import scala.language.unsafeNulls
+trait RecyclableAllocator extends BufferAllocator {
 
-class HeapPageAllocator extends AbstractPageAllocator {
+    /** Determine if this allocator is pooling and reusing its allocated memory.
+     *
+     *  @return
+     *    true if this allocator is pooling and reusing its memory, false otherwise.
+     */
+    def isPooling: Boolean
 
-    override protected def newBuffer(): PageBuffer = HeapPageBuffer(ByteBuffer.allocate(PageBuffer.PAGE_SIZE))
-
-    override def isDirect: Boolean = false
+    /** Recycle the [[Buffer]]
+     *
+     *  @param buffer
+     */
+    def recycle(buffer: Buffer): Unit
 
 }

@@ -16,15 +16,25 @@
  * limitations under the License.
  */
 
-package cc.otavia.buffer
+package cc.otavia.buffer.pool
+
+import cc.otavia.buffer.pool.RecyclablePageBuffer
 
 import java.nio.ByteBuffer
 import scala.language.unsafeNulls
 
-class HeapWrapBuffer(byteBuffer: ByteBuffer) extends HeapBuffer(byteBuffer)
+class HeapRecyclablePageBuffer(underlying: ByteBuffer) extends RecyclablePageBuffer(underlying) {
 
-object HeapWrapBuffer {
+    assert(underlying.hasArray)
 
-    def apply(byteBuffer: ByteBuffer): HeapWrapBuffer = new HeapWrapBuffer(byteBuffer)
-    
+    override private[otavia] def byteBuffer = underlying
+
+    override def isDirect: Boolean = false
+
+}
+
+object HeapRecyclablePageBuffer {
+
+    def apply(byteBuffer: ByteBuffer): HeapRecyclablePageBuffer = new HeapRecyclablePageBuffer(byteBuffer)
+
 }

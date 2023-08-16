@@ -16,32 +16,27 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.buffer.{Buffer, CompositeBuffer}
+import cc.otavia.buffer.Buffer
 import cc.otavia.core.channel.cumulator.{Cumulator, ReadSinkBufferCumulator}
 
 trait ChannelInboundBuffer {
     this: Channel =>
 
-    private var accumulation: CompositeBuffer | Null = null
-    private var firstAcc: Boolean                    = true
+    private var firstAcc: Boolean = true
 
     private[core] def resetInboundBuffer(): Unit = {
-        accumulation = ??? // directAllocator.compose()
         firstAcc = true
     }
 
-    private[core] def closeInboundBuffer(): Unit = accumulation = null
-
-    private[core] def channelInboundBufferAccumulation: CompositeBuffer = accumulation.asInstanceOf[CompositeBuffer]
+    private[core] def closeInboundBuffer(): Unit = {}
 
     def channelInboundBuffer(ctx: ChannelHandlerContext, buffer: Buffer): Unit = {
-        val acc = channelInboundBufferAccumulation
 //        acc.extendWith(buffer.send())
         firstAcc = false
     }
 
     def inboundAccumulationIsEmpty: Boolean = ???
-    def inboundAccumulationIsNull: Boolean  = accumulation == null
+    def inboundAccumulationIsNull: Boolean  = ???
 
 }
 

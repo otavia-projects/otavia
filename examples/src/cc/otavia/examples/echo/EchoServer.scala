@@ -16,10 +16,10 @@
 
 package cc.otavia.examples.echo
 
+import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.actor.*
 import cc.otavia.core.actor.AcceptorActor.AcceptedChannel
 import cc.otavia.core.actor.ChannelsActor.*
-import cc.otavia.core.buffer.AdaptiveBuffer
 import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelHandler, ChannelHandlerContext}
 import cc.otavia.core.message.{Ask, Reply}
 import cc.otavia.core.stack.StackState.FutureState

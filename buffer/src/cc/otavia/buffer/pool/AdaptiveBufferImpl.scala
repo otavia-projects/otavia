@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.buffer
+package cc.otavia.buffer.pool
 
+import cc.otavia.buffer.pool.{RecyclablePageBuffer, PagePooledAllocator}
 import cc.otavia.buffer.{AbstractBuffer, Buffer, ByteCursor}
-import cc.otavia.core.buffer.AdaptiveBuffer.AdaptiveStrategy
 
 import java.lang.{Byte as JByte, Double as JDouble, Float as JFloat, Long as JLong, Short as JShort}
 import java.nio.ByteBuffer
@@ -26,8 +26,8 @@ import java.nio.charset.Charset
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
-    extends mutable.ArrayDeque[PageBuffer]
+private class AdaptiveBufferImpl(val allocator: PagePooledAllocator)
+    extends mutable.ArrayDeque[RecyclablePageBuffer]
     with AdaptiveBuffer {
 
     private var ridx: Int = 0
@@ -81,17 +81,17 @@ private class AdaptiveBufferImpl(val allocator: PageBufferAllocator)
     }
 
     private def extendBuffer(): Unit = {
-        val buffer: PageBuffer = allocator.allocate()
+        val buffer: RecyclablePageBuffer = allocator.allocate()
         addOne(buffer)
         widx += buffer.readableBytes
     }
 
-    final private[otavia] def extend(buffer: PageBuffer): Unit = {
+    final private[otavia] def extend(buffer: RecyclablePageBuffer): Unit = {
         addOne(buffer)
         widx += buffer.readableBytes
     }
 
-    override private[otavia] def splitBefore(offset: Int): PageBuffer = {
+    override private[otavia] def splitBefore(offset: Int): RecyclablePageBuffer = {
         val (idx, off) = offsetAtOffset(offset)
         val split      = apply(idx)
         val len        = split.readableBytes - off

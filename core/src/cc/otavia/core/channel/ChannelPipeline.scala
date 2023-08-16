@@ -18,7 +18,7 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.core.buffer.AdaptiveBuffer
+import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.*
 import cc.otavia.core.channel.message.ReadPlan
 

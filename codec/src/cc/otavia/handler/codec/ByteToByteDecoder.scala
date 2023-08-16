@@ -16,7 +16,7 @@
 
 package cc.otavia.handler.codec
 
-import cc.otavia.core.buffer.AdaptiveBuffer
+import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.handler.Byte2ByteDecoder
 import cc.otavia.core.channel.{ChannelHandlerAdapter, ChannelHandlerContext}
 

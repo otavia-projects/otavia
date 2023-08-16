@@ -16,23 +16,21 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.buffer
+package cc.otavia.buffer.pool
+
+import cc.otavia.buffer.FixedCapacityAllocator
+import cc.otavia.buffer.pool.RecyclablePageBuffer
 
 import java.nio.ByteBuffer
 import scala.language.unsafeNulls
 
-class HeapPageBuffer(underlying: ByteBuffer) extends PageBuffer(underlying) {
+class HeapPagePooledAllocator(fixedCapacity: Int) extends AbstractPagePooledAllocator(fixedCapacity) {
 
-    assert(underlying.hasArray)
+    def this() = this(FixedCapacityAllocator.DEFAULT_PAGE_SIZE)
 
-    override private[otavia] def byteBuffer = underlying
+    override protected def newBuffer(): RecyclablePageBuffer =
+        HeapRecyclablePageBuffer(ByteBuffer.allocate(fixedCapacity))
 
     override def isDirect: Boolean = false
-
-}
-
-object HeapPageBuffer {
-
-    def apply(byteBuffer: ByteBuffer): HeapPageBuffer = new HeapPageBuffer(byteBuffer)
 
 }

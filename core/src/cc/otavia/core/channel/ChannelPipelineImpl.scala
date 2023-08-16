@@ -18,8 +18,8 @@
 
 package cc.otavia.core.channel
 
+import cc.otavia.buffer.pool.{AdaptiveBuffer, PagePooledAllocator}
 import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.buffer.{AdaptiveBuffer, PageBufferAllocator}
 import cc.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import cc.otavia.core.channel.ChannelPipelineImpl.*
 import cc.otavia.core.channel.estimator.MessageSizeEstimator
@@ -111,7 +111,7 @@ class ChannelPipelineImpl(override val channel: Channel) extends ChannelPipeline
         }
     }
 
-    private def setAdaptiveBuffer(ctx: ChannelHandlerContextImpl, allocator: PageBufferAllocator): Unit = {
+    private def setAdaptiveBuffer(ctx: ChannelHandlerContextImpl, allocator: PagePooledAllocator): Unit = {
         if (ctx.hasInboundAdaptive) {
             val inbound = AdaptiveBuffer(allocator)
             ctx.setInboundAdaptiveBuffer(inbound)

@@ -27,7 +27,7 @@ import cc.otavia.core.slf4a.LogLevel
 import cc.otavia.core.stack.BlockFuture
 import cc.otavia.core.system.monitor.SystemMonitor
 import cc.otavia.core.timer.Timer
-import cc.otavia.core.util.SystemPropertyUtil
+import cc.otavia.core.util.{Report, SystemPropertyUtil}
 
 import java.lang.management.MemoryUsage
 import java.net.InetAddress
@@ -147,6 +147,24 @@ object ActorSystem {
 
     private val DEFAULT_PRINT_BANNER: Boolean = true
     val PRINT_BANNER: Boolean = SystemPropertyUtil.getBoolean("cc.otavia.system.banner", DEFAULT_PRINT_BANNER)
+
+    // buffer setting
+    private val DEFAULT_PAGE_SIZE: Int      = 4
+    private val ENABLE_PAGE_SIZES: Set[Int] = Set(1, 2, 4, 8, 16)
+    private val K: Int                      = 1024
+
+    val PAGE_SIZE: Int = {
+        val size = SystemPropertyUtil.getInt("cc.otavia.buffer.page.size", DEFAULT_PAGE_SIZE)
+        if (ENABLE_PAGE_SIZES.contains(size)) size * K
+        else {
+            Report.report(
+              s"cc.otavia.buffer.page.size is set to $size, but only support ${ENABLE_PAGE_SIZES
+                      .mkString("[", ", ", "]")}, set to default ${DEFAULT_PAGE_SIZE * K} ",
+              "Buffer"
+            )
+            DEFAULT_PAGE_SIZE * K
+        }
+    }
 
     def apply(): ActorSystem =
         new ActorSystemImpl(DEFAULT_SYSTEM_NAME, new ActorThreadFactory.DefaultActorThreadFactory)

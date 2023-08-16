@@ -16,7 +16,7 @@
 
 package cc.otavia.core.message
 
-import cc.otavia.core.buffer.PageBuffer
+import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.cache.ResourceTimer
 import cc.otavia.core.channel.Channel
 import cc.otavia.core.message.{Event, TimerEvent}
@@ -68,7 +68,7 @@ enum ReactorEvent extends Event {
 
     case AcceptedEvent(channel: Channel, accepted: Channel)
 
-    case ReadBuffer(channel: Channel, buffer: PageBuffer, sender: Option[SocketAddress] = None, recipient: SocketAddress)
+    case ReadBuffer(channel: Channel, buffer: RecyclablePageBuffer, sender: Option[SocketAddress] = None, recipient: SocketAddress)
 
     case ExceptionEvent(channel: Channel, cause: Throwable)
 

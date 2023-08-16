@@ -18,7 +18,7 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.core.buffer.{AdaptiveBuffer, PageBuffer, PageBufferAllocator}
+import cc.otavia.buffer.pool.{AdaptiveBuffer, RecyclablePageBuffer, PagePooledAllocator}
 import cc.otavia.core.timer.Timer
 
 trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundInvoker {
@@ -45,11 +45,11 @@ trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundIn
      */
     def isRemoved: Boolean
 
-    /** Return the assigned [[PageBufferAllocator]] which will be used to allocate off-heap [[PageBuffer]]s. */
-    final def directAllocator(): PageBufferAllocator = channel.directAllocator
+    /** Return the assigned [[PagePooledAllocator]] which will be used to allocate off-heap [[RecyclablePageBuffer]]s. */
+    final def directAllocator(): PagePooledAllocator = channel.directAllocator
 
-    /** Return the assigned [[PageBufferAllocator]] which will be used to allocate heap [[PageBuffer]]s. */
-    final def heapAllocator(): PageBufferAllocator = channel.heapAllocator
+    /** Return the assigned [[PagePooledAllocator]] which will be used to allocate heap [[RecyclablePageBuffer]]s. */
+    final def heapAllocator(): PagePooledAllocator = channel.heapAllocator
 
     final def isBufferHandlerContext: Boolean = hasOutboundAdaptive || hasInboundAdaptive
 

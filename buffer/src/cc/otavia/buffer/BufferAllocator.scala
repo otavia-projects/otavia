@@ -18,6 +18,8 @@
 
 package cc.otavia.buffer
 
+import cc.otavia.buffer.unpool.{UnpoolDirectAllocator, UnpoolDirectBuffer, UnpoolHeapAllocator, UnpoolHeapBuffer}
+
 import java.nio.ByteBuffer
 import scala.language.unsafeNulls
 
@@ -41,18 +43,6 @@ trait BufferAllocator {
      */
     def allocate(size: Int): Buffer
 
-    /** Determine if this allocator is pooling and reusing its allocated memory.
-     *
-     *  @return
-     *    true if this allocator is pooling and reusing its memory, false otherwise.
-     */
-    def isPooling: Boolean
-
-    /** Recycle the [[Buffer]]
-     *  @param buffer
-     */
-    def recycle(buffer: Buffer): Unit
-
     /** Determine if this allocator is allocate direct memory or heap memory.
      *
      *  @return
@@ -64,29 +54,9 @@ trait BufferAllocator {
 
 object BufferAllocator {
 
-    private val DEFAULT_OFF_HEAP_ALLOCATOR = new BufferAllocator {
+    private val DEFAULT_OFF_HEAP_ALLOCATOR = new UnpoolDirectAllocator()
 
-        override def allocate(size: Int): Buffer = new DirectBuffer(ByteBuffer.allocateDirect(size))
-
-        override def isPooling: Boolean = false
-
-        override def recycle(buffer: Buffer): Unit = buffer.close()
-
-        override def isDirect: Boolean = true
-
-    }
-
-    private val DEFAULT_ON_HEAP_ALLOCATOR = new BufferAllocator {
-
-        override def allocate(size: Int): Buffer = new HeapBuffer(ByteBuffer.allocate(size))
-
-        override def isPooling: Boolean = false
-
-        override def recycle(buffer: Buffer): Unit = buffer.close()
-
-        override def isDirect: Boolean = false
-
-    }
+    private val DEFAULT_ON_HEAP_ALLOCATOR = new UnpoolHeapAllocator()
 
     def onHeapAllocator(): BufferAllocator = DEFAULT_ON_HEAP_ALLOCATOR
 

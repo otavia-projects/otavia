@@ -18,7 +18,7 @@
 
 package cc.otavia.handler.codec
 
-import cc.otavia.core.buffer.AdaptiveBuffer
+import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContext
 
 /** A decoder that splits the received [[Buffer]]s by the fixed number of bytes. For example, if you received the

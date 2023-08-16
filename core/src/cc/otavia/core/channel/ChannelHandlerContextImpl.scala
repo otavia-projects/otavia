@@ -18,8 +18,8 @@
 
 package cc.otavia.core.channel
 
+import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.buffer.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContextImpl.*
 import cc.otavia.core.channel.internal.ChannelHandlerMask
 import cc.otavia.core.channel.internal.ChannelHandlerMask.*

@@ -16,16 +16,15 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.buffer
+package cc.otavia.buffer.unpool
 
-import cc.otavia.core.buffer.AbstractPageAllocator
+import cc.otavia.buffer.{Buffer, BufferAllocator}
 
 import java.nio.ByteBuffer
 import scala.language.unsafeNulls
+class UnpoolDirectAllocator extends BufferAllocator {
 
-class DirectPageAllocator extends AbstractPageAllocator {
-
-    override protected def newBuffer(): PageBuffer = DirectPageBuffer(ByteBuffer.allocateDirect(PageBuffer.PAGE_SIZE))
+    override def allocate(size: Int): Buffer = new UnpoolDirectBuffer(ByteBuffer.allocateDirect(size))
 
     override def isDirect: Boolean = true
 

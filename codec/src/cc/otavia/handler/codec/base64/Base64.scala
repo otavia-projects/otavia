@@ -20,9 +20,9 @@ package cc.otavia.handler.codec.base64
 
 import cc.otavia.buffer.BufferAllocator.{offHeapAllocator, onHeapAllocator}
 import cc.otavia.buffer.{Buffer, BufferAllocator}
-import cc.otavia.core.buffer.AdaptiveBuffer
 import cc.otavia.handler.codec.base64.Base64.Decoder.decode4to3
 import cc.otavia.buffer.ByteProcessor
+import cc.otavia.buffer.pool.AdaptiveBuffer
 
 import java.util.Objects.requireNonNull
 import scala.language.unsafeNulls

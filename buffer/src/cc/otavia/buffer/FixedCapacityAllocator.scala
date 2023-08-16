@@ -1,8 +1,6 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
- * This file fork from netty.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,15 +16,14 @@
 
 package cc.otavia.buffer
 
-import java.nio.ByteBuffer
-import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
-import java.nio.charset.Charset
-import scala.language.unsafeNulls
+trait FixedCapacityAllocator extends BufferAllocator {
 
-class DirectBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
+    def fixedCapacity: Int
 
-    assert(underlying.isDirect)
+}
 
-    override def isDirect: Boolean = true
+object FixedCapacityAllocator {
+
+    val DEFAULT_PAGE_SIZE = 4096
 
 }

@@ -18,7 +18,7 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.core.buffer.AdaptiveBuffer
+import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.stack.ChannelFuture
 
@@ -275,13 +275,6 @@ trait ChannelHandler {
     def pendingOutboundBytes(ctx: ChannelHandlerContext): Long = 0
 
     def isBufferHandler: Boolean = false
-
-    protected def inboundAdaptiveStrategy: AdaptiveBuffer.AdaptiveStrategy = AdaptiveBuffer.FullPageStrategy
-
-    protected def outboundAdaptiveStrategy: AdaptiveBuffer.AdaptiveStrategy = AdaptiveBuffer.FullPageStrategy
-
-    private[core] def inboundStrategy: AdaptiveBuffer.AdaptiveStrategy  = inboundAdaptiveStrategy
-    private[core] def outboundStrategy: AdaptiveBuffer.AdaptiveStrategy = outboundAdaptiveStrategy
 
     /** If the handler has inbound [[AdaptiveBuffer]] */
     def hasInboundAdaptive: Boolean = false

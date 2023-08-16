@@ -51,7 +51,7 @@ abstract class AbstractNioByteChannel[L <: SocketAddress, R <: SocketAddress](
     ) {
 
     override final protected[core] def doReadNow(readSink: ReadSink): Boolean = {
-        val buffer         = channelInboundBufferAccumulation
+        val buffer: Buffer = ???
         val adaptiveBuffer = channelInboundAdaptiveBuffer
         if (buffer.writableBytes > 0) {
             val accLast = buffer.writableBytes

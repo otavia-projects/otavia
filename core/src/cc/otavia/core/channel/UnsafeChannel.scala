@@ -18,8 +18,8 @@
 
 package cc.otavia.core.channel
 
+import cc.otavia.buffer.pool.{AbstractPagePooledAllocator, PagePooledAllocator}
 import cc.otavia.core.address.ActorAddress
-import cc.otavia.core.buffer.{AbstractPageAllocator, PageBufferAllocator}
 import cc.otavia.core.channel.message.ReadPlan
 
 import java.net.SocketAddress
@@ -97,8 +97,8 @@ trait UnsafeChannel {
      */
     def isShutdown(direction: ChannelShutdownDirection): Boolean
 
-    def directAllocator: PageBufferAllocator = channel.directAllocator
+    def directAllocator: PagePooledAllocator = channel.directAllocator
 
-    def heapAllocator: PageBufferAllocator = channel.heapAllocator
+    def heapAllocator: PagePooledAllocator = channel.heapAllocator
 
 }

@@ -18,9 +18,9 @@ package cc.otavia.core.system
 
 import cc.otavia.BuildInfo
 import cc.otavia.buffer.BufferAllocator
+import cc.otavia.buffer.pool.{DirectPagePooledAllocator, HeapPagePooledAllocator}
 import cc.otavia.core.actor.*
 import cc.otavia.core.address.*
-import cc.otavia.core.buffer.{DirectPageAllocator, HeapPageAllocator}
 import cc.otavia.core.channel.ChannelFactory
 import cc.otavia.core.ioc.{BeanDefinition, BeanManager, Module}
 import cc.otavia.core.message.{Call, IdAllocator}

@@ -16,7 +16,7 @@
 
 package cc.otavia.core.channel.message
 
-import cc.otavia.core.buffer.AdaptiveBuffer
+import cc.otavia.buffer.pool.AdaptiveBuffer
 
 /** A [[AdaptiveBufferMessage]] only notice [[AdaptiveBuffer]] is change. */
 object AdaptiveBufferChangeNotice extends AdaptiveBufferMessage

@@ -16,15 +16,15 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.buffer
+package cc.otavia.buffer.pool
 
-import cc.otavia.core.buffer.{DirectPageAllocator, HeapPageAllocator}
+import cc.otavia.buffer.pool.{DirectPagePooledAllocator, HeapPagePooledAllocator}
 import org.scalatest.funsuite.AnyFunSuite
 
 class BufferAllocatorSuite extends AnyFunSuite {
 
     test("buffer initial") {
-        val allocator = new HeapPageAllocator
+        val allocator = new HeapPagePooledAllocator
         val buffer    = allocator.allocate()
 
         assert(buffer.readerOffset == 0)
@@ -34,7 +34,7 @@ class BufferAllocatorSuite extends AnyFunSuite {
     }
 
     test("allocate direct") {
-        val allocator = new DirectPageAllocator
+        val allocator = new DirectPagePooledAllocator
         val buffer    = allocator.allocate()
 
         assert(buffer.isDirect)
@@ -42,7 +42,7 @@ class BufferAllocatorSuite extends AnyFunSuite {
     }
 
     test("allocate heap") {
-        val allocator = new HeapPageAllocator
+        val allocator = new HeapPagePooledAllocator
 
         val buffer = allocator.allocate()
 
@@ -50,7 +50,7 @@ class BufferAllocatorSuite extends AnyFunSuite {
     }
 
     test("heap buffer fill") {
-        val allocator = new HeapPageAllocator
+        val allocator = new HeapPagePooledAllocator
 
         val buffer = allocator.allocate()
 
@@ -65,7 +65,7 @@ class BufferAllocatorSuite extends AnyFunSuite {
     }
 
     test("direct buffer fill") {
-        val allocator = new DirectPageAllocator
+        val allocator = new DirectPagePooledAllocator
 
         val buffer = allocator.allocate()
 

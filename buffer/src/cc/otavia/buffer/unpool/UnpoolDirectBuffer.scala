@@ -16,12 +16,23 @@
  * limitations under the License.
  */
 
-package cc.otavia.buffer
+package cc.otavia.buffer.unpool
+
+import cc.otavia.buffer.AbstractBuffer
 
 import java.nio.ByteBuffer
+import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
+import java.nio.charset.Charset
+import scala.language.unsafeNulls
 
-class DirectWrapBuffer(underlying: ByteBuffer) extends DirectBuffer(underlying)
+class UnpoolDirectBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
 
-object DirectWrapBuffer {
-    def apply(underlying: ByteBuffer): DirectWrapBuffer = new DirectWrapBuffer(underlying)
+    assert(underlying.isDirect)
+
+    override def isDirect: Boolean = true
+
+}
+
+object UnpoolDirectBuffer {
+    def apply(underlying: ByteBuffer): UnpoolDirectBuffer = new UnpoolDirectBuffer(underlying)
 }
