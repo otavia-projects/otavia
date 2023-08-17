@@ -47,6 +47,7 @@ object ProjectInfo {
     def booPickle     = ivy"io.suzaku::boopickle:1.4.0"
     def netty5        = ivy"io.netty:netty5-codec:5.0.0.Alpha5"
     def xml           = ivy"org.scala-lang.modules::scala-xml:2.1.0"
+    def proto         = ivy"io.github.zero-deps::proto:2.1.2"
 
 }
 
@@ -94,58 +95,6 @@ object buffer extends OtaviaModule {
         def jmhCoreVersion = "1.37"
 
         override def moduleDeps = Seq(buffer)
-
-    }
-
-}
-
-object serde extends OtaviaModule {
-
-    override def artifactName = "serde"
-
-    override def moduleDeps = Seq(buffer)
-
-}
-
-object `serde-json` extends OtaviaModule {
-
-    override def artifactName = "serde-json"
-
-    override def moduleDeps = Seq(serde)
-
-    object test extends Tests with TestModule.ScalaTest {
-
-        override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.jsoniter)
-
-        override def compileIvyDeps = Agg(ProjectInfo.jsoniterMacro)
-
-    }
-
-}
-
-object `serde-json-macro` extends OtaviaModule {
-
-    override def artifactName = "serde-json-macro"
-
-    override def moduleDeps = Seq(serde, `serde-json`)
-
-    object test extends Tests with TestModule.ScalaTest {
-
-        override def ivyDeps = Agg(ProjectInfo.testDep)
-
-    }
-
-}
-
-object `serde-http` extends OtaviaModule {
-
-    override def artifactName = "serde-http"
-
-    override def moduleDeps = Seq(`serde-json`)
-
-    object test extends Tests with TestModule.ScalaTest {
-
-        override def ivyDeps = Agg(ProjectInfo.testDep)
 
     }
 
@@ -313,6 +262,86 @@ object web extends OtaviaModule {
 
 object examples extends OtaviaModule {
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+}
+
+object serde extends OtaviaModule {
+
+    override def artifactName = "serde"
+
+    override def moduleDeps = Seq(buffer)
+
+}
+
+object `serde-json` extends OtaviaModule {
+
+    override def artifactName = "serde-json"
+
+    override def moduleDeps = Seq(serde)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.jsoniter)
+
+        override def compileIvyDeps = Agg(ProjectInfo.jsoniterMacro)
+
+    }
+
+}
+
+object `serde-json-macro` extends OtaviaModule {
+
+    override def artifactName = "serde-json-macro"
+
+    override def moduleDeps = Seq(serde, `serde-json`)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
+
+}
+
+object `serde-http` extends OtaviaModule {
+
+    override def artifactName = "serde-http"
+
+    override def moduleDeps = Seq(serde, `serde-json`)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
+
+}
+
+object `serde-proto` extends OtaviaModule {
+
+    override def artifactName = "serde-proto"
+
+    override def moduleDeps = Seq(serde)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.proto)
+
+    }
+
+}
+
+object `serde-proto-macro` extends OtaviaModule {
+
+    override def artifactName = "serde-proto-macro"
+
+    override def moduleDeps = Seq(serde, `serde-proto`)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
+
 }
 
 trait SiteModule extends ScalaModule {

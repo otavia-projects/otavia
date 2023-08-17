@@ -14,35 +14,12 @@
  * limitations under the License.
  */
 
-package cc.otavia.buffer
+package cc.otavia.proto.mrc
 
-import org.openjdk.jmh.annotations.{Benchmark, Scope, Setup, State}
+import cc.otavia.proto.ProtoSerde
 
-@State(Scope.Thread)
-class HeapBufferBench {
+object ProtoSerdeGenerator {
 
-    private var buffer: Buffer = _
-
-    @Setup
-    def init(): Unit = {
-        buffer = BufferAllocator.onHeapAllocator().allocate(FixedCapacityAllocator.DEFAULT_PAGE_SIZE)
-    }
-
-    @Benchmark
-    def writeInt(): Unit = {
-        buffer.writeInt(10)
-        buffer.close()
-    }
-
-    @Benchmark
-    def parseInt(): Unit = {
-        val x = "1234567".toInt
-    }
-
-    @Benchmark
-    def serializeInt(): Unit = {
-        val int = 1234567
-        val x   = int.toString
-    }
+    def generate[A]: ProtoSerde[A] = ???
 
 }
