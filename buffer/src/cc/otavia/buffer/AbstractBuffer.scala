@@ -573,6 +573,13 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         } else 0
     }
 
+    override def nextIs(byte: Byte): Boolean = underlying.get(ridx) == byte
+
+    override def skipIfNext(byte: Byte): Boolean = if (underlying.get(ridx) == byte) {
+        ridx += 1
+        true
+    } else false
+
     inline private def checkRead(index: Int, size: Int): Unit =
         if (index < 0 || widx < index + size) throw outOfBounds(index, size)
 

@@ -1896,6 +1896,10 @@ trait Buffer {
      */
     final def setDoubleLE(index: Int, value: Double): Buffer = setLongLE(index, JDouble.doubleToRawLongBits(value))
 
+    def nextIs(byte: Byte): Boolean
+
+    def skipIfNext(byte: Byte): Boolean
+
 }
 
 object Buffer {

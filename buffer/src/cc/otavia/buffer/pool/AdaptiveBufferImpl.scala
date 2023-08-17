@@ -16,7 +16,7 @@
 
 package cc.otavia.buffer.pool
 
-import cc.otavia.buffer.pool.{RecyclablePageBuffer, PagePooledAllocator}
+import cc.otavia.buffer.pool.{PagePooledAllocator, RecyclablePageBuffer}
 import cc.otavia.buffer.{AbstractBuffer, Buffer, ByteCursor}
 
 import java.lang.{Byte as JByte, Double as JDouble, Float as JFloat, Long as JLong, Short as JShort}
@@ -1367,5 +1367,9 @@ private class AdaptiveBufferImpl(val allocator: PagePooledAllocator)
     }
 
     override def readBytes(destination: Buffer, length: Int): Buffer = ???
+
+    override def nextIs(byte: Byte): Boolean = if (nonEmpty) head.nextIs(byte) else false
+
+    override def skipIfNext(byte: Byte): Boolean = if (nonEmpty) head.skipIfNext(byte) else false
 
 }

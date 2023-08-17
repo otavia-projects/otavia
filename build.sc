@@ -17,8 +17,12 @@
 import mill._, scalalib._, publish._
 import os.Path
 import mill.api.Result
-import $ivy.`com.lihaoyi::mill-contrib-buildinfo:$MILL_VERSION`
+import $ivy.`com.lihaoyi::mill-contrib-scoverage:`
+import $ivy.`com.lihaoyi::mill-contrib-buildinfo:`
+import $ivy.`com.lihaoyi::mill-contrib-jmh:`
 import mill.contrib.buildinfo.BuildInfo
+import contrib.jmh.JmhModule
+import mill.contrib.scoverage.ScoverageModule
 
 object ProjectInfo {
 
@@ -32,7 +36,7 @@ object ProjectInfo {
     def author                  = Seq("Yan Kun <yan_kun_1992@foxmail.com>")
     def version                 = "0.2.0-SNAPSHOT"
     def scalaVersion            = "3.3.0"
-    def scoverageVersion        = "2.0.10"
+    def scoverageVersion        = "1.4.0"
     def buildTool               = "mill"
     def buildToolVersion        = mill.BuildInfo.millVersion
 
@@ -76,6 +80,68 @@ trait OtaviaModule extends ScalaModule with PublishModule {
 object buffer extends OtaviaModule {
 
     override def artifactName = "buffer"
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
+
+    object bench extends ScalaModule with JmhModule {
+
+        override def scalaVersion = ProjectInfo.scalaVersion
+
+        def jmhCoreVersion = "1.37"
+
+        override def moduleDeps = Seq(buffer)
+
+    }
+
+}
+
+object serde extends OtaviaModule {
+
+    override def artifactName = "serde"
+
+    override def moduleDeps = Seq(buffer)
+
+}
+
+object `serde-json` extends OtaviaModule {
+
+    override def artifactName = "serde-json"
+
+    override def moduleDeps = Seq(serde)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.jsoniter)
+
+        override def compileIvyDeps = Agg(ProjectInfo.jsoniterMacro)
+
+    }
+
+}
+
+object `serde-json-macro` extends OtaviaModule {
+
+    override def artifactName = "serde-json-macro"
+
+    override def moduleDeps = Seq(serde, `serde-json`)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
+
+}
+
+object `serde-http` extends OtaviaModule {
+
+    override def artifactName = "serde-http"
+
+    override def moduleDeps = Seq(`serde-json`)
 
     object test extends Tests with TestModule.ScalaTest {
 
