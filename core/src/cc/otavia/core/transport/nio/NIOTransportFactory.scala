@@ -16,7 +16,6 @@
 
 package cc.otavia.core.transport.nio
 
-import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.channel.socket.SocketProtocolFamily
 import cc.otavia.core.channel.{Channel, ChannelException}
 import cc.otavia.core.reactor.{DefaultSelectStrategy, IoHandler, Reactor}
@@ -131,7 +130,7 @@ class NIOTransportFactory(val system: ActorSystem) extends TransportFactory {
         createDatagramChannel0(ch)
     }
 
-    override def createDatagramChannel(family: SocketProtocolFamily): Channel = {
+    override def createDatagramChannel(family: ProtocolFamily): Channel = {
         val ch = selectorProvider.openDatagramChannel(family)
         initialJdkChannel(ch)
         createDatagramChannel0(ch)

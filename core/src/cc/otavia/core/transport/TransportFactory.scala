@@ -17,7 +17,6 @@
 package cc.otavia.core.transport
 
 import cc.otavia.core.channel.Channel
-import cc.otavia.core.channel.socket.SocketProtocolFamily
 import cc.otavia.core.reactor.{IoHandler, Reactor}
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.transport.nio.NIOTransportServiceProvider
@@ -41,7 +40,7 @@ abstract class TransportFactory() {
 
     def createDatagramChannel(): Channel
 
-    def createDatagramChannel(family: SocketProtocolFamily): Channel
+    def createDatagramChannel(family: ProtocolFamily): Channel
 
     def createFileChannel(): Channel
 

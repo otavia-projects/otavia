@@ -16,9 +16,7 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.core.channel.socket.SocketProtocolFamily
 import cc.otavia.core.transport.TransportFactory
-import cc.otavia.core.channel.socket.SocketProtocolFamily
 import cc.otavia.core.transport.TransportFactory
 
 import java.net.ProtocolFamily
@@ -35,7 +33,7 @@ class ChannelFactory(val transportFactory: TransportFactory) {
 
     def openDatagramChannel(): Channel = transportFactory.createDatagramChannel()
 
-    def openDatagramChannel(family: SocketProtocolFamily): Channel = transportFactory.createDatagramChannel(family)
+    def openDatagramChannel(family: ProtocolFamily): Channel = transportFactory.createDatagramChannel(family)
 
     def openFileChannel(): Channel = transportFactory.createFileChannel()
 
