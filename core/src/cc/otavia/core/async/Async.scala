@@ -22,7 +22,7 @@
 //
 //import scala.annotation.{compileTimeOnly, experimental}
 //import scala.quoted.*
-//
+// TODO: move this package to async module
 //@experimental
 //object Async {
 //

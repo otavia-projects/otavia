@@ -137,6 +137,21 @@ object core extends OtaviaModule with BuildInfo {
 
 }
 
+/** experimental async/await transformer in otavia actor model. */
+object async extends OtaviaModule {
+
+    override def artifactName = "async"
+
+    override def moduleDeps = Seq(core)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
+
+}
+
 object handler extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
