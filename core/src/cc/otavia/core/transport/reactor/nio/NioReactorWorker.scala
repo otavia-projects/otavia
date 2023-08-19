@@ -19,7 +19,7 @@ package cc.otavia.core.transport.reactor.nio
 import cc.otavia.core.channel.Channel
 import cc.otavia.core.reactor.Reactor.Command
 import cc.otavia.core.reactor.Reactor.Command.*
-import cc.otavia.core.reactor.{IoExecutionContext, Reactor}
+import cc.otavia.core.reactor.{IoExecutionContext, IoHandler, IoHandlerFactory, Reactor}
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.util.SpinLockQueue
@@ -32,7 +32,7 @@ class NioReactorWorker(
     val executor: Executor,
     val system: ActorSystem,
     val maxTasksPerRun: Int,
-    val ioHandler: NioHandler
+    val ioHandlerFactory: IoHandlerFactory
 ) extends AtomicInteger {
 
     import NioReactorWorker.*
@@ -52,6 +52,8 @@ class NioReactorWorker(
         override def deadlineNanos: Long = ???
 
     }
+
+    private var ioHandler: IoHandler = _
 
     set(ST_NOT_STARTED)
 
@@ -74,6 +76,7 @@ class NioReactorWorker(
         assert(thread == null)
         executor.execute(() => {
             thread = Thread.currentThread()
+            ioHandler = ioHandlerFactory.newHandler
             try {
                 run()
             } catch {

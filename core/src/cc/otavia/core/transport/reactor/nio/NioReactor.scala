@@ -16,11 +16,10 @@
 
 package cc.otavia.core.transport.reactor.nio
 
-import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.channel.Channel
+import cc.otavia.core.reactor.*
 import cc.otavia.core.reactor.Reactor.Command.*
 import cc.otavia.core.reactor.Reactor.{Command, DEFAULT_MAX_TASKS_PER_RUN}
-import cc.otavia.core.reactor.{IoExecutionContext, IoHandler, LoopExecutor, Reactor}
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.system.ActorSystem.DEFAULT_PRINT_BANNER
@@ -46,7 +45,14 @@ class NioReactor(
     private val workers: Array[NioReactorWorker] = new Array[NioReactorWorker](NIO_REACTOR_WORKERS)
 
     workers.indices.foreach { idx =>
-        workers(idx) = new NioReactorWorker(LoopExecutor(threadFactory), system, maxTasksPerRun, new NioHandler(system))
+        workers(idx) = new NioReactorWorker(
+          LoopExecutor(threadFactory),
+          system,
+          maxTasksPerRun,
+          new IoHandlerFactory {
+              override def newHandler: IoHandler = new NioHandler(system)
+          }
+        )
     }
 
     override def submit(command: Command): Unit = {

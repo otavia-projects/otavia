@@ -24,7 +24,7 @@ abstract class MainActor(val args: Array[String]) extends StateActor[Args] {
 
     final override def afterMount(): Unit = {
         self.notice(Args(args))
-        logger.info(s"Send ${args.mkString("Array(", ", ", ")")} to ${getClass.getSimpleName}[MainActor]")
+        logger.info(s"Send main args ${args.mkString("[", ", ", "]")} to main actor [${getClass.getName}]")
     }
 
     final override def continueNotice(stack: NoticeStack[Args]): Option[StackState] = main0(stack)
