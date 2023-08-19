@@ -48,6 +48,7 @@ object ProjectInfo {
     def netty5        = ivy"io.netty:netty5-codec:5.0.0.Alpha5"
     def xml           = ivy"org.scala-lang.modules::scala-xml:2.1.0"
     def proto         = ivy"io.github.zero-deps::proto:2.1.2"
+    def shapeless     = ivy"org.typelevel::shapeless3-deriving:3.3.0"
 
 }
 
@@ -293,6 +294,8 @@ object `serde-json-macro` extends OtaviaModule {
     override def artifactName = "serde-json-macro"
 
     override def moduleDeps = Seq(serde, `serde-json`)
+
+    override def ivyDeps = Agg(ProjectInfo.shapeless)
 
     object test extends Tests with TestModule.ScalaTest {
 

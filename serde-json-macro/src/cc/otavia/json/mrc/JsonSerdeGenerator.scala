@@ -16,10 +16,31 @@
 
 package cc.otavia.json.mrc
 
+import cc.otavia.buffer.Buffer
 import cc.otavia.json.JsonSerde
+import shapeless3.deriving.*
+
+import scala.collection.AbstractIterable
+import scala.compiletime.*
+import scala.deriving.Mirror
 
 object JsonSerdeGenerator {
 
-    def generate[A]: JsonSerde[A] = ???
+    given serdeShapelessGen[A](using inst: K0.ProductInstances[JsonSerde, A]): JsonSerde[A] with {
+
+        override def serialize(value: A, out: Buffer): Unit = {}
+
+        override def deserialize(in: Buffer): A = ???
+
+    }
+
+    inline def generate[A](using m: Mirror.Of[A]): JsonSerde[A] = {
+        // lazy val elemInstances = summonInstances[A, m.MirroredElemTypes] // (1)
+        // inline m match // (2)
+        //     case s: Mirror.SumOf[A]     => eqSum(s, elemInstances)
+        //     case p: Mirror.ProductOf[A] => eqProduct(p, elemInstances)
+
+        ???
+    }
 
 }

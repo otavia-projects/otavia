@@ -21,6 +21,8 @@ import cc.otavia.serde.{Serde, SerdeMathTypeOps, SerdeOps, SerdePrimaryTypeOps}
 
 import java.math.BigInteger
 import java.nio.charset.{Charset, StandardCharsets}
+import scala.compiletime.*
+import scala.deriving.Mirror
 import scala.language.unsafeNulls
 
 trait JsonSerde[A] extends Serde[A] with SerdePrimaryTypeOps with SerdeMathTypeOps {
@@ -31,40 +33,60 @@ trait JsonSerde[A] extends Serde[A] with SerdePrimaryTypeOps with SerdeMathTypeO
         while (in.skipIfNext(' ') || in.skipIfNext('\n') || in.skipIfNext('\r') || in.skipIfNext('\t')) {}
 
     protected def serializeObjectStart(out: Buffer): this.type = {
-        out.writeByte('{')
+        out.writeByte(JsonConstants.TOKEN_OBJECT_START)
         this
     }
 
     protected def skipObjectStart(in: Buffer): Boolean = {
         skipBlanks(in)
-        in.nextIs('{')
+        in.skipIfNext(JsonConstants.TOKEN_OBJECT_START)
     }
 
     protected def serializeArrayStart(out: Buffer): this.type = {
-        out.writeByte('[')
+        out.writeByte(JsonConstants.TOKEN_ARRAY_START)
         this
     }
 
     protected def skipArrayStart(in: Buffer): Boolean = {
         skipBlanks(in)
-        in.nextIs('[')
+        in.skipIfNext(JsonConstants.TOKEN_ARRAY_START)
+    }
+
+    protected def serializeObjectEnd(out: Buffer): this.type = {
+        out.writeByte(JsonConstants.TOKEN_OBJECT_END)
+        this
+    }
+
+    protected def skipObjectEnd(in: Buffer): Boolean = {
+        skipBlanks(in)
+        in.skipIfNext(JsonConstants.TOKEN_OBJECT_END)
+    }
+
+    protected def serializeArrayEnd(out: Buffer): this.type = {
+        out.writeByte(JsonConstants.TOKEN_ARRAY_END)
+        this
+    }
+
+    protected def skipArrayEnd(in: Buffer): Boolean = {
+        skipBlanks(in)
+        in.skipIfNext(JsonConstants.TOKEN_ARRAY_END)
     }
 
     protected def serializeKey(key: String, out: Buffer): this.type = {
-        out.writeByte('"')
+        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
         out.writeCharSequence(key, charsets)
-        out.writeByte('"')
-        out.writeByte(':')
+        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+        out.writeByte(JsonConstants.TOKEN_COLON)
         this
     }
 
     override final protected def serializeByte(byte: Byte, out: Buffer): JsonSerde.this.type = serializeInt(byte, out)
 
     override final protected def serializeBoolean(boolean: Boolean, out: Buffer): JsonSerde.this.type = if (boolean) {
-        out.writeBytes(JsonSerde.TOKEN_TURE)
+        out.writeBytes(JsonConstants.TOKEN_TURE)
         this
     } else {
-        out.writeBytes(JsonSerde.TOKEN_FALSE)
+        out.writeBytes(JsonConstants.TOKEN_FALSE)
         this
     }
 
@@ -132,7 +154,8 @@ trait JsonSerde[A] extends Serde[A] with SerdePrimaryTypeOps with SerdeMathTypeO
 
 object JsonSerde {
 
-    private val TOKEN_TURE: Array[Byte]  = "true".getBytes(StandardCharsets.US_ASCII)
-    private val TOKEN_FALSE: Array[Byte] = "false".getBytes(StandardCharsets.US_ASCII)
+    inline def derived[A](using m: Mirror.Of[A]): JsonSerde[A] = {
+        ???
+    }
 
 }
