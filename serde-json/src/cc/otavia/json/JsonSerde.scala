@@ -37,6 +37,7 @@ trait JsonSerde[A] extends Serde[A] with SerdePrimaryTypeOps with SerdeMathTypeO
         this
     }
 
+    // TODO: replace to exceptXXX, if false throws error
     protected def skipObjectStart(in: Buffer): Boolean = {
         skipBlanks(in)
         in.skipIfNext(JsonConstants.TOKEN_OBJECT_START)
