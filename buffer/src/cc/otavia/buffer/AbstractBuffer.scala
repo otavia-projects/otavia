@@ -575,6 +575,12 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         underlying.clear()
     }
 
+    override def clean(): this.type = {
+        widx = 0
+        ridx = 0
+        this
+    }
+
     override def capacity: Int = underlying.capacity()
 
     override def fill(value: Byte): Buffer = {

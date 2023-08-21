@@ -728,7 +728,12 @@ trait Buffer {
     /** Check the [[Buffer]] is closed. */
     def closed: Boolean
 
-    def clean(): Unit = ??? // TODO:
+    /** Clears this [[Buffer]]. The [[readerOffset]] and [[writerOffset]] are set to zero.
+     *
+     *  @return
+     *    This buffer
+     */
+    def clean(): this.type
 
     // data accessor
 

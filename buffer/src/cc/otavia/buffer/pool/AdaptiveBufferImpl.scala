@@ -258,6 +258,11 @@ private class AdaptiveBufferImpl(val allocator: PagePooledAllocator)
         stClosed = true
     }
 
+    override def clean(): this.type = {
+        recycleAll(true)
+        this
+    }
+
     override def closed: Boolean = stClosed
 
     override def readByte: Byte = {
