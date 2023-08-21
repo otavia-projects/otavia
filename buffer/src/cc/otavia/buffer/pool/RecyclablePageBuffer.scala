@@ -50,6 +50,8 @@ abstract class RecyclablePageBuffer(underlying: ByteBuffer) extends AbstractBuff
         super.close()
     }
 
+    override def closed: Boolean = status == ST_PAGE_ALLOCATABLE
+
     private[otavia] def byteBuffer: ByteBuffer
 
 }

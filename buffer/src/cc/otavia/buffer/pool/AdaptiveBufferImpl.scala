@@ -33,7 +33,7 @@ private class AdaptiveBufferImpl(val allocator: PagePooledAllocator)
     private var ridx: Int = 0
     private var widx: Int = 0
 
-    private var closed: Boolean = false
+    private var stClosed: Boolean = false
 
     private def startIndex = ridx - head.readerOffset
 
@@ -123,7 +123,11 @@ private class AdaptiveBufferImpl(val allocator: PagePooledAllocator)
         first
     }
 
-    override private[otavia] def splitLast() = ???
+    override private[otavia] def splitLast(): RecyclablePageBuffer = {
+        val last = removeLast()
+        widx -= last.readableBytes
+        last
+    }
 
     override def capacity: Int = Int.MaxValue
 
@@ -251,8 +255,10 @@ private class AdaptiveBufferImpl(val allocator: PagePooledAllocator)
 
     override def close(): Unit = {
         recycleAll()
-        closed = true
+        stClosed = true
     }
+
+    override def closed: Boolean = stClosed
 
     override def readByte: Byte = {
         val value = head.readByte

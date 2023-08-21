@@ -21,7 +21,7 @@ package cc.otavia.buffer
 /** Provides a mechanism to iterate over a collection of bytes. */
 trait ByteProcessor {
 
-    /** Process Buffer
+    /** Process [[Buffer]]
      *  @return
      *    true if the processor wants to continue the loop and handle the next byte in the buffer. false if the
      *    processor wants to stop handling bytes and abort the loop.
@@ -32,10 +32,10 @@ trait ByteProcessor {
 
 object ByteProcessor {
 
-    private val SPACE           = ' '.toByte
-    private val HTAB            = '\t'.toByte
-    private val CARRIAGE_RETURN = '\r'.toByte
-    private val LINE_FEED       = '\n'.toByte
+    private val SPACE: Byte           = ' '
+    private val TAB: Byte             = '\t'
+    private val CARRIAGE_RETURN: Byte = '\r'
+    private val LINE_FEED: Byte       = '\n'
 
     /** A [[ByteProcessor]] which finds the first appearance of a specific byte. */
     class IndexOfProcessor(byteToFind: Byte) extends ByteProcessor {
@@ -50,10 +50,10 @@ object ByteProcessor {
     }
 
     /** Aborts on a `NULL(0x00)`. */
-    val FIND_NUL = new ByteProcessor.IndexOfProcessor(0.toByte)
+    val FIND_NUL = new ByteProcessor.IndexOfProcessor(0)
 
     /** Aborts on a `non-NULL(0x00)`. */
-    val FIND_NON_NUL = new ByteProcessor.IndexNotOfProcessor(0.toByte)
+    val FIND_NON_NUL = new ByteProcessor.IndexNotOfProcessor(0)
 
     /** Aborts on a `CR ('\r')`. */
     val FIND_CR = new ByteProcessor.IndexOfProcessor(CARRIAGE_RETURN)
@@ -68,10 +68,10 @@ object ByteProcessor {
     val FIND_NON_LF = new ByteProcessor.IndexNotOfProcessor(LINE_FEED)
 
     /** Aborts on a semicolon `(';')`. */
-    val FIND_SEMI_COLON = new ByteProcessor.IndexOfProcessor(';'.toByte)
+    val FIND_SEMI_COLON = new ByteProcessor.IndexOfProcessor(';')
 
     /** Aborts on a comma `(',')`. */
-    val FIND_COMMA = new ByteProcessor.IndexOfProcessor(','.toByte)
+    val FIND_COMMA = new ByteProcessor.IndexOfProcessor(',')
 
     /** Aborts on a ascii space character (`' '`). */
     val FIND_ASCII_SPACE = new ByteProcessor.IndexOfProcessor(SPACE)
@@ -83,9 +83,9 @@ object ByteProcessor {
     val FIND_NON_CRLF: ByteProcessor = (value: Byte) => value == CARRIAGE_RETURN || value == LINE_FEED
 
     /** Aborts on a linear whitespace (a (`' '` or a `'\t'`). */
-    val FIND_LINEAR_WHITESPACE: ByteProcessor = (value: Byte) => value != SPACE && value != HTAB
+    val FIND_LINEAR_WHITESPACE: ByteProcessor = (value: Byte) => value != SPACE && value != TAB
 
     /** Aborts on a byte which is not a linear whitespace (neither `' '` nor `'\t'`). */
-    val FIND_NON_LINEAR_WHITESPACE: ByteProcessor = (value: Byte) => value == SPACE || value == HTAB
+    val FIND_NON_LINEAR_WHITESPACE: ByteProcessor = (value: Byte) => value == SPACE || value == TAB
 
 }

@@ -590,6 +590,22 @@ trait Buffer {
      *  [[writerOffset]] are not modified while the iteration takes place. Otherwise, unpredictable behaviour might
      *  result.
      *
+     *  @return
+     *    A [[ByteCursor]] for the given stretch of bytes of this buffer.
+     *  @throws BufferClosedException
+     *    If the [[Buffer]] has been closed.
+     *  @throws IllegalArgumentException
+     *    if the length is negative, or if the region given by the [[fromOffset]] and the [[length]] reaches outside the
+     *    bounds of this buffer.
+     */
+    final def openCursor(): ByteCursor = openCursor(readerOffset, readableBytes)
+
+    /** Opens a cursor to iterate the given number bytes of this buffer, starting at the given offset. The
+     *  [[readerOffset]] and [[writerOffset]] are not modified by the cursor. <p> Care should be taken to ensure that
+     *  the buffer's lifetime extends beyond the cursor and the iteration, and that the [[readerOffset]] and
+     *  [[writerOffset]] are not modified while the iteration takes place. Otherwise, unpredictable behaviour might
+     *  result.
+     *
      *  @param fromOffset
      *    The offset into the buffer where iteration should start. The first byte read from the iterator will be the
      *    byte at this offset.
@@ -597,6 +613,8 @@ trait Buffer {
      *    The number of bytes to iterate.
      *  @return
      *    A [[ByteCursor]] for the given stretch of bytes of this buffer.
+     *  @throws BufferClosedException
+     *    If the [[Buffer]] has been closed.
      *  @throws IllegalArgumentException
      *    if the length is negative, or if the region given by the [[fromOffset]] and the [[length]] reaches outside the
      *    bounds of this buffer.
@@ -612,8 +630,13 @@ trait Buffer {
      *
      *  @return
      *    A [[ByteCursor]] for the readable bytes of this buffer.
+     *  @throws BufferClosedException
+     *    If the [[Buffer]] has been closed.
+     *  @throws IllegalArgumentException
+     *    if the length is negative, or if the region given by the [[fromOffset]] and the [[length]] reaches outside the
+     *    bounds of this buffer.
      */
-    def openReverseCursor: ByteCursor = {
+    final def openReverseCursor: ByteCursor = {
         val woff = writerOffset
         openReverseCursor(if (woff == 0) 0 else woff - 1, readableBytes)
     }
@@ -701,6 +724,11 @@ trait Buffer {
 
     /** Close this [[Buffer]] */
     def close(): Unit
+
+    /** Check the [[Buffer]] is closed. */
+    def closed: Boolean
+
+    def clean(): Unit = ??? // TODO:
 
     // data accessor
 
@@ -1918,7 +1946,8 @@ object Buffer {
      *    The new byte buffer
      */
     def wrap(byteBuffer: ByteBuffer): Buffer =
-        if (byteBuffer.isDirect) UnpoolDirectBuffer(byteBuffer) else UnpoolHeapBuffer(byteBuffer)
+        if (byteBuffer.isDirect) UnpoolDirectBuffer(byteBuffer)
+        else UnpoolHeapBuffer(byteBuffer) // TODO: modify ridx widx
 
     /** Wraps a byte array into a [[Buffer]].
      *
@@ -1933,6 +1962,6 @@ object Buffer {
      *  @return
      *    The new byte buffer
      */
-    def wrap(array: Array[Byte]): Buffer = UnpoolHeapBuffer(ByteBuffer.wrap(array))
+    def wrap(array: Array[Byte]): Buffer = UnpoolHeapBuffer(ByteBuffer.wrap(array)) // TODO: modify ridx widx
 
 }

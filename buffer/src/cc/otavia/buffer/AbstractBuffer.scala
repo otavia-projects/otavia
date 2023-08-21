@@ -202,11 +202,72 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         if (continue) -1 else offset - ridx
     } else -1
 
-    override def openCursor(fromOffset: Int, length: Int): ByteCursor = ???
+    override def openCursor(fromOffset: Int, length: Int): ByteCursor = {
+        if (closed) throw new BufferClosedException()
+        if (fromOffset < 0) throw new IndexOutOfBoundsException(s"The fromOffset cannot be negative: ${fromOffset}")
+        if (length < 0) throw new IndexOutOfBoundsException(s"The length cannot be negative: ${length}")
+        if (capacity < fromOffset + length)
+            throw new IndexOutOfBoundsException(
+              s"The fromOffset + length is beyond the end of the buffer: fromOffset = ${fromOffset}, length = ${length}"
+            )
 
-    override def openReverseCursor(fromOffset: Int, length: Int): ByteCursor = ???
+        new ByteCursor {
+            private var idx: Int    = fromOffset
+            private val end: Int    = fromOffset + length
+            private var value: Byte = _
 
-    override def ensureWritable(size: Int, minimumGrowth: Int, allowCompaction: Boolean): Buffer = ???
+            override def readByte: Boolean = if (idx < end) {
+                value = underlying.get(idx)
+                idx += 1
+                true
+            } else false
+
+            override def getByte: Byte = value
+
+            override def currentOffset: Int = idx
+
+            override def bytesLeft: Int = end - idx
+        }
+
+    }
+
+    override def openReverseCursor(fromOffset: Int, length: Int): ByteCursor = {
+        if (closed) throw new BufferClosedException()
+        if (fromOffset < 0) throw new IndexOutOfBoundsException(s"The fromOffset cannot be negative: ${fromOffset}")
+        if (length < 0) throw new IndexOutOfBoundsException(s"The length cannot be negative: ${length}")
+        if (capacity <= fromOffset)
+            throw new IndexOutOfBoundsException(s"The fromOffset is beyond the end of the buffer: ${fromOffset}")
+        if (fromOffset - length < -1)
+            new IndexOutOfBoundsException(
+              "The fromOffset - length would underflow the buffer: " + "fromOffset = " + fromOffset + ", length = " + length + '.'
+            )
+
+        new ByteCursor {
+            private var idx: Int    = fromOffset
+            private val end: Int    = fromOffset - length
+            private var value: Byte = -1
+
+            override def readByte: Boolean = if (idx > end) {
+                value = underlying.get(idx)
+                idx -= 1
+                true
+            } else false
+
+            override def getByte: Byte = value
+
+            override def currentOffset: Int = idx
+
+            override def bytesLeft: Int = idx - end
+        }
+    }
+
+    override def ensureWritable(size: Int, minimumGrowth: Int, allowCompaction: Boolean): Buffer = {
+        if (this.writableBytes >= size) {} else if (capacity - this.readableBytes >= size) {
+            if (allowCompaction) compact()
+            else throw new IllegalStateException(s"${this} can't write with size ${size} ")
+        } else throw new IllegalStateException(s"${this} can't write with size ${size} ")
+        this
+    }
 
     override def readByte: Byte = {
         val b = underlying.get(ridx)

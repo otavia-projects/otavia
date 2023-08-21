@@ -16,28 +16,16 @@
  * limitations under the License.
  */
 
-package cc.otavia.buffer.unpool
+package cc.otavia.buffer
 
-import cc.otavia.buffer.AbstractBuffer
+/** An exception thrown when an operation is attempted on a [[Buffer]] when it has been closed. */
+class BufferClosedException(message: String | Null, cause: Throwable | Null)
+    extends IllegalStateException(message, cause) {
 
-import java.nio.ByteBuffer
-import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
-import java.nio.charset.Charset
-import scala.language.unsafeNulls
+    def this() = this(null, null)
 
-class UnpoolDirectBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
+    def this(message: String) = this(message, null)
 
-    assert(underlying.isDirect)
+    def this(cause: Throwable) = this(null, cause)
 
-    writerOffset(underlying.limit())
-    readerOffset(underlying.position())
-
-    override def isDirect: Boolean = true
-
-    override def closed: Boolean = false
-
-}
-
-object UnpoolDirectBuffer {
-    def apply(underlying: ByteBuffer): UnpoolDirectBuffer = new UnpoolDirectBuffer(underlying)
 }

@@ -29,6 +29,8 @@ import scala.language.unsafeNulls
 class UnpoolHeapBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
 
     assert(underlying.hasArray)
+    writerOffset(underlying.limit())
+    readerOffset(underlying.position())
 
     private val array: Array[Byte] = underlying.array()
 
@@ -42,5 +44,7 @@ class UnpoolHeapBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying
     }
 
     override def isDirect: Boolean = false
+
+    override def closed: Boolean = false
 
 }

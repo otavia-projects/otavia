@@ -17,7 +17,7 @@
 package cc.otavia.buffer.pool
 
 import cc.otavia.buffer.Buffer
-import cc.otavia.buffer.pool.{RecyclablePageBuffer, PagePooledAllocator}
+import cc.otavia.buffer.pool.{PagePooledAllocator, RecyclablePageBuffer}
 
 import java.nio.ByteBuffer
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
@@ -39,7 +39,7 @@ trait AdaptiveBuffer extends Buffer {
     private[otavia] def splitBefore(offset: Int): RecyclablePageBuffer
 
     /** Split the last [[RecyclablePageBuffer]] from this [[AdaptiveBuffer]]
- *
+     *
      *  @return
      */
     private[otavia] def splitLast(): RecyclablePageBuffer
@@ -49,7 +49,7 @@ trait AdaptiveBuffer extends Buffer {
     /** Append this [[RecyclablePageBuffer]] to the end of this [[AdaptiveBuffer]]
      *
      *  @param buffer
-     * [[RecyclablePageBuffer]] allocated by this [[allocator]]
+     *    [[RecyclablePageBuffer]] allocated by this [[allocator]]
      */
     private[otavia] def extend(buffer: RecyclablePageBuffer): Unit
 
