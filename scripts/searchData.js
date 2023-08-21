@@ -56,7 +56,7 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"cc/otavia/buffer/Buffer.html#bytesBefore-fffffbe7","e":false,"i":"","n":"bytesBefore","t":"bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte, needle4: Byte): Int","d":"cc.otavia.buffer.Buffer","k":"def","x":""},
 {"l":"cc/otavia/buffer/Buffer.html#bytesBefore-f35","e":false,"i":"","n":"bytesBefore","t":"bytesBefore(needle: Array[Byte]): Int","d":"cc.otavia.buffer.Buffer","k":"def","x":""},
 {"l":"cc/otavia/buffer/Buffer.html#capacity-0","e":false,"i":"","n":"capacity","t":"capacity: Int","d":"cc.otavia.buffer.Buffer","k":"def","x":""},
-{"l":"cc/otavia/buffer/Buffer.html#clean-94c","e":false,"i":"","n":"clean","t":"clean(): Unit","d":"cc.otavia.buffer.Buffer","k":"def","x":""},
+{"l":"cc/otavia/buffer/Buffer.html#clean-fffff520","e":false,"i":"","n":"clean","t":"clean(): Buffer.this.type","d":"cc.otavia.buffer.Buffer","k":"def","x":""},
 {"l":"cc/otavia/buffer/Buffer.html#close-94c","e":false,"i":"","n":"close","t":"close(): Unit","d":"cc.otavia.buffer.Buffer","k":"def","x":""},
 {"l":"cc/otavia/buffer/Buffer.html#closed-0","e":false,"i":"","n":"closed","t":"closed: Boolean","d":"cc.otavia.buffer.Buffer","k":"def","x":""},
 {"l":"cc/otavia/buffer/Buffer.html#compact-fffff520","e":false,"i":"","n":"compact","t":"compact(): Buffer","d":"cc.otavia.buffer.Buffer","k":"def","x":""},
