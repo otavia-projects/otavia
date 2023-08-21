@@ -244,6 +244,14 @@ object `codec-smtp` extends OtaviaModule {
 
 }
 
+object `codec-kafka` extends OtaviaModule {
+
+    override def artifactName: T[String] = "codec-kafka"
+
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+}
+
 object `native-transport` extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)

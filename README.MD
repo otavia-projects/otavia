@@ -98,6 +98,7 @@ In `otavia`, developer only focus on
 | codec-redis    | Redis ChannelHandlers and Actors.                      |          |      |
 | codec-smtp     | SMTP ChannelHandlers and Actors.                       |          |      |
 | codec-socks    | SOCKS4/5 ChannelHandlers and Actors.                   |          |      |
+| codec-kafka    | KAFKA ChannelHandlers and Actors.                      |          |      |
 
 ### logger ecosystem
 
