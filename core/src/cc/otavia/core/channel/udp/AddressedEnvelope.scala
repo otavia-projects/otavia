@@ -18,15 +18,10 @@
 
 package cc.otavia.core.channel.udp
 
-import io.netty5.util.{ReferenceCounted, Resource}
-
 import java.net.SocketAddress
 
 /** A message that wraps another message with a sender address and a recipient address.
  *
- *  @note
- *    [[AddressedEnvelope]] implementors likely also implement either [[ReferenceCounted]] or [[Resource]]. Users should
- *    be mindful to release or close any address envelopes if that's the case.
  *  @tparam M
  *    the type of the wrapped message
  *  @tparam A

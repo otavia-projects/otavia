@@ -18,7 +18,6 @@
 
 package cc.otavia.core.channel
 
-import io.netty5.util.{Attribute, AttributeKey}
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.message.ReactorEvent

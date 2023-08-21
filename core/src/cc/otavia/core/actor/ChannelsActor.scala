@@ -16,7 +16,6 @@
 
 package cc.otavia.core.actor
 
-import io.netty5.util.internal.ThrowableUtil
 import cc.otavia.core.actor.Actor
 import cc.otavia.core.actor.ChannelsActor.*
 import cc.otavia.core.address.{ActorAddress, Address}
@@ -27,6 +26,7 @@ import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.*
 import cc.otavia.core.system.ActorThread
 import cc.otavia.core.timer.Timer
+import cc.otavia.core.util.ThrowableUtil
 
 import java.net.*
 import java.nio.channels.SelectionKey

@@ -18,8 +18,6 @@
 
 package cc.otavia.core.transport.nio.channel
 
-import io.netty5.util.NetUtil
-import io.netty5.util.internal.SocketUtils
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.*
 import cc.otavia.core.channel.estimator.{ServerChannelReadHandleFactory, ServerChannelWriteHandleFactory}
@@ -52,7 +50,7 @@ class NioServerSocketChannel1(socket: ServerSocketChannel, val family: ProtocolF
       SelectionKey.OP_ACCEPT
     ) {
 
-    @volatile private var backlog = NetUtil.SOMAXCONN
+    @volatile private var backlog = 200
 
     private var unresolvedLocal: SocketAddress | Null = _
 

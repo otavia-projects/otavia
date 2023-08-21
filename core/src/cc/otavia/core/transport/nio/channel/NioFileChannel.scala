@@ -18,7 +18,6 @@
 
 package cc.otavia.core.transport.nio.channel
 
-import io.netty5.util.{Attribute, AttributeKey}
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.*
 import cc.otavia.core.channel.message.{FileReadPlan, ReadPlan, ReadPlanFactory}
@@ -29,7 +28,6 @@ import cc.otavia.core.system.ActorSystem
 import java.io.File
 import java.net.SocketAddress
 import java.nio.channels.FileChannel
-import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path, StandardOpenOption}
 import scala.jdk.CollectionConverters.*
 import scala.language.unsafeNulls

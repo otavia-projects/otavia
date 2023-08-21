@@ -28,7 +28,6 @@ import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.ChannelFuture
 import cc.otavia.core.util.ThrowableUtil
 import io.netty5.util.Resource
-import io.netty5.util.internal.StringUtil
 
 import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
@@ -36,9 +35,9 @@ import java.nio.file.{OpenOption, Path}
 import scala.util.Try
 
 final class ChannelHandlerContextImpl(
-                                         override val pipeline: ChannelPipelineImpl,
-                                         override val name: String,
-                                         override val handler: ChannelHandler
+    override val pipeline: ChannelPipelineImpl,
+    override val name: String,
+    override val handler: ChannelHandler
 ) extends ChannelHandlerContext {
 
     protected val logger: Logger = Logger.getLogger(getClass, pipeline.system)
@@ -594,7 +593,7 @@ final class ChannelHandlerContextImpl(
         val pending = handler.pendingOutboundBytes(this)
         if (pending < 0) {
             pipeline.forceCloseTransport()
-            val handlerName = StringUtil.simpleClassName(handler.getClass)
+            val handlerName = handler.getClass.getSimpleName
             val message =
                 s"$handlerName.pendingOutboundBytes(ChannelHandlerContext) returned a negative value: $pending. Force closed transport."
             throw new IllegalStateException(message)

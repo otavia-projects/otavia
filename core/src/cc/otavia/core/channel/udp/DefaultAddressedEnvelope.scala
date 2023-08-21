@@ -18,8 +18,6 @@
 
 package cc.otavia.core.channel.udp
 
-import io.netty5.util.internal.StringUtil
-
 import java.net.SocketAddress
 
 /** The default [[AddressedEnvelope]] implementation.
@@ -35,8 +33,8 @@ class DefaultAddressedEnvelope[M, A <: SocketAddress](
 ) extends AddressedEnvelope[M, A] {
 
     override def toString: String =
-        if (sender.nonEmpty) s"${StringUtil.simpleClassName(this)}(${sender.get} => $recipient, $message)"
-        else s"${StringUtil.simpleClassName(this)}(=> $recipient, $message)"
+        if (sender.nonEmpty) s"${this.getClass.getSimpleName}(${sender.get} => $recipient, $message)"
+        else s"${this.getClass.getSimpleName}(=> $recipient, $message)"
 
     override def content: M = message
 

@@ -16,8 +16,9 @@
 
 package cc.otavia.core.cache
 
-import io.netty5.util.concurrent.FastThreadLocal
 import cc.otavia.core.system.ActorThread
+
+import java.lang.ThreadLocal as JThreadLocal
 
 abstract class PerThreadObjectPool[T <: Poolable](override val dropIfRecycleNotByCreated: Boolean = false)
     extends ThreadIsolationObjectPool[T] {
@@ -29,7 +30,7 @@ abstract class PerThreadObjectPool[T <: Poolable](override val dropIfRecycleNotB
     }
 
     // use by other Thread
-    private lazy val fastThreadLocal = new FastThreadLocal[Poolable.SingleThreadPoolableHolder[T]] {
+    private lazy val fastThreadLocal = new JThreadLocal[Poolable.SingleThreadPoolableHolder[T]] {
         override def initialValue(): Poolable.SingleThreadPoolableHolder[T] =
             new Poolable.SingleThreadPoolableHolder[T]()
     }

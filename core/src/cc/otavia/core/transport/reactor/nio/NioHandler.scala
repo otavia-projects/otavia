@@ -18,8 +18,6 @@
 
 package cc.otavia.core.transport.reactor.nio
 
-import cc.otavia.core.slf4a.Logger
-import io.netty5.util.internal.*
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.channel.{Channel, ChannelException}
 import cc.otavia.core.message.ReactorEvent
@@ -28,6 +26,8 @@ import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.transport.nio.channel.{AbstractNioChannel, AbstractNioUnsafeChannel, NioUnsafeChannel}
 import cc.otavia.core.transport.reactor.nio.NioHandler.*
+import cc.otavia.core.util.{SystemPropertyUtil, ThrowableUtil}
+import io.netty5.util.internal.{PlatformDependent, ReflectionUtil}
 
 import java.io.{IOException, UncheckedIOException}
 import java.net.SocketAddress
@@ -516,6 +516,6 @@ object NioHandler {
     private def nioUnsafe(handle: Channel): NioUnsafeChannel = handle.unsafeChannel match
         case unsafe: AbstractNioUnsafeChannel[?] => unsafe
         case _ =>
-            throw new IllegalArgumentException(s"Channel of type ${StringUtil.simpleClassName(handle)} not supported")
+            throw new IllegalArgumentException(s"Channel of type ${handle.getClass.getSimpleName} not supported")
 
 }

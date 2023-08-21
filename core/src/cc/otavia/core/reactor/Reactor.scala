@@ -16,7 +16,6 @@
 
 package cc.otavia.core.reactor
 
-import io.netty5.util.internal.SystemPropertyUtil
 import cc.otavia.core.channel.Channel
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.reactor.Reactor.Command

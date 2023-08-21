@@ -18,8 +18,6 @@
 
 package cc.otavia.core.channel.internal
 
-import io.netty5.util.internal.ObjectUtil.checkPositiveOrZero
-
 /** [[WriteBufferWaterMark]] is used to set low water mark and high water mark for the write buffer.
  *
  *  If the number of bytes queued in the write buffer exceeds the high high water mark, Channel#writableBytes() will
@@ -37,7 +35,7 @@ import io.netty5.util.internal.ObjectUtil.checkPositiveOrZero
 final class WriteBufferWaterMark private[core] (val low: Int, val high: Int, validate: Boolean = true) {
 
     if (validate) {
-        checkPositiveOrZero(low, "low")
+        assert(low >= 0, s"low value is ${low} (expected: >= 0)")
         if (high < low)
             throw new IllegalArgumentException(
               s"write buffer's high water mark cannot be less than low water mark ($low): $high"
