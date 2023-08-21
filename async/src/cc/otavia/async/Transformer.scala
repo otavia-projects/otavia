@@ -14,7 +14,7 @@
 // * limitations under the License.
 // */
 //
-//package cc.otavia.core.async
+//package cc.otavia.async
 //
 //import cc.otavia.core.message.Reply
 //import cc.otavia.core.stack.{ReplyWaiter, StackState}

@@ -27,9 +27,34 @@ object Async {
     @compileTimeOnly("[async] `await` must be enclosed in an `async` block")
     def await[A <: Ask[? <: Reply]](address: Address[A], ask: A): Future[ReplyOf[A]] = ???
 
+    /** [[unwarp]] is a short case of {{{await(..).getNow}}} */
     @compileTimeOnly("[unwarp] `await` must be enclosed in an `async` block")
     def unwarp[A <: Ask[? <: Reply]](address: Address[A], ask: A): ReplyOf[A] = ???
 
     inline def async(inline body: Option[StackState]): Option[StackState] = ???
+    //
+    //    private[core] def asyncImpl(body: Expr[Option[StackState]])(using Quotes): Expr[Option[StackState]] = {
+    //        @experimental
+    //        val expr = transformAsync(body)
+    //        // @experimental
+    //        // report.info(expr.show)
+    //        expr
+    //    }
+    //
+    //    inline def show(inline body: Any): Any = ${ showImpl('body) }
+    //
+    //    private[core] def showImpl(body: Expr[Any])(using q: Quotes): Expr[Any] = {
+    //        import q.reflect.*
+    //        val ast = body.asTerm
+    //        report.info(ast.show(using Printer.TreeStructure))
+    //        body
+    //    }
+    //
+    //    @experimental
+    //    private[core] def transformAsync(asyncBody: Expr[Option[StackState]])(using Quotes): Expr[Option[StackState]] = {
+    //        val transformer = new Transformer(asyncBody)
+    //        transformer.transform
+    //    }
+    //
 
 }
