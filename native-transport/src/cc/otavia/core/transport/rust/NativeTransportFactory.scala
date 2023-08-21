@@ -38,7 +38,7 @@ class NativeTransportFactory extends TransportFactory {
 
     override def createDatagramChannel(): Channel = ???
 
-    override def createDatagramChannel(family: SocketProtocolFamily): Channel = ???
+    override def createDatagramChannel(family: ProtocolFamily): Channel = ???
 
     override def createFileChannel(): Channel = ???
 
