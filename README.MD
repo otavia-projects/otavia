@@ -63,7 +63,7 @@ In `otavia`, developer only focus on
 - `ActorSystem`: `Actor` instance container, responsible for creating `Actor` instances, managing the life cycle
   of `Actor` instances and scheduling the execution of ready `Actor` instances.
 
-## Main modules
+## Project modules
 
 ### core modules
 
@@ -100,7 +100,7 @@ In `otavia`, developer only focus on
 | codec-socks    | SOCKS4/5 ChannelHandlers and Actors.                   |          |      |
 | codec-kafka    | KAFKA ChannelHandlers and Actors.                      |          |      |
 
-### logger ecosystem
+### slf4a logger ecosystem
 
 | module name | description                           | coverage | docs |
 |-------------|---------------------------------------|----------|------|

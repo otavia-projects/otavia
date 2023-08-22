@@ -1,1 +1,6 @@
-# 中文文档
+---
+layout: main
+title: Chinese Document
+---
+
+# Chinese Document

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import mill._, scalalib._, publish._
+import mill._, scalalib._, scalajslib._, scalanativelib._, publish._
 import os.Path
 import mill.api.Result
 import $ivy.`com.lihaoyi::mill-contrib-scoverage:`
@@ -79,15 +79,30 @@ trait OtaviaModule extends ScalaModule with PublishModule {
 
 }
 
-object buffer extends OtaviaModule {
+trait BufferModule extends OtaviaModule {
 
-    override def artifactName = "buffer"
-
-    object test extends Tests with TestModule.ScalaTest {
-
+    trait BufferTests extends Tests with TestModule.ScalaTest {
         override def ivyDeps = Agg(ProjectInfo.testDep)
-
     }
+}
+
+trait JvmBufferModule extends BufferModule with ScalaModule {
+
+    object test extends BufferTests
+
+}
+
+object buffer extends JvmBufferModule {
+
+    //    object native extends NativeBufferModule
+    //
+    //    trait NativeBufferModule extends BufferModule with ScalaNativeModule {
+    //
+    //        def scalaNativeVersion = "0.4.14"
+    //
+    //        object test extends BufferTests
+    //
+    //    }
 
     object bench extends ScalaModule with JmhModule {
 
@@ -134,6 +149,12 @@ object core extends OtaviaModule with BuildInfo {
         override def ivyDeps = Agg(ProjectInfo.testDep)
 
     }
+
+}
+
+object testkit extends OtaviaModule {
+
+    override def moduleDeps = Seq(core)
 
 }
 

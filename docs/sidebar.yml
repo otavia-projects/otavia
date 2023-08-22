@@ -12,3 +12,51 @@ subsection:
     subsection:
       - title: Channel Pipeline
         page: guide/channel_pipeline.md
+      - title: IO Model
+        page: guide/io_model.md
+      - title: Actor IOC
+        page: guide/ioc.md
+      - title: Message Model
+        page: guide/message_model.md
+      - title: Reactor Model
+        page: guide/reactor_model.md
+      - title: SLF4A
+        page: guide/slf4a.md
+  - title: Modules
+    index: module/index.md
+    directory: module
+    subsection:
+      - title: Buffer
+        page: module/buffer.md
+  - title: Chinese Document
+    index: zh/index.md
+    directory: zh
+    subsection:
+      - title: Quick Start
+        index: zh/quick_start/index.md
+        directory: zh/quick_start
+        subsection:
+          - title: Send notice message
+            page: zh/quick_start/send_notice_message.md
+      - title: Guide
+        index: zh/guide/index.md
+        directory: guide
+        subsection:
+          - title: Channel Pipeline
+            page: zh/guide/channel_pipeline.md
+          - title: IO Model
+            page: zh/guide/io_model.md
+          - title: Actor IOC
+            page: guide/ioc.md
+          - title: Message Model
+            page: zh/guide/message_model.md
+          - title: Reactor Model
+            page: zh/guide/reactor_model.md
+          - title: SLF4A
+            page: zh/guide/slf4a.md
+      - title: Modules
+        index: zh/module/index.md
+        directory: module
+        subsection:
+          - title: Buffer
+            page: zh/module/buffer.md
