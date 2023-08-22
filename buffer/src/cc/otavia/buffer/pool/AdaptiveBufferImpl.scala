@@ -16,8 +16,9 @@
 
 package cc.otavia.buffer.pool
 
-import cc.otavia.buffer.pool.{PagePooledAllocator, RecyclablePageBuffer}
-import cc.otavia.buffer.{AbstractBuffer, Buffer, ByteCursor}
+import cc.otavia.buffer
+import cc.otavia.buffer.pool.{PooledPageAllocator, RecyclablePageBuffer}
+import cc.otavia.buffer.{AbstractBuffer, Buffer, BufferClosedException, ByteCursor}
 
 import java.lang.{Byte as JByte, Double as JDouble, Float as JFloat, Long as JLong, Short as JShort}
 import java.nio.ByteBuffer
@@ -26,7 +27,7 @@ import java.nio.charset.Charset
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-private class AdaptiveBufferImpl(val allocator: PagePooledAllocator)
+private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     extends mutable.ArrayDeque[RecyclablePageBuffer]
     with AdaptiveBuffer {
 
@@ -184,23 +185,44 @@ private class AdaptiveBufferImpl(val allocator: PagePooledAllocator)
                     }
                     len > 0
                 } do ()
-            } else {}
-        } else {}
-        widx = offset
+                widx = offset
+            } else {
+                widx = offset
+            }
+        } else {
+            val (index, off) = offsetAtOffset(offset)
+            var release      = size - index - 1
+            while (release > 0) {
+                val last = splitLast()
+                last.close()
+                release -= 1
+            }
+            last.writerOffset(last.readerOffset + off)
+        }
         this
     }
 
     override def fill(value: Byte): Buffer = {
-        for (buffer <- this) {
-            buffer.fill(value)
-        }
+        for (buffer <- this) buffer.fill(value)
         this
     }
 
     override def isDirect: Boolean = allocator.isDirect
 
-    override def copyInto(srcPos: Int, dest: Array[Byte], destPos: Int, length: Int): Unit =
-        throw new UnsupportedOperationException("AdaptiveBuffer not support copyInto")
+    override def copyInto(srcPos: Int, dest: Array[Byte], destPos: Int, length: Int): Unit = {
+        if (destPos + length > dest.length)
+            throw new IndexOutOfBoundsException(s"destPos + length = ${destPos + length} is large than length of dest")
+        if (length > readableBytes)
+            throw new IndexOutOfBoundsException(
+              s"length = ${length} can't large than readableBytes = ${readableBytes} of this buffer"
+            )
+        if (srcPos < ridx)
+            throw new IndexOutOfBoundsException(s"srcPos = ${srcPos} can't less than readerOffset = ${ridx}")
+        if (srcPos >= widx)
+            throw new IndexOutOfBoundsException(s"srcPos = ${srcPos} can't large than writerOffset = ${widx}")
+
+        ???
+    }
 
     override def copyInto(srcPos: Int, dest: ByteBuffer, destPos: Int, length: Int): Unit =
         throw new UnsupportedOperationException("AdaptiveBuffer not support copyInto")
@@ -247,7 +269,28 @@ private class AdaptiveBufferImpl(val allocator: PagePooledAllocator)
 
     override def bytesBefore(needle: Array[Byte]): Int = ???
 
-    override def openCursor(fromOffset: Int, length: Int): ByteCursor = ???
+    override def openCursor(fromOffset: Int, length: Int): ByteCursor = {
+        if (closed) throw new BufferClosedException()
+        if (length < 0) throw new IndexOutOfBoundsException(s"The length cannot be negative: ${length}")
+        if (fromOffset < ridx)
+            throw new IndexOutOfBoundsException(
+              s"The fromOffset = ${fromOffset} cannot be less than readerOffset = ${ridx}"
+            )
+        if (widx < fromOffset + length)
+            throw new IndexOutOfBoundsException(
+              s"The fromOffset + length is beyond the writerOffset of the buffer: fromOffset = ${fromOffset}, length = ${length}"
+            )
+
+        new ByteCursor {
+            override def readByte: Boolean = ???
+
+            override def getByte: Byte = ???
+
+            override def currentOffset: Int = ???
+
+            override def bytesLeft: Int = ???
+        }
+    }
 
     override def openReverseCursor(fromOffset: Int, length: Int): ByteCursor = ???
 
@@ -1381,6 +1424,27 @@ private class AdaptiveBufferImpl(val allocator: PagePooledAllocator)
 
     override def nextIs(byte: Byte): Boolean = if (nonEmpty) head.nextIs(byte) else false
 
-    override def skipIfNext(byte: Byte): Boolean = if (nonEmpty) head.skipIfNext(byte) else false
+    override def nextIn(bytes: Array[Byte]): Boolean = if (nonEmpty) head.nextIn(bytes) else false
+
+    override def skipIfNext(byte: Byte): Boolean = if (nonEmpty) {
+        val res = head.skipIfNext(byte)
+        if (res) ridx += 1
+        res
+    } else false
+
+    override def skipIfNexts(bytes: Array[Byte]): Boolean = if (head.readableBytes >= bytes.length) {
+        val res = head.skipIfNexts(bytes)
+        if (res) ridx += bytes.length
+        res
+    } else if (readableBytes >= bytes.length) {
+        var skip = true
+        var i    = 0
+        while (skip && i < bytes.length) {
+            skip = getByte(ridx + i) == bytes(i)
+            i += 1
+        }
+        if (skip) readerOffset(ridx + bytes.length)
+        skip
+    } else false
 
 }

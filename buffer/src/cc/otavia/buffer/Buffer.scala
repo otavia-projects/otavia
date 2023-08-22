@@ -1929,9 +1929,17 @@ trait Buffer {
      */
     final def setDoubleLE(index: Int, value: Double): Buffer = setLongLE(index, JDouble.doubleToRawLongBits(value))
 
+    /** Check the next readable byte is the gaven byte */
     def nextIs(byte: Byte): Boolean
 
+    /** Check the next readable byte is in the gaven bytes */
+    def nextIn(bytes: Array[Byte]): Boolean
+
+    /** increase the [[readerOffset]] by one if the next readable byte is the gaven byte */
     def skipIfNext(byte: Byte): Boolean
+
+    /** increase the [[readerOffset]] by length of [[bytes]] if the next readable bytes is the gaven bytes */
+    def skipIfNexts(bytes: Array[Byte]): Boolean
 
 }
 
@@ -1941,9 +1949,10 @@ object Buffer {
      *
      *  <p> The new buffer will be backed by the given [[ByteBuffer]]; that is, modifications to the buffer will cause
      *  the [[ByteBuffer]] to be modified and vice versa. The new buffer's capacity will be [[ByteBuffer#capacity]], its
-     *  readerOffset and writerOffset will be zero, and its byte order will be
+     *  readerOffset is set to position of [[ByteBuffer]] and writerOffset is set to limit of [[ByteBuffer]], and its
+     *  byte order will be
      *
-     *  [[ByteOrder# BIG_ENDIAN]].
+     *  [[ByteOrder#BIG_ENDIAN]].
      *
      *  @param byteBuffer
      *    The [[ByteBuffer]] that will back this buffer
@@ -1951,8 +1960,7 @@ object Buffer {
      *    The new byte buffer
      */
     def wrap(byteBuffer: ByteBuffer): Buffer =
-        if (byteBuffer.isDirect) UnpoolDirectBuffer(byteBuffer)
-        else UnpoolHeapBuffer(byteBuffer) // TODO: modify ridx widx
+        if (byteBuffer.isDirect) UnpoolDirectBuffer(byteBuffer) else UnpoolHeapBuffer(byteBuffer)
 
     /** Wraps a byte array into a [[Buffer]].
      *
@@ -1967,6 +1975,6 @@ object Buffer {
      *  @return
      *    The new byte buffer
      */
-    def wrap(array: Array[Byte]): Buffer = UnpoolHeapBuffer(ByteBuffer.wrap(array)) // TODO: modify ridx widx
+    def wrap(array: Array[Byte]): Buffer = UnpoolHeapBuffer(ByteBuffer.wrap(array))
 
 }

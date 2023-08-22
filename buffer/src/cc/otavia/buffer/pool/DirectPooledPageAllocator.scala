@@ -24,13 +24,14 @@ import cc.otavia.buffer.pool.RecyclablePageBuffer
 import java.nio.ByteBuffer
 import scala.language.unsafeNulls
 
-class HeapPagePooledAllocator(fixedCapacity: Int) extends AbstractPagePooledAllocator(fixedCapacity) {
+class DirectPooledPageAllocator(fixedCapacity: Int) extends AbstractPooledPageAllocator(fixedCapacity) {
 
     def this() = this(FixedCapacityAllocator.DEFAULT_PAGE_SIZE)
 
-    override protected def newBuffer(): RecyclablePageBuffer =
-        HeapRecyclablePageBuffer(ByteBuffer.allocate(fixedCapacity))
+    override protected def newBuffer(): RecyclablePageBuffer = DirectRecyclablePageBuffer(
+      ByteBuffer.allocateDirect(fixedCapacity)
+    )
 
-    override def isDirect: Boolean = false
+    override def isDirect: Boolean = true
 
 }

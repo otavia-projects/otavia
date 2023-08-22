@@ -18,7 +18,7 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.buffer.pool.{AbstractPagePooledAllocator, PagePooledAllocator}
+import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, PooledPageAllocator}
 import cc.otavia.core.address.ActorAddress
 import cc.otavia.core.channel.message.ReadPlan
 
@@ -97,8 +97,8 @@ trait UnsafeChannel {
      */
     def isShutdown(direction: ChannelShutdownDirection): Boolean
 
-    def directAllocator: PagePooledAllocator = channel.directAllocator
+    def directAllocator: PooledPageAllocator = channel.directAllocator
 
-    def heapAllocator: PagePooledAllocator = channel.heapAllocator
+    def heapAllocator: PooledPageAllocator = channel.heapAllocator
 
 }

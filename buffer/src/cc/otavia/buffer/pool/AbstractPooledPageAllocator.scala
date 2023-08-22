@@ -18,13 +18,13 @@
 
 package cc.otavia.buffer.pool
 
-import cc.otavia.buffer.pool.{PagePooledAllocator, RecyclablePageBuffer}
+import cc.otavia.buffer.pool.{PooledPageAllocator, RecyclablePageBuffer}
 import cc.otavia.buffer.{Buffer, FixedCapacityAllocator}
 
 import java.nio.ByteBuffer
 import scala.language.unsafeNulls
 
-abstract class AbstractPagePooledAllocator(val fixedCapacity: Int) extends PagePooledAllocator {
+abstract class AbstractPooledPageAllocator(val fixedCapacity: Int) extends PooledPageAllocator {
 
     private var count: Int                 = 0
     private var head: RecyclablePageBuffer = _
@@ -43,22 +43,20 @@ abstract class AbstractPagePooledAllocator(val fixedCapacity: Int) extends PageP
         count += 1
     }
 
-    protected def pop(): RecyclablePageBuffer = this.synchronized {
-        val page = head
-        if (count == 1) {
-            head = null
-            tail = null
-        } else {
-            head = page.next
-            page.next = null
-        }
-        count -= 1
-        page
+    protected def pop(): RecyclablePageBuffer | Null = this.synchronized {
+        if (count > 0) {
+            val page = head
+            if (count == 1) {
+                head = null
+                tail = null
+            } else {
+                head = page.next
+                page.next = null
+            }
+            count -= 1
+            page
+        } else null
     }
-
-    protected def nonEmpty: Boolean = this.synchronized(count > 0)
-
-    protected def isEmpty: Boolean = this.synchronized(count == 0)
 
     override def isPooling: Boolean = true
 
@@ -70,13 +68,12 @@ abstract class AbstractPagePooledAllocator(val fixedCapacity: Int) extends PageP
     }
 
     override def allocate(): RecyclablePageBuffer = {
-        val buffer =
-            if (nonEmpty) pop()
-            else {
+        val buffer = pop() match
+            case buffer: RecyclablePageBuffer => buffer
+            case null =>
                 val page = newBuffer()
                 page.setAllocator(this)
                 page
-            }
         buffer.setAllocated()
         buffer
     }

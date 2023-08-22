@@ -133,42 +133,37 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         if (continue) -1 else offset - ridx
     }
 
-    override def bytesBefore(needle1: Byte, needle2: Byte): Int = {
-        if (readableBytes >= 2) {
-            var offset: Int       = ridx
-            var continue: Boolean = true
-            var b1: Byte          = 0
-            var b2: Byte          = underlying.get(offset)
-            while (continue && offset < widx - 1) {
-                b1 = b2
-                b2 = underlying.get(offset + 1)
-                if (b1 == needle1 && b2 == needle2) {
-                    continue = false
-                } else offset += 1
-            }
-            if (continue) -1 else offset - ridx
-        } else -1
+    override def bytesBefore(needle1: Byte, needle2: Byte): Int = if (readableBytes >= 2) {
+        var offset: Int       = ridx
+        var continue: Boolean = true
+        var b1: Byte          = 0
+        var b2: Byte          = underlying.get(offset)
+        while (continue && offset < widx - 1) {
+            b1 = b2
+            b2 = underlying.get(offset + 1)
+            if (b1 == needle1 && b2 == needle2) {
+                continue = false
+            } else offset += 1
+        }
+        if (continue) -1 else offset - ridx
+    } else -1
 
-    }
-
-    override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int = {
-        if (readableBytes >= 3) {
-            var offset: Int       = ridx
-            var continue: Boolean = true
-            var b1: Byte          = 0
-            var b2: Byte          = underlying.get(offset)
-            var b3: Byte          = underlying.get(offset + 1)
-            while (continue && offset < widx - 2) {
-                b1 = b2
-                b2 = b3
-                b3 = underlying.get(offset + 2)
-                if (b1 == needle1 && b2 == needle2 && b3 == needle3) {
-                    continue = false
-                } else offset += 1
-            }
-            if (continue) -1 else offset - ridx
-        } else -1
-    }
+    override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int = if (readableBytes >= 3) {
+        var offset: Int       = ridx
+        var continue: Boolean = true
+        var b1: Byte          = 0
+        var b2: Byte          = underlying.get(offset)
+        var b3: Byte          = underlying.get(offset + 1)
+        while (continue && offset < widx - 2) {
+            b1 = b2
+            b2 = b3
+            b3 = underlying.get(offset + 2)
+            if (b1 == needle1 && b2 == needle2 && b3 == needle3) {
+                continue = false
+            } else offset += 1
+        }
+        if (continue) -1 else offset - ridx
+    } else -1
 
     override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte, needle4: Byte): Int =
         if (readableBytes >= 4) {
@@ -191,15 +186,21 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         } else -1
 
     override def bytesBefore(needle: Array[Byte]): Int = if (readableBytes >= needle.length) {
-        val length            = needle.length
-        val copy              = new Array[Byte](length)
-        var offset: Int       = ridx
-        var continue: Boolean = true
-        while (continue && offset < widx - length) {
-            this.copyInto(offset, copy, 0, length)
-            if (copy sameElements needle) continue = false else offset += 1
+        if (needle.length == 1) bytesBefore(needle(0))
+        else if (needle.length == 2) bytesBefore(needle(0), needle(1))
+        else if (needle.length == 3) bytesBefore(needle(0), needle(1), needle(2))
+        else if (needle.length == 4) bytesBefore(needle(0), needle(1), needle(2), needle(3))
+        else {
+            val length            = needle.length
+            val copy              = new Array[Byte](length)
+            var offset: Int       = ridx
+            var continue: Boolean = true
+            while (continue && offset < widx - length) {
+                this.copyInto(offset, copy, 0, length)
+                if (copy sameElements needle) continue = false else offset += 1
+            }
+            if (continue) -1 else offset - ridx
         }
-        if (continue) -1 else offset - ridx
     } else -1
 
     override def openCursor(fromOffset: Int, length: Int): ByteCursor = {
@@ -642,10 +643,32 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
 
     override def nextIs(byte: Byte): Boolean = underlying.get(ridx) == byte
 
+    override def nextIn(bytes: Array[Byte]): Boolean = {
+        var notIn = true
+        var i     = 0
+        val b     = underlying.get(ridx)
+        while (notIn && i < bytes.length) {
+            notIn = b != bytes(i)
+            i += 1
+        }
+        !notIn
+    }
+
     override def skipIfNext(byte: Byte): Boolean = if (underlying.get(ridx) == byte) {
         ridx += 1
         true
     } else false
+
+    override def skipIfNexts(bytes: Array[Byte]): Boolean = {
+        var skip = true
+        var i    = 0
+        while (skip && i < bytes.length) {
+            skip = underlying.get(ridx + i) == bytes(i)
+            i += 1
+        }
+        if (skip) ridx += bytes.length
+        skip
+    }
 
     inline private def checkRead(index: Int, size: Int): Unit =
         if (index < 0 || widx < index + size) throw outOfBounds(index, size)

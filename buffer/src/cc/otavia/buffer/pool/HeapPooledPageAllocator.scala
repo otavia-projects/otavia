@@ -1,6 +1,8 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
+ * This file fork from netty.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,17 +18,19 @@
 
 package cc.otavia.buffer.pool
 
-import cc.otavia.buffer.{BufferAllocator, FixedCapacityAllocator}
+import cc.otavia.buffer.FixedCapacityAllocator
 import cc.otavia.buffer.pool.RecyclablePageBuffer
 
-trait PagePooledAllocator extends RecyclableAllocator with FixedCapacityAllocator {
+import java.nio.ByteBuffer
+import scala.language.unsafeNulls
 
-    override def isPooling: Boolean = true
+class HeapPooledPageAllocator(fixedCapacity: Int) extends AbstractPooledPageAllocator(fixedCapacity) {
 
-    override def allocate(size: Int): RecyclablePageBuffer = allocate()
+    def this() = this(FixedCapacityAllocator.DEFAULT_PAGE_SIZE)
 
-    def allocate(): RecyclablePageBuffer
+    override protected def newBuffer(): RecyclablePageBuffer =
+        HeapRecyclablePageBuffer(ByteBuffer.allocate(fixedCapacity))
 
-    protected def newBuffer(): RecyclablePageBuffer
+    override def isDirect: Boolean = false
 
 }

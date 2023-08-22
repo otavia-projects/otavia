@@ -16,8 +16,6 @@
 
 package cc.otavia.core.address
 
-import cc.otavia.core.actor.AbstractActor
-import cc.otavia.core.message.{Ask, Call, Event, Notice, Reply}
 import cc.otavia.core.actor.{AbstractActor, Actor, ChannelsActor, StateActor}
 import cc.otavia.core.message.*
 import cc.otavia.core.slf4a.Appender

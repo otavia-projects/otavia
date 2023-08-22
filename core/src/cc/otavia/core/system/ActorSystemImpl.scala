@@ -18,7 +18,7 @@ package cc.otavia.core.system
 
 import cc.otavia.BuildInfo
 import cc.otavia.buffer.BufferAllocator
-import cc.otavia.buffer.pool.{DirectPagePooledAllocator, HeapPagePooledAllocator}
+import cc.otavia.buffer.pool.{DirectPooledPageAllocator, HeapPooledPageAllocator}
 import cc.otavia.core.actor.*
 import cc.otavia.core.address.*
 import cc.otavia.core.channel.ChannelFactory

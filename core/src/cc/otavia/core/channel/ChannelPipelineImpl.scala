@@ -18,7 +18,7 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.buffer.pool.{AdaptiveBuffer, PagePooledAllocator}
+import cc.otavia.buffer.pool.{AdaptiveBuffer, PooledPageAllocator}
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import cc.otavia.core.channel.ChannelPipelineImpl.*
@@ -111,7 +111,7 @@ class ChannelPipelineImpl(override val channel: Channel) extends ChannelPipeline
         }
     }
 
-    private def setAdaptiveBuffer(ctx: ChannelHandlerContextImpl, allocator: PagePooledAllocator): Unit = {
+    private def setAdaptiveBuffer(ctx: ChannelHandlerContextImpl, allocator: PooledPageAllocator): Unit = {
         if (ctx.hasInboundAdaptive) {
             val inbound = AdaptiveBuffer(allocator)
             ctx.setInboundAdaptiveBuffer(inbound)

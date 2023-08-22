@@ -17,7 +17,7 @@
 package cc.otavia.buffer.pool
 
 import cc.otavia.buffer.Buffer
-import cc.otavia.buffer.pool.{PagePooledAllocator, RecyclablePageBuffer}
+import cc.otavia.buffer.pool.{PooledPageAllocator, RecyclablePageBuffer}
 
 import java.nio.ByteBuffer
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
@@ -28,7 +28,7 @@ import scala.language.unsafeNulls
 /** A Adaptive allocate and release memory [[RecyclablePageBuffer]]. This type of [[Buffer]] */
 trait AdaptiveBuffer extends Buffer {
 
-    def allocator: PagePooledAllocator
+    def allocator: PooledPageAllocator
 
     /** Split the [[RecyclablePageBuffer]] chain from this [[AdaptiveBuffer]]
      *
@@ -59,7 +59,7 @@ object AdaptiveBuffer {
 
     val MAX_BUFFER_SIZE: Int = Int.MaxValue - 8
 
-    def apply(allocator: PagePooledAllocator): AdaptiveBuffer = new AdaptiveBufferImpl(allocator)
+    def apply(allocator: PooledPageAllocator): AdaptiveBuffer = new AdaptiveBufferImpl(allocator)
 
     def apply(pageBuffer: RecyclablePageBuffer): AdaptiveBuffer = {
         val adaptiveBuffer = new AdaptiveBufferImpl(pageBuffer.allocator)

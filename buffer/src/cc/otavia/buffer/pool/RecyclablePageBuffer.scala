@@ -18,7 +18,7 @@
 
 package cc.otavia.buffer.pool
 
-import cc.otavia.buffer.pool.PagePooledAllocator
+import cc.otavia.buffer.pool.PooledPageAllocator
 import cc.otavia.buffer.{AbstractBuffer, Buffer}
 
 import java.nio.ByteBuffer
@@ -28,13 +28,13 @@ abstract class RecyclablePageBuffer(underlying: ByteBuffer) extends AbstractBuff
 
     import RecyclablePageBuffer.*
 
-    private var parent: PagePooledAllocator = _
+    private var parent: PooledPageAllocator = _
     private var nxt: RecyclablePageBuffer   = _
     private var status: Int                 = ST_PAGE_ALLOCATABLE
 
-    def setAllocator(allocator: PagePooledAllocator): Unit = parent = allocator
+    def setAllocator(allocator: PooledPageAllocator): Unit = parent = allocator
 
-    def allocator: PagePooledAllocator = parent
+    def allocator: PooledPageAllocator = parent
 
     def next_=(pageBuffer: RecyclablePageBuffer): Unit = nxt = pageBuffer
 

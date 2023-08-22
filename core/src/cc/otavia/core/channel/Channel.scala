@@ -19,7 +19,7 @@
 package cc.otavia.core.channel
 
 import cc.otavia.buffer.AbstractBuffer
-import cc.otavia.buffer.pool.{AbstractPagePooledAllocator, AdaptiveBuffer, RecyclablePageBuffer, PagePooledAllocator}
+import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, AdaptiveBuffer, RecyclablePageBuffer, PooledPageAllocator}
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.address.ActorAddress
 import cc.otavia.core.channel.message.ReadPlan
@@ -167,10 +167,10 @@ trait Channel extends ChannelInflight, EventHandle, ChannelAddress {
     /** Return the assigned [[ChannelPipeline]]. */
     def pipeline: ChannelPipeline
 
-    /** Return the assigned [[PagePooledAllocator]] which will be used to allocate [[RecyclablePageBuffer]]s. */
-    def directAllocator: PagePooledAllocator
+    /** Return the assigned [[PooledPageAllocator]] which will be used to allocate [[RecyclablePageBuffer]]s. */
+    def directAllocator: PooledPageAllocator
 
-    def heapAllocator: PagePooledAllocator
+    def heapAllocator: PooledPageAllocator
 
     final def write(msg: AnyRef): Unit = pipeline.write(msg)
 
