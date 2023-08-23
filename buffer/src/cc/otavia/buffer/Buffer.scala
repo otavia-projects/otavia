@@ -553,8 +553,8 @@ trait Buffer {
      */
     def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int
 
-    /** Get the number of [[readableBytes]], until the given [[needle1]],[[needle2]],[[needle3]] bytes is found in this
-     *  buffer. If the needle is not found, -1 is returned.
+    /** Get the number of [[readableBytes]], until the given [[needle1]],[[needle2]],[[needle3]],[[needle4]] bytes is
+     *  found in this buffer. If the needle is not found, -1 is returned.
      *
      *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
      *
@@ -570,6 +570,405 @@ trait Buffer {
      *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
      */
     def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte, needle4: Byte): Int
+
+    /** Get the number of [[readableBytes]], until the given [[b1]],[[b2]],[[b3]],[[b4]],[[b5]] bytes is found in this
+     *  buffer. If the needle is not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param b1
+     *    The first byte value to search for.
+     *  @param b2
+     *    The second byte value to search for.
+     *  @param b3
+     *    The third byte value to search for.
+     *  @param b4
+     *    The fourth byte value to search for.
+     *  @param b5
+     *    The fifth byte value to search for.
+     *  @return
+     *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
+     */
+    def bytesBefore5(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte): Int
+
+    /** Get the number of [[readableBytes]], until the given [[b1]],[[b2]],[[b3]],[[b4]],[[b5]],[[b6]] bytes is found in
+     *  this buffer. If the needle is not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param b1
+     *    The first byte value to search for.
+     *  @param b2
+     *    The second byte value to search for.
+     *  @param b3
+     *    The third byte value to search for.
+     *  @param b4
+     *    The fourth byte value to search for.
+     *  @param b5
+     *    The fifth byte value to search for.
+     *  @param b6
+     *    The sixth byte value to search for.
+     *  @return
+     *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
+     */
+    def bytesBefore6(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte): Int
+
+    /** Get the number of [[readableBytes]], until the given [[b1]],[[b2]],[[b3]],[[b4]],[[b5]],[[b6]],[[b7]] bytes is
+     *  found in this buffer. If the needle is not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param b1
+     *    The first byte value to search for.
+     *  @param b2
+     *    The second byte value to search for.
+     *  @param b3
+     *    The third byte value to search for.
+     *  @param b4
+     *    The fourth byte value to search for.
+     *  @param b5
+     *    The fifth byte value to search for.
+     *  @param b6
+     *    The sixth byte value to search for.
+     *  @param b7
+     *    The seventh byte value to search for.
+     *  @return
+     *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
+     */
+    def bytesBefore7(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Int
+
+    /** Get the number of [[readableBytes]], until the given [[b1]],[[b2]],[[b3]],[[b4]],[[b5]],[[b6]],[[b7]],[[b8]]
+     *  bytes is found in this buffer. If the needle is not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param b1
+     *    The first byte value to search for.
+     *  @param b2
+     *    The second byte value to search for.
+     *  @param b3
+     *    The third byte value to search for.
+     *  @param b4
+     *    The fourth byte value to search for.
+     *  @param b5
+     *    The fifth byte value to search for.
+     *  @param b6
+     *    The sixth byte value to search for.
+     *  @param b7
+     *    The seventh byte value to search for.
+     *  @param b8
+     *    The eighth byte value to search for.
+     *  @return
+     *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
+     */
+    def bytesBefore8(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte): Int
+
+    /** Get the number of [[readableBytes]], until the given
+     *  [[b1]],[[b2]],[[b3]],[[b4]],[[b5]],[[b6]],[[b7]],[[b8]],[[b9]] bytes is found in this buffer. If the needle is
+     *  not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param b1
+     *    The first byte value to search for.
+     *  @param b2
+     *    The second byte value to search for.
+     *  @param b3
+     *    The third byte value to search for.
+     *  @param b4
+     *    The fourth byte value to search for.
+     *  @param b5
+     *    The fifth byte value to search for.
+     *  @param b6
+     *    The sixth byte value to search for.
+     *  @param b7
+     *    The seventh byte value to search for.
+     *  @param b8
+     *    The eighth byte value to search for.
+     *  @param b9
+     *    The ninth byte value to search for.
+     *  @return
+     *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
+     */
+    def bytesBefore9(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte, b9: Byte): Int
+
+    /** Get the number of [[readableBytes]], until the given
+     *  [[b1]],[[b2]],[[b3]],[[b4]],[[b5]],[[b6]],[[b7]],[[b8]],[[b9]],[[b10]] bytes is found in this buffer. If the
+     *  needle is not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param b1
+     *    The first byte value to search for.
+     *  @param b2
+     *    The second byte value to search for.
+     *  @param b3
+     *    The third byte value to search for.
+     *  @param b4
+     *    The fourth byte value to search for.
+     *  @param b5
+     *    The fifth byte value to search for.
+     *  @param b6
+     *    The sixth byte value to search for.
+     *  @param b7
+     *    The seventh byte value to search for.
+     *  @param b8
+     *    The eighth byte value to search for.
+     *  @param b9
+     *    The ninth byte value to search for.
+     *  @param b10
+     *    The tenth byte value to search for.
+     *  @return
+     *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
+     */
+    // format: off
+    def bytesBefore10(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte, b9: Byte, b10: Byte): Int
+    // format: on
+
+    /** Get the number of [[readableBytes]], until the given
+     *  [[b1]],[[b2]],[[b3]],[[b4]],[[b5]],[[b6]],[[b7]],[[b8]],[[b9]],[[b10]],[[b11]] bytes is found in this buffer. If
+     *  the needle is not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param b1
+     *    The first byte value to search for.
+     *  @param b2
+     *    The second byte value to search for.
+     *  @param b3
+     *    The third byte value to search for.
+     *  @param b4
+     *    The fourth byte value to search for.
+     *  @param b5
+     *    The fifth byte value to search for.
+     *  @param b6
+     *    The sixth byte value to search for.
+     *  @param b7
+     *    The seventh byte value to search for.
+     *  @param b8
+     *    The eighth byte value to search for.
+     *  @param b9
+     *    The ninth byte value to search for.
+     *  @param b10
+     *    The tenth byte value to search for.
+     *  @param b11
+     *    The eleventh byte value to search for.
+     *  @return
+     *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
+     */
+    // format: off
+    def bytesBefore11(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte, b9: Byte, b10: Byte, b11: Byte): Int
+    // format: on
+
+    /** Get the number of [[readableBytes]], until the given
+     *  [[b1]],[[b2]],[[b3]],[[b4]],[[b5]],[[b6]],[[b7]],[[b8]],[[b9]],[[b10]],[[b11]],[[b12]] bytes is found in this
+     *  buffer. If the needle is not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param b1
+     *    The first byte value to search for.
+     *  @param b2
+     *    The second byte value to search for.
+     *  @param b3
+     *    The third byte value to search for.
+     *  @param b4
+     *    The fourth byte value to search for.
+     *  @param b5
+     *    The fifth byte value to search for.
+     *  @param b6
+     *    The sixth byte value to search for.
+     *  @param b7
+     *    The seventh byte value to search for.
+     *  @param b8
+     *    The eighth byte value to search for.
+     *  @param b9
+     *    The ninth byte value to search for.
+     *  @param b10
+     *    The tenth byte value to search for.
+     *  @param b11
+     *    The eleventh byte value to search for.
+     *  @param b12
+     *    The 12th byte value to search for.
+     *  @return
+     *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
+     */
+    // format: off
+    def bytesBefore12(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte, b9: Byte,
+                      b10: Byte, b11: Byte, b12: Byte): Int
+    // format: on
+
+    /** Get the number of [[readableBytes]], until the given
+     *  [[b1]],[[b2]],[[b3]],[[b4]],[[b5]],[[b6]],[[b7]],[[b8]],[[b9]],[[b10]],[[b11]],[[b12]],[[b13]] bytes is found in
+     *  this buffer. If the needle is not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param b1
+     *    The first byte value to search for.
+     *  @param b2
+     *    The second byte value to search for.
+     *  @param b3
+     *    The third byte value to search for.
+     *  @param b4
+     *    The fourth byte value to search for.
+     *  @param b5
+     *    The fifth byte value to search for.
+     *  @param b6
+     *    The sixth byte value to search for.
+     *  @param b7
+     *    The seventh byte value to search for.
+     *  @param b8
+     *    The eighth byte value to search for.
+     *  @param b9
+     *    The ninth byte value to search for.
+     *  @param b10
+     *    The tenth byte value to search for.
+     *  @param b11
+     *    The eleventh byte value to search for.
+     *  @param b12
+     *    The 12th byte value to search for.
+     *  @param b13
+     *    The 13th byte value to search for.
+     *  @return
+     *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
+     */
+    // format: off
+    def bytesBefore13(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte, b9: Byte,
+                      b10: Byte, b11: Byte, b12: Byte, b13: Byte): Int
+    // format: oon
+
+    /** Get the number of [[readableBytes]], until the given
+     *  [[b1]],[[b2]],[[b3]],[[b4]],[[b5]],[[b6]],[[b7]],[[b8]],[[b9]],[[b10]],[[b11]],[[b12]],[[b13]],[[b14]] bytes is
+     *  found in this buffer. If the needle is not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param b1
+     *    The first byte value to search for.
+     *  @param b2
+     *    The second byte value to search for.
+     *  @param b3
+     *    The third byte value to search for.
+     *  @param b4
+     *    The fourth byte value to search for.
+     *  @param b5
+     *    The fifth byte value to search for.
+     *  @param b6
+     *    The sixth byte value to search for.
+     *  @param b7
+     *    The seventh byte value to search for.
+     *  @param b8
+     *    The eighth byte value to search for.
+     *  @param b9
+     *    The ninth byte value to search for.
+     *  @param b10
+     *    The tenth byte value to search for.
+     *  @param b11
+     *    The eleventh byte value to search for.
+     *  @param b12
+     *    The 12th byte value to search for.
+     *  @param b13
+     *    The 13th byte value to search for.
+     *  @param b14
+     *    The 14th byte value to search for.
+     *  @return
+     *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
+     */
+    // format: off
+    def bytesBefore14(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte, b9: Byte,
+                      b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte): Int
+    // format: on
+
+    /** Get the number of [[readableBytes]], until the given
+     *  [[b1]],[[b2]],[[b3]],[[b4]],[[b5]],[[b6]],[[b7]],[[b8]],[[b9]],[[b10]],[[b11]],[[b12]],[[b13]],[[b14]],[[b15]]
+     *  bytes is found in this buffer. If the needle is not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param b1
+     *    The first byte value to search for.
+     *  @param b2
+     *    The second byte value to search for.
+     *  @param b3
+     *    The third byte value to search for.
+     *  @param b4
+     *    The fourth byte value to search for.
+     *  @param b5
+     *    The fifth byte value to search for.
+     *  @param b6
+     *    The sixth byte value to search for.
+     *  @param b7
+     *    The seventh byte value to search for.
+     *  @param b8
+     *    The eighth byte value to search for.
+     *  @param b9
+     *    The ninth byte value to search for.
+     *  @param b10
+     *    The tenth byte value to search for.
+     *  @param b11
+     *    The eleventh byte value to search for.
+     *  @param b12
+     *    The 12th byte value to search for.
+     *  @param b13
+     *    The 13th byte value to search for.
+     *  @param b14
+     *    The 14th byte value to search for.
+     *  @param b15
+     *    The 15th byte value to search for.
+     *  @return
+     *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
+     */
+    // format: off
+    def bytesBefore15(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte, b9: Byte,
+                      b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte): Int
+    // format: on
+
+    /** Get the number of [[readableBytes]], until the given
+     *  [[b1]],[[b2]],[[b3]],[[b4]],[[b5]],[[b6]],[[b7]],[[b8]],[[b9]],[[b10]],[[b11]],[[b12]],[[b13]],[[b14]],[[b15]],[[b16]]
+     *  bytes is found in this buffer. If the needle is not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param b1
+     *    The first byte value to search for.
+     *  @param b2
+     *    The second byte value to search for.
+     *  @param b3
+     *    The third byte value to search for.
+     *  @param b4
+     *    The fourth byte value to search for.
+     *  @param b5
+     *    The fifth byte value to search for.
+     *  @param b6
+     *    The sixth byte value to search for.
+     *  @param b7
+     *    The seventh byte value to search for.
+     *  @param b8
+     *    The eighth byte value to search for.
+     *  @param b9
+     *    The ninth byte value to search for.
+     *  @param b10
+     *    The tenth byte value to search for.
+     *  @param b11
+     *    The eleventh byte value to search for.
+     *  @param b12
+     *    The 12th byte value to search for.
+     *  @param b13
+     *    The 13th byte value to search for.
+     *  @param b14
+     *    The 14th byte value to search for.
+     *  @param b15
+     *    The 15th byte value to search for.
+     *  @param b16
+     *    The 16th byte value to search for.
+     *  @return
+     *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
+     */
+    // format: off
+    def bytesBefore16(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte, b9: Byte,
+                      b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte, b16: Byte): Int
+    // format: on
 
     /** Get the number of [[readableBytes]], until the given [[needle]] is found in this buffer. The found offset will
      *  be the offset into this buffer, relative to its [[readerOffset]], of the first byte of a sequence that matches

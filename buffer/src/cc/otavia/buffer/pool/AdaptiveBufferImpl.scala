@@ -212,32 +212,106 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     override def copyInto(srcPos: Int, dest: Array[Byte], destPos: Int, length: Int): Unit = {
         if (destPos + length > dest.length)
             throw new IndexOutOfBoundsException(s"destPos + length = ${destPos + length} is large than length of dest")
-        if (length > readableBytes)
+        if (srcPos < ridx)
+            throw new IndexOutOfBoundsException(s"srcPos = ${srcPos} can't less than readerOffset = ${ridx}")
+        if (srcPos >= widx)
+            throw new IndexOutOfBoundsException(s"srcPos = ${srcPos} can't large than writerOffset = ${widx}")
+        if (length > widx - srcPos)
             throw new IndexOutOfBoundsException(
-              s"length = ${length} can't large than readableBytes = ${readableBytes} of this buffer"
+              s"length = ${length} can't large than writerOffset - srcPos = ${widx - srcPos} of this buffer"
+            )
+
+        if (size == 1) {
+            head.copyInto(head.readerOffset + (srcPos - ridx), dest, destPos, length)
+        } else {
+            val (srcIndex, srcOff) = offsetAtOffset(srcPos)
+            val (endIndex, off)    = offsetAtOffset(srcPos + length)
+            if (srcIndex == endIndex) {
+                val buffer = apply(srcIndex)
+                buffer.copyInto(buffer.readerOffset + srcOff, dest, destPos, length)
+            } else {
+                // first component buffer
+                val first  = apply(srcIndex)
+                var accPos = destPos
+                var len    = first.readableBytes - srcOff
+                first.copyInto(first.readerOffset + srcPos, dest, accPos, len)
+                accPos += len
+
+                var i = srcIndex + 1
+                while (i < endIndex) {
+                    val buffer = apply(i)
+                    len = buffer.readableBytes
+                    buffer.copyInto(buffer.readerOffset, dest, accPos, len)
+                    accPos += len
+                    i += 1
+                }
+
+                // last component buffer
+                val last = apply(endIndex)
+                len = off
+                last.copyInto(last.readerOffset, dest, accPos, len)
+            }
+        }
+    }
+
+    override def copyInto(srcPos: Int, dest: ByteBuffer, destPos: Int, length: Int): Unit = {
+        if (destPos + length > dest.capacity())
+            throw new IndexOutOfBoundsException(
+              s"destPos + length = ${destPos + length} is large than capacity of dest"
             )
         if (srcPos < ridx)
             throw new IndexOutOfBoundsException(s"srcPos = ${srcPos} can't less than readerOffset = ${ridx}")
         if (srcPos >= widx)
             throw new IndexOutOfBoundsException(s"srcPos = ${srcPos} can't large than writerOffset = ${widx}")
+        if (length > widx - srcPos)
+            throw new IndexOutOfBoundsException(
+              s"length = ${length} can't large than writerOffset - srcPos = ${widx - srcPos} of this buffer"
+            )
 
-        ???
+        if (size == 1) {
+            head.copyInto(head.readerOffset + (srcPos - ridx), dest, destPos, length)
+        } else {
+            val (srcIndex, srcOff) = offsetAtOffset(srcPos)
+            val (endIndex, off)    = offsetAtOffset(srcPos + length)
+            if (srcIndex == endIndex) {
+                val buffer = apply(srcIndex)
+                buffer.copyInto(buffer.readerOffset + srcOff, dest, destPos, length)
+            } else {
+                // first component buffer
+                val first  = apply(srcIndex)
+                var accPos = destPos
+                var len    = first.readableBytes - srcOff
+                first.copyInto(first.readerOffset + srcPos, dest, accPos, len)
+                accPos += len
+
+                var i = srcIndex + 1
+                while (i < endIndex) {
+                    val buffer = apply(i)
+                    len = buffer.readableBytes
+                    buffer.copyInto(buffer.readerOffset, dest, accPos, len)
+                    accPos += len
+                    i += 1
+                }
+
+                // last component buffer
+                val last = apply(endIndex)
+                len = off
+                last.copyInto(last.readerOffset, dest, accPos, len)
+            }
+        }
     }
 
-    override def copyInto(srcPos: Int, dest: ByteBuffer, destPos: Int, length: Int): Unit =
-        throw new UnsupportedOperationException("AdaptiveBuffer not support copyInto")
-
     override def copyInto(srcPos: Int, dest: Buffer, destPos: Int, length: Int): Unit =
-        throw new UnsupportedOperationException("AdaptiveBuffer not support copyInto")
+        throw new UnsupportedOperationException("AdaptiveBuffer not support copyInto Buffer")
 
     override def transferTo(channel: WritableByteChannel, length: Int): Int =
-        throw new UnsupportedOperationException("AdaptiveBuffer not support transferTo")
+        throw new UnsupportedOperationException("AdaptiveBuffer not support transferTo WritableByteChannel")
 
     override def transferFrom(channel: FileChannel, position: Long, length: Int): Int =
-        throw new UnsupportedOperationException("AdaptiveBuffer not support transferFrom")
+        throw new UnsupportedOperationException("AdaptiveBuffer not support transferFrom FileChannel")
 
     override def transferFrom(channel: ReadableByteChannel, length: Int): Int =
-        throw new UnsupportedOperationException("AdaptiveBuffer not support transferFrom")
+        throw new UnsupportedOperationException("AdaptiveBuffer not support transferFrom ReadableByteChannel")
 
     override def bytesBefore(needle: Byte): Int = {
         var offset: Int       = ridx
@@ -266,6 +340,54 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int = ???
 
     override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte, needle4: Byte): Int = ???
+
+    override def bytesBefore5(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte): Int = ???
+
+    override def bytesBefore6(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte): Int = ???
+
+    override def bytesBefore7(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Int = ???
+
+    override def bytesBefore8(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte): Int = ???
+
+    // format: off
+    override def bytesBefore9(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                              b9: Byte): Int = ???
+    // format: on
+
+    // format: off
+    override def bytesBefore10(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte): Int = ???
+    // format: on
+
+    // format: off
+    override def bytesBefore11(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte): Int = ???
+    // format: on
+
+    // format: off
+    override def bytesBefore12(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte): Int = ???
+    // format: on
+
+    // format: off
+    override def bytesBefore13(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte): Int = ???
+    // format: on
+
+    // format: off
+    override def bytesBefore14(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte): Int = ???
+    // format: on
+
+    // format: off
+    override def bytesBefore15(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte): Int = ???
+    // format: on
+
+    // format: off
+    override def bytesBefore16(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte, b16: Byte): Int = ???
+    // format: on
 
     override def bytesBefore(needle: Array[Byte]): Int = ???
 

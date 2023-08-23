@@ -185,22 +185,487 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
             if (continue) -1 else offset - ridx
         } else -1
 
-    override def bytesBefore(needle: Array[Byte]): Int = if (readableBytes >= needle.length) {
-        if (needle.length == 1) bytesBefore(needle(0))
-        else if (needle.length == 2) bytesBefore(needle(0), needle(1))
-        else if (needle.length == 3) bytesBefore(needle(0), needle(1), needle(2))
-        else if (needle.length == 4) bytesBefore(needle(0), needle(1), needle(2), needle(3))
-        else {
-            val length            = needle.length
-            val copy              = new Array[Byte](length)
+    override def bytesBefore5(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte): Int =
+        if (readableBytes >= 5) {
             var offset: Int       = ridx
             var continue: Boolean = true
-            while (continue && offset < widx - length) {
-                this.copyInto(offset, copy, 0, length)
-                if (copy sameElements needle) continue = false else offset += 1
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            while (continue && offset < widx - 4) {
+                a1 = a2
+                a2 = a3
+                a3 = a4
+                a4 = a5
+                a5 = underlying.get(offset + 4)
+                if (a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5) {
+                    continue = false
+                } else offset += 1
             }
             if (continue) -1 else offset - ridx
+        } else -1
+
+    override def bytesBefore6(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte): Int =
+        if (readableBytes >= 6) {
+            var offset: Int       = ridx
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            while (continue && offset < widx - 5) {
+                a1 = a2
+                a2 = a3
+                a3 = a4
+                a4 = a5
+                a5 = a6
+                a6 = underlying.get(offset + 5)
+                if (a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - ridx
+        } else -1
+
+    override def bytesBefore7(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Int =
+        if (readableBytes >= 7) {
+            var offset: Int       = ridx
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            var a7: Byte          = underlying.get(offset + 5)
+            while (continue && offset < widx - 6) {
+                a1 = a2
+                a2 = a3
+                a3 = a4
+                a4 = a5
+                a5 = a6
+                a6 = a7
+                a7 = underlying.get(offset + 6)
+                if (a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - ridx
+        } else -1
+
+    override def bytesBefore8(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte): Int =
+        if (readableBytes >= 8) {
+            var offset: Int       = ridx
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            var a7: Byte          = underlying.get(offset + 5)
+            var a8: Byte          = underlying.get(offset + 6)
+            while (continue && offset < widx - 7) {
+                a1 = a2
+                a2 = a3
+                a3 = a4
+                a4 = a5
+                a5 = a6
+                a6 = a7
+                a7 = a8
+                a8 = underlying.get(offset + 7)
+                if (a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - ridx
+        } else -1
+
+    override def bytesBefore9(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte, b9: Byte)
+        : Int = if (readableBytes >= 9) {
+        var offset: Int       = ridx
+        var continue: Boolean = true
+        var a1: Byte          = 0
+        var a2: Byte          = underlying.get(offset)
+        var a3: Byte          = underlying.get(offset + 1)
+        var a4: Byte          = underlying.get(offset + 2)
+        var a5: Byte          = underlying.get(offset + 3)
+        var a6: Byte          = underlying.get(offset + 4)
+        var a7: Byte          = underlying.get(offset + 5)
+        var a8: Byte          = underlying.get(offset + 6)
+        var a9: Byte          = underlying.get(offset + 7)
+        while (continue && offset < widx - 8) {
+            a1 = a2
+            a2 = a3
+            a3 = a4
+            a4 = a5
+            a5 = a6
+            a6 = a7
+            a7 = a8
+            a8 = a9
+            a9 = underlying.get(offset + 8)
+            if (
+              a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
+              a9 == b9
+            ) {
+                continue = false
+            } else offset += 1
         }
+        if (continue) -1 else offset - ridx
+    } else -1
+
+    // format: off
+    override def bytesBefore10(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte): Int = if (readableBytes >= 10) {
+        // format: on
+        var offset: Int       = ridx
+        var continue: Boolean = true
+        var a1: Byte          = 0
+        var a2: Byte          = underlying.get(offset)
+        var a3: Byte          = underlying.get(offset + 1)
+        var a4: Byte          = underlying.get(offset + 2)
+        var a5: Byte          = underlying.get(offset + 3)
+        var a6: Byte          = underlying.get(offset + 4)
+        var a7: Byte          = underlying.get(offset + 5)
+        var a8: Byte          = underlying.get(offset + 6)
+        var a9: Byte          = underlying.get(offset + 7)
+        var a10: Byte         = underlying.get(offset + 8)
+        while (continue && offset < widx - 9) {
+            a1 = a2
+            a2 = a3
+            a3 = a4
+            a4 = a5
+            a5 = a6
+            a6 = a7
+            a7 = a8
+            a8 = a9
+            a9 = a10
+            a10 = underlying.get(offset + 9)
+            if (
+              a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
+              a9 == b9 && a10 == b10
+            ) {
+                continue = false
+            } else offset += 1
+        }
+        if (continue) -1 else offset - ridx
+    } else -1
+
+    // format: off
+    override def bytesBefore11(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte): Int = if (readableBytes >= 11) {
+        // format: on
+        var offset: Int       = ridx
+        var continue: Boolean = true
+        var a1: Byte          = 0
+        var a2: Byte          = underlying.get(offset)
+        var a3: Byte          = underlying.get(offset + 1)
+        var a4: Byte          = underlying.get(offset + 2)
+        var a5: Byte          = underlying.get(offset + 3)
+        var a6: Byte          = underlying.get(offset + 4)
+        var a7: Byte          = underlying.get(offset + 5)
+        var a8: Byte          = underlying.get(offset + 6)
+        var a9: Byte          = underlying.get(offset + 7)
+        var a10: Byte         = underlying.get(offset + 8)
+        var a11: Byte         = underlying.get(offset + 9)
+        while (continue && offset < widx - 10) {
+            a1 = a2
+            a2 = a3
+            a3 = a4
+            a4 = a5
+            a5 = a6
+            a6 = a7
+            a7 = a8
+            a8 = a9
+            a9 = a10
+            a10 = a11
+            a11 = underlying.get(offset + 10)
+            if (
+              a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
+              a9 == b9 && a10 == b10 && a11 == b11
+            ) {
+                continue = false
+            } else offset += 1
+        }
+        if (continue) -1 else offset - ridx
+    } else -1
+
+    // format: off
+    override def bytesBefore12(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte): Int = if (readableBytes >= 12) {
+        // format: on
+        var offset: Int       = ridx
+        var continue: Boolean = true
+        var a1: Byte          = 0
+        var a2: Byte          = underlying.get(offset)
+        var a3: Byte          = underlying.get(offset + 1)
+        var a4: Byte          = underlying.get(offset + 2)
+        var a5: Byte          = underlying.get(offset + 3)
+        var a6: Byte          = underlying.get(offset + 4)
+        var a7: Byte          = underlying.get(offset + 5)
+        var a8: Byte          = underlying.get(offset + 6)
+        var a9: Byte          = underlying.get(offset + 7)
+        var a10: Byte         = underlying.get(offset + 8)
+        var a11: Byte         = underlying.get(offset + 9)
+        var a12: Byte         = underlying.get(offset + 10)
+        while (continue && offset < widx - 11) {
+            a1 = a2
+            a2 = a3
+            a3 = a4
+            a4 = a5
+            a5 = a6
+            a6 = a7
+            a7 = a8
+            a8 = a9
+            a9 = a10
+            a10 = a11
+            a11 = a12
+            a12 = underlying.get(offset + 11)
+            if (
+              a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
+              a9 == b9 && a10 == b10 && a11 == b11 && a12 == b12
+            ) {
+                continue = false
+            } else offset += 1
+        }
+        if (continue) -1 else offset - ridx
+    } else -1
+
+    // format: off
+    override def bytesBefore13(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte): Int = if (readableBytes >= 13) {
+        // format: on
+        var offset: Int       = ridx
+        var continue: Boolean = true
+        var a1: Byte          = 0
+        var a2: Byte          = underlying.get(offset)
+        var a3: Byte          = underlying.get(offset + 1)
+        var a4: Byte          = underlying.get(offset + 2)
+        var a5: Byte          = underlying.get(offset + 3)
+        var a6: Byte          = underlying.get(offset + 4)
+        var a7: Byte          = underlying.get(offset + 5)
+        var a8: Byte          = underlying.get(offset + 6)
+        var a9: Byte          = underlying.get(offset + 7)
+        var a10: Byte         = underlying.get(offset + 8)
+        var a11: Byte         = underlying.get(offset + 9)
+        var a12: Byte         = underlying.get(offset + 10)
+        var a13: Byte         = underlying.get(offset + 11)
+        while (continue && offset < widx - 12) {
+            a1 = a2
+            a2 = a3
+            a3 = a4
+            a4 = a5
+            a5 = a6
+            a6 = a7
+            a7 = a8
+            a8 = a9
+            a9 = a10
+            a10 = a11
+            a11 = a12
+            a12 = a13
+            a13 = underlying.get(offset + 12)
+            if (
+              a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
+              a9 == b9 && a10 == b10 && a11 == b11 && a12 == b12 && a13 == b13
+            ) {
+                continue = false
+            } else offset += 1
+        }
+        if (continue) -1 else offset - ridx
+    } else -1
+
+    // format: off
+    override def bytesBefore14(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte): Int =
+    // format: on
+        if (readableBytes >= 14) {
+            var offset: Int       = ridx
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            var a7: Byte          = underlying.get(offset + 5)
+            var a8: Byte          = underlying.get(offset + 6)
+            var a9: Byte          = underlying.get(offset + 7)
+            var a10: Byte         = underlying.get(offset + 8)
+            var a11: Byte         = underlying.get(offset + 9)
+            var a12: Byte         = underlying.get(offset + 10)
+            var a13: Byte         = underlying.get(offset + 11)
+            var a14: Byte         = underlying.get(offset + 12)
+            while (continue && offset < widx - 13) {
+                a1 = a2
+                a2 = a3
+                a3 = a4
+                a4 = a5
+                a5 = a6
+                a6 = a7
+                a7 = a8
+                a8 = a9
+                a9 = a10
+                a10 = a11
+                a11 = a12
+                a12 = a13
+                a13 = a14
+                a14 = underlying.get(offset + 13)
+                if (
+                  a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
+                  a9 == b9 && a10 == b10 && a11 == b11 && a12 == b12 && a13 == b13 && a14 == b14
+                ) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - ridx
+        } else -1
+
+    // format: off
+    override def bytesBefore15(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte): Int =
+    // format: on
+        if (readableBytes >= 15) {
+            var offset: Int       = ridx
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            var a7: Byte          = underlying.get(offset + 5)
+            var a8: Byte          = underlying.get(offset + 6)
+            var a9: Byte          = underlying.get(offset + 7)
+            var a10: Byte         = underlying.get(offset + 8)
+            var a11: Byte         = underlying.get(offset + 9)
+            var a12: Byte         = underlying.get(offset + 10)
+            var a13: Byte         = underlying.get(offset + 11)
+            var a14: Byte         = underlying.get(offset + 12)
+            var a15: Byte         = underlying.get(offset + 13)
+            while (continue && offset < widx - 14) {
+                a1 = a2
+                a2 = a3
+                a3 = a4
+                a4 = a5
+                a5 = a6
+                a6 = a7
+                a7 = a8
+                a8 = a9
+                a9 = a10
+                a10 = a11
+                a11 = a12
+                a12 = a13
+                a13 = a14
+                a14 = a15
+                a15 = underlying.get(offset + 14)
+                if (
+                  a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
+                  a9 == b9 && a10 == b10 && a11 == b11 && a12 == b12 && a13 == b13 && a14 == b14 && a15 == b15
+                ) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - ridx
+        } else -1
+
+    // format: off
+    override def bytesBefore16(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte, b16: Byte): Int =
+    // format: on
+        if (readableBytes >= 16) {
+            var offset: Int       = ridx
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            var a7: Byte          = underlying.get(offset + 5)
+            var a8: Byte          = underlying.get(offset + 6)
+            var a9: Byte          = underlying.get(offset + 7)
+            var a10: Byte         = underlying.get(offset + 8)
+            var a11: Byte         = underlying.get(offset + 9)
+            var a12: Byte         = underlying.get(offset + 10)
+            var a13: Byte         = underlying.get(offset + 11)
+            var a14: Byte         = underlying.get(offset + 12)
+            var a15: Byte         = underlying.get(offset + 13)
+            var a16: Byte         = underlying.get(offset + 14)
+            while (continue && offset < widx - 15) {
+                a1 = a2
+                a2 = a3
+                a3 = a4
+                a4 = a5
+                a5 = a6
+                a6 = a7
+                a7 = a8
+                a8 = a9
+                a9 = a10
+                a10 = a11
+                a11 = a12
+                a12 = a13
+                a13 = a14
+                a14 = a15
+                a15 = a16
+                a16 = underlying.get(offset + 15)
+                if (
+                  a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
+                  a9 == b9 && a10 == b10 && a11 == b11 && a12 == b12 && a13 == b13 && a14 == b14 && a15 == b15 && a16 == b16
+                ) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - ridx
+        } else -1
+
+    override def bytesBefore(needle: Array[Byte]): Int = if (readableBytes >= needle.length) {
+        needle.length match
+            case 5 => bytesBefore5(needle(0), needle(1), needle(2), needle(3), needle(4))
+            case 6 => bytesBefore6(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5))
+            case 7 => bytesBefore7(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6))
+            // format: off
+            case 8 => bytesBefore8(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7))
+            case 9 => bytesBefore9(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8))
+            case 10 => bytesBefore10(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8), needle(9))
+            case 11 => bytesBefore11(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8), needle(9), needle(10))
+            case 12 => bytesBefore12(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8), needle(9), needle(10), needle(11))
+            case 13 => bytesBefore13(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8), needle(9), needle(10), needle(11), needle(12))
+            case 14 => bytesBefore14(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8), needle(9), needle(10), needle(11), needle(12), needle(13))
+            case 15 => bytesBefore15(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8), needle(9), needle(10), needle(11), needle(12), needle(13), needle(14))
+            case 16 => bytesBefore16(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8), needle(9), needle(10), needle(11), needle(12), needle(13), needle(14), needle(15))
+            // format: on
+            case 1 => bytesBefore(needle(0))
+            case 2 => bytesBefore(needle(0), needle(1))
+            case 3 => bytesBefore(needle(0), needle(1), needle(2))
+            case 4 => bytesBefore(needle(0), needle(1), needle(2), needle(3))
+            case _ =>
+                val length            = needle.length
+                val first             = needle(0)
+                val second            = needle(1)
+                val copy              = new Array[Byte](length)
+                var offset: Int       = ridx
+                var continue: Boolean = true
+                while (continue && offset < widx - length) {
+                    if (underlying.get(offset) != first || underlying.get(offset + 1) != second) offset += 1
+                    else {
+                        this.copyInto(offset, copy, 0, length)
+                        if (copy sameElements needle) continue = false else offset += 1
+                    }
+                }
+                if (continue) -1 else offset - ridx
+
     } else -1
 
     override def openCursor(fromOffset: Int, length: Int): ByteCursor = {

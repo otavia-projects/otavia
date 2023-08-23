@@ -27,7 +27,6 @@ import scala.language.unsafeNulls
 
 class BufferSuite extends AnyFunSuite {
 
-
     test("heap buffer copy") {
         val buffer = Buffer.wrap(ByteBuffer.allocateDirect(4096))
 
@@ -66,7 +65,9 @@ class BufferSuite extends AnyFunSuite {
     }
 
     test("string write/read in buffer") {
-        val buffer    =  Buffer.wrap(ByteBuffer.allocateDirect(4096))
+        val buffer = Buffer.wrap(ByteBuffer.allocateDirect(4096))
+
+        buffer.clean()
 
         buffer.writeChar('b')
         assert(buffer.writerOffset == 2)
@@ -105,6 +106,8 @@ class BufferSuite extends AnyFunSuite {
 
     test("compact buffer") {
         val buffer = Buffer.wrap(ByteBuffer.allocateDirect(4096))
+
+        buffer.clean()
 
         buffer.writeInt(2)
         assert(buffer.readerOffset == 0)
@@ -148,6 +151,8 @@ class BufferSuite extends AnyFunSuite {
     test("Buffer write/read ByteBuffer") {
         val buffer = Buffer.wrap(ByteBuffer.allocate(4096))
 
+        buffer.clean()
+
         val byteBuffer = ByteBuffer.allocate(2000)
         byteBuffer.position(300)
         for (idx <- 0 until 277) byteBuffer.putInt(idx)
@@ -187,6 +192,9 @@ class BufferSuite extends AnyFunSuite {
         val buffer = Buffer.wrap(ByteBuffer.allocate(4096))
         val buf    = Buffer.wrap(ByteBuffer.allocate(4096))
 
+        buffer.clean()
+        buf.clean()
+
         for (idx <- 0 until 1000) buf.writeInt(idx)
 
         assert(buf.readableBytes == 1000 * 4)
@@ -221,6 +229,8 @@ class BufferSuite extends AnyFunSuite {
 
     test("Buffer write/read Array[Byte]") {
         val buffer = Buffer.wrap(ByteBuffer.allocate(4096))
+
+        buffer.clean()
 
         val array = new Array[Byte](1000)
         util.Arrays.fill(array, 'B'.toByte)
@@ -307,6 +317,7 @@ class BufferSuite extends AnyFunSuite {
 
     test("Buffer base write/read ") {
         val buffer = Buffer.wrap(ByteBuffer.allocateDirect(4096))
+        buffer.clean()
 
         buffer.writeByte('A')
         assert(buffer.readerOffset == 0)
