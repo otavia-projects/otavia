@@ -10,8 +10,8 @@ import cc.otavia.core.testkit.ProbeActor.ProbeStart
 import scala.concurrent.{Future, Promise}
 import scala.reflect.ClassTag
 
-class ProbeActor[M <: Ask[? <: Reply], R <: ReplyOf[M]: ClassTag](
-    actor: Address[M],
+private[testkit] class ProbeActor[M <: Ask[? <: Reply], R <: ReplyOf[M]: ClassTag](
+    address: Address[M],
     msg: M,
     expect: ReplyFuture[R] => Boolean,
     result: Promise[Boolean]
@@ -23,7 +23,7 @@ class ProbeActor[M <: Ask[? <: Reply], R <: ReplyOf[M]: ClassTag](
         stack.stackState match
             case StackState.start =>
                 val state = new FutureState[R]()
-                actor.ask(msg, state.future)(using this)
+                address.ask(msg, state.future)
                 state.suspend()
             case state: FutureState[R] =>
                 result.success(expect(state.future))
@@ -33,5 +33,5 @@ class ProbeActor[M <: Ask[? <: Reply], R <: ReplyOf[M]: ClassTag](
 }
 
 object ProbeActor {
-    case class ProbeStart() extends Notice
+    private[testkit] case class ProbeStart() extends Notice
 }
