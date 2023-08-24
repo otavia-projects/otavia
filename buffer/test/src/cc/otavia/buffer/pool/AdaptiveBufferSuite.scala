@@ -99,4 +99,158 @@ class AdaptiveBufferSuite extends AnyFunSuite {
 
     test("set offset") {}
 
+    test("bytesBefore 1") {
+        val adaptive = AdaptiveBuffer(allocator)
+
+        for (idx <- 0 until 1024) adaptive.writeByte(0)
+
+        assert(adaptive.writerOffset == 1024)
+
+        adaptive.writeByte('H')
+
+        assert(adaptive.writerOffset == 1025)
+
+        assert(adaptive.bytesBefore('H'.toByte) == 1024)
+
+        for (idx <- 1025 until allocator.fixedCapacity - 1) adaptive.writeByte(0)
+
+        adaptive.writeByte('T')
+
+        assert(adaptive.bytesBefore('T'.toByte) == allocator.fixedCapacity - 1)
+
+        for (idx <- 0 until 1024) adaptive.writeByte(0)
+
+        adaptive.writeByte('P')
+
+        assert(adaptive.bytesBefore('P'.toByte) == allocator.fixedCapacity + 1024)
+
+        for (idx <- 1025 until allocator.fixedCapacity) adaptive.writeByte(0)
+
+        adaptive.writeByte('S')
+
+        assert(adaptive.bytesBefore('S'.toByte) == allocator.fixedCapacity * 2)
+
+        adaptive.readerOffset(allocator.fixedCapacity + 56)
+
+        assert(adaptive.bytesBefore('S'.toByte) == allocator.fixedCapacity - 56)
+
+        val buffer = allocator.allocate()
+
+        buffer.writeByte('A')
+
+        adaptive.extend(buffer)
+
+        assert(adaptive.bytesBefore('A'.toByte) == allocator.fixedCapacity - 56 + 1)
+
+    }
+
+    test("bytesBefore 2") {
+        val adaptive = AdaptiveBuffer(allocator)
+
+        for (idx <- 0 until 1024) adaptive.writeByte(0)
+
+        assert(adaptive.writerOffset == 1024)
+
+        adaptive.writeByte('A')
+        adaptive.writeByte('A')
+
+        assert(adaptive.writerOffset == 1026)
+
+        assert(adaptive.bytesBefore('A'.toByte, 'A') == 1024)
+
+        for (idx <- 1026 until allocator.fixedCapacity - 1) adaptive.writeByte(0)
+
+        adaptive.writeByte('B')
+        adaptive.writeByte('B')
+
+        assert(adaptive.bytesBefore('B'.toByte, 'B') == allocator.fixedCapacity - 1)
+
+        for (idx <- 1 until 1024) adaptive.writeByte(0)
+
+        adaptive.writeByte('P')
+        adaptive.writeByte('P')
+
+        assert(adaptive.bytesBefore('P'.toByte, 'P') == allocator.fixedCapacity + 1024)
+
+        for (idx <- 1026 until allocator.fixedCapacity) adaptive.writeByte(0)
+
+        adaptive.writeByte('S')
+        adaptive.writeByte('s')
+
+        assert(adaptive.bytesBefore('S'.toByte, 's') == allocator.fixedCapacity * 2)
+
+        adaptive.readerOffset(allocator.fixedCapacity + 56)
+
+        val len = adaptive.bytesBefore('S'.toByte, 's')
+
+        assert(adaptive.bytesBefore('S'.toByte, 's') == allocator.fixedCapacity - 56)
+
+        val buffer = allocator.allocate()
+
+        buffer.writeByte('C')
+        buffer.writeByte('c')
+
+        adaptive.extend(buffer)
+
+        assert(adaptive.bytesBefore('C'.toByte, 'c') == allocator.fixedCapacity - 56 + 2)
+
+    }
+
+    test("bytesBefore 3") {
+        val adaptive = AdaptiveBuffer(allocator)
+
+        for (idx <- 0 until 1024) adaptive.writeByte(0)
+
+        assert(adaptive.writerOffset == 1024)
+
+        adaptive.writeByte('A')
+        adaptive.writeByte('A')
+        adaptive.writeByte('A')
+
+        assert(adaptive.writerOffset == 1027)
+
+        assert(adaptive.bytesBefore('A'.toByte, 'A', 'A') == 1024)
+
+        for (idx <- 1027 until allocator.fixedCapacity - 1) adaptive.writeByte(0)
+
+        adaptive.writeByte('B')
+        adaptive.writeByte('B')
+        adaptive.writeByte('B')
+
+        assert(adaptive.bytesBefore('B'.toByte, 'B', 'B') == allocator.fixedCapacity - 1)
+
+        for (idx <- 2 until 1024) adaptive.writeByte(0)
+
+        adaptive.writeByte('P')
+        adaptive.writeByte('P')
+        adaptive.writeByte('P')
+
+        assert(adaptive.bytesBefore('P'.toByte, 'P', 'P') == allocator.fixedCapacity + 1024)
+
+        for (idx <- 1027 until allocator.fixedCapacity) adaptive.writeByte(0)
+
+        adaptive.writeByte('S')
+        adaptive.writeByte('s')
+        adaptive.writeByte('s')
+
+        assert(adaptive.bytesBefore('S'.toByte, 's', 's') == allocator.fixedCapacity * 2)
+
+        adaptive.readerOffset(allocator.fixedCapacity + 56)
+
+        val len = adaptive.bytesBefore('S'.toByte, 's', 's')
+
+        assert(adaptive.bytesBefore('S'.toByte, 's', 's') == allocator.fixedCapacity - 56)
+
+        val buffer = allocator.allocate()
+
+        buffer.writeByte('C')
+        buffer.writeByte('c')
+        buffer.writeByte('c')
+
+        adaptive.extend(buffer)
+
+        assert(adaptive.bytesBefore('C'.toByte, 'c', 'c') == allocator.fixedCapacity - 56 + 3)
+
+    }
+
 }

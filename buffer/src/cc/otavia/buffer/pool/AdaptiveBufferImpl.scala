@@ -314,82 +314,771 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         throw new UnsupportedOperationException("AdaptiveBuffer not support transferFrom ReadableByteChannel")
 
     override def bytesBefore(needle: Byte): Int = {
-        var offset: Int       = ridx
+        var cursor: Int       = ridx
         var continue: Boolean = true
         var idx               = 0
-        var idxOffset         = ridx
+        var idxStart          = ridx
         while (continue && idx < size) {
             val buffer     = apply(idx)
             val len        = buffer.readableBytes
             val byteBuffer = buffer.underlying
-            while (continue && offset < idxOffset + len) {
-                if (byteBuffer.get(buffer.readerOffset + offset - idxOffset) == needle) {
-                    continue = false
-                } else offset += 1
-            }
-            if (continue) {
-                idxOffset += len
+            while (continue && cursor < idxStart + len)
+                if (byteBuffer.get(buffer.readerOffset + cursor - idxStart) == needle) continue = false else cursor += 1
+            if (continue) { // buffer not find
+                idxStart += len
                 idx += 1
             }
         }
-        if (continue) -1 else offset - ridx
+        if (continue) -1 else cursor - ridx
     }
 
-    override def bytesBefore(needle1: Byte, needle2: Byte): Int = ???
+    override def bytesBefore(needle1: Byte, needle2: Byte): Int = if (readableBytes >= 2) {
+        var cursor: Int       = ridx + 1
+        var continue: Boolean = true
+        var idx               = 0
+        var idxStart          = ridx
 
-    override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int = ???
+        var b1: Byte = 0
+        var b2: Byte = head.underlying.get(head.readerOffset)
+        while (continue && idx < size) {
+            val buffer     = apply(idx)
+            val len        = buffer.readableBytes
+            val byteBuffer = buffer.underlying
 
-    override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte, needle4: Byte): Int = ???
+            while (continue && cursor < idxStart + len) {
+                b1 = b2
+                b2 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                if (b1 == needle1 && b2 == needle2) continue = false else cursor += 1
+            }
+            if (continue) {
+                idxStart += len
+                idx += 1
+            }
+        }
+        if (continue) -1 else cursor - ridx - 1
+    } else -1
 
-    override def bytesBefore5(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte): Int = ???
+    override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int = if (readableBytes >= 3) {
+        var cursor: Int       = ridx
+        var continue: Boolean = true
+        var idx               = 0
+        var idxStart          = ridx
 
-    override def bytesBefore6(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte): Int = ???
+        var b1: Byte = 0
+        var b2: Byte = 0
+        var b3: Byte = 0
+        while (continue && idx < size) {
+            val buffer     = apply(idx)
+            val len        = buffer.readableBytes
+            val byteBuffer = buffer.underlying
 
-    override def bytesBefore7(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Int = ???
+            while (continue && cursor < idxStart + len) {
+                b1 = b2
+                b2 = b3
+                b3 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                if (b1 == needle1 && b2 == needle2 && b3 == needle3 && cursor - ridx > 2) continue = false
+                else cursor += 1
+            }
+            if (continue) {
+                idxStart += len
+                idx += 1
+            }
+        }
+        if (continue) -1 else cursor - ridx - 2
+    } else -1
 
-    override def bytesBefore8(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte): Int = ???
+    override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte, needle4: Byte): Int =
+        if (readableBytes >= 4) {
+            var cursor: Int       = ridx
+            var continue: Boolean = true
+            var idx               = 0
+            var idxStart          = ridx
+
+            var b1: Byte = 0
+            var b2: Byte = 0
+            var b3: Byte = 0
+            var b4: Byte = 0
+            while (continue && idx < size) {
+                val buffer     = apply(idx)
+                val len        = buffer.readableBytes
+                val byteBuffer = buffer.underlying
+
+                while (continue && cursor < idxStart + len) {
+                    b1 = b2
+                    b2 = b3
+                    b3 = b4
+                    b4 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                    if (b1 == needle1 && b2 == needle2 && b3 == needle3 && b4 == needle4 && cursor - ridx > 3)
+                        continue = false
+                    else cursor += 1
+                }
+                if (continue) {
+                    idxStart += len
+                    idx += 1
+                }
+            }
+            if (continue) -1 else cursor - ridx - 3
+        } else -1
+
+    override def bytesBefore5(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte): Int =
+        if (readableBytes >= 5) {
+            var cursor: Int       = ridx
+            var continue: Boolean = true
+            var idx               = 0
+            var idxStart          = ridx
+
+            var a1: Byte = 0
+            var a2: Byte = 0
+            var a3: Byte = 0
+            var a4: Byte = 0
+            var a5: Byte = 0
+            while (continue && idx < size) {
+                val buffer     = apply(idx)
+                val len        = buffer.readableBytes
+                val byteBuffer = buffer.underlying
+
+                while (continue && cursor < idxStart + len) {
+                    a1 = a2
+                    a2 = a3
+                    a3 = a4
+                    a4 = a5
+                    a5 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                    if (b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && cursor - ridx > 4)
+                        continue = false
+                    else cursor += 1
+                }
+                if (continue) {
+                    idxStart += len
+                    idx += 1
+                }
+            }
+            if (continue) -1 else cursor - ridx - 4
+        } else -1
+
+    override def bytesBefore6(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte): Int =
+        if (readableBytes >= 6) {
+            var cursor: Int       = ridx
+            var continue: Boolean = true
+            var idx               = 0
+            var idxStart          = ridx
+
+            var a1: Byte = 0
+            var a2: Byte = 0
+            var a3: Byte = 0
+            var a4: Byte = 0
+            var a5: Byte = 0
+            var a6: Byte = 0
+            while (continue && idx < size) {
+                val buffer     = apply(idx)
+                val len        = buffer.readableBytes
+                val byteBuffer = buffer.underlying
+
+                while (continue && cursor < idxStart + len) {
+                    a1 = a2
+                    a2 = a3
+                    a3 = a4
+                    a4 = a5
+                    a5 = a6
+                    a6 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                    if (b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && cursor - ridx > 5)
+                        continue = false
+                    else cursor += 1
+                }
+                if (continue) {
+                    idxStart += len
+                    idx += 1
+                }
+            }
+            if (continue) -1 else cursor - ridx - 5
+        } else -1
+
+    override def bytesBefore7(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Int =
+        if (readableBytes > 6) {
+            var cursor: Int       = ridx
+            var continue: Boolean = true
+            var idx               = 0
+            var idxStart          = ridx
+
+            var a1: Byte = 0
+            var a2: Byte = 0
+            var a3: Byte = 0
+            var a4: Byte = 0
+            var a5: Byte = 0
+            var a6: Byte = 0
+            var a7: Byte = 0
+            while (continue && idx < size) {
+                val buffer     = apply(idx)
+                val len        = buffer.readableBytes
+                val byteBuffer = buffer.underlying
+
+                while (continue && cursor < idxStart + len) {
+                    a1 = a2
+                    a2 = a3
+                    a3 = a4
+                    a4 = a5
+                    a5 = a6
+                    a6 = a7
+                    a7 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                    if (
+                      b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
+                      cursor - ridx > 6
+                    ) continue = false
+                    else cursor += 1
+                }
+                if (continue) {
+                    idxStart += len
+                    idx += 1
+                }
+            }
+            if (continue) -1 else cursor - ridx - 6
+        } else -1
+
+    override def bytesBefore8(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte): Int =
+        if (readableBytes > 7) {
+            var cursor: Int       = ridx
+            var continue: Boolean = true
+            var idx               = 0
+            var idxStart          = ridx
+
+            var a1: Byte = 0
+            var a2: Byte = 0
+            var a3: Byte = 0
+            var a4: Byte = 0
+            var a5: Byte = 0
+            var a6: Byte = 0
+            var a7: Byte = 0
+            var a8: Byte = 0
+            while (continue && idx < size) {
+                val buffer     = apply(idx)
+                val len        = buffer.readableBytes
+                val byteBuffer = buffer.underlying
+
+                while (continue && cursor < idxStart + len) {
+                    a1 = a2
+                    a2 = a3
+                    a3 = a4
+                    a4 = a5
+                    a5 = a6
+                    a6 = a7
+                    a7 = a8
+                    a8 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                    if (
+                      b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
+                      b8 == a8 && cursor - ridx > 7
+                    ) continue = false
+                    else cursor += 1
+                }
+                if (continue) {
+                    idxStart += len
+                    idx += 1
+                }
+            }
+            if (continue) -1 else cursor - ridx - 7
+        } else -1
 
     // format: off
     override def bytesBefore9(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
-                              b9: Byte): Int = ???
+                              b9: Byte): Int =
     // format: on
+        if (readableBytes > 8) {
+            var cursor: Int       = ridx
+            var continue: Boolean = true
+            var idx               = 0
+            var idxStart          = ridx
+
+            var a1: Byte = 0
+            var a2: Byte = 0
+            var a3: Byte = 0
+            var a4: Byte = 0
+            var a5: Byte = 0
+            var a6: Byte = 0
+            var a7: Byte = 0
+            var a8: Byte = 0
+            var a9: Byte = 0
+            while (continue && idx < size) {
+                val buffer     = apply(idx)
+                val len        = buffer.readableBytes
+                val byteBuffer = buffer.underlying
+
+                while (continue && cursor < idxStart + len) {
+                    a1 = a2
+                    a2 = a3
+                    a3 = a4
+                    a4 = a5
+                    a5 = a6
+                    a6 = a7
+                    a7 = a8
+                    a8 = a9
+                    a9 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                    if (
+                      b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
+                      b8 == a8 && b9 == a9 && cursor - ridx > 8
+                    ) continue = false
+                    else cursor += 1
+                }
+                if (continue) {
+                    idxStart += len
+                    idx += 1
+                }
+            }
+            if (continue) -1 else cursor - ridx - 8
+        } else -1
 
     // format: off
     override def bytesBefore10(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
-                               b9: Byte, b10: Byte): Int = ???
+                               b9: Byte, b10: Byte): Int =
     // format: on
+        if (readableBytes > 9) {
+            var cursor: Int       = ridx
+            var continue: Boolean = true
+            var idx               = 0
+            var idxStart          = ridx
+
+            var a1: Byte  = 0
+            var a2: Byte  = 0
+            var a3: Byte  = 0
+            var a4: Byte  = 0
+            var a5: Byte  = 0
+            var a6: Byte  = 0
+            var a7: Byte  = 0
+            var a8: Byte  = 0
+            var a9: Byte  = 0
+            var a10: Byte = 0
+            while (continue && idx < size) {
+                val buffer     = apply(idx)
+                val len        = buffer.readableBytes
+                val byteBuffer = buffer.underlying
+
+                while (continue && cursor < idxStart + len) {
+                    a1 = a2
+                    a2 = a3
+                    a3 = a4
+                    a4 = a5
+                    a5 = a6
+                    a6 = a7
+                    a7 = a8
+                    a8 = a9
+                    a9 = a10
+                    a10 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                    if (
+                      b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
+                      b8 == a8 && b9 == a9 && b10 == a10 && cursor - ridx > 9
+                    ) continue = false
+                    else cursor += 1
+                }
+                if (continue) {
+                    idxStart += len
+                    idx += 1
+                }
+            }
+            if (continue) -1 else cursor - ridx - 9
+        } else -1
 
     // format: off
     override def bytesBefore11(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
-                               b9: Byte, b10: Byte, b11: Byte): Int = ???
+                               b9: Byte, b10: Byte, b11: Byte): Int =
     // format: on
+        if (readableBytes > 10) {
+            var cursor: Int       = ridx
+            var continue: Boolean = true
+            var idx               = 0
+            var idxStart          = ridx
+
+            var a1: Byte  = 0
+            var a2: Byte  = 0
+            var a3: Byte  = 0
+            var a4: Byte  = 0
+            var a5: Byte  = 0
+            var a6: Byte  = 0
+            var a7: Byte  = 0
+            var a8: Byte  = 0
+            var a9: Byte  = 0
+            var a10: Byte = 0
+            var a11: Byte = 0
+            while (continue && idx < size) {
+                val buffer     = apply(idx)
+                val len        = buffer.readableBytes
+                val byteBuffer = buffer.underlying
+
+                while (continue && cursor < idxStart + len) {
+                    a1 = a2
+                    a2 = a3
+                    a3 = a4
+                    a4 = a5
+                    a5 = a6
+                    a6 = a7
+                    a7 = a8
+                    a8 = a9
+                    a9 = a10
+                    a10 = a11
+                    a11 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                    if (
+                      b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
+                      b8 == a8 && b9 == a9 && b10 == a10 && b11 == a11 && cursor - ridx > 10
+                    ) continue = false
+                    else cursor += 1
+                }
+                if (continue) {
+                    idxStart += len
+                    idx += 1
+                }
+            }
+            if (continue) -1 else cursor - ridx - 10
+        } else -1
 
     // format: off
     override def bytesBefore12(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
-                               b9: Byte, b10: Byte, b11: Byte, b12: Byte): Int = ???
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte): Int =
     // format: on
+        if (readableBytes > 11) {
+            var cursor: Int       = ridx
+            var continue: Boolean = true
+            var idx               = 0
+            var idxStart          = ridx
+
+            var a1: Byte  = 0
+            var a2: Byte  = 0
+            var a3: Byte  = 0
+            var a4: Byte  = 0
+            var a5: Byte  = 0
+            var a6: Byte  = 0
+            var a7: Byte  = 0
+            var a8: Byte  = 0
+            var a9: Byte  = 0
+            var a10: Byte = 0
+            var a11: Byte = 0
+            var a12: Byte = 0
+            while (continue && idx < size) {
+                val buffer     = apply(idx)
+                val len        = buffer.readableBytes
+                val byteBuffer = buffer.underlying
+
+                while (continue && cursor < idxStart + len) {
+                    a1 = a2
+                    a2 = a3
+                    a3 = a4
+                    a4 = a5
+                    a5 = a6
+                    a6 = a7
+                    a7 = a8
+                    a8 = a9
+                    a9 = a10
+                    a10 = a11
+                    a11 = a12
+                    a12 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                    if (
+                      b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
+                      b8 == a8 && b9 == a9 && b10 == a10 && b11 == a11 && b12 == a12 && cursor - ridx > 11
+                    ) continue = false
+                    else cursor += 1
+                }
+                if (continue) {
+                    idxStart += len
+                    idx += 1
+                }
+            }
+            if (continue) -1 else cursor - ridx - 11
+        } else -1
 
     // format: off
     override def bytesBefore13(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
-                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte): Int = ???
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte): Int =
     // format: on
+        if (readableBytes > 12) {
+            var cursor: Int       = ridx
+            var continue: Boolean = true
+            var idx               = 0
+            var idxStart          = ridx
+
+            var a1: Byte  = 0
+            var a2: Byte  = 0
+            var a3: Byte  = 0
+            var a4: Byte  = 0
+            var a5: Byte  = 0
+            var a6: Byte  = 0
+            var a7: Byte  = 0
+            var a8: Byte  = 0
+            var a9: Byte  = 0
+            var a10: Byte = 0
+            var a11: Byte = 0
+            var a12: Byte = 0
+            var a13: Byte = 0
+            while (continue && idx < size) {
+                val buffer     = apply(idx)
+                val len        = buffer.readableBytes
+                val byteBuffer = buffer.underlying
+
+                while (continue && cursor < idxStart + len) {
+                    a1 = a2
+                    a2 = a3
+                    a3 = a4
+                    a4 = a5
+                    a5 = a6
+                    a6 = a7
+                    a7 = a8
+                    a8 = a9
+                    a9 = a10
+                    a10 = a11
+                    a11 = a12
+                    a12 = a13
+                    a13 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                    if (
+                      b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
+                      b8 == a8 && b9 == a9 && b10 == a10 && b11 == a11 && b12 == a12 && b13 == a13 &&
+                      cursor - ridx > 12
+                    ) continue = false
+                    else cursor += 1
+                }
+                if (continue) {
+                    idxStart += len
+                    idx += 1
+                }
+            }
+            if (continue) -1 else cursor - ridx - 12
+        } else -1
 
     // format: off
     override def bytesBefore14(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
-                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte): Int = ???
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte): Int =
     // format: on
+        if (readableBytes > 13) {
+            var cursor: Int       = ridx
+            var continue: Boolean = true
+            var idx               = 0
+            var idxStart          = ridx
+
+            var a1: Byte  = 0
+            var a2: Byte  = 0
+            var a3: Byte  = 0
+            var a4: Byte  = 0
+            var a5: Byte  = 0
+            var a6: Byte  = 0
+            var a7: Byte  = 0
+            var a8: Byte  = 0
+            var a9: Byte  = 0
+            var a10: Byte = 0
+            var a11: Byte = 0
+            var a12: Byte = 0
+            var a13: Byte = 0
+            var a14: Byte = 0
+            while (continue && idx < size) {
+                val buffer     = apply(idx)
+                val len        = buffer.readableBytes
+                val byteBuffer = buffer.underlying
+
+                while (continue && cursor < idxStart + len) {
+                    a1 = a2
+                    a2 = a3
+                    a3 = a4
+                    a4 = a5
+                    a5 = a6
+                    a6 = a7
+                    a7 = a8
+                    a8 = a9
+                    a9 = a10
+                    a10 = a11
+                    a11 = a12
+                    a12 = a13
+                    a13 = a14
+                    a14 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                    if (
+                      b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
+                      b8 == a8 && b9 == a9 && b10 == a10 && b11 == a11 && b12 == a12 && b13 == a13 &&
+                      b14 == a14 && cursor - ridx > 13
+                    ) continue = false
+                    else cursor += 1
+                }
+                if (continue) {
+                    idxStart += len
+                    idx += 1
+                }
+            }
+            if (continue) -1 else cursor - ridx - 13
+        } else -1
 
     // format: off
     override def bytesBefore15(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
-                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte): Int = ???
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte): Int =
     // format: on
+        if (readableBytes > 14) {
+            var cursor: Int       = ridx
+            var continue: Boolean = true
+            var idx               = 0
+            var idxStart          = ridx
+
+            var a1: Byte  = 0
+            var a2: Byte  = 0
+            var a3: Byte  = 0
+            var a4: Byte  = 0
+            var a5: Byte  = 0
+            var a6: Byte  = 0
+            var a7: Byte  = 0
+            var a8: Byte  = 0
+            var a9: Byte  = 0
+            var a10: Byte = 0
+            var a11: Byte = 0
+            var a12: Byte = 0
+            var a13: Byte = 0
+            var a14: Byte = 0
+            var a15: Byte = 0
+            while (continue && idx < size) {
+                val buffer     = apply(idx)
+                val len        = buffer.readableBytes
+                val byteBuffer = buffer.underlying
+
+                while (continue && cursor < idxStart + len) {
+                    a1 = a2
+                    a2 = a3
+                    a3 = a4
+                    a4 = a5
+                    a5 = a6
+                    a6 = a7
+                    a7 = a8
+                    a8 = a9
+                    a9 = a10
+                    a10 = a11
+                    a11 = a12
+                    a12 = a13
+                    a13 = a14
+                    a14 = a15
+                    a15 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                    if (
+                      b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
+                      b8 == a8 && b9 == a9 && b10 == a10 && b11 == a11 && b12 == a12 && b13 == a13 &&
+                      b14 == a14 && b15 == a15 && cursor - ridx > 14
+                    ) continue = false
+                    else cursor += 1
+                }
+                if (continue) {
+                    idxStart += len
+                    idx += 1
+                }
+            }
+            if (continue) -1 else cursor - ridx - 14
+        } else -1
 
     // format: off
     override def bytesBefore16(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
-                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte, b16: Byte): Int = ???
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte, b16: Byte): Int =
     // format: on
+        if (readableBytes > 15) {
+            var cursor: Int       = ridx
+            var continue: Boolean = true
+            var idx               = 0
+            var idxStart          = ridx
 
-    override def bytesBefore(needle: Array[Byte]): Int = ???
+            var a1: Byte  = 0
+            var a2: Byte  = 0
+            var a3: Byte  = 0
+            var a4: Byte  = 0
+            var a5: Byte  = 0
+            var a6: Byte  = 0
+            var a7: Byte  = 0
+            var a8: Byte  = 0
+            var a9: Byte  = 0
+            var a10: Byte = 0
+            var a11: Byte = 0
+            var a12: Byte = 0
+            var a13: Byte = 0
+            var a14: Byte = 0
+            var a15: Byte = 0
+            var a16: Byte = 0
+            while (continue && idx < size) {
+                val buffer     = apply(idx)
+                val len        = buffer.readableBytes
+                val byteBuffer = buffer.underlying
+
+                while (continue && cursor < idxStart + len) {
+                    // TODO: change to Long << 8 | byteBuffer.get(buffer.readerOffset + cursor - idxStart) according bench
+                    a1 = a2
+                    a2 = a3
+                    a3 = a4
+                    a4 = a5
+                    a5 = a6
+                    a6 = a7
+                    a7 = a8
+                    a8 = a9
+                    a9 = a10
+                    a10 = a11
+                    a11 = a12
+                    a12 = a13
+                    a13 = a14
+                    a14 = a15
+                    a15 = a16
+                    a16 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                    if (
+                      b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
+                      b8 == a8 && b9 == a9 && b10 == a10 && b11 == a11 && b12 == a12 && b13 == a13 &&
+                      b14 == a14 && b15 == a15 && b16 == a16 && cursor - ridx > 15
+                    ) continue = false
+                    else cursor += 1
+                }
+                if (continue) {
+                    idxStart += len
+                    idx += 1
+                }
+            }
+            if (continue) -1 else cursor - ridx - 15
+        } else -1
+
+    override def bytesBefore(needle: Array[Byte]): Int = if (readableBytes >= needle.length) {
+        needle.length match
+            case 5 => bytesBefore5(needle(0), needle(1), needle(2), needle(3), needle(4))
+            case 6 => bytesBefore6(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5))
+            case 7 => bytesBefore7(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6))
+            // format: off
+            case 8 => bytesBefore8(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7))
+            case 9 => bytesBefore9(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8))
+            case 10 => bytesBefore10(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8), needle(9))
+            case 11 => bytesBefore11(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8), needle(9), needle(10))
+            case 12 => bytesBefore12(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8), needle(9), needle(10), needle(11))
+            case 13 => bytesBefore13(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8), needle(9), needle(10), needle(11), needle(12))
+            case 14 => bytesBefore14(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8), needle(9), needle(10), needle(11), needle(12), needle(13))
+            case 15 => bytesBefore15(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8), needle(9), needle(10), needle(11), needle(12), needle(13), needle(14))
+            case 16 => bytesBefore16(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                needle(8), needle(9), needle(10), needle(11), needle(12), needle(13), needle(14), needle(15))
+            // format: on
+            case 1 => bytesBefore(needle(0))
+            case 2 => bytesBefore(needle(0), needle(1))
+            case 3 => bytesBefore(needle(0), needle(1), needle(2))
+            case 4 => bytesBefore(needle(0), needle(1), needle(2), needle(3))
+            case _ =>
+                val length = needle.length
+                val first  = needle(0)
+                val second = needle(1)
+                val copy   = new Array[Byte](length)
+                this.copyInto(ridx, copy, 0, length)
+                var cursor: Int       = ridx
+                var continue: Boolean = true
+                var idx               = 0
+                var idxStart          = ridx
+
+                while (continue && idx < size) {
+                    val buffer     = apply(idx)
+                    val len        = buffer.readableBytes
+                    val byteBuffer = buffer.underlying
+                    while (continue && cursor < idxStart + len) {
+                        if (byteBuffer.get(buffer.readerOffset + cursor - idxStart) != first) cursor += 1
+                        else {
+                            // TODO: bug buffer.readableBytes < length
+                            buffer.copyInto(buffer.readerOffset + cursor - idxStart, copy, 0, length)
+                            if (copy sameElements needle) continue = false else cursor += 1
+                        }
+                    }
+                    if (continue) { // buffer not find
+                        idxStart += len
+                        idx += 1
+                    }
+                }
+                if (continue) -1 else cursor - ridx - length
+    } else -1
 
     override def openCursor(fromOffset: Int, length: Int): ByteCursor = {
         if (closed) throw new BufferClosedException()

@@ -438,7 +438,7 @@ trait SiteModule extends ScalaModule {
             val fileName = child.toNIO.toString.toLowerCase.trim
             if (fileName.endsWith(".md")) {
                 val content = os.read(child)
-                val newCtx  = content.replaceAll("\\(.*/_assets/images/", "(images/")
+                val newCtx  = content.replaceAll("([(\"]).*/_assets/images/", "$1images/")
                 os.write(docs / child.subRelativeTo(docSource().path), newCtx, createFolders = true)
             } else os.copy.over(child, docs / child.subRelativeTo(docSource().path), createFolders = true)
         }
@@ -491,7 +491,7 @@ object docs extends SiteModule {
 
     override def scalaVersion: T[String] = ProjectInfo.scalaVersion
 
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(buffer, core)
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(buffer, core, serde, handler, codec, testkit)
 
     override def projectName: String = "otavia"
 

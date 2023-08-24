@@ -22,6 +22,8 @@ subsection:
         page: guide/reactor_model.md
       - title: SLF4A
         page: guide/slf4a.md
+      - title: Serde framework
+        page: guide/serde.md
   - title: Modules
     index: module/index.md
     directory: module
