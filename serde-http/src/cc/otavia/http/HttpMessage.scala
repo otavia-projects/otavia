@@ -16,10 +16,7 @@
 
 package cc.otavia.http
 
-import cc.otavia.serde.Serde
+sealed trait HttpMessage
 
-/** Interface for Http serialization/deserialization
- *  @tparam A
- *    type of Http data model
- */
-trait HttpSerde[A <: HttpMessage] extends Serde[A]
+case class HttpRequest[C](method: HttpMethod, path: String, version: HttpVersion, headers: HttpHeaders, content: C)
+    extends HttpMessage

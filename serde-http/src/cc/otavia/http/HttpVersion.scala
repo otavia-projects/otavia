@@ -16,10 +16,11 @@
 
 package cc.otavia.http
 
-import cc.otavia.serde.Serde
+enum HttpVersion(val value: String) {
 
-/** Interface for Http serialization/deserialization
- *  @tparam A
- *    type of Http data model
- */
-trait HttpSerde[A <: HttpMessage] extends Serde[A]
+    case HTTP_1_0 extends HttpVersion("HTTP/1.0")
+    case HTTP_1_1 extends HttpVersion("HTTP/1.1")
+
+    case HTTP_2 extends HttpVersion("HTTP/2.0")
+
+}

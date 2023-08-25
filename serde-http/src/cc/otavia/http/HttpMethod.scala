@@ -16,10 +16,9 @@
 
 package cc.otavia.http
 
-import cc.otavia.serde.Serde
+enum HttpMethod(val value: Array[Byte]) {
 
-/** Interface for Http serialization/deserialization
- *  @tparam A
- *    type of Http data model
- */
-trait HttpSerde[A <: HttpMessage] extends Serde[A]
+    case GET  extends HttpMethod(Array('G', 'E', 'T'))
+    case POST extends HttpMethod(Array('P', 'O', 'S', 'T'))
+
+}
