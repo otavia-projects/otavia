@@ -16,12 +16,14 @@
 
 package cc.otavia.buffer
 
+import cc.otavia.buffer.pool.HeapPooledPageAllocator
 import org.openjdk.jmh.annotations.{Benchmark, Scope, Setup, State}
 
 @State(Scope.Thread)
 class HeapBufferBench {
 
-    private var buffer: Buffer = _
+    private var buffer: Buffer         = _
+
 
     @Setup
     def init(): Unit = {

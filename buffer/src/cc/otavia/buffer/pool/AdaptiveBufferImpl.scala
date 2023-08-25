@@ -17,8 +17,8 @@
 package cc.otavia.buffer.pool
 
 import cc.otavia.buffer
+import cc.otavia.buffer.*
 import cc.otavia.buffer.pool.{PooledPageAllocator, RecyclablePageBuffer}
-import cc.otavia.buffer.{AbstractBuffer, Buffer, BufferClosedException, ByteCursor}
 
 import java.lang.{Byte as JByte, Double as JDouble, Float as JFloat, Long as JLong, Short as JShort}
 import java.nio.ByteBuffer
@@ -989,7 +989,6 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                 val byteBuffer = buffer.underlying
 
                 while (continue && cursor < idxStart + len) {
-                    // TODO: change to Long << 8 | byteBuffer.get(buffer.readerOffset + cursor - idxStart) according bench
                     a1 = a2
                     a2 = a3
                     a3 = a4
@@ -1023,6 +1022,10 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
 
     override def bytesBefore(needle: Array[Byte]): Int = if (readableBytes >= needle.length) {
         needle.length match
+            case 1 => bytesBefore(needle(0))
+            case 2 => bytesBefore(needle(0), needle(1))
+            case 3 => bytesBefore(needle(0), needle(1), needle(2))
+            case 4 => bytesBefore(needle(0), needle(1), needle(2), needle(3))
             case 5 => bytesBefore5(needle(0), needle(1), needle(2), needle(3), needle(4))
             case 6 => bytesBefore6(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5))
             case 7 => bytesBefore7(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6))
@@ -1045,20 +1048,16 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             case 16 => bytesBefore16(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
                 needle(8), needle(9), needle(10), needle(11), needle(12), needle(13), needle(14), needle(15))
             // format: on
-            case 1 => bytesBefore(needle(0))
-            case 2 => bytesBefore(needle(0), needle(1))
-            case 3 => bytesBefore(needle(0), needle(1), needle(2))
-            case 4 => bytesBefore(needle(0), needle(1), needle(2), needle(3))
             case _ =>
                 val length = needle.length
                 val first  = needle(0)
-                val second = needle(1)
-                val copy   = new Array[Byte](length)
-                this.copyInto(ridx, copy, 0, length)
+
                 var cursor: Int       = ridx
                 var continue: Boolean = true
                 var idx               = 0
                 var idxStart          = ridx
+
+                val copy = new Array[Byte](length)
 
                 while (continue && idx < size) {
                     val buffer     = apply(idx)
@@ -1067,8 +1066,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                     while (continue && cursor < idxStart + len) {
                         if (byteBuffer.get(buffer.readerOffset + cursor - idxStart) != first) cursor += 1
                         else {
-                            // TODO: bug buffer.readableBytes < length
-                            buffer.copyInto(buffer.readerOffset + cursor - idxStart, copy, 0, length)
+                            this.copyInto(cursor, copy, 0, length)
                             if (copy sameElements needle) continue = false else cursor += 1
                         }
                     }
@@ -1093,17 +1091,76 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             )
 
         new ByteCursor {
-            override def readByte: Boolean = ???
+            private var value: Byte = _
+            private var read: Int   = 0
 
-            override def getByte: Byte = ???
+            private val (fromIndex, fromOff) = offsetAtOffset(fromOffset)
 
-            override def currentOffset: Int = ???
+            private var currentComponent: Int = fromIndex
+            private var currentBuffer: Buffer = apply(currentComponent)
+            private var currentIdx: Int       = currentBuffer.readerOffset + fromOff
 
-            override def bytesLeft: Int = ???
+            override def readByte: Boolean = if (read <= length) {
+                value = currentBuffer.getByte(currentIdx)
+                read += 1
+                currentIdx += 1
+                if (currentIdx == currentBuffer.writerOffset) { // change to next component buffer
+                    currentComponent += 1
+                    currentBuffer = apply(currentComponent)
+                    currentIdx = currentBuffer.readerOffset
+                }
+                true
+            } else false
+
+            override def getByte: Byte = value
+
+            override def currentOffset: Int = ridx + read
+
+            override def bytesLeft: Int = length - read
         }
     }
 
-    override def openReverseCursor(fromOffset: Int, length: Int): ByteCursor = ???
+    override def openReverseCursor(fromOffset: Int, length: Int): ByteCursor = {
+        if (closed) throw new BufferClosedException()
+        if (length < 0) throw new IndexOutOfBoundsException(s"The length cannot be negative: ${length}")
+        if (fromOffset < ridx)
+            throw new IndexOutOfBoundsException(
+              s"The fromOffset = ${fromOffset} cannot be less than readerOffset = ${ridx}"
+            )
+        if (fromOffset - length >= ridx)
+            new IndexOutOfBoundsException(
+              s"The fromOffset - length would underflow the readerOffset: fromOffset - length = ${fromOffset - length}, readerOffset = ${ridx}."
+            )
+
+        new ByteCursor {
+            private var value: Byte = _
+            private var read: Int   = 0
+
+            private val (fromIndex, fromOff) = offsetAtOffset(fromOffset)
+
+            private var currentComponent: Int = fromIndex
+            private var currentBuffer: Buffer = apply(currentComponent)
+            private var currentIdx: Int       = currentBuffer.readerOffset + fromOff
+
+            override def readByte: Boolean = if (read <= length) {
+                value = currentBuffer.getByte(currentIdx)
+                read += 1
+                currentIdx -= 1
+                if (currentIdx == currentBuffer.readerOffset) { // change to pre component buffer
+                    currentComponent -= 1
+                    currentBuffer = apply(currentComponent)
+                    currentIdx = currentBuffer.writerOffset
+                }
+                true
+            } else false
+
+            override def getByte: Byte = value
+
+            override def currentOffset: Int = ridx + read
+
+            override def bytesLeft: Int = length - read
+        }
+    }
 
     override def ensureWritable(size: Int, minimumGrowth: Int, allowCompaction: Boolean): Buffer = this
 
@@ -2152,6 +2209,11 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def writeBytes(source: Buffer, length: Int): Buffer = {
+        if (closed) throw new BufferClosedException()
+        if (source.readableBytes < length)
+            throw new IndexOutOfBoundsException(
+              s"source buffer readableBytes is less than length: readableBytes = $readableBytes, length = $length"
+            )
         val remaining = if (source.readableBytes > length) source.readableBytes - length else 0
         source match
             case buffer: AbstractBuffer =>
@@ -2161,8 +2223,9 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                     if (continue) extendBuffer()
                     continue
                 } do ()
+                widx += length
             case buffer: AdaptiveBuffer =>
-                if (allocator == buffer.allocator) {
+                if (allocator == buffer.allocator) { // zero copy
                     val pageChain = buffer.splitBefore(buffer.readerOffset + length)
                     var cursor    = pageChain
                     while (cursor != null) {
@@ -2175,10 +2238,11 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                     val pageChain = buffer.splitBefore(buffer.readerOffset + length)
                     var cursor    = pageChain
                     while (cursor != null) {
-                        val buffer = cursor
+                        val buf = cursor
                         cursor = cursor.next
-                        buffer.next = null
-                        this.writeBytes(buffer)
+                        buf.next = null
+                        this.writeBytes(buf)
+                        buf.close()
                     }
                 }
             case _ =>
@@ -2186,9 +2250,50 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         this
     }
 
-    override def writeBytes(source: Array[Byte], srcPos: Int, length: Int): Buffer = ???
+    override def writeBytes(source: Array[Byte], srcPos: Int, length: Int): Buffer = {
+        if (closed) throw new BufferClosedException()
+        if (srcPos + length > source.length)
+            throw new IndexOutOfBoundsException(
+              s"srcPos + length is underflow the bound of source: srcPos + length = ${srcPos + length}, source.length = ${source.length}"
+            )
 
-    override def writeBytes(source: ByteBuffer, length: Int): Buffer = ???
+        var remaining = length
+        while {
+            val write = Math.min(remaining, last.writableBytes)
+            last.writeBytes(source, srcPos, write)
+            remaining -= write
+            if (remaining > 0) this.extendBuffer()
+            remaining > 0
+        } do ()
+
+        widx += length
+
+        this
+    }
+
+    override def setBytes(index: Int, source: Array[Byte], srcPos: Int, length: Int): Buffer = ???
+
+    override def writeBytes(source: ByteBuffer, length: Int): Buffer = {
+        if (closed) throw new BufferClosedException()
+        if (source.position() + length > source.capacity())
+            throw new IndexOutOfBoundsException(
+              s"position + length is underflow the bound of source: position + length = ${source
+                      .position() + length}, source.capacity = ${source.capacity()}"
+            )
+
+        var remaining = length
+        while {
+            val write = Math.min(remaining, last.writableBytes)
+            last.writeBytes(source, write)
+            remaining -= write
+            if (remaining > 0) this.extendBuffer()
+            remaining > 0
+        } do ()
+
+        widx += length
+
+        this
+    }
 
     override def readBytes(destination: ByteBuffer, length: Int): Buffer = {
         val len = math.min(destination.remaining(), readableBytes)
@@ -2231,7 +2336,55 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         this
     }
 
-    override def readBytes(destination: Buffer, length: Int): Buffer = ???
+    override def readBytes(destination: Buffer, length: Int): Buffer = {
+        if (closed) throw new BufferClosedException()
+        destination match
+            case buffer: AbstractBuffer =>
+                if (buffer.writableBytes < length)
+                    throw new IndexOutOfBoundsException(
+                      s"length is large than the writableBytes of destination: writableBytes = ${buffer.writableBytes}, length = ${length} "
+                    )
+
+                if (readableBytes < length)
+                    throw new IndexOutOfBoundsException(
+                      s"length is large than the readableBytes of this buffer: readableBytes = ${readableBytes}, length = ${length}"
+                    )
+                val chain  = this.splitBefore(readerOffset + length)
+                var cursor = chain
+                while (cursor != null) {
+                    val buf = cursor
+                    cursor = cursor.next
+                    buffer.writeBytes(buf)
+                    buf.close()
+                }
+                ridx += length
+            case buffer: AdaptiveBuffer =>
+                if (allocator == buffer.allocator) { // zero copy
+                    var cursor = this.splitBefore(readerOffset + length)
+                    while (cursor != null) {
+                        val buf = cursor
+                        cursor = cursor.next
+                        buf.next = null
+                        buffer.extend(buf)
+                    }
+                } else {
+                    var cursor = this.splitBefore(readerOffset + length)
+                    while (cursor != null) {
+                        val buf = cursor
+                        cursor = cursor.next
+                        buf.next = null
+                        buffer.writeBytes(buf)
+                        buf.close()
+                    }
+                }
+            case _ =>
+                var len = length
+                while (len > 0) {
+                    destination.writeByte(this.readByte)
+                    len -= 1
+                }
+        this
+    }
 
     override def nextIs(byte: Byte): Boolean = if (nonEmpty) head.nextIs(byte) else false
 

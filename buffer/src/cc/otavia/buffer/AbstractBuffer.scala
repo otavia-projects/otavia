@@ -90,6 +90,22 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         this
     }
 
+    override def setBytes(index: Int, source: Array[Byte], srcPos: Int, length: Int): Buffer = {
+        if (closed) throw new BufferClosedException()
+        if (srcPos + length > source.length)
+            throw new IndexOutOfBoundsException(
+              s"srcPos + length is underflow of the length of source: srcPos + length = ${srcPos + length}, source.length = ${source.length}"
+            )
+        if (capacity < length + index)
+            throw new IndexOutOfBoundsException(
+              s"length + index is large than the capacity of this buffer: length + index = ${length + index}, capacity = $capacity"
+            )
+
+        underlying.put(index, source, srcPos, length)
+
+        this
+    }
+
     override def writeBytes(source: ByteBuffer, length: Int): Buffer = {
         val len = math.min(length, source.remaining())
         checkWrite(widx, len)

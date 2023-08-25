@@ -24,7 +24,7 @@ import java.io.IOException
 import java.lang.{Double as JDouble, Float as JFloat, Long as JLong, Short as JShort}
 import java.nio.ByteBuffer
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
-import java.nio.charset.Charset
+import java.nio.charset.{Charset, StandardCharsets}
 import scala.language.unsafeNulls
 
 /** A wrapper of [[java.nio.ByteBuffer]], with separate reader and writer offsets.
@@ -325,6 +325,17 @@ trait Buffer {
     @throws[IOException]
     def transferFrom(channel: ReadableByteChannel, length: Int): Int
 
+    /** Writes into this buffer, all the bytes from the given [[source]] using the [[StandardCharsets.UTF_8]] charset.
+     *  This updates the [[writerOffset]] of this buffer.
+     *
+     *  @param source
+     *    [[CharSequence]] to read from.
+     *
+     *  @return
+     *    This buffer.
+     */
+    final def writeCharSequence(source: CharSequence): Buffer = writeCharSequence(source, StandardCharsets.UTF_8)
+
     /** Writes into this buffer, all the bytes from the given [[source]] using the passed [[charset]]. This updates the
      *  [[writerOffset]] of this buffer.
      *
@@ -336,6 +347,47 @@ trait Buffer {
      *    This buffer.
      */
     def writeCharSequence(source: CharSequence, charset: Charset): Buffer
+
+    /** Sets into this buffer, all the bytes from the given [[source]] using the passed [[charset]]. This not updates
+     *  the [[writerOffset]] of this buffer.
+     *
+     *  @param source
+     *    [[CharSequence]] to read from.
+     *  @param charset
+     *    [[Charset]] to use for writing.
+     *  @return
+     *    This buffer.
+     */
+    final def setCharSequence(index: Int, source: CharSequence): Buffer =
+        setCharSequence(index, source, StandardCharsets.UTF_8)
+
+    /** Sets into this buffer, all the bytes from the given [[source]] using the passed [[charset]]. This not updates
+     *  the [[writerOffset]] of this buffer.
+     *
+     *  @param source
+     *    [[CharSequence]] to read from.
+     *  @param charset
+     *    [[Charset]] to use for writing.
+     *  @return
+     *    This buffer.
+     */
+    final def setCharSequence(index: Int, source: CharSequence, charset: Charset): Buffer = {
+        val bytes = source.toString.getBytes(charset)
+        setBytes(index, bytes)
+    }
+
+    /** Reads a [[CharSequence]] of the passed [[length]] using the [[StandardCharsets.UTF_8]] charset. This updates the
+     *  [[readerOffset]] of this buffer.
+     *
+     *  @param length
+     *    of [[CharSequence]] to read.
+     *
+     *  @return
+     *    [[CharSequence]] read from this buffer.
+     *  @throws IndexOutOfBoundsException
+     *    if the passed [[length]] is more than the [[readableBytes]] of this buffer.
+     */
+    def readCharSequence(length: Int): CharSequence = readCharSequence(length, StandardCharsets.UTF_8)
 
     /** Reads a [[CharSequence]] of the passed [[length]] using the passed [[Charset]]. This updates the
      *  [[readerOffset]] of this buffer.
@@ -396,6 +448,39 @@ trait Buffer {
      *    This buffer.
      */
     final def writeBytes(source: Array[Byte]): Buffer = writeBytes(source, 0, source.length)
+
+    /** Set the given byte array at the given write offset. The [[writerOffset]] is not modified.
+     *
+     *  @param index
+     *    The write offset, an absolute offset into this buffer to write to.
+     *  @param source
+     *    The byte array to write.
+     *  @param srcPos
+     *    start offset of byte array.
+     *  @param length
+     *    length of byte to write.
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Double.BYTES]].
+     */
+    def setBytes(index: Int, source: Array[Byte], srcPos: Int, length: Int): Buffer
+
+    /** Set the given byte array at the given write offset. The [[writerOffset]] is not modified.
+     *
+     *  @param index
+     *    The write offset, an absolute offset into this buffer to write to.
+     *  @param source
+     *    The byte array to write.
+     *
+     *  @return
+     *    This Buffer.
+     *  @throws IndexOutOfBoundsException
+     *    if the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Double.BYTES]].
+     */
+    final def setBytes(index: Int, source: Array[Byte]): Buffer = setBytes(index, source, 0, source.length)
 
     /** Writes into this buffer from the source [[ByteBuffer]]. This updates the [[writerOffset]] of this buffer and
      *  also the position of the source [[ByteBuffer]].
