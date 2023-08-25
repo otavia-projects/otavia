@@ -4601,6 +4601,87 @@ node9 -> node0;
           </div>
          </div>
         </div>
+        <div class="documentableElement" id="setBytes-fffff087" data-f-keywords="override">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractBuffer.html#setBytes-fffff087" t="n" class="documentableName ">setBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">source</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>], <span t="k"></span><span data-unresolved-link="" t="n">srcPos</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">length</span>: <span data-unresolved-link="" t="t">Int</span>): <a href="Buffer.html" t="t">Buffer</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Set the given byte array at the given write offset. The <a href="AbstractBuffer.html#writerOffset-fffffa19">writerOffset</a> is not modified.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Set the given byte array at the given write offset. The <a href="AbstractBuffer.html#writerOffset-fffffa19">writerOffset</a> is not modified.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               index
+              </dt>
+              <dd class="body-medium">
+               <p>The write offset, an absolute offset into this buffer to write to.</p> 
+              </dd>
+              <dt class="body-small">
+               length
+              </dt>
+              <dd class="body-medium">
+               <p>length of byte to write.</p> 
+              </dd>
+              <dt class="body-small">
+               source
+              </dt>
+              <dd class="body-medium">
+               <p>The byte array to write.</p> 
+              </dd>
+              <dt class="body-small">
+               srcPos
+              </dt>
+              <dd class="body-medium">
+               <p>start offset of byte array.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>This Buffer.</p> 
+              </dd>
+              <dt class="body-small">
+               Throws
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <div>
+                 <span data-unresolved-link="">IndexOutOfBoundsException</span> 
+                 <p>if the given offset is out of bounds of the buffer, that is, less than 0 or greater than <a href="AbstractBuffer.html#capacity-0">capacity</a> minus <span data-unresolved-link="">java.lang.Double.BYTES</span>.</p> 
+                </div>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="Buffer.html">Buffer</a>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
         <div class="documentableElement" id="setChar-fffff1fb" data-f-keywords="override">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -8128,6 +8209,67 @@ node9 -> node0;
           </div>
          </div>
         </div>
+        <div class="documentableElement" id="readCharSequence-872" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AbstractBuffer.html#readCharSequence-872" t="n" class="documentableName ">readCharSequence</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">length</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">CharSequence</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Reads a <span data-unresolved-link="" title="Problem linking CharSequence: No DRI found for query">CharSequence</span> of the passed <span data-unresolved-link="" title="Problem linking length: No DRI found for query">length</span> using the <span data-unresolved-link="" title="Problem linking StandardCharsets.UTF_8: No DRI found for query">StandardCharsets.UTF_8</span> charset. This updates the <a href="Buffer.html#readerOffset-fffffa19">readerOffset</a> of this buffer.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Reads a <span data-unresolved-link="" title="Problem linking CharSequence: No DRI found for query">CharSequence</span> of the passed <span data-unresolved-link="" title="Problem linking length: No DRI found for query">length</span> using the <span data-unresolved-link="" title="Problem linking StandardCharsets.UTF_8: No DRI found for query">StandardCharsets.UTF_8</span> charset. This updates the <a href="Buffer.html#readerOffset-fffffa19">readerOffset</a> of this buffer.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               length
+              </dt>
+              <dd class="body-medium">
+               <p>of <span data-unresolved-link="" title="Problem linking CharSequence: No DRI found for query">CharSequence</span> to read.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p><span data-unresolved-link="" title="Problem linking CharSequence: No DRI found for query">CharSequence</span> read from this buffer.</p> 
+              </dd>
+              <dt class="body-small">
+               Throws
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <div>
+                 <span data-unresolved-link="">IndexOutOfBoundsException</span> 
+                 <p>if the passed <span data-unresolved-link="" title="Problem linking length: No DRI found for query">length</span> is more than the <a href="Buffer.html#readableBytes-0">readableBytes</a> of this buffer.</p> 
+                </div>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="Buffer.html#readCharSequence-872">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
         <div class="documentableElement" id="readDoubleLE-0" data-f-keywords="final" data-f-inherited="Buffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -8635,6 +8777,73 @@ node9 -> node0;
           </div>
          </div>
         </div>
+        <div class="documentableElement" id="setBytes-fffffc27" data-f-keywords="final" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractBuffer.html#setBytes-fffffc27" t="n" class="documentableName ">setBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">source</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>]): <a href="Buffer.html" t="t">Buffer</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Set the given byte array at the given write offset. The <a href="Buffer.html#writerOffset-fffffa19">writerOffset</a> is not modified.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Set the given byte array at the given write offset. The <a href="Buffer.html#writerOffset-fffffa19">writerOffset</a> is not modified.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               index
+              </dt>
+              <dd class="body-medium">
+               <p>The write offset, an absolute offset into this buffer to write to.</p> 
+              </dd>
+              <dt class="body-small">
+               source
+              </dt>
+              <dd class="body-medium">
+               <p>The byte array to write.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>This Buffer.</p> 
+              </dd>
+              <dt class="body-small">
+               Throws
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <div>
+                 <span data-unresolved-link="">IndexOutOfBoundsException</span> 
+                 <p>if the given offset is out of bounds of the buffer, that is, less than 0 or greater than <a href="Buffer.html#capacity-0">capacity</a> minus <span data-unresolved-link="">java.lang.Double.BYTES</span>.</p> 
+                </div>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="Buffer.html#setBytes-fffffc27">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
         <div class="documentableElement" id="setCharLE-fffff1fb" data-f-keywords="final" data-f-inherited="Buffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -8695,6 +8904,118 @@ node9 -> node0;
               </dt>
               <dd class="body-medium">
                <a href="Buffer.html#setCharLE-fffff1fb">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="setCharSequence-fffff90a" data-f-keywords="final" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractBuffer.html#setCharSequence-fffff90a" t="n" class="documentableName ">setCharSequence</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">source</span>: <span data-unresolved-link="" t="t">CharSequence</span>, <span t="k"></span><span data-unresolved-link="" t="n">charset</span>: <span data-unresolved-link="" t="t">Charset</span>): <a href="Buffer.html" t="t">Buffer</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Sets into this buffer, all the bytes from the given <span data-unresolved-link="" title="Problem linking source: No DRI found for query">source</span> using the passed <span data-unresolved-link="" title="Problem linking charset: No DRI found for query">charset</span>. This not updates the <a href="Buffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Sets into this buffer, all the bytes from the given <span data-unresolved-link="" title="Problem linking source: No DRI found for query">source</span> using the passed <span data-unresolved-link="" title="Problem linking charset: No DRI found for query">charset</span>. This not updates the <a href="Buffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               charset
+              </dt>
+              <dd class="body-medium">
+               <p><span data-unresolved-link="" title="Problem linking Charset: No DRI found for query">Charset</span> to use for writing.</p> 
+              </dd>
+              <dt class="body-small">
+               source
+              </dt>
+              <dd class="body-medium">
+               <p><span data-unresolved-link="" title="Problem linking CharSequence: No DRI found for query">CharSequence</span> to read from.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>This buffer.</p> 
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="Buffer.html#setCharSequence-fffff90a">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="setCharSequence-fffffc6e" data-f-keywords="final" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractBuffer.html#setCharSequence-fffffc6e" t="n" class="documentableName ">setCharSequence</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">source</span>: <span data-unresolved-link="" t="t">CharSequence</span>): <a href="Buffer.html" t="t">Buffer</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Sets into this buffer, all the bytes from the given <span data-unresolved-link="" title="Problem linking source: No DRI found for query">source</span> using the passed <span data-unresolved-link="" title="Problem linking charset: No DRI found for query">charset</span>. This not updates the <a href="Buffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Sets into this buffer, all the bytes from the given <span data-unresolved-link="" title="Problem linking source: No DRI found for query">source</span> using the passed <span data-unresolved-link="" title="Problem linking charset: No DRI found for query">charset</span>. This not updates the <a href="Buffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               charset
+              </dt>
+              <dd class="body-medium">
+               <p><span data-unresolved-link="" title="Problem linking Charset: No DRI found for query">Charset</span> to use for writing.</p> 
+              </dd>
+              <dt class="body-small">
+               source
+              </dt>
+              <dd class="body-medium">
+               <p><span data-unresolved-link="" title="Problem linking CharSequence: No DRI found for query">CharSequence</span> to read from.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>This buffer.</p> 
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="Buffer.html#setCharSequence-fffffc6e">Buffer</a>
               </dd>
              </dl>
             </div>
@@ -9610,6 +9931,56 @@ node9 -> node0;
               </dt>
               <dd class="body-medium">
                <a href="Buffer.html#writeCharLE-42">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="writeCharSequence-835" data-f-keywords="final" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractBuffer.html#writeCharSequence-835" t="n" class="documentableName ">writeCharSequence</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">source</span>: <span data-unresolved-link="" t="t">CharSequence</span>): <a href="Buffer.html" t="t">Buffer</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Writes into this buffer, all the bytes from the given <span data-unresolved-link="" title="Problem linking source: No DRI found for query">source</span> using the <span data-unresolved-link="" title="Problem linking StandardCharsets.UTF_8: No DRI found for query">StandardCharsets.UTF_8</span> charset. This updates the <a href="Buffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Writes into this buffer, all the bytes from the given <span data-unresolved-link="" title="Problem linking source: No DRI found for query">source</span> using the <span data-unresolved-link="" title="Problem linking StandardCharsets.UTF_8: No DRI found for query">StandardCharsets.UTF_8</span> charset. This updates the <a href="Buffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               source
+              </dt>
+              <dd class="body-medium">
+               <p><span data-unresolved-link="" title="Problem linking CharSequence: No DRI found for query">CharSequence</span> to read from.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>This buffer.</p> 
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="Buffer.html#writeCharSequence-835">Buffer</a>
               </dd>
              </dl>
             </div>
