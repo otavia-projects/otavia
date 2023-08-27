@@ -2403,6 +2403,7 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"docs/quick_start/index.html#","e":false,"i":"","n":"Quick Start","t":"Quick Start","d":"","k":"static","x":""},
 {"l":"docs/quick_start/send_notice_message.html#","e":false,"i":"","n":"Send notice message","t":"Send notice message","d":"","k":"static","x":""},
 {"l":"docs/guide/index.html#","e":false,"i":"","n":"Guide","t":"Guide","d":"","k":"static","x":""},
+{"l":"docs/guide/actor_model.html#","e":false,"i":"","n":"Actor Model","t":"Actor Model","d":"","k":"static","x":""},
 {"l":"docs/guide/channel_pipeline.html#","e":false,"i":"","n":"Channel Pipeline","t":"Channel Pipeline","d":"","k":"static","x":""},
 {"l":"docs/guide/io_model.html#","e":false,"i":"","n":"IO Model","t":"IO Model","d":"","k":"static","x":""},
 {"l":"docs/guide/ioc.html#","e":false,"i":"","n":"Actor IOC ","t":"Actor IOC ","d":"","k":"static","x":""},
