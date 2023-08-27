@@ -10,6 +10,8 @@ subsection:
     index: guide/index.md
     directory: guide
     subsection:
+      - title: Actor Model
+        page: guide/actor_model.md
       - title: Channel Pipeline
         page: guide/channel_pipeline.md
       - title: IO Model
