@@ -18,8 +18,9 @@
 
 package cc.otavia.core.transport.reactor.nio
 
+import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.channel.message.ReadPlan
-import cc.otavia.core.channel.{Channel, ChannelException}
+import cc.otavia.core.channel.{Channel, ChannelException, FileRegion}
 import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.reactor.*
 import cc.otavia.core.slf4a.Logger
@@ -324,8 +325,8 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
     }
 
     override def deregister(channel: Channel): Unit = {
-        val nioProcessor = nioUnsafe(channel)
-        nioProcessor.deregisterSelector()
+        val nioUnsafeChannel = nioUnsafe(channel)
+        nioUnsafeChannel.deregisterSelector()
         cancelledKeys += 1
         if (cancelledKeys >= CLEANUP_INTERVAL) {
             cancelledKeys = 0
@@ -369,8 +370,10 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         channel.unsafeChannel.unsafeRead(plan)
     }
 
-    override def wakeup(inEventLoop: Boolean): Unit = if (wakenUp.compareAndSet(false, true))
-        selector.wakeup()
+    override def flush(channel: Channel, payload: FileRegion | RecyclablePageBuffer): Unit = ???
+
+    override def wakeup(inEventLoop: Boolean): Unit =
+        if (wakenUp.compareAndSet(false, true)) selector.wakeup()
 
     override def isCompatible(handleType: Class[? <: Channel]): Boolean =
         classOf[AbstractNioChannel[?, ?]].isAssignableFrom(handleType)

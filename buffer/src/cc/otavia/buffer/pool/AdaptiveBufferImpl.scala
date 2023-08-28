@@ -2258,6 +2258,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             )
 
         var remaining = length
+        if (allocatedWritableBytes == 0) extendBuffer()
         while {
             val write = Math.min(remaining, last.writableBytes)
             last.writeBytes(source, srcPos, write)
@@ -2314,6 +2315,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             )
 
         var remaining = length
+        if (allocatedWritableBytes == 0) extendBuffer()
         while {
             val write = Math.min(remaining, last.writableBytes)
             last.writeBytes(source, write)

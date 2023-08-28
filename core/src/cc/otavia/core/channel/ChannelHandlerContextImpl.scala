@@ -151,6 +151,8 @@ final class ChannelHandlerContextImpl(
         if (relink) {
             val prev = this.prev
             val next = this.next
+            prev.next = next
+            next.prev = prev
             // TODO
         }
     }
@@ -541,7 +543,8 @@ final class ChannelHandlerContextImpl(
 
     private def invokeWrite(msg: AnyRef, msgId: Long): Unit = try {
         val m = pipeline.touch(msg, this)
-        if (saveCurrentPendingBytesIfNeededInbound()) handler.write(this, m, msgId)
+        if (saveCurrentPendingBytesIfNeededInbound())
+            handler.write(this, m, msgId)
     } catch {
         case t: Throwable => handleOutboundHandlerException(t, false)
     } finally updatePendingBytesIfNeeded()
@@ -558,6 +561,7 @@ final class ChannelHandlerContextImpl(
         invokeWrite(msg, msgId)
         invokeFlush()
     }
+
     private def write0(msg: AnyRef, flush: Boolean): Unit = {
         channel.assertExecutor() // check the method is called in ChannelsActor which the channel registered
         val next = findContextOutbound(if (flush) MASK_WRITE | MASK_FLUSH else MASK_WRITE)

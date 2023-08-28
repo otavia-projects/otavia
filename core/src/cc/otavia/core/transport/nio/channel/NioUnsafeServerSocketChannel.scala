@@ -18,8 +18,9 @@
 
 package cc.otavia.core.transport.nio.channel
 
+import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.channel.message.ReadPlan
-import cc.otavia.core.channel.{Channel, ChannelShutdownDirection}
+import cc.otavia.core.channel.{Channel, ChannelShutdownDirection, FileRegion}
 import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.transport.nio.channel.NioUnsafeServerSocketChannel.{BACKLOG, NioServerSocketReadPlan}
 import cc.otavia.core.util.SystemPropertyUtil
@@ -65,6 +66,9 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, re
         throw new UnsupportedOperationException()
 
     override def unsafeShutdown(direction: ChannelShutdownDirection): Unit =
+        throw new UnsupportedOperationException()
+
+    override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit =
         throw new UnsupportedOperationException()
 
     override def isOpen: Boolean = ch.isOpen

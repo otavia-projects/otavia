@@ -18,9 +18,10 @@
 
 package cc.otavia.core.transport.nio.channel
 
+import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.channel.estimator.ReadBufferAllocator
 import cc.otavia.core.channel.message.{FileReadPlan, MaxMessagesReadPlanFactory, ReadPlan}
-import cc.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelShutdownDirection}
+import cc.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelShutdownDirection, FileRegion}
 import cc.otavia.core.message.ReactorEvent
 
 import java.net.SocketAddress
@@ -87,6 +88,8 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
                 )
                 executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel, cause = Some(cause)))
     }
+
+    override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit = ???
 
     override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit =
         executorAddress.inform(ReactorEvent.ConnectReply(channel, cause = Some(new UnsupportedOperationException())))

@@ -29,27 +29,21 @@ import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 
 abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M | Connect] {
 
-    protected def connect(host: String, port: Int): Unit = connect(InetSocketAddress.createUnresolved(host, port).nn)
-
-    protected def connect(host: InetAddress, port: Int): Unit = connect(new InetSocketAddress(host, port))
-
     /** Request to connect to the given [[SocketAddress]]. This method return a channel which is not connected to the
      *  remote address, it only register this channel to [[Reactor]], when register operation completes, this actor will
      *  receive a [[ReactorEvent.RegisterReply]] event, then this actor will call [[afterChannelRegisterReplyEvent]] to
      *  handle register result and connect to remote address.
      *
-     *  @param remoteAddress
+     *  @param stack
      *    remote address to connect.
      *  @return
-     *    a channel which is registering to [[Reactor]].
+     *    a [[ConnectReply]] which is registering to [[Reactor]].
      */
-    protected def connect(remoteAddress: SocketAddress): Unit = {}
-
     protected def connect(stack: AskStack[Connect]): Option[StackState] = {
         stack.stackState match
             case StackState.start =>
                 // TODO: check remote whether resolved, if not send ask message AddressResolver actor
-                val remote = stack.ask.remote
+                val remote  = stack.ask.remote
                 val channel = newChannelAndInit()
                 val state   = new ConnectWaitState()
                 channel.connect(remote, stack.ask.local, state.connectFuture)

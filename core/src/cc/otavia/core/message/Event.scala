@@ -20,7 +20,6 @@ import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.cache.ResourceTimer
 import cc.otavia.core.channel.Channel
 import cc.otavia.core.message.{Event, TimerEvent}
-import cc.otavia.core.stack.BlockPromise
 import cc.otavia.core.util.Nextable
 
 import java.net.SocketAddress
@@ -73,5 +72,3 @@ enum ReactorEvent extends Event {
     case ExceptionEvent(channel: Channel, cause: Throwable)
 
 }
-
-case class BlockFutureCompletedEvent(promise: BlockPromise[?]) extends Event

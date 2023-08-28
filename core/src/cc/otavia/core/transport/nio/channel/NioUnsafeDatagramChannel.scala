@@ -18,9 +18,10 @@
 
 package cc.otavia.core.transport.nio.channel
 
+import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
 import cc.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
-import cc.otavia.core.channel.{Channel, ChannelShutdownDirection}
+import cc.otavia.core.channel.{Channel, ChannelShutdownDirection, FileRegion}
 import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.transport.nio.channel.NioUnsafeDatagramChannel.NioDatagramChannelReadPlan
 
@@ -71,6 +72,25 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
     override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = direction match
         case ChannelShutdownDirection.Inbound  => inputShutdown = true
         case ChannelShutdownDirection.Outbound => outputShutdown = true
+
+    override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit = {
+        payload match
+            case fileRegion: FileRegion =>
+                ???
+            case buffer: RecyclablePageBuffer => // TODO: UDP packet
+                var cursor = buffer
+                while (cursor.next != null) {
+                    val buf = cursor
+                    cursor = cursor.next
+                    buf.next = null
+                    val byteBuffer = buf.byteBuffer
+                    byteBuffer.limit(buffer.writerOffset)
+                    byteBuffer.position(buffer.readerOffset)
+                    ch.write(byteBuffer)
+                    buf.close()
+                }
+
+    }
 
     override def isOpen: Boolean = ch.isOpen
 

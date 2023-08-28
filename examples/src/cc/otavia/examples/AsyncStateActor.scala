@@ -1,4 +1,4 @@
-//package cc.otavia.examples
+package cc.otavia.examples
 //
 //import cc.otavia.core.actor.{AcceptorActor, ChannelsActor, ClientChannelsActor, StateActor}
 //import cc.otavia.core.address.Address
@@ -93,3 +93,5 @@
 //    }
 //
 //}
+
+object AsyncStateActor // delete this

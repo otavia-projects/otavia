@@ -18,7 +18,9 @@
 
 package cc.otavia.core.channel
 
+import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.AbstractNetChannel.{DEFAULT_CONNECT_TIMEOUT, SUPPORTED_CHANNEL_OPTIONS}
+import cc.otavia.core.channel.internal.AdaptiveBufferOffset
 import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.stack.{ChannelPromise, Promise}
 import cc.otavia.core.system.ActorSystem
@@ -29,12 +31,15 @@ import java.net.{InetSocketAddress, SocketAddress}
 import java.nio.channels.{AlreadyConnectedException, ClosedChannelException, ConnectionPendingException}
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
+import scala.collection.mutable
 import scala.language.unsafeNulls
 
 abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChannel(system) {
 
     private var connectTimeoutMillis: Int      = DEFAULT_CONNECT_TIMEOUT
     private var connectTimeoutRegisterId: Long = Timer.INVALID_TIMEOUT_REGISTER_ID
+
+    private val outboundQueue: mutable.ArrayDeque[AdaptiveBufferOffset | FileRegion] = mutable.ArrayDeque.empty
 
     /** Override to add support for more [[ChannelOption]]s. You need to also call super after handling the extra
      *  options.
@@ -208,8 +213,6 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         }
     }
 
-    override private[core] def disconnectTransport(promise: ChannelPromise): Unit = ???
-
     override private[core] def handleChannelConnectReplyEvent(event: ReactorEvent.ConnectReply): Unit = {
         val promise = ongoingChannelPromise
         this.ongoingChannelPromise = null
@@ -218,8 +221,8 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
             case None =>
                 connected = true
                 if (promise.canTimeout) timer.cancelTimerTask(promise.timeoutId) // cancel timeout trigger
-                promise.setSuccess(event)
                 if (event.firstActive) if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead()
+                promise.setSuccess(event)
             case Some(cause) =>
                 promise.setFailure(cause)
                 closeTransport(newPromise())
@@ -257,9 +260,27 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
 
     override private[core] def deregisterTransport(promise: ChannelPromise): Unit = ???
 
-    override private[core] def writeTransport(msg: AnyRef): Unit = ???
+    override private[core] def writeTransport(msg: AnyRef): Unit = {
+        msg match
+            case fileRegion: FileRegion => outboundQueue.addOne(fileRegion)
+            case adaptiveBuffer: AdaptiveBuffer if adaptiveBuffer == channelOutboundAdaptiveBuffer =>
+                if (outboundQueue.nonEmpty && outboundQueue.last.isInstanceOf[AdaptiveBufferOffset]) {
+                    outboundQueue.last.asInstanceOf[AdaptiveBufferOffset].endIndex = adaptiveBuffer.writerOffset
+                } else outboundQueue.addOne(new AdaptiveBufferOffset(adaptiveBuffer.writerOffset))
+            case _ => throw new UnsupportedOperationException()
+    }
 
-    override private[core] def flushTransport(): Unit = ???
+    override private[core] def flushTransport(): Unit = {
+        val resize = if (outboundQueue.size > 64) true else false
+        while (outboundQueue.nonEmpty) {
+            val payload = outboundQueue.removeHead()
+            payload match
+                case fileRegion: FileRegion => reactor.flush(this, fileRegion)
+                case adaptiveBufferOffset: AdaptiveBufferOffset =>
+                    val chain = channelOutboundAdaptiveBuffer.splitBefore(adaptiveBufferOffset.endIndex)
+                    reactor.flush(this, chain)
+        }
+    }
 
     protected final def readIfIsAutoRead(): Unit = if (autoRead) pipeline.read()
 

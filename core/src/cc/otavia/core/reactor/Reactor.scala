@@ -16,8 +16,9 @@
 
 package cc.otavia.core.reactor
 
-import cc.otavia.core.channel.Channel
+import cc.otavia.buffer.pool.{AdaptiveBuffer, RecyclablePageBuffer}
 import cc.otavia.core.channel.message.ReadPlan
+import cc.otavia.core.channel.{Channel, FileRegion}
 import cc.otavia.core.reactor.Reactor.Command
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.util.Nextable
@@ -77,6 +78,11 @@ trait Reactor {
         submit(command)
     }
 
+    final def flush(channel: Channel, payload: FileRegion | RecyclablePageBuffer): Unit = {
+        val command = Command.Flush(channel, payload)
+        submit(command)
+    }
+
     def submit(command: Command): Unit
 
 }
@@ -108,6 +114,8 @@ object Reactor {
         case class Close(channel: Channel) extends Command
 
         case class Read(channel: Channel, plan: ReadPlan) extends Command
+
+        case class Flush(channel: Channel, payload: FileRegion | RecyclablePageBuffer) extends Command
 
     }
 

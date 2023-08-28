@@ -18,7 +18,7 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, PooledPageAllocator}
+import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, PooledPageAllocator, RecyclablePageBuffer}
 import cc.otavia.core.address.ActorAddress
 import cc.otavia.core.channel.message.ReadPlan
 
@@ -83,6 +83,8 @@ trait UnsafeChannel {
      */
     @throws[Exception]
     def unsafeRead(readPlan: ReadPlan): Unit
+
+    def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit
 
     /** Returns true if the [[UnsafeChannel]] is open and may get active later */
     def isOpen: Boolean

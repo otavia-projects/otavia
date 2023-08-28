@@ -32,6 +32,11 @@ trait Message2ByteEncoder extends ChannelHandler {
         if (ctx.outboundAdaptiveBuffer.readableBytes > 0) ctx.write(ctx.outboundAdaptiveBuffer)
     }
 
+    override def write(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit = {
+        write(ctx, msg)
+        // TODO
+    }
+
     protected def encode(ctx: ChannelHandlerContext, input: AnyRef, output: AdaptiveBuffer): Unit
 
 }

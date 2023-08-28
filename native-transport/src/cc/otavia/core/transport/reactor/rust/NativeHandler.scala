@@ -16,8 +16,9 @@
 
 package cc.otavia.core.transport.reactor.rust
 
-import cc.otavia.core.channel.Channel
+import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.channel.message.ReadPlan
+import cc.otavia.core.channel.{Channel, FileRegion}
 import cc.otavia.core.reactor.*
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
@@ -58,6 +59,8 @@ class NativeHandler(val maxEvents: Int, val strategy: SelectStrategy, sys: Actor
     ): Unit = ???
 
     override def read(channel: Channel, plan: ReadPlan): Unit = ???
+
+    override def flush(channel: Channel, payload: FileRegion | RecyclablePageBuffer): Unit = ???
 
     override def wakeup(inEventLoop: Boolean): Unit = ???
 

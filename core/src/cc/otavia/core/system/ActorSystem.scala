@@ -24,7 +24,6 @@ import cc.otavia.core.ioc.{BeanDefinition, Module}
 import cc.otavia.core.message.*
 import cc.otavia.core.reactor.Reactor
 import cc.otavia.core.slf4a.LogLevel
-import cc.otavia.core.stack.BlockFuture
 import cc.otavia.core.system.monitor.SystemMonitor
 import cc.otavia.core.timer.Timer
 import cc.otavia.core.util.{Report, SystemPropertyUtil}

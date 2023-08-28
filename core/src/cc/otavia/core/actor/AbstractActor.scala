@@ -102,8 +102,6 @@ private[core] abstract class AbstractActor[M <: Call]
                 promise.setId(askId)
                 currentStack.addUncompletedPromise(promise)
                 this.push(promise)
-            case promise: AioPromise[?]       =>
-            case promise: BlockPromise[?]     =>
             case promise: ChannelReplyPromise =>
             case _                            =>
     }

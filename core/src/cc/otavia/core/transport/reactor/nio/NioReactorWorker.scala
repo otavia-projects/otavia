@@ -117,6 +117,7 @@ class NioReactorWorker(
         case Open(channel, path, options, attrs)       => ioHandler.open(channel, path, options, attrs)
         case Connect(channel, remote, local, fastOpen) => ioHandler.connect(channel, remote, local, fastOpen)
         case Read(channel, plan)                       => ioHandler.read(channel, plan)
+        case Flush(channel, payload) =>
 
     private def confirmShutdown(): Boolean = false
 

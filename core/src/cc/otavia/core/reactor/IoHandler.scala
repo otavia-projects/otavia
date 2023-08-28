@@ -18,7 +18,8 @@
 
 package cc.otavia.core.reactor
 
-import cc.otavia.core.channel.Channel
+import cc.otavia.buffer.pool.RecyclablePageBuffer
+import cc.otavia.core.channel.{Channel, FileRegion}
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.system.ActorSystem
 
@@ -73,6 +74,8 @@ abstract class IoHandler(val system: ActorSystem) {
     def connect(channel: Channel, remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit
 
     def read(channel: Channel, plan: ReadPlan): Unit
+
+    def flush(channel: Channel, payload: FileRegion | RecyclablePageBuffer): Unit
 
     /** Wakeup the [[IoHandler]], which means if any operation blocks it should be unblocked and return as soon as
      *  possible.

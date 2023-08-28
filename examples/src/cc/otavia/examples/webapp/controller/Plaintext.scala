@@ -44,3 +44,5 @@ import cc.otavia.core.actor.StateActor
 //
 //  case class User(name: String, devices: Seq[Device])
 //}
+
+object Plaintext // delete this

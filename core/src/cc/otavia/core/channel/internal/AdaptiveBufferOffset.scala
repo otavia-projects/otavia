@@ -1,6 +1,8 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
+ * This file fork from netty.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,13 +16,13 @@
  * limitations under the License.
  */
 
-package cc.otavia.examples.webapp
+package cc.otavia.core.channel.internal
 
-//import cc.otavia.web.WebApplication
+class AdaptiveBufferOffset(private[this] var _endIndex: Int = 0) {
 
-@main def app(): Unit = {
+    def endIndex: Int = _endIndex
 
-    //  WebApplication.run("cc.otavia.examples.webapp")
-    println("webapp start")
+    def endIndex_=(value: Int): Unit =
+        _endIndex = value
 
 }
