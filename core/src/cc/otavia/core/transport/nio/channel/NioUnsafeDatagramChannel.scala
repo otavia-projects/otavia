@@ -76,10 +76,11 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
     override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit = {
         payload match
             case fileRegion: FileRegion =>
+
                 ???
             case buffer: RecyclablePageBuffer => // TODO: UDP packet
                 var cursor = buffer
-                while (cursor.next != null) {
+                while (cursor != null) {
                     val buf = cursor
                     cursor = cursor.next
                     buf.next = null

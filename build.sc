@@ -306,7 +306,7 @@ object web extends OtaviaModule {
 }
 
 object examples extends OtaviaModule {
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, log4a)
 }
 
 object serde extends OtaviaModule {

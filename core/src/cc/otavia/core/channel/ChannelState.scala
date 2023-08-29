@@ -134,8 +134,7 @@ trait ChannelState extends CompressionBooleanLong {
     protected final def outboundHeadOfLine: Boolean                = get(ST_OUTBOUND_HOL)
 
     protected def getStateString(): String = {
-        val sb = new StringBuilder(toBinaryString())
-        sb.append(" = ")
+        val sb = new StringBuilder()
         if (created) sb.append("created ")
         if (neverRegistered) sb.append("neverRegistered ")
         if (registering) sb.append("registering ")

@@ -103,6 +103,11 @@ private[core] abstract class AbstractActor[M <: Call]
                 currentStack.addUncompletedPromise(promise)
                 this.push(promise)
             case promise: ChannelReplyPromise =>
+                assert(promise.notInChain, "The ChannelPromise has been used, can't be use again!")
+                promise.setStack(currentStack)
+                promise.setId(askId)
+                currentStack.addUncompletedPromise(promise)
+                this.push(promise)
             case _                            =>
     }
 

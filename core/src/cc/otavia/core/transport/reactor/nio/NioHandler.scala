@@ -370,7 +370,8 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         channel.unsafeChannel.unsafeRead(plan)
     }
 
-    override def flush(channel: Channel, payload: FileRegion | RecyclablePageBuffer): Unit = ???
+    override def flush(channel: Channel, payload: FileRegion | RecyclablePageBuffer): Unit =
+        channel.unsafeChannel.unsafeFlush(payload)
 
     override def wakeup(inEventLoop: Boolean): Unit =
         if (wakenUp.compareAndSet(false, true)) selector.wakeup()
@@ -410,7 +411,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
                     break = true
                 }
 
-                val selectedKeys = selector.select(timeoutMillis)
+                val selectedKeys = selector.select(timeoutMillis) // TODO: fix timeoutMillis < 0
                 selectCnt += 1
 
                 if (selectedKeys != 0 || oldWakeup || wakenUp.get() || !runner.canBlock) {

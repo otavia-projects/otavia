@@ -89,7 +89,7 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
             case fileRegion: FileRegion => ???
             case buffer: RecyclablePageBuffer =>
                 var cursor = buffer
-                while (cursor.next != null) {
+                while (cursor != null) {
                     val buf = cursor
                     cursor = cursor.next
                     buf.next = null

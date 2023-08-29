@@ -46,7 +46,7 @@ object EchoClient {
             stack.stackState match
                 case StackState.start =>
                     clientActor = system.buildActor(() => new ClientActor())
-                    clientActor.ask(Connect(InetAddress.getByName("www.baidu.com"), 80)).suspend()
+                    clientActor.ask(Connect(InetAddress.getByName("localhost"), 8080)).suspend()
                 case state: FutureState[ConnectReply] =>
                     state.future.cause match
                         case Some(value) =>
