@@ -51,8 +51,16 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
     }
 
     override def deregisterSelector(): Unit = if (_selectionKey != null) {
-        _selectionKey.cancel()
-        _selectionKey = null
+        try {
+            _selectionKey.cancel()
+            _selectionKey = null
+            executorAddress.inform(ReactorEvent.DeregisterReply(channel, false, isOpen))
+        } catch {
+            case e: Throwable =>
+                executorAddress.inform(ReactorEvent.DeregisterReply(channel, false, isOpen, Some(e)))
+        }
+    } else {
+        executorAddress.inform(ReactorEvent.DeregisterReply(channel, false, isOpen, Some(new IllegalStateException())))
     }
 
     override def handle(key: SelectionKey): Unit = {

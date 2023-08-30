@@ -366,6 +366,22 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         }
     }
 
+    override def disconnect(channel: Channel): Unit = {
+        try {
+            channel.unsafeChannel.unsafeDisconnect()
+        } catch {
+            case t: Throwable => channel.executorAddress.inform(ReactorEvent.DisconnectReply(channel, Some(t)))
+        }
+    }
+
+    override def close(channel: Channel): Unit = {
+        try {
+            channel.unsafeChannel.unsafeClose()
+        } catch {
+            case t: Throwable => channel.executorAddress.inform(ReactorEvent.ChannelClose(channel, Some(t)))
+        }
+    }
+
     override def read(channel: Channel, plan: ReadPlan): Unit = {
         channel.unsafeChannel.unsafeRead(plan)
     }

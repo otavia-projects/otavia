@@ -74,7 +74,8 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
         }
     }
 
-    override def unsafeDisconnect(): Unit = ???
+    override def unsafeDisconnect(): Unit =
+        throw new UnsupportedOperationException("should never execute this method")
 
     override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = direction match
         case Inbound =>

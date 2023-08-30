@@ -58,6 +58,10 @@ class NativeHandler(val maxEvents: Int, val strategy: SelectStrategy, sys: Actor
         fastOpen: Boolean
     ): Unit = ???
 
+    override def disconnect(channel: Channel): Unit = ???
+
+    override def close(channel: Channel): Unit = ???
+
     override def read(channel: Channel, plan: ReadPlan): Unit = ???
 
     override def flush(channel: Channel, payload: FileRegion | RecyclablePageBuffer): Unit = ???

@@ -45,7 +45,12 @@ enum ReactorEvent extends Event {
 
     // event for
     case RegisterReply(channel: Channel, active: Boolean = false, cause: Option[Throwable] = None)
-    case DeregisterReply(channel: Channel, firstInactive: Boolean = false, cause: Option[Throwable] = None)
+    case DeregisterReply(
+        channel: Channel,
+        firstInactive: Boolean = false,
+        isOpen: Boolean = false,
+        cause: Option[Throwable] = None
+    )
 
     case BindReply(channel: Channel, firstActive: Boolean = false, cause: Option[Throwable] = None)
 
@@ -67,7 +72,12 @@ enum ReactorEvent extends Event {
 
     case AcceptedEvent(channel: Channel, accepted: Channel)
 
-    case ReadBuffer(channel: Channel, buffer: RecyclablePageBuffer, sender: Option[SocketAddress] = None, recipient: SocketAddress)
+    case ReadBuffer(
+        channel: Channel,
+        buffer: RecyclablePageBuffer,
+        sender: Option[SocketAddress] = None,
+        recipient: SocketAddress
+    )
 
     case ExceptionEvent(channel: Channel, cause: Throwable)
 

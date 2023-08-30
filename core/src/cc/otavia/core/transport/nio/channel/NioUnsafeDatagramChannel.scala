@@ -67,7 +67,10 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
         }
     }
 
-    override def unsafeDisconnect(): Unit = ???
+    override def unsafeDisconnect(): Unit = {
+        ch.disconnect()
+        channel.executorAddress.inform(ReactorEvent.DisconnectReply(channel))
+    }
 
     override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = direction match
         case ChannelShutdownDirection.Inbound  => inputShutdown = true
@@ -76,7 +79,6 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
     override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit = {
         payload match
             case fileRegion: FileRegion =>
-
                 ???
             case buffer: RecyclablePageBuffer => // TODO: UDP packet
                 var cursor = buffer

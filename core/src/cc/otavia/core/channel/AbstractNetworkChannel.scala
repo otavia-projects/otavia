@@ -258,7 +258,44 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
     override private[core] def shutdownTransport(direction: ChannelShutdownDirection, promise: ChannelPromise): Unit =
         ???
 
-    override private[core] def deregisterTransport(promise: ChannelPromise): Unit = ???
+    override private[core] def deregisterTransport(promise: ChannelPromise): Unit =
+        if (!registered) promise.setSuccess(ReactorEvent.EMPTY_EVENT)
+        else {
+            // TODO: add deregistering state
+            reactor.deregister(this)
+            this.ongoingChannelPromise = promise
+        }
+
+    override private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = {
+        event.cause match
+            case Some(value) =>
+                logger.warn("Unexpected exception occurred while deregistering a channel.", value)
+            case None =>
+
+        if (event.firstInactive) pipeline.fireChannelInactive()
+
+        // TODO: add deregistering state
+        if (registered) {
+            registered = false
+            pipeline.fireChannelUnregistered()
+
+            if (!event.isOpen) {
+                // Remove all handlers from the ChannelPipeline. This is needed to ensure
+                // handlerRemoved(...) is called and so resources are released.
+                while (!pipeline.isEmpty) {
+                    try {
+                        pipeline.removeLast()
+                    } catch {
+                        case t: Throwable =>
+                    }
+                }
+            }
+        }
+
+        val promise = this.ongoingChannelPromise
+        this.ongoingChannelPromise = null
+        promise.setSuccess(event)
+    }
 
     override private[core] def writeTransport(msg: AnyRef): Unit = {
         msg match

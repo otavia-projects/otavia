@@ -73,6 +73,10 @@ abstract class IoHandler(val system: ActorSystem) {
 
     def connect(channel: Channel, remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit
 
+    def disconnect(channel: Channel): Unit
+
+    def close(channel: Channel): Unit
+
     def read(channel: Channel, plan: ReadPlan): Unit
 
     def flush(channel: Channel, payload: FileRegion | RecyclablePageBuffer): Unit
