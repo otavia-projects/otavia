@@ -66,7 +66,7 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
         readPlan match
             case FileReadPlan(length, position) =>
                 if (length > 0) {
-                    try {
+                    try { // TODO
                         if (position != -1) {
                             channel.channelInboundAdaptiveBuffer.transferFrom(ch, position, length)
                         } else {
