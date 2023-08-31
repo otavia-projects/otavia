@@ -21,13 +21,13 @@
     length
    </dt>
    <dd class="body-medium">
-    <p>Length of data want to read.</p> 
+    <p>Length of bytes want to read. If length is -1, read until file end.</p> 
    </dd>
    <dt class="body-small">
     position
    </dt>
    <dd class="body-medium">
-    <p>If position is -1, bytes are read starting at this channel's current file position, and then the file position is updated with the number of bytes actually read. If <span data-unresolved-link="">position</span> is not -1, then set the file current position to <span data-unresolved-link="">position</span> and then read starting at this channel's current file position, and then the file position is updated with the number of bytes actually read.</p> 
+    <p>If position is -1, bytes are read starting at this channel's current file position, and then the file position is updated with the number of bytes actually read. If <span data-unresolved-link="">position</span> is not -1, then read starting at the given file position rather than at the channel's current position. This method does not modify this channel's position. If the given position is greater than the file's current size then no bytes are read.</p> 
    </dd>
   </dl>
   <h2 class="h500">Attributes</h2>
