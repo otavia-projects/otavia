@@ -22,11 +22,12 @@ import java.nio.channels.FileChannel
  *
  *  @param position
  *    If position is -1, bytes are read starting at this channel's current file position, and then the file position is
- *    updated with the number of bytes actually read. If [[position]] is not -1, then set the file current position to
- *    [[position]] and then read starting at this channel's current file position, and then the file position is updated
- *    with the number of bytes actually read.
+ *    updated with the number of bytes actually read. If [[position]] is not -1, then read starting at the given file
+ *    position rather than at the channel's current position. This method does not modify this channel's position. If
+ *    the given position is greater than the file's current size then no bytes are read.
+ *
  *  @param length
- *    Length of data want to read.
+ *    Length of bytes want to read. If length is -1, read until file end.
  */
 case class FileReadPlan(length: Int = 4096, position: Long = -1) extends ReadPlan {
 

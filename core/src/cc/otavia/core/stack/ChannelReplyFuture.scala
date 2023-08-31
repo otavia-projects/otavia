@@ -30,7 +30,7 @@ object ChannelReplyFuture {
 
 class ChannelReplyPromise private () extends AbstractPromise[AnyRef] with ChannelReplyFuture {
 
-    private var value: Any           = _
+    private var value: AnyRef        = _
     private var throwable: Throwable = _
 
     private var msgId: Long      = -1
@@ -45,7 +45,14 @@ class ChannelReplyPromise private () extends AbstractPromise[AnyRef] with Channe
 
     override def recycle(): Unit = ChannelReplyPromise.objectPool.recycle(this)
 
-    override def setSuccess(result: AnyRef): Promise[AnyRef] = ???
+    override def setSuccess(result: AnyRef): Promise[AnyRef] = {
+        value = result
+        if (stack ne null) {
+            val actor = stack.runtimeActor
+            actor.receiveFuture(this)
+        }
+        this
+    }
 
     override def setFailure(cause: Throwable): Promise[AnyRef] = ???
 
@@ -57,7 +64,7 @@ class ChannelReplyPromise private () extends AbstractPromise[AnyRef] with Channe
 
     override def isDone: Boolean = ???
 
-    override def getNow: AnyRef = ???
+    override def getNow: AnyRef = value
 
     override def cause: Option[Throwable] = ???
 

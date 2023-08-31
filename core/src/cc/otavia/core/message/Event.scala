@@ -76,7 +76,8 @@ enum ReactorEvent extends Event {
         channel: Channel,
         buffer: RecyclablePageBuffer,
         sender: Option[SocketAddress] = None,
-        recipient: SocketAddress
+        recipient: SocketAddress,
+        cause: Option[Throwable] = None
     )
 
     case ExceptionEvent(channel: Channel, cause: Throwable)

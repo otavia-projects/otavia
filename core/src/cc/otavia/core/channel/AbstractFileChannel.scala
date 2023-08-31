@@ -66,7 +66,9 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
         ???
     }
 
-    override private[core] def flushTransport(): Unit = ???
+    override private[core] def flushTransport(): Unit = {
+        // TODO: impl
+    }
 
     override private[core] def openTransport(
         path: Path,
@@ -121,8 +123,6 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
             case Some(cause) =>
                 promise.setFailure(cause)
     }
-
-    override private[core] def handleChannelReadBufferEvent(event: ReactorEvent.ReadBuffer): Unit = ???
 
     override def toString: String = s"FileChannel(path=${path.toAbsolutePath}, state=${getStateString()})"
 

@@ -121,6 +121,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         case e: ReactorEvent.ConnectReply =>
             e.channel.handleChannelConnectReplyEvent(e)
         case e: ReactorEvent.ReadBuffer => e.channel.handleChannelReadBufferEvent(e)
+        case e: ReactorEvent.OpenReply  => e.channel.handleChannelOpenReplyEvent(e)
 
     // Event from Reactor
 

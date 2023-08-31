@@ -108,12 +108,20 @@ private[core] abstract class AbstractActor[M <: Call]
                 promise.setId(askId)
                 currentStack.addUncompletedPromise(promise)
                 this.push(promise)
-            case _                            =>
+            case _ =>
     }
 
     def receiveFuture(future: Future[?]): Unit = {
         future match
             case promise: ChannelPromise =>
+                pop(promise.id)
+                val stack = promise.actorStack
+                stack.addCompletedPromise(promise)
+                if (stack.stackState.resumable() || !stack.hasUncompletedPromise) {
+                    currentStack = stack
+                    resume()
+                }
+            case promise: ChannelReplyPromise =>
                 pop(promise.id)
                 val stack = promise.actorStack
                 stack.addCompletedPromise(promise)

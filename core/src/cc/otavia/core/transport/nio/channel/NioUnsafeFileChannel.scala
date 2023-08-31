@@ -66,20 +66,126 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
         readPlan match
             case FileReadPlan(length, position) =>
                 if (length > 0) {
-                    try { // TODO
+                    try {
                         if (position != -1) {
-                            channel.channelInboundAdaptiveBuffer.transferFrom(ch, position, length)
+                            var remaining = length
+                            var pos       = position
+                            var continue  = true
+                            while (continue) {
+                                val buffer     = directAllocator.allocate()
+                                val read       = Math.min(buffer.writableBytes, remaining)
+                                val byteBuffer = buffer.byteBuffer
+                                byteBuffer.limit(read)
+                                val realRead = ch.read(byteBuffer, pos)
+                                if (realRead > 0) {
+                                    pos += realRead
+                                    remaining -= realRead
+                                    byteBuffer.clear()
+                                    buffer.writerOffset(realRead)
+                                    executorAddress.inform(ReactorEvent.ReadBuffer(channel, buffer, recipient = null))
+                                    if (remaining == 0) {
+                                        continue = false
+                                        executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel))
+                                    }
+                                } else if (realRead == 0) {
+                                    continue = false
+                                } else {
+                                    continue = false
+                                    val cause = new IndexOutOfBoundsException(
+                                      s"require read length [${length}] is large than file remaining [${length - remaining}], actual read [${length - remaining}]"
+                                    )
+                                    executorAddress.inform(ReactorEvent.ReadEvent(channel, cause = Some(cause)))
+                                }
+                            }
                         } else {
-                            channel.channelInboundAdaptiveBuffer.transferFrom(ch, length)
+                            var remaining = length
+                            var continue  = true
+                            while (continue) {
+                                val buffer     = directAllocator.allocate()
+                                val byteBuffer = buffer.byteBuffer
+                                byteBuffer.limit(Math.min(buffer.writableBytes, remaining))
+                                val realRead = ch.read(byteBuffer)
+                                if (realRead > 0) {
+                                    remaining -= realRead
+                                    byteBuffer.clear()
+                                    buffer.writerOffset(realRead)
+                                    executorAddress.inform(ReactorEvent.ReadBuffer(channel, buffer, recipient = null))
+                                    if (remaining == 0) {
+                                        continue = false
+                                        executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel))
+                                    }
+                                } else if (realRead == 0) {
+                                    continue = false
+                                } else {
+                                    continue = false
+                                    val cause = new IndexOutOfBoundsException(
+                                      s"require read length [${length}] is large than file remaining [${length - remaining}], actual read [${length - remaining}]"
+                                    )
+                                    executorAddress.inform(
+                                      ReactorEvent.ReadCompletedEvent(channel, cause = Some(cause))
+                                    )
+                                }
+                            }
                         }
-                        executorAddress.inform(ReactorEvent.ReadEvent(channel))
                     } catch {
                         case t: Throwable =>
                             executorAddress.inform(ReactorEvent.ReadEvent(channel, cause = Some(t)))
                     }
-
+                } else if (length == -1) {
+                    try {
+                        if (position != -1) {
+                            val readLength = ch.size()
+                            var remaining  = readLength
+                            var pos        = position
+                            var continue   = true
+                            while (continue) {
+                                val buffer     = directAllocator.allocate()
+                                val byteBuffer = buffer.byteBuffer
+                                byteBuffer.limit(Math.min(buffer.writableBytes.toLong, remaining).toInt)
+                                val realRead = ch.read(byteBuffer, pos)
+                                if (realRead > 0) {
+                                    pos += realRead
+                                    remaining -= realRead
+                                    byteBuffer.clear()
+                                    buffer.writerOffset(realRead)
+                                    executorAddress.inform(ReactorEvent.ReadBuffer(channel, buffer, recipient = null))
+                                    if (remaining == 0) {
+                                        continue = false
+                                        executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel))
+                                    }
+                                } else if (realRead == 0) {
+                                    continue = false
+                                }
+                            }
+                        } else {
+                            val readLength = ch.size()
+                            var remaining  = readLength
+                            var continue   = true
+                            while (continue) {
+                                val buffer     = directAllocator.allocate()
+                                val byteBuffer = buffer.byteBuffer
+                                byteBuffer.limit(Math.min(buffer.writableBytes.toLong, remaining).toInt)
+                                val realRead = ch.read(byteBuffer)
+                                if (realRead > 0) {
+                                    remaining -= realRead
+                                    byteBuffer.clear()
+                                    buffer.writerOffset(realRead)
+                                    executorAddress.inform(ReactorEvent.ReadBuffer(channel, buffer, recipient = null))
+                                    if (remaining == 0) {
+                                        continue = false
+                                        executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel))
+                                    }
+                                } else if (realRead == 0) {
+                                    continue = false
+                                }
+                            }
+                        }
+                    } catch {
+                        case t: Throwable =>
+                            executorAddress.inform(ReactorEvent.ReadEvent(channel, cause = Some(t)))
+                    }
                 } else {
-                    val cause = new IndexOutOfBoundsException(s"read length is $length")
+                    val cause = new UnsupportedOperationException(s"read length is $length")
                     executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel, cause = Some(cause)))
                 }
             case _ =>
@@ -98,6 +204,6 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
 
     override def isActive: Boolean = isOpen
 
-    override def isShutdown(direction: ChannelShutdownDirection): Boolean = ???
+    override def isShutdown(direction: ChannelShutdownDirection): Boolean = !isOpen
 
 }
