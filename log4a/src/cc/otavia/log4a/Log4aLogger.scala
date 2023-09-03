@@ -37,13 +37,13 @@ class Log4aLogger(val name: String, val level: LogLevel, val appenderNames: Arra
         // TODO:
     }
 
-    override def isTraceEnabled: Boolean = ???
+    override def isTraceEnabled: Boolean = level <= LogLevel.TRACE
 
-    override def isDebugEnabled: Boolean = ???
+    override def isDebugEnabled: Boolean = level <= LogLevel.DEBUG
 
-    override def isWarnEnabled: Boolean = ???
+    override def isWarnEnabled: Boolean = level <= LogLevel.WARN
 
-    override def isErrorEnabled: Boolean = ???
+    override def isErrorEnabled: Boolean = level <= LogLevel.ERROR
 
     override def trace(msg: String): Unit =
         println(

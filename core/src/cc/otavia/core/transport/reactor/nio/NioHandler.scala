@@ -408,64 +408,62 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
             val selectDeadLineNanos = currentTimeNanos + runner.delayNanos(currentTimeNanos)
             var break: Boolean      = false
             while (!break) {
-                val timeoutMillis = (selectDeadLineNanos - currentTimeNanos + 500000L) / 1000000L
+                val timeoutMillis = (selectDeadLineNanos - currentTimeNanos + 500_000L) / 1_000_000L
                 if (timeoutMillis <= 0) {
                     if (selectCnt == 0) {
                         selector.selectNow
                         selectCnt = 1
                     }
                     break = true
-                }
-
-                // If a task was submitted when wakenUp value was true, the task didn't get a chance to call
-                // Selector#wakeup. So we need to check task queue again before executing select operation.
-                // If we don't, the task might be pended until select operation was timed out.
-                // It might be pended until idle timeout if IdleStateHandler existed in pipeline.
-                if (!runner.canBlock && wakenUp.compareAndSet(false, true)) {
+                } else if (!runner.canBlock && wakenUp.compareAndSet(false, true)) {
+                    // If a task was submitted when wakenUp value was true, the task didn't get a chance to call
+                    // Selector#wakeup. So we need to check task queue again before executing select operation.
+                    // If we don't, the task might be pended until select operation was timed out.
+                    // It might be pended until idle timeout if IdleStateHandler existed in pipeline.
                     selector.selectNow()
                     selectCnt = 1
                     break = true
-                }
-
-                val selectedKeys = selector.select(timeoutMillis) // TODO: fix timeoutMillis < 0
-                selectCnt += 1
-
-                if (selectedKeys != 0 || oldWakeup || wakenUp.get() || !runner.canBlock) {
-                    // - Selected something,
-                    // - waken up by user, or
-                    // - the task queue has a pending task.
-                    // - a scheduled task is ready for processing
-                    break = true
-                }
-
-                if (Thread.interrupted()) {
-                    // Thread was interrupted so reset selected keys and break so we not run into a busy loop.
-                    // As this is most likely a bug in the handler of the user or it's client library we will
-                    // also log it.
-                    //
-                    // See https://github.com/netty/netty/issues/2426
-                    logger.debug(
-                      "Selector.select() returned prematurely because " +
-                          "Thread.currentThread().interrupt() was called. Use " +
-                          "NioHandler.shutdownGracefully() to shutdown the NioHandler."
-                    )
+                } else {
+                    val selectedKeys = selector.select(timeoutMillis)
                     selectCnt += 1
-                    break = true
-                }
 
-                val time = System.nanoTime
-                if (time - TimeUnit.MILLISECONDS.toNanos(timeoutMillis) >= currentTimeNanos) {
-                    // timeoutMillis elapsed without anything selected.
-                    selectCnt += 1
-                } else if (SELECTOR_AUTO_REBUILD_THRESHOLD > 0 && selectCnt >= SELECTOR_AUTO_REBUILD_THRESHOLD) {
-                    // The code exists in an extra method to ensure the method is not too big to inline as this
-                    // branch is not very likely to get hit very frequently.
-                    selector = selectRebuildSelector(selectCnt)
-                    selectCnt = 1
-                    break = true
-                }
+                    if (selectedKeys != 0 || oldWakeup || wakenUp.get() || !runner.canBlock) {
+                        // - Selected something,
+                        // - waken up by user, or
+                        // - the task queue has a pending task.
+                        // - a scheduled task is ready for processing
+                        break = true
+                    }
 
-                currentTimeNanos = time
+                    if (Thread.interrupted()) {
+                        // Thread was interrupted so reset selected keys and break so we not run into a busy loop.
+                        // As this is most likely a bug in the handler of the user or it's client library we will
+                        // also log it.
+                        //
+                        // See https://github.com/netty/netty/issues/2426
+                        logger.debug(
+                          "Selector.select() returned prematurely because " +
+                              "Thread.currentThread().interrupt() was called. Use " +
+                              "NioHandler.shutdownGracefully() to shutdown the NioHandler."
+                        )
+                        selectCnt += 1
+                        break = true
+                    }
+
+                    val time = System.nanoTime
+                    if (time - TimeUnit.MILLISECONDS.toNanos(timeoutMillis) >= currentTimeNanos) {
+                        // timeoutMillis elapsed without anything selected.
+                        selectCnt += 1
+                    } else if (SELECTOR_AUTO_REBUILD_THRESHOLD > 0 && selectCnt >= SELECTOR_AUTO_REBUILD_THRESHOLD) {
+                        // The code exists in an extra method to ensure the method is not too big to inline as this
+                        // branch is not very likely to get hit very frequently.
+                        selector = selectRebuildSelector(selectCnt)
+                        selectCnt = 1
+                        break = true
+                    }
+
+                    currentTimeNanos = time
+                }
             }
 
             if (selectCnt > MIN_PREMATURE_SELECTOR_RETURNS) {

@@ -116,7 +116,7 @@ object ActorSystem {
     private val DEFAULT_SYSTEM_NAME = s"ActorSystem:${InetAddress.getLocalHost.getHostName}"
 
     val DEFAULT_MAX_TASKS_PER_RUN: Int =
-        Math.max(1, SystemPropertyUtil.getInt("cc.otavia.reactor.maxTaskPerRun", 1024 * 4))
+        Math.max(1, SystemPropertyUtil.getInt("cc.otavia.reactor.maxTaskPerRun", 16))
 
     val DEFAULT_POOL_HOLDER_MAX_SIZE: Int =
         SystemPropertyUtil.getInt("cc.otavia.pool.holder.maxSize", 1024)

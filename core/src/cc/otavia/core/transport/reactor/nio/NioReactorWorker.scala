@@ -47,7 +47,7 @@ class NioReactorWorker(
 
         override def canBlock: Boolean = commandQueue.isEmpty
 
-        override def delayNanos(currentTimeNanos: Long): Long = 50 * 1000 * 1000
+        override def delayNanos(currentTimeNanos: Long): Long = if (commandQueue.isEmpty) 50 * 1000 * 1000 else 0
 
         override def deadlineNanos: Long = ???
 
@@ -107,6 +107,7 @@ class NioReactorWorker(
             runCommand(commandQueue.dequeue())
             processedTasks += 1
         }
+        if (processedTasks > 0 && logger.isDebugEnabled) logger.debug(s"processed ${processedTasks} reactor command")
         processedTasks
     }
 

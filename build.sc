@@ -49,6 +49,7 @@ object ProjectInfo {
     def xml           = ivy"org.scala-lang.modules::scala-xml:2.1.0"
     def proto         = ivy"io.github.zero-deps::proto:2.1.2"
     def shapeless     = ivy"org.typelevel::shapeless3-deriving:3.3.0"
+    def jedis         = ivy"redis.clients:jedis:4.4.3"
 
 }
 
@@ -221,7 +222,13 @@ object `codec-redis` extends OtaviaModule {
 
     override def artifactName: T[String] = "codec-redis"
 
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, serde)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.jedis)
+
+    }
 
 }
 
