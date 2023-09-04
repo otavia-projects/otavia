@@ -17,7 +17,6 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.channel.Channel
-import cc.otavia.core.channel.Channel
 
 import scala.language.unsafeNulls
 
@@ -53,6 +52,11 @@ class ChannelStack[+T <: AnyRef] private () extends Stack {
     def `return`(ret: AnyRef): None.type = {
         this.ret = ret
         belong.write(ret, msgId)
+        None
+    }
+
+    def `return`(): None.type = {
+        this.ret = None
         None
     }
 

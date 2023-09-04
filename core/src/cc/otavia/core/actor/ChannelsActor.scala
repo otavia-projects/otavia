@@ -245,8 +245,8 @@ object ChannelsActor {
 
     final class CloseState(val futures: Iterable[ChannelFuture]) extends StackState
 
-    case class Connect(remote: SocketAddress, local: Option[SocketAddress] = None) extends Ask[ConnectReply]
-    case class ConnectReply(channelId: Int)                                        extends Reply
+    final case class Connect(remote: SocketAddress, local: Option[SocketAddress] = None) extends Ask[ConnectReply]
+    case class ConnectReply(channelId: Int)                                              extends Reply
 
     case class Disconnect(ids: Seq[Int] = Seq.empty) extends Ask[DisconnectReply]
     case class DisconnectReply(ids: Seq[Int])        extends Reply

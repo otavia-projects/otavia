@@ -36,9 +36,15 @@ object StackState {
         final override def resumable(): Boolean = true
     }
 
-    class FutureState[R <: Reply : ClassTag] extends StackState {
+    class FutureState[R <: Reply: ClassTag] extends StackState {
+
         val replyType: ClassTag[R] = classTag[R]
         val future: ReplyFuture[R] = ReplyFuture()
+
+    }
+
+    class ChannelReplyState extends StackState {
+        val future = ChannelReplyFuture()
     }
 
 }

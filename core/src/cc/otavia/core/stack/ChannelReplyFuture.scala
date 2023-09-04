@@ -18,6 +18,8 @@ package cc.otavia.core.stack
 
 import cc.otavia.core.message.ExceptionMessage
 
+import scala.language.unsafeNulls
+
 /** User interface for class [[ChannelReplyPromise]] */
 sealed trait ChannelReplyFuture extends Future[AnyRef] {
     private[core] override def promise: ChannelReplyPromise = this.asInstanceOf[ChannelReplyPromise]
@@ -30,6 +32,7 @@ object ChannelReplyFuture {
 
 class ChannelReplyPromise private () extends AbstractPromise[AnyRef] with ChannelReplyFuture {
 
+    private var ask: AnyRef          = _
     private var value: AnyRef        = _
     private var throwable: Throwable = _
 
@@ -39,6 +42,13 @@ class ChannelReplyPromise private () extends AbstractPromise[AnyRef] with Channe
     def setMessageId(id: Long): Unit = this.msgId = id
 
     def messageId: Long = msgId
+
+    def setAsk(ask: AnyRef): Unit = this.ask = ask
+    def getAsk(): AnyRef = {
+        val v = ask
+        this.ask = null
+        v
+    }
 
     def setBarrier(barrier: Boolean): Unit = this.barrier = barrier
     def isBarrier: Boolean                 = barrier

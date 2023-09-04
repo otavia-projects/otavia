@@ -16,63 +16,55 @@
 
 package cc.otavia.redis
 
-import cc.otavia.core.actor.ChannelsActor
+import cc.otavia.core
+import cc.otavia.core.actor.ChannelsActor.Connect
+import cc.otavia.core.actor.{ChannelsActor, SocketChannelsActor}
 import cc.otavia.core.channel.*
 import cc.otavia.core.message.*
 import cc.otavia.core.stack.*
-import cc.otavia.redis.Client.{Connect, Connected, ConnectingState}
+import cc.otavia.handler.codec.redis.RedisCodec
+import cc.otavia.redis.cmd.*
 
-import java.nio.channels.{SelectionKey, SocketChannel}
-
-//class Client extends ChannelsActor[Client.MSG] {
-//
-//  private val channels           = collection.mutable.HashMap.empty[Long, Channel]
-//  private var connected: Boolean = false
-//
-//  override def continueAsk(state: Client.MSG & Ask[?] | AskFrame): Option[StackState] = state match
-//    case connect: Client.Connect =>
-//      val connectingState = new ConnectingState(connect.poolSize)
-//      for (elem <- (0 until connect.poolSize)) {
-//        val channel: Channel = ??? // SocketChannel.open() // how to create pipeline
-//        channels.put(channel.id, channel)
-//        // connect register resume
-////        channel.connect(connect.host, connect.port, connectingState.waiters(elem)) // how to resume
-//      }
-//      Some(connectingState)
-//    case askFrame: AskFrame =>
-//      askFrame.state match
-//        case state: ConnectingState =>
-//          if (state.waiters.forall(!_.isException)) {
-//            connected = true
-//            askFrame.`return`(Connected())
-//          } else askFrame.`return`(ExceptionMessage(state.waiters.find(_.isException).get.exception))
-//        case _ => None
-//    case _ => None
-//
-//  override def continueChannelMessage(msg: AnyRef | ChannelFrame): Option[StackState] = ???
-//
-//  override def init(channel: Channel): Unit = ???
-//
-//  override def close(): Unit = ???
-//}
+import java.nio.channels.{AlreadyConnectedException, SelectionKey, SocketChannel}
+import scala.language.unsafeNulls
 
 object Client {
+    type RIDES_CALL = Select | Set
+}
 
-    type MSG = Connect | Select
+class Client extends SocketChannelsActor[Command[? <: CommandResponse]] {
 
-    final case class Connect(host: String, port: Int, username: String, password: String, poolSize: Int)(using
-        IdAllocator
-    ) extends Ask[Connected]
-    final case class Connected() extends Reply
+    private var channel: ChannelAddress = _
 
-    final case class Select(index: Int)          extends Ask[SelectReply]
-    final case class SelectReply(status: String) extends Reply
+    override def handler: Option[ChannelInitializer[? <: Channel]] = Some(
+      new ChannelInitializer[Channel] {
+          override protected def initChannel(ch: Channel): Unit = {
+              ch.pipeline.addFirst(new RedisCodec())
+              ch.setOutboundMessageBarrier(_ => false)
+              ch.setMaxOutboundInflight(512)
+          }
+      }
+    )
 
-    private final class ConnectingState(size: Int) extends StackState {
-
-        val waiters                       = ??? // new Array[ChannelReplyWaiter[Unit]](size)
-        override def resumable(): Boolean = ??? // waiters.forall(_.received)
-
+    override def continueAsk(stack: AskStack[Command[? <: CommandResponse] | Connect]): Option[StackState] = {
+        stack match
+            case s: AskStack[Connect] if s.ask.isInstanceOf[Connect] =>
+                if (channel == null) connect(s) else stack.`throw`(ExceptionMessage(new AlreadyConnectedException()))
+            case _ => handleCommand(stack.asInstanceOf[AskStack[Command[? <: CommandResponse]]])
     }
+
+    private def handleCommand(stack: AskStack[Command[? <: CommandResponse]]): Option[StackState] = {
+        stack.stackState match
+            case StackState.start =>
+                val state = new StackState.ChannelReplyState()
+                channel.ask(stack.ask, state.future)
+                state.suspend()
+            case state: StackState.ChannelReplyState =>
+                if (state.future.isSuccess)
+                    stack.`return`(state.future.getNow.asInstanceOf[ReplyOf[Command[? <: CommandResponse]]])
+                else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
+    }
+
+    override protected def afterConnected(channel: ChannelAddress): Unit = this.channel = channel
 
 }

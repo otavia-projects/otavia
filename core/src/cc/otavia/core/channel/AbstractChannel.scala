@@ -146,6 +146,28 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
             this.executor.receiveChannelMessage(stack)
         }
+        if (outboundPendingFutures.nonEmpty) processPendingFutures()
+    }
+
+    private def processPendingFutures(): Unit = {
+        if (outboundPendingFutures.headIsBarrier) {
+            if (outboundInflightFutures.isEmpty) {
+                val promise = outboundPendingFutures.pop()
+                // write message to pipeline, and send data by socket
+                this.writeAndFlush(promise.getAsk(), promise.messageId)
+                outboundInflightFutures.append(promise)
+            } // else do nothing and wait outboundInflightFutures become empty.
+        } else {
+            while (
+              outboundPendingFutures.nonEmpty && outboundInflightFutures.size < maxOutboundInflight &&
+              !outboundInflightFutures.headIsBarrier
+            ) {
+                val promise = outboundPendingFutures.pop()
+                this.write(promise.getAsk(), promise.messageId)
+                outboundInflightFutures.append(promise)
+            }
+            this.flush()
+        }
     }
 
     // end impl ChannelInflight
@@ -155,29 +177,12 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         val promise = future.promise
         promise.setMessageId(generateMessageId)
         promise.setBarrier(outboundMessageBarrier(value))
+        promise.setAsk(value)
         executor.attachStack(executor.idAllocator.generate, future)
-        if (outboundInflightFutures.size >= maxOutboundInflight) {
-            outboundPendingFutures.append(promise)
-        } else {
-            if (promise.isBarrier) {
-                if (outboundInflightFutures.size == 0) {
-                    this.write(value, promise.messageId) // write message to pipeline
-                    this.flush()
-                    outboundInflightFutures.append(promise)
-                } else outboundPendingFutures.append(promise)
-            } else {
-                if (outboundInflightFutures.headIsBarrier) outboundPendingFutures.append(promise)
-                else {
-                    this.write(value, promise.messageId)
-                    this.flush()
-                    outboundInflightFutures.append(promise)
-                }
-            }
-        }
+        outboundPendingFutures.append(promise)
+        processPendingFutures()
         future
     }
-
-    override def batchAsk(asks: Seq[AnyRef], futures: Seq[ChannelReplyFuture]): Seq[ChannelReplyFuture] = ???
 
     override def notice(value: AnyRef): Unit = {
         this.write(value) // write message to pipeline

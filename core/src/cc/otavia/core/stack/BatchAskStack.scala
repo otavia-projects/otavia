@@ -16,7 +16,6 @@
 
 package cc.otavia.core.stack
 
-import cc.otavia.core.message.{Ask, ExceptionMessage, Reply}
 import cc.otavia.core.message.{Ask, ExceptionMessage, Reply, ReplyOf}
 
 import scala.language.unsafeNulls

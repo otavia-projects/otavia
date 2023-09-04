@@ -16,7 +16,6 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.actor.{Actor, ChannelsActor}
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.reactor.Reactor
@@ -278,8 +277,6 @@ trait ChannelAddress {
      *    the reply message future.
      */
     def ask(value: AnyRef, future: ChannelReplyFuture): ChannelReplyFuture
-
-    def batchAsk(asks: Seq[AnyRef], futures: Seq[ChannelReplyFuture]): Seq[ChannelReplyFuture]
 
     // actor send notice message to channel
     def notice(value: AnyRef): Unit
