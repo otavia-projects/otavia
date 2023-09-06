@@ -139,7 +139,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     override private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit = {
         if (outboundInflightFutures.hasMessage(id)) {
             val promise = outboundInflightFutures.pop()
-            promise.setSuccess(msg)
+            if (!msg.isInstanceOf[Throwable]) promise.setSuccess(msg)
+            else promise.setFailure(msg.asInstanceOf[Throwable])
         } else {
             val stack = ChannelStack(this, msg, id)
             //        this.executor.continueChannelStack()

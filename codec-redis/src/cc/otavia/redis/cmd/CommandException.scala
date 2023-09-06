@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-package cc.otavia.serde
+package cc.otavia.redis.cmd
 
-import cc.otavia.buffer.Buffer
+class CommandException(message: String | Null, cause: Throwable | Null) extends RuntimeException(message, cause) {
 
-trait Serde[A] {
+    def this() = this(null, null)
 
-    def checkDeserializable(in: Buffer): Boolean = true
+    def this(message: String) = this(message, null)
 
-    def deserialize(in: Buffer): A
-
-    final def deserializeToAny(in: Buffer): Any = deserialize(in)
-
-    def serialize(value: A, out: Buffer): Unit
-
-    final def serializeAny(value: Any, out: Buffer): Unit = serialize(value.asInstanceOf[A], out)
+    def this(cause: Throwable) = this(null, cause)
 
 }

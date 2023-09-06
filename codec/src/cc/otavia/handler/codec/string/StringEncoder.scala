@@ -29,7 +29,7 @@ class StringEncoder(private val charset: Charset) extends MessageToByteEncoder {
 
     def this() = this(StandardCharsets.UTF_8)
 
-    override protected def encode(ctx: ChannelHandlerContext, input: AnyRef, output: AdaptiveBuffer): Unit =
-        output.writeCharSequence(input.asInstanceOf[String], charset)
+    override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit =
+        output.writeCharSequence(msg.asInstanceOf[String], charset)
 
 }

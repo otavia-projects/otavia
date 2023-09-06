@@ -57,8 +57,8 @@ class LineEncoder(private val lineSeparator: Array[Byte], private val charset: C
     /** Creates a new instance with the specified character set. */
     def this(charset: Charset) = this(LineSeparator.DEFAULT, charset)
 
-    override protected def encode(ctx: ChannelHandlerContext, input: AnyRef, output: AdaptiveBuffer): Unit = {
-        output.writeCharSequence(input.asInstanceOf[String], charset)
+    override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit = {
+        output.writeCharSequence(msg.asInstanceOf[String], charset)
         output.writeBytes(lineSeparator)
     }
 

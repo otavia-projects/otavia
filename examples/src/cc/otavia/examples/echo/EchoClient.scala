@@ -97,8 +97,8 @@ object EchoClient {
 
     private class ClientHandler extends MessageToByteEncoder {
 
-        override protected def encode(ctx: ChannelHandlerContext, input: AnyRef, output: AdaptiveBuffer): Unit =
-            output.writeCharSequence(input.asInstanceOf[Echo].question)
+        override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit =
+            output.writeCharSequence(msg.asInstanceOf[Echo].question)
 
         override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
             val buffer = ctx.inboundAdaptiveBuffer

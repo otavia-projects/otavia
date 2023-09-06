@@ -24,7 +24,7 @@ import cc.otavia.handler.codec.MessageToByteEncoder
 
 class ByteArrayEncoder extends MessageToByteEncoder {
 
-    override protected def encode(ctx: ChannelHandlerContext, input: AnyRef, output: AdaptiveBuffer): Unit =
-        output.writeBytes(input.asInstanceOf[Array[Byte]])
+    override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit =
+        output.writeBytes(msg.asInstanceOf[Array[Byte]])
 
 }

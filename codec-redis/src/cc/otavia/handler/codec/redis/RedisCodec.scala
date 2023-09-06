@@ -19,11 +19,29 @@ package cc.otavia.handler.codec.redis
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContext
 import cc.otavia.handler.codec.*
+import cc.otavia.redis.cmd.*
+import cc.otavia.redis.serde.RedisSerde
+import cc.otavia.redis.serde.impl.{OKSerde, SelectSerde}
+
+import scala.collection.mutable
 
 class RedisCodec extends ByteToMessageCodec {
 
-    override protected def encode(ctx: ChannelHandlerContext, input: AnyRef, output: AdaptiveBuffer): Unit = ???
+    private val responseSerdeQueue: mutable.Queue[(Long, RedisSerde[?])] = mutable.Queue.empty
 
-    override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = ???
+    override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, mid: Long): Unit = {
+        msg match
+            case select: Select =>
+                SelectSerde.serialize(select, output)
+                responseSerdeQueue.addOne((mid, OKSerde))
+        ???
+    }
+
+    override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit =
+        if (responseSerdeQueue.head._2.checkDeserializable(input)) {
+            val (msgId, serde) = responseSerdeQueue.removeHead()
+            val response       = serde.deserialize(input)
+            ctx.fireChannelRead(response.asInstanceOf[AnyRef], msgId)
+        }
 
 }

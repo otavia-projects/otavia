@@ -84,8 +84,8 @@ object EchoServer {
             println(text)
         }
 
-        override protected def encode(ctx: ChannelHandlerContext, input: AnyRef, output: AdaptiveBuffer): Unit = {
-            output.writeCharSequence(input.asInstanceOf[String], StandardCharsets.UTF_8)
+        override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit = {
+            output.writeCharSequence(msg.asInstanceOf[String], StandardCharsets.UTF_8)
         }
 
         override def channelRegistered(ctx: ChannelHandlerContext): Unit = {

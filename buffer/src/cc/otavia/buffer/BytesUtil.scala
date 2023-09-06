@@ -18,6 +18,8 @@ package cc.otavia.buffer
 
 object BytesUtil {
 
+    final def bytes2Short(b0: Byte, b1: Byte): Short = (b0 << 8 | b1).toShort
+
     final def bytes2Int(b0: Byte, b1: Byte): Int = b0.toInt << 8 | b1
 
     final def bytes3Int(b0: Byte, b1: Byte, b2: Byte): Int = b0.toInt << 16 | b1.toInt << 8 | b2

@@ -16,8 +16,32 @@
 
 package cc.otavia.redis.serde
 
+import cc.otavia.buffer.Buffer
+import cc.otavia.redis.cmd.*
 import cc.otavia.serde.Serde
 
-trait RedisSerde[T] extends Serde[T] {
+trait RedisSerde[T <: Command[?] | CommandResponse] extends Serde[T] {
+
+    final protected def serializeSimpleError(error: String, out: Buffer): this.type = {
+        out.writeByte('-')
+        out.writeCharSequence(error)
+        out.writeByte('\r')
+        out.writeByte('\n')
+        this
+    }
+
+    final protected def deserializeSimpleError(in: Buffer): String = {
+        in.skipIfNext('-')
+        val len      = in.bytesBefore('\r'.toByte, '\n')
+        val errorMsg = in.readCharSequence(len).toString
+        in.skipReadableBytes(2)
+        errorMsg
+    }
+
+    final protected def serializeCRLF(out: Buffer): this.type = {
+        out.writeByte('\r')
+        out.writeByte('\n')
+        this
+    }
 
 }

@@ -39,24 +39,28 @@ object Command {
     // def del(keys: Seq[String]): Del = Del(keys.map(_.getBytes(StandardCharsets.UTF_8)))
     def del(keys: Seq[Array[Byte]]) = Del(keys)
 
+    def info(): Info = Info()
+
 }
 
-case class OK() extends Reply
+case class OK() extends CommandResponse
 
-case class Success(value: Long) extends Reply
+case class Success(value: Long) extends CommandResponse
 
-case class BulkReply(value: Array[Byte]) extends Reply
+case class BulkReply(value: Array[Byte]) extends CommandResponse
 
-case class Select(db: Int) extends Ask[OK]
+case class Select(db: Int) extends Command[OK]
 
-case class Set(key: Array[Byte], value: Array[Byte]) extends Ask[OK]
+case class Info() extends Command[BulkReply]
 
-case class Get(key: String | Array[Byte]) extends Ask[BulkReply]
+case class Set(key: Array[Byte], value: Array[Byte]) extends Command[OK]
 
-case class Del(key: Array[Byte] | Seq[Array[Byte]]) extends Ask[Success]
+case class Get(key: String | Array[Byte]) extends Command[BulkReply]
 
-class HGetAll(key: Array[Byte]) extends Ask[RedisMap[?, ?]]
+case class Del(key: Array[Byte] | Seq[Array[Byte]]) extends Command[Success]
 
-trait RedisMap[K, V] extends Reply
+class HGetAll(key: Array[Byte]) extends Command[RedisMap[?, ?]]
 
-case class HSet(key: Array[Byte], values: (String, String) | RedisMap[?, ?]) extends Ask[Success]
+trait RedisMap[K, V] extends CommandResponse
+
+case class HSet(key: Array[Byte], values: (String, String) | RedisMap[?, ?]) extends Command[Success]

@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-package cc.otavia.serde
+package cc.otavia.redis.serde.impl
 
 import cc.otavia.buffer.Buffer
+import cc.otavia.redis.cmd.*
+import cc.otavia.redis.serde.AbstractCommandSerde
 
-trait Serde[A] {
+object SelectSerde extends AbstractCommandSerde[Select] {
 
-    def checkDeserializable(in: Buffer): Boolean = true
+    override def deserialize(in: Buffer): Select = {
+        ???
+    }
 
-    def deserialize(in: Buffer): A
-
-    final def deserializeToAny(in: Buffer): Any = deserialize(in)
-
-    def serialize(value: A, out: Buffer): Unit
-
-    final def serializeAny(value: Any, out: Buffer): Unit = serialize(value.asInstanceOf[A], out)
+    override def serialize(value: Select, out: Buffer): Unit = {
+        serializeArrayHeader(2, out)
+        serializeString("select", out)
+        serializeInteger(value.db, out)
+    }
 
 }
