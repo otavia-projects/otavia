@@ -19,9 +19,9 @@ package cc.otavia.redis.serde.impl
 import cc.otavia.buffer.Buffer
 import cc.otavia.redis.RedisProtocolException
 import cc.otavia.redis.cmd.*
-import cc.otavia.redis.serde.RedisSerde
+import cc.otavia.redis.serde.{AbstractResponseSerde, RedisSerde}
 
-object OKSerde extends RedisSerde[OK] {
+object OKSerde extends AbstractResponseSerde[OK] {
 
     private val SIMPLE_STARTS: Array[Byte] = Array('-', '+')
 

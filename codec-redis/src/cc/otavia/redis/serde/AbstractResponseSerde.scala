@@ -17,14 +17,24 @@
 package cc.otavia.redis.serde
 
 import cc.otavia.buffer.Buffer
-import cc.otavia.redis.RedisProtocolException
-import cc.otavia.redis.cmd.{Command, CommandResponse}
+import cc.otavia.redis.cmd.CommandResponse
 
-import java.nio.charset.StandardCharsets
-import scala.language.unsafeNulls
+abstract class AbstractResponseSerde[R <: CommandResponse] extends RedisSerde[R] {
 
-abstract class AbstractCommandSerde[C <: Command[?] | CommandResponse] extends RedisSerde[C] {
+    final protected def serializeSimpleError(error: String, out: Buffer): this.type = {
+        out.writeByte('-')
+        out.writeCharSequence(error)
+        out.writeByte('\r')
+        out.writeByte('\n')
+        this
+    }
 
-    
+    final protected def deserializeSimpleError(in: Buffer): String = {
+        in.skipIfNext('-')
+        val len      = in.bytesBefore('\r'.toByte, '\n')
+        val errorMsg = in.readCharSequence(len).toString
+        in.skipReadableBytes(2)
+        errorMsg
+    }
 
 }

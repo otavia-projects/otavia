@@ -16,27 +16,60 @@
 
 package cc.otavia.redis.serde
 
-import cc.otavia.buffer.Buffer
+import cc.otavia.buffer.{Buffer, BufferUtils}
+import cc.otavia.redis.RedisProtocolException
 import cc.otavia.redis.cmd.*
 import cc.otavia.serde.Serde
 
+import java.nio.charset.StandardCharsets
+import scala.language.unsafeNulls
+
 trait RedisSerde[T <: Command[?] | CommandResponse] extends Serde[T] {
 
-    final protected def serializeSimpleError(error: String, out: Buffer): this.type = {
-        out.writeByte('-')
-        out.writeCharSequence(error)
-        out.writeByte('\r')
-        out.writeByte('\n')
+    final protected def serializeBulkString(bulk: String, out: Buffer): this.type = {
+        out.writeByte('$')
+        val bytes = bulk.getBytes(StandardCharsets.UTF_8)
+        out.writeCharSequence(bytes.length.toString)
+        serializeCRLF(out)
+        out.writeBytes(bytes)
+        serializeCRLF(out)
         this
     }
 
-    final protected def deserializeSimpleError(in: Buffer): String = {
-        in.skipIfNext('-')
-        val len      = in.bytesBefore('\r'.toByte, '\n')
-        val errorMsg = in.readCharSequence(len).toString
+    final protected def deserializeBulkString(in: Buffer): String = if (in.skipIfNext('$')) {
+        val intLen = in.bytesBefore('\r'.toByte, '\n')
+        val strLen = BufferUtils.readStringAsInt(in, intLen)
         in.skipReadableBytes(2)
-        errorMsg
+        val string = in.readCharSequence(strLen).toString
+        in.skipReadableBytes(2)
+        string
+    } else throw new RedisProtocolException(s"except byte '$$' but get '${in.getByte(in.readerOffset)}'")
+
+    final protected def serializeInteger(value: Long, out: Buffer): this.type = {
+        out.writeByte(':')
+        out.writeCharSequence(value.toString)
+        serializeCRLF(out)
+        this
     }
+
+    final protected def deserializeInteger(in: Buffer): Long = if (in.skipIfNext(':')) {
+        val intLen = in.bytesBefore('\r'.toByte, '\n')
+        val int    = BufferUtils.readStringAsLong(in, intLen)
+        in.skipReadableBytes(2)
+        int
+    } else throw new RedisProtocolException(s"except byte ':' but get '${in.getByte(in.readerOffset)}'")
+
+    protected def serializeArrayHeader(len: Int, out: Buffer): this.type = {
+        out.writeByte('*')
+        out.writeCharSequence(len.toString)
+        serializeCRLF(out)
+        this
+    }
+
+    protected def deserializeArrayHeader(in: Buffer): Int = if (in.skipIfNext('*')) {
+
+        ???
+    } else throw new RedisProtocolException(s"except byte '*' but get '${in.getByte(in.readerOffset)}'")
 
     final protected def serializeCRLF(out: Buffer): this.type = {
         out.writeByte('\r')

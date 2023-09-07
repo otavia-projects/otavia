@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package cc.otavia.redis.serde
+package cc.otavia.redis.serde.impl
 
 import cc.otavia.buffer.Buffer
-import cc.otavia.redis.RedisProtocolException
-import cc.otavia.redis.cmd.{Command, CommandResponse}
+import cc.otavia.redis.cmd.*
+import cc.otavia.redis.serde.{AbstractCommandSerde, AbstractResponseSerde}
 
-import java.nio.charset.StandardCharsets
-import scala.language.unsafeNulls
+object SuccessSerde extends AbstractResponseSerde[Success] {
 
-abstract class AbstractCommandSerde[C <: Command[?] | CommandResponse] extends RedisSerde[C] {
+    override def deserialize(in: Buffer): Success = ???
 
-    
+    override def serialize(value: Success, out: Buffer): Unit = ???
 
 }

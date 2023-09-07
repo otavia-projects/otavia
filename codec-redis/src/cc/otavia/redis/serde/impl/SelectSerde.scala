@@ -28,7 +28,7 @@ object SelectSerde extends AbstractCommandSerde[Select] {
 
     override def serialize(value: Select, out: Buffer): Unit = {
         serializeArrayHeader(2, out)
-        serializeString("select", out)
+        serializeBulkString("select", out)
         serializeInteger(value.db, out)
     }
 

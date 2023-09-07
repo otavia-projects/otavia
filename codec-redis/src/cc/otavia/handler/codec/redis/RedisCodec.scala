@@ -40,8 +40,13 @@ class RedisCodec extends ByteToMessageCodec {
     override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit =
         if (responseSerdeQueue.head._2.checkDeserializable(input)) {
             val (msgId, serde) = responseSerdeQueue.removeHead()
-            val response       = serde.deserialize(input)
-            ctx.fireChannelRead(response.asInstanceOf[AnyRef], msgId)
+            try {
+                val response = serde.deserialize(input)
+                ctx.fireChannelRead(response.asInstanceOf[AnyRef], msgId)
+            } catch {
+                case e: Throwable => ctx.fireChannelRead(e, msgId)
+            }
+
         }
 
 }
