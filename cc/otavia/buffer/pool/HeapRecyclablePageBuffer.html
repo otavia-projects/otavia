@@ -2772,6 +2772,73 @@ node6 -> node3;
           </div>
          </div>
         </div>
+        <div class="documentableElement" id="getBytes-412" data-f-keywords="final" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="HeapRecyclablePageBuffer.html#getBytes-412" t="n" class="documentableName ">getBytes</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">len</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Get the bytes value at the given reader offset. The <a href="../Buffer.html#readerOffset-fffffa19">readerOffset</a> is not modified.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Get the bytes value at the given reader offset. The <a href="../Buffer.html#readerOffset-fffffa19">readerOffset</a> is not modified.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               index
+              </dt>
+              <dd class="body-medium">
+               <p>The read offset, an absolute offset into this buffer, to read from.</p> 
+              </dd>
+              <dt class="body-small">
+               len
+              </dt>
+              <dd class="body-medium">
+               <p>Length of bytes to read</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>The bytes array</p> 
+              </dd>
+              <dt class="body-small">
+               Throws
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <div>
+                 <span data-unresolved-link="">IndexOutOfBoundsException</span> 
+                 <p>If the given offset is out of bounds of the buffer, that is, less than 0 or greater than <a href="../Buffer.html#capacity-0">capacity</a> minus <span data-unresolved-link="">java.lang.Float.BYTES</span>.</p> 
+                </div>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../Buffer.html#getBytes-412">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
         <div class="documentableElement" id="getChar-fffffd85" data-f-keywords="override" data-f-inherited="AbstractBuffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -2895,6 +2962,79 @@ node6 -> node3;
               </dt>
               <dd class="body-medium">
                <a href="../Buffer.html#getCharLE-fffffd85">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="getCharSequence-fffffa4f" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HeapRecyclablePageBuffer.html#getCharSequence-fffffa4f" t="n" class="documentableName ">getCharSequence</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">len</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">charset</span>: <span data-unresolved-link="" t="t">Charset</span>): <span data-unresolved-link="" t="t">CharSequence</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Get a <span data-unresolved-link="" title="Problem linking CharSequence: No DRI found for query">CharSequence</span> at the given reader offset. The <a href="../Buffer.html#readerOffset-fffffa19">readerOffset</a> is not modified.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Get a <span data-unresolved-link="" title="Problem linking CharSequence: No DRI found for query">CharSequence</span> at the given reader offset. The <a href="../Buffer.html#readerOffset-fffffa19">readerOffset</a> is not modified.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               charset
+              </dt>
+              <dd class="body-medium">
+               <p><span data-unresolved-link="" title="Problem linking Charset: No DRI found for query">Charset</span> to use for reading.</p> 
+              </dd>
+              <dt class="body-small">
+               index
+              </dt>
+              <dd class="body-medium">
+               <p>The read offset, an absolute offset into this buffer, to read from.</p> 
+              </dd>
+              <dt class="body-small">
+               len
+              </dt>
+              <dd class="body-medium">
+               <p>Length of bytes to read</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p><span data-unresolved-link="" title="Problem linking CharSequence: No DRI found for query">CharSequence</span> get from this buffer.</p> 
+              </dd>
+              <dt class="body-small">
+               Throws
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <div>
+                 <span data-unresolved-link="">IndexOutOfBoundsException</span> 
+                 <p>If the given offset is out of bounds of the buffer, that is, less than 0 or greater than <a href="../Buffer.html#capacity-0">capacity</a> minus <span data-unresolved-link="">java.lang.Float.BYTES</span>.</p> 
+                </div>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../Buffer.html#getCharSequence-fffffa4f">Buffer</a>
               </dd>
              </dl>
             </div>
@@ -5181,13 +5321,13 @@ node6 -> node3;
                charset
               </dt>
               <dd class="body-medium">
-               <p>of the bytes to be read.</p> 
+               <p><span data-unresolved-link="" title="Problem linking Charset: No DRI found for query">Charset</span> to use for reading.</p> 
               </dd>
               <dt class="body-small">
                length
               </dt>
               <dd class="body-medium">
-               <p>of <span data-unresolved-link="" title="Problem linking CharSequence: No DRI found for query">CharSequence</span> to read.</p> 
+               <p>Length of <span data-unresolved-link="" title="Problem linking CharSequence: No DRI found for query">CharSequence</span> to read.</p> 
               </dd>
              </dl>
              <h2 class="h200">Attributes</h2>
