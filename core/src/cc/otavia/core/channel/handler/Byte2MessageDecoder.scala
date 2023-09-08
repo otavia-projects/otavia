@@ -27,7 +27,7 @@ trait Byte2MessageDecoder extends ChannelHandler {
 
     final override def hasInboundAdaptive: Boolean = false
 
-    override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
+    final override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
         msg match
             case buffer: AdaptiveBuffer => decode(ctx, buffer)
             case _                      => ctx.fireChannelRead(msg)

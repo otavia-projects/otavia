@@ -19,6 +19,7 @@ package cc.otavia.redis.serde
 import cc.otavia.buffer.{Buffer, BufferUtils}
 import cc.otavia.redis.RedisProtocolException
 import cc.otavia.redis.cmd.*
+import cc.otavia.redis.serde.RedisSerde.*
 import cc.otavia.serde.Serde
 
 import java.nio.charset.StandardCharsets
@@ -40,7 +41,7 @@ trait RedisSerde[T <: Command[?] | CommandResponse] extends Serde[T] {
         val intLen = in.bytesBefore('\r'.toByte, '\n')
         val strLen = BufferUtils.readStringAsInt(in, intLen)
         in.skipReadableBytes(2)
-        val string = in.readCharSequence(strLen).toString
+        val string = if (strLen != 0) in.readCharSequence(strLen).toString else ""
         in.skipReadableBytes(2)
         string
     } else throw new RedisProtocolException(s"except byte '$$' but get '${in.getByte(in.readerOffset)}'")
@@ -76,5 +77,222 @@ trait RedisSerde[T <: Command[?] | CommandResponse] extends Serde[T] {
         out.writeByte('\n')
         this
     }
+
+    /** serialize Null in RESP3
+     *  @param out
+     *    output [[Buffer]]
+     *  @return
+     *    this serde
+     */
+    final protected def serializeNull(out: Buffer): this.type = {
+        out.writeByte('_')
+        serializeCRLF(out)
+    }
+
+    /** deserialize Null in RESP3
+     *  @param in
+     *    input [[Buffer]]
+     *  @return
+     *    [[None]]
+     */
+    final protected def deserializeNull(in: Buffer): None.type =
+        if (in.skipIfNext('_') && in.skipIfNexts(CRLF)) None
+        else
+            throw new RedisProtocolException(s"RESP3 Null except byte '_' but get '${in.getByte(in.readerOffset)}'")
+
+    /** deserialize Double in RESP3
+     *  @param double
+     *    double value
+     *  @param out
+     *    output [[Buffer]]
+     *  @return
+     *    this
+     */
+    final protected def serializeDouble(double: Double, out: Buffer): this.type = {
+        if (double == Double.PositiveInfinity) out.writeBytes(INF)
+        else if (double == Double.NegativeInfinity) out.writeBytes(NE_INF)
+        else {
+            out.writeByte(',')
+            out.writeCharSequence(double.toString)
+            out.writeBytes(CRLF)
+        }
+        this
+    }
+
+    /** deserialize Double in RESP3
+     *  @param in
+     *    input [[Buffer]]
+     *  @return
+     *    double value
+     */
+    final protected def deserializeDouble(in: Buffer): Double =
+        if (in.skipIfNexts(INF)) Double.PositiveInfinity
+        else if (in.skipIfNexts(NE_INF)) Double.NegativeInfinity
+        else if (in.skipIfNext(',')) {
+            val double = in.readCharSequence(in.bytesBefore(CRLF)).toString.toDouble
+            in.skipReadableBytes(2)
+            double
+        } else
+            throw new RedisProtocolException(s"RESP3 Double except byte ',' but get '${in.getByte(in.readerOffset)}'")
+
+    /** serialize Boolean in RESP3
+     *  @param boolean
+     *    boolean value
+     *  @param out
+     *    output [[Buffer]]
+     *  @return
+     *    this
+     */
+    final protected def serializeBoolean(boolean: Boolean, out: Buffer): this.type = {
+        if (boolean) out.writeBytes(TRUE) else out.writeBytes(FALSE)
+        this
+    }
+
+    /** deserialize Boolean in RESP3
+     *  @param in
+     *    input [[Buffer]]
+     *  @return
+     *    boolean value
+     */
+    final protected def deserializeBoolean(in: Buffer): Boolean =
+        if (in.skipIfNexts(TRUE)) true
+        else if (in.skipIfNexts(FALSE)) false
+        else
+            throw new RedisProtocolException(s"RESP3 Boolean except byte '#' but get '${in.getByte(in.readerOffset)}'")
+
+    /** serialize Blob Error in RESP3
+     *
+     *  @param error
+     *    error message
+     *  @param out
+     *    output [[Buffer]]
+     *  @return
+     *    this
+     */
+    final protected def serializeBlobError(error: String, out: Buffer): this.type = {
+        out.writeByte('!')
+        val bytes = error.getBytes(StandardCharsets.UTF_8)
+        out.writeCharSequence(bytes.length.toString)
+        out.writeBytes(CRLF)
+        out.writeBytes(bytes)
+        out.writeBytes(CRLF)
+        this
+    }
+
+    /** deserialize Blob Error in RESP3
+     *
+     *  @param in
+     *    input [[Buffer]]
+     *  @return
+     *    error message
+     */
+    final protected def deserializeBlobError(in: Buffer): String = if (in.skipIfNext('!')) {
+        val strLen = in.readCharSequence(in.bytesBefore(CRLF)).toString.toInt
+        in.skipReadableBytes(2)
+        val error = in.readCharSequence(strLen).toString
+        if (in.skipIfNexts(CRLF)) {} else
+            throw new RedisProtocolException(
+              s"RESP3 Blob Error except bytes '<CR><LF>' but get '${in.getBytes(in.readerOffset, 2).mkString("'", ", ", "'")}'"
+            )
+        error
+    } else
+        throw new RedisProtocolException(s"RESP3 Blob Error except byte '!' but get '${in.getByte(in.readerOffset)}'")
+
+    /** serialize Verbatim String in RESP3
+     *
+     *  @param verbatim
+     *    Verbatim String
+     *  @param out
+     *    output [[Buffer]]
+     *  @return
+     *    this
+     */
+    final protected def serializeVerbatimString(verbatim: String, out: Buffer): this.type = {
+        out.writeByte('=')
+        val bytes = verbatim.getBytes(StandardCharsets.UTF_8)
+        out.writeCharSequence(bytes.length.toString)
+        out.writeBytes(CRLF)
+
+        out.writeBytes(bytes)
+        out.writeBytes(CRLF)
+        this
+    }
+
+    /** deserialize Verbatim String in RESP3
+     *
+     *  @param in
+     *    input [[Buffer]]
+     *  @return
+     *    verbatim string
+     */
+    final protected def deserializeVerbatimString(in: Buffer): String = if (in.skipIfNext('=')) {
+        val strLen = in.readCharSequence(in.bytesBefore(CRLF)).toString.toInt
+        in.skipReadableBytes(2)
+        val verbatim = in.readCharSequence(strLen).toString
+        if (in.skipIfNexts(CRLF)) {} else
+            throw new RedisProtocolException(
+              s"RESP3 Verbatim String except bytes '<CR><LF>' but get '${in.getBytes(in.readerOffset, 2).mkString("'", ", ", "'")}'"
+            )
+        verbatim
+    } else
+        throw new RedisProtocolException(
+          s"RESP3 Verbatim String except byte '=' but get '${in.getByte(in.readerOffset)}'"
+        )
+
+    /** serialize Big number in RESP3
+     *
+     *  @param bigInt
+     *    Big number
+     *  @param out
+     *    output [[Buffer]]
+     *  @return
+     *    this
+     */
+    final protected def serializeBigInt(bigInt: BigInt, out: Buffer): this.type = {
+        out.writeByte('(')
+        out.writeCharSequence(bigInt.toString())
+        out.writeBytes(CRLF)
+        this
+    }
+
+    /** deserialize Big number in RESP3
+     *
+     *  @param in
+     *    input [[Buffer]]
+     *  @return
+     *    Big number
+     */
+    final protected def deserializeBigInt(in: Buffer): BigInt = if (in.skipIfNext('(')) {
+        val str = in.readCharSequence(in.bytesBefore(CRLF)).toString
+        in.skipReadableBytes(2)
+        BigInt(str)
+    } else
+        throw new RedisProtocolException(
+          s"RESP3 Big number except byte '(' but get '${in.getByte(in.readerOffset)}'"
+        )
+
+    final protected def checkInteger(index: Int, in: Buffer): Boolean = if (in.getByte(index) == ':') {
+
+        ???
+    } else false
+
+    final protected def checkBulkString(index: Int, in: Buffer): Boolean = if (in.getByte(index) == '$') {
+        ???
+    } else false
+
+    final protected def checkArray(index: Int, in: Buffer): Boolean = if (in.getByte(index) == '*') {
+        ???
+    } else false
+
+}
+
+object RedisSerde {
+
+    private val CRLF: Array[Byte]   = Array('\r', '\n')
+    private val INF: Array[Byte]    = ",inf\r\n".getBytes()
+    private val NE_INF: Array[Byte] = ",-inf\r\n".getBytes()
+
+    private val TRUE: Array[Byte]  = "#t\r\n".getBytes()
+    private val FALSE: Array[Byte] = "#f\r\n".getBytes()
 
 }

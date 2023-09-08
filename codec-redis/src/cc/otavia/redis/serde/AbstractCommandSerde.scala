@@ -18,13 +18,13 @@ package cc.otavia.redis.serde
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.redis.RedisProtocolException
-import cc.otavia.redis.cmd.{Command, CommandResponse}
+import cc.otavia.redis.cmd.Command
 
 import java.nio.charset.StandardCharsets
 import scala.language.unsafeNulls
 
-abstract class AbstractCommandSerde[C <: Command[?] | CommandResponse] extends RedisSerde[C] {
+abstract class AbstractCommandSerde[C <: Command[?]] extends RedisSerde[C] {
 
-    
+    final override def checkDeserializable(in: Buffer): Boolean = checkArray(in.readerOffset, in)
 
 }

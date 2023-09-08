@@ -214,7 +214,7 @@ object `codec-adbc` extends OtaviaModule {
 
     override def artifactName = "codec-adbc"
 
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, serde)
 
 }
 
@@ -389,6 +389,34 @@ object `serde-proto-macro` extends OtaviaModule {
     override def artifactName = "serde-proto-macro"
 
     override def moduleDeps = Seq(serde, `serde-proto`)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
+
+}
+
+object `mysql-adbc-driver` extends OtaviaModule {
+
+    override def artifactName = "mysql-adbc-driver"
+
+    override def moduleDeps = Seq(`codec-adbc`)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
+
+}
+
+object `postgres-adbc-driver` extends OtaviaModule {
+
+    override def artifactName = "postgres-adbc-driver"
+
+    override def moduleDeps = Seq(`codec-adbc`)
 
     object test extends Tests with TestModule.ScalaTest {
 

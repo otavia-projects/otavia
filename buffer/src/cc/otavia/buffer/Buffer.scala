@@ -393,15 +393,34 @@ trait Buffer {
      *  [[readerOffset]] of this buffer.
      *
      *  @param length
-     *    of [[CharSequence]] to read.
+     *    Length of [[CharSequence]] to read.
      *  @param charset
-     *    of the bytes to be read.
+     *    [[Charset]] to use for reading.
      *  @return
      *    [[CharSequence]] read from this buffer.
      *  @throws IndexOutOfBoundsException
      *    if the passed [[length]] is more than the [[readableBytes]] of this buffer.
      */
     def readCharSequence(length: Int, charset: Charset): CharSequence
+
+    /** Get a [[CharSequence]] at the given reader offset. The [[readerOffset]] is not modified.
+     *
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @param len
+     *    Length of bytes to read
+     *  @param charset
+     *    [[Charset]] to use for reading.
+     *  @return
+     *    [[CharSequence]] get from this buffer.
+     *  @throws IndexOutOfBoundsException
+     *    If the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Float.BYTES]].
+     */
+    def getCharSequence(index: Int, len: Int, charset: Charset = StandardCharsets.UTF_8): CharSequence = {
+        val array = getBytes(index, len)
+        new String(array, charset)
+    }
 
     /** Writes into this buffer, all the readable bytes from the given buffer. This updates the [[writerOffset]] of this
      *  buffer, and the [[readerOffset]] of the given buffer.
@@ -481,6 +500,24 @@ trait Buffer {
      *    [[java.lang.Double.BYTES]].
      */
     final def setBytes(index: Int, source: Array[Byte]): Buffer = setBytes(index, source, 0, source.length)
+
+    /** Get the bytes value at the given reader offset. The [[readerOffset]] is not modified.
+     *
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @param len
+     *    Length of bytes to read
+     *  @return
+     *    The bytes array
+     *  @throws IndexOutOfBoundsException
+     *    If the given offset is out of bounds of the buffer, that is, less than 0 or greater than [[capacity]] minus
+     *    [[java.lang.Float.BYTES]].
+     */
+    final def getBytes(index: Int, len: Int): Array[Byte] = {
+        val array = new Array[Byte](len)
+        this.copyInto(index, array, 0, len)
+        array
+    }
 
     /** Writes into this buffer from the source [[ByteBuffer]]. This updates the [[writerOffset]] of this buffer and
      *  also the position of the source [[ByteBuffer]].

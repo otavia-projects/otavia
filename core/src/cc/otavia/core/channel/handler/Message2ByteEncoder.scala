@@ -17,7 +17,7 @@
 package cc.otavia.core.channel.handler
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
-import cc.otavia.core.channel.{ChannelHandler, ChannelHandlerContext}
+import cc.otavia.core.channel.{ChannelHandler, ChannelHandlerContext, ChannelInflight, FileRegion}
 
 /** channel io transport --> Byte2ByteDecoder --> Byte2MessageDecoder --> Message2MessageDecoder --> channel inflight
  *
@@ -27,15 +27,14 @@ trait Message2ByteEncoder extends ChannelHandler {
 
     final override def hasOutboundAdaptive: Boolean = true
 
-    override def write(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
-        encode(ctx, ctx.outboundAdaptiveBuffer, msg, ctx.channel.generateMessageId)
-        if (ctx.outboundAdaptiveBuffer.readableBytes > 0) ctx.write(ctx.outboundAdaptiveBuffer)
-    }
+    final override def write(ctx: ChannelHandlerContext, msg: AnyRef): Unit =
+        write(ctx, msg, ChannelInflight.INVALID_CHANNEL_MESSAGE_ID)
 
-    override def write(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit = {
-        encode(ctx, ctx.outboundAdaptiveBuffer, msg, msgId)
-        if (ctx.outboundAdaptiveBuffer.readableBytes > 0) ctx.write(ctx.outboundAdaptiveBuffer)
-    }
+    final override def write(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit = msg match
+        case fileRegion: FileRegion => ctx.write(fileRegion)
+        case _ =>
+            encode(ctx, ctx.outboundAdaptiveBuffer, msg, msgId)
+            if (ctx.outboundAdaptiveBuffer.readableBytes > 0) ctx.write(ctx.outboundAdaptiveBuffer)
 
     protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit
 

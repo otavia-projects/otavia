@@ -187,12 +187,12 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     override def notice(value: AnyRef): Unit = {
         this.write(value) // write message to pipeline
-        this.flush()
+        this.flush()      // flush data to io transport
     }
 
     override def batchNotice(notices: Seq[AnyRef]): Unit = {
         for (notice <- notices) this.write(notice) // write message to pipeline
-        this.flush()
+        this.flush() // flush data to io transport
     }
 
     // end impl ChannelAddress
