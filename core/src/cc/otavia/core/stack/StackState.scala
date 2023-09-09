@@ -44,7 +44,11 @@ object StackState {
     }
 
     class ChannelReplyState extends StackState {
-        val future = ChannelReplyFuture()
+        val future: ChannelReplyFuture = ChannelReplyFuture()
+    }
+
+    class ChannelFutureState extends StackState {
+        val future: ChannelFuture = ChannelFuture()
     }
 
 }

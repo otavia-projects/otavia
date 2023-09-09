@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-package cc.otavia.adbc
+package cc.otavia.mysql
 
-import cc.otavia.buffer.Buffer
-import cc.otavia.core.actor.ChannelsActor
+import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContext
-import cc.otavia.core.channel.handler.{Byte2MessageDecoder, Message2ByteEncoder}
-import cc.otavia.core.message.{Ask, IdAllocator, Reply}
 import cc.otavia.core.stack.ChannelFuture
+import cc.otavia.handler.codec.ByteToMessageCodec
 
 import java.net.SocketAddress
 
-trait Driver extends Byte2MessageDecoder with Message2ByteEncoder {
+class MysqlDriver extends ByteToMessageCodec {
 
-    protected def checkDecodePacket(buffer: Buffer): Boolean
+    override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = ???
+
+    override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit =
+        ???
 
     override def connect(
         ctx: ChannelHandlerContext,
@@ -36,6 +37,7 @@ trait Driver extends Byte2MessageDecoder with Message2ByteEncoder {
         future: ChannelFuture
     ): ChannelFuture = {
         super.connect(ctx, remote, local, future)
+        
     }
 
 }
