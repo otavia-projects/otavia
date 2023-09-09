@@ -50,6 +50,7 @@ object ProjectInfo {
     def proto         = ivy"io.github.zero-deps::proto:2.1.2"
     def shapeless     = ivy"org.typelevel::shapeless3-deriving:3.3.0"
     def jedis         = ivy"redis.clients:jedis:4.4.3"
+    def scram         = ivy"com.ongres.scram:client:2.1"
 
 }
 
@@ -417,6 +418,8 @@ object `postgres-adbc-driver` extends OtaviaModule {
     override def artifactName = "postgres-adbc-driver"
 
     override def moduleDeps = Seq(`codec-adbc`)
+
+    override def ivyDeps = Agg(ProjectInfo.scram)
 
     object test extends Tests with TestModule.ScalaTest {
 

@@ -16,28 +16,26 @@
 
 package cc.otavia.mysql
 
+import cc.otavia.adbc.Driver
+import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContext
 import cc.otavia.core.stack.ChannelFuture
-import cc.otavia.handler.codec.ByteToMessageCodec
 
 import java.net.SocketAddress
 
-class MysqlDriver extends ByteToMessageCodec {
+class MysqlDriver extends Driver {
+
+    final override protected def checkDecodePacket(buffer: Buffer): Boolean =
+        if (buffer.readableBytes > 4) {
+            val start     = buffer.readerOffset
+            val packetLen = buffer.getUnsignedMediumLE(start) + 4
+            if (buffer.readableBytes >= packetLen) true else false
+        } else false
 
     override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = ???
 
     override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit =
         ???
-
-    override def connect(
-        ctx: ChannelHandlerContext,
-        remote: SocketAddress,
-        local: Option[SocketAddress],
-        future: ChannelFuture
-    ): ChannelFuture = {
-        super.connect(ctx, remote, local, future)
-        
-    }
 
 }

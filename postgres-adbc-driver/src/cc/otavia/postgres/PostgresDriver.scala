@@ -16,6 +16,23 @@
 
 package cc.otavia.postgres
 
-class PostgresDriver {
+import cc.otavia.adbc.Driver
+import cc.otavia.buffer.Buffer
+import cc.otavia.buffer.pool.AdaptiveBuffer
+import cc.otavia.core.channel.ChannelHandlerContext
+
+class PostgresDriver extends Driver {
+
+    final override protected def checkDecodePacket(buffer: Buffer): Boolean =
+        if (buffer.readableBytes >= 5) {
+            val start        = buffer.readerOffset
+            val packetLength = buffer.getInt(start + 1) + 1
+            if (buffer.readableBytes >= packetLength) true else false
+        } else false
+
+    override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit =
+        ???
+
+    override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = ???
 
 }

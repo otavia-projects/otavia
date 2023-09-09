@@ -31,7 +31,7 @@ class Connection(override val family: ProtocolFamily = StandardProtocolFamily.IN
 
     private var channel: ChannelAddress = _
 
-    override protected def init(channel: Channel): Unit = ???
+    override protected def init(channel: Channel): Unit = {}
 
     override protected def newChannel(): Channel = system.channelFactory.openSocketChannel(family)
 
@@ -59,6 +59,6 @@ class Connection(override val family: ProtocolFamily = StandardProtocolFamily.IN
 object Connection {
 
     case class ConnectResult(connectionId: Int)                         extends Reply
-    case class Connect(uri: String, username: String, password: String) extends Ask[ConnectResult]
+    case class Connect(url: String, username: String, password: String) extends Ask[ConnectResult]
 
 }
