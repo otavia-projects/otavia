@@ -1662,6 +1662,8 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"cc/otavia/core/stack/StackState.html#suspend-fffff63d","e":false,"i":"","n":"suspend","t":"suspend(): Option[StackState]","d":"cc.otavia.core.stack.StackState","k":"def","x":""},
 {"l":"cc/otavia/core/stack/StackState$.html#","e":false,"i":"","n":"StackState","t":"StackState","d":"cc.otavia.core.stack","k":"object","x":""},
 {"l":"cc/otavia/core/stack/StackState$.html#start-0","e":false,"i":"","n":"start","t":"start: StackState","d":"cc.otavia.core.stack.StackState","k":"val","x":""},
+{"l":"cc/otavia/core/stack/StackState$$ChannelFutureState.html#","e":false,"i":"","n":"ChannelFutureState","t":"ChannelFutureState extends StackState","d":"cc.otavia.core.stack.StackState","k":"class","x":""},
+{"l":"cc/otavia/core/stack/StackState$$ChannelFutureState.html#future-0","e":false,"i":"","n":"future","t":"future: ChannelFuture","d":"cc.otavia.core.stack.StackState.ChannelFutureState","k":"val","x":""},
 {"l":"cc/otavia/core/stack/StackState$$ChannelReplyState.html#","e":false,"i":"","n":"ChannelReplyState","t":"ChannelReplyState extends StackState","d":"cc.otavia.core.stack.StackState","k":"class","x":""},
 {"l":"cc/otavia/core/stack/StackState$$ChannelReplyState.html#future-0","e":false,"i":"","n":"future","t":"future: ChannelReplyFuture","d":"cc.otavia.core.stack.StackState.ChannelReplyState","k":"val","x":""},
 {"l":"cc/otavia/core/stack/StackState$$FutureState.html#","e":false,"i":"","n":"FutureState","t":"FutureState[R <: Reply] extends StackState","d":"cc.otavia.core.stack.StackState","k":"class","x":""},
