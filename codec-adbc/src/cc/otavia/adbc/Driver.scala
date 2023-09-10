@@ -29,13 +29,4 @@ trait Driver extends Byte2MessageDecoder with Message2ByteEncoder {
 
     protected def checkDecodePacket(buffer: Buffer): Boolean
 
-    override def connect(
-        ctx: ChannelHandlerContext,
-        remote: SocketAddress,
-        local: Option[SocketAddress],
-        future: ChannelFuture
-    ): ChannelFuture = {
-        super.connect(ctx, remote, local, future)
-    }
-
 }

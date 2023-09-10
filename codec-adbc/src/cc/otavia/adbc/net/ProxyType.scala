@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-package cc.otavia.adbc
+package cc.otavia.adbc.net
 
-trait DriverFactory {
+/**
+ * The type of a TCP proxy server.
+ */
+sealed trait ProxyType
 
-    def newDriver(): Driver
+object ProxyType {
+    /** HTTP CONNECT ssl proxy */
+    object HTTP extends ProxyType
 
-    def driverClassName: String
+    /** SOCKS4/4a tcp proxy */
+    object SOCKS4 extends ProxyType
 
-    def parseOptions(url: String, username: String, password: String): ConnectOptions
-
+    /** SOCSK5 tcp proxy */
+    object SOCKS5 extends ProxyType
 }

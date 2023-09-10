@@ -16,15 +16,28 @@
 
 package cc.otavia.mysql
 
-import cc.otavia.adbc.Driver
+import cc.otavia.adbc.{ConnectOptions, Driver}
 import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContext
 import cc.otavia.core.stack.ChannelFuture
+import cc.otavia.mysql.protocol.CapabilitiesFlag.*
+import cc.otavia.mysql.protocol.Packets.*
+import cc.otavia.mysql.utils.*
 
 import java.net.SocketAddress
+import java.nio.charset.StandardCharsets
+import scala.language.unsafeNulls
 
 class MysqlDriver extends Driver {
+
+    import MysqlDriver.*
+
+    private var status = ST_CONNECTING
+
+    private var sequenceId: Int = 0
+
+    private var options: ConnectOptions = _
 
     final override protected def checkDecodePacket(buffer: Buffer): Boolean =
         if (buffer.readableBytes > 4) {
@@ -33,9 +46,87 @@ class MysqlDriver extends Driver {
             if (buffer.readableBytes >= packetLen) true else false
         } else false
 
-    override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = ???
+    override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit =
+        if (checkDecodePacket(input)) {
+            val packetStart     = input.readerOffset
+            val length          = input.readUnsignedMediumLE
+            val sequenceId: Int = input.readUnsignedByte
+            status match
+                case ST_CONNECTED =>
+                    handleInitialHandshake(input)
+                    status = ST_AUTHENTICATING
+                case ST_CONNECTING     => ???
+                case ST_AUTHENTICATING => handleAuthentication(ctx, input)
+        }
 
     override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit =
         ???
+
+    private def handleInitialHandshake(payload: Buffer): Unit = {}
+
+    private def handleAuthentication(ctx: ChannelHandlerContext, payload: Buffer): Unit = {
+        val header = payload.getUnsignedByte(payload.readerOffset)
+        header match {
+            case OK_PACKET_HEADER =>
+                status = ST_CONNECTED
+            case ERROR_PACKET_HEADER =>
+            case AUTH_SWITCH_REQUEST_STATUS_FLAG =>
+                handleAuthSwitchRequest(ctx, options.password.getBytes(StandardCharsets.UTF_8), payload)
+            case AUTH_MORE_DATA_STATUS_FLAG => // handleAuthMoreData(cmd.password.getBytes(StandardCharsets.UTF_8), payload)
+            case _ =>
+        }
+    }
+
+    private def handleAuthSwitchRequest(ctx: ChannelHandlerContext, password: Array[Byte], payload: Buffer): Unit = {
+        // Protocol::AuthSwitchRequest
+        payload.readByte
+        val pluginName = BufferUtils.readNullTerminatedString(payload, StandardCharsets.UTF_8)
+        val nonce      = new Array[Byte](NONCE_LENGTH)
+        payload.readBytes(nonce)
+        val authRes = pluginName match {
+            case "mysql_native_password" => Native41Authenticator.encode(password, nonce)
+            case "caching_sha2_password" => CachingSha2Authenticator.encode(password, nonce)
+            case "mysql_clear_password"  => password
+            case _                       => ???
+        }
+        sendBytesAsPacket(ctx, authRes)
+    }
+
+    def isTlsSupportedByServer(serverCapabilitiesFlags: Int): Boolean =
+        (serverCapabilitiesFlags & CLIENT_SSL) != 0
+
+    private def sendBytesAsPacket(ctx: ChannelHandlerContext, payload: Array[Byte]): Unit = {
+        val length = payload.length
+        val packet = ctx.outboundAdaptiveBuffer
+        packet.writeMediumLE(length)
+        packet.writeByte(sequenceId.toByte)
+        packet.writeBytes(payload)
+        ctx.writeAndFlush(packet)
+    }
+
+}
+
+object MysqlDriver {
+
+    private val AUTH_PLUGIN_DATA_PART1_LENGTH = 8
+
+    private val ST_CONNECTING     = 0
+    private val ST_AUTHENTICATING = 1
+    private val ST_CONNECTED      = 2
+    private val ST_CLOSING        = 5
+
+    val ST_CLIENT_CREATE        = 0
+    val ST_CLIENT_CONNECTED     = 1
+    val ST_CLIENT_AUTHENTICATED = 2
+    val ST_CLIENT_CLOSED        = 3
+
+    // auth
+    val NONCE_LENGTH                    = 20
+    val AUTH_SWITCH_REQUEST_STATUS_FLAG = 0xfe
+
+    val AUTH_MORE_DATA_STATUS_FLAG                = 0x01
+    protected val AUTH_PUBLIC_KEY_REQUEST_FLAG    = 0x02
+    protected val FAST_AUTH_STATUS_FLAG           = 0x03
+    protected val FULL_AUTHENTICATION_STATUS_FLAG = 0x04
 
 }

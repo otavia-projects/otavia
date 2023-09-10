@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package cc.otavia.adbc
+package cc.otavia.mysql.protocol
 
-trait DriverFactory {
+object Packets {
 
-    def newDriver(): Driver
-
-    def driverClassName: String
-
-    def parseOptions(url: String, username: String, password: String): ConnectOptions
+    val OK_PACKET_HEADER            = 0x00
+    val EOF_PACKET_HEADER           = 0xfe
+    val ERROR_PACKET_HEADER         = 0xff
+    val PACKET_PAYLOAD_LENGTH_LIMIT = 0xffffff
 
 }
