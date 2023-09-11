@@ -28,7 +28,7 @@ components that this product depends on.
 This product contains a modified version of Netty, which can be obtained at:
 
   * LICENSE:
-    * copyright/LICENSE.netty.txt (Apache License 2.0)
+    * LICENSES/LICENSE.netty.txt (Apache License 2.0)
   * HOMEPAGE:
     * https://netty.io/
     * https://github.com/netty/netty
@@ -37,21 +37,29 @@ This product contains a modified version of Robert Harder's Public Domain
 Base64 Encoder and Decoder, which can be obtained at:
 
   * LICENSE:
-    * copyright/LICENSE.base64.txt (Public Domain)
+    * LICENSES/LICENSE.base64.txt (Public Domain)
   * HOMEPAGE:
     * http://iharder.sourceforge.net/current/java/base64/
 
 This product contains a modified version of millw, which can be obtained at:
 
   * LICENSE:
-    * copyright/LICENSE.millw.txt (Apache License 2.0)
+    * LICENSES/LICENSE.millw.txt (Apache License 2.0)
   * HOMEPAGE:
     * https://github.com/lefou/millw
 
 This product contains a modified version of slf4j, which can be obtained at:
 
   * LICENSE:
-    * copyright/LICENSE.slf4j.txt (MIT License)
+    * LICENSES/LICENSE.slf4j.txt (MIT License)
   * HOMEPAGE:
     * https://www.slf4j.org/
     * https://github.com/qos-ch/slf4j
+
+This product contains a modified version of vertx-sql-client , which can be obtained at:
+
+  * LICENSE:
+    * LICENSES/LICENSE.vertx-sql-client.txt (Apache License 2.0)
+  * HOMEPAGE:
+    * https://vertx.io/docs/#databases
+    * https://github.com/eclipse-vertx/vertx-sql-client

@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package cc.otavia.adbc.serde
+package cc.otavia.adbc.datatype
 
-import cc.otavia.adbc.ProtocolParser
-import cc.otavia.serde.Serde
+import scala.beans.BeanProperty
 
-trait ResultSetSerde[R] extends Serde[R] {
+class Point(@BeanProperty var x: Double = 0, @BeanProperty var y: Double = 0) extends Geometry()
 
-    protected var protocolParser: ProtocolParser = _
-
-    private[adbc] def setProtocolParser(protocolParser: ProtocolParser): Unit = this.protocolParser = protocolParser
-
+object Point {
+    def copy(point: Point): Point = {
+        val p = Point(point.x, point.y)
+        p.setSRID(point.getSRID)
+        p
+    }
 }

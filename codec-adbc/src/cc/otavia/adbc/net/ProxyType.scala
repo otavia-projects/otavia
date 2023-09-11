@@ -16,18 +16,16 @@
 
 package cc.otavia.adbc.net
 
-/**
- * The type of a TCP proxy server.
- */
-sealed trait ProxyType
+/** The type of a TCP proxy server. */
+enum ProxyType {
 
-object ProxyType {
     /** HTTP CONNECT ssl proxy */
-    object HTTP extends ProxyType
+    case HTTP extends ProxyType
 
     /** SOCKS4/4a tcp proxy */
-    object SOCKS4 extends ProxyType
+    case SOCKS4 extends ProxyType
 
     /** SOCSK5 tcp proxy */
-    object SOCKS5 extends ProxyType
+    case SOCKS5 extends ProxyType
+
 }

@@ -16,12 +16,14 @@
 
 package cc.otavia.adbc
 
+import java.util
+
 trait DriverFactory {
 
-    def newDriver(): Driver
+    def newDriver(options: ConnectOptions): Driver
 
     def driverClassName: String
 
-    def parseOptions(url: String, username: String, password: String): ConnectOptions
+    def parseOptions(url: String, info: util.Properties): ConnectOptions
 
 }

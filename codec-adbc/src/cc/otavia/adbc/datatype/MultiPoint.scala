@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-package cc.otavia.adbc
+package cc.otavia.adbc.datatype
 
-import cc.otavia.buffer.Buffer
-import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.channel.ChannelHandlerContext
-import cc.otavia.core.channel.handler.{Byte2MessageDecoder, Message2ByteEncoder}
-import cc.otavia.core.message.{Ask, IdAllocator, Reply}
-import cc.otavia.core.stack.ChannelFuture
+import scala.beans.BeanProperty
 
-import java.net.SocketAddress
+/** A MultiPoint is a geometry collection composed of Point elements. The points are not connected or ordered in any
+ *  way.
+ *
+ *  @param points
+ */
+class MultiPoint(@BeanProperty var points: List[Point]) extends Geometry()
 
-abstract class Driver(val options: ConnectOptions) extends Byte2MessageDecoder with Message2ByteEncoder {
-
-    protected def checkDecodePacket(buffer: Buffer): Boolean
-
+object MultiPoint {
+    def copy(multiPoint: MultiPoint): MultiPoint = {
+        val mp = MultiPoint(multiPoint.points)
+        mp.setSRID(multiPoint.getSRID)
+        mp
+    }
 }

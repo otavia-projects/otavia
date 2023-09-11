@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package cc.otavia.adbc
+package cc.otavia.adbc.serde
 
-import cc.otavia.buffer.Buffer
-import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.channel.ChannelHandlerContext
-import cc.otavia.core.channel.handler.{Byte2MessageDecoder, Message2ByteEncoder}
-import cc.otavia.core.message.{Ask, IdAllocator, Reply}
-import cc.otavia.core.stack.ChannelFuture
+import cc.otavia.adbc.ResultSetParser
+import cc.otavia.serde.Serde
 
-import java.net.SocketAddress
+trait RowSerde[R] extends Serde[R] {
 
-abstract class Driver(val options: ConnectOptions) extends Byte2MessageDecoder with Message2ByteEncoder {
+    private var resultSetParser: ResultSetParser = _
 
-    protected def checkDecodePacket(buffer: Buffer): Boolean
+    private[adbc] def setParser(parser: ResultSetParser): Unit = this.resultSetParser = parser
 
 }

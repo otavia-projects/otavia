@@ -16,8 +16,8 @@
 
 package cc.otavia.adbc
 
-import cc.otavia.adbc.serde.ResultSetSerde
-import cc.otavia.core.message.{Ask, Reply}
+import cc.otavia.adbc.serde.RowSerde
+import cc.otavia.core.message.{Ask, Notice, Reply}
 
 trait Statement {}
 
@@ -27,11 +27,23 @@ object Statement {
 
     class ExecuteUpdate(sql: String) extends Ask[ModifyRows]
 
-    class ExecuteQuery[R <: ResultSet](sql: String, serde: ResultSetSerde[R]) extends Ask[R]
+    class ExecuteQuery[R <: Row](sql: String, serde: RowSerde[R]) extends Ask[R]
 
     object ExecuteQuery {
-        def apply[R <: ResultSet](sql: String)(using serde: ResultSetSerde[R]): ExecuteQuery[R] =
+        def apply[R <: Row](sql: String)(using serde: RowSerde[R]): ExecuteQuery[R] =
             new ExecuteQuery(sql, serde)
     }
+
+    class ExecuteQueries[R <: Row](sql: String, serde: RowSerde[R]) extends Ask[Rows[R]]
+    object ExecuteQueries {
+        def apply[R <: Row](sql: String)(using serde: RowSerde[R]): ExecuteQueries[R] =
+            new ExecuteQueries(sql, serde)
+    }
+
+    case class Cursor(id: Int)                                     extends Reply
+    class ExecuteCursor[R <: Row](sql: String, serde: RowSerde[R]) extends Ask[Cursor]
+
+    case class CursorRow[R <: Row](row: R, cursorId: Int) extends Notice
+    case class CursorEnd(cursorId: Int)                   extends Notice
 
 }

@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package cc.otavia.adbc
+package cc.otavia.mysql.spi
 
-import cc.otavia.buffer.Buffer
-import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.channel.ChannelHandlerContext
-import cc.otavia.core.channel.handler.{Byte2MessageDecoder, Message2ByteEncoder}
-import cc.otavia.core.message.{Ask, IdAllocator, Reply}
-import cc.otavia.core.stack.ChannelFuture
+import cc.otavia.adbc.{ConnectOptions, Driver, DriverFactory}
+import cc.otavia.mysql.{MySQLConnectOptions, MysqlDriver}
 
-import java.net.SocketAddress
+import java.util
 
-abstract class Driver(val options: ConnectOptions) extends Byte2MessageDecoder with Message2ByteEncoder {
+object MySQLDriverFactory extends DriverFactory {
 
-    protected def checkDecodePacket(buffer: Buffer): Boolean
+    override def newDriver(options: ConnectOptions): Driver = new MysqlDriver(options.asInstanceOf[MySQLConnectOptions])
+
+    override def driverClassName: String = "cc.otavia.mysql.MysqlDriver"
+
+    override def parseOptions(url: String, info: util.Properties): ConnectOptions = ???
 
 }

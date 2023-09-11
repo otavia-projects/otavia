@@ -16,17 +16,6 @@
 
 package cc.otavia.adbc
 
-import cc.otavia.buffer.Buffer
-import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.channel.ChannelHandlerContext
-import cc.otavia.core.channel.handler.{Byte2MessageDecoder, Message2ByteEncoder}
-import cc.otavia.core.message.{Ask, IdAllocator, Reply}
-import cc.otavia.core.stack.ChannelFuture
+import cc.otavia.core.message.Reply
 
-import java.net.SocketAddress
-
-abstract class Driver(val options: ConnectOptions) extends Byte2MessageDecoder with Message2ByteEncoder {
-
-    protected def checkDecodePacket(buffer: Buffer): Boolean
-
-}
+trait Row extends Reply

@@ -20,6 +20,6 @@ import cc.otavia.adbc.DriverFactory
 
 trait ADBCServiceProvider {
 
-    def getDriverFactory(): DriverFactory
+    def getDriverFactory: DriverFactory
 
 }

@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package cc.otavia.adbc
+package cc.otavia.mysql.protocol
 
-import cc.otavia.buffer.Buffer
-import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.channel.ChannelHandlerContext
-import cc.otavia.core.channel.handler.{Byte2MessageDecoder, Message2ByteEncoder}
-import cc.otavia.core.message.{Ask, IdAllocator, Reply}
-import cc.otavia.core.stack.ChannelFuture
+object EnumCursorType {
 
-import java.net.SocketAddress
+    val CURSOR_TYPE_NO_CURSOR: Byte = 0
+    val CURSOR_TYPE_READ_ONLY: Byte = 1
 
-abstract class Driver(val options: ConnectOptions) extends Byte2MessageDecoder with Message2ByteEncoder {
-
-    protected def checkDecodePacket(buffer: Buffer): Boolean
+    // not supported by the server for now
+    val CURSOR_TYPE_FOR_UPDATE: Byte = 2
+    val CURSOR_TYPE_SCROLLABLE: Byte = 4
 
 }

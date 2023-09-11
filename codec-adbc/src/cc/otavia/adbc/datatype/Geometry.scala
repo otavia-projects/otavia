@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
-package cc.otavia.adbc
+package cc.otavia.adbc.datatype
 
-import cc.otavia.buffer.Buffer
-import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.channel.ChannelHandlerContext
-import cc.otavia.core.channel.handler.{Byte2MessageDecoder, Message2ByteEncoder}
-import cc.otavia.core.message.{Ask, IdAllocator, Reply}
-import cc.otavia.core.stack.ChannelFuture
+/** Geometry is an abstract class which represents the base of geometry data type.
+ *
+ *  @param srid
+ */
+abstract class Geometry(var srid: Long) {
 
-import java.net.SocketAddress
+    def this(other: Geometry) = this(other.srid)
 
-abstract class Driver(val options: ConnectOptions) extends Byte2MessageDecoder with Message2ByteEncoder {
+    def this() = this(0)
 
-    protected def checkDecodePacket(buffer: Buffer): Boolean
+    def getSRID: Long = srid
+
+    def setSRID(srid: Long): this.type = {
+        this.srid = srid
+        this
+    }
 
 }

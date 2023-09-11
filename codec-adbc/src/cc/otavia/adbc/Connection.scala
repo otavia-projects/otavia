@@ -25,19 +25,31 @@ import cc.otavia.core.stack.StackState.*
 import cc.otavia.core.stack.{AskStack, ChannelFuture, StackState}
 
 import java.net.{ProtocolFamily, StandardProtocolFamily}
+import java.util
+import java.util.Properties
 
 class Connection(override val family: ProtocolFamily = StandardProtocolFamily.INET)
     extends ChannelsActor[Connect | ExecuteUpdate | ExecuteQuery[?]] {
 
     private var channel: ChannelAddress = _
+    private var driver: Driver          = _
 
-    override protected def init(channel: Channel): Unit = {}
+    override protected def init(channel: Channel): Unit = {
+        channel.pipeline.addLast(driver)
+    }
 
     override protected def newChannel(): Channel = system.channelFactory.openSocketChannel(family)
 
     private def handleConnect(stack: AskStack[Connect]): Option[StackState] = {
         stack.stackState match
             case StackState.start =>
+                val auth = stack.ask
+                val driverFactory = auth.driver match
+                    case Some(name) => DriverManager.getDriverFactory(name)
+                    case None       => DriverManager.defaultDriver(auth.url)
+                val options = driverFactory.parseOptions(auth.url, auth.info)
+                driver = driverFactory.newDriver(options)
+
                 channel = newChannelAndInit()
                 val state = new ChannelFutureState()
                 channel.connect(???, state.future)
@@ -54,11 +66,28 @@ class Connection(override val family: ProtocolFamily = StandardProtocolFamily.IN
         ???
     }
 
+    private def handleExecuteQueries(stack: AskStack[ExecuteQueries[?]]): Option[StackState] = {
+        ???
+    }
+
+    private def handleCursor(stack: AskStack[ExecuteCursor[?]]): Option[StackState] = {
+
+        ???
+    }
+
 }
 
 object Connection {
 
-    case class ConnectResult(connectionId: Int)                         extends Reply
-    case class Connect(url: String, username: String, password: String) extends Ask[ConnectResult]
+    case class ConnectResult(connectionId: Int)                                           extends Reply
+    case class Connect(url: String, info: util.Properties, driver: Option[String] = None) extends Ask[ConnectResult]
+    object Connect {
+        def apply(url: String, user: String, password: String): Connect = {
+            val info = new Properties()
+            info.put("user", user)
+            info.put("password", password)
+            new Connect(url, info, None)
+        }
+    }
 
 }

@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package cc.otavia.adbc
+package cc.otavia.postgres.spi
 
-trait ProtocolParser {
+import cc.otavia.adbc.{ConnectOptions, Driver, DriverFactory}
+import cc.otavia.postgres.{PostgresConnectOptions, PostgresDriver}
 
-    def next(): Boolean
+import java.util
 
-    def parseString(columnIndex: Int): String
+object PostgresDriverFactory extends DriverFactory {
 
-    def parseBoolean(columnIndex: Int): Boolean
+    override def newDriver(options: ConnectOptions): Driver =
+        new PostgresDriver(options.asInstanceOf[PostgresConnectOptions])
 
-    def parseByte(columnIndex: Int): Byte
+    override def driverClassName: String = "cc.otavia.postgres.PostgresDriver"
 
-    def parseShort(columnIndex: Int): Short
-
-    def parseInt(columnIndex: Int): Int
-
-    def parseLong(columnIndex: Int): Long
-
-    def parseFloat(columnIndex: Int): Float
+    override def parseOptions(url: String, info: util.Properties): ConnectOptions = ???
 
 }

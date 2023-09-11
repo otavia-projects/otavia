@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-package cc.otavia.adbc
+package cc.otavia.adbc.datatype
 
-import cc.otavia.buffer.Buffer
-import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.channel.ChannelHandlerContext
-import cc.otavia.core.channel.handler.{Byte2MessageDecoder, Message2ByteEncoder}
-import cc.otavia.core.message.{Ask, IdAllocator, Reply}
-import cc.otavia.core.stack.ChannelFuture
+import scala.beans.BeanProperty
 
-import java.net.SocketAddress
+/** A MultiPolygon is a MultiSurface object composed of Polygon elements.
+ *
+ *  @param polygons
+ */
+class MultiPolygon(@BeanProperty var polygons: List[Polygon]) extends Geometry()
 
-abstract class Driver(val options: ConnectOptions) extends Byte2MessageDecoder with Message2ByteEncoder {
-
-    protected def checkDecodePacket(buffer: Buffer): Boolean
-
+object MultiPolygon {
+    def copy(multiPolygon: MultiPolygon): MultiPolygon = {
+        val mp = MultiPolygon(multiPolygon.polygons)
+        mp.setSRID(multiPolygon.getSRID)
+        mp
+    }
 }

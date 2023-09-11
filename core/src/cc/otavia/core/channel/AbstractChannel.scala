@@ -128,7 +128,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     override private[core] def onInboundMessage(msg: AnyRef): Unit = {
         if (outboundInflightFutures.isEmpty) {
-            val stack = ChannelStack(this, msg, msgId = generateMessageId)
+            val stack = ChannelStack(this, msg, msgId = generateMessageId) // TODO: support channel notice message
             inboundInflightStacks
             executor.receiveChannelMessage(stack)
         } else {

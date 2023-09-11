@@ -29,15 +29,13 @@ import java.net.SocketAddress
 import java.nio.charset.StandardCharsets
 import scala.language.unsafeNulls
 
-class MysqlDriver extends Driver {
+class MysqlDriver(override val options: MySQLConnectOptions) extends Driver(options) {
 
     import MysqlDriver.*
 
     private var status = ST_CONNECTING
 
     private var sequenceId: Int = 0
-
-    private var options: ConnectOptions = _
 
     final override protected def checkDecodePacket(buffer: Buffer): Boolean =
         if (buffer.readableBytes > 4) {
@@ -92,8 +90,7 @@ class MysqlDriver extends Driver {
         sendBytesAsPacket(ctx, authRes)
     }
 
-    def isTlsSupportedByServer(serverCapabilitiesFlags: Int): Boolean =
-        (serverCapabilitiesFlags & CLIENT_SSL) != 0
+    def isTlsSupportedByServer(serverCapabilitiesFlags: Int): Boolean = (serverCapabilitiesFlags & CLIENT_SSL) != 0
 
     private def sendBytesAsPacket(ctx: ChannelHandlerContext, payload: Array[Byte]): Unit = {
         val length = payload.length

@@ -14,8 +14,21 @@
  * limitations under the License.
  */
 
-package cc.otavia.adbc
+package cc.otavia.adbc.datatype
 
-import cc.otavia.core.message.Reply
+import scala.beans.BeanProperty
 
-trait ResultSet extends Reply
+/** A Polygon is a planar Surface representing a multisided geometry. It is defined by a single exterior boundary and
+ *  zero or more interior boundaries, where each interior boundary defines a hole in the Polygon.
+ *
+ *  @param lineStrings
+ */
+class Polygon(@BeanProperty var lineStrings: List[LineString]) extends Geometry()
+
+object Polygon {
+    def copy(polygon: Polygon): Polygon = {
+        val p = Polygon(polygon.lineStrings)
+        p.setSRID(polygon.getSRID)
+        p
+    }
+}

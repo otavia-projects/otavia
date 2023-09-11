@@ -21,7 +21,7 @@ import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContext
 
-class PostgresDriver extends Driver {
+class PostgresDriver(override val options: PostgresConnectOptions) extends Driver(options) {
 
     final override protected def checkDecodePacket(buffer: Buffer): Boolean =
         if (buffer.readableBytes >= 5) {
