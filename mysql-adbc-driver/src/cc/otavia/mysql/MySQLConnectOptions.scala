@@ -17,9 +17,32 @@
 package cc.otavia.mysql
 
 import cc.otavia.adbc.ConnectOptions
+import cc.otavia.buffer.Buffer
+
+import scala.beans.BeanProperty
+import scala.language.unsafeNulls
 
 class MySQLConnectOptions extends ConnectOptions {
+
     import MySQLConnectOptions.*
+
+    @BeanProperty var collation: String                          = _
+    @BeanProperty var charset: String                            = DEFAULT_CHARSET
+    @BeanProperty var useAffectedRows: Boolean                   = DEFAULT_USE_AFFECTED_ROWS
+    @BeanProperty var sslMode: SslMode                           = DEFAULT_SSL_MODE
+    @BeanProperty var serverRsaPublicKeyPath: String             = _
+    @BeanProperty var serverRsaPublicKeyValue: Buffer            = _
+    @BeanProperty var characterEncoding: String                  = DEFAULT_CHARACTER_ENCODING
+    @BeanProperty var pipeliningLimit: Int                       = DEFAULT_PIPELINING_LIMIT
+    @BeanProperty var authenticationPlugin: AuthenticationPlugin = AuthenticationPlugin.DEFAULT
+
+    host = DEFAULT_HOST
+    port = DEFAULT_PORT
+    user = DEFAULT_USER
+    password = DEFAULT_PASSWORD
+    database = DEFAULT_SCHEMA
+
+    for ((key, value) <- DEFAULT_CONNECTION_ATTRIBUTES) properties.put(key, value)
 
 }
 
@@ -32,7 +55,7 @@ object MySQLConnectOptions {
     val DEFAULT_SCHEMA: String                             = ""
     val DEFAULT_CHARSET: String                            = "utf8mb4"
     val DEFAULT_USE_AFFECTED_ROWS: Boolean                 = false
-    val DEFAULT_CONNECTION_ATTRIBUTES: Map[String, String] = Map("_client_name" -> "sdoob-mysql-client")
+    val DEFAULT_CONNECTION_ATTRIBUTES: Map[String, String] = Map("_client_name" -> "otavia-mysql-client")
     val DEFAULT_SSL_MODE: SslMode                          = SslMode.DISABLED
     val DEFAULT_CHARACTER_ENCODING: String                 = "UTF-8"
     val DEFAULT_PIPELINING_LIMIT: Int                      = 1

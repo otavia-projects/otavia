@@ -79,13 +79,11 @@ class Connection(override val family: ProtocolFamily = StandardProtocolFamily.IN
 
 object Connection {
 
-    case class ConnectResult(connectionId: Int)                                           extends Reply
-    case class Connect(url: String, info: util.Properties, driver: Option[String] = None) extends Ask[ConnectResult]
+    case class ConnectResult(connectionId: Int)                                               extends Reply
+    case class Connect(url: String, info: Map[String, String], driver: Option[String] = None) extends Ask[ConnectResult]
     object Connect {
         def apply(url: String, user: String, password: String): Connect = {
-            val info = new Properties()
-            info.put("user", user)
-            info.put("password", password)
+            val info = Map("user" -> user, "password" -> password)
             new Connect(url, info, None)
         }
     }

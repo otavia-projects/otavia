@@ -18,6 +18,7 @@ package cc.otavia.adbc
 
 import cc.otavia.adbc.net.ProxyOptions
 
+import java.net.{InetSocketAddress, SocketAddress}
 import scala.beans.BeanProperty
 import scala.collection.mutable
 import scala.language.unsafeNulls
@@ -88,6 +89,8 @@ class ConnectOptions {
             }
         }
     }
+
+    def socketAddress: SocketAddress = new InetSocketAddress(host, port)
 
 }
 

@@ -34,7 +34,7 @@ object Statement {
             new ExecuteQuery(sql, serde)
     }
 
-    class ExecuteQueries[R <: Row](sql: String, serde: RowSerde[R]) extends Ask[Rows[R]]
+    class ExecuteQueries[R <: Row](sql: String, serde: RowSerde[R]) extends Ask[RowSet[R]]
     object ExecuteQueries {
         def apply[R <: Row](sql: String)(using serde: RowSerde[R]): ExecuteQueries[R] =
             new ExecuteQueries(sql, serde)

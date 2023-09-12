@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-package cc.otavia.postgres.spi
+package cc.otavia.adbc
 
-import cc.otavia.adbc.{ConnectOptions, Driver, DriverFactory}
-import cc.otavia.postgres.{PostgresConnectOptions, PostgresDriver}
+import java.sql.JDBCType
 
-import java.util
+trait ColumnDescriptor {
 
-object PostgresDriverFactory extends DriverFactory {
+    /** the column name */
+    def name: String
 
-    override def newDriver(options: ConnectOptions): Driver =
-        new PostgresDriver(options.asInstanceOf[PostgresConnectOptions])
+    /** whether the column is an array */
+    def isArray: Boolean
 
-    override def driverClassName: String = "cc.otavia.postgres.PostgresDriver"
+    /** vendor-specific name of the column type, or [[Null]] if unknown */
+    def typeName: String
 
-    override def parseOptions(url: String, info: Map[String, String]): ConnectOptions = ???
+    /** the most appropriate [[JDBCType]] */
+    def jdbcType: JDBCType
 
 }

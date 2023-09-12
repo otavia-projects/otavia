@@ -17,13 +17,53 @@
 package cc.otavia.adbc
 
 import java.util
+import java.util.regex.{Matcher, Pattern}
+import scala.language.unsafeNulls
+import scala.util.matching.Regex
 
 trait DriverFactory {
+
+    protected val JDBC_URL_RE: Regex =
+        "^jdbc:(mysql|mariadb|oracle|sqlserver|postgresql|sqlite):((\\/\\/[\\w.-]+(:\\d+)?\\/\\w+)|\\/[\\w.-]+)$".r
+
+    protected val PROP_HOST     = "host"
+    protected val PROP_PORT     = "port"
+    protected val PROP_DATABASE = "database"
+    protected val PROP_SERVER   = "server"
+    protected val PROP_PARAMS   = "params"
+    protected val PROP_FOLDER   = "folder"
+    protected val PROP_FILE     = "file"
+    protected val PROP_USER     = "user"
+    protected val PROP_PASSWORD = "password"
 
     def newDriver(options: ConnectOptions): Driver
 
     def driverClassName: String
 
-    def parseOptions(url: String, info: util.Properties): ConnectOptions
+    def parseOptions(url: String, info: Map[String, String]): ConnectOptions
+
+    private def getPropertyRegex(property: String): String = property match
+        case PROP_FOLDER | PROP_FILE | PROP_PARAMS => ".+?"
+        case _                                     => "[\\\\w\\\\-_.~]+"
+
+    private def replaceAll(input: String, regex: String, replacer: Matcher => String): String = {
+        val matcher          = Pattern.compile(regex).matcher(input)
+        val sb: StringBuffer = new StringBuffer
+        while (matcher.find) matcher.appendReplacement(sb, replacer(matcher))
+        matcher.appendTail(sb)
+        sb.toString
+    }
+
+    protected def getPattern(url: String): Pattern = {
+        var pattern = url
+        pattern = replaceAll(pattern, "\\[(.*?)]", (m) => "\\\\E(?:\\\\Q" + m.group(1) + "\\\\E)?\\\\Q")
+        pattern = replaceAll(
+          pattern,
+          "\\{(.*?)}",
+          m => "\\\\E(\\?<\\\\Q" + m.group(1) + "\\\\E>" + getPropertyRegex(m.group(1)) + ")\\\\Q"
+        )
+        pattern = "^\\Q" + pattern + "\\E$"
+        Pattern.compile(pattern)
+    }
 
 }

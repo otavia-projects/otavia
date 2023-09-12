@@ -17,16 +17,65 @@
 package cc.otavia.mysql.spi
 
 import cc.otavia.adbc.{ConnectOptions, Driver, DriverFactory}
-import cc.otavia.mysql.{MySQLConnectOptions, MysqlDriver}
+import cc.otavia.buffer.Buffer
+import cc.otavia.handler.codec.base64.Base64
+import cc.otavia.mysql.{AuthenticationPlugin, MySQLConnectOptions, MySQLDriver, SslMode}
 
+import java.nio.charset.StandardCharsets
 import java.util
+import scala.collection.mutable
+import scala.language.unsafeNulls
 
 object MySQLDriverFactory extends DriverFactory {
 
-    override def newDriver(options: ConnectOptions): Driver = new MysqlDriver(options.asInstanceOf[MySQLConnectOptions])
+    override def newDriver(options: ConnectOptions): Driver = new MySQLDriver(options.asInstanceOf[MySQLConnectOptions])
 
-    override def driverClassName: String = "cc.otavia.mysql.MysqlDriver"
+    override def driverClassName: String = "cc.otavia.mysql.MySQLDriver"
 
-    override def parseOptions(url: String, info: util.Properties): ConnectOptions = ???
+    override def parseOptions(url: String, info: Map[String, String]): ConnectOptions = {
+        val pattern = getPattern("jdbc:mysql://{host}[:{port}]/[{database}][\\?{params}]")
+        val matcher = pattern.matcher(url)
+        val options = new MySQLConnectOptions()
+
+        val urlParams: mutable.Map[String, String] = mutable.HashMap.empty
+        if (matcher.matches()) {
+            val host     = matcher.group("host")
+            val port     = matcher.group("port")
+            val database = matcher.group("database")
+
+            options.host = host
+            if (port != null) options.port = port.toInt
+            options.database = database
+
+            val params = matcher.group("params")
+            if (params != null) {
+                val pairs = params.split("&")
+                pairs.foreach { pair =>
+                    val parts = pair.split("=")
+                    urlParams.put(parts(0), parts(1))
+                }
+            }
+        }
+
+        for ((key, value) <- urlParams.toMap ++ info) {
+            key match
+                case "user"                   => options.user = value
+                case "password"               => options.password = value
+                case "authenticationPlugin"   => options.authenticationPlugin = AuthenticationPlugin.valueOf(value)
+                case "characterEncoding"      => options.characterEncoding = value
+                case "charset"                => options.charset = value
+                case "collation"              => options.collation = value
+                case "pipeliningLimit"        => options.pipeliningLimit = value.toInt
+                case "serverRsaPublicKeyPath" => options.serverRsaPublicKeyPath = value
+                case "serverRsaPublicKeyValue" =>
+                    options.serverRsaPublicKeyValue =
+                        Base64.decode(Buffer.wrap(value.getBytes(StandardCharsets.ISO_8859_1)))
+                case "sslMode"         => options.sslMode = SslMode.valueOf(value)
+                case "useAffectedRows" => options.useAffectedRows = value.toBoolean
+                case _                 => options.properties.put(key, value)
+        }
+
+        options
+    }
 
 }

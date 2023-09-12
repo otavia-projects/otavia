@@ -26,12 +26,32 @@ import cc.otavia.mysql.protocol.Packets.*
 import cc.otavia.mysql.utils.*
 
 import java.net.SocketAddress
-import java.nio.charset.StandardCharsets
+import java.nio.charset.{Charset, StandardCharsets}
 import scala.language.unsafeNulls
 
-class MysqlDriver(override val options: MySQLConnectOptions) extends Driver(options) {
+class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(options) {
 
-    import MysqlDriver.*
+    import MySQLDriver.*
+
+    private val collation: Collation =
+        if (options.collation != null) Collation.valueOf(options.collation)
+        else {
+            if (options.charset == null) Collation.utf8mb4_general_ci
+            else Collation.valueOf(Collation.getDefaultCollationFromCharsetName(options.charset))
+        }
+
+    private val encodingCharset: Charset =
+        if (options.collation != null) Charset.forName(collation.mappedJavaCharsetName)
+        else if (options.characterEncoding == null) Charset.defaultCharset()
+        else Charset.forName(options.characterEncoding)
+
+    private var clientCapabilitiesFlag: Int = {
+        var flags = CLIENT_SUPPORTED_CAPABILITIES_FLAGS
+        if (options.database != null && options.database.nonEmpty) flags |= CLIENT_CONNECT_WITH_DB
+        if (options.properties.nonEmpty) flags |= CLIENT_CONNECT_ATTRS
+        if (options.useAffectedRows) flags |= CLIENT_FOUND_ROWS
+        flags
+    }
 
     private var status = ST_CONNECTING
 
@@ -50,17 +70,21 @@ class MysqlDriver(override val options: MySQLConnectOptions) extends Driver(opti
             val length          = input.readUnsignedMediumLE
             val sequenceId: Int = input.readUnsignedByte
             status match
-                case ST_CONNECTED =>
+                case ST_CONNECTING =>
                     handleInitialHandshake(input)
                     status = ST_AUTHENTICATING
-                case ST_CONNECTING     => ???
                 case ST_AUTHENTICATING => handleAuthentication(ctx, input)
         }
 
     override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit =
         ???
 
-    private def handleInitialHandshake(payload: Buffer): Unit = {}
+    private def handleInitialHandshake(payload: Buffer): Unit = {
+        val protocolVersion: Int = payload.readUnsignedByte
+        val serverVersion        = BufferUtils.readNullTerminatedString(payload, StandardCharsets.US_ASCII)
+
+        ???
+    }
 
     private def handleAuthentication(ctx: ChannelHandlerContext, payload: Buffer): Unit = {
         val header = payload.getUnsignedByte(payload.readerOffset)
@@ -103,7 +127,7 @@ class MysqlDriver(override val options: MySQLConnectOptions) extends Driver(opti
 
 }
 
-object MysqlDriver {
+object MySQLDriver {
 
     private val AUTH_PLUGIN_DATA_PART1_LENGTH = 8
 

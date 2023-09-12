@@ -31,7 +31,7 @@ import scala.language.unsafeNulls
 object DriverManager {
 
     private val DEFAULT_DRIVER =
-        Map("mysql" -> "cc.otavia.mysql.MysqlDriver", "postgres" -> "cc.otavia.postgres.PostgresDriver")
+        Map("mysql" -> "cc.otavia.mysql.MySQLDriver", "postgres" -> "cc.otavia.postgres.PostgresDriver")
 
     private val drivers: ConcurrentHashMap[String, DriverFactory] = new ConcurrentHashMap[String, DriverFactory]()
 
