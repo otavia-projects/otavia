@@ -16,21 +16,19 @@
 
 package cc.otavia.adbc.datatype
 
-/** Geometry is an abstract class which represents the base of geometry data type.
- *
- *  @param srid
- */
-abstract class Geometry(protected var srid: Long) {
+import scala.beans.BeanProperty
 
-    def this(other: Geometry) = this(other.srid)
+/** Circle data type in Postgres represented by a center [[Point]] and radius. */
+class Circle(@BeanProperty var centerPoint: Point = new Point(), @BeanProperty var radius: Double = 0.0)
+    extends Geometry() {
 
-    def this() = this(0)
-
-    def getSRID: Long = srid
-
-    def setSRID(srid: Long): this.type = {
-        this.srid = srid
-        this
+    override def equals(obj: Any): Boolean = if (this == obj) true
+    else if (obj == null || getClass != obj.getClass) false
+    else {
+        val circle = obj.asInstanceOf[Circle]
+        if (circle.radius == radius && circle.centerPoint.equals(centerPoint) && circle.getSRID == srid) true else false
     }
+
+    override def toString: String = s"Circle(${centerPoint}, $radius)"
 
 }

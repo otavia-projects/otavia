@@ -18,7 +18,10 @@ package cc.otavia.adbc.datatype
 
 import scala.beans.BeanProperty
 
-class Point(@BeanProperty var x: Double = 0, @BeanProperty var y: Double = 0) extends Geometry()
+class Point(@BeanProperty var x: Double = 0, @BeanProperty var y: Double = 0) extends Geometry() {
+    override def toString: String = s"Point($x, $y)"
+    
+}
 
 object Point {
     def copy(point: Point): Point = {
