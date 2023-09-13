@@ -90,6 +90,18 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         this
     }
 
+    override def writeBytes(length: Int, value: Byte): Buffer = {
+        if (writableBytes < length)
+            throw new IndexOutOfBoundsException(s"except length ${length}, but only ${writableBytes}")
+        var i = 0
+        while (i < length) {
+            underlying.put(widx + i, value)
+            i += 1
+        }
+        widx += length
+        this
+    }
+
     override def setBytes(index: Int, source: Array[Byte], srcPos: Int, length: Int): Buffer = {
         if (closed) throw new BufferClosedException()
         if (srcPos + length > source.length)

@@ -468,6 +468,18 @@ trait Buffer {
      */
     final def writeBytes(source: Array[Byte]): Buffer = writeBytes(source, 0, source.length)
 
+    /** Fills this buffer with [[value]] starting at the current [[writerOffset]] and increases the [[writerOffset]] by
+     *  the specified length. If [[writableBytes]] is less than length, [[ensureWritable]] will be called in an attempt
+     *  to expand capacity to accommodate.
+     *  @param length
+     *    the number of [[value]]s to write to the buffer.
+     *  @param value
+     *    the value byte to write.
+     *  @return
+     *    This buffer.
+     */
+    def writeBytes(length: Int, value: Byte): Buffer
+
     /** Set the given byte array at the given write offset. The [[writerOffset]] is not modified.
      *
      *  @param index

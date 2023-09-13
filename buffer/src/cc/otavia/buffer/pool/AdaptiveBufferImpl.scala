@@ -2272,6 +2272,24 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         this
     }
 
+    override def writeBytes(length: Int, value: Byte): Buffer = {
+        if (closed) throw new BufferClosedException()
+
+        var remaining = length
+        if (allocatedWritableBytes == 0) extendBuffer()
+        while {
+            val write = Math.min(remaining, last.writableBytes)
+            last.writeBytes(write, value)
+            remaining -= write
+            if (remaining > 0) this.extendBuffer()
+            remaining > 0
+        } do ()
+
+        widx += length
+
+        this
+    }
+
     override def setBytes(index: Int, source: Array[Byte], srcPos: Int, length: Int): Buffer = {
         if (closed) throw new BufferClosedException()
         if (length < 0) throw new IndexOutOfBoundsException(s"length of source can't be negative: length = $length")
