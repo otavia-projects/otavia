@@ -59,7 +59,7 @@ abstract class AbstractLogger extends Logger, Serializable, ModuleListener {
     override def warn(format: String, args: Any*): Unit = ???
 
     override def warn(msg: String, e: Throwable): Unit = ???
-//        if (isWarnEnabled) trace(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
+    // if (isWarnEnabled) this.warn(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
 
     override def error(format: String, arg: Any): Unit = ???
 
