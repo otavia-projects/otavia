@@ -18,7 +18,7 @@ package cc.otavia.adbc
 
 /** An exception that provides information on a database access error or other errors.
  *
- *  Each SQLException provides several kinds of information:
+ *  Each [[SQLException]] provides several kinds of information:
  *    - a string describing the error. This is used as the Java Exception message, available via the method getMesasge.
  *    - a "SQLstate" string, which follows either the XOPEN SQLstate conventions or the SQL:2003 conventions. The values
  *      of the SQLState string are described in the appropriate spec. The DatabaseMetaData method getSQLStateType can be

@@ -16,18 +16,20 @@
 
 package cc.otavia.mysql
 
-import cc.otavia.adbc.{ConnectOptions, Driver}
+import cc.otavia.adbc.Statement.ExecuteUpdate
+import cc.otavia.adbc.{ConnectOptions, Connection, Driver}
 import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
-import cc.otavia.core.channel.ChannelHandlerContext
+import cc.otavia.core.channel.{ChannelHandlerContext, ChannelInflight}
 import cc.otavia.core.slf4a.{Logger, LoggerFactory}
 import cc.otavia.core.stack.ChannelFuture
-import cc.otavia.mysql.protocol.CapabilitiesFlag
 import cc.otavia.mysql.protocol.CapabilitiesFlag.*
 import cc.otavia.mysql.protocol.Packets.*
+import cc.otavia.mysql.protocol.{CapabilitiesFlag, CommandType}
 import cc.otavia.mysql.utils.*
 
 import java.net.SocketAddress
+import java.nio.channels.ClosedChannelException
 import java.nio.charset.{Charset, StandardCharsets}
 import java.util
 import scala.collection.mutable
@@ -62,7 +64,12 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
     private var ctx: ChannelHandlerContext = _
     private var status                     = ST_CONNECTING
 
-    private var sequenceId: Int                   = 0
+    private var authenticationFailed: Throwable = _
+    private var authMsgId                       = ChannelInflight.INVALID_CHANNEL_MESSAGE_ID
+
+    private var currentMessageId = ChannelInflight.INVALID_CHANNEL_MESSAGE_ID
+
+    private var sequenceId: Byte                  = 0
     private var metadata: MySQLDatabaseMetadata   = _
     private var connectionId: Long                = Long.MinValue
     private var authPluginData: Array[Byte]       = _
@@ -85,14 +92,25 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
                 case ST_CONNECTING =>
                     handleInitialHandshake(input)
                     status = ST_AUTHENTICATING
-                case ST_AUTHENTICATING => handleAuthentication(ctx, input)
+                case ST_AUTHENTICATING => handleAuthentication(input)
 
             // skip remaining data
             if (input.readerOffset - packetStart < length + 4) input.readerOffset(packetStart + length + 4)
         }
 
-    override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit =
-        ???
+    override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, mid: Long): Unit = {
+        msg match
+            case _: Connection.Auth =>
+                if (status == ST_AUTHENTICATED) ctx.fireChannelRead(None, mid)
+                else if (status == ST_AUTHENTICATE_FAILED) ctx.fireChannelRead(authenticationFailed, mid)
+                else if (status == ST_CLOSING) ctx.fireChannelRead(ClosedChannelException(), mid)
+                else authMsgId = mid
+            case executeUpdate: ExecuteUpdate =>
+                if (status == ST_AUTHENTICATED) {
+                    sendQueryCommand(executeUpdate.sql)
+                } else ???
+            case _ => ???
+    }
 
     private def handleInitialHandshake(payload: Buffer): Unit = {
         logger.debug("handle initial handshake")
@@ -226,34 +244,44 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
         ctx.writeAndFlush(packet)
     }
 
-    private def handleAuthentication(ctx: ChannelHandlerContext, payload: Buffer): Unit = {
+    private def handleAuthentication(payload: Buffer): Unit = {
         logger.debug("handle authentication")
         val header = payload.getUnsignedByte(payload.readerOffset)
         header match {
-            case OK_PACKET_HEADER =>
-                status = ST_CONNECTED
-            case ERROR_PACKET_HEADER =>
+            case OK_PACKET_HEADER    => successAuthAndResponse()
+            case ERROR_PACKET_HEADER => handleErrorPacketPayload(payload)
             case AUTH_SWITCH_REQUEST_STATUS_FLAG =>
-                handleAuthSwitchRequest(ctx, options.password.getBytes(StandardCharsets.UTF_8), payload)
+                handleAuthSwitchRequest(options.password.getBytes(StandardCharsets.UTF_8), payload)
             case AUTH_MORE_DATA_STATUS_FLAG =>
                 handleAuthMoreData(options.password.getBytes(StandardCharsets.UTF_8), payload)
-            case _ =>
+            case _ => failAuthAndResponse(new IllegalStateException(s"Unhandled state with header: $header"))
         }
     }
 
-    private def handleAuthSwitchRequest(ctx: ChannelHandlerContext, password: Array[Byte], payload: Buffer): Unit = {
+    private def handleErrorPacketPayload(payload: Buffer): Unit = {
+        payload.readByte // skip ERR packet header
+        val errorCode = payload.readUnsignedShortLE
+        // CLIENT_PROTOCOL_41 capability flag will always be set
+        payload.readByte // // SQL state marker will always be #
+        val sqlState = BufferUtils.readFixedLengthString(payload, 5, StandardCharsets.UTF_8)
+        val errorMsg = BufferUtils.readFixedLengthString(payload, payload.readableBytes, StandardCharsets.UTF_8)
+
+        failAuthAndResponse(new MySQLException(errorMsg, errorCode, sqlState))
+    }
+
+    private def handleAuthSwitchRequest(password: Array[Byte], payload: Buffer): Unit = {
         // Protocol::AuthSwitchRequest
         payload.readByte
         val pluginName = BufferUtils.readNullTerminatedString(payload, StandardCharsets.UTF_8)
         val nonce      = new Array[Byte](NONCE_LENGTH)
         payload.readBytes(nonce)
-        val authRes = pluginName match {
-            case "mysql_native_password" => Native41Authenticator.encode(password, nonce)
-            case "caching_sha2_password" => CachingSha2Authenticator.encode(password, nonce)
-            case "mysql_clear_password"  => password
-            case _                       => ???
-        }
-        sendBytesAsPacket(ctx, authRes)
+        pluginName match
+            case "mysql_native_password" => sendBytesAsPacket(ctx, Native41Authenticator.encode(password, nonce))
+            case "caching_sha2_password" => sendBytesAsPacket(ctx, CachingSha2Authenticator.encode(password, nonce))
+            case "mysql_clear_password"  => sendBytesAsPacket(ctx, util.Arrays.copyOf(password, password.length + 1))
+            case _ =>
+                val msg = s"Unsupported authentication method: $pluginName"
+                failAuthAndResponse(new UnsupportedOperationException(msg))
     }
 
     private def handleAuthMoreData(password: Array[Byte], payload: Buffer): Unit = {
@@ -291,10 +319,10 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
                     }
                 case FAST_AUTH_STATUS_FLAG => // fast auth success
                     logger.debug("fast auth success")
+                    successAuthAndResponse()
                 case _ =>
                     val msg = s"Unsupported flag for AuthMoreData : $flag"
-                    logger.error(msg)
-                    ctx.fireChannelExceptionCaught(new UnsupportedOperationException(msg))
+                    failAuthAndResponse(new UnsupportedOperationException(msg))
         }
     }
 
@@ -311,8 +339,7 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
             )
             sendBytesAsPacket(ctx, encryptedPassword)
         } catch {
-            case e: Exception =>
-                logger.error("")
+            case e: Exception => failAuthAndResponse(e)
         }
     }
 
@@ -330,6 +357,23 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
     private def isTlsSupportedByServer(serverCapabilitiesFlags: Int): Boolean =
         (serverCapabilitiesFlags & CLIENT_SSL) != 0
 
+    private def sendQueryCommand(sql: String): Unit = {
+        val packet      = ctx.outboundAdaptiveBuffer
+        val packetStart = packet.writerOffset
+        packet.writeMediumLE(0) // will set payload length by calculation
+        packet.writeByte(sequenceId)
+
+        // encode packet payload
+        packet.writeByte(CommandType.COM_QUERY)
+        packet.writeCharSequence(sql, encodingCharset)
+
+        // set payload length
+        val payloadLength = packet.writerOffset - packetStart - 4
+        packet.setMediumLE(packetStart, payloadLength)
+
+        ctx.writeAndFlush(packet) // TODO: check maxpacket limit
+    }
+
     private def sendBytesAsPacket(ctx: ChannelHandlerContext, payload: Array[Byte]): Unit = {
         val length = payload.length
         val packet = ctx.outboundAdaptiveBuffer
@@ -345,16 +389,29 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
         logger = LoggerFactory.getLogger(getClass, ctx.system)
     }
 
+    private def failAuthAndResponse(cause: Throwable): Unit = {
+        status = ST_AUTHENTICATE_FAILED
+        if (authMsgId != ChannelInflight.INVALID_CHANNEL_MESSAGE_ID) ctx.fireChannelRead(cause, authMsgId)
+        else authenticationFailed = cause
+    }
+
+    private def successAuthAndResponse(): Unit = {
+        status = ST_AUTHENTICATED
+        if (authMsgId != ChannelInflight.INVALID_CHANNEL_MESSAGE_ID) ctx.fireChannelRead(None, authMsgId)
+    }
+
 }
 
 object MySQLDriver {
 
     private val AUTH_PLUGIN_DATA_PART1_LENGTH = 8
 
-    private val ST_CONNECTING     = 0
-    private val ST_AUTHENTICATING = 1
-    private val ST_CONNECTED      = 2
-    private val ST_CLOSING        = 5
+    private val ST_CONNECTING          = 0
+    private val ST_AUTHENTICATING      = 1
+    private val ST_CONNECTED           = 2
+    private val ST_AUTHENTICATED       = 4
+    private val ST_AUTHENTICATE_FAILED = 5
+    private val ST_CLOSING             = 6
 
     val ST_CLIENT_CREATE        = 0
     val ST_CLIENT_CONNECTED     = 1

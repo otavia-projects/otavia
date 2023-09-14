@@ -314,7 +314,7 @@ object web extends OtaviaModule {
 }
 
 object examples extends OtaviaModule {
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, log4a)
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, log4a, `mysql-adbc-driver`)
 }
 
 object serde extends OtaviaModule {

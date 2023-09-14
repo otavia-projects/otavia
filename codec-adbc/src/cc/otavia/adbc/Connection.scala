@@ -16,11 +16,11 @@
 
 package cc.otavia.adbc
 
-import cc.otavia.adbc.Connection.Connect
+import cc.otavia.adbc.Connection.{Auth, Connect, ConnectResult}
 import cc.otavia.adbc.Statement.*
 import cc.otavia.core.actor.{ChannelsActor, SocketChannelsActor}
 import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelState}
-import cc.otavia.core.message.{Ask, Reply}
+import cc.otavia.core.message.{Ask, ExceptionMessage, Reply}
 import cc.otavia.core.stack.StackState.*
 import cc.otavia.core.stack.{AskStack, ChannelFuture, StackState}
 
@@ -40,22 +40,31 @@ class Connection(override val family: ProtocolFamily = StandardProtocolFamily.IN
 
     override protected def newChannel(): Channel = system.channelFactory.openSocketChannel(family)
 
+    override def continueAsk(stack: AskStack[Connect | ExecuteUpdate | ExecuteQuery[?]]): Option[StackState] =
+        stack match
+            case stack: AskStack[Connect] if stack.ask.isInstanceOf[Connect] => handleConnect(stack)
+            case _                                                           => ???
+
     private def handleConnect(stack: AskStack[Connect]): Option[StackState] = {
         stack.stackState match
-            case StackState.start =>
+            case StackState.start => // waiting for socket connected
                 val auth = stack.ask
                 val driverFactory = auth.driver match
                     case Some(name) => DriverManager.getDriverFactory(name)
                     case None       => DriverManager.defaultDriver(auth.url)
                 val options = driverFactory.parseOptions(auth.url, auth.info)
                 driver = driverFactory.newDriver(options)
-
                 channel = newChannelAndInit()
                 val state = new ChannelFutureState()
-                channel.connect(???, state.future)
+                channel.connect(options.socketAddress, state.future)
                 state.suspend()
-            case state: ChannelFutureState =>
-                ???
+            case state: ChannelFutureState => // waiting for authentication
+                val authState = new ChannelReplyState()
+                channel.ask(Auth(stack.ask.url, stack.ask.info), authState.future)
+                authState.suspend()
+            case state: ChannelReplyState => // return authenticate result
+                if (state.future.isSuccess) stack.`return`(ConnectResult(channel.id))
+                else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
     }
 
     private def handleExecuteUpdate(stack: AskStack[ExecuteUpdate]): Option[StackState] = {
@@ -87,5 +96,7 @@ object Connection {
             new Connect(url, info, None)
         }
     }
+
+    case class Auth(url: String, info: Map[String, String])
 
 }
