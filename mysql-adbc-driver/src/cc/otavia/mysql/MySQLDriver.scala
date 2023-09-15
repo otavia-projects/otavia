@@ -84,7 +84,7 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
         } else false
 
     override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit =
-        if (checkDecodePacket(input)) {
+        while (checkDecodePacket(input)) {
             val packetStart     = input.readerOffset
             val length          = input.readUnsignedMediumLE
             val sequenceId: Int = input.readUnsignedByte

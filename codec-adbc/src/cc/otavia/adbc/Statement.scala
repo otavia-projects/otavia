@@ -27,7 +27,7 @@ object Statement {
 
     case class ExecuteUpdate(sql: String) extends Ask[ModifyRows]
 
-    case class ExecuteQuery[R <: Row](sql: String, serde: RowSerde[R]) extends Ask[R]
+    class ExecuteQuery[R <: Row](val sql: String, val serde: RowSerde[R]) extends Ask[R]
 
     object ExecuteQuery {
         def apply[R <: Row](sql: String)(using serde: RowSerde[R]): ExecuteQuery[R] =
