@@ -32,12 +32,12 @@ object BufferUtils {
         s
     }
 
-    def writeCString(buffer: Buffer, s: String, charset: Charset = StandardCharsets.UTF_8): Unit = {
+    final def writeCString(buffer: Buffer, s: String, charset: Charset = StandardCharsets.UTF_8): Unit = {
         buffer.writeCharSequence(s, charset)
         buffer.writeByte(ZERO)
     }
 
-    def writeCSting(buffer: Buffer, bytes: Array[Byte]): Unit = {
+    final def writeCString(buffer: Buffer, bytes: Array[Byte]): Unit = {
         buffer.writeBytes(bytes)
         buffer.writeByte(ZERO)
     }
