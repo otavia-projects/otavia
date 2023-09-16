@@ -49,7 +49,7 @@ object PostgresConnectOptions {
     private val DEFAULT_SSL_MODE: SslMode     = SslMode.DISABLE
     private val DEFAULT_USE_LAYER_7_PROXY     = false
     private val DEFAULT_PROPERTIES: Map[String, String] = Map(
-      "application_name"   -> "vertx-pg-client",
+      "application_name"   -> "otavia-pg-client",
       "client_encoding"    -> "utf8",
       "DateStyle"          -> "ISO",
       "extra_float_digits" -> "2"

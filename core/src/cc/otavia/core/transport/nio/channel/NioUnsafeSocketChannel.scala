@@ -131,7 +131,6 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
             false
         } else if (read == 0) {
             page.close()
-            channel.directAllocator.recycle(page)
             false
         } else true
 

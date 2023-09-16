@@ -167,9 +167,11 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                 sendScramClientInitialMessage(msg)
             case Constants.AUTH_TYPE_SASL_CONTINUE =>
                 sendScramClientFinalMessage(scramAuthentication.recvServerFirstMsg(payload))
+                logger.debug("sasl continue send")
             case Constants.AUTH_TYPE_SASL_FINAL =>
                 try {
                     scramAuthentication.checkServerFinalMsg(payload, payload.readableBytes)
+                    logger.debug("sasl final")
                 } catch {
                     case e: UnsupportedOperationException => ???
                 }
