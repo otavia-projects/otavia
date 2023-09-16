@@ -37,7 +37,19 @@ final class SelectedSelectionKeySet extends util.AbstractSet[SelectionKey] {
 
     override def remove(o: Any): Boolean = false
 
-    override def contains(o: Any): Boolean = false
+    override def contains(o: Any): Boolean = {
+        var i        = 0
+        var continue = true
+        var res      = false
+        while (continue && i < _size) {
+            val key = keys(i)
+            if (key.equals(o)) {
+                continue = false
+                res = true
+            } else i += 1
+        }
+        res
+    }
 
     override def size(): Int = _size
 
@@ -57,7 +69,16 @@ final class SelectedSelectionKeySet extends util.AbstractSet[SelectionKey] {
 
     }
 
-    def reset(start: Int = 0): Unit = if (start < _size && start >= 0) {
+    def reset(): Unit = {
+        var cursor = 0
+        while (cursor < _size) {
+            keys(cursor) = null
+            cursor += 1
+        }
+        _size = 0
+    }
+
+    def reset(start: Int): Unit = if (start < _size && start >= 0) {
         var cursor = start
         while (cursor < _size) {
             keys(cursor) = null

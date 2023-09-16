@@ -64,21 +64,28 @@ class ChannelReplyPromise private () extends AbstractPromise[AnyRef] with Channe
         this
     }
 
-    override def setFailure(cause: Throwable): Promise[AnyRef] = ???
+    override def setFailure(cause: Throwable): Promise[AnyRef] = {
+        throwable = cause
+        if (stack ne null) {
+            val actor = stack.runtimeActor
+            actor.receiveFuture(this)
+        }
+        this
+    }
 
-    override def future: Future[AnyRef] = ???
+    override def future: Future[AnyRef] = this
 
-    override def isSuccess: Boolean = ???
+    override def isSuccess: Boolean = value != null
 
-    override def isFailed: Boolean = ???
+    override def isFailed: Boolean = throwable != null
 
-    override def isDone: Boolean = ???
+    override def isDone: Boolean = isSuccess || isFailed
 
     override def getNow: AnyRef = value
 
-    override def cause: Option[Throwable] = ???
+    override def cause: Option[Throwable] = Some(throwable)
 
-    override def causeUnsafe: Throwable = ???
+    override def causeUnsafe: Throwable = throwable
 
     override protected def cleanInstance(): Unit = {
         msgId = -1
