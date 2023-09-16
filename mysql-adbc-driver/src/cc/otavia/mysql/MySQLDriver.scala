@@ -191,7 +191,7 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
         val packet         = ctx.outboundAdaptiveBuffer
         val packetStartIdx = packet.writerOffset
         packet.writeMediumLE(0) // set after
-        packet.writeByte(sequenceId.toByte)
+        packet.writeByte(sequenceId)
         packet.writeIntLE(clientCapabilitiesFlag)
         packet.writeIntLE(PACKET_PAYLOAD_LENGTH_LIMIT)
         packet.writeByte(collation.collationId.toByte)
@@ -344,7 +344,7 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
     }
 
     private def encodeConnectionAttributes(attributes: mutable.Map[String, String], packet: Buffer): Unit = {
-        val buffer = AdaptiveBuffer(ctx.outboundAdaptiveBuffer.allocator)
+        val buffer = AdaptiveBuffer(ctx.heapAllocator())
         for ((key, value) <- attributes) {
             BufferUtils.writeLengthEncodedString(buffer, key, StandardCharsets.UTF_8)
             BufferUtils.writeLengthEncodedString(buffer, value, StandardCharsets.UTF_8)

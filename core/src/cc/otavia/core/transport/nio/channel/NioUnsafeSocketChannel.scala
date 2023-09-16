@@ -95,9 +95,9 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
                     cursor = cursor.next
                     buf.next = null
                     val byteBuffer = buf.byteBuffer
-                    byteBuffer.limit(buffer.writerOffset)
-                    byteBuffer.position(buffer.readerOffset)
-                    ch.write(byteBuffer) // TODO: socket write buf busy
+                    byteBuffer.limit(buf.writerOffset)
+                    byteBuffer.position(buf.readerOffset)
+                    val write = ch.write(byteBuffer) // TODO: socket write buf busy
                     buf.close()
                 }
     }

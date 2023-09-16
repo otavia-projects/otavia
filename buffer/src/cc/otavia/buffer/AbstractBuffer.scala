@@ -919,16 +919,16 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
     }
 
     override def setMedium(index: Int, value: Int): Buffer = {
-        underlying.put(widx, (value >> 16).toByte)
-        underlying.put(widx + 1, (value >> 8 & 0xff).toByte)
-        underlying.put(widx + 2, (value & 0xff).toByte)
+        underlying.put(index, (value >> 16).toByte)
+        underlying.put(index + 1, (value >> 8 & 0xff).toByte)
+        underlying.put(index + 2, (value & 0xff).toByte)
         this
     }
 
     override def setMediumLE(index: Int, value: Int): Buffer = {
-        underlying.put(widx, (value & 0xff).toByte)
-        underlying.put(widx + 1, (value >> 8 & 0xff).toByte)
-        underlying.put(widx + 2, (value >> 16).toByte)
+        underlying.put(index, value.toByte)
+        underlying.put(index + 1, (value >>> 8).toByte)
+        underlying.put(index + 2, (value >>> 16).toByte)
         this
     }
 

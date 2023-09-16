@@ -253,4 +253,14 @@ class AdaptiveBufferSuite extends AnyFunSuite {
 
     }
 
+    test("adaptive set") {
+        val adaptive = AdaptiveBuffer(allocator)
+        for (idx <- 0 until 1024) adaptive.writeByte(0)
+
+        adaptive.setMediumLE(0, 137)
+
+        assert(adaptive.getMediumLE(0) == 137)
+
+    }
+
 }
