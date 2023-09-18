@@ -14,11 +14,22 @@
  * limitations under the License.
  */
 
-package cc.otavia.postgres.spi
+package cc.otavia.sql
 
-import cc.otavia.sql.DriverFactory
-import cc.otavia.sql.spi.ADBCServiceProvider
+import java.sql.JDBCType
 
-class PostgresServiceProvider extends ADBCServiceProvider {
-    override def getDriverFactory: DriverFactory = PostgresDriverFactory
+trait ColumnDescriptor {
+
+    /** the column name */
+    def name: String
+
+    /** whether the column is an array */
+    def isArray: Boolean
+
+    /** vendor-specific name of the column type, or [[Null]] if unknown */
+    def typeName: String
+
+    /** the most appropriate [[JDBCType]] */
+    def jdbcType: JDBCType
+
 }

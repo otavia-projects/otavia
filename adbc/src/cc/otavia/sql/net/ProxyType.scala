@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
-package cc.otavia.postgres.spi
+package cc.otavia.sql.net
 
-import cc.otavia.sql.DriverFactory
-import cc.otavia.sql.spi.ADBCServiceProvider
+/** The type of a TCP proxy server. */
+enum ProxyType {
 
-class PostgresServiceProvider extends ADBCServiceProvider {
-    override def getDriverFactory: DriverFactory = PostgresDriverFactory
+    /** HTTP CONNECT ssl proxy */
+    case HTTP extends ProxyType
+
+    /** SOCKS4/4a tcp proxy */
+    case SOCKS4 extends ProxyType
+
+    /** SOCSK5 tcp proxy */
+    case SOCKS5 extends ProxyType
+
 }

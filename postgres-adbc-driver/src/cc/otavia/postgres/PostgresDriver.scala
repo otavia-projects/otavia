@@ -16,9 +16,9 @@
 
 package cc.otavia.postgres
 
-import cc.otavia.adbc.Connection.Auth
-import cc.otavia.adbc.Driver
-import cc.otavia.adbc.Statement.ExecuteUpdate
+import cc.otavia.sql.Connection.Auth
+import cc.otavia.sql.Driver
+import cc.otavia.sql.Statement.ExecuteUpdate
 import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.{ChannelHandlerContext, ChannelInflight}

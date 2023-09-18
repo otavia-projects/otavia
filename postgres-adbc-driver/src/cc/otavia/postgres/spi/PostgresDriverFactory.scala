@@ -16,7 +16,7 @@
 
 package cc.otavia.postgres.spi
 
-import cc.otavia.adbc.{ConnectOptions, Driver, DriverFactory}
+import cc.otavia.sql.{ConnectOptions, Driver, DriverFactory}
 import cc.otavia.postgres.{PostgresConnectOptions, PostgresDriver, SslMode}
 
 import java.util

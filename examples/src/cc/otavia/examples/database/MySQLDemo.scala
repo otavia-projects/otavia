@@ -16,8 +16,8 @@
 
 package cc.otavia.examples.database
 
-import cc.otavia.adbc.Connection
-import cc.otavia.adbc.Connection.Connect
+import cc.otavia.sql.Connection
+import cc.otavia.sql.Connection.Connect
 import cc.otavia.core.actor.{ChannelsActor, MainActor, SocketChannelsActor}
 import cc.otavia.core.stack.StackState.{FutureState, start}
 import cc.otavia.core.stack.{NoticeStack, StackState}

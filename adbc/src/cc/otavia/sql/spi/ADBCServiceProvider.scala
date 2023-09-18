@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package cc.otavia.postgres.spi
+package cc.otavia.sql.spi
 
 import cc.otavia.sql.DriverFactory
-import cc.otavia.sql.spi.ADBCServiceProvider
 
-class PostgresServiceProvider extends ADBCServiceProvider {
-    override def getDriverFactory: DriverFactory = PostgresDriverFactory
+trait ADBCServiceProvider {
+
+    def getDriverFactory: DriverFactory
+
 }

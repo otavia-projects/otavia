@@ -14,11 +14,21 @@
  * limitations under the License.
  */
 
-package cc.otavia.postgres.spi
+package cc.otavia.sql.datatype
 
-import cc.otavia.sql.DriverFactory
-import cc.otavia.sql.spi.ADBCServiceProvider
+import scala.beans.BeanProperty
 
-class PostgresServiceProvider extends ADBCServiceProvider {
-    override def getDriverFactory: DriverFactory = PostgresDriverFactory
+/** A MultiPoint is a geometry collection composed of Point elements. The points are not connected or ordered in any
+ *  way.
+ *
+ *  @param points
+ */
+class MultiPoint(@BeanProperty var points: List[Point]) extends Geometry()
+
+object MultiPoint {
+    def copy(multiPoint: MultiPoint): MultiPoint = {
+        val mp = MultiPoint(multiPoint.points)
+        mp.setSRID(multiPoint.getSRID)
+        mp
+    }
 }

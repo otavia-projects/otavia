@@ -14,11 +14,24 @@
  * limitations under the License.
  */
 
-package cc.otavia.postgres.spi
+package cc.otavia.sql
 
-import cc.otavia.sql.DriverFactory
-import cc.otavia.sql.spi.ADBCServiceProvider
+trait ResultSetParser {
 
-class PostgresServiceProvider extends ADBCServiceProvider {
-    override def getDriverFactory: DriverFactory = PostgresDriverFactory
+    def next(): Boolean
+
+    def parseString(columnIndex: Int): String
+
+    def parseBoolean(columnIndex: Int): Boolean
+
+    def parseByte(columnIndex: Int): Byte
+
+    def parseShort(columnIndex: Int): Short
+
+    def parseInt(columnIndex: Int): Int
+
+    def parseLong(columnIndex: Int): Long
+
+    def parseFloat(columnIndex: Int): Float
+
 }

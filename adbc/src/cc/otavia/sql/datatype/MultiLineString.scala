@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
-package cc.otavia.postgres.spi
+package cc.otavia.sql.datatype
 
-import cc.otavia.sql.DriverFactory
-import cc.otavia.sql.spi.ADBCServiceProvider
+import scala.beans.BeanProperty
 
-class PostgresServiceProvider extends ADBCServiceProvider {
-    override def getDriverFactory: DriverFactory = PostgresDriverFactory
+class MultiLineString(@BeanProperty var lineStrings: List[LineString]) extends Geometry()
+
+object MultiLineString {
+    def copy(multiLineString: MultiLineString): MultiLineString = {
+        val ml = MultiLineString(multiLineString.lineStrings)
+        ml.setSRID(multiLineString.getSRID)
+        ml
+    }
 }

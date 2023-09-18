@@ -16,7 +16,7 @@
 
 package cc.otavia.postgres
 
-import cc.otavia.adbc.DatabaseException
+import cc.otavia.sql.DatabaseException
 import cc.otavia.postgres.PostgresException.formatMessage
 
 import scala.language.unsafeNulls

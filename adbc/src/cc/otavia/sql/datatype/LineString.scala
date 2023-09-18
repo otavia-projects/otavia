@@ -14,11 +14,20 @@
  * limitations under the License.
  */
 
-package cc.otavia.postgres.spi
+package cc.otavia.sql.datatype
 
-import cc.otavia.sql.DriverFactory
-import cc.otavia.sql.spi.ADBCServiceProvider
+import scala.beans.BeanProperty
 
-class PostgresServiceProvider extends ADBCServiceProvider {
-    override def getDriverFactory: DriverFactory = PostgresDriverFactory
+/** A LineString is a Curve with linear interpolation between points, it may represents a Line or a LinearRing.
+ *
+ *  @param points
+ */
+class LineString(@BeanProperty var points: List[Point]) extends Geometry()
+
+object LineString {
+    def copy(lineString: LineString): LineString = {
+        val l = LineString(lineString.points)
+        l.setSRID(lineString.getSRID)
+        l
+    }
 }

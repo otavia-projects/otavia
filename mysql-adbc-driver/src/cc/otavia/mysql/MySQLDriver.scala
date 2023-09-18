@@ -16,8 +16,8 @@
 
 package cc.otavia.mysql
 
-import cc.otavia.adbc.Statement.ExecuteUpdate
-import cc.otavia.adbc.{ConnectOptions, Connection, Driver}
+import cc.otavia.sql.Statement.ExecuteUpdate
+import cc.otavia.sql.{ConnectOptions, Connection, Driver}
 import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.{ChannelHandlerContext, ChannelInflight}

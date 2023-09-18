@@ -16,7 +16,7 @@
 
 package cc.otavia.mysql
 
-import cc.otavia.adbc.DatabaseMetadata
+import cc.otavia.sql.DatabaseMetadata
 
 import scala.language.unsafeNulls
 

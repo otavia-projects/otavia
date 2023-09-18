@@ -16,7 +16,7 @@
 
 package cc.otavia.mysql
 
-import cc.otavia.adbc.ConnectOptions
+import cc.otavia.sql.ConnectOptions
 import cc.otavia.buffer.Buffer
 
 import scala.beans.BeanProperty

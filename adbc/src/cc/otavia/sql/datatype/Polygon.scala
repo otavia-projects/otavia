@@ -14,11 +14,21 @@
  * limitations under the License.
  */
 
-package cc.otavia.postgres.spi
+package cc.otavia.sql.datatype
 
-import cc.otavia.sql.DriverFactory
-import cc.otavia.sql.spi.ADBCServiceProvider
+import scala.beans.BeanProperty
 
-class PostgresServiceProvider extends ADBCServiceProvider {
-    override def getDriverFactory: DriverFactory = PostgresDriverFactory
+/** A Polygon is a planar Surface representing a multisided geometry. It is defined by a single exterior boundary and
+ *  zero or more interior boundaries, where each interior boundary defines a hole in the Polygon.
+ *
+ *  @param lineStrings
+ */
+class Polygon(@BeanProperty var lineStrings: List[LineString]) extends Geometry()
+
+object Polygon {
+    def copy(polygon: Polygon): Polygon = {
+        val p = Polygon(polygon.lineStrings)
+        p.setSRID(polygon.getSRID)
+        p
+    }
 }

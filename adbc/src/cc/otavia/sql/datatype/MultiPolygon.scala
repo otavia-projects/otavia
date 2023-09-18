@@ -14,11 +14,20 @@
  * limitations under the License.
  */
 
-package cc.otavia.postgres.spi
+package cc.otavia.sql.datatype
 
-import cc.otavia.sql.DriverFactory
-import cc.otavia.sql.spi.ADBCServiceProvider
+import scala.beans.BeanProperty
 
-class PostgresServiceProvider extends ADBCServiceProvider {
-    override def getDriverFactory: DriverFactory = PostgresDriverFactory
+/** A MultiPolygon is a MultiSurface object composed of Polygon elements.
+ *
+ *  @param polygons
+ */
+class MultiPolygon(@BeanProperty var polygons: List[Polygon]) extends Geometry()
+
+object MultiPolygon {
+    def copy(multiPolygon: MultiPolygon): MultiPolygon = {
+        val mp = MultiPolygon(multiPolygon.polygons)
+        mp.setSRID(multiPolygon.getSRID)
+        mp
+    }
 }

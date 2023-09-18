@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 
-package cc.otavia.postgres.spi
+package cc.otavia.sql
 
-import cc.otavia.sql.DriverFactory
-import cc.otavia.sql.spi.ADBCServiceProvider
+import cc.otavia.buffer.Buffer
+import cc.otavia.core.actor.ChannelsActor
+import cc.otavia.core.channel.ChannelHandlerContext
+import cc.otavia.core.channel.handler.{Byte2MessageDecoder, Message2ByteEncoder}
+import cc.otavia.core.message.{Ask, IdAllocator, Reply}
+import cc.otavia.core.stack.ChannelFuture
 
-class PostgresServiceProvider extends ADBCServiceProvider {
-    override def getDriverFactory: DriverFactory = PostgresDriverFactory
+import java.net.SocketAddress
+
+abstract class Driver(val options: ConnectOptions) extends Byte2MessageDecoder with Message2ByteEncoder {
+
+    protected def checkDecodePacket(buffer: Buffer): Boolean
+
 }

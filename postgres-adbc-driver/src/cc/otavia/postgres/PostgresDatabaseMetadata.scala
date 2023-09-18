@@ -16,7 +16,7 @@
 
 package cc.otavia.postgres
 
-import cc.otavia.adbc.DatabaseMetadata
+import cc.otavia.sql.DatabaseMetadata
 import cc.otavia.postgres
 
 import java.util.regex.{Matcher, Pattern}

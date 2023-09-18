@@ -16,7 +16,7 @@
 
 package cc.otavia.postgres
 
-import cc.otavia.adbc.ConnectOptions
+import cc.otavia.sql.ConnectOptions
 
 import scala.beans.BeanProperty
 

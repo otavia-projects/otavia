@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 
-package cc.otavia.postgres.spi
+package cc.otavia.sql.datatype
 
-import cc.otavia.sql.DriverFactory
-import cc.otavia.sql.spi.ADBCServiceProvider
+import scala.beans.BeanProperty
 
-class PostgresServiceProvider extends ADBCServiceProvider {
-    override def getDriverFactory: DriverFactory = PostgresDriverFactory
+class Point(@BeanProperty var x: Double = 0, @BeanProperty var y: Double = 0) extends Geometry() {
+    override def toString: String = s"Point($x, $y)"
+    
+}
+
+object Point {
+    def copy(point: Point): Point = {
+        val p = Point(point.x, point.y)
+        p.setSRID(point.getSRID)
+        p
+    }
 }

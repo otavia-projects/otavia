@@ -14,11 +14,23 @@
  * limitations under the License.
  */
 
-package cc.otavia.postgres.spi
+package cc.otavia.sql
 
-import cc.otavia.sql.DriverFactory
-import cc.otavia.sql.spi.ADBCServiceProvider
+/** Base class for database failures.
+ *  @param message
+ *  @param errorCode
+ *    Database specific error code.
+ *  @param sqlState
+ *    SQL State (XOPEN or SQL:2003 conventions).
+ *  @param cause
+ */
+abstract class DatabaseException(
+    message: String | Null,
+    val errorCode: Int,
+    val sqlState: String,
+    cause: SQLException | Null
+) extends RuntimeException(message, cause) {
 
-class PostgresServiceProvider extends ADBCServiceProvider {
-    override def getDriverFactory: DriverFactory = PostgresDriverFactory
+    def this(message: String, errorCode: Int, sqlState: String) = this(message, errorCode, sqlState, null)
+
 }

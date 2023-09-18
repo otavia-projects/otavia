@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-package cc.otavia.postgres.spi
+package cc.otavia.sql.serde
 
-import cc.otavia.sql.DriverFactory
-import cc.otavia.sql.spi.ADBCServiceProvider
+import cc.otavia.sql.ResultSetParser
+import cc.otavia.serde.Serde
 
-class PostgresServiceProvider extends ADBCServiceProvider {
-    override def getDriverFactory: DriverFactory = PostgresDriverFactory
+trait RowSerde[R] extends Serde[R] {
+
+    private var resultSetParser: ResultSetParser = _
+
+    private[sql] def setParser(parser: ResultSetParser): Unit = this.resultSetParser = parser
+
 }

@@ -16,7 +16,7 @@
 
 package cc.otavia.mysql.spi
 
-import cc.otavia.adbc.{ConnectOptions, Driver, DriverFactory}
+import cc.otavia.sql.{ConnectOptions, Driver, DriverFactory}
 import cc.otavia.buffer.Buffer
 import cc.otavia.handler.codec.base64.Base64
 import cc.otavia.mysql.{AuthenticationPlugin, MySQLConnectOptions, MySQLDriver, SslMode}

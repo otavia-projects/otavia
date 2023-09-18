@@ -16,7 +16,7 @@
 
 package cc.otavia.mysql
 
-import cc.otavia.adbc.DatabaseException
+import cc.otavia.sql.DatabaseException
 
 /** The [[DatabaseException]] for MySQL. */
 class MySQLException(errorMessage: String, errorCode: Int, sqlState: String)

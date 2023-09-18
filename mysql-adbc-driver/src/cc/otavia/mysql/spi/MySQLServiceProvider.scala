@@ -16,8 +16,8 @@
 
 package cc.otavia.mysql.spi
 
-import cc.otavia.adbc.DriverFactory
-import cc.otavia.adbc.spi.ADBCServiceProvider
+import cc.otavia.sql.DriverFactory
+import cc.otavia.sql.spi.ADBCServiceProvider
 
 class MySQLServiceProvider extends ADBCServiceProvider {
 

@@ -14,11 +14,23 @@
  * limitations under the License.
  */
 
-package cc.otavia.postgres.spi
+package cc.otavia.sql.datatype
 
-import cc.otavia.sql.DriverFactory
-import cc.otavia.sql.spi.ADBCServiceProvider
+/** Geometry is an abstract class which represents the base of geometry data type.
+ *
+ *  @param srid
+ */
+abstract class Geometry(protected var srid: Long) {
 
-class PostgresServiceProvider extends ADBCServiceProvider {
-    override def getDriverFactory: DriverFactory = PostgresDriverFactory
+    def this(other: Geometry) = this(other.srid)
+
+    def this() = this(0)
+
+    def getSRID: Long = srid
+
+    def setSRID(srid: Long): this.type = {
+        this.srid = srid
+        this
+    }
+
 }
