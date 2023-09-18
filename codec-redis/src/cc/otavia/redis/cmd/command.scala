@@ -53,6 +53,8 @@ case class Select(db: Int) extends Command[OK]
 
 case class Info() extends Command[BulkReply]
 
+case class Auth(password: String) extends Command[OK]
+
 case class Set(key: Array[Byte], value: Array[Byte]) extends Command[OK]
 
 case class Get(key: String | Array[Byte]) extends Command[BulkReply]

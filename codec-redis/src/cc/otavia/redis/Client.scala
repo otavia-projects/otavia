@@ -17,7 +17,8 @@
 package cc.otavia.redis
 
 import cc.otavia.core
-import cc.otavia.core.actor.ChannelsActor.Connect
+import cc.otavia.core.actor.ChannelsActor.{Connect, ConnectReply}
+import cc.otavia.core.actor.SocketChannelsActor.ConnectWaitState
 import cc.otavia.core.actor.{ChannelsActor, SocketChannelsActor}
 import cc.otavia.core.channel.*
 import cc.otavia.core.message.*

@@ -21,7 +21,7 @@ import cc.otavia.core.channel.ChannelHandlerContext
 import cc.otavia.handler.codec.*
 import cc.otavia.redis.cmd.*
 import cc.otavia.redis.serde.RedisSerde
-import cc.otavia.redis.serde.impl.{OKSerde, SelectSerde}
+import cc.otavia.redis.serde.impl.{AuthSerde, OKSerde, SelectSerde}
 
 import scala.collection.mutable
 
@@ -34,7 +34,10 @@ class RedisCodec extends ByteToMessageCodec {
             case select: Select =>
                 SelectSerde.serialize(select, output)
                 responseSerdeQueue.addOne((mid, OKSerde))
-        ???
+            case auth: Auth =>
+                AuthSerde.serialize(auth, output)
+                responseSerdeQueue.addOne(mid, OKSerde)
+
     }
 
     override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit =

@@ -17,18 +17,17 @@
 package cc.otavia.redis.serde.impl
 
 import cc.otavia.buffer.Buffer
-import cc.otavia.redis.cmd.Info
+import cc.otavia.redis.cmd.{Auth, Info}
 import cc.otavia.redis.serde.AbstractCommandSerde
 
-object InfoSerde extends AbstractCommandSerde[Info] {
+object AuthSerde extends AbstractCommandSerde[Auth] {
 
-    override def deserialize(in: Buffer): Info = {
-        ???
-    }
+    override def deserialize(in: Buffer): Auth = ???
 
-    override def serialize(value: Info, out: Buffer): Unit = {
-        serializeArrayHeader(1, out)
-        serializeBulkString("info", out)
+    override def serialize(value: Auth, out: Buffer): Unit = {
+        serializeArrayHeader(2, out)
+        serializeBulkString("auth", out)
+        serializeBulkString(value.password, out)
     }
 
 }
