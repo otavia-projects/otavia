@@ -51,6 +51,7 @@ object ProjectInfo {
     def shapeless     = ivy"org.typelevel::shapeless3-deriving:3.3.0"
     def jedis         = ivy"redis.clients:jedis:4.4.3"
     def scram         = ivy"com.ongres.scram:client:2.1"
+    def magnolia      = ivy"com.softwaremill.magnolia1_3::magnolia:1.3.3"
 
 }
 
@@ -211,11 +212,21 @@ object `codec-http` extends OtaviaModule {
 
 }
 
-object `codec-adbc` extends OtaviaModule {
+object adbc extends OtaviaModule {
 
-    override def artifactName = "codec-adbc"
+    override def artifactName = "adbc"
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, serde)
+
+}
+
+object `adbc-serde-macro` extends OtaviaModule {
+
+    override def artifactName = "adbc-serde-macro"
+
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(adbc)
+
+    override def ivyDeps = Agg(ProjectInfo.magnolia)
 
 }
 
@@ -307,7 +318,7 @@ object log4a extends OtaviaModule {
 
 object web extends OtaviaModule {
 
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, `codec-http`, `codec-adbc`, `codec-redis`)
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, `codec-http`, adbc, `codec-redis`)
 
     override def artifactName: T[String] = "otavia-web"
 
@@ -315,7 +326,7 @@ object web extends OtaviaModule {
 
 object examples extends OtaviaModule {
     override def moduleDeps: Seq[PublishModule] =
-        scala.Seq(core, codec, log4a, `mysql-adbc-driver`, `postgres-adbc-driver`)
+        scala.Seq(core, codec, log4a, `mysql-adbc-driver`, `postgres-adbc-driver`, `codec-redis`)
 }
 
 object serde extends OtaviaModule {
@@ -348,7 +359,7 @@ object `serde-json-macro` extends OtaviaModule {
 
     override def moduleDeps = Seq(serde, `serde-json`)
 
-    override def ivyDeps = Agg(ProjectInfo.shapeless)
+    override def ivyDeps = Agg(ProjectInfo.shapeless, ProjectInfo.magnolia)
 
     object test extends Tests with TestModule.ScalaTest {
 
@@ -404,7 +415,7 @@ object `mysql-adbc-driver` extends OtaviaModule {
 
     override def artifactName = "mysql-adbc-driver"
 
-    override def moduleDeps = Seq(`codec-adbc`)
+    override def moduleDeps = Seq(adbc)
 
     object test extends Tests with TestModule.ScalaTest {
 
@@ -418,7 +429,7 @@ object `postgres-adbc-driver` extends OtaviaModule {
 
     override def artifactName = "postgres-adbc-driver"
 
-    override def moduleDeps = Seq(`codec-adbc`)
+    override def moduleDeps = Seq(adbc)
 
     override def ivyDeps = Agg(ProjectInfo.scram)
 

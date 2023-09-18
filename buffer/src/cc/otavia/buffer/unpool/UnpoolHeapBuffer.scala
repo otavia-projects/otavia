@@ -26,11 +26,16 @@ import java.nio.charset.Charset
 import java.util
 import scala.language.unsafeNulls
 
-class UnpoolHeapBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
+class UnpoolHeapBuffer(underlying: ByteBuffer, clean: Boolean = false) extends AbstractBuffer(underlying) {
 
     assert(underlying.hasArray)
-    writerOffset(underlying.limit())
-    readerOffset(underlying.position())
+    if (clean) {
+        writerOffset(0)
+        readerOffset(0)
+    } else {
+        writerOffset(underlying.limit())
+        readerOffset(underlying.position())
+    }
 
     private val array: Array[Byte] = underlying.array()
 

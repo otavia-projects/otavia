@@ -1,8 +1,6 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
- * This file fork from netty.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,20 +14,35 @@
  * limitations under the License.
  */
 
-package cc.otavia.buffer.unpool
+package cc.otavia.json.derivation
 
 import cc.otavia.buffer.{Buffer, BufferAllocator}
+import org.scalatest.funsuite.AnyFunSuite
 
-import java.nio.ByteBuffer
+import java.nio.charset.{Charset, StandardCharsets}
 import scala.language.unsafeNulls
 
-class UnpoolHeapAllocator extends BufferAllocator {
+class GeneratorSuite extends AnyFunSuite {
 
-    override def allocate(size: Int): Buffer = {
-        val byteBuffer = ByteBuffer.allocate(size)
-        new UnpoolHeapBuffer(byteBuffer, true)
+    import GeneratorSuite.*
+
+    test("serde") {
+        given charset: Charset = StandardCharsets.UTF_8
+        val device             = Device(1, "iPhone 14")
+        val serde              = JsonSerdeGenerator.derived[Device]
+
+        val allocator = BufferAllocator.onHeapAllocator()
+        val buffer    = allocator.allocate(4096)
+
+        serde.serialize(device, buffer)
+
+        println(buffer.readCharSequence(buffer.readableBytes))
+        assert(true)
+
     }
 
-    override def isDirect: Boolean = false
+}
 
+object GeneratorSuite {
+    case class Device(id: Int, name: String)
 }

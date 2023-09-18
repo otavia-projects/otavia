@@ -17,6 +17,7 @@
 package cc.otavia.json
 
 import cc.otavia.buffer.Buffer
+import cc.otavia.json.primaries.*
 import cc.otavia.serde.{Serde, SerdeMathTypeOps, SerdeOps, SerdePrimaryTypeOps}
 
 import java.math.BigInteger
@@ -101,7 +102,10 @@ trait JsonSerde[A] extends Serde[A] with SerdePrimaryTypeOps with SerdeMathTypeO
         this
     }
 
-    override final protected def serializeInt(int: Int, out: Buffer): JsonSerde.this.type = ???
+    override final protected def serializeInt(int: Int, out: Buffer): JsonSerde.this.type = {
+        out.writeCharSequence(int.toString)
+        this
+    }
 
     override final protected def serializeLong(long: Long, out: Buffer): JsonSerde.this.type = ???
 
@@ -109,7 +113,12 @@ trait JsonSerde[A] extends Serde[A] with SerdePrimaryTypeOps with SerdeMathTypeO
 
     override final protected def serializeDouble(double: Double, out: Buffer): JsonSerde.this.type = ???
 
-    override final protected def serializeString(string: String, out: Buffer): JsonSerde.this.type = ???
+    override final protected def serializeString(string: String, out: Buffer): JsonSerde.this.type = {
+        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+        out.writeCharSequence(string, charsets) // TODO: escape char
+        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+        this
+    }
 
     override final protected def deserializeByte(in: Buffer): Byte = ???
 
@@ -155,8 +164,35 @@ trait JsonSerde[A] extends Serde[A] with SerdePrimaryTypeOps with SerdeMathTypeO
 
 object JsonSerde {
 
-    inline def derived[A](using m: Mirror.Of[A]): JsonSerde[A] = {
-        ???
+    private given Charset = StandardCharsets.UTF_8
+
+    given JsonSerde[Boolean] = BooleanJsonSerde
+    given JsonSerde[Byte]    = ByteJsonSerde
+    given JsonSerde[Char]    = CharJsonSerde
+    given JsonSerde[Double]  = DoubleJsonSerde
+    given JsonSerde[Float]   = FloatJsonSerde
+    given JsonSerde[Int]     = IntJsonSerde
+    given JsonSerde[Long]    = LongJsonSerde
+    given JsonSerde[Short]   = ShortJsonSerde
+
+    given stringSerde(using charset: Charset): JsonSerde[String] with {
+
+        private val serde =
+            if (charset == StandardCharsets.UTF_8) StringJsonSerde.UTF8StringJsonSerde
+            else new StringJsonSerde(charset)
+
+        override def deserialize(in: Buffer): String = serde.deserialize(in)
+
+        override def serialize(value: String, out: Buffer): Unit = serde.serialize(value, out)
+
+    }
+
+    given seqSerde[T](using se: JsonSerde[T]): JsonSerde[Seq[T]] with {
+
+        override def deserialize(in: Buffer): Seq[T] = ???
+
+        override def serialize(value: Seq[T], out: Buffer): Unit = ???
+
     }
 
 }
