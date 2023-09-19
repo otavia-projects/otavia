@@ -16,13 +16,47 @@
 
 package cc.otavia.sql.serde
 
-import cc.otavia.sql.ResultSetParser
+import cc.otavia.buffer.Buffer
 import cc.otavia.serde.Serde
+import cc.otavia.sql.ResultSetParser
 
 trait RowSerde[R] extends Serde[R] {
 
     private var resultSetParser: ResultSetParser = _
 
     private[sql] def setParser(parser: ResultSetParser): Unit = this.resultSetParser = parser
+
+    protected def parser: ResultSetParser = resultSetParser
+
+    def parse(p: ResultSetParser, index: Int): R
+
+    def parse(p: ResultSetParser, name: String): R
+
+}
+
+object RowSerde {
+
+    private sealed abstract class Column[C] extends RowSerde[C] {
+
+        override def deserialize(in: Buffer): C = throw new UnsupportedOperationException()
+
+        override def serialize(value: C, out: Buffer): Unit = throw new UnsupportedOperationException()
+
+    }
+
+    given intCol: RowSerde[Int] = new Column[Int] {
+
+        override def parse(p: ResultSetParser, index: Int): Int = p.parseInt(index)
+
+        override def parse(p: ResultSetParser, name: String): Int = ???
+
+    }
+    given charCol: RowSerde[Char] = new Column[Char] {
+
+        override def parse(p: ResultSetParser, index: Int): Char = ???
+
+        override def parse(p: ResultSetParser, name: String): Char = ???
+
+    }
 
 }

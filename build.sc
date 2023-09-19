@@ -228,6 +228,12 @@ object `adbc-serde-macro` extends OtaviaModule {
 
     override def ivyDeps = Agg(ProjectInfo.magnolia)
 
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
+
 }
 
 object `codec-redis` extends OtaviaModule {
