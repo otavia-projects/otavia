@@ -224,8 +224,10 @@ final class ChannelHandlerContextImpl(
     }
 
     def invokeChannelExceptionCaught(cause: Throwable): Unit = if (saveCurrentPendingBytesIfNeededInbound()) {
-        try { handler.channelExceptionCaught(this, cause) }
-        catch {
+        try {
+            cause.printStackTrace() // TODO: delete
+            handler.channelExceptionCaught(this, cause)
+        } catch {
             case error: Throwable =>
                 logger.debug(
                   s"An exception ${ThrowableUtil.stackTraceToString(error)} was thrown by a user handler's " +

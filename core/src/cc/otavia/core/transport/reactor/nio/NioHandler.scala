@@ -27,7 +27,7 @@ import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.transport.nio.channel.{AbstractNioChannel, AbstractNioUnsafeChannel, NioUnsafeChannel}
 import cc.otavia.core.transport.reactor.nio.NioHandler.*
-import cc.otavia.core.util.{SystemPropertyUtil, ThrowableUtil}
+import cc.otavia.core.util.{Platform, SystemPropertyUtil, ThrowableUtil}
 import io.netty5.util.internal.{PlatformDependent, ReflectionUtil}
 
 import java.io.{IOException, UncheckedIOException}
@@ -82,7 +82,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         if (DISABLE_KEY_SET_OPTIMIZATION) SelectorTuple(unwrappedSelector)
         else {
             Try {
-                Class.forName("sun.nio.ch.SelectorImpl", false, PlatformDependent.getSystemClassLoader)
+                Class.forName("sun.nio.ch.SelectorImpl", false, Platform.getSystemClassLoader)
             } match
                 case Failure(throwable) =>
                     val msg = s"failed to instrument a special java.util.Set into: $unwrappedSelector $throwable"

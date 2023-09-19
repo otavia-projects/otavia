@@ -28,9 +28,16 @@ object Platform {
 
     private val MAYBE_SUPER_USER = maybeSuperUser0
 
+    private val IS_OSX           = isOsx0
+    private val IS_J9_JVM        = isJ9Jvm0
+    private val IS_IVKVM_DOT_NET = isIkvmDotNet0
+
     def isWindows: Boolean = NORMALIZED_OS == "windows"
+    def isAndroid: Boolean = Platform0.isAndroid
 
     def maybeSuperUser: Boolean = MAYBE_SUPER_USER
+
+    def getSystemClassLoader: ClassLoader = ClassLoader.getSystemClassLoader
 
     private final def normalize(value: String): String =
         value.toLowerCase(Locale.US).replaceAll("[^a-z0-9]+", "")
@@ -74,6 +81,19 @@ object Platform {
         else
             // Check for root and toor as some BSDs have a toor user that is basically the same as root.
             "root" == username || "toor" == username
+    }
+
+    private def isOsx0 = {
+        "osx" == NORMALIZED_OS
+    }
+    private def isJ9Jvm0 = {
+        val vmName = SystemPropertyUtil.get("java.vm.name", "").toLowerCase
+        vmName.startsWith("ibm j9") || vmName.startsWith("eclipse openj9")
+    }
+
+    private def isIkvmDotNet0 = {
+        val vmName = SystemPropertyUtil.get("java.vm.name", "").toUpperCase(Locale.US)
+        vmName == "IKVM.NET"
     }
 
 }
