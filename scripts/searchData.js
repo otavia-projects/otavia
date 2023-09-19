@@ -44,7 +44,7 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"cc/otavia/buffer/unpool/UnpoolDirectBuffer$.html#","e":false,"i":"","n":"UnpoolDirectBuffer","t":"UnpoolDirectBuffer","d":"cc.otavia.buffer.unpool","k":"object","x":""},
 {"l":"cc/otavia/buffer/unpool/UnpoolDirectBuffer$.html#apply-fffffb85","e":false,"i":"","n":"apply","t":"apply(underlying: ByteBuffer): UnpoolDirectBuffer","d":"cc.otavia.buffer.unpool.UnpoolDirectBuffer","k":"def","x":""},
 {"l":"cc/otavia/buffer/unpool/UnpoolHeapAllocator.html#","e":false,"i":"","n":"UnpoolHeapAllocator","t":"UnpoolHeapAllocator extends BufferAllocator","d":"cc.otavia.buffer.unpool","k":"class","x":""},
-{"l":"cc/otavia/buffer/unpool/UnpoolHeapBuffer.html#","e":false,"i":"","n":"UnpoolHeapBuffer","t":"UnpoolHeapBuffer(underlying: ByteBuffer) extends AbstractBuffer","d":"cc.otavia.buffer.unpool","k":"class","x":""},
+{"l":"cc/otavia/buffer/unpool/UnpoolHeapBuffer.html#","e":false,"i":"","n":"UnpoolHeapBuffer","t":"UnpoolHeapBuffer(underlying: ByteBuffer, clean: Boolean) extends AbstractBuffer","d":"cc.otavia.buffer.unpool","k":"class","x":""},
 {"l":"cc/otavia/buffer/AbstractBuffer.html#","e":false,"i":"","n":"AbstractBuffer","t":"AbstractBuffer(val underlying: ByteBuffer) extends Buffer","d":"cc.otavia.buffer","k":"class","x":""},
 {"l":"cc/otavia/buffer/AbstractBuffer.html#underlying-0","e":false,"i":"","n":"underlying","t":"underlying: ByteBuffer","d":"cc.otavia.buffer.AbstractBuffer","k":"val","x":""},
 {"l":"cc/otavia/buffer/Buffer.html#","e":false,"i":"","n":"Buffer","t":"Buffer","d":"cc.otavia.buffer","k":"trait","x":""},
