@@ -16,8 +16,6 @@
 
 package cc.otavia.mysql
 
-import cc.otavia.sql.Statement.ExecuteUpdate
-import cc.otavia.sql.{ConnectOptions, Connection, Driver}
 import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.{ChannelHandlerContext, ChannelInflight}
@@ -27,6 +25,8 @@ import cc.otavia.mysql.protocol.CapabilitiesFlag.*
 import cc.otavia.mysql.protocol.Packets.*
 import cc.otavia.mysql.protocol.{CapabilitiesFlag, CommandType}
 import cc.otavia.mysql.utils.*
+import cc.otavia.sql.Statement.ExecuteUpdate
+import cc.otavia.sql.{ConnectOptions, Connection, Driver}
 
 import java.net.SocketAddress
 import java.nio.channels.ClosedChannelException
@@ -85,9 +85,10 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
 
     override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit =
         while (checkDecodePacket(input)) {
-            val packetStart     = input.readerOffset
-            val length          = input.readUnsignedMediumLE
-            val sequenceId: Int = input.readUnsignedByte
+            val packetStart = input.readerOffset
+            val length      = input.readUnsignedMediumLE
+            this.sequenceId = input.readUnsignedByte.toByte
+            this.sequenceId = (this.sequenceId + 1).toByte
             status match
                 case ST_CONNECTING =>
                     handleInitialHandshake(input)

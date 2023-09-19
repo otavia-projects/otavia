@@ -72,7 +72,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             ridx = 0
             widx = 0
             clearAndShrink()
-        }
+        } else ridx = widx
     }
 
     override def compact(): Buffer = {
