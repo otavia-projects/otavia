@@ -17,6 +17,7 @@
 package cc.otavia.json.derivation
 
 import cc.otavia.buffer.{Buffer, BufferAllocator}
+import cc.otavia.json.JsonSerde
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.charset.{Charset, StandardCharsets}
@@ -26,15 +27,34 @@ class GeneratorSuite extends AnyFunSuite {
 
     import GeneratorSuite.*
 
-    test("serde") {
+    test("serde primaries type in case class") {
         given charset: Charset = StandardCharsets.UTF_8
-        val device             = Device(1, "iPhone 14")
-        val serde              = JsonSerdeGenerator.derived[Device]
+        val primaries          = Primaries(true, '1', 'A', 56789.6789d, 4567.3456f, 7, 567890, 6, "STRING")
+        val serde              = JsonSerdeGenerator.derived[Primaries]
 
         val allocator = BufferAllocator.onHeapAllocator()
         val buffer    = allocator.allocate(4096)
 
-        serde.serialize(device, buffer)
+        serde.serialize(primaries, buffer)
+
+        println(buffer.readCharSequence(buffer.readableBytes))
+        assert(true)
+
+    }
+
+    test("serde seq") {
+        given charset: Charset = StandardCharsets.UTF_8
+
+        val primaries = Primaries(true, '1', 'A', 56789.6789d, 4567.3456f, 7, 567890, 6, "STRING")
+
+        given primariesSerde: JsonSerde[Primaries] = JsonSerdeGenerator.derived[Primaries]
+
+        val allocator = BufferAllocator.onHeapAllocator()
+        val buffer    = allocator.allocate(4096)
+
+        val serde = JsonSerde.seqSerde[Primaries]
+
+        serde.serialize(Seq(primaries), buffer)
 
         println(buffer.readCharSequence(buffer.readableBytes))
         assert(true)
@@ -44,5 +64,16 @@ class GeneratorSuite extends AnyFunSuite {
 }
 
 object GeneratorSuite {
-    case class Device(id: Int, name: String)
+    case class Primaries(
+        boolean: Boolean,
+        byte: Byte,
+        char: Char,
+        double: Double,
+        float: Float,
+        int: Int,
+        long: Long,
+        short: Short,
+        string: String
+    )
+
 }

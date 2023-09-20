@@ -49,7 +49,7 @@ trait SerdePrimaryTypeOps {
 
     protected def deserializeShort(in: Buffer): Short
 
-    protected def deserializeInt(in: Buffer): Short
+    protected def deserializeInt(in: Buffer): Int
 
     protected def deserializeLong(in: Buffer): Long
 

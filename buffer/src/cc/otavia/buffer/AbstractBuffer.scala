@@ -1147,6 +1147,11 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         !notIn
     }
 
+    override def nextInRange(lower: Byte, upper: Byte): Boolean = {
+        val b = underlying.get(ridx)
+        b >= lower && b <= upper
+    }
+
     override def skipIfNext(byte: Byte): Boolean = if (underlying.get(ridx) == byte) {
         ridx += 1
         true
@@ -1161,6 +1166,18 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         }
         if (skip) ridx += bytes.length
         skip
+    }
+
+    override def skipIfNextIn(set: Array[Byte]): Boolean = {
+        var notIn = true
+        var i     = 0
+        val b     = underlying.get(ridx)
+        while (notIn && i < set.length) {
+            notIn = b != set(i)
+            i += 1
+        }
+        if (!notIn) ridx += 1
+        !notIn
     }
 
     inline private def checkRead(index: Int, size: Int): Unit =

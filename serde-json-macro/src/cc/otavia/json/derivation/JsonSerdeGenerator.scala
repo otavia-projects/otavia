@@ -21,7 +21,7 @@ import cc.otavia.json.{JsonConstants, JsonSerde}
 import magnolia1.{AutoDerivation, CaseClass, SealedTrait}
 import shapeless3.deriving.*
 
-import scala.collection.AbstractIterable
+import scala.collection.mutable
 import scala.compiletime.*
 import scala.deriving.Mirror
 
@@ -31,7 +31,15 @@ object JsonSerdeGenerator extends AutoDerivation[JsonSerde] {
 
     override def join[T](caseClass: CaseClass[JsonSerdeGenerator.Typeclass, T]): JsonSerde[T] = new JsonSerde[T] {
 
-        override def deserialize(in: Buffer): T = ???
+        private val paramsMap: Map[String, CaseClass.Param[JsonSerde, T]] =
+            caseClass.params.map(p => p.label -> p).toMap
+
+        override def deserialize(in: Buffer): T = {
+            val values = mutable.HashMap.empty[String, AnyRef] // TODO
+            skipBlanks(in)
+
+            ???
+        }
 
         override def serialize(value: T, out: Buffer): Unit = {
             serializeObjectStart(out)

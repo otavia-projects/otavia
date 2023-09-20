@@ -25,6 +25,7 @@ class JsoniterSuite extends AnyFunSuite {
     import JsoniterSuite.*
 
     test("jsoniter serialize") {
+        given CodecMakerConfig.PrintCodec with {}
         given codec: JsonValueCodec[Device] = JsonCodecMaker.make
 
         val json = writeToString(Device(-1, 'l', 'l', "iPhone 13"))

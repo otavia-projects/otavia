@@ -2442,6 +2442,9 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
 
     override def nextIn(bytes: Array[Byte]): Boolean = if (nonEmpty) head.nextIn(bytes) else false
 
+    override def nextInRange(lower: Byte, upper: Byte): Boolean =
+        if (nonEmpty) head.nextInRange(lower, upper) else false
+
     override def skipIfNext(byte: Byte): Boolean = if (nonEmpty) {
         val res = head.skipIfNext(byte)
         if (res) ridx += 1
@@ -2462,5 +2465,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         if (skip) readerOffset(ridx + bytes.length)
         skip
     } else false
+
+    override def skipIfNextIn(set: Array[Byte]): Boolean = if (nonEmpty) head.skipIfNextIn(set) else false
 
 }
