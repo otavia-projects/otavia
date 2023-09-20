@@ -43,3 +43,11 @@ class HttpHeaders extends mutable.Map[String, String] {
     override def iterator: Iterator[(String, String)] = ???
 
 }
+
+object HttpHeaders {
+
+    val REQUEST_DEFAULT = new HttpHeaders()
+
+    val RESPONSE_DEFAULT = new HttpHeaders()
+
+}

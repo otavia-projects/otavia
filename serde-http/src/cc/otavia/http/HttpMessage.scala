@@ -18,5 +18,11 @@ package cc.otavia.http
 
 sealed trait HttpMessage
 
-case class HttpRequest[C](method: HttpMethod, path: String, version: HttpVersion, headers: HttpHeaders, content: C)
-    extends HttpMessage
+case class HttpRequest[C](
+    method: HttpMethod,
+    path: String,
+    version: HttpVersion = HttpVersion.HTTP_1_1,
+    headers: Option[HttpHeaders] = None,
+    content: Option[C] = None,
+    contentType: Option[String] = None
+) extends HttpMessage

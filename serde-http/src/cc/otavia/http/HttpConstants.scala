@@ -16,22 +16,42 @@
 
 package cc.otavia.http
 
-import java.nio.charset.StandardCharsets
+import java.nio.charset.{Charset, StandardCharsets}
 import scala.language.unsafeNulls
 
-/** The version of HTTP or its derived protocols, such as <a
- *  href="https://en.wikipedia.org/wiki/Real_Time_Streaming_Protocol">RTSP</a> and <a
- *  href="https://en.wikipedia.org/wiki/Internet_Content_Adaptation_Protocol">ICAP</a>.
- */
-enum HttpVersion(val bytes: Array[Byte]) {
+object HttpConstants {
 
-    /** HTTP/1.0 */
-    case HTTP_1_0 extends HttpVersion("HTTP/1.0".getBytes(StandardCharsets.US_ASCII))
+    /** Horizontal space */
+    val SP = 32
 
-    /** HTTP/1.1 */
-    case HTTP_1_1 extends HttpVersion("HTTP/1.1".getBytes(StandardCharsets.US_ASCII))
+    /** Horizontal tab */
+    val HT = 9
 
-    /** HTTP/2.0 */
-    case HTTP_2 extends HttpVersion("HTTP/2.0".getBytes(StandardCharsets.US_ASCII))
+    /** Carriage return */
+    val CR = 13
+
+    /** Equals '=' */
+    val EQUALS = 61
+
+    /** Line feed character */
+    val LF = 10
+
+    /** Colon ':' */
+    val COLON = 58
+
+    /** Semicolon ';' */
+    val SEMICOLON = 59
+
+    /** Comma ',' */
+    val COMMA = 44
+
+    /** Double quote '"' */
+    val DOUBLE_QUOTE = '"'
+
+    /** Default character set (UTF-8) */
+    val DEFAULT_CHARSET: Charset = StandardCharsets.UTF_8
+
+    /** Horizontal space */
+    val SP_CHAR: Char = SP.toChar
 
 }

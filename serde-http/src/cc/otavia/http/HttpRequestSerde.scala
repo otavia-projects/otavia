@@ -40,37 +40,58 @@ class HttpRequestSerde[C] extends HttpSerde[HttpRequest[C]] {
 
     override def serialize(request: HttpRequest[C], out: Buffer): Unit = {
         serializeHeadLine(request, out)
-        for ((k, v) <- request.headers) {
-            serializeHeader(k, v, out)
-        }
-        serializeHeader("Content-Length", "          ", out) // set after serialize content
-        val lengthOffset = out.writerOffset - 12
-        out.writeByte('\r')
-        out.writeByte('\n')
+        request.headers match
+            case Some(value) => for ((k, v) <- value) serializeHeader(k, v, out)
+            case None        =>
 
-        val contentStartOffset = out.writerOffset
-        serde.serialize(request.content, out)
-        val contentLength = out.writerOffset - contentStartOffset
+        request.content match
+            case Some(value) =>
+                // TODO: Content-Type
+                // set after serialize content
+                val lengthOffset = out.writerOffset + HttpHeader.Key.CONTENT_LENGTH.length + 2
+                serializeHeader(HttpHeader.Key.CONTENT_LENGTH, HttpHeader.Value.CONTENT_LENGTH_PLACEHOLDER, out)
+                out.writeByte('\r')
+                out.writeByte('\n')
 
-        out.setBytes(lengthOffset, contentLength.toString.getBytes(StandardCharsets.UTF_8)) // set Content-Length value
+                val contentStartOffset = out.writerOffset
+                serde.serialize(value, out)
+                val contentLength = out.writerOffset - contentStartOffset
+
+                out.setBytes(
+                  lengthOffset,
+                  contentLength.toString.getBytes(StandardCharsets.UTF_8)
+                ) // set Content-Length value
+            case None =>
+                serializeHeader(HttpHeader.Key.CONTENT_LENGTH, HttpHeader.Value.ZERO, out)
+                out.writeByte('\r')
+                out.writeByte('\n')
 
     }
 
-    inline private def serializeHeadLine(request: HttpRequest[C], out: Buffer): Unit = {
-        out.writeBytes(request.method.value)
+    private def serializeHeadLine(request: HttpRequest[C], out: Buffer): Unit = {
+        out.writeBytes(request.method.bytes)
         out.writeByte(' ')
         out.writeCharSequence(request.path, StandardCharsets.UTF_8)
         out.writeByte(' ')
-        out.writeCharSequence(request.version.value, StandardCharsets.UTF_8)
+        out.writeBytes(request.version.bytes)
         out.writeByte('\r')
         out.writeByte('\n')
     }
 
-    inline private def serializeHeader(key: String, value: String, out: Buffer): Unit = {
-        out.writeCharSequence(key)
+    private def serializeHeader(key: Array[Byte], value: Array[Byte], out: Buffer): Unit = {
+        out.writeBytes(key)
         out.writeByte(':')
         out.writeByte(' ')
-        out.writeCharSequence(value)
+        out.writeBytes(value)
+        out.writeByte('\r')
+        out.writeByte('\n')
+    }
+
+    private def serializeHeader(key: String, value: String, out: Buffer): Unit = {
+        out.writeCharSequence(key, StandardCharsets.US_ASCII)
+        out.writeByte(':')
+        out.writeByte(' ')
+        out.writeCharSequence(value, StandardCharsets.US_ASCII)
         out.writeByte('\r')
         out.writeByte('\n')
     }
