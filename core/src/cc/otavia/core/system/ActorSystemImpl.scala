@@ -281,7 +281,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
         val last = gcTime.get()
         if (now - last > 1000 && gcTime.compareAndSet(last, now)) {
             System.gc()
-            println(s"${Thread.currentThread()} GC")
+            logger.trace("GC")
         }
     }
 
