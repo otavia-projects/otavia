@@ -208,7 +208,13 @@ object `codec-http` extends OtaviaModule {
 
     override def artifactName = "codec-http"
 
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(codec, serde, `serde-json`)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
 
 }
 
@@ -332,7 +338,7 @@ object web extends OtaviaModule {
 
 object examples extends OtaviaModule {
     override def moduleDeps: Seq[PublishModule] =
-        scala.Seq(core, codec, log4a, `mysql-adbc-driver`, `postgres-adbc-driver`, `codec-redis`)
+        scala.Seq(core, codec, log4a, `mysql-adbc-driver`, `postgres-adbc-driver`, `codec-redis`, `codec-http`)
 }
 
 object serde extends OtaviaModule {
@@ -366,20 +372,6 @@ object `serde-json-macro` extends OtaviaModule {
     override def moduleDeps = Seq(serde, `serde-json`)
 
     override def ivyDeps = Agg(ProjectInfo.shapeless, ProjectInfo.magnolia)
-
-    object test extends Tests with TestModule.ScalaTest {
-
-        override def ivyDeps = Agg(ProjectInfo.testDep)
-
-    }
-
-}
-
-object `serde-http` extends OtaviaModule {
-
-    override def artifactName = "serde-http"
-
-    override def moduleDeps = Seq(serde, `serde-json`)
 
     object test extends Tests with TestModule.ScalaTest {
 

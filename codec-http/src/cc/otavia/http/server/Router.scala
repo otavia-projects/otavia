@@ -14,44 +14,32 @@
  * limitations under the License.
  */
 
-package cc.otavia.http
+package cc.otavia.http.server
+
+import cc.otavia.core.address.Address
+import cc.otavia.http.{HttpMethod, HttpRequest, HttpSerde}
 
 import java.nio.charset.{Charset, StandardCharsets}
+import java.nio.file.Path
 import scala.language.unsafeNulls
 
-object HttpConstants {
+sealed trait Router
 
-    /** Horizontal space */
-    val SP = 32
+case class ControllerRouter(
+    method: HttpMethod,
+    path: String,
+    controller: Address[?],
+    requestSerde: Option[HttpSerde[HttpRequest[?]]],
+    responseSerde: Option[HttpSerde[?]]
+) extends Router
 
-    /** Horizontal tab */
-    val HT = 9
+case class StaticFilesRouter(path: String, statics: Path) extends Router
 
-    /** Carriage return */
-    val CR = 13
+case class NotFoundRouter(statics: Option[Path] = None) extends Router
 
-    /** Equals '=' */
-    val EQUALS = 61
-
-    /** Line feed character */
-    val LF = 10
-
-    /** Colon ':' */
-    val COLON = 58
-
-    /** Semicolon ';' */
-    val SEMICOLON = 59
-
-    /** Comma ',' */
-    val COMMA = 44
-
-    /** Double quote '"' */
-    val DOUBLE_QUOTE = '"'
-
-    /** Default character set (UTF-8) */
-    val DEFAULT_CHARSET: Charset = StandardCharsets.UTF_8
-
-    /** Horizontal space */
-    val SP_CHAR: Char = SP.toChar
-
-}
+case class PlainTextRouter(
+    method: HttpMethod,
+    path: String,
+    text: Array[String],
+    charset: Charset = StandardCharsets.UTF_8
+) extends Router
