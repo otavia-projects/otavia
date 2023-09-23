@@ -185,6 +185,77 @@ node5 -> node2;
          <button class="icon-button show-content expand"></button>
          <h4 class="groupHeader h200">Inherited methods</h4>
         </div>
+        <div class="documentableElement" id="bytesBefore-5d9" data-f-keywords="override" data-f-inherited="AbstractBuffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="UnpoolDirectBuffer.html#bytesBefore-5d9" t="n" class="documentableName ">bytesBefore</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">needle</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>], <span t="k"></span><span data-unresolved-link="" t="n">from</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">to</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">ignoreCase</span>: <span data-unresolved-link="" t="t">Boolean</span>): <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Get the number of <a href="../AbstractBuffer.html#readableBytes-0">readableBytes</a>, until the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> is found in this buffer. The found offset will be the offset into this buffer, relative to <span data-unresolved-link="" title="Problem linking from: No DRI found for query">from</span>, of the first byte of a sequence that matches all readable bytes in the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> buffer. If the needle is not found, -1 is returned.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Get the number of <a href="../AbstractBuffer.html#readableBytes-0">readableBytes</a>, until the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> is found in this buffer. The found offset will be the offset into this buffer, relative to <span data-unresolved-link="" title="Problem linking from: No DRI found for query">from</span>, of the first byte of a sequence that matches all readable bytes in the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> buffer. If the needle is not found, -1 is returned.</p> 
+              <p>This method does not modify the <a href="../AbstractBuffer.html#readerOffset-fffffa19">readerOffset</a> or the <a href="../AbstractBuffer.html#writerOffset-fffffa19">writerOffset</a>.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               from
+              </dt>
+              <dd class="body-medium">
+               <p>start index to search</p> 
+              </dd>
+              <dt class="body-small">
+               ignoreCase
+              </dt>
+              <dd class="body-medium">
+               <p>ignore case</p> 
+              </dd>
+              <dt class="body-small">
+               needle
+              </dt>
+              <dd class="body-medium">
+               <p>The byte seq value to search for.</p> 
+              </dd>
+              <dt class="body-small">
+               to
+              </dt>
+              <dd class="body-medium">
+               <p>end index to search</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="../AbstractBuffer.html#bytesBefore-5d9">AbstractBuffer</a> -&gt; <a href="../Buffer.html">Buffer</a>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../AbstractBuffer.html#bytesBefore-5d9">AbstractBuffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
         <div class="documentableElement" id="bytesBefore-f35" data-f-keywords="override" data-f-inherited="AbstractBuffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -1901,6 +1972,118 @@ node5 -> node2;
               </dt>
               <dd class="body-medium">
                <a href="../AbstractBuffer.html#bytesBefore9-1d7">AbstractBuffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="bytesBeforeIn-f35" data-f-keywords="override" data-f-inherited="AbstractBuffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="UnpoolDirectBuffer.html#bytesBeforeIn-f35" t="n" class="documentableName ">bytesBeforeIn</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">set</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>]): <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Get the number of <a href="../AbstractBuffer.html#readableBytes-0">readableBytes</a>, until any the given byte in <span data-unresolved-link="" title="Problem linking set: No DRI found for query">set</span> is found in this buffer. If the byte is not found, -1 is returned.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Get the number of <a href="../AbstractBuffer.html#readableBytes-0">readableBytes</a>, until any the given byte in <span data-unresolved-link="" title="Problem linking set: No DRI found for query">set</span> is found in this buffer. If the byte is not found, -1 is returned.</p> 
+              <p>This method does not modify the <a href="../AbstractBuffer.html#readerOffset-fffffa19">readerOffset</a> or the <a href="../AbstractBuffer.html#writerOffset-fffffa19">writerOffset</a>.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               set
+              </dt>
+              <dd class="body-medium">
+               <p>any the given byte in <span data-unresolved-link="" title="Problem linking set: No DRI found for query">set</span></p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="../AbstractBuffer.html#bytesBeforeIn-f35">AbstractBuffer</a> -&gt; <a href="../Buffer.html">Buffer</a>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../AbstractBuffer.html#bytesBeforeIn-f35">AbstractBuffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="bytesBeforeInRange-fffff587" data-f-keywords="override" data-f-inherited="AbstractBuffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="UnpoolDirectBuffer.html#bytesBeforeInRange-fffff587" t="n" class="documentableName ">bytesBeforeInRange</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">lower</span>: <span data-unresolved-link="" t="t">Byte</span>, <span t="k"></span><span data-unresolved-link="" t="n">upper</span>: <span data-unresolved-link="" t="t">Byte</span>): <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Get the number of <a href="../AbstractBuffer.html#readableBytes-0">readableBytes</a>, until any the given byte which is between <span data-unresolved-link="" title="Problem linking lower: No DRI found for query">lower</span> and <span data-unresolved-link="" title="Problem linking upper: No DRI found for query">upper</span> is found in this buffer. If the byte is not found, -1 is returned.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Get the number of <a href="../AbstractBuffer.html#readableBytes-0">readableBytes</a>, until any the given byte which is between <span data-unresolved-link="" title="Problem linking lower: No DRI found for query">lower</span> and <span data-unresolved-link="" title="Problem linking upper: No DRI found for query">upper</span> is found in this buffer. If the byte is not found, -1 is returned.</p> 
+              <p>This method does not modify the <a href="../AbstractBuffer.html#readerOffset-fffffa19">readerOffset</a> or the <a href="../AbstractBuffer.html#writerOffset-fffffa19">writerOffset</a>.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               lower
+              </dt>
+              <dd class="body-medium">
+               <p>lower bound byte</p> 
+              </dd>
+              <dt class="body-small">
+               upper
+              </dt>
+              <dd class="body-medium">
+               <p>upper bound byte</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="../AbstractBuffer.html#bytesBeforeInRange-fffff587">AbstractBuffer</a> -&gt; <a href="../Buffer.html">Buffer</a>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../AbstractBuffer.html#bytesBeforeInRange-fffff587">AbstractBuffer</a>
               </dd>
              </dl>
             </div>
@@ -4249,6 +4432,135 @@ node5 -> node2;
               </dt>
               <dd class="body-medium">
                <a href="../Buffer.html#getUnsignedShortLE-fffffbe0">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="indexIn-fffff64b" data-f-keywords="override" data-f-inherited="AbstractBuffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="UnpoolDirectBuffer.html#indexIn-fffff64b" t="n" class="documentableName ">indexIn</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">bytes</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>], <span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Check the byte at index is in the gaven bytes</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Check the byte at index is in the gaven bytes</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="../AbstractBuffer.html#indexIn-fffff64b">AbstractBuffer</a> -&gt; <a href="../Buffer.html">Buffer</a>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../AbstractBuffer.html#indexIn-fffff64b">AbstractBuffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="indexInRange-fffff539" data-f-keywords="override" data-f-inherited="AbstractBuffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="UnpoolDirectBuffer.html#indexInRange-fffff539" t="n" class="documentableName ">indexInRange</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">lower</span>: <span data-unresolved-link="" t="t">Byte</span>, <span t="k"></span><span data-unresolved-link="" t="n">upper</span>: <span data-unresolved-link="" t="t">Byte</span>, <span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Check the byte at index is in the gaven byte range</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Check the byte at index is in the gaven byte range</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="../AbstractBuffer.html#indexInRange-fffff539">AbstractBuffer</a> -&gt; <a href="../Buffer.html">Buffer</a>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../AbstractBuffer.html#indexInRange-fffff539">AbstractBuffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="indexIs-fffff469" data-f-keywords="override" data-f-inherited="AbstractBuffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="UnpoolDirectBuffer.html#indexIs-fffff469" t="n" class="documentableName ">indexIs</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">byte</span>: <span data-unresolved-link="" t="t">Byte</span>, <span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Check the byte at <span data-unresolved-link="" title="Problem linking index: No DRI found for query">index</span> is the gaven byte</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Check the byte at <span data-unresolved-link="" title="Problem linking index: No DRI found for query">index</span> is the gaven byte</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="../AbstractBuffer.html#indexIs-fffff469">AbstractBuffer</a> -&gt; <a href="../Buffer.html">Buffer</a>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../AbstractBuffer.html#indexIs-fffff469">AbstractBuffer</a>
               </dd>
              </dl>
             </div>

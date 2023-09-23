@@ -417,6 +417,62 @@ node10 -> node5;
           </div>
          </div>
         </div>
+        <div class="documentableElement" id="bytesBefore-5d9">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Buffer.html#bytesBefore-5d9" t="n" class="documentableName ">bytesBefore</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">needle</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>], <span t="k"></span><span data-unresolved-link="" t="n">from</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">to</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">ignoreCase</span>: <span data-unresolved-link="" t="t">Boolean</span>): <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Get the number of <a href="Buffer.html#readableBytes-0">readableBytes</a>, until the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> is found in this buffer. The found offset will be the offset into this buffer, relative to <span data-unresolved-link="" title="Problem linking from: No DRI found for query">from</span>, of the first byte of a sequence that matches all readable bytes in the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> buffer. If the needle is not found, -1 is returned.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Get the number of <a href="Buffer.html#readableBytes-0">readableBytes</a>, until the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> is found in this buffer. The found offset will be the offset into this buffer, relative to <span data-unresolved-link="" title="Problem linking from: No DRI found for query">from</span>, of the first byte of a sequence that matches all readable bytes in the given <span data-unresolved-link="" title="Problem linking needle: No DRI found for query">needle</span> buffer. If the needle is not found, -1 is returned.</p> 
+              <p>This method does not modify the <a href="Buffer.html#readerOffset-fffffa19">readerOffset</a> or the <a href="Buffer.html#writerOffset-fffffa19">writerOffset</a>.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               from
+              </dt>
+              <dd class="body-medium">
+               <p>start index to search</p> 
+              </dd>
+              <dt class="body-small">
+               ignoreCase
+              </dt>
+              <dd class="body-medium">
+               <p>ignore case</p> 
+              </dd>
+              <dt class="body-small">
+               needle
+              </dt>
+              <dd class="body-medium">
+               <p>The byte seq value to search for.</p> 
+              </dd>
+              <dt class="body-small">
+               to
+              </dt>
+              <dd class="body-medium">
+               <p>end index to search</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
         <div class="documentableElement" id="bytesBefore10-f07">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -1636,6 +1692,88 @@ node10 -> node5;
                <p>The offset, relative to the current <a href="Buffer.html#readerOffset-fffffa19">readerOffset</a>, of the found value, or -1 if none was found.</p> 
               </dd>
              </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="bytesBeforeIn-f35">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Buffer.html#bytesBeforeIn-f35" t="n" class="documentableName ">bytesBeforeIn</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">set</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>]): <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Get the number of <a href="Buffer.html#readableBytes-0">readableBytes</a>, until any the given byte in <span data-unresolved-link="" title="Problem linking set: No DRI found for query">set</span> is found in this buffer. If the byte is not found, -1 is returned.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Get the number of <a href="Buffer.html#readableBytes-0">readableBytes</a>, until any the given byte in <span data-unresolved-link="" title="Problem linking set: No DRI found for query">set</span> is found in this buffer. If the byte is not found, -1 is returned.</p> 
+              <p>This method does not modify the <a href="Buffer.html#readerOffset-fffffa19">readerOffset</a> or the <a href="Buffer.html#writerOffset-fffffa19">writerOffset</a>.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               set
+              </dt>
+              <dd class="body-medium">
+               <p>any the given byte in <span data-unresolved-link="" title="Problem linking set: No DRI found for query">set</span></p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="bytesBeforeInRange-fffff587">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Buffer.html#bytesBeforeInRange-fffff587" t="n" class="documentableName ">bytesBeforeInRange</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">lower</span>: <span data-unresolved-link="" t="t">Byte</span>, <span t="k"></span><span data-unresolved-link="" t="n">upper</span>: <span data-unresolved-link="" t="t">Byte</span>): <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Get the number of <a href="Buffer.html#readableBytes-0">readableBytes</a>, until any the given byte which is between <span data-unresolved-link="" title="Problem linking lower: No DRI found for query">lower</span> and <span data-unresolved-link="" title="Problem linking upper: No DRI found for query">upper</span> is found in this buffer. If the byte is not found, -1 is returned.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Get the number of <a href="Buffer.html#readableBytes-0">readableBytes</a>, until any the given byte which is between <span data-unresolved-link="" title="Problem linking lower: No DRI found for query">lower</span> and <span data-unresolved-link="" title="Problem linking upper: No DRI found for query">upper</span> is found in this buffer. If the byte is not found, -1 is returned.</p> 
+              <p>This method does not modify the <a href="Buffer.html#readerOffset-fffffa19">readerOffset</a> or the <a href="Buffer.html#writerOffset-fffffa19">writerOffset</a>.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               lower
+              </dt>
+              <dd class="body-medium">
+               <p>lower bound byte</p> 
+              </dd>
+              <dt class="body-small">
+               upper
+              </dt>
+              <dd class="body-medium">
+               <p>upper bound byte</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
             </div>
            </div>
           </div>
@@ -2935,6 +3073,90 @@ node10 -> node5;
                </div>
               </dd>
              </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="indexIn-fffff64b">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Buffer.html#indexIn-fffff64b" t="n" class="documentableName ">indexIn</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">bytes</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>], <span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Check the byte at index is in the gaven bytes</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Check the byte at index is in the gaven bytes</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="indexInRange-fffff539">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Buffer.html#indexInRange-fffff539" t="n" class="documentableName ">indexInRange</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">lower</span>: <span data-unresolved-link="" t="t">Byte</span>, <span t="k"></span><span data-unresolved-link="" t="n">upper</span>: <span data-unresolved-link="" t="t">Byte</span>, <span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Check the byte at index is in the gaven byte range</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Check the byte at index is in the gaven byte range</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="indexIs-fffff469">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Buffer.html#indexIs-fffff469" t="n" class="documentableName ">indexIs</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">byte</span>: <span data-unresolved-link="" t="t">Byte</span>, <span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Check the byte at <span data-unresolved-link="" title="Problem linking index: No DRI found for query">index</span> is the gaven byte</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Check the byte at <span data-unresolved-link="" title="Problem linking index: No DRI found for query">index</span> is the gaven byte</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
             </div>
            </div>
           </div>
