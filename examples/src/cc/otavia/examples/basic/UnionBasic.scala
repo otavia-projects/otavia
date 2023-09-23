@@ -44,7 +44,7 @@ object UnionBasic {
         override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = handleStart(stack)
 
         private def handleStart(stack: NoticeStack[Start]): Option[StackState] = {
-            stack.stackState match
+            stack.state match
                 case StackState.start =>
                     if (stack.notice.toggle) {
                         val state = new FutureState[World]()

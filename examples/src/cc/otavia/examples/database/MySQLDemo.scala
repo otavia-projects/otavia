@@ -33,7 +33,7 @@ object MySQLDemo {
 
     private class Main(args: Array[String]) extends MainActor(args) {
         override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] = {
-            stack.stackState match
+            stack.state match
                 case StackState.start =>
                     val connection = system.buildActor(() => new Connection())
                     val url        = args(0)

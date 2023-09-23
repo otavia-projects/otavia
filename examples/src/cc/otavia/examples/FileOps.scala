@@ -43,7 +43,7 @@ object FileOps {
         system.buildActor(() =>
             new MainActor(args) {
                 override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] =
-                    stack.stackState match
+                    stack.state match
                         case StackState.start =>
                             fileChannelActor.ask(ReadLines()).suspend()
                         case futureState: FutureState[ReadLinesReply] =>
@@ -66,7 +66,7 @@ object FileOps {
         override protected def newChannel(): Channel = system.channelFactory.openFileChannel()
 
         override def continueAsk(stack: AskStack[ReadLines]): Option[StackState] = {
-            stack.stackState match
+            stack.state match
                 case StackState.start =>
                     val channel   = newChannelAndInit()
                     val openState = new OpenState()

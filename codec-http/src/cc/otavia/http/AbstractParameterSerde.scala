@@ -16,14 +16,22 @@
 
 package cc.otavia.http
 
-sealed trait HttpMessage
+import cc.otavia.buffer.Buffer
 
-case class HttpRequest[P, C](
-    method: HttpMethod,
-    path: String,
-    version: HttpVersion = HttpVersion.HTTP_1_1,
-    headers: Option[HttpHeaders] = None,
-    contentType: Option[String] = None,
-    params: Option[P] = None,
-    content: Option[C] = None
-) extends HttpMessage
+import scala.collection.mutable
+import scala.language.unsafeNulls
+
+abstract class AbstractParameterSerde[P] extends ParameterSerde[P] {
+
+    private var pvrs: mutable.Map[String, String] = _
+    private var pmvrs: mutable.Map[String, String] = _
+
+    override def setPathVars(vars: mutable.Map[String, String]): Unit = pvrs = vars
+
+    override def setParams(p: mutable.Map[String, String]): Unit = pmvrs = p
+
+    override def pathVars: mutable.Map[String, String] = pvrs
+
+    override def params: mutable.Map[String, String] = pmvrs
+
+}

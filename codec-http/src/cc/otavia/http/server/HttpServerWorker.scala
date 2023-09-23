@@ -17,9 +17,20 @@
 package cc.otavia.http.server
 
 import cc.otavia.core.actor.AcceptedWorkerActor
-import cc.otavia.core.channel.Channel
+import cc.otavia.core.actor.AcceptorActor.AcceptedChannel
+import cc.otavia.core.channel.{Channel, ChannelAddress}
+import cc.otavia.core.stack.{AskStack, StackState}
 import cc.otavia.handler.http.ServerCodec
 
 class HttpServerWorker(routerMatcher: RouterMatcher) extends AcceptedWorkerActor[Nothing] {
+
     override protected def init(channel: Channel): Unit = channel.pipeline.addLast(new ServerCodec(routerMatcher))
+
+    override def continueAsk(stack: AskStack[AcceptedChannel]): Option[StackState] = handleAccepted(stack)
+
+    override protected def afterAccepted(channel: ChannelAddress): Unit = {
+        println(s"EchoServerWorker accepted ${channel}")
+        super.afterAccepted(channel)
+    }
+
 }

@@ -42,7 +42,7 @@ object AskTimeout {
         override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = handleStart(stack)
 
         private def handleStart(stack: NoticeStack[Start]): Option[StackState] = {
-            stack.stackState match
+            stack.state match
                 case StackState.start =>
                     val state = new FutureState[Pong]()
                     pongActor.ask(Ping(), state.future, 1000) // max timeout time: 1000 millis

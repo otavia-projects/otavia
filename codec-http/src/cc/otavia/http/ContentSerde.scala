@@ -16,12 +16,6 @@
 
 package cc.otavia.http
 
-import cc.otavia.buffer.Buffer
+import cc.otavia.serde.Serde
 
-class UrlParamsSerde[C] extends HttpSerde[HttpRequest[C]] {
-
-    override def deserialize(in: Buffer): HttpRequest[C] = ???
-
-    override def serialize(value: HttpRequest[C], out: Buffer): Unit = ???
-
-}
+trait ContentSerde[C] extends Serde[C]

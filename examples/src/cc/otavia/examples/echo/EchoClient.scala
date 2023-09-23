@@ -43,7 +43,7 @@ object EchoClient {
         private var clientActor: Address[Connect | Echo] = _
 
         override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] =
-            stack.stackState match
+            stack.state match
                 case StackState.start =>
                     clientActor = system.buildActor(() => new ClientActor())
                     clientActor.ask(Connect(InetAddress.getByName("localhost"), 8080)).suspend()
@@ -78,7 +78,7 @@ object EchoClient {
         }
 
         private def echo(stack: AskStack[Echo]): Option[StackState] = {
-            stack.stackState match
+            stack.state match
                 case StackState.start =>
                     val state = new EchoWaitState()
                     channels.head._2.ask(stack.ask, state.future)

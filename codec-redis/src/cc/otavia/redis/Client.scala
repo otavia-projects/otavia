@@ -55,7 +55,7 @@ class Client extends SocketChannelsActor[Command[? <: CommandResponse]] {
     }
 
     private def handleCommand(stack: AskStack[Command[? <: CommandResponse]]): Option[StackState] = {
-        stack.stackState match
+        stack.state match
             case StackState.start =>
                 val state = new StackState.ChannelReplyState()
                 channel.ask(stack.ask, state.future)

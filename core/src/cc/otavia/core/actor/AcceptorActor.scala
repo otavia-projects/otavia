@@ -51,7 +51,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
     final override protected def newChannel(): Channel = system.channelFactory.openServerSocketChannel(family)
 
     final protected def bind(stack: AskStack[Bind]): Option[StackState] = {
-        stack.stackState match
+        stack.state match
             case StackState.start =>
                 val channel = newChannelAndInit()
                 val state   = new BindState()
@@ -81,7 +81,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
     }
 
     private def handleAcceptedStack(stack: ChannelStack[Channel]): Option[StackState] = {
-        stack.stackState match
+        stack.state match
             case StackState.start =>
                 val state = new DispatchState()
                 workers.ask(AcceptedChannel(stack.message), state.dispatchFuture)

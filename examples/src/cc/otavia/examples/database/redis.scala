@@ -35,7 +35,7 @@ private class MainRedis(host: String, port: Int, password: String, database: Int
     private var client: Address[MessageOf[Client]] = _
 
     override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] =
-        stack.stackState match
+        stack.state match
             case StackState.start =>
                 client = system.buildActor(() => new Client())
                 val state = new FutureState[ConnectReply]()

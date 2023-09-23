@@ -37,7 +37,7 @@ class HandleStateActor extends StateActor[MSG] with Injectable {
     }
 
     private def handleRequest(stack: AskStack[Request]): Option[StackState] = {
-        stack.stackState match
+        stack.state match
             case StackState.`start` =>
                 logger.debug("Initial state")
                 val request = stack.ask

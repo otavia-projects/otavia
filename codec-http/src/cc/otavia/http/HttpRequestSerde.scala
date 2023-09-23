@@ -22,7 +22,7 @@ import cc.otavia.serde.Serde
 import java.nio.charset.StandardCharsets
 import scala.language.unsafeNulls
 
-class HttpRequestSerde[C] extends HttpSerde[HttpRequest[C]] {
+class HttpRequestSerde[P, C] extends HttpSerde[HttpRequest[P, C]] {
 
     private var serde: Serde[C] = _
 
@@ -36,9 +36,9 @@ class HttpRequestSerde[C] extends HttpSerde[HttpRequest[C]] {
         this
     }
 
-    override def deserialize(in: Buffer): HttpRequest[C] = ???
+    override def deserialize(in: Buffer): HttpRequest[P, C] = ???
 
-    override def serialize(request: HttpRequest[C], out: Buffer): Unit = {
+    override def serialize(request: HttpRequest[P, C], out: Buffer): Unit = {
         serializeHeadLine(request, out)
         request.headers match
             case Some(value) => for ((k, v) <- value) serializeHeader(k, v, out)
@@ -68,7 +68,7 @@ class HttpRequestSerde[C] extends HttpSerde[HttpRequest[C]] {
 
     }
 
-    private def serializeHeadLine(request: HttpRequest[C], out: Buffer): Unit = {
+    private def serializeHeadLine(request: HttpRequest[P, C], out: Buffer): Unit = {
         out.writeBytes(request.method.bytes)
         out.writeByte(' ')
         out.writeCharSequence(request.path, StandardCharsets.UTF_8)

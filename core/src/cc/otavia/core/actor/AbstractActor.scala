@@ -117,7 +117,7 @@ private[core] abstract class AbstractActor[M <: Call]
                 pop(promise.id)
                 val stack = promise.actorStack
                 stack.addCompletedPromise(promise)
-                if (stack.stackState.resumable() || !stack.hasUncompletedPromise) {
+                if (stack.state.resumable() || !stack.hasUncompletedPromise) {
                     currentStack = stack
                     resume()
                 }
@@ -125,7 +125,7 @@ private[core] abstract class AbstractActor[M <: Call]
                 pop(promise.id)
                 val stack = promise.actorStack
                 stack.addCompletedPromise(promise)
-                if (stack.stackState.resumable() || !stack.hasUncompletedPromise) {
+                if (stack.state.resumable() || !stack.hasUncompletedPromise) {
                     currentStack = stack
                     resume()
                 }
@@ -182,7 +182,7 @@ private[core] abstract class AbstractActor[M <: Call]
         val stack = currentStack.asInstanceOf[NoticeStack[M & Notice]]
         try {
             val uncompleted = stack.uncompletedIterator()
-            val oldState    = stack.stackState
+            val oldState    = stack.state
             continueNotice(stack) match
                 case Some(state) =>
                     if (state != oldState) {
@@ -221,7 +221,7 @@ private[core] abstract class AbstractActor[M <: Call]
         val stack = currentStack.asInstanceOf[BatchNoticeStack[M & Notice]]
         try {
             val uncompleted = stack.uncompletedIterator()
-            val oldState    = stack.stackState
+            val oldState    = stack.state
             batchContinueNotice(stack) match // change the stack to next state.
                 case Some(state) =>
                     if (state != oldState) {
@@ -270,7 +270,7 @@ private[core] abstract class AbstractActor[M <: Call]
         val askStack = currentStack.asInstanceOf[AskStack[M & Ask[? <: Reply]]]
         try {
             val uncompleted = askStack.uncompletedIterator()
-            val oldState    = askStack.stackState
+            val oldState    = askStack.state
             continueAsk(askStack) match // run stack and switch to next state
                 case Some(state) =>
                     if (state != oldState) {
@@ -309,7 +309,7 @@ private[core] abstract class AbstractActor[M <: Call]
         val stack = currentStack.asInstanceOf[BatchAskStack[M & Ask[? <: Reply]]]
         try {
             val uncompleted = stack.uncompletedIterator()
-            val oldState    = stack.stackState
+            val oldState    = stack.state
             batchContinueAsk(stack) match
                 case Some(state) =>
                     if (state != oldState) {
@@ -378,7 +378,7 @@ private[core] abstract class AbstractActor[M <: Call]
             case message: ExceptionMessage => promise.setFailure(message)
             case _                         => promise.setSuccess(reply)
         currentStack.addCompletedPromise(promise)
-        if (currentStack.stackState.resumable() || !currentStack.hasUncompletedPromise) resume()
+        if (currentStack.state.resumable() || !currentStack.hasUncompletedPromise) resume()
     }
 
     /** resume running current stack frame to next state */
@@ -402,7 +402,7 @@ private[core] abstract class AbstractActor[M <: Call]
                 promise.setSuccess(askTimeoutEvent)
                 val stack = promise.actorStack
                 stack.addCompletedPromise(promise)
-                if (stack.stackState.resumable() || !stack.hasUncompletedPromise) {
+                if (stack.state.resumable() || !stack.hasUncompletedPromise) {
                     currentStack = stack
                     resume()
                 }
@@ -410,7 +410,7 @@ private[core] abstract class AbstractActor[M <: Call]
                 promise.setFailure(new TimeoutException())
                 val stack = promise.actorStack
                 stack.addCompletedPromise(promise)
-                if (stack.stackState.resumable() || !stack.hasUncompletedPromise) {
+                if (stack.state.resumable() || !stack.hasUncompletedPromise) {
                     currentStack = stack
                     resume()
                 }

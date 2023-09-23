@@ -23,6 +23,6 @@ class HttpServer(override val workerNumber: Int = 8, routers: Seq[Router]) exten
     private val routerMatcher = new RouterMatcher(routers)
 
     override protected def workerFactory: AcceptorActor.WorkerFactory[HttpServerWorker] = () =>
-        new HttpServerWorker(routerMatcher)
+        new HttpServerWorker(routerMatcher.sync())
 
 }

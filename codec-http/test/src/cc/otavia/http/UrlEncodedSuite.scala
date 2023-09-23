@@ -26,7 +26,7 @@ class UrlEncodedSuite extends AnyFunSuite {
         println(URLEncoder.encode("中文", "utf-8"))
         println(URLEncoder.encode("中文", "gbk"))
 
-        println(URLDecoder.decode("name=%E4%B8%A5%E9%94%9F&age=30", "utf-8"))
+        println(URLDecoder.decode("/path/to/url?name=%E4%B8%A5%E9%94%9F&age=30", "utf-8"))
     }
 
 }

@@ -53,7 +53,7 @@ object Stack {
 
 abstract class Stack extends Poolable {
 
-    private var state          = StackState.start
+    private var st          = StackState.start
     private var error: Boolean = false
 
     // completed promise
@@ -71,11 +71,11 @@ abstract class Stack extends Poolable {
 
     private[core] def setRuntimeActor(a: AbstractActor[?]): Unit = actor = a
 
-    def stackState: StackState = state
+    def state: StackState = st
 
-    private[core] def setState(stackState: StackState): Unit = if (this.state != stackState) {
+    private[core] def setState(stackState: StackState): Unit = if (this.st != stackState) {
         recycleAllPromises()
-        this.state = stackState
+        this.st = stackState
     }
 
     private[core] def setFailed(): Unit = error = true
@@ -83,7 +83,7 @@ abstract class Stack extends Poolable {
 
     override protected def cleanInstance(): Unit = {
         recycleAllPromises()
-        state = StackState.start
+        st = StackState.start
         error = false
         actor = null
     }

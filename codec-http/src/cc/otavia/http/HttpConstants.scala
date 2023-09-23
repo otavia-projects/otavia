@@ -54,7 +54,15 @@ object HttpConstants {
     /** Horizontal space */
     val SP_CHAR: Char = SP.toChar
 
+    /** http schema */
+    val HTTP_SCHEMA: Array[Byte] = "http://".getBytes(StandardCharsets.US_ASCII)
+
+    /** https schema */
+    val HTTPS_SCHEMA: Array[Byte] = "https://".getBytes(StandardCharsets.US_ASCII)
+
     val HEADERS_END: Array[Byte]     = "\r\n\r\n".getBytes(StandardCharsets.US_ASCII)
     val HEADER_LINE_END: Array[Byte] = "\r\n".getBytes(StandardCharsets.US_ASCII)
+
+    val HEADER_SPLITTER: Array[Byte] = ": ".getBytes(StandardCharsets.US_ASCII)
 
 }

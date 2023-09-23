@@ -69,7 +69,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         val channelStack = currentStack.asInstanceOf[ChannelStack[?]]
         try {
             val uncompleted = channelStack.uncompletedIterator()
-            val oldState    = channelStack.stackState
+            val oldState    = channelStack.state
             continueChannel(channelStack) match // run stack and switch to next state
                 case Some(state) =>
                     if (state != oldState) {
@@ -199,7 +199,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     ): ChannelFuture = ???
 
     final protected def close(stack: AskStack[Close]): Option[StackState] = {
-        stack.stackState match
+        stack.state match
             case StackState.start =>
                 val removes = if (stack.ask.ids.isEmpty) channels.keys else stack.ask.ids
                 if (removes.isEmpty) stack.`return`(CloseReply(Iterable.empty))
@@ -263,15 +263,14 @@ object ChannelsActor {
         def apply(host: InetAddress, port: Int): Connect = Connect(new InetSocketAddress(host, port))
 
     }
+
     case class Bind(local: SocketAddress) extends Ask[BindReply]
 
     object Bind {
 
         def apply(port: Int): Bind = Bind(new InetSocketAddress(port))
 
-        def apply(host: String, port: Int): Bind = Bind(
-          InetSocketAddress.createUnresolved(host, port).nn
-        )
+        def apply(host: String, port: Int): Bind = Bind(new InetSocketAddress(host, port))
 
         def apply(host: InetAddress, port: Int): Bind = Bind(new InetSocketAddress(host, port))
 

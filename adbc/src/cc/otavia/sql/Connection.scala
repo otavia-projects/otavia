@@ -46,7 +46,7 @@ class Connection(override val family: ProtocolFamily = StandardProtocolFamily.IN
             case _                                                           => ???
 
     private def handleConnect(stack: AskStack[Connect]): Option[StackState] = {
-        stack.stackState match
+        stack.state match
             case StackState.start => // waiting for socket connected
                 val auth = stack.ask
                 val driverFactory = auth.driver match

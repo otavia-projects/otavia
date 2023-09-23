@@ -423,7 +423,7 @@ object HttpHeader {
         val TEXT_EVENT_STREAM: String = "text/event-stream"
 
         /** text/plain */
-        val TEXT_PLAIN: String = "text/plain"
+        val TEXT_PLAIN: Array[Byte] = "text/plain".getBytes(StandardCharsets.US_ASCII)
 
         /** trailers */
         val TRAILERS: String = "trailers"

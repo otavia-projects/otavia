@@ -40,7 +40,7 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M | Connect]
      *    a [[ConnectReply]] which is registering to [[Reactor]].
      */
     protected def connect(stack: AskStack[Connect]): Option[StackState] = {
-        stack.stackState match
+        stack.state match
             case StackState.start =>
                 // TODO: check remote whether resolved, if not send ask message AddressResolver actor
                 val remote  = stack.ask.remote

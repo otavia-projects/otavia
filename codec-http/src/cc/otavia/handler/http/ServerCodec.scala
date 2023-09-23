@@ -16,34 +16,79 @@
 
 package cc.otavia.handler.http
 
+import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContext
 import cc.otavia.core.slf4a.{Logger, LoggerFactory}
+import cc.otavia.core.stack.ChannelFuture
 import cc.otavia.core.timer.TimeoutTrigger
 import cc.otavia.handler.codec.ByteToMessageCodec
 import cc.otavia.http.server.*
-import cc.otavia.http.{HttpConstants, HttpHeader}
+import cc.otavia.http.server.Router.*
+import cc.otavia.http.{HttpConstants, HttpHeader, HttpVersion, MediaType}
 
-import java.nio.charset.StandardCharsets
+import java.nio.charset.{Charset, StandardCharsets}
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import scala.language.unsafeNulls
 
 class ServerCodec(routerMatcher: RouterMatcher) extends ByteToMessageCodec {
 
-    private var logger: Logger = _
+    import ServerCodec.*
+
+    private var logger: Logger             = _
+    private var ctx: ChannelHandlerContext = _
 
     private var date: Array[Byte]   = _ // TODO: use threadLocal cache
     private var dateTimeoutId: Long = 0
 
+    private var parseState: Int       = ST_PARSE_HEADLINE
+    private var currentRouter: Router = _
+
     // decode http request
     override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = {
-        while (checkPacket(input)) {          // check packet completed
-            routerMatcher.choice(input) match // find the router
-                case controllerRouter: ControllerRouter   =>
-                case staticFilesRouter: StaticFilesRouter =>
-                case notFoundRouter: NotFoundRouter       => // 404
-                case plainTextRouter: PlainTextRouter     =>
+        while (input.readableBytes > 0) {
+            if (parseState == ST_PARSE_HEADLINE) {
+                if (input.readableBytes <= 4096) {
+                    val lineLength = input.bytesBefore(HttpConstants.HEADER_LINE_END)
+                    if (lineLength != -1) parseHeadLine(input, lineLength)
+                } else {
+                    val lineLength =
+                        input.bytesBefore(HttpConstants.HEADER_LINE_END, input.readerOffset, input.readerOffset + 4096)
+
+                    if (lineLength != -1) parseHeadLine(input, lineLength)
+                    else { // illegal http packet
+                        input.skipReadableBytes(input.readableBytes)
+                        ctx.channel.close(ChannelFuture())
+                    }
+                }
+            }
+
+            if (parseState == ST_PARSE_HEADERS) {
+                val headersLength = input.bytesBefore(HttpConstants.HEADERS_END)
+                if (headersLength != -1) {
+                    currentRouter match
+                        case ControllerRouter(
+                              method,
+                              path,
+                              controller,
+                              headers,
+                              paramsSerde,
+                              contentSerde,
+                              responseSerde
+                            ) =>
+                        case StaticFilesRouter(path, root) =>
+                        case NotFoundRouter(page)          =>
+                        case PlainTextRouter(method, path, text, charset) =>
+                            input.skipReadableBytes(headersLength + 4)
+                            parseState = ST_PARSE_HEADLINE
+                            responsePlaintext(text, charset)
+                }
+            }
+
+            if (parseState == ST_PARSE_BODY) {
+                ???
+            }
         }
     }
 
@@ -51,16 +96,41 @@ class ServerCodec(routerMatcher: RouterMatcher) extends ByteToMessageCodec {
     override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit =
         ???
 
-    private def checkPacket(input: AdaptiveBuffer): Boolean = {
-        while (input.skipIfNext(HttpConstants.SP)) {}
-        val headerEndIdx     = input.bytesBefore(HttpConstants.HEADERS_END)
-        val contentLengthIdx = input.bytesBefore(HttpHeader.Key.CONTENT_LENGTH)
-        ???
+    private def parseHeadLine(buffer: Buffer, lineLength: Int): Unit = {
+        val start = buffer.readerOffset
+        while (buffer.skipIfNext(HttpConstants.SP)) {}
+        currentRouter = routerMatcher.choice(buffer)
+        buffer.readerOffset(start + lineLength + 2)
+        parseState = ST_PARSE_HEADERS
+    }
+
+    private def responsePlaintext(text: Array[Byte], charset: Charset): Unit = {
+        val buffer = ctx.outboundAdaptiveBuffer
+        buffer.writeBytes(RESPONSE_NORMAL)
+        buffer.writeBytes(HttpHeader.Key.CONTENT_TYPE)
+        buffer.writeBytes(HttpConstants.HEADER_SPLITTER)
+        if (charset == StandardCharsets.UTF_8) buffer.writeBytes(MediaType.TEXT_PLAIN_UTF8.fullName)
+        else if (charset == StandardCharsets.US_ASCII) buffer.writeBytes(MediaType.TEXT_PLAIN.fullName)
+        else {
+            buffer.writeBytes(HttpHeader.Value.TEXT_PLAIN)
+            buffer.writeBytes(s"; charset=${charset.name()}".getBytes(StandardCharsets.US_ASCII))
+        }
+        buffer.writeBytes(HttpConstants.HEADER_LINE_END)
+        buffer.writeBytes(HttpHeader.Key.CONTENT_LENGTH)
+        buffer.writeBytes(HttpConstants.HEADER_SPLITTER)
+        buffer.writeBytes(text.length.toString.getBytes(StandardCharsets.US_ASCII))
+
+        buffer.writeBytes(HttpConstants.HEADERS_END)
+
+        buffer.writeBytes(text)
+
+        ctx.writeAndFlush(buffer)
     }
 
     override def handlerAdded(ctx: ChannelHandlerContext): Unit = {
         super.handlerAdded(ctx)
         this.logger = LoggerFactory.getLogger(getClass, ctx.system)
+        this.ctx = ctx
         this.dateTimeoutId = ctx.timer.registerChannelTimeout(TimeoutTrigger.DelayPeriod(1000, 1000), ctx.channel)
     }
 
@@ -75,11 +145,30 @@ class ServerCodec(routerMatcher: RouterMatcher) extends ByteToMessageCodec {
         logger.info("date updating")
     } else ctx.fireChannelTimeoutEvent(id)
 
+    private def httpVersion(buffer: Buffer): HttpVersion = {
+        while (buffer.skipIfNext(HttpConstants.SP)) {}
+        val version =
+            if (buffer.skipIfNexts(HttpVersion.HTTP_1_1.bytes)) HttpVersion.HTTP_1_1
+            else if (buffer.skipIfNexts(HttpVersion.HTTP_2.bytes)) HttpVersion.HTTP_2
+            else HttpVersion.HTTP_1_0
+        buffer.skipReadableBytes(buffer.bytesBefore(HttpConstants.HEADER_LINE_END) + 2)
+        version
+    }
+
 }
 
 object ServerCodec {
 
     /** server name of this http server */
     private val SERVER_NAME: Array[Byte] = "otavia-http".getBytes(StandardCharsets.US_ASCII)
+
+    private val RESPONSE_NORMAL: Array[Byte] =
+        """HTTP/1.1 200 OK
+          |Server: otavia-http
+          |""".stripMargin.getBytes(StandardCharsets.US_ASCII)
+
+    private val ST_PARSE_HEADLINE: Int = 0
+    private val ST_PARSE_HEADERS: Int  = 1
+    private val ST_PARSE_BODY: Int     = 2
 
 }

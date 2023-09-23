@@ -154,9 +154,32 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         var offset: Int       = ridx
         var continue: Boolean = true
         while (continue && offset < widx) {
-            if (underlying.get(offset) == needle) {
-                continue = false
-            } else offset += 1
+            if (underlying.get(offset) == needle) continue = false else offset += 1
+        }
+        if (continue) -1 else offset - ridx
+    }
+
+    override def bytesBeforeIn(set: Array[Byte]): Int = {
+        var offset: Int       = ridx
+        var continue: Boolean = true
+        while (continue && offset < widx) {
+            var i     = 0
+            var notin = true
+            val b     = underlying.get(offset)
+            while (i < set.length && notin) {
+                if (b != set(i)) i += 1 else notin = false
+            }
+            if (notin) offset += 1 else continue = false
+        }
+        if (continue) -1 else offset - ridx
+    }
+
+    override def bytesBeforeInRange(lower: Byte, upper: Byte): Int = {
+        var offset: Int       = ridx
+        var continue: Boolean = true
+        while (continue && offset < widx) {
+            val b = underlying.get(offset)
+            if (b >= lower && b <= upper) continue = false else offset += 1
         }
         if (continue) -1 else offset - ridx
     }
@@ -696,6 +719,16 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
 
     } else -1
 
+    override def bytesBefore(needle: Array[Byte], from: Int, to: Int, ignoreCase: Boolean): Int = {
+        if (from < ridx)
+            throw new IndexOutOfBoundsException(s"from is less than readerOffset: form = $from, readerOffset = $ridx")
+
+        if (to > widx)
+            throw new IndexOutOfBoundsException(s"to is beyond the end of the buffer: to = $to, writerOffset = $widx")
+
+        ???
+    }
+
     override def openCursor(fromOffset: Int, length: Int): ByteCursor = {
         if (closed) throw new BufferClosedException()
         if (fromOffset < 0) throw new IndexOutOfBoundsException(s"The fromOffset cannot be negative: ${fromOffset}")
@@ -1136,6 +1169,8 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
 
     override def nextIs(byte: Byte): Boolean = underlying.get(ridx) == byte
 
+    override def indexIs(byte: Byte, index: Int): Boolean = underlying.get(index) == byte
+
     override def nextIn(bytes: Array[Byte]): Boolean = {
         var notIn = true
         var i     = 0
@@ -1147,8 +1182,24 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         !notIn
     }
 
+    override def indexIn(bytes: Array[Byte], index: Int): Boolean = {
+        var notIn = true
+        var i     = 0
+        val b     = underlying.get(index)
+        while (notIn && i < bytes.length) {
+            notIn = b != bytes(i)
+            i += 1
+        }
+        !notIn
+    }
+
     override def nextInRange(lower: Byte, upper: Byte): Boolean = {
         val b = underlying.get(ridx)
+        b >= lower && b <= upper
+    }
+
+    override def indexInRange(lower: Byte, upper: Byte, index: Int): Boolean = {
+        val b = underlying.get(index)
         b >= lower && b <= upper
     }
 

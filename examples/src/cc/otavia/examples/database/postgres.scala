@@ -25,7 +25,7 @@ import cc.otavia.core.system.ActorSystem
 
 private class Main(url: String, username: String, password: String) extends MainActor(Array(url, username, password)) {
     override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] =
-        stack.stackState match
+        stack.state match
             case StackState.start =>
                 val Array(url, username, password) = args
                 val connection                     = system.buildActor(() => new Connection())

@@ -218,6 +218,22 @@ object `codec-http` extends OtaviaModule {
 
 }
 
+object `codec-http-macro` extends OtaviaModule {
+
+    override def artifactName = "codec-http-macro"
+
+    override def ivyDeps = Agg(ProjectInfo.magnolia)
+
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(codec, `codec-http`)
+
+    object test extends Tests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
+
+}
+
 object adbc extends OtaviaModule {
 
     override def artifactName = "adbc"

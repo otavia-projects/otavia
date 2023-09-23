@@ -657,6 +657,30 @@ trait Buffer {
      */
     def bytesBefore(needle: Byte): Int
 
+    /** Get the number of [[readableBytes]], until any the given byte in [[set]] is found in this buffer. If the byte is
+     *  not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param set
+     *    any the given byte in [[set]]
+     *  @return
+     */
+    def bytesBeforeIn(set: Array[Byte]): Int
+
+    /** Get the number of [[readableBytes]], until any the given byte which is between [[lower]] and [[upper]] is found
+     *  in this buffer. If the byte is not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param lower
+     *    lower bound byte
+     *  @param upper
+     *    upper bound byte
+     *  @return
+     */
+    def bytesBeforeInRange(lower: Byte, upper: Byte): Int
+
     /** Get the number of [[readableBytes]], until the given [[needle1]],[[needle2]] bytes is found in this buffer. If
      *  the needle is not found, -1 is returned.
      *
@@ -1116,6 +1140,24 @@ trait Buffer {
      *    The offset, relative to the current [[readerOffset]], of the found value, or -1 if none was found.
      */
     def bytesBefore(needle: Array[Byte]): Int
+
+    /** Get the number of [[readableBytes]], until the given [[needle]] is found in this buffer. The found offset will
+     *  be the offset into this buffer, relative to [[from]], of the first byte of a sequence that matches all readable
+     *  bytes in the given [[needle]] buffer. If the needle is not found, -1 is returned.
+     *
+     *  <p> This method does not modify the [[readerOffset]] or the [[writerOffset]].
+     *
+     *  @param needle
+     *    The byte seq value to search for.
+     *  @param from
+     *    start index to search
+     *  @param to
+     *    end index to search
+     *  @param ignoreCase
+     *    ignore case
+     *  @return
+     */
+    def bytesBefore(needle: Array[Byte], from: Int, to: Int, ignoreCase: Boolean = false): Int
 
     /** Opens a cursor to iterate the given number bytes of this buffer, starting at the given offset. The
      *  [[readerOffset]] and [[writerOffset]] are not modified by the cursor. <p> Care should be taken to ensure that
@@ -2465,11 +2507,20 @@ trait Buffer {
     /** Check the next readable byte is the gaven byte */
     def nextIs(byte: Byte): Boolean
 
+    /** Check the byte at [[index]] is the gaven byte */
+    def indexIs(byte: Byte, index: Int): Boolean
+
     /** Check the next readable byte is in the gaven bytes */
     def nextIn(bytes: Array[Byte]): Boolean
 
+    /** Check the byte at index is in the gaven bytes */
+    def indexIn(bytes: Array[Byte], index: Int): Boolean
+
     /** Check the next readable byte is in the gaven byte range */
     def nextInRange(lower: Byte, upper: Byte): Boolean
+
+    /** Check the byte at index is in the gaven byte range */
+    def indexInRange(lower: Byte, upper: Byte, index: Int): Boolean
 
     /** increase the [[readerOffset]] by one if the next readable byte is the gaven byte */
     def skipIfNext(byte: Byte): Boolean

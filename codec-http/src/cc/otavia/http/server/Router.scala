@@ -17,29 +17,60 @@
 package cc.otavia.http.server
 
 import cc.otavia.core.address.Address
-import cc.otavia.http.{HttpMethod, HttpRequest, HttpSerde}
+import cc.otavia.http.*
 
 import java.nio.charset.{Charset, StandardCharsets}
 import java.nio.file.Path
 import scala.language.unsafeNulls
 
-sealed trait Router
+enum Router {
 
-case class ControllerRouter(
-    method: HttpMethod,
-    path: String,
-    controller: Address[?],
-    requestSerde: Option[HttpSerde[HttpRequest[?]]],
-    responseSerde: Option[HttpSerde[?]]
-) extends Router
+    case ControllerRouter(
+        method: HttpMethod,
+        path: String,
+        controller: Address[?],
+        headers: Seq[String],
+        paramsSerde: Option[ParameterSerde[?]],
+        contentSerde: Option[ContentSerde[?]],
+        responseSerde: Option[HttpSerde[?]]
+    ) extends Router
 
-case class StaticFilesRouter(path: String, statics: Path) extends Router
+    case StaticFilesRouter(path: String, root: Path) extends Router
 
-case class NotFoundRouter(statics: Option[Path] = None) extends Router
+    case NotFoundRouter(page: Option[Path] = None) extends Router
 
-case class PlainTextRouter(
-    method: HttpMethod,
-    path: String,
-    text: Array[String],
-    charset: Charset = StandardCharsets.UTF_8
-) extends Router
+    case PlainTextRouter(
+        method: HttpMethod,
+        path: String,
+        text: Array[Byte],
+        charset: Charset = StandardCharsets.UTF_8
+    ) extends Router
+
+}
+
+object Router {
+
+    private val EMPTY_STRING: Seq[String] = Seq.empty
+
+    def static(path: String, root: Path): StaticFilesRouter = StaticFilesRouter(path, root)
+
+    def controller(
+        method: HttpMethod,
+        path: String,
+        controller: Address[?],
+        headers: Seq[String] = EMPTY_STRING,
+        paramsSerde: Option[ParameterSerde[?]] = None,
+        contentSerde: Option[ContentSerde[?]] = None,
+        responseSerde: Option[HttpSerde[?]] = None
+    ): ControllerRouter = ControllerRouter(method, path, controller, headers, paramsSerde, contentSerde, responseSerde)
+
+    def `404`(page: Option[Path]): NotFoundRouter = NotFoundRouter(page)
+
+    def plain(
+        path: String,
+        text: Array[Byte],
+        method: HttpMethod = HttpMethod.GET,
+        charset: Charset = StandardCharsets.UTF_8
+    ): PlainTextRouter = PlainTextRouter(method, path, text, charset)
+
+}

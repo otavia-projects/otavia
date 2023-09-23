@@ -75,7 +75,7 @@ object Basic {
         }
 
         override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = {
-            stack.stackState match
+            stack.state match
                 case StackState.start =>
                     val state = new FutureState[Pong]
                     pongActor.ask(Ping(), state.future)

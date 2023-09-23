@@ -332,6 +332,10 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         if (continue) -1 else cursor - ridx
     }
 
+    override def bytesBeforeIn(set: Array[Byte]): Int = ???
+
+    override def bytesBeforeInRange(lower: Byte, upper: Byte): Int = ???
+
     override def bytesBefore(needle1: Byte, needle2: Byte): Int = if (readableBytes >= 2) {
         var cursor: Int       = ridx + 1
         var continue: Boolean = true
@@ -1077,6 +1081,8 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                 }
                 if (continue) -1 else cursor - ridx - length
     } else -1
+
+    override def bytesBefore(needle: Array[Byte], from: Int, to: Int, ignoreCase: Boolean): Int = ???
 
     override def openCursor(fromOffset: Int, length: Int): ByteCursor = {
         if (closed) throw new BufferClosedException()
@@ -2440,10 +2446,28 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
 
     override def nextIs(byte: Byte): Boolean = if (nonEmpty) head.nextIs(byte) else false
 
+    override def indexIs(byte: Byte, index: Int): Boolean = this.getByte(index) == byte
+
     override def nextIn(bytes: Array[Byte]): Boolean = if (nonEmpty) head.nextIn(bytes) else false
+
+    override def indexIn(bytes: Array[Byte], index: Int): Boolean = {
+        var notIn = true
+        var i     = 0
+        val b     = this.getByte(index)
+        while (notIn && i < bytes.length) {
+            notIn = b != bytes(i)
+            i += 1
+        }
+        !notIn
+    }
 
     override def nextInRange(lower: Byte, upper: Byte): Boolean =
         if (nonEmpty) head.nextInRange(lower, upper) else false
+
+    override def indexInRange(lower: Byte, upper: Byte, index: Int): Boolean = {
+        val b = this.getByte(index)
+        b >= lower && b <= upper
+    }
 
     override def skipIfNext(byte: Byte): Boolean = if (nonEmpty) {
         val res = head.skipIfNext(byte)

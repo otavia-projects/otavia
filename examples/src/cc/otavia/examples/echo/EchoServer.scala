@@ -43,7 +43,7 @@ object EchoServer {
 
     private class Main(args: Array[String]) extends MainActor(args) {
         override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] = {
-            stack.stackState match
+            stack.state match
                 case StackState.start =>
                     val server = system.buildActor(() => new EchoServer())
                     server.ask(Bind(8080)).suspend()

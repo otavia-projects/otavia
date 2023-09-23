@@ -30,7 +30,7 @@ object TimeoutInStack {
 
     private class TimeoutInStackActor(args: Array[String]) extends MainActor(args) {
         override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] = {
-            stack.stackState match
+            stack.state match
                 case StackState.start =>
                     val state = new TimeoutState()
                     timer.askTimeout(state.timeoutEventFuture, 2000)
