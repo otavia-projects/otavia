@@ -1347,7 +1347,7 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"cc/otavia/core/reactor/IoHandler.html#register-ba3","e":false,"i":"","n":"register","t":"register(channel: Channel): Unit","d":"cc.otavia.core.reactor.IoHandler","k":"def","x":""},
 {"l":"cc/otavia/core/reactor/IoHandler.html#run-d3d","e":false,"i":"","n":"run","t":"run(context: IoExecutionContext): Int","d":"cc.otavia.core.reactor.IoHandler","k":"def","x":""},
 {"l":"cc/otavia/core/reactor/IoHandler.html#system-0","e":false,"i":"","n":"system","t":"system: ActorSystem","d":"cc.otavia.core.reactor.IoHandler","k":"val","x":""},
-{"l":"cc/otavia/core/reactor/IoHandler.html#wakeup-8ac","e":false,"i":"","n":"wakeup","t":"wakeup(inEventLoop: Boolean): Unit","d":"cc.otavia.core.reactor.IoHandler","k":"def","x":""},
+{"l":"cc/otavia/core/reactor/IoHandler.html#wakeup-94c","e":false,"i":"","n":"wakeup","t":"wakeup(): Unit","d":"cc.otavia.core.reactor.IoHandler","k":"def","x":""},
 {"l":"cc/otavia/core/reactor/IoHandlerFactory.html#","e":false,"i":"","n":"IoHandlerFactory","t":"IoHandlerFactory","d":"cc.otavia.core.reactor","k":"trait","x":""},
 {"l":"cc/otavia/core/reactor/IoHandlerFactory.html#newHandler-0","e":false,"i":"","n":"newHandler","t":"newHandler: IoHandler","d":"cc.otavia.core.reactor.IoHandlerFactory","k":"def","x":""},
 {"l":"cc/otavia/core/reactor/LoopExecutor.html#","e":false,"i":"","n":"LoopExecutor","t":"LoopExecutor(threadFactory: ThreadFactory) extends Executor","d":"cc.otavia.core.reactor","k":"class","x":""},
