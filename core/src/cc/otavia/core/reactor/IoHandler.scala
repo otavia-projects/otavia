@@ -19,8 +19,8 @@
 package cc.otavia.core.reactor
 
 import cc.otavia.buffer.pool.RecyclablePageBuffer
-import cc.otavia.core.channel.{Channel, FileRegion}
 import cc.otavia.core.channel.message.ReadPlan
+import cc.otavia.core.channel.{Channel, FileRegion}
 import cc.otavia.core.system.ActorSystem
 
 import java.net.SocketAddress
@@ -84,7 +84,7 @@ abstract class IoHandler(val system: ActorSystem) {
     /** Wakeup the [[IoHandler]], which means if any operation blocks it should be unblocked and return as soon as
      *  possible.
      */
-    def wakeup(inEventLoop: Boolean): Unit
+    def wakeup(): Unit
 
     /** Returns true if the given type is compatible with this [[IoHandler]] and so can be registered, false otherwise.
      *

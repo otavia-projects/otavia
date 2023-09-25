@@ -145,7 +145,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
             }
 
             if (emptyTimes > 60 && currentNanoTime - spinStart > 10 * 1000 * 1000) {
-                this.suspendThread(20)
+                this.suspendThread(50)
                 status = ST_RUNNING
                 if (currentNanoTime - spinStart > 1000 * 1000 * 1000 && !gc) {
                     system.gc()

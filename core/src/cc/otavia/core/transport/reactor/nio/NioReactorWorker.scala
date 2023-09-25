@@ -47,7 +47,7 @@ class NioReactorWorker(
 
         override def canBlock: Boolean = commandQueue.isEmpty
 
-        override def delayNanos(currentTimeNanos: Long): Long = if (commandQueue.isEmpty) 50 * 1000 * 1000 else 0
+        override def delayNanos(currentTimeNanos: Long): Long = if (commandQueue.isEmpty) 10 * 1000 * 1000 else 0
 
         override def deadlineNanos: Long = ???
 
@@ -70,7 +70,7 @@ class NioReactorWorker(
         } finally {
             if (!success) compareAndSet(ST_STARTED, ST_NOT_STARTED)
         }
-    }
+    } else if (get() == ST_STARTED) ioHandler.wakeup()
 
     private def doStartThread(): Unit = {
         assert(thread == null)

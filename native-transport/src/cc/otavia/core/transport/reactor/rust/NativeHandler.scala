@@ -66,7 +66,7 @@ class NativeHandler(val maxEvents: Int, val strategy: SelectStrategy, sys: Actor
 
     override def flush(channel: Channel, payload: FileRegion | RecyclablePageBuffer): Unit = ???
 
-    override def wakeup(inEventLoop: Boolean): Unit = ???
+    override def wakeup(): Unit = ???
 
     override def isCompatible(handleType: Class[? <: Channel]): Boolean = ???
 
