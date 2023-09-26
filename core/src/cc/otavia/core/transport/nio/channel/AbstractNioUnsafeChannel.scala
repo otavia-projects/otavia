@@ -64,7 +64,10 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
     }
 
     override def handle(key: SelectionKey): Unit = {
-        if (!key.isValid) executorAddress.inform(ReactorEvent.ChannelClose(channel))
+        if (!key.isValid) {
+            unsafeClose()
+            executorAddress.inform(ReactorEvent.ChannelClose(channel))
+        }
         try {
             val readOps = key.readyOps()
             // We first need to call finishConnect() before try to trigger a read(...) or write(...) as otherwise
@@ -124,6 +127,14 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
             clearScheduledRead()
         } else {
             readLoop()
+        }
+    }
+
+    override protected def doClearScheduledRead(): Unit = {
+        val key = _selectionKey
+        if (key == null || !key.isValid) {} else {
+            val interestOps = key.interestOps()
+            if ((interestOps & readInterestOp) != 0) key.interestOps(interestOps & ~readInterestOp)
         }
     }
 

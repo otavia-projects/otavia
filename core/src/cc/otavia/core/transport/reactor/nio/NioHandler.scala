@@ -396,8 +396,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         classOf[AbstractNioChannel[?, ?]].isAssignableFrom(handleType)
 
     @throws[IOException]
-    private def selectNow(): Int = try { selector.selectNow() }
-    finally if (wakenUp.get()) selector.wakeup()
+    private def selectNow(): Int = selector.selectNow()
 
     @throws[IOException]
     private def select(runner: IoExecutionContext): Unit = {
@@ -417,7 +416,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
                     break = true
                 } else {
                     val timeoutMillis =
-                        if (blocks > 4 && (wakenUp.compareAndSet(false, true) || wakenUp.get())) 1000 else 10
+                        if (blocks > 10 && (wakenUp.compareAndSet(false, true) || wakenUp.get())) 2000 else 4
                     val currentTimeMillis = System.currentTimeMillis()
                     val selectedKeys      = selector.select(timeoutMillis)
                     selectCnt += 1
@@ -435,7 +434,8 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
                             // timeoutMillis elapsed without anything selected.
                             selectCnt = 1
                         } else if (
-                          SELECTOR_AUTO_REBUILD_THRESHOLD > 0 && selectCnt >= SELECTOR_AUTO_REBUILD_THRESHOLD
+                          SELECTOR_AUTO_REBUILD_THRESHOLD > 0 &&
+                          selectCnt >= SELECTOR_AUTO_REBUILD_THRESHOLD
                         ) {
                             // The code exists in an extra method to ensure the method is not too big to inline as this
                             // branch is not very likely to get hit very frequently.
