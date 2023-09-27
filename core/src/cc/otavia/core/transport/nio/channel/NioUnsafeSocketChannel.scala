@@ -121,9 +121,7 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
             read = page.transferFrom(ch, attempted)
             processRead(attempted, read, 1)
         } catch {
-            case t: Throwable =>
-                unsafeClose()
-                executorAddress.inform(ReactorEvent.ChannelClose(channel, cause = Some(t)))
+            case t: Throwable => unsafeClose(Some(t))
         }
 
         if (read > 0) {

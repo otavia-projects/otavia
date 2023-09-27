@@ -56,13 +56,8 @@ trait UnsafeChannel {
     @throws[Exception]
     def unsafeDisconnect(): Unit
 
-    /** Close the [[Channel]]
-     *
-     *  @throws Exception
-     *    thrown on error.
-     */
-    @throws[Exception]
-    def unsafeClose(): Unit
+    /** Close the [[Channel]] */
+    def unsafeClose(cause: Option[Throwable]): Unit
 
     /** Shutdown one direction of the [[Channel]].
      *

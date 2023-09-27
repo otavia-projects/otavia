@@ -141,8 +141,8 @@ class ServerCodec(routerMatcher: RouterMatcher) extends ByteToMessageCodec {
 
     override def channelTimeoutEvent(ctx: ChannelHandlerContext, id: Long): Unit = if (id == this.dateTimeoutId) {
         // update date
-        val time = LocalDateTime.now()
-        logger.info("date updating")
+        // val time = LocalDateTime.now()
+        // logger.info("date updating")
     } else ctx.fireChannelTimeoutEvent(id)
 
     private def httpVersion(buffer: Buffer): HttpVersion = {

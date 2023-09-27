@@ -27,6 +27,7 @@ import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.{TimeoutTrigger, Timer}
 import cc.otavia.core.util.Platform
 
+import java.io.IOException
 import java.net.{InetSocketAddress, SocketAddress}
 import java.nio.channels.{AlreadyConnectedException, ClosedChannelException, ConnectionPendingException}
 import java.nio.file.attribute.FileAttribute
@@ -213,20 +214,21 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         }
     }
 
-    override private[core] def handleChannelConnectReplyEvent(event: ReactorEvent.ConnectReply): Unit = {
-        val promise = ongoingChannelPromise
-        this.ongoingChannelPromise = null
-        connecting = false
-        event.cause match
-            case None =>
-                connected = true
-                if (promise.canTimeout) timer.cancelTimerTask(promise.timeoutId) // cancel timeout trigger
-                if (event.firstActive) if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead()
-                promise.setSuccess(event)
-            case Some(cause) =>
-                promise.setFailure(cause)
-                closeTransport(newPromise())
-    }
+    override private[core] def handleChannelConnectReplyEvent(event: ReactorEvent.ConnectReply): Unit =
+        if (ongoingChannelPromise != null) {
+            val promise = ongoingChannelPromise
+            this.ongoingChannelPromise = null
+            connecting = false
+            event.cause match
+                case None =>
+                    connected = true
+                    if (promise.canTimeout) timer.cancelTimerTask(promise.timeoutId) // cancel timeout trigger
+                    if (event.firstActive) if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead()
+                    promise.setSuccess(event)
+                case Some(cause) =>
+                    promise.setFailure(cause)
+                    closeTransport(newPromise())
+        }
 
     private def handleConnectTimeout(): Unit = {
         val promise = ongoingChannelPromise
@@ -253,7 +255,36 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         promise: ChannelPromise
     ): Unit = invokeLater(() => promise.setFailure(new UnsupportedOperationException()))
 
-    override private[core] def closeTransport(promise: ChannelPromise): Unit = ???
+    override private[core] def closeTransport(promise: ChannelPromise): Unit = {
+        if (connecting || registering || connected) {
+            val ongoing = ongoingChannelPromise
+
+            if (ongoing != null) ongoing.setFailure(new ClosedChannelException())
+
+            connecting = false
+            registering = false
+            closing = true
+            ongoingChannelPromise = promise
+            reactor.close(this)
+            this.failedInflights()
+            this.closeAdaptiveBuffers()
+        } else if (closed) { promise.setSuccess(ReactorEvent.EMPTY_EVENT) }
+        else if (closing) { promise.setFailure(new IllegalStateException("A close operation is running")) }
+        else promise.setFailure(new IOException("channel was not connected!"))
+    }
+
+    override private[core] def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = {
+        closing = false
+        closed = true
+
+        pipeline.fireChannelInactive()
+        if (registered) pipeline.fireChannelUnregistered()
+
+        while (!pipeline.isEmpty) {
+            pipeline.removeLast()
+        }
+
+    }
 
     override private[core] def shutdownTransport(direction: ChannelShutdownDirection, promise: ChannelPromise): Unit =
         ???

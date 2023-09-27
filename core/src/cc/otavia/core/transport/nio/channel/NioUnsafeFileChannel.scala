@@ -55,10 +55,15 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
     override def unsafeDisconnect(): Unit =
         executorAddress.inform(ReactorEvent.DisconnectReply(channel, cause = Some(new UnsupportedOperationException())))
 
-    override def unsafeClose(): Unit = {
-        ch.close()
-        ch = null
-        executorAddress.inform(ReactorEvent.ChannelClose(channel))
+    override def unsafeClose(cause: Option[Throwable]): Unit = {
+        try {
+            ch.close()
+            ch = null
+            executorAddress.inform(ReactorEvent.ChannelClose(channel, cause))
+        } catch {
+            case t: Throwable =>
+                executorAddress.inform(ReactorEvent.ChannelClose(channel, Some(t)))
+        }
     }
 
     override def unsafeShutdown(direction: ChannelShutdownDirection): Unit =

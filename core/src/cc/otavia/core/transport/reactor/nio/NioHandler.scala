@@ -376,7 +376,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
 
     override def close(channel: Channel): Unit = {
         try {
-            channel.unsafeChannel.unsafeClose()
+            channel.unsafeChannel.unsafeClose(None)
         } catch {
             case t: Throwable => channel.executorAddress.inform(ReactorEvent.ChannelClose(channel, Some(t)))
         }

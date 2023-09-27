@@ -63,11 +63,9 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
         executorAddress.inform(ReactorEvent.DeregisterReply(channel, false, isOpen, Some(new IllegalStateException())))
     }
 
-    override def handle(key: SelectionKey): Unit = {
-        if (!key.isValid) {
-            unsafeClose()
-            executorAddress.inform(ReactorEvent.ChannelClose(channel))
-        }
+    override def handle(key: SelectionKey): Unit = if (!key.isValid) {
+        unsafeClose(None)
+    } else {
         try {
             val readOps = key.readyOps()
             // We first need to call finishConnect() before try to trigger a read(...) or write(...) as otherwise
@@ -91,11 +89,9 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
             // to a spin loop
             if ((readOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readOps == 0) {
                 readNow()
-                // val event = ReactorEvent.ChannelReadiness(this, SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)
-                // executorAddress.inform(event)
             }
         } catch {
-            case ignored: CancelledKeyException => executorAddress.inform(ReactorEvent.ChannelClose(channel))
+            case ignored: CancelledKeyException => unsafeClose(Some(ignored))
         }
     }
 
@@ -118,7 +114,15 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
         )
     }
 
-    override def unsafeClose(): Unit = ch.close()
+    override def unsafeClose(cause: Option[Throwable]): Unit = {
+        try {
+            ch.close()
+            executorAddress.inform(ReactorEvent.ChannelClose(channel, cause))
+        } catch {
+            case t: Throwable =>
+                executorAddress.inform(ReactorEvent.ChannelClose(channel, Some(t)))
+        }
+    }
 
     protected def finishConnect(): Unit = {}
 
@@ -146,12 +150,11 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
                     closed = doReadNow()
                 } catch {
                     case cause: Throwable =>
-                        executorAddress.inform(ReactorEvent.ExceptionEvent(channel, cause))
                         cause match
                             case _: PortUnreachableException =>
                                 shutdownReadSide()
                             case _: IOException if !this.isInstanceOf[NioUnsafeServerSocketChannel] =>
-                                unsafeClose()
+                                unsafeClose(Some(cause))
                 }
                 currentReadPlan.continueReading && !closed && !isShutdown(ChannelShutdownDirection.Inbound)
             } do ()
@@ -183,7 +186,7 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
             if (isAllowHalfClosure) {
                 unsafeShutdown(ChannelShutdownDirection.Inbound)
             } else {
-                unsafeClose()
+                unsafeClose(None)
             }
         } else {
             inputClosedSeenErrorOnRead = true

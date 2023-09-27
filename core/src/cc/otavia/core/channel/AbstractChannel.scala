@@ -150,6 +150,10 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         if (outboundPendingFutures.nonEmpty) processPendingFutures()
     }
 
+    protected def failedInflights(): Unit = {
+        // TODO
+    }
+
     private def processPendingFutures(): Unit = {
         if (outboundPendingFutures.headIsBarrier) {
             if (outboundInflightFutures.isEmpty) {
@@ -272,8 +276,6 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     // impl EventHandle
 
-    override private[core] def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = ???
-
     override private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = ???
 
     override private[core] def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit = ???
@@ -322,6 +324,21 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     }
 
     // end impl EventHandle
+
+    protected def closeAdaptiveBuffers(): Unit = {
+        closeInboundAdaptiveBuffers()
+        closeOutboundAdaptiveBuffers()
+    }
+
+    protected def closeInboundAdaptiveBuffers(): Unit = {
+        shutdownedInbound = true
+        pipeline.closeInboundAdaptiveBuffers()
+    }
+
+    protected def closeOutboundAdaptiveBuffers(): Unit = {
+        shutdownedOutbound = true
+        pipeline.closeOutboundAdaptiveBuffers()
+    }
 
     final protected def newPromise(): ChannelPromise = ChannelPromise()
 

@@ -19,7 +19,7 @@ package cc.otavia.core.actor
 import cc.otavia.core.message.{Ask, Call, Notice, Reply}
 import cc.otavia.core.stack.*
 
-private[core] trait ActorCoroutineRunner[M <: Call] {
+private[core] trait ActorStackRunner[M <: Call] {
 
     def batchContinueNotice(stack: BatchNoticeStack[M & Notice]): Option[StackState] =
         throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")

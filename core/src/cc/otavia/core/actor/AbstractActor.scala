@@ -33,7 +33,7 @@ import scala.reflect.ClassTag
 private[core] abstract class AbstractActor[M <: Call]
     extends FutureDispatcher
     with Actor[M]
-    with ActorCoroutineRunner[M] {
+    with ActorStackRunner[M] {
 
     protected var logger: Logger = _
 

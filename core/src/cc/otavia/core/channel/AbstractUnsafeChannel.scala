@@ -33,7 +33,7 @@ import scala.language.unsafeNulls
 abstract class AbstractUnsafeChannel(val channel: Channel) extends UnsafeChannel {
 
     private var inputClosedSeenErrorOnRead: Boolean = false
-    protected var isAllowHalfClosure: Boolean       = true
+    protected var isAllowHalfClosure: Boolean       = false
 
     protected var autoRead: Boolean = true
 

@@ -118,9 +118,7 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
             if (address != null) processRead(attempted, read, 1)
             else processRead(attempted, read, 0)
         } catch {
-            case t: Throwable =>
-                unsafeClose()
-                executorAddress.inform(ReactorEvent.ChannelClose(channel, cause = Some(t)))
+            case t: Throwable => unsafeClose(Some(t))
         }
 
         if (read > 0) {

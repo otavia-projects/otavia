@@ -353,21 +353,6 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
         closed = true
     }
 
-    private def closeAdaptiveBuffers(): Unit = {
-        closeInboundAdaptiveBuffers()
-        closeOutboundAdaptiveBuffers()
-    }
-
-    private def closeInboundAdaptiveBuffers(): Unit = {
-        shutdownedInbound = true
-        pipeline.closeInboundAdaptiveBuffers()
-    }
-
-    private def closeOutboundAdaptiveBuffers(): Unit = {
-        shutdownedOutbound = true
-        pipeline.closeOutboundAdaptiveBuffers()
-    }
-
     private def failInflights(cause: Throwable): Unit = {
         // TODO: impl
     }
