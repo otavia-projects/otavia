@@ -44,10 +44,9 @@ abstract class RecyclablePageBuffer(underlying: ByteBuffer) extends AbstractBuff
     def next: RecyclablePageBuffer = nxt
 
     override def close(): Unit = {
-        parent.recycle(this)
-        status = ST_PAGE_ALLOCATABLE
-        nxt = null
         super.close()
+        status = ST_PAGE_ALLOCATABLE
+        parent.recycle(this)
     }
 
     override def closed: Boolean = status == ST_PAGE_ALLOCATABLE

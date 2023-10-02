@@ -69,11 +69,12 @@ abstract class AbstractPooledPageAllocator(val fixedCapacity: Int) extends Poole
 
     override def allocate(): RecyclablePageBuffer = {
         val buffer = pop() match
-            case buffer: RecyclablePageBuffer => buffer
             case null =>
                 val page = newBuffer()
                 page.setAllocator(this)
                 page
+            case buffer: RecyclablePageBuffer => buffer
+
         buffer.setAllocated()
         buffer
     }
