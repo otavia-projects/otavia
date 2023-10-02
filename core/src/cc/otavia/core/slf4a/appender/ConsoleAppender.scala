@@ -20,8 +20,10 @@ import cc.otavia.core.actor.StateActor
 import cc.otavia.core.address.Address
 import cc.otavia.core.ioc.{Component, Primary}
 import cc.otavia.core.slf4a.Appender
+import cc.otavia.core.slf4a.Appender.*
 import cc.otavia.core.stack.{BatchNoticeStack, StackState}
 
+import java.time.format.DateTimeFormatter
 import scala.collection.mutable
 
 @Component
@@ -32,20 +34,54 @@ class ConsoleAppender extends StateActor[Appender.LogMsg], Appender {
     override def batchable: Boolean = true
     override def maxBatchSize: Int  = 1000
 
-    private val cache = new mutable.StringBuilder()
+    private val cache     = new mutable.StringBuilder()
+    private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
     override def batchContinueNotice(stack: BatchNoticeStack[Appender.LogMsg]): Option[StackState] = {
-        for (notice <- stack.notices) {
-            cache.append(notice.clz.getName)
-            cache.append(space)
-            cache.append(notice.time.toString)
-            cache.append(space)
-            cache.append(notice.log)
-            cache.append(line)
+        stack.notices.foreach {
+            case trace: Trace =>
+                cache.append(Console.WHITE)
+                cache.append(trace.time.format(formatter))
+                cache.append("\tTRACE\t")
+                writeLogLine(trace)
+                cache.append(Console.RESET)
+            case debug: Debug =>
+                cache.append(debug.time.format(formatter))
+                cache.append("\tDEBUG\t")
+                writeLogLine(debug)
+            case info: Info =>
+                cache.append(Console.GREEN)
+                cache.append(info.time.format(formatter))
+                cache.append("\tINFO\t")
+                writeLogLine(info)
+                cache.append(Console.RESET)
+            case warn: Warn =>
+                cache.append(Console.YELLOW)
+                cache.append(warn.time.format(formatter))
+                cache.append("\tWARN\t")
+                writeLogLine(warn)
+                cache.append(Console.RESET)
+            case error: Error =>
+                cache.append(Console.RED)
+                cache.append(error.time.format(formatter))
+                cache.append("\tERROR\t")
+                writeLogLine(error)
+                cache.append(Console.RESET)
+            case fatal: Fatal => ???
         }
-        print(cache)
+        print(cache.toString())
         cache.clear()
         stack.`return`()
+    }
+
+    private def writeLogLine(logMsg: LogMsg): Unit = {
+        cache.append('[')
+        cache.append(logMsg.thread)
+        cache.append("]\t")
+        cache.append(logMsg.loggerName)
+        cache.append('-')
+        cache.append(logMsg.log)
+        cache.append('\n')
     }
 
 }

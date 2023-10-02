@@ -41,8 +41,6 @@ abstract class AbstractLogger extends Logger, Serializable, ModuleListener {
     override def debug(msg: String, e: Throwable): Unit = ???
 //        if (isDebugEnabled) trace(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
 
-    override def isInfoEnabled: Boolean = ???
-
     override def info(format: String, arg: Any): Unit = ???
 
     override def info(format: String, arg1: Any, arg2: Any): Unit = ???

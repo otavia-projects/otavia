@@ -105,7 +105,7 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
         if ((ops & readInterestOp) == 0)
             _selectionKey.interestOps(ops | readInterestOp)
 
-        readNow()
+        // readNow()
     }
 
     override def unsafeOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = {

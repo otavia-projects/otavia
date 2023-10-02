@@ -16,10 +16,13 @@
 
 package cc.otavia.log4a
 
+import cc.otavia.core.address.Address
+import cc.otavia.core.slf4a.Appender.LogMsg
 import cc.otavia.core.slf4a.{AbstractLogger, LogLevel}
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.util.{Report, ThrowableUtil}
-import cc.otavia.log4a.InternalLogger.{AppenderLogger, BufferedLogger}
+import cc.otavia.log4a.InternalLogger.BufferedLogger
+import cc.otavia.log4a.appender.Appender
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -31,50 +34,54 @@ class Log4aLogger(val name: String, val level: LogLevel, val appenderNames: Arra
 
     private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
+    private var appender: Address[LogMsg] = _
+
     override def getName: String = name
 
     override def onLoaded(system: ActorSystem): Unit = {
-        // TODO:
+        appender = system.getAddress(classOf[Appender], qualifier = Some(appenderNames.head))
     }
 
-    override def isTraceEnabled: Boolean = level <= LogLevel.TRACE
+    override def isTraceEnabled: Boolean = level >= LogLevel.TRACE
 
-    override def isDebugEnabled: Boolean = level <= LogLevel.DEBUG
+    override def isDebugEnabled: Boolean = level >= LogLevel.DEBUG
 
-    override def isWarnEnabled: Boolean = level <= LogLevel.WARN
+    override def isInfoEnabled: Boolean = level >= LogLevel.INFO
 
-    override def isErrorEnabled: Boolean = level <= LogLevel.ERROR
+    override def isWarnEnabled: Boolean = level >= LogLevel.WARN
 
-    override def trace(msg: String): Unit =
+    override def isErrorEnabled: Boolean = level >= LogLevel.ERROR
+
+    override def trace(msg: String): Unit = if (isTraceEnabled)
         println(
           s"${Console.WHITE}${LocalDateTime.now().format(formatter)}\tTRACE\t[${Thread
                   .currentThread()
                   .getName}]\t${name} -\t${msg}${Console.RESET}"
         )
 
-    override def debug(msg: String): Unit =
+    override def debug(msg: String): Unit = if (isDebugEnabled)
         println(
           s"${LocalDateTime.now().format(formatter)}\tDEBUG\t[${Thread
                   .currentThread()
-                  .getName}]\t${name} -\t${msg}"
+                  .getName}]\t${name} -\t${msg}${Console.RESET}"
         )
 
-    override def info(msg: String): Unit =
+    override def info(msg: String): Unit = if (isInfoEnabled)
         println(
           s"${Console.GREEN}${LocalDateTime.now().format(formatter)}\tINFO\t[${Thread.currentThread().getName}]\t${name} -\t${msg}${Console.RESET}"
         )
 
-    override def warn(msg: String): Unit =
+    override def warn(msg: String): Unit = if (isWarnEnabled)
         println(s"${Console.YELLOW}${LocalDateTime.now().format(formatter)}\tWARN\t[${Thread
                 .currentThread()
                 .getName}]\t${name} -\t${msg}${Console.RESET}")
 
-    override def error(msg: String): Unit =
+    override def error(msg: String): Unit = if (isErrorEnabled)
         println(
           s"${Console.RED}${LocalDateTime.now().format(formatter)}\tERROR\t[${Thread.currentThread().getName}]\t${name} -\t${msg}${Console.RESET}"
         )
 
-    override def error(msg: String, e: Throwable): Unit =
+    override def error(msg: String, e: Throwable): Unit = if (isErrorEnabled)
         println(s"${Console.RED}${LocalDateTime.now().format(formatter)}\tERROR\t[${Thread
                 .currentThread()
                 .getName}]\t${name} -\t${msg}\n${ThrowableUtil.stackTraceToString(e)}${Console.RESET}")
