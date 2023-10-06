@@ -125,7 +125,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
         while (true) {
             var success: Boolean = false
             // run current thread tasks
-            val stops    = this.stopActor()
+            val stops    = 0 // this.stopActor()
             val runHouse = manager.run()
             val runEvent = this.runThreadEvent()
 
@@ -139,13 +139,13 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
                 gc = false
             } else {
                 emptyTimes += 1
-                if (emptyTimes >= 20 && currentNanoTime - spinStart > 100 * 1000) {
-                    if (manager.steal()) { emptyTimes = 10 }
+                if (emptyTimes >= 200 && currentNanoTime - spinStart > 500 * 1000) {
+                    if (manager.trySteal()) { emptyTimes = 10 }
                 }
             }
 
-            if (emptyTimes > 60 && currentNanoTime - spinStart > 10 * 1000 * 1000) {
-                this.suspendThread(emptyTimes)
+            if (emptyTimes > 600 && currentNanoTime - spinStart > 10 * 1000 * 1000) {
+                this.suspendThread()
                 status = ST_RUNNING
                 if (currentNanoTime - spinStart > 1000 * 1000 * 1000 && !gc) {
                     system.gc()

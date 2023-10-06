@@ -19,10 +19,6 @@ package cc.otavia.core.system
 import cc.otavia.core.actor.Actor
 import cc.otavia.core.message.{Event, Message}
 import cc.otavia.core.slf4a.Logger
-import cc.otavia.core.system.monitor.HouseManagerMonitor
-import cc.otavia.core.actor.Actor
-import cc.otavia.core.message.Event
-import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.HouseManager.*
 import cc.otavia.core.system.monitor.HouseManagerMonitor
 import cc.otavia.core.util.SystemPropertyUtil
@@ -79,7 +75,7 @@ class HouseManager(val thread: ActorThread) {
     /** Received [[Message]] or [[Event]] when [[ActorHouse]] status is <b> READY | RUNNING
      *
      *  @param house
-     * The [[ActorHouse]] which is received [[Message]] or [[Event]]
+     *    The [[ActorHouse]] which is received [[Message]] or [[Event]]
      */
     def change(house: ActorHouse): Unit = {
         if (house.highPriority && !house.inHighPriorityQueue) {
@@ -141,14 +137,14 @@ class HouseManager(val thread: ActorThread) {
         (((System.nanoTime() - runningStart) > STEAL_NANO_THRESHOLD) && actorQueue.nonEmpty)
 
     /** Steal from other [[ActorThread]] to run, this method is called by [[HouseManager.thread]] */
-    def steal(): Boolean = {
+    def trySteal(): Boolean = {
         // find the next stealable thread
         val threads                         = thread.parent.workers
         var i                               = 1
         var continue: Boolean               = true
         var stealThread: ActorThread | Null = null
         while (i < threads.length && continue) {
-            val thread = threads((i + threads.length) % threads.length)
+            val thread = threads((i + this.thread.index) % threads.length)
             i += 1
             if (thread != null && thread.houseManager.stealable) {
                 continue = false
@@ -191,6 +187,6 @@ object HouseManager {
 
     private val STEAL_REMAINING_THRESHOLD = SystemPropertyUtil.getInt("cc.otavia.core.steal.threshold", 16)
     private val STEAL_NANO_THRESHOLD =
-        SystemPropertyUtil.getInt("cc.otavia.core.steal.threshold.microsecond", 1 * 1000) * 1000
+        SystemPropertyUtil.getInt("cc.otavia.core.steal.threshold.microsecond", 2 * 1000) * 1000
 
 }
