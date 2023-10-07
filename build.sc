@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-import mill._, scalalib._, scalajslib._, scalanativelib._, publish._
-import os.Path
-import mill.api.Result
-import $ivy.`com.lihaoyi::mill-contrib-scoverage:`
 import $ivy.`com.lihaoyi::mill-contrib-buildinfo:`
 import $ivy.`com.lihaoyi::mill-contrib-jmh:`
+import $ivy.`com.lihaoyi::mill-contrib-scoverage:`
+import mill._
+import mill.api.Result
 import mill.contrib.buildinfo.BuildInfo
-import contrib.jmh.JmhModule
-import mill.contrib.scoverage.ScoverageModule
+import mill.contrib.jmh.JmhModule
+import mill.scalalib._
+import mill.scalalib.publish._
+import os.Path
 
 object ProjectInfo {
 
@@ -38,7 +39,7 @@ object ProjectInfo {
     def scalaVersion            = "3.3.0"
     def scoverageVersion        = "1.4.0"
     def buildTool               = "mill"
-    def buildToolVersion        = mill.BuildInfo.millVersion
+    def buildToolVersion        = main.BuildInfo.millVersion
 
     def testDep = ivy"org.scalatest::scalatest:3.2.15"
 
@@ -84,7 +85,7 @@ trait OtaviaModule extends ScalaModule with PublishModule {
 
 trait BufferModule extends OtaviaModule {
 
-    trait BufferTests extends Tests with TestModule.ScalaTest {
+    trait BufferTests extends ScalaTests with TestModule.ScalaTest {
         override def ivyDeps = Agg(ProjectInfo.testDep)
     }
 }
@@ -123,31 +124,35 @@ object core extends OtaviaModule with BuildInfo {
 
     override def ivyDeps = Agg(ProjectInfo.netty5)
 
-    override def buildInfoMembers = Map(
-      "scalaVersion"    -> scalaVersion(),
-      "publishVersion"  -> publishVersion(),
-      "name"            -> "otavia",
-      "description"     -> ProjectInfo.description,
-      "organization"    -> ProjectInfo.organization,
-      "organizationUrl" -> ProjectInfo.organizationUrl,
-      "github"          -> ProjectInfo.repository,
-      "licenses" -> {
-          if (ProjectInfo.licenses.length == 1) ProjectInfo.licenses.head.name
-          else ProjectInfo.licenses.map(_.name).mkString("[", ", ", "]")
-      },
-      "author" -> {
-          if (ProjectInfo.author.length == 1) ProjectInfo.author.head else ProjectInfo.author.mkString("[", ", ", "]")
-      },
-      "copyright" -> "2022"
+    override def buildInfoMembers = Seq(
+      BuildInfo.Value("scalaVersion", scalaVersion()),
+      BuildInfo.Value("publishVersion", publishVersion()),
+      BuildInfo.Value("name", "otavia"),
+      BuildInfo.Value("description", ProjectInfo.description),
+      BuildInfo.Value("organization", ProjectInfo.organization),
+      BuildInfo.Value("organizationUrl", ProjectInfo.organizationUrl),
+      BuildInfo.Value("github", ProjectInfo.repository),
+      BuildInfo.Value(
+        "licenses", {
+            if (ProjectInfo.licenses.length == 1) ProjectInfo.licenses.head.name
+            else ProjectInfo.licenses.map(_.name).mkString("[", ", ", "]")
+        }
+      ),
+      BuildInfo.Value(
+        "author", {
+            if (ProjectInfo.author.length == 1) ProjectInfo.author.head else ProjectInfo.author.mkString("[", ", ", "]")
+        }
+      ),
+      BuildInfo.Value("copyright", "2022")
     )
 
-    override def buildInfoPackageName: Option[String] = Some("cc.otavia")
+    override def buildInfoPackageName: String = "cc.otavia"
 
     override def artifactName = "core"
 
     override def moduleDeps = Seq(buffer)
 
-    object test extends Tests with TestModule.ScalaTest {
+    object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
 
@@ -168,7 +173,7 @@ object async extends OtaviaModule {
 
     override def moduleDeps = Seq(core)
 
-    object test extends Tests with TestModule.ScalaTest {
+    object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
 
@@ -182,7 +187,7 @@ object handler extends OtaviaModule {
 
     override def artifactName = "handler"
 
-    object test extends Tests with TestModule.ScalaTest {
+    object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
 
@@ -196,7 +201,7 @@ object codec extends OtaviaModule {
 
     override def artifactName = "codec"
 
-    object test extends Tests with TestModule.ScalaTest {
+    object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.netty5)
 
@@ -210,7 +215,7 @@ object `codec-http` extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(codec, serde, `serde-json`)
 
-    object test extends Tests with TestModule.ScalaTest {
+    object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
 
@@ -226,7 +231,7 @@ object `codec-http-macro` extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(codec, `codec-http`)
 
-    object test extends Tests with TestModule.ScalaTest {
+    object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
 
@@ -250,7 +255,7 @@ object `adbc-serde-macro` extends OtaviaModule {
 
     override def ivyDeps = Agg(ProjectInfo.magnolia)
 
-    object test extends Tests with TestModule.ScalaTest {
+    object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
 
@@ -264,7 +269,7 @@ object `codec-redis` extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, serde)
 
-    object test extends Tests with TestModule.ScalaTest {
+    object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.jedis)
 
@@ -336,7 +341,7 @@ object log4a extends OtaviaModule {
 
     override def ivyDeps = Agg(ProjectInfo.xml)
 
-    object test extends Tests with TestModule.ScalaTest {
+    object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
 
@@ -371,7 +376,7 @@ object `serde-json` extends OtaviaModule {
 
     override def moduleDeps = Seq(serde)
 
-    object test extends Tests with TestModule.ScalaTest {
+    object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.jsoniter)
 
@@ -389,7 +394,7 @@ object `serde-json-macro` extends OtaviaModule {
 
     override def ivyDeps = Agg(ProjectInfo.shapeless, ProjectInfo.magnolia)
 
-    object test extends Tests with TestModule.ScalaTest {
+    object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
 
@@ -403,7 +408,7 @@ object `serde-proto` extends OtaviaModule {
 
     override def moduleDeps = Seq(serde)
 
-    object test extends Tests with TestModule.ScalaTest {
+    object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.proto)
 
@@ -417,7 +422,7 @@ object `serde-proto-macro` extends OtaviaModule {
 
     override def moduleDeps = Seq(serde, `serde-proto`)
 
-    object test extends Tests with TestModule.ScalaTest {
+    object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
 
@@ -431,7 +436,7 @@ object `mysql-adbc-driver` extends OtaviaModule {
 
     override def moduleDeps = Seq(adbc)
 
-    object test extends Tests with TestModule.ScalaTest {
+    object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
 
@@ -447,7 +452,7 @@ object `postgres-adbc-driver` extends OtaviaModule {
 
     override def ivyDeps = Agg(ProjectInfo.scram)
 
-    object test extends Tests with TestModule.ScalaTest {
+    object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
 
@@ -526,15 +531,16 @@ trait SiteModule extends ScalaModule {
         // format: on
 
         if (
-          zincWorker
-              .worker()
-              .docJar(
-                scalaVersion(),
-                scalaOrganization(),
-                scalaDocClasspath().map(_.path),
-                scalacPluginClasspath().map(_.path),
-                options ++ compileCp ++ scalaDocOptions() ++ files.map(_.toString)
-              )
+//          zincWorker
+//              .worker
+//              .docJar(
+//                scalaVersion(),
+//                scalaOrganization(),
+//                scalaDocClasspath().map(_.path),
+//                scalacPluginClasspath().map(_.path),
+//                options ++ compileCp ++ scalaDocOptions() ++ files.map(_.toString)
+//              )
+          true
         ) {
             replace(javadocDir / "index.html")
             for (child <- os.walk(javadocDir / "cc") if child.toNIO.toString.endsWith(".html")) replace(child)
