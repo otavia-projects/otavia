@@ -18,6 +18,7 @@ package cc.otavia.handler.http
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
+import cc.otavia.core.cache.ThreadLocal
 import cc.otavia.core.channel.ChannelHandlerContext
 import cc.otavia.core.slf4a.{Logger, LoggerFactory}
 import cc.otavia.core.stack.ChannelFuture
@@ -32,15 +33,12 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import scala.language.unsafeNulls
 
-class ServerCodec(routerMatcher: RouterMatcher) extends ByteToMessageCodec {
+class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array[Byte]]) extends ByteToMessageCodec {
 
     import ServerCodec.*
 
     private var logger: Logger             = _
     private var ctx: ChannelHandlerContext = _
-
-    private var date: Array[Byte]   = _ // TODO: use threadLocal cache
-    private var dateTimeoutId: Long = 0
 
     private var parseState: Int       = ST_PARSE_HEADLINE
     private var currentRouter: Router = _
@@ -59,6 +57,7 @@ class ServerCodec(routerMatcher: RouterMatcher) extends ByteToMessageCodec {
                     if (lineLength != -1) parseHeadLine(input, lineLength)
                     else { // illegal http packet
                         input.skipReadableBytes(input.readableBytes)
+                        logger.error(s"Illegal http packet, head line is large than 4096, close channel ${ctx.channel}")
                         ctx.channel.close(ChannelFuture())
                     }
                 }
@@ -116,6 +115,7 @@ class ServerCodec(routerMatcher: RouterMatcher) extends ByteToMessageCodec {
             buffer.writeBytes(s"; charset=${charset.name()}".getBytes(StandardCharsets.US_ASCII))
         }
         buffer.writeBytes(HttpConstants.HEADER_LINE_END)
+        buffer.writeBytes(dates.get())
         buffer.writeBytes(HttpHeader.Key.CONTENT_LENGTH)
         buffer.writeBytes(HttpConstants.HEADER_SPLITTER)
         buffer.writeBytes(text.length.toString.getBytes(StandardCharsets.US_ASCII))
@@ -131,19 +131,12 @@ class ServerCodec(routerMatcher: RouterMatcher) extends ByteToMessageCodec {
         super.handlerAdded(ctx)
         this.logger = LoggerFactory.getLogger(getClass, ctx.system)
         this.ctx = ctx
-        this.dateTimeoutId = ctx.timer.registerChannelTimeout(TimeoutTrigger.DelayPeriod(1000, 1000), ctx.channel)
     }
 
     override def handlerRemoved(ctx: ChannelHandlerContext): Unit = {
-        ctx.timer.cancelTimerTask(this.dateTimeoutId)
+        this.ctx = null
         super.handlerRemoved(ctx)
     }
-
-    override def channelTimeoutEvent(ctx: ChannelHandlerContext, id: Long): Unit = if (id == this.dateTimeoutId) {
-        // update date
-        // val time = LocalDateTime.now()
-        // logger.info("date updating")
-    } else ctx.fireChannelTimeoutEvent(id)
 
     private def httpVersion(buffer: Buffer): HttpVersion = {
         while (buffer.skipIfNext(HttpConstants.SP)) {}

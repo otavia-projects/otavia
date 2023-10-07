@@ -104,7 +104,7 @@ object HttpHeader {
         val CONTENT_LANGUAGE: Array[Byte] = "content-language".getBytes(StandardCharsets.US_ASCII)
 
         /** content-length */
-        val CONTENT_LENGTH: Array[Byte] = "content-length".getBytes(StandardCharsets.US_ASCII)
+        val CONTENT_LENGTH: Array[Byte] = "Content-Length".getBytes(StandardCharsets.US_ASCII)
 
         /** content-location */
         val CONTENT_LOCATION: Array[Byte] = "content-location".getBytes(StandardCharsets.US_ASCII)
@@ -125,13 +125,13 @@ object HttpHeader {
         val CONTENT_SECURITY_POLICY: Array[Byte] = "content-security-policy".getBytes(StandardCharsets.US_ASCII)
 
         /** content-type */
-        val CONTENT_TYPE: Array[Byte] = "content-type".getBytes(StandardCharsets.US_ASCII)
+        val CONTENT_TYPE: Array[Byte] = "Content-Type".getBytes(StandardCharsets.US_ASCII)
 
         /** cookie */
-        val COOKIE: Array[Byte] = "cookie".getBytes(StandardCharsets.US_ASCII)
+        val COOKIE: Array[Byte] = "Cookie".getBytes(StandardCharsets.US_ASCII)
 
         /** date */
-        val DATE: Array[Byte] = "date".getBytes(StandardCharsets.US_ASCII)
+        val DATE: Array[Byte] = "Date".getBytes(StandardCharsets.US_ASCII)
 
         /** dnt */
         val DNT: Array[Byte] = "dnt".getBytes(StandardCharsets.US_ASCII)

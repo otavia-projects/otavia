@@ -25,9 +25,10 @@ import cc.otavia.core.channel.{Channel, ChannelShutdownDirection, FileRegion}
 import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.transport.nio.channel.NioUnsafeSocketChannel.NioSocketChannelReadPlan
 
+import java.io.IOException
 import java.net.SocketAddress
 import java.nio.ByteBuffer
-import java.nio.channels.{SelectableChannel, SelectionKey, SocketChannel}
+import java.nio.channels.{ClosedChannelException, SelectableChannel, SelectionKey, SocketChannel}
 import scala.language.unsafeNulls
 
 class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp: Int)
@@ -86,6 +87,7 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
             outputShutdown = true
 
     override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit = {
+        var closed = false
         payload match
             case fileRegion: FileRegion => ???
             case buffer: RecyclablePageBuffer =>
@@ -94,10 +96,18 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
                     val buf = cursor
                     cursor = cursor.next
                     buf.next = null
-                    val byteBuffer = buf.byteBuffer
-                    byteBuffer.limit(buf.writerOffset)
-                    byteBuffer.position(buf.readerOffset)
-                    val write = ch.write(byteBuffer) // TODO: socket write buf busy
+                    if (!closed) {
+                        val byteBuffer = buf.byteBuffer
+                        byteBuffer.limit(buf.writerOffset)
+                        byteBuffer.position(buf.readerOffset)
+                        try {
+                            val write = ch.write(byteBuffer) // TODO: socket write buf busy
+                        } catch {
+                            case e: IOException =>
+                                unsafeClose(Some(e))
+                                closed = true
+                        }
+                    }
                     buf.close()
                 }
     }
