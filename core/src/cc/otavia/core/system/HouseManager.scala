@@ -23,6 +23,7 @@ import cc.otavia.core.system.HouseManager.*
 import cc.otavia.core.system.monitor.HouseManagerMonitor
 import cc.otavia.core.util.SystemPropertyUtil
 
+import scala.collection.mutable
 import scala.language.unsafeNulls
 
 class HouseManager(val thread: ActorThread) {
@@ -50,11 +51,10 @@ class HouseManager(val thread: ActorThread) {
 
     private[core] def currentRunningActor: Actor[?] = currentRunning
 
-    def laterTasks = thread.laterTasks
+    def laterTasks: mutable.ArrayDeque[Runnable] = thread.laterTasks
 
     def mount(house: ActorHouse): Unit = {
         mountingQueue.enqueue(house)
-        logger.trace(s"Schedule mount ${house.actor}")
         thread.notifyThread()
     }
 
@@ -66,8 +66,6 @@ class HouseManager(val thread: ActorThread) {
         if (house.actorType == ActorHouse.STATE_ACTOR) actorQueue.enqueue(house)
         else if (house.actorType == ActorHouse.CHANNELS_ACTOR) channelsActorQueue.enqueue(house)
         else if (house.actorType == ActorHouse.SERVER_CHANNELS_ACTOR) serverActorQueue.enqueue(house)
-
-        logger.trace(s"Change actor ${house.actor} to ready")
 
         thread.notifyThread()
     }
@@ -108,7 +106,6 @@ class HouseManager(val thread: ActorThread) {
         if (this.run0(actorQueue)) success = true
 
         if (mountingQueue.available) {
-            logger.trace(s"${thread.getName} mounting size ${mountingQueue.readies}")
             val house = mountingQueue.dequeue()
             if (house != null) {
                 currentRunning = house.actor
@@ -152,10 +149,7 @@ class HouseManager(val thread: ActorThread) {
             }
         }
         if (stealThread != null) {
-//            runningStart = System.nanoTime()
-            // running other thread's HouseManager
             val success = stealThread.houseManager.runSteal()
-//            runningStart = Long.MaxValue
             success
         } else false
     }

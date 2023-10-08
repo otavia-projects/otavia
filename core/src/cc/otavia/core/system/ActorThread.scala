@@ -131,22 +131,22 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 
             if (stops > 0 || runHouse || runEvent) success = true
 
-            val currentNanoTime = System.nanoTime()
-
             if (success) {
-                spinStart = currentNanoTime
                 emptyTimes = 0
                 gc = false
             } else {
                 emptyTimes += 1
-                if (emptyTimes >= 2000 && currentNanoTime - spinStart > 200 * 1000) {
+                val currentNano = System.nanoTime()
+                if (emptyTimes == 100) spinStart = currentNano
+
+                if (emptyTimes >= 2000 && currentNano - spinStart > 200 * 1000) {
                     if (manager.trySteal()) { emptyTimes = 0 }
                 }
 
-                if (emptyTimes > 6000 && currentNanoTime - spinStart > 600 * 1000) {
+                if (emptyTimes > 6000 && currentNano - spinStart > 600 * 1000) {
                     this.suspendThread()
                     status = ST_RUNNING
-                    if (currentNanoTime - spinStart > 5000 * 1000 * 1000 && !gc) {
+                    if (currentNano - spinStart > 5000 * 1000 * 1000 && !gc) {
                         system.gc()
                         gc = true
                     }

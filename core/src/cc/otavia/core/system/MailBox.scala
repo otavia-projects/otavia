@@ -21,15 +21,15 @@ import cc.otavia.core.util.{Nextable, SpinLock}
 import java.util.concurrent.atomic.AtomicLong
 import scala.language.unsafeNulls
 
-class MailBox(val house: ActorHouse) extends SpinLock {
+class MailBox(val house: ActorHouse) { // extends SpinLock
 
-    @volatile private var head: Nextable = _
-    @volatile private var tail: Nextable = _
+    private var head: Nextable = _
+    private var tail: Nextable = _
 
     @volatile private var count: Int = 0
 
-    def put(obj: Nextable): Unit = {
-        lock()
+    def put(obj: Nextable): Unit = this.synchronized {
+        // lock()
 
         val oldTail = tail
         if (oldTail == null) {
@@ -41,12 +41,12 @@ class MailBox(val house: ActorHouse) extends SpinLock {
         }
         count += 1
 
-        unlock()
+        // unlock()
     }
 
-    def get[T <: Nextable](): T = {
+    def get[T <: Nextable](): T = this.synchronized {
         var obj: Nextable = null
-        lock()
+        // lock()
         if (count == 1) {
             obj = head
             head = null
@@ -57,20 +57,20 @@ class MailBox(val house: ActorHouse) extends SpinLock {
             obj.dechain()
         }
         count -= 1
-        unlock()
+        // unlock()
 
         obj.asInstanceOf[T]
     }
 
-    def getChain(max: Int): Nextable = {
+    def getChain(max: Int): Nextable = this.synchronized {
         var obj: Nextable = null
-        lock()
+        // lock()
         if (count <= max) {
             obj = head
             head = null
             tail = null
             count = 0
-            unlock()
+            // unlock()
         } else {
             obj = head
             var i      = 0
@@ -83,7 +83,7 @@ class MailBox(val house: ActorHouse) extends SpinLock {
             head = cursor.next
             chainTail.next = null
             count -= max
-            unlock()
+            // unlock()
         }
         obj
     }
