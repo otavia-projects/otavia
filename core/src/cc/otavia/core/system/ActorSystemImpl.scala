@@ -16,7 +16,6 @@
 
 package cc.otavia.core.system
 
-import cc.otavia.BuildInfo
 import cc.otavia.buffer.BufferAllocator
 import cc.otavia.buffer.pool.{DirectPooledPageAllocator, HeapPooledPageAllocator}
 import cc.otavia.core.actor.*

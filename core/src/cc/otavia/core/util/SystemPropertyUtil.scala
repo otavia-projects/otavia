@@ -16,7 +16,6 @@
 
 package cc.otavia.core.util
 
-import java.security.{AccessController, PrivilegedAction}
 import scala.language.unsafeNulls
 import scala.util.Try
 
@@ -37,9 +36,7 @@ object SystemPropertyUtil {
 
         if (System.getSecurityManager == null) Option(System.getProperty(key))
         else
-            AccessController.doPrivileged(new PrivilegedAction[Option[String]] {
-                override def run(): Option[String] = Option(System.getProperty(key))
-            })
+            Option(System.getProperty(key))
     }
 
     /** Returns the value of the Java system property with the specified [[key]], while falling back to the specified

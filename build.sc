@@ -19,7 +19,6 @@ import $ivy.`com.lihaoyi::mill-contrib-jmh:`
 import $ivy.`com.lihaoyi::mill-contrib-scoverage:`
 import mill._
 import mill.api.Result
-import mill.contrib.buildinfo.BuildInfo
 import mill.contrib.jmh.JmhModule
 import mill.scalalib._
 import mill.scalalib.publish._
@@ -120,33 +119,33 @@ object buffer extends JvmBufferModule {
 
 }
 
-object core extends OtaviaModule with BuildInfo {
+object core extends OtaviaModule /* with BuildInfo */ {
 
     override def ivyDeps = Agg(ProjectInfo.netty5)
 
-    override def buildInfoMembers = Seq(
-      BuildInfo.Value("scalaVersion", scalaVersion()),
-      BuildInfo.Value("publishVersion", publishVersion()),
-      BuildInfo.Value("name", "otavia"),
-      BuildInfo.Value("description", ProjectInfo.description),
-      BuildInfo.Value("organization", ProjectInfo.organization),
-      BuildInfo.Value("organizationUrl", ProjectInfo.organizationUrl),
-      BuildInfo.Value("github", ProjectInfo.repository),
-      BuildInfo.Value(
-        "licenses", {
-            if (ProjectInfo.licenses.length == 1) ProjectInfo.licenses.head.name
-            else ProjectInfo.licenses.map(_.name).mkString("[", ", ", "]")
-        }
-      ),
-      BuildInfo.Value(
-        "author", {
-            if (ProjectInfo.author.length == 1) ProjectInfo.author.head else ProjectInfo.author.mkString("[", ", ", "]")
-        }
-      ),
-      BuildInfo.Value("copyright", "2022")
-    )
+    // override def buildInfoMembers = Seq(
+    //   BuildInfo.Value("scalaVersion", scalaVersion()),
+    //   BuildInfo.Value("publishVersion", publishVersion()),
+    //   BuildInfo.Value("name", "otavia"),
+    //   BuildInfo.Value("description", ProjectInfo.description),
+    //   BuildInfo.Value("organization", ProjectInfo.organization),
+    //   BuildInfo.Value("organizationUrl", ProjectInfo.organizationUrl),
+    //   BuildInfo.Value("github", ProjectInfo.repository),
+    //   BuildInfo.Value(
+    //     "licenses", {
+    //         if (ProjectInfo.licenses.length == 1) ProjectInfo.licenses.head.name
+    //         else ProjectInfo.licenses.map(_.name).mkString("[", ", ", "]")
+    //     }
+    //   ),
+    //   BuildInfo.Value(
+    //     "author", {
+    //         if (ProjectInfo.author.length == 1) ProjectInfo.author.head else ProjectInfo.author.mkString("[", ", ", "]")
+    //     }
+    //   ),
+    //   BuildInfo.Value("copyright", "2022")
+    // )
 
-    override def buildInfoPackageName: String = "cc.otavia"
+    // override def buildInfoPackageName: String = "cc.otavia"
 
     override def artifactName = "core"
 
