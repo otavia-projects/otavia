@@ -19,7 +19,6 @@ package cc.otavia.core.stack
 import cc.otavia.core.message.Reply
 import cc.otavia.core.message.{ExceptionMessage, Reply, UnitReply}
 import cc.otavia.core.timer.Timer
-import cc.otavia.core.util.TimerService
 
 import scala.language.unsafeNulls
 
