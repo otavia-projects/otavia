@@ -530,16 +530,15 @@ trait SiteModule extends ScalaModule {
         // format: on
 
         if (
-//          zincWorker
-//              .worker
-//              .docJar(
-//                scalaVersion(),
-//                scalaOrganization(),
-//                scalaDocClasspath().map(_.path),
-//                scalacPluginClasspath().map(_.path),
-//                options ++ compileCp ++ scalaDocOptions() ++ files.map(_.toString)
-//              )
-          true
+          zincWorker()
+              .worker()
+              .docJar(
+                scalaVersion(),
+                scalaOrganization(),
+                scalaDocClasspath(),
+                scalacPluginClasspath(),
+                options ++ compileCp ++ scalaDocOptions() ++ files.map(_.toString)
+              )
         ) {
             replace(javadocDir / "index.html")
             for (child <- os.walk(javadocDir / "cc") if child.toNIO.toString.endsWith(".html")) replace(child)
