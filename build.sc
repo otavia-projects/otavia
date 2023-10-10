@@ -34,7 +34,7 @@ object ProjectInfo {
     def repository              = github.browsableRepository.get
     def licenses                = Seq(License.`Apache-2.0`)
     def author                  = Seq("Yan Kun <yan_kun_1992@foxmail.com>")
-    def version                 = "0.3.0-SNAPSHOT"
+    def version                 = "0.3.1-SNAPSHOT"
     def scalaVersion            = "3.3.0"
     def scoverageVersion        = "1.4.0"
     def buildTool               = "mill"
@@ -165,21 +165,6 @@ object testkit extends OtaviaModule {
 
 }
 
-/** experimental async/await transformer in otavia actor model. */
-object async extends OtaviaModule {
-
-    override def artifactName = "async"
-
-    override def moduleDeps = Seq(core)
-
-    object test extends ScalaTests with TestModule.ScalaTest {
-
-        override def ivyDeps = Agg(ProjectInfo.testDep)
-
-    }
-
-}
-
 object handler extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
@@ -222,43 +207,11 @@ object `codec-http` extends OtaviaModule {
 
 }
 
-object `codec-http-macro` extends OtaviaModule {
-
-    override def artifactName = "codec-http-macro"
-
-    override def ivyDeps = Agg(ProjectInfo.magnolia)
-
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(codec, `codec-http`)
-
-    object test extends ScalaTests with TestModule.ScalaTest {
-
-        override def ivyDeps = Agg(ProjectInfo.testDep)
-
-    }
-
-}
-
 object adbc extends OtaviaModule {
 
     override def artifactName = "adbc"
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, serde)
-
-}
-
-object `adbc-serde-macro` extends OtaviaModule {
-
-    override def artifactName = "adbc-serde-macro"
-
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(adbc)
-
-    override def ivyDeps = Agg(ProjectInfo.magnolia)
-
-    object test extends ScalaTests with TestModule.ScalaTest {
-
-        override def ivyDeps = Agg(ProjectInfo.testDep)
-
-    }
 
 }
 
@@ -324,14 +277,6 @@ object `codec-kafka` extends OtaviaModule {
 
 }
 
-object `native-transport` extends OtaviaModule {
-
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
-
-    override def artifactName: T[String] = "native-transport"
-
-}
-
 object log4a extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
@@ -345,14 +290,6 @@ object log4a extends OtaviaModule {
         override def ivyDeps = Agg(ProjectInfo.testDep)
 
     }
-
-}
-
-object web extends OtaviaModule {
-
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, `codec-http`, adbc, `codec-redis`)
-
-    override def artifactName: T[String] = "otavia-web"
 
 }
 
@@ -385,22 +322,6 @@ object `serde-json` extends OtaviaModule {
 
 }
 
-object `serde-json-macro` extends OtaviaModule {
-
-    override def artifactName = "serde-json-macro"
-
-    override def moduleDeps = Seq(serde, `serde-json`)
-
-    override def ivyDeps = Agg(ProjectInfo.shapeless, ProjectInfo.magnolia)
-
-    object test extends ScalaTests with TestModule.ScalaTest {
-
-        override def ivyDeps = Agg(ProjectInfo.testDep)
-
-    }
-
-}
-
 object `serde-proto` extends OtaviaModule {
 
     override def artifactName = "serde-proto"
@@ -410,20 +331,6 @@ object `serde-proto` extends OtaviaModule {
     object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.proto)
-
-    }
-
-}
-
-object `serde-proto-macro` extends OtaviaModule {
-
-    override def artifactName = "serde-proto-macro"
-
-    override def moduleDeps = Seq(serde, `serde-proto`)
-
-    object test extends ScalaTests with TestModule.ScalaTest {
-
-        override def ivyDeps = Agg(ProjectInfo.testDep)
 
     }
 
