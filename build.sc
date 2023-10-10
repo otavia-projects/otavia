@@ -42,8 +42,8 @@ object ProjectInfo {
 
     def testDep = ivy"org.scalatest::scalatest:3.2.15"
 
-    def jsoniter      = ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core:2.23.2"
-    def jsoniterMacro = ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:2.23.2"
+    def jsoniter      = ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core:2.24.1"
+    def jsoniterMacro = ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:2.24.1"
     def booPickle     = ivy"io.suzaku::boopickle:1.4.0"
     def netty5        = ivy"io.netty:netty5-codec:5.0.0.Alpha5"
     def xml           = ivy"org.scala-lang.modules::scala-xml:2.1.0"
