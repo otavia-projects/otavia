@@ -70,13 +70,13 @@ In `otavia`, developer only focus on
 sbt
 
 ```scala
-libraryDependencies += "cc.otavia" %% "core" % "{version}"
+libraryDependencies += "cc.otavia" %% "otavia-runtime" % "{version}"
 ```
 
 mill
 
 ```scala
-ivy"cc.otavia::core:{version}"
+ivy"cc.otavia::otavia-runtime:{version}"
 ```
 
 maven
@@ -85,7 +85,7 @@ maven
 
 <dependency>
     <groupId>cc.otavia</groupId>
-    <artifactId>core</artifactId>
+    <artifactId>otavia-runtime</artifactId>
     <version>{version}</version>
 </dependency>
 ```
