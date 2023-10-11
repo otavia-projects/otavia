@@ -278,14 +278,14 @@ class BufferSuite extends AnyFunSuite {
         buffer.setByte(3988, 'S')
         buffer.setByte(3989, 'C')
 
-        assert(buffer.bytesBefore('A'.toByte, 'S', 'C') == 3987 - start)
+        assert(buffer.bytesBefore('A'.toByte, 'S'.toByte, 'C'.toByte) == 3987 - start)
 
         buffer.setByte(3996, 'H')
         buffer.setByte(3997, 'T')
         buffer.setByte(3998, 'T')
         buffer.setByte(3999, 'P')
 
-        assert(buffer.bytesBefore('H'.toByte, 'T', 'T', 'P') == 3996 - start)
+        assert(buffer.bytesBefore('H'.toByte, 'T'.toByte, 'T'.toByte, 'P'.toByte) == 3996 - start)
 
         buffer.setByte(3999 + 1, ' ')
         buffer.setByte(3999 + 2, '1')
@@ -296,8 +296,8 @@ class BufferSuite extends AnyFunSuite {
 
         assert(buffer.bytesBefore('h'.toByte) == -1)
         assert(buffer.bytesBefore('h'.toByte, 'e') == -1)
-        assert(buffer.bytesBefore('h'.toByte, 'e', 'l') == -1)
-        assert(buffer.bytesBefore('h'.toByte, 'e', 'l', 'l') == -1)
+        assert(buffer.bytesBefore('h'.toByte, 'e'.toByte, 'l'.toByte) == -1)
+        assert(buffer.bytesBefore('h'.toByte, 'e'.toByte, 'l'.toByte, 'l'.toByte) == -1)
 
         assert(buffer.bytesBefore("hello".getBytes) == -1)
 

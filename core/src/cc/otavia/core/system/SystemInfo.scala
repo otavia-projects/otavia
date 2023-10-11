@@ -21,7 +21,9 @@ import cc.otavia.common.SystemPropertyUtil
 
 object SystemInfo {
 
-    def logo(): String = SystemPropertyUtil.readStringFromClassPath("/logo.txt")
+    private val LOGO_FILE: String = "/logo.txt"
+
+    def logo(): String = SystemPropertyUtil.readStringFromClassPath(LOGO_FILE)
 
     def info(): String = {
         s"Otavia version ${BuildInfo.publishVersion} with Scala library ${BuildInfo.scalaVersion}"

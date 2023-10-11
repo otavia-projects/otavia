@@ -16,6 +16,7 @@
 
 package cc.otavia.core.ioc
 
+import cc.otavia.core.slf4a.Appender
 import cc.otavia.core.slf4a.appender.ConsoleAppender
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -28,7 +29,7 @@ class BeanSuite extends AnyFunSuite {
         val bean = new Bean(classOf[ConsoleAppender], null)
         val sps  = bean.superClasses()
 
-        assert(sps == mutable.Set("cc.otavia.core.slf4a.appender.ConsoleAppender", "cc.otavia.core.slf4a.Appender"))
+        assert(sps == mutable.Set(classOf[ConsoleAppender].getName, classOf[Appender].getName))
     }
 
 }

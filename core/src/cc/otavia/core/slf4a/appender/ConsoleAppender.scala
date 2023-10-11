@@ -27,7 +27,7 @@ import java.time.format.DateTimeFormatter
 import scala.collection.mutable
 
 @Component
-class ConsoleAppender extends StateActor[Appender.LogMsg], Appender {
+class ConsoleAppender extends StateActor[Appender.LogMsg], Appender { // TODO: delete this
 
     import ConsoleAppender.*
 

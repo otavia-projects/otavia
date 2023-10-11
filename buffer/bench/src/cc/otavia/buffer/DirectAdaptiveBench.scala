@@ -53,12 +53,12 @@ class DirectAdaptiveBench {
 
     @Benchmark
     def bytesBefore3(): Unit = {
-        adaptiveBuffer.bytesBefore('H', 'T', 'T')
+        adaptiveBuffer.bytesBefore('H'.toByte, 'T'.toByte, 'T'.toByte)
     }
 
     @Benchmark
     def bytesBefore4(): Unit = {
-        adaptiveBuffer.bytesBefore('H', 'T', 'T', 'P')
+        adaptiveBuffer.bytesBefore('H'.toByte, 'T'.toByte, 'T'.toByte, 'P'.toByte)
     }
 
     @Benchmark

@@ -209,7 +209,7 @@ class AdaptiveBufferSuite extends AnyFunSuite {
 
         assert(adaptive.writerOffset == 1027)
 
-        assert(adaptive.bytesBefore('A'.toByte, 'A', 'A') == 1024)
+        assert(adaptive.bytesBefore('A'.toByte, 'A'.toByte, 'A'.toByte) == 1024)
 
         for (idx <- 1027 until allocator.fixedCapacity - 1) adaptive.writeByte(0)
 
@@ -217,7 +217,7 @@ class AdaptiveBufferSuite extends AnyFunSuite {
         adaptive.writeByte('B')
         adaptive.writeByte('B')
 
-        assert(adaptive.bytesBefore('B'.toByte, 'B', 'B') == allocator.fixedCapacity - 1)
+        assert(adaptive.bytesBefore('B'.toByte, 'B'.toByte, 'B'.toByte) == allocator.fixedCapacity - 1)
 
         for (idx <- 2 until 1024) adaptive.writeByte(0)
 
@@ -225,7 +225,7 @@ class AdaptiveBufferSuite extends AnyFunSuite {
         adaptive.writeByte('P')
         adaptive.writeByte('P')
 
-        assert(adaptive.bytesBefore('P'.toByte, 'P', 'P') == allocator.fixedCapacity + 1024)
+        assert(adaptive.bytesBefore('P'.toByte, 'P'.toByte, 'P'.toByte) == allocator.fixedCapacity + 1024)
 
         for (idx <- 1027 until allocator.fixedCapacity) adaptive.writeByte(0)
 
@@ -233,13 +233,13 @@ class AdaptiveBufferSuite extends AnyFunSuite {
         adaptive.writeByte('s')
         adaptive.writeByte('s')
 
-        assert(adaptive.bytesBefore('S'.toByte, 's', 's') == allocator.fixedCapacity * 2)
+        assert(adaptive.bytesBefore('S'.toByte, 's'.toByte, 's'.toByte) == allocator.fixedCapacity * 2)
 
         adaptive.readerOffset(allocator.fixedCapacity + 56)
 
-        val len = adaptive.bytesBefore('S'.toByte, 's', 's')
+        val len = adaptive.bytesBefore('S'.toByte, 's'.toByte, 's'.toByte)
 
-        assert(adaptive.bytesBefore('S'.toByte, 's', 's') == allocator.fixedCapacity - 56)
+        assert(adaptive.bytesBefore('S'.toByte, 's'.toByte, 's'.toByte) == allocator.fixedCapacity - 56)
 
         val buffer = allocator.allocate()
 
@@ -249,7 +249,7 @@ class AdaptiveBufferSuite extends AnyFunSuite {
 
         adaptive.extend(buffer)
 
-        assert(adaptive.bytesBefore('C'.toByte, 'c', 'c') == allocator.fixedCapacity - 56 + 3)
+        assert(adaptive.bytesBefore('C'.toByte, 'c'.toByte, 'c'.toByte) == allocator.fixedCapacity - 56 + 3)
 
     }
 

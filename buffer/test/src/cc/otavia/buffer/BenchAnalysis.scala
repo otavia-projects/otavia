@@ -93,14 +93,14 @@ object BenchAnalysis {
         var i = 0
 
         while (i < 100_000) { // Warmup
-            adaptiveBuffer.bytesBefore('H', 'T', 'T')
+            adaptiveBuffer.bytesBefore('H'.toByte, 'T'.toByte, 'T'.toByte)
             i += 1
         }
 
         i = 0
         val start = System.currentTimeMillis()
         while (i < 10_000_000) {
-            adaptiveBuffer.bytesBefore('H', 'T', 'T')
+            adaptiveBuffer.bytesBefore('H'.toByte, 'T'.toByte, 'T'.toByte)
             i += 1
         }
         val end = System.currentTimeMillis()
@@ -127,14 +127,14 @@ object BenchAnalysis {
         var i = 0
 
         while (i < 100_000) { // Warmup
-            val len = adaptiveBuffer.bytesBefore('H', 'T', 'T', 'P')
+            val len = adaptiveBuffer.bytesBefore('H'.toByte, 'T'.toByte, 'T'.toByte, 'P'.toByte)
             i += 1
         }
 
         i = 0
         val start = System.currentTimeMillis()
         while (i < 10_000_000) {
-            adaptiveBuffer.bytesBefore('H', 'T', 'T', 'P')
+            adaptiveBuffer.bytesBefore('H'.toByte, 'T'.toByte, 'T'.toByte, 'P'.toByte)
             i += 1
         }
         val end = System.currentTimeMillis()
