@@ -14,21 +14,6 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.slf4a
+package cc.otavia.sql
 
-import cc.otavia.common.Report
-import org.scalatest.funsuite.AnyFunSuite
-
-class UtilSuite extends AnyFunSuite {
-
-    test("report error") {
-        Report.report("A SLF4A service provider failed to instantiate:\n")
-        Console.err.printf("format string {} is ok", "value")
-        val format = "format string {} is ok"
-
-
-
-        assert(true)
-    }
-
-}
+trait RowWriter {}

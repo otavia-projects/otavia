@@ -17,6 +17,7 @@
 package cc.otavia.core.system
 
 import cc.otavia.buffer.BufferAllocator
+import cc.otavia.common.{Report, SystemPropertyUtil}
 import cc.otavia.core.actor.{Actor, ActorFactory, MainActor, MessageOf}
 import cc.otavia.core.address.Address
 import cc.otavia.core.channel.{Channel, ChannelFactory}
@@ -26,7 +27,6 @@ import cc.otavia.core.reactor.Reactor
 import cc.otavia.core.slf4a.LogLevel
 import cc.otavia.core.system.monitor.SystemMonitor
 import cc.otavia.core.timer.Timer
-import cc.otavia.core.util.{Report, SystemPropertyUtil}
 
 import java.lang.management.MemoryUsage
 import java.net.InetAddress

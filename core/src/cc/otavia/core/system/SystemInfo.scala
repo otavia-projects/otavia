@@ -16,16 +16,15 @@
 
 package cc.otavia.core.system
 
-// import cc.otavia.BuildInfo
-import cc.otavia.core.util.SystemPropertyUtil
+import cc.otavia.BuildInfo
+import cc.otavia.common.SystemPropertyUtil
 
 object SystemInfo {
 
     def logo(): String = SystemPropertyUtil.readStringFromClassPath("/logo.txt")
 
     def info(): String = {
-        // s"Otavia version ${BuildInfo.publishVersion} with Scala library ${BuildInfo.scalaVersion}"
-        ""
+        s"Otavia version ${BuildInfo.publishVersion} with Scala library ${BuildInfo.scalaVersion}"
     }
 
 }

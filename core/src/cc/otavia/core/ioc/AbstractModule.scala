@@ -16,9 +16,9 @@
 
 package cc.otavia.core.ioc
 
+import cc.otavia.common.Report
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
-import cc.otavia.core.util.Report
 
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.language.unsafeNulls

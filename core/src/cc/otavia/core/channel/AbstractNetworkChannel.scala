@@ -19,13 +19,13 @@
 package cc.otavia.core.channel
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
+import cc.otavia.common.Platform
 import cc.otavia.core.channel.AbstractNetChannel.{DEFAULT_CONNECT_TIMEOUT, SUPPORTED_CHANNEL_OPTIONS}
 import cc.otavia.core.channel.internal.AdaptiveBufferOffset
 import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.stack.{ChannelPromise, Promise}
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.{TimeoutTrigger, Timer}
-import cc.otavia.core.util.Platform
 
 import java.io.IOException
 import java.net.{InetSocketAddress, SocketAddress}

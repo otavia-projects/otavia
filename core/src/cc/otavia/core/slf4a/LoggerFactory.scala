@@ -16,10 +16,10 @@
 
 package cc.otavia.core.slf4a
 
+import cc.otavia.common.Report
 import cc.otavia.core.slf4a.nop.NOPServiceProvider
 import cc.otavia.core.slf4a.spi.SLF4AServiceProvider
 import cc.otavia.core.system.ActorSystem
-import cc.otavia.core.util.Report
 
 import java.security.{AccessController, PrivilegedAction}
 import java.util

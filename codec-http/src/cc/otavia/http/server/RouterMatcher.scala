@@ -17,7 +17,7 @@
 package cc.otavia.http.server
 
 import cc.otavia.buffer.Buffer
-import cc.otavia.core.util.SystemPropertyUtil
+import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.http.HttpMethod.*
 import cc.otavia.http.server.Router.*
 import cc.otavia.http.{HttpConstants, HttpMethod, HttpUtils, HttpVersion}

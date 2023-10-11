@@ -16,9 +16,9 @@
 
 package cc.otavia.core.slf4a
 
+import cc.otavia.common.ThrowableUtil
 import cc.otavia.core.slf4a.LogLevel.*
 import cc.otavia.core.system.ActorSystem
-import cc.otavia.core.util.ThrowableUtil
 
 /** The [[Logger]] interface is the main user entry point of SLF4A API. It is expected that logging takes place through
  *  concrete implementations of this interface.

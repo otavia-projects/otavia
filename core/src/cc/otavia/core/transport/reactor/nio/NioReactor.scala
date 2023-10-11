@@ -16,6 +16,7 @@
 
 package cc.otavia.core.transport.reactor.nio
 
+import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.channel.Channel
 import cc.otavia.core.reactor.*
 import cc.otavia.core.reactor.Reactor.Command.*
@@ -25,7 +26,7 @@ import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.system.ActorSystem.DEFAULT_PRINT_BANNER
 import cc.otavia.core.transport.TransportFactory
 import cc.otavia.core.transport.reactor.nio.NioReactor.{NIO_REACTOR_WORKERS, NioThreadFactory}
-import cc.otavia.core.util.{SpinLockQueue, SystemPropertyUtil}
+import cc.otavia.core.util.SpinLockQueue
 
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.{ConcurrentLinkedQueue, Executors, ThreadFactory}

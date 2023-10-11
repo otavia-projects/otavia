@@ -19,6 +19,7 @@ import $ivy.`com.lihaoyi::mill-contrib-jmh:`
 import $ivy.`com.lihaoyi::mill-contrib-scoverage:`
 import mill._
 import mill.api.Result
+import mill.contrib.buildinfo.BuildInfo
 import mill.contrib.jmh.JmhModule
 import mill.scalalib._
 import mill.scalalib.publish._
@@ -48,25 +49,15 @@ object ProjectInfo {
     def netty5        = ivy"io.netty:netty5-codec:5.0.0.Alpha5"
     def xml           = ivy"org.scala-lang.modules::scala-xml:2.1.0"
     def proto         = ivy"io.github.zero-deps::proto:2.1.2"
-    def shapeless     = ivy"org.typelevel::shapeless3-deriving:3.3.0"
     def jedis         = ivy"redis.clients:jedis:4.4.3"
     def scram         = ivy"com.ongres.scram:client:2.1"
-    def magnolia      = ivy"com.softwaremill.magnolia1_3::magnolia:1.3.3"
 
-}
-
-trait OtaviaModule extends ScalaModule with PublishModule {
-
-    override def scalaVersion = ProjectInfo.scalaVersion
-
-    override def publishVersion: T[String] = ProjectInfo.version
-
-    override def pomSettings: T[PomSettings] = PomSettings(
-      description = ProjectInfo.description,
-      organization = ProjectInfo.organization,
-      url = ProjectInfo.repository,
-      licenses = ProjectInfo.licenses,
-      versionControl = ProjectInfo.github,
+    val settings = PomSettings(
+      description = description,
+      organization = organization,
+      url = repository,
+      licenses = licenses,
+      versionControl = github,
       developers = Seq(
         Developer(
           "yankun1992",
@@ -77,6 +68,52 @@ trait OtaviaModule extends ScalaModule with PublishModule {
         )
       )
     )
+
+}
+
+object common extends ScalaModule with BuildInfo with PublishModule {
+
+    override def scalaVersion = ProjectInfo.scalaVersion
+
+    override def buildInfoPackageName = "cc.otavia"
+
+    override def buildInfoMembers = Seq(
+      BuildInfo.Value("scalaVersion", scalaVersion()),
+      BuildInfo.Value("publishVersion", publishVersion()),
+      BuildInfo.Value("name", "otavia"),
+      BuildInfo.Value("description", ProjectInfo.description),
+      BuildInfo.Value("organization", ProjectInfo.organization),
+      BuildInfo.Value("organizationUrl", ProjectInfo.organizationUrl),
+      BuildInfo.Value("github", ProjectInfo.repository),
+      BuildInfo.Value(
+        "licenses", {
+            if (ProjectInfo.licenses.length == 1) ProjectInfo.licenses.head.name
+            else ProjectInfo.licenses.map(_.name).mkString("[", ", ", "]")
+        }
+      ),
+      BuildInfo.Value(
+        "author", {
+            if (ProjectInfo.author.length == 1) ProjectInfo.author.head else ProjectInfo.author.mkString("[", ", ", "]")
+        }
+      ),
+      BuildInfo.Value("copyright", "2022")
+    )
+
+    override def pomSettings = ProjectInfo.settings
+
+    override def publishVersion = ProjectInfo.version
+
+    override def artifactName = "otavia-common"
+
+}
+
+trait OtaviaModule extends ScalaModule with PublishModule {
+
+    override def scalaVersion = ProjectInfo.scalaVersion
+
+    override def publishVersion: T[String] = ProjectInfo.version
+
+    override def pomSettings: T[PomSettings] = ProjectInfo.settings
 
     override def scalacOptions = T { scala.Seq("-Yexplicit-nulls") }
 
@@ -107,6 +144,8 @@ object buffer extends JvmBufferModule {
     //
     //    }
 
+    override def artifactName = "otavia-buffer"
+
     object bench extends ScalaModule with JmhModule {
 
         override def scalaVersion = ProjectInfo.scalaVersion
@@ -119,37 +158,13 @@ object buffer extends JvmBufferModule {
 
 }
 
-object core extends OtaviaModule /* with BuildInfo */ {
+object core extends OtaviaModule {
 
     override def ivyDeps = Agg(ProjectInfo.netty5)
 
-    // override def buildInfoMembers = Seq(
-    //   BuildInfo.Value("scalaVersion", scalaVersion()),
-    //   BuildInfo.Value("publishVersion", publishVersion()),
-    //   BuildInfo.Value("name", "otavia"),
-    //   BuildInfo.Value("description", ProjectInfo.description),
-    //   BuildInfo.Value("organization", ProjectInfo.organization),
-    //   BuildInfo.Value("organizationUrl", ProjectInfo.organizationUrl),
-    //   BuildInfo.Value("github", ProjectInfo.repository),
-    //   BuildInfo.Value(
-    //     "licenses", {
-    //         if (ProjectInfo.licenses.length == 1) ProjectInfo.licenses.head.name
-    //         else ProjectInfo.licenses.map(_.name).mkString("[", ", ", "]")
-    //     }
-    //   ),
-    //   BuildInfo.Value(
-    //     "author", {
-    //         if (ProjectInfo.author.length == 1) ProjectInfo.author.head else ProjectInfo.author.mkString("[", ", ", "]")
-    //     }
-    //   ),
-    //   BuildInfo.Value("copyright", "2022")
-    // )
+    override def artifactName = "otavia-runtime"
 
-    // override def buildInfoPackageName: String = "cc.otavia"
-
-    override def artifactName = "core"
-
-    override def moduleDeps = Seq(buffer)
+    override def moduleDeps = Seq(buffer, common)
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
@@ -161,6 +176,8 @@ object core extends OtaviaModule /* with BuildInfo */ {
 
 object testkit extends OtaviaModule {
 
+    override def artifactName = "otavia-testkit"
+
     override def moduleDeps = Seq(core)
 
 }
@@ -169,7 +186,7 @@ object handler extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
-    override def artifactName = "handler"
+    override def artifactName = "otavia-handler"
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
@@ -183,7 +200,7 @@ object codec extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
 
-    override def artifactName = "codec"
+    override def artifactName = "otavia-codec"
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
@@ -195,7 +212,7 @@ object codec extends OtaviaModule {
 
 object `codec-http` extends OtaviaModule {
 
-    override def artifactName = "codec-http"
+    override def artifactName = "otavia-codec-http"
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(codec, serde, `serde-json`)
 
@@ -207,9 +224,9 @@ object `codec-http` extends OtaviaModule {
 
 }
 
-object adbc extends OtaviaModule {
+object sql extends OtaviaModule {
 
-    override def artifactName = "adbc"
+    override def artifactName = "otavia-sql"
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, serde)
 
@@ -217,7 +234,7 @@ object adbc extends OtaviaModule {
 
 object `codec-redis` extends OtaviaModule {
 
-    override def artifactName: T[String] = "codec-redis"
+    override def artifactName: T[String] = "otavia-codec-redis"
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, serde)
 
@@ -231,7 +248,7 @@ object `codec-redis` extends OtaviaModule {
 
 object `codec-socks` extends OtaviaModule {
 
-    override def artifactName: T[String] = "codec-socks"
+    override def artifactName: T[String] = "otavia-codec-socks"
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
@@ -239,7 +256,7 @@ object `codec-socks` extends OtaviaModule {
 
 object `codec-haproxy` extends OtaviaModule {
 
-    override def artifactName: T[String] = "codec-haproxy"
+    override def artifactName: T[String] = "otavia-codec-haproxy"
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
@@ -247,7 +264,7 @@ object `codec-haproxy` extends OtaviaModule {
 
 object `codec-mqtt` extends OtaviaModule {
 
-    override def artifactName: T[String] = "codec-mqtt"
+    override def artifactName: T[String] = "otavia-codec-mqtt"
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
@@ -255,7 +272,7 @@ object `codec-mqtt` extends OtaviaModule {
 
 object `codec-memcache` extends OtaviaModule {
 
-    override def artifactName: T[String] = "codec-memcache"
+    override def artifactName: T[String] = "otavia-codec-memcache"
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
@@ -263,7 +280,7 @@ object `codec-memcache` extends OtaviaModule {
 
 object `codec-smtp` extends OtaviaModule {
 
-    override def artifactName: T[String] = "codec-smtp"
+    override def artifactName: T[String] = "otavia-codec-smtp"
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
@@ -271,7 +288,7 @@ object `codec-smtp` extends OtaviaModule {
 
 object `codec-kafka` extends OtaviaModule {
 
-    override def artifactName: T[String] = "codec-kafka"
+    override def artifactName: T[String] = "otavia-codec-kafka"
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
@@ -281,7 +298,7 @@ object log4a extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
 
-    override def artifactName: T[String] = "log4a"
+    override def artifactName: T[String] = "otavia-log4a"
 
     override def ivyDeps = Agg(ProjectInfo.xml)
 
@@ -293,14 +310,9 @@ object log4a extends OtaviaModule {
 
 }
 
-object examples extends OtaviaModule {
-    override def moduleDeps: Seq[PublishModule] =
-        scala.Seq(core, codec, log4a, `mysql-adbc-driver`, `postgres-adbc-driver`, `codec-redis`, `codec-http`)
-}
-
 object serde extends OtaviaModule {
 
-    override def artifactName = "serde"
+    override def artifactName = "otavia-serde"
 
     override def moduleDeps = Seq(buffer)
 
@@ -308,7 +320,7 @@ object serde extends OtaviaModule {
 
 object `serde-json` extends OtaviaModule {
 
-    override def artifactName = "serde-json"
+    override def artifactName = "otavia-serde-json"
 
     override def moduleDeps = Seq(serde)
 
@@ -324,7 +336,7 @@ object `serde-json` extends OtaviaModule {
 
 object `serde-proto` extends OtaviaModule {
 
-    override def artifactName = "serde-proto"
+    override def artifactName = "otavia-serde-proto"
 
     override def moduleDeps = Seq(serde)
 
@@ -336,11 +348,11 @@ object `serde-proto` extends OtaviaModule {
 
 }
 
-object `mysql-adbc-driver` extends OtaviaModule {
+object `sql-mysql-driver` extends OtaviaModule {
 
-    override def artifactName = "mysql-adbc-driver"
+    override def artifactName = "otavia-mysql-driver"
 
-    override def moduleDeps = Seq(adbc)
+    override def moduleDeps = Seq(sql)
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
@@ -350,11 +362,11 @@ object `mysql-adbc-driver` extends OtaviaModule {
 
 }
 
-object `postgres-adbc-driver` extends OtaviaModule {
+object `sql-postgres-driver` extends OtaviaModule {
 
-    override def artifactName = "postgres-adbc-driver"
+    override def artifactName = "otavia-postgres-driver"
 
-    override def moduleDeps = Seq(adbc)
+    override def moduleDeps = Seq(sql)
 
     override def ivyDeps = Agg(ProjectInfo.scram)
 

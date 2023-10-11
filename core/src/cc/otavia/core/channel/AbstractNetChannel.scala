@@ -19,6 +19,7 @@
 package cc.otavia.core.channel
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
+import cc.otavia.common.{Platform, ThrowableUtil}
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.AbstractNetChannel.*
 import cc.otavia.core.channel.ChannelOption.*
@@ -30,7 +31,6 @@ import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.*
 import cc.otavia.core.system.ActorThread
 import cc.otavia.core.timer.{TimeoutTrigger, Timer}
-import cc.otavia.core.util.{Platform, ThrowableUtil}
 
 import java.net.*
 import java.nio.channels.{AlreadyConnectedException, ClosedChannelException, ConnectionPendingException, NotYetConnectedException}

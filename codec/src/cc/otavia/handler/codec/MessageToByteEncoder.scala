@@ -20,7 +20,6 @@ package cc.otavia.handler.codec
 
 import cc.otavia.core.channel.handler.Message2ByteEncoder
 import cc.otavia.core.channel.{ChannelHandlerAdapter, ChannelHandlerContext}
-import io.netty5.util.internal.{SilentDispose, TypeParameterMatcher}
 
 /** [[ChannelHandler]] which encodes message in a stream-like fashion from one message to a [[Buffer]]. Example
  *  implementation which encodes [[Integer]]s to a [[Buffer]].

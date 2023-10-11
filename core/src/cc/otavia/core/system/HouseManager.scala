@@ -16,12 +16,12 @@
 
 package cc.otavia.core.system
 
+import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.actor.Actor
 import cc.otavia.core.message.{Event, Message}
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.HouseManager.*
 import cc.otavia.core.system.monitor.HouseManagerMonitor
-import cc.otavia.core.util.SystemPropertyUtil
 
 import scala.collection.mutable
 import scala.language.unsafeNulls

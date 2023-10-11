@@ -16,12 +16,13 @@
 
 package cc.otavia.core.system
 
+import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.message.{Event, Message}
 import cc.otavia.core.actor.*
 import cc.otavia.core.address.ActorAddress
 import cc.otavia.core.message.*
 import cc.otavia.core.system.ActorHouse.*
-import cc.otavia.core.util.{Nextable, SystemPropertyUtil}
+import cc.otavia.core.util.Nextable
 
 import java.lang.management.*
 import java.util.concurrent.atomic.AtomicInteger

@@ -16,11 +16,11 @@
 
 package cc.otavia.log4a
 
+import cc.otavia.common.{Report, ThrowableUtil}
 import cc.otavia.core.address.Address
 import cc.otavia.core.slf4a.Appender.LogMsg
 import cc.otavia.core.slf4a.{AbstractLogger, LogLevel}
 import cc.otavia.core.system.ActorSystem
-import cc.otavia.core.util.{Report, ThrowableUtil}
 import cc.otavia.log4a.InternalLogger.BufferedLogger
 import cc.otavia.log4a.appender.Appender
 

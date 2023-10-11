@@ -16,6 +16,7 @@
 
 package cc.otavia.core.actor
 
+import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.actor.Actor.*
 import cc.otavia.core.address.Address
 import cc.otavia.core.message.*
@@ -23,7 +24,6 @@ import cc.otavia.core.reactor.Reactor
 import cc.otavia.core.stack.*
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.Timer
-import cc.otavia.core.util.SystemPropertyUtil
 
 import scala.reflect.{ClassTag, TypeTest, classTag}
 

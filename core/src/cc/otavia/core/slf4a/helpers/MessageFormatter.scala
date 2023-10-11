@@ -16,7 +16,7 @@
 
 package cc.otavia.core.slf4a.helpers
 
-import cc.otavia.core.util.{Report, ThrowableUtil}
+import cc.otavia.common.{Report, ThrowableUtil}
 
 import java.lang
 

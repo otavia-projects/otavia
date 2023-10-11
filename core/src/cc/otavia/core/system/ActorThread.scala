@@ -17,12 +17,12 @@
 package cc.otavia.core.system
 
 import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, DirectPooledPageAllocator, HeapPooledPageAllocator}
+import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.actor.Actor
 import cc.otavia.core.address.{ActorAddress, ActorThreadAddress}
 import cc.otavia.core.message.{Event, ResourceTimeoutEvent}
 import cc.otavia.core.system.ActorThread.{GC_PEER_ROUND, ST_RUNNING, ST_STARTING, ST_WAITING}
 import cc.otavia.core.system.monitor.ActorThreadMonitor
-import cc.otavia.core.util.SystemPropertyUtil
 
 import java.lang.ref.{PhantomReference, ReferenceQueue, SoftReference, WeakReference}
 import java.util.concurrent.{ConcurrentLinkedQueue, CopyOnWriteArraySet}

@@ -16,9 +16,9 @@
 
 package cc.otavia.core.slf4a
 
+import cc.otavia.common.ThrowableUtil
 import cc.otavia.core.ioc.ModuleListener
 import cc.otavia.core.slf4a.helpers.MessageFormatter
-import cc.otavia.core.util.ThrowableUtil
 
 abstract class AbstractLogger extends Logger, Serializable, ModuleListener {
 

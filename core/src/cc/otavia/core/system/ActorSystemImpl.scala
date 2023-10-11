@@ -18,6 +18,7 @@ package cc.otavia.core.system
 
 import cc.otavia.buffer.BufferAllocator
 import cc.otavia.buffer.pool.{DirectPooledPageAllocator, HeapPooledPageAllocator}
+import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.actor.*
 import cc.otavia.core.address.*
 import cc.otavia.core.channel.ChannelFactory
@@ -27,7 +28,6 @@ import cc.otavia.core.slf4a.{LogLevel, Logger}
 import cc.otavia.core.system.monitor.{ReactorMonitor, SystemMonitor, SystemMonitorTask, ThreadMonitor}
 import cc.otavia.core.timer.{Timeout, Timer, TimerImpl}
 import cc.otavia.core.transport.TransportFactory
-import cc.otavia.core.util.SystemPropertyUtil
 
 import java.io.File
 import java.lang.management.{ManagementFactory, MemoryMXBean}

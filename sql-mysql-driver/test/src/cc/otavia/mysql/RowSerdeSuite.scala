@@ -14,21 +14,34 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.slf4a
+package cc.otavia.mysql
 
-import cc.otavia.common.Report
+import cc.otavia.buffer.Buffer
+import cc.otavia.core.message.Reply
+import cc.otavia.sql.RowParser
+import cc.otavia.sql.serde.RowSerde
 import org.scalatest.funsuite.AnyFunSuite
 
-class UtilSuite extends AnyFunSuite {
+class RowSerdeSuite extends AnyFunSuite {
 
-    test("report error") {
-        Report.report("A SLF4A service provider failed to instantiate:\n")
-        Console.err.printf("format string {} is ok", "value")
-        val format = "format string {} is ok"
-
-
-
+    test("generate row serde by hand") {
         assert(true)
+    }
+
+}
+
+object RowSerdeSuite {
+
+    private case class User(id: Int, name: String, address: String) extends Reply
+
+    private val userSerde: RowSerde[User] = new RowSerde[User] {
+
+        override def deserialize(in: Buffer): User = {
+            User(parser.parseInt(0), parser.parseString(1), parser.parseString(2))
+        }
+
+        override def serialize(value: User, out: Buffer): Unit = ???
+
     }
 
 }

@@ -19,6 +19,7 @@
 package cc.otavia.core.channel
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
+import cc.otavia.common.ThrowableUtil
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.ChannelHandlerContextImpl.*
 import cc.otavia.core.channel.internal.ChannelHandlerMask
@@ -26,7 +27,6 @@ import cc.otavia.core.channel.internal.ChannelHandlerMask.*
 import cc.otavia.core.channel.message.{AutoReadPlan, ReadPlan}
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.ChannelFuture
-import cc.otavia.core.util.ThrowableUtil
 import io.netty5.util.Resource
 
 import java.net.SocketAddress

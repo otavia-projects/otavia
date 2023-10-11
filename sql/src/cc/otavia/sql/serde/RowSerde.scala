@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.slf4a
+package cc.otavia.sql.serde
 
-import cc.otavia.common.Report
-import org.scalatest.funsuite.AnyFunSuite
+import cc.otavia.buffer.Buffer
+import cc.otavia.serde.Serde
+import cc.otavia.sql.RowParser
 
-class UtilSuite extends AnyFunSuite {
+abstract class RowSerde[R] extends Serde[R] {
 
-    test("report error") {
-        Report.report("A SLF4A service provider failed to instantiate:\n")
-        Console.err.printf("format string {} is ok", "value")
-        val format = "format string {} is ok"
+    private var rowParser: RowParser = _
 
+    private[sql] def setParser(parser: RowParser): Unit = this.rowParser = parser
 
-
-        assert(true)
-    }
+    protected def parser: RowParser = rowParser
 
 }

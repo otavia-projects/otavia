@@ -16,6 +16,7 @@
 
 package cc.otavia.core.util
 
+import cc.otavia.common.ClassUtils
 import cc.otavia.core.actor.Actor
 import cc.otavia.core.slf4a.*
 import cc.otavia.core.slf4a.appender.ConsoleAppender
