@@ -41,16 +41,13 @@ object ProjectInfo {
     def buildTool               = "mill"
     def buildToolVersion        = main.BuildInfo.millVersion
 
-    def testDep = ivy"org.scalatest::scalatest:3.2.15"
+    def testDep = ivy"org.scalatest::scalatest:3.2.17"
 
-    def jsoniter      = ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core:2.24.1"
-    def jsoniterMacro = ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:2.24.1"
-    def booPickle     = ivy"io.suzaku::boopickle:1.4.0"
-    def netty5        = ivy"io.netty:netty5-codec:5.0.0.Alpha5"
-    def xml           = ivy"org.scala-lang.modules::scala-xml:2.1.0"
-    def proto         = ivy"io.github.zero-deps::proto:2.1.2"
-    def jedis         = ivy"redis.clients:jedis:4.4.3"
-    def scram         = ivy"com.ongres.scram:client:2.1"
+    def netty5 = ivy"io.netty:netty5-codec:5.0.0.Alpha5"
+    def xml    = ivy"org.scala-lang.modules::scala-xml:2.1.0"
+    def proto  = ivy"io.github.zero-deps::proto:2.1.2"
+    def jedis  = ivy"redis.clients:jedis:4.4.3"
+    def scram  = ivy"com.ongres.scram:client:2.1"
 
     val settings = PomSettings(
       description = description,
@@ -59,13 +56,9 @@ object ProjectInfo {
       licenses = licenses,
       versionControl = github,
       developers = Seq(
-        Developer(
-          "yankun1992",
-          "Yan Kun",
-          "https://github.com/yankun1992",
-          Some("otavia-projects"),
-          Some("https://github.com/otavia-projects")
-        )
+        // format: off
+        Developer("yankun1992", "Yan Kun", "https://github.com/yankun1992", Some("otavia-projects"), Some("https://github.com/otavia-projects"))
+        // format: on
       )
     )
 
@@ -104,6 +97,12 @@ object common extends ScalaModule with BuildInfo with PublishModule {
     override def publishVersion = ProjectInfo.version
 
     override def artifactName = "otavia-common"
+
+    object test extends ScalaTests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
 
 }
 
@@ -314,7 +313,7 @@ object serde extends OtaviaModule {
 
     override def artifactName = "otavia-serde"
 
-    override def moduleDeps = Seq(buffer)
+    override def moduleDeps = Seq(buffer, common)
 
 }
 
@@ -326,9 +325,7 @@ object `serde-json` extends OtaviaModule {
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
-        override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.jsoniter)
-
-        override def compileIvyDeps = Agg(ProjectInfo.jsoniterMacro)
+        override def ivyDeps = Agg(ProjectInfo.testDep)
 
     }
 

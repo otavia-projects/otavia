@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package cc.otavia.json.primaries
+package cc.otavia.json.types
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.json.JsonSerde
 
-object LongJsonSerde extends JsonSerde[Long] {
+import java.time.OffsetTime
 
-    override def deserialize(in: Buffer): Long = deserializeLong(in)
+/** [[JsonSerde]] for [[OffsetTime]]. */
+object OffsetTimeJsonSerde extends JsonSerde[OffsetTime] {
 
-    override def serialize(value: Long, out: Buffer): Unit = serializeLong(value, out)
+    override final def serialize(value: OffsetTime, out: Buffer): Unit = this.serializeOffsetTime(value, out)
+
+    override final def deserialize(in: Buffer): OffsetTime = this.deserializeOffsetTime(in)
 
 }

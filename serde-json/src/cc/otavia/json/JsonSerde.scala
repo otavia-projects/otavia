@@ -17,65 +17,69 @@
 package cc.otavia.json
 
 import cc.otavia.buffer.Buffer
-import cc.otavia.json.primaries.*
-import cc.otavia.serde.{Serde, SerdeMathTypeOps, SerdeOps, SerdePrimaryTypeOps}
+import cc.otavia.datatype.Money
+import cc.otavia.json.types.*
+import cc.otavia.serde.{Serde, SerdeOps}
 
-import java.math.BigInteger
+import java.math.{BigInteger, BigDecimal as JBigDecimal}
 import java.nio.charset.{Charset, StandardCharsets}
+import java.time.{Duration as JDuration, *}
+import java.util.{Currency, Locale, UUID}
 import scala.collection.mutable
 import scala.compiletime.*
+import scala.concurrent.duration.Duration
 import scala.deriving.Mirror
 import scala.language.unsafeNulls
 
-trait JsonSerde[A] extends Serde[A] with SerdePrimaryTypeOps with SerdeMathTypeOps {
+trait JsonSerde[A] extends Serde[A] with SerdeOps {
 
     def charsets: Charset = StandardCharsets.UTF_8
 
-    protected def skipBlanks(in: Buffer): Unit =
+    final protected def skipBlanks(in: Buffer): Unit =
         while (in.skipIfNextIn(JsonConstants.TOKEN_BLANKS)) {}
 
-    protected def serializeObjectStart(out: Buffer): this.type = {
+    final protected def serializeObjectStart(out: Buffer): this.type = {
         out.writeByte(JsonConstants.TOKEN_OBJECT_START)
         this
     }
 
     // TODO: replace to exceptXXX, if false throws error
-    protected def skipObjectStart(in: Buffer): Boolean = {
+    final protected def skipObjectStart(in: Buffer): Boolean = {
         skipBlanks(in)
         in.skipIfNext(JsonConstants.TOKEN_OBJECT_START)
     }
 
-    protected def serializeArrayStart(out: Buffer): this.type = {
+    final protected def serializeArrayStart(out: Buffer): this.type = {
         out.writeByte(JsonConstants.TOKEN_ARRAY_START)
         this
     }
 
-    protected def skipArrayStart(in: Buffer): Boolean = {
+    final protected def skipArrayStart(in: Buffer): Boolean = {
         skipBlanks(in)
         in.skipIfNext(JsonConstants.TOKEN_ARRAY_START)
     }
 
-    protected def serializeObjectEnd(out: Buffer): this.type = {
+    final protected def serializeObjectEnd(out: Buffer): this.type = {
         out.writeByte(JsonConstants.TOKEN_OBJECT_END)
         this
     }
 
-    protected def skipObjectEnd(in: Buffer): Boolean = {
+    final protected def skipObjectEnd(in: Buffer): Boolean = {
         skipBlanks(in)
         in.skipIfNext(JsonConstants.TOKEN_OBJECT_END)
     }
 
-    protected def serializeArrayEnd(out: Buffer): this.type = {
+    final protected def serializeArrayEnd(out: Buffer): this.type = {
         out.writeByte(JsonConstants.TOKEN_ARRAY_END)
         this
     }
 
-    protected def skipArrayEnd(in: Buffer): Boolean = {
+    final protected def skipArrayEnd(in: Buffer): Boolean = {
         skipBlanks(in)
         in.skipIfNext(JsonConstants.TOKEN_ARRAY_END)
     }
 
-    protected def serializeKey(key: String, out: Buffer): this.type = {
+    final protected def serializeKey(key: String, out: Buffer): this.type = {
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
         out.writeCharSequence(key, charsets)
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
@@ -83,9 +87,9 @@ trait JsonSerde[A] extends Serde[A] with SerdePrimaryTypeOps with SerdeMathTypeO
         this
     }
 
-    override final protected def serializeByte(byte: Byte, out: Buffer): JsonSerde.this.type = serializeInt(byte, out)
+    override final protected def serializeByte(byte: Byte, out: Buffer): this.type = serializeInt(byte, out)
 
-    override final protected def serializeBoolean(boolean: Boolean, out: Buffer): JsonSerde.this.type = if (boolean) {
+    override final protected def serializeBoolean(boolean: Boolean, out: Buffer): this.type = if (boolean) {
         out.writeBytes(JsonConstants.TOKEN_TURE)
         this
     } else {
@@ -93,39 +97,39 @@ trait JsonSerde[A] extends Serde[A] with SerdePrimaryTypeOps with SerdeMathTypeO
         this
     }
 
-    override final protected def serializeChar(char: Char, out: Buffer): JsonSerde.this.type = {
+    override final protected def serializeChar(char: Char, out: Buffer): this.type = {
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
         out.writeByte(char.toByte)
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
         this
     }
 
-    override final protected def serializeShort(short: Short, out: Buffer): JsonSerde.this.type = {
+    override final protected def serializeShort(short: Short, out: Buffer): this.type = {
         out.writeCharSequence(short.toString)
         this
     }
 
-    override final protected def serializeInt(int: Int, out: Buffer): JsonSerde.this.type = {
+    override final protected def serializeInt(int: Int, out: Buffer): this.type = {
         out.writeCharSequence(int.toString)
         this
     }
 
-    override final protected def serializeLong(long: Long, out: Buffer): JsonSerde.this.type = {
+    override final protected def serializeLong(long: Long, out: Buffer): this.type = {
         out.writeCharSequence(long.toString)
         this
     }
 
-    override final protected def serializeFloat(float: Float, out: Buffer): JsonSerde.this.type = {
+    override final protected def serializeFloat(float: Float, out: Buffer): this.type = {
         out.writeCharSequence(float.toString)
         this
     }
 
-    override final protected def serializeDouble(double: Double, out: Buffer): JsonSerde.this.type = {
+    override final protected def serializeDouble(double: Double, out: Buffer): this.type = {
         out.writeCharSequence(double.toString)
         this
     }
 
-    override final protected def serializeString(string: String, out: Buffer): JsonSerde.this.type = {
+    override final protected def serializeString(string: String, out: Buffer): this.type = {
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
         out.writeCharSequence(string, charsets) // TODO: escape char
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
@@ -230,25 +234,107 @@ trait JsonSerde[A] extends Serde[A] with SerdePrimaryTypeOps with SerdeMathTypeO
 
     // math type
 
-    override final protected def serializeBigInt(bigInt: BigInt, out: Buffer): JsonSerde.this.type = ???
+    override final protected def serializeBigInt(bigInt: BigInt, out: Buffer): this.type = ???
 
-    override final protected def serializeBigDecimal(bigDecimal: BigDecimal, out: Buffer): JsonSerde.this.type = ???
+    override final protected def serializeBigDecimal(bigDecimal: BigDecimal, out: Buffer): this.type = ???
 
-    override final protected def serializeBigInteger(bigInteger: BigInteger, out: Buffer): JsonSerde.this.type = ???
+    override final protected def serializeBigInteger(bigInteger: BigInteger, out: Buffer): this.type = ???
 
-    override final protected def serializeJBigDecimal(
-        bigDecimal: java.math.BigDecimal,
-        out: Buffer
-    ): JsonSerde.this.type =
-        ???
+    override final protected def serializeJBigDecimal(bigDecimal: java.math.BigDecimal, out: Buffer): this.type = ???
 
     override final protected def deserializeBigInt(in: Buffer): BigInt = ???
 
-    override final protected def deserializeBigDecimal(in: Buffer): BigInt = ???
+    override final protected def deserializeBigDecimal(in: Buffer): BigDecimal = ???
 
-    override final protected def deserializeBigInteger(in: Buffer): BigInt = ???
+    override final protected def deserializeBigInteger(in: Buffer): BigInteger = ???
 
-    override final protected def deserializeJBigDecimal(in: Buffer): BigInt = ???
+    override final protected def deserializeJBigDecimal(in: Buffer): java.math.BigDecimal = ???
+
+    override final protected def serializeJDuration(duration: JDuration, out: Buffer): this.type = ???
+
+    override final protected def serializeDuration(duration: Duration, out: Buffer): this.type = ???
+
+    override final protected def serializeInstant(instant: Instant, out: Buffer): this.type = ???
+
+    override final protected def serializeLocalDate(localDate: LocalDate, out: Buffer): this.type = ???
+
+    override final protected def serializeLocalDateTime(
+        localDateTime: LocalDateTime,
+        out: Buffer
+    ): this.type = ???
+
+    override final protected def serializeLocalTime(localTime: LocalTime, out: Buffer): this.type = ???
+
+    override final protected def serializeMonthDay(monthDay: MonthDay, out: Buffer): this.type = ???
+
+    override final protected def serializeOffsetDateTime(
+        offsetDateTime: OffsetDateTime,
+        out: Buffer
+    ): this.type =
+        ???
+
+    override final protected def serializeOffsetTime(offsetTime: OffsetTime, out: Buffer): this.type = ???
+
+    override final protected def serializePeriod(period: Period, out: Buffer): this.type = ???
+
+    override final protected def serializeYear(year: Year, out: Buffer): this.type = ???
+
+    override final protected def serializeYearMonth(yearMonth: YearMonth, out: Buffer): this.type = ???
+
+    override final protected def serializeZonedDateTime(
+        zonedDateTime: ZonedDateTime,
+        out: Buffer
+    ): this.type = ???
+
+    override final protected def serializeZoneId(zoneId: ZoneId, out: Buffer): this.type = ???
+
+    override final protected def serializeZoneOffset(zoneOffset: ZoneOffset, out: Buffer): this.type = ???
+
+    override final protected def deserializeJDuration(in: Buffer): JDuration = ???
+
+    override final protected def deserializeDuration(in: Buffer): Duration = ???
+
+    override final protected def deserializeInstant(in: Buffer): Instant = ???
+
+    override final protected def deserializeLocalDate(in: Buffer): LocalDate = ???
+
+    override final protected def deserializeLocalDateTime(in: Buffer): LocalDateTime = ???
+
+    override final protected def deserializeLocalTime(in: Buffer): LocalTime = ???
+
+    override final protected def deserializeMonthDay(in: Buffer): MonthDay = ???
+
+    override final protected def deserializeOffsetDateTime(in: Buffer): OffsetDateTime = ???
+
+    override final protected def deserializeOffsetTime(in: Buffer): OffsetTime = ???
+
+    override final protected def deserializePeriod(in: Buffer): Period = ???
+
+    override final protected def deserializeYear(in: Buffer): Year = ???
+
+    override final protected def deserializeYearMonth(in: Buffer): YearMonth = ???
+
+    override final protected def deserializeZonedDateTime(in: Buffer): ZonedDateTime = ???
+
+    override final protected def deserializeZoneId(in: Buffer): ZoneId = ???
+
+    override final protected def deserializeZoneOffset(in: Buffer): ZoneOffset = ???
+
+    override final protected def serializeUUID(uuid: UUID, out: Buffer): this.type = ???
+
+    override final protected def serializeLocale(locale: Locale, out: Buffer): this.type = ???
+
+    override final protected def serializeCurrency(currency: Currency, out: Buffer): this.type = ???
+
+    override final protected def deserializeUUID(in: Buffer): UUID = ???
+
+    override final protected def deserializeLocale(in: Buffer): Locale = ???
+
+    override final protected def deserializeCurrency(in: Buffer): Currency = ???
+
+    override final protected def serializeMoney(money: Money, out: Buffer): this.type = ???
+
+    override final protected def deserializeMoney(in: Buffer): Money = ???
 
 }
 
@@ -256,14 +342,36 @@ object JsonSerde {
 
     private given Charset = StandardCharsets.UTF_8
 
-    given JsonSerde[Boolean] = BooleanJsonSerde
-    given JsonSerde[Byte]    = ByteJsonSerde
-    given JsonSerde[Char]    = CharJsonSerde
-    given JsonSerde[Double]  = DoubleJsonSerde
-    given JsonSerde[Float]   = FloatJsonSerde
-    given JsonSerde[Int]     = IntJsonSerde
-    given JsonSerde[Long]    = LongJsonSerde
-    given JsonSerde[Short]   = ShortJsonSerde
+    given JsonSerde[Boolean]        = BooleanJsonSerde
+    given JsonSerde[Byte]           = ByteJsonSerde
+    given JsonSerde[Char]           = CharJsonSerde
+    given JsonSerde[Double]         = DoubleJsonSerde
+    given JsonSerde[Float]          = FloatJsonSerde
+    given JsonSerde[Int]            = IntJsonSerde
+    given JsonSerde[Long]           = LongJsonSerde
+    given JsonSerde[Short]          = ShortJsonSerde
+    given JsonSerde[BigInt]         = BigIntJsonSerde
+    given JsonSerde[BigDecimal]     = BigDecimalJsonSerde
+    given JsonSerde[BigInteger]     = BigIntegerJsonSerde
+    given JsonSerde[JBigDecimal]    = JBigDecimalJsonSerde
+    given JsonSerde[JDuration]      = JDurationJsonSerde
+    given JsonSerde[Instant]        = InstantJsonSerde
+    given JsonSerde[LocalDate]      = LocalDateJsonSerde
+    given JsonSerde[LocalDateTime]  = LocalDateTimeJsonSerde
+    given JsonSerde[LocalTime]      = LocalTimeJsonSerde
+    given JsonSerde[MonthDay]       = MonthDayJsonSerde
+    given JsonSerde[OffsetDateTime] = OffsetDateTimeJsonSerde
+    given JsonSerde[OffsetTime]     = OffsetTimeJsonSerde
+    given JsonSerde[Period]         = PeriodJsonSerde
+    given JsonSerde[Year]           = YearJsonSerde
+    given JsonSerde[YearMonth]      = YearMonthJsonSerde
+    given JsonSerde[ZonedDateTime]  = ZonedDateTimeJsonSerde
+    given JsonSerde[ZoneId]         = ZoneIdJsonSerde
+    given JsonSerde[ZoneOffset]     = ZoneOffsetJsonSerde
+    given JsonSerde[UUID]           = UUIDJsonSerde
+    given JsonSerde[Locale]         = LocaleJsonSerde
+    given JsonSerde[Currency]       = CurrencyJsonSerde
+    given JsonSerde[Money]          = MoneyJsonSerde
 
     given stringSerde(using charset: Charset): JsonSerde[String] with {
 

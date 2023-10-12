@@ -14,22 +14,18 @@
  * limitations under the License.
  */
 
-package cc.otavia.json.primaries
+package cc.otavia.json.types
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.json.JsonSerde
 
-import java.nio.charset.{Charset, StandardCharsets}
-import scala.language.unsafeNulls
+import java.time.LocalDate
 
-class StringJsonSerde(override val charsets: Charset = StandardCharsets.UTF_8) extends JsonSerde[String] {
+/** [[JsonSerde]] for [[LocalDate]]. */
+object LocalDateJsonSerde extends JsonSerde[LocalDate] {
 
-    override def deserialize(in: Buffer): String = deserializeString(in)
+    override final def serialize(value: LocalDate, out: Buffer): Unit = this.serializeLocalDate(value, out)
 
-    override def serialize(value: String, out: Buffer): Unit = serializeString(value, out)
+    override final def deserialize(in: Buffer): LocalDate = this.deserializeLocalDate(in)
 
-}
-
-object StringJsonSerde {
-    val UTF8StringJsonSerde = new StringJsonSerde()
 }

@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package cc.otavia.json.primaries
+package cc.otavia.json.types
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.json.JsonSerde
 
-object ShortJsonSerde extends JsonSerde[Short] {
+/** [[JsonSerde]] for [[BigDecimal]]. */
+object BigDecimalJsonSerde extends JsonSerde[BigDecimal] {
 
-    override def deserialize(in: Buffer): Short = deserializeShort(in)
+    override final def serialize(value: BigDecimal, out: Buffer): Unit = this.serializeBigDecimal(value, out)
 
-    override def serialize(value: Short, out: Buffer): Unit = serializeShort(value, out)
+    override final def deserialize(in: Buffer): BigDecimal = this.deserializeBigDecimal(in)
 
 }

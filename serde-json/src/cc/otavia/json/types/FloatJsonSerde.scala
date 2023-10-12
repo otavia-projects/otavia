@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package cc.otavia.json.primaries
+package cc.otavia.json.types
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.json.JsonSerde
 
-object DoubleJsonSerde extends JsonSerde[Double] {
+/** [[JsonSerde]] for [[Float]]. */
+object FloatJsonSerde extends JsonSerde[Float] {
 
-    override def deserialize(in: Buffer): Double = deserializeDouble(in)
+    override def deserialize(in: Buffer): Float = deserializeFloat(in)
 
-    override def serialize(value: Double, out: Buffer): Unit = serializeDouble(value, out)
+    override def serialize(value: Float, out: Buffer): Unit = serializeFloat(value, out)
 
 }

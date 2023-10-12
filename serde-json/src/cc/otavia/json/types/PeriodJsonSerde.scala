@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package cc.otavia.json.primaries
+package cc.otavia.json.types
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.json.JsonSerde
 
-object CharJsonSerde extends JsonSerde[Char] {
+import java.time.Period
 
-    override def deserialize(in: Buffer): Char = deserializeChar(in)
+/** [[JsonSerde]] for [[Period]]. */
+object PeriodJsonSerde extends JsonSerde[Period] {
 
-    override def serialize(value: Char, out: Buffer): Unit = serializeChar(value, out)
+    override final def serialize(value: Period, out: Buffer): Unit = this.serializePeriod(value, out)
+
+    override final def deserialize(in: Buffer): Period = this.deserializePeriod(in)
 
 }

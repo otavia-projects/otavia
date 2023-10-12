@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.otavia.sql.datatype
+package cc.otavia.datatype
 
 import java.lang
 import java.math.{BigDecimal as JBigDecimal, BigInteger as JBigInteger}

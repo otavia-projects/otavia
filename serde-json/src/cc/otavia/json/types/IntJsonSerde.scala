@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package cc.otavia.json.primaries
+package cc.otavia.json.types
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.json.JsonSerde
 
+/** [[JsonSerde]] for [[Int]]. */
 object IntJsonSerde extends JsonSerde[Int] {
 
     override def deserialize(in: Buffer): Int = deserializeInt(in)

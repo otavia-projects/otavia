@@ -14,25 +14,16 @@
  * limitations under the License.
  */
 
-package cc.otavia.serde
+package cc.otavia.json.types
 
 import cc.otavia.buffer.Buffer
+import cc.otavia.json.JsonSerde
 
-import java.util.{Currency, Locale, UUID}
+/** [[JsonSerde]] for [[Byte]]. */
+object ByteJsonSerde extends JsonSerde[Byte] {
 
-trait SerdeUtilTypeOps {
-    this: Serde[?] =>
+    override def deserialize(in: Buffer): Byte = deserializeByte(in)
 
-    protected def serializeUUID(UUID: UUID, out: Buffer): this.type
-
-    protected def serializeLocale(locale: Locale, out: Buffer): this.type
-
-    protected def serializeCurrency(currency: Currency, out: Buffer): this.type
-
-    protected def deserializeUUID(in: Buffer): UUID
-
-    protected def deserializeLocale(in: Buffer): Locale
-
-    protected def deserializeCurrency(in: Buffer): Currency
+    override def serialize(value: Byte, out: Buffer): Unit = serializeByte(value, out)
 
 }

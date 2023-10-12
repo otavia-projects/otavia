@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package cc.otavia.json.primaries
+package cc.otavia.json.types
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.json.JsonSerde
 
-object FloatJsonSerde extends JsonSerde[Float] {
+import java.util.Currency
 
-    override def deserialize(in: Buffer): Float = deserializeFloat(in)
+/** [[JsonSerde]] for [[Currency]] */
+object CurrencyJsonSerde extends JsonSerde[Currency] {
 
-    override def serialize(value: Float, out: Buffer): Unit = serializeFloat(value, out)
+    override final def serialize(value: Currency, out: Buffer): Unit = this.serializeCurrency(value, out)
+
+    override final def deserialize(in: Buffer): Currency = this.deserializeCurrency(in)
 
 }

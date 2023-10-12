@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package cc.otavia.json.primaries
+package cc.otavia.json.types
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.json.JsonSerde
 
-object ByteJsonSerde extends JsonSerde[Byte] {
+import scala.concurrent.duration.Duration
 
-    override def deserialize(in: Buffer): Byte = deserializeByte(in)
+/** [[JsonSerde]] for [[Duration]]. */
+object DurationJsonSerde extends JsonSerde[Duration] {
 
-    override def serialize(value: Byte, out: Buffer): Unit = serializeByte(value, out)
+    override final def serialize(value: Duration, out: Buffer): Unit = this.serializeDuration(value, out)
+
+    override final def deserialize(in: Buffer): Duration = this.deserializeDuration(in)
 
 }

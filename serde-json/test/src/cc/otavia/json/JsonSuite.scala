@@ -19,9 +19,23 @@ package cc.otavia.json
 import cc.otavia.buffer.Buffer
 import org.scalatest.funsuite.AnyFunSuite
 
+import java.nio.charset.StandardCharsets
+import scala.language.unsafeNulls
+
 class JsonSuite extends AnyFunSuite {
 
     import JsonSuite.*
+
+    test("byte json") {
+        val b: Byte = 'c'
+        val serde   = summon[JsonSerde[Byte]]
+        val buffer  = Buffer.wrap(new Array[Byte](1024)).clean()
+        serde.serialize(b, buffer)
+        val bytes = b.toInt.toString.getBytes(StandardCharsets.US_ASCII)
+        assert(buffer.skipIfNexts(bytes))
+        buffer.writeBytes(bytes)
+        assert(serde.deserialize(buffer) == b)
+    }
 
     test("derives") {
         val user = User(1, "Tom")

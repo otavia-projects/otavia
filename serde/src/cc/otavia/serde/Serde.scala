@@ -18,16 +18,50 @@ package cc.otavia.serde
 
 import cc.otavia.buffer.Buffer
 
+/** A type class to serialize/deserialize instance of type [[A]].
+ *  @tparam A
+ *    The type to serialize/deserialize.
+ */
 trait Serde[A] {
 
+    /** Check that there is enough data in the buffer to deserialize.
+     *  @param in
+     *    The input [[Buffer]].
+     *  @return
+     *    `true` if has enough data, or else `false`.
+     */
     def checkDeserializable(in: Buffer): Boolean = true
 
+    /** Deserialize the bytes data in [[Buffer]] to instance of type [[A]]
+     *  @param in
+     *    The input [[Buffer]].
+     *  @return
+     *    Instance of type [[A]].
+     */
     def deserialize(in: Buffer): A
 
+    /** Deserialize the bytes data in [[Buffer]] to instance of type [[A]], but return erased instance of type [[Any]].
+     *  @param in
+     *    The input [[Buffer]].
+     *  @return
+     *    Instance of type [[Any]].
+     */
     final def deserializeToAny(in: Buffer): Any = deserialize(in)
 
+    /** Serialize instance of type [[A]] into [[Buffer]].
+     *  @param value
+     *    Instance of type [[A]].
+     *  @param out
+     *    Output [[Buffer]].
+     */
     def serialize(value: A, out: Buffer): Unit
 
+    /** Serialize instance of type [[A]] which is erased type to [[Any]] into Buffer.
+     *  @param value
+     *    Instance of type [[A]] which is erased type to [[Any]].
+     *  @param out
+     *    Output [[Buffer]].
+     */
     final def serializeAny(value: Any, out: Buffer): Unit = serialize(value.asInstanceOf[A], out)
 
 }

@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package cc.otavia.json.primaries
+package cc.otavia.json.types
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.json.JsonSerde
 
-object BooleanJsonSerde extends JsonSerde[Boolean] {
+import java.util.Locale
 
-    override def deserialize(in: Buffer): Boolean = deserializeBoolean(in)
+/** [[JsonSerde]] for [[Locale]]. */
+object LocaleJsonSerde extends JsonSerde[Locale] {
 
-    override def serialize(value: Boolean, out: Buffer): Unit = serializeBoolean(value, out)
+    override final def serialize(value: Locale, out: Buffer): Unit = this.serializeLocale(value, out)
+
+    override final def deserialize(in: Buffer): Locale = this.deserializeLocale(in)
 
 }
