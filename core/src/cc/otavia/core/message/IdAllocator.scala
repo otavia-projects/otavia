@@ -19,9 +19,10 @@ package cc.otavia.core.message
 import cc.otavia.core.address.Address
 
 class IdAllocator private[core] () {
+
     private var address: Address[Call] = _
-    private var aid: Long                         = _
-    private var currentId: Long                   = Long.MinValue
+    private var aid: Long              = _
+    private var currentId: Long        = Long.MinValue
 
     private[core] def setActorId(id: Long): Unit = aid = id
 
@@ -37,4 +38,5 @@ class IdAllocator private[core] () {
         currentId += 1
         id
     }
+
 }

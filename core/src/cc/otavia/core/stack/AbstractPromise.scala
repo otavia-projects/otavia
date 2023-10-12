@@ -17,7 +17,6 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.cache.Poolable
-import cc.otavia.core.cache.Poolable
 
 import scala.annotation.tailrec
 import scala.language.unsafeNulls
@@ -30,6 +29,7 @@ abstract class AbstractPromise[V] extends Promise[V] with Poolable {
 
     /** Used by [[FutureDispatcher]], this class is see as Node in hashmap */
     private[stack] var _next: AbstractPromise[?] = _
+
     @tailrec
     private[stack] final def findNode(id: Long): AbstractPromise[?] = {
         if (id == aid) this else if (_next eq null) null else _next.findNode(id)
@@ -47,7 +47,5 @@ abstract class AbstractPromise[V] extends Promise[V] with Poolable {
     }
 
     override def canTimeout: Boolean = false
-    
-    
 
 }

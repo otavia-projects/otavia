@@ -71,13 +71,11 @@ trait ActorSystem {
      *    type of actor
      *  @return
      */
-    def buildActor[A <: Actor[? <: Call]](
-        factory: ActorFactory[A],
-        num: Int = 1,
-        global: Boolean = false,
-        qualifier: Option[String] = None,
-        primary: Boolean = false
-    ): Address[MessageOf[A]]
+    // format: off
+    def buildActor[A <: Actor[? <: Call]](factory: ActorFactory[A], num: Int = 1, 
+                                          global: Boolean = false, qualifier: Option[String] = None,
+                                          primary: Boolean = false): Address[MessageOf[A]]
+    // format: on
 
     private[core] def registerGlobalActor(entry: BeanDefinition): Unit
 
@@ -87,7 +85,8 @@ trait ActorSystem {
 
     /** IOC methods, developer can ues it by [[cc.otavia.core.ioc.Injectable]] */
     // format: off
-    private[otavia] def getAddress[M <: Call](clz: Class[? <: Actor[?]], qualifier: Option[String] = None, remote: Option[String] = None): Address[M]
+    private[otavia] def getAddress[M <: Call](clz: Class[? <: Actor[?]], qualifier: Option[String] = None, 
+                                              remote: Option[String] = None): Address[M]
     // format: on
 
     // IO transport layer
