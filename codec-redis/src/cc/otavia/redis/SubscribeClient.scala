@@ -19,7 +19,7 @@ package cc.otavia.redis
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.Channel
 import cc.otavia.core.message.{Ask, IdAllocator, Notice, Reply}
-import cc.otavia.core.stack.{ChannelFrame, StackState}
+import cc.otavia.core.stack.StackState
 
 //class SubscribeClient extends ChannelsActor[SubscribeClient.MSG] {
 //  override def continueChannelMessage(msg: AnyRef | ChannelFrame): Option[StackState] = ???

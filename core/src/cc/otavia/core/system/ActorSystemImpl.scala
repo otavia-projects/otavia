@@ -45,7 +45,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     actorThreadFactory.setSystem(this)
 
-    @volatile private var inited: Boolean = false
+    @volatile private var initialize: Boolean = false
 
     private val earlyModules = new ConcurrentLinkedQueue[Module]()
 
@@ -100,7 +100,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     private val gcTime = new AtomicLong(System.currentTimeMillis())
 
-    inited = true
+    initialize = true
 
     loadEarlyModules()
 
@@ -111,9 +111,9 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     private def doMonitor(): Unit = systemMonitorTask.run()
 
-    override def initialed: Boolean = inited
+    override def initialized: Boolean = initialize
 
-    override def pool: ActorThreadPool = actorThreadPool
+    override private[core] def pool: ActorThreadPool = actorThreadPool
 
     override private[core] def reactor = _reactor
 
@@ -209,7 +209,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     }
 
     override def loadModule(module: Module): Unit = try {
-        if (!inited) {
+        if (!initialize) {
             earlyModules.add(module)
         } else {
             logger.debug(s"Loading module $module")

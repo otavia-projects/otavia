@@ -41,7 +41,7 @@ import scala.reflect.ClassTag
  */
 trait ActorSystem {
 
-    def initialed: Boolean
+    def initialized: Boolean
 
     /** [[cc.otavia.core.channel.Channel]] io reactor of this actor system */
     private[core] def reactor: Reactor
@@ -94,9 +94,9 @@ trait ActorSystem {
     /** [[ChannelFactory]] for TCP socket channel. */
     def channelFactory: ChannelFactory
 
-    def pool: ActorThreadPool
+    private[core] def pool: ActorThreadPool
 
-    final def threadPoolSize: Int = pool.size
+    final def actorWorkerSize: Int = pool.size
 
     private[system] def setActorContext[A <: Actor[? <: Call]](actor: A, thread: ActorThread): Address[MessageOf[A]]
 
