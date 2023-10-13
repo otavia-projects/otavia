@@ -22,7 +22,7 @@ import scala.language.unsafeNulls
  *  [[scala.collection.mutable.HashMap]]. We don't use hashmap because is box/unbox [[Long]] as key, this class is avoid
  *  this cost.
  */
-abstract class FutureDispatcher {
+private[core] abstract class FutureDispatcher {
 
     import FutureDispatcher.*
 
@@ -114,7 +114,7 @@ abstract class FutureDispatcher {
 
 }
 
-object FutureDispatcher {
+private[core] object FutureDispatcher {
     private[stack] def tableSizeFor(capacity: Int): Int =
         (Integer.highestOneBit((capacity - 1).max(4)) * 2).min(1 << 30)
 

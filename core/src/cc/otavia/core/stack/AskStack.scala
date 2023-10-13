@@ -68,7 +68,7 @@ object AskStack {
         override protected def newObject(): AskStack[? <: Ask[?]] = new AskStack[Nothing]()
     }
 
-    def apply[A <: Ask[? <: Reply]](using actor: AbstractActor[?]): AskStack[A] = {
+    private[core] def apply[A <: Ask[? <: Reply]](actor: AbstractActor[?]): AskStack[A] = {
         val stack = stackPool.get().asInstanceOf[AskStack[A]]
         stack.setRuntimeActor(actor)
         stack

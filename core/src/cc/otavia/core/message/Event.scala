@@ -19,7 +19,6 @@ package cc.otavia.core.message
 import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.cache.ResourceTimer
 import cc.otavia.core.channel.Channel
-import cc.otavia.core.message.{Event, TimerEvent}
 import cc.otavia.core.util.Nextable
 
 import java.net.SocketAddress

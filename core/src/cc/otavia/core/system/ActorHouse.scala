@@ -17,7 +17,6 @@
 package cc.otavia.core.system
 
 import cc.otavia.common.SystemPropertyUtil
-import cc.otavia.core.message.{Event, Message}
 import cc.otavia.core.actor.*
 import cc.otavia.core.address.ActorAddress
 import cc.otavia.core.message.*
@@ -34,7 +33,7 @@ import scala.language.unsafeNulls
  *  @tparam M
  *    the message type of the mounted actor instance can handle
  */
-private[core] class ActorHouse(val manager: HouseManager) extends Runnable with AutoCloseable {
+private[core] class ActorHouse(val manager: HouseManager) extends Runnable {
 
     private var dweller: AbstractActor[? <: Call] = _
     private var atp: Int                          = 0
@@ -227,19 +226,17 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable with 
 
     private[core] def createActorAddress[M <: Call](): ActorAddress[M] = {
         val address = new ActorAddress[M](this)
-        if (actor.isInstanceOf[BeforeStop])
+        if (actor.isInstanceOf[AutoCleanable])
             manager.thread.registerAddressRef(address)
         address
     }
 
     private[core] def createUntypedAddress(): ActorAddress[?] = {
         val address = new ActorAddress[Call](this)
-        if (actor.isInstanceOf[BeforeStop])
+        if (actor.isInstanceOf[AutoCleanable])
             manager.thread.registerAddressRef(address)
         address
     }
-
-    override def close(): Unit = dweller.stop()
 
     override def toString: String = s"events=${eventMailbox.size()}, notices=${noticeMailbox.size()}, " +
         s"asks=${askMailbox.size()}, replies=${replyMailbox.size()}"

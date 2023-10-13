@@ -17,7 +17,6 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.message.Notice
-import cc.otavia.core.message.{Call, Notice}
 
 import scala.language.unsafeNulls
 
@@ -34,7 +33,7 @@ class NoticeStack[N <: Notice] private () extends ActorStack {
         super.cleanInstance()
     }
 
-    /** Finsh this [[NoticeStack]] */
+    /** Finish this [[NoticeStack]] */
     def `return`(): None.type = {
         done = true
         None
@@ -50,6 +49,6 @@ object NoticeStack {
         override protected def newObject(): NoticeStack[? <: Notice] = new NoticeStack[Nothing]()
     }
 
-    def apply[N <: Notice](): NoticeStack[N] = stackPool.get().asInstanceOf[NoticeStack[N]]
+    private[core] def apply[N <: Notice](): NoticeStack[N] = stackPool.get().asInstanceOf[NoticeStack[N]]
 
 }

@@ -16,15 +16,15 @@
 
 package cc.otavia.core.system
 
-import cc.otavia.core.actor.{ActorCleaner, BeforeStop}
+import cc.otavia.core.actor.{ActorCleaner, AutoCleanable}
+import cc.otavia.core.address.ActorAddress
 
 import java.lang.ref.{PhantomReference, ReferenceQueue}
-import java.util.concurrent.CopyOnWriteArraySet
 
-class ActorHousePhantomRef(house: ActorHouse, queue: ReferenceQueue[ActorHouse])
-    extends PhantomReference[ActorHouse](house, queue) {
+class AddressPhantomReference(referent: ActorAddress[?], queue: ReferenceQueue[ActorAddress[?]])
+    extends PhantomReference[ActorAddress[?]](referent, queue) {
 
-    private val actorCleaner: ActorCleaner = house.actor.asInstanceOf[BeforeStop].beforeStop()
+    private val actorCleaner: ActorCleaner = referent.house.actor.asInstanceOf[AutoCleanable].cleaner()
 
     override def clear(): Unit = {
         actorCleaner.run()

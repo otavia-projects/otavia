@@ -86,18 +86,16 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
     }
 
     /** Stop [[Actor]] witch need be gc. */
-    private def stopActor(): Int = {
+    private def stopActors(): Int = {
         var count    = 0
         var continue = true
         while (count < GC_PEER_ROUND && continue) {
-            referenceQueue.poll match
-                case null => continue = false
-                case ref: AddressPhantomReference =>
-                    ref.finalizeResources()
-                    ref.clear()
-                    refSet.remove(ref)
-                    count += 1
-                case reference: PhantomReference[?] => reference.clear()
+            val reference = referenceQueue.poll()
+            if (reference != null) {
+                reference.clear()
+                refSet.remove(reference)
+                count += 1
+            } else continue = false
         }
         count
     }
@@ -125,7 +123,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
         while (true) {
             var success: Boolean = false
             // run current thread tasks
-            val stops    = 0 // this.stopActor()
+            val stops    = this.stopActors()
             val runHouse = manager.run()
             val runEvent = this.runThreadEvent()
 

@@ -30,10 +30,7 @@ import scala.concurrent.TimeoutException
 import scala.language.unsafeNulls
 import scala.reflect.ClassTag
 
-private[core] abstract class AbstractActor[M <: Call]
-    extends FutureDispatcher
-    with Actor[M]
-    with ActorStackRunner[M] {
+private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher with Actor[M] {
 
     protected var logger: Logger = _
 
@@ -59,6 +56,45 @@ private[core] abstract class AbstractActor[M <: Call]
      *    self address
      */
     def self: Address[M] = context.address.asInstanceOf[Address[M]]
+
+    def batchContinueNotice(stack: BatchNoticeStack[M & Notice]): Option[StackState] =
+        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
+
+    def batchContinueAsk(stack: BatchAskStack[M & Ask[? <: Reply]]): Option[StackState] =
+        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
+
+    def batchNoticeFilter: M & Notice => Boolean = _ => true
+
+    def batchAskFilter: M & Ask[?] => Boolean = _ => true
+
+    def noticeBarrier: M & Notice => Boolean = _ => false
+
+    def askBarrier: M & Ask[?] => Boolean = _ => false
+
+    /** implement this method to handle ask message and resume when received reply message for this notice message
+     *
+     *  @param state
+     *    ask message received by this actor instance, or resume frame .
+     *  @return
+     *    an option value containing the resumable [[StackState]] waited for some reply message, or `None` if the stack
+     *    frame has finished.
+     */
+    def continueAsk(stack: AskStack[M & Ask[? <: Reply]]): Option[StackState] =
+        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
+
+    /** implement this method to handle notice message and resume when received reply message for this notice message
+     *
+     *  @param state
+     *    notice message receive by this actor instance, or resume frame .
+     *  @return
+     *    an option value containing the resumable [[StackState]] waited for some reply message, or `None` if the stack
+     *    frame has finished.
+     */
+    def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState] =
+        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
+
+    def continueChannel(stack: ChannelStack[AnyRef]): Option[StackState] =
+        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
 
     final override private[core] def setCtx(context: ActorContext): Unit = {
         ctx = context
@@ -260,7 +296,7 @@ private[core] abstract class AbstractActor[M <: Call]
     final private[core] def receiveAsk(ask: Ask[? <: Reply]): Unit = {
         revAsks += 1
         currentReceived = ask
-        val stack = AskStack[M & Ask[? <: Reply]]
+        val stack = AskStack[M & Ask[? <: Reply]](this)
         stack.setCall(ask)
         currentStack = stack
         runAskStack()
@@ -417,17 +453,12 @@ private[core] abstract class AbstractActor[M <: Call]
             case _ =>
     }
 
-    /** Call by [[cc.otavia.core.system.ActorHousePhantomRef]] to release [[Actor]] resource. */
-    private[core] def stop(): Unit = {
-        this match
-            case beforeStop: BeforeStop =>
-                try {
-                    beforeStop.beforeStop()
-                } catch {
-                    case t: Throwable => logger.error("Error at beforeStop with ", t)
-                }
-            case _ =>
-    }
+    /** Receive IO event from [[Reactor]] or timeout event from [[Timer]]
+     *
+     *  @param event
+     *    IO/timeout event
+     */
+    protected def receiveReactorEvent(event: Event): Unit = {}
 
 }
 

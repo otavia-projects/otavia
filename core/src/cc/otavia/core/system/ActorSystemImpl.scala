@@ -51,6 +51,8 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     private val logger = Logger.getLogger(getClass, this)
 
+    private val timerImpl = new TimerImpl(this)
+
     private val actorThreadPool: ActorThreadPool = new DefaultActorThreadPool(
       this,
       actorThreadFactory,
@@ -62,8 +64,6 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     private val beanManager = new BeanManager(this)
 
     private val totals = new AtomicLong(0)
-
-    private val timerExecutor = new TimerImpl(this)
 
     private var mainActor: Address[MainActor.Args] = _
 
@@ -117,7 +117,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     override private[core] def reactor = _reactor
 
-    override def timer: Timer = timerExecutor
+    override def timer: Timer = timerImpl
 
     override def distributor: IdAllocator = ???
 
@@ -127,13 +127,11 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     override def defaultMaxBatchSize: Int = ???
 
-    override def buildActor[A <: Actor[? <: Call]](
-        factory: ActorFactory[A],
-        num: Int = 1,
-        global: Boolean = false,
-        qualifier: Option[String] = None,
-        primary: Boolean = false
+    // format: off
+    override final def buildActor[A <: Actor[? <: Call]](factory: ActorFactory[A], num: Int = 1,
+        global: Boolean = false, qualifier: Option[String] = None, primary: Boolean = false
     ): Address[MessageOf[A]] = {
+    // format: on
         val actorFactory   = factory.asInstanceOf[ActorFactory[?]]
         val (address, clz) = createActor(actorFactory, num)
 
@@ -157,23 +155,23 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
         actor: A,
         thread: ActorThread
     ): Address[MessageOf[A]] = {
-        val house   = thread.createActorHouse()
+        val house = thread.createActorHouse()
+        house.setActor(actor.asInstanceOf[AbstractActor[? <: Call]])
         val address = house.createActorAddress[MessageOf[A]]()
         val context = ActorContext(this, address, generator.getAndIncrement())
 
         actor.setCtx(context)
-        house.setActor(actor.asInstanceOf[AbstractActor[? <: Call]])
 
         address
     }
 
     private def setActorContext0(actor: AbstractActor[?], thread: ActorThread): ActorAddress[?] = {
-        val house   = thread.createActorHouse()
+        val house = thread.createActorHouse()
+        house.setActor(actor)
         val address = house.createUntypedAddress()
         val context = ActorContext(this, address, generator.getAndIncrement())
 
         actor.setCtx(context)
-        house.setActor(actor)
 
         address
     }

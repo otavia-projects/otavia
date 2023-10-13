@@ -24,8 +24,10 @@ import cc.otavia.core.util.Chainable
 import scala.language.unsafeNulls
 
 object Stack {
-    class UncompletedPromiseIterator(private[core] var head: AbstractPromise[?], private[core] var tail: AbstractPromise[?])
-        extends Iterator[AbstractPromise[?]] {
+    class UncompletedPromiseIterator(
+        private[core] var head: AbstractPromise[?],
+        private[core] var tail: AbstractPromise[?]
+    ) extends Iterator[AbstractPromise[?]] {
 
         override def hasNext: Boolean = {
             val has = head != null
@@ -53,7 +55,7 @@ object Stack {
 
 abstract class Stack extends Poolable {
 
-    private var st          = StackState.start
+    private var st             = StackState.start
     private var error: Boolean = false
 
     // completed promise

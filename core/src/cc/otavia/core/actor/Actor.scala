@@ -147,13 +147,6 @@ trait Actor[+M <: Call] {
      */
     protected def handleActorTimeout(timeoutEvent: TimeoutEvent): Unit = {}
 
-    /** Receive IO event from [[Reactor]] or timeout event from [[Timer]]
-     *
-     *  @param event
-     *    IO/timeout event
-     */
-    protected def receiveReactorEvent(event: Event): Unit = {}
-
     // actor life cycle hook method
 
     /** When a actor instance is mounted to actor system, this method will call by actor system */

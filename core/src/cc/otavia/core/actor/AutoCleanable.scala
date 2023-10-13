@@ -14,25 +14,14 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.system;
+package cc.otavia.core.actor
 
-import cc.otavia.core.address.ActorAddress;
-import cc.otavia.core.address.ActorAddress;
+trait AutoCleanable {
+    this: AbstractActor[?] =>
 
-import java.lang.ref.PhantomReference;
-import java.lang.ref.ReferenceQueue;
-
-public class AddressPhantomReference extends PhantomReference<ActorAddress<?>> {
-    private final Runnable thunk;
-
-    AddressPhantomReference(ActorAddress<?> referent, ReferenceQueue<ActorAddress<?>> queue) {
-        super(referent, queue);
-        thunk = referent.house()::close;
-    }
-
-    public void finalizeResources() {
-        // free resources
-        if (thunk != null) thunk.run();
-    }
+    /** if restart method throw NotImplementedError, actor system will call this method and mark the actor instance
+     *  dead, and release is resource.
+     */
+    def cleaner(): ActorCleaner
 
 }
