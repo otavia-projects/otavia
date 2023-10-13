@@ -16,8 +16,7 @@
 
 package cc.otavia.core.ioc
 
-import cc.otavia.core.slf4a.Appender
-import cc.otavia.core.slf4a.appender.ConsoleAppender
+import cc.otavia.core.actors.*
 import org.scalatest.funsuite.AnyFunSuite
 
 import scala.collection.mutable
@@ -25,11 +24,11 @@ import scala.language.unsafeNulls
 
 class BeanSuite extends AnyFunSuite {
 
-    test("Get all super class for ConsoleAppender") {
-        val bean = new Bean(classOf[ConsoleAppender], null)
+    test("Get all super class for ConsoleShower") {
+        val bean = new Bean(classOf[ConsoleShower], null)
         val sps  = bean.superClasses()
 
-        assert(sps == mutable.Set(classOf[ConsoleAppender].getName, classOf[Appender].getName))
+        assert(sps == mutable.Set(classOf[ConsoleShower].getName, classOf[Shower].getName))
     }
 
 }

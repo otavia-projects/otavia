@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.slf4a
+package cc.otavia.core.actors
 
-/** Log level for actor. */
-enum LogLevel extends Ordered[LogLevel] {
+import cc.otavia.core.actor.{MessageOf, StateActor}
+import cc.otavia.core.actors.Shower.*
+import cc.otavia.core.message.Notice
+import cc.otavia.core.stack.{NoticeStack, StackState}
 
-    case OFF   extends LogLevel
-    case FATAL extends LogLevel
-    case ERROR extends LogLevel
-    case WARN  extends LogLevel
-    case INFO  extends LogLevel
-    case DEBUG extends LogLevel
-    case TRACE extends LogLevel
-    case ALL   extends LogLevel
+class ConsoleShower extends StateActor[MessageOf[Shower]] with Shower {
 
-    final override def compare(that: LogLevel): Int = ordinal - that.ordinal
+    override def continueNotice(stack: NoticeStack[ShowEvent]): Option[StackState] = handleInfo(stack)
+
+    private def handleInfo(stack: NoticeStack[ShowEvent]): Option[StackState] = {
+        val msg = stack.notice
+        println(s"${msg.clz.getName} ${msg.time} ${msg.thread} ${msg.msg}")
+        stack.`return`()
+    }
 
 }

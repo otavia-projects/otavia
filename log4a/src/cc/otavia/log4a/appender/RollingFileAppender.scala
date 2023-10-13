@@ -14,20 +14,6 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.slf4a
+package cc.otavia.log4a.appender
 
-/** Log level for actor. */
-enum LogLevel extends Ordered[LogLevel] {
-
-    case OFF   extends LogLevel
-    case FATAL extends LogLevel
-    case ERROR extends LogLevel
-    case WARN  extends LogLevel
-    case INFO  extends LogLevel
-    case DEBUG extends LogLevel
-    case TRACE extends LogLevel
-    case ALL   extends LogLevel
-
-    final override def compare(that: LogLevel): Int = ordinal - that.ordinal
-
-}
+class RollingFileAppender {}

@@ -17,6 +17,34 @@
 package cc.otavia.log4a.appender
 
 import cc.otavia.core.actor.Actor
-import cc.otavia.log4a.LogMessage
+import cc.otavia.core.message.Notice
+import cc.otavia.log4a.appender.Appender.*
 
-trait Appender extends Actor[LogMessage]
+import java.time.LocalDateTime
+
+trait Appender extends Actor[LogMsg]
+
+object Appender {
+
+    sealed trait LogMsg extends Notice {
+
+        val time: LocalDateTime
+        val thread: String
+        val loggerName: String
+        val log: String
+
+    }
+
+    final case class Trace(time: LocalDateTime, thread: String, loggerName: String, log: String) extends LogMsg
+
+    final case class Debug(time: LocalDateTime, thread: String, loggerName: String, log: String) extends LogMsg
+
+    final case class Info(time: LocalDateTime, thread: String, loggerName: String, log: String) extends LogMsg
+
+    final case class Warn(time: LocalDateTime, thread: String, loggerName: String, log: String) extends LogMsg
+
+    final case class Error(time: LocalDateTime, thread: String, loggerName: String, log: String) extends LogMsg
+
+    final case class Fatal(time: LocalDateTime, thread: String, loggerName: String, log: String) extends LogMsg
+
+}

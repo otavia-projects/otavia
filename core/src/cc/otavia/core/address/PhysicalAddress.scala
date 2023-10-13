@@ -18,7 +18,6 @@ package cc.otavia.core.address
 
 import cc.otavia.core.actor.{AbstractActor, Actor, ChannelsActor, StateActor}
 import cc.otavia.core.message.*
-import cc.otavia.core.slf4a.Appender
 import cc.otavia.core.stack.ReplyFuture
 import cc.otavia.core.system.{ActorHouse, House}
 import cc.otavia.core.timer.TimeoutTrigger

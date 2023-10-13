@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-package cc.otavia.log4a
+package cc.otavia.log4a.appender
 
-import cc.otavia.core.message.Notice
-
-sealed trait LogMessage extends Notice
-
-case class SingleMessage(msg: String) extends LogMessage
-
-case class MultiMessage(msgs: Seq[String]) extends LogMessage
+class SingleFileAppender {}

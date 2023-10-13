@@ -14,14 +14,28 @@
  * limitations under the License.
  */
 
-package cc.otavia.log4a
+package cc.otavia.core.actors
 
-sealed trait InternalLogger {}
+import cc.otavia.core.actor.Actor
+import cc.otavia.core.actors.Shower.*
+import cc.otavia.core.message.Notice
 
-object InternalLogger {
+import java.time.LocalDateTime
 
-    class BufferedLogger extends InternalLogger {}
+trait Shower extends Actor[ShowEvent]
 
-    class AppenderLogger extends InternalLogger {}
+object Shower {
+
+    sealed trait ShowEvent extends Notice {
+
+        val clz: Class[?]
+        val time: LocalDateTime
+        val thread: String
+        val msg: String
+
+    }
+
+    final case class Info(clz: Class[?], time: LocalDateTime, thread: String, msg: String)  extends ShowEvent
+    final case class Error(clz: Class[?], time: LocalDateTime, thread: String, msg: String) extends ShowEvent
 
 }

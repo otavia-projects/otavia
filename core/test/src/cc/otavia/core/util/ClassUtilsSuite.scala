@@ -18,18 +18,18 @@ package cc.otavia.core.util
 
 import cc.otavia.common.ClassUtils
 import cc.otavia.core.actor.Actor
+import cc.otavia.core.actors.*
 import cc.otavia.core.slf4a.*
-import cc.otavia.core.slf4a.appender.ConsoleAppender
 import org.scalatest.funsuite.AnyFunSuite
 
 class ClassUtilsSuite extends AnyFunSuite {
 
     test("show class hierarchy") {
-        ClassUtils.printInheritTree(classOf[ConsoleAppender])
+        ClassUtils.printInheritTree(classOf[ConsoleShower])
         println("")
-        ClassUtils.printInheritTree(classOf[Appender])
+        ClassUtils.printInheritTree(classOf[Shower])
         println("")
-        ClassUtils.printInheritTree(classOf[Actor[Appender.Info | Appender.Warn]])
+        ClassUtils.printInheritTree(classOf[Actor[Shower.Info | Shower.Error]])
         assert(true)
     }
 
