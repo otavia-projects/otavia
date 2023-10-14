@@ -47,7 +47,7 @@ trait Ask[R <: Reply] extends Call {
         // TODO: support AOP when sender is AopActor
         this.s = sender.self.asInstanceOf[Address[Call]]
         this.sid = sender.actorId
-        this.mid = sender.idAllocator.generate
+        this.mid = sender.generateSendMessageId()
     }
 
 }

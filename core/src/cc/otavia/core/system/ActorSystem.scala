@@ -49,9 +49,6 @@ trait ActorSystem {
     /** Timeout event dispatcher of this actor system */
     def timer: Timer
 
-    /** message id distributor usage for create [[Notice]] message */
-    def distributor: IdAllocator
-
     def shutdown(): Unit
 
     def defaultMaxFetchPerRunning: Int

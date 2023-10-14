@@ -25,6 +25,7 @@ import cc.otavia.core.stack.*
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.Timer
 
+import scala.language.unsafeNulls
 import scala.reflect.{ClassTag, TypeTest, classTag}
 
 /** base class of IO & Actor model, it has two subclass
@@ -36,10 +37,44 @@ import scala.reflect.{ClassTag, TypeTest, classTag}
  */
 trait Actor[+M <: Call] {
 
-    /** message id distributor */
-    given idAllocator: IdAllocator = new IdAllocator()
-
     given actor: this.type = this
+
+    /** Context of this actor. This method can only used after actor instance mount to actor system */
+    def context: ActorContext
+
+    /** The ActorSystem of this actor instance is running
+     *
+     *  @return
+     *    ActorSystem
+     */
+    final def system: ActorSystem = context.system
+
+    final def timer: Timer = system.timer
+
+    /** The unique id of this actor distributed by [[ActorSystem]], when a actor instance is mounted to a
+     *  [[ActorSystem]], the actor system will distribute a unique id to the instance.
+     *
+     *  @return
+     *    id number
+     */
+    final def actorId: Long = context.actorId
+
+    // actor life cycle hook method
+
+    /** When a actor instance is mounted to actor system, this method will call by actor system */
+    protected def afterMount(): Unit = {}
+
+    /** Actor system call this method before call restart method */
+    protected def beforeRestart(): Unit = {}
+
+    /** When this actor occur not handled exception, the actor system will call this method, if user actor do not
+     *  implement this method, the actor will dead.
+     */
+    protected def restart(): Unit =
+        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
+
+    /** Actor system call this method after call restart */
+    protected def afterRestart(): Unit = {}
 
     /** whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to
      *  receiveBatchXXX method
@@ -60,36 +95,6 @@ trait Actor[+M <: Call] {
     def niceEvent: Int = NICE_EVENT
 
     def nice: Int = 8
-
-    private[core] def stackEndRate: Float
-
-    /** Context of this actor. This method can only used after actor instance mount to actor system */
-    def context: ActorContext
-
-    /** This method will called by [[ActorSystem]] when actor mount to actor system, when a actor is creating, the
-     *  [[ActorSystem]] will create a [[ActorContext]]. When mount actor instance to actor system, use this method to
-     *  set system context information.
-     *  @param context
-     *    the system context of this actor
-     */
-    private[core] def setCtx(context: ActorContext): Unit
-
-    /** The ActorSystem of this actor instance is running
-     *
-     *  @return
-     *    ActorSystem
-     */
-    final def system: ActorSystem = context.system
-
-    final def timer: Timer = system.timer
-
-    /** The unique id of this actor distributed by [[ActorSystem]], when a actor instance is mounted to a
-     *  [[ActorSystem]], the actor system will distribute a unique id to the instance.
-     *
-     *  @return
-     *    id number
-     */
-    final def actorId: Long = context.actorId
 
     /** user actor override this to control whether restart when occur exception */
     protected def noticeExceptionStrategy: ExceptionStrategy = ExceptionStrategy.Restart
@@ -135,34 +140,10 @@ trait Actor[+M <: Call] {
      *  The [[ActorSystem]] call this method if and only if [[batchable]] is true. Conversely, the [[receiveBatchAsk]]
      *  method will not be called
      *
-     *  @param notices
+     *  @param asks
      *    batch ask messages.
      */
     private[core] def receiveBatchAsk(asks: Seq[Ask[?]]): Unit
-
-    /** handle user registered timeout event.
-     *
-     *  @param timeoutEvent
-     *    event
-     */
-    protected def handleActorTimeout(timeoutEvent: TimeoutEvent): Unit = {}
-
-    // actor life cycle hook method
-
-    /** When a actor instance is mounted to actor system, this method will call by actor system */
-    protected def afterMount(): Unit = {}
-
-    /** Actor system call this method before call restart method */
-    protected def beforeRestart(): Unit = {}
-
-    /** When this actor occur not handled exception, the actor system will call this method, if user actor do not
-     *  implement this method, the actor will dead.
-     */
-    protected def restart(): Unit =
-        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
-
-    /** Actor system call this method after call restart */
-    protected def afterRestart(): Unit = {}
 
 }
 

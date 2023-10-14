@@ -37,7 +37,7 @@ trait ChannelAddress {
     def id: Int
 
     inline private def setFutureCtx(future: ChannelFuture): Unit = {
-        executor.attachStack(executor.idAllocator.generate, future)
+        executor.attachStack(executor.generateSendMessageId(), future)
         future.promise.setChannel(this)
     }
 

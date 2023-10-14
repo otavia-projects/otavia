@@ -101,7 +101,7 @@ trait Timer {
     final def askTimeout(future: TimeoutEventFuture, delay: Long, unit: TimeUnit = MILLISECONDS)(using
         sender: AbstractActor[?]
     ): TimeoutEventFuture = {
-        val aid = sender.idAllocator.generate
+        val aid = sender.generateSendMessageId()
         future.promise.setId(aid)
         sender.attachStack(aid, future)
         registerAskTimeout(TimeoutTrigger.DelayTime(delay, unit), sender.self, aid)

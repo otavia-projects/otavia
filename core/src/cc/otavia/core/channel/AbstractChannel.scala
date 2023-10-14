@@ -183,7 +183,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         promise.setMessageId(generateMessageId)
         promise.setBarrier(outboundMessageBarrier(value))
         promise.setAsk(value)
-        executor.attachStack(executor.idAllocator.generate, future)
+        executor.attachStack(executor.generateSendMessageId(), future)
         outboundPendingFutures.append(promise)
         processPendingFutures()
         future

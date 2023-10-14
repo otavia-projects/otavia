@@ -23,7 +23,7 @@ import cc.otavia.core.actor.*
 import cc.otavia.core.address.*
 import cc.otavia.core.channel.ChannelFactory
 import cc.otavia.core.ioc.{BeanDefinition, BeanManager, Module}
-import cc.otavia.core.message.{Call, IdAllocator}
+import cc.otavia.core.message.Call
 import cc.otavia.core.slf4a.{LogLevel, Logger}
 import cc.otavia.core.system.monitor.{ReactorMonitor, SystemMonitor, SystemMonitorTask, ThreadMonitor}
 import cc.otavia.core.timer.{Timeout, Timer, TimerImpl}
@@ -119,8 +119,6 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
 
     override def timer: Timer = timerImpl
 
-    override def distributor: IdAllocator = ???
-
     override def shutdown(): Unit = ???
 
     override def defaultMaxFetchPerRunning: Int = ???
@@ -160,7 +158,7 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
         val address = house.createActorAddress[MessageOf[A]]()
         val context = ActorContext(this, address, generator.getAndIncrement())
 
-        actor.setCtx(context)
+        actor.asInstanceOf[AbstractActor[?]].setCtx(context)
 
         address
     }

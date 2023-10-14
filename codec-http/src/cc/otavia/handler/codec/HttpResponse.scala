@@ -16,6 +16,6 @@
 
 package cc.otavia.handler.codec
 
-import cc.otavia.core.message.{IdAllocator, Reply}
+import cc.otavia.core.message.Reply
 
 final case class HttpResponse[T](headers: HttpHeaders, content: T) extends Reply

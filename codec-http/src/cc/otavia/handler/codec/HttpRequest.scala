@@ -16,6 +16,6 @@
 
 package cc.otavia.handler.codec
 
-import cc.otavia.core.message.{Ask, IdAllocator, Reply}
+import cc.otavia.core.message.{Ask, Reply}
 
 final case class HttpRequest[C](headers: HttpHeaders, content: C) extends Ask[HttpResponse[?]]
