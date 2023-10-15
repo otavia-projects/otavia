@@ -37,7 +37,7 @@ import scala.reflect.{ClassTag, TypeTest, classTag}
  */
 trait Actor[+M <: Call] {
 
-    given actor: this.type = this
+    protected given actor: this.type = this
 
     /** Context of this actor. This method can only used after actor instance mount to actor system */
     def context: ActorContext

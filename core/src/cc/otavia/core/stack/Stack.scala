@@ -23,39 +23,9 @@ import cc.otavia.core.util.Chainable
 
 import scala.language.unsafeNulls
 
-object Stack {
-    class UncompletedPromiseIterator(
-        private[core] var head: AbstractPromise[?],
-        private[core] var tail: AbstractPromise[?]
-    ) extends Iterator[AbstractPromise[?]] {
-
-        override def hasNext: Boolean = {
-            val has = head != null
-            if (!has) tail = null
-            has
-        }
-
-        override def next(): AbstractPromise[?] = {
-            val promise = head
-            head = promise.next.asInstanceOf[AbstractPromise[?] | Null]
-            promise.deChain()
-            promise
-        }
-
-        def nextCast[P <: AbstractPromise[?]](): P = next().asInstanceOf[P]
-
-        def clean(): Unit = {
-            head = null
-            tail = null
-        }
-
-    }
-
-}
-
 abstract class Stack extends Poolable {
 
-    private var st             = StackState.start
+    private var stackState     = StackState.start
     private var error: Boolean = false
 
     // completed promise
@@ -73,19 +43,19 @@ abstract class Stack extends Poolable {
 
     private[core] def setRuntimeActor(a: AbstractActor[?]): Unit = actor = a
 
-    def state: StackState = st
+    def state: StackState = stackState
 
-    private[core] def setState(stackState: StackState): Unit = if (this.st != stackState) {
-        recycleAllPromises()
-        this.st = stackState
+    private[core] def setState(stackState: StackState): Unit = if (this.stackState != stackState) {
+        recycleCompletedPromises()
+        this.stackState = stackState
     }
 
     private[core] def setFailed(): Unit = error = true
     private[core] def isFailed: Boolean = error
 
     override protected def cleanInstance(): Unit = {
-        recycleAllPromises()
-        st = StackState.start
+        recycleCompletedPromises()
+        stackState = StackState.start
         error = false
         actor = null
     }
@@ -136,7 +106,7 @@ abstract class Stack extends Poolable {
         }
     }
 
-    private[core] def addUncompletedPromiseIterator(iterator: Stack.UncompletedPromiseIterator): Unit = {
+    private[core] def addUncompletedPromiseIterator(iterator: PromiseIterator): Unit = {
         if (uhead == null) {
             uhead = iterator.head
             utail = iterator.tail
@@ -172,15 +142,15 @@ abstract class Stack extends Poolable {
         count
     }
 
-    private[core] def recycleAllPromises(): Unit = while (headPromise != null) {
+    private[core] def recycleCompletedPromises(): Unit = while (headPromise != null) {
         val promise = headPromise
         if (headPromise == tailPromise) tailPromise = null
         headPromise = promise.next.asInstanceOf[AbstractPromise[?] | Null]
         promise.recycle()
     }
 
-    private[core] def uncompletedIterator(): Stack.UncompletedPromiseIterator = {
-        val iterator = new Stack.UncompletedPromiseIterator(uhead, utail)
+    private[core] def uncompletedPromises(): PromiseIterator = {
+        val iterator = new PromiseIterator(uhead, utail)
         uhead = null
         utail = null
         iterator

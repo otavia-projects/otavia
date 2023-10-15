@@ -68,7 +68,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     private def runChannelStack(): Unit = {
         val channelStack = currentStack.asInstanceOf[ChannelStack[?]]
         try {
-            val uncompleted = channelStack.uncompletedIterator()
+            val uncompleted = channelStack.uncompletedPromises()
             val oldState    = channelStack.state
             continueChannel(channelStack) match // run stack and switch to next state
                 case Some(state) =>
@@ -81,14 +81,14 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
                     assert(channelStack.hasUncompletedPromise, s"has no future to wait for $channelStack")
                 case None =>
                     if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
-                    recycleUncompletedPromise(channelStack.uncompletedIterator())
+                    recycleUncompletedPromise(channelStack.uncompletedPromises())
                     assert(channelStack.isDone, "continueAsk is return None but not call return method!")
                     channelStack.recycle()
         } catch {
             case cause: Throwable =>
                 cause.printStackTrace()
                 channelStack.`return`(cause) // completed stack with Exception
-                recycleUncompletedPromise(channelStack.uncompletedIterator())
+                recycleUncompletedPromise(channelStack.uncompletedPromises())
                 channelStack.recycle()
         } finally {
             currentStack = null

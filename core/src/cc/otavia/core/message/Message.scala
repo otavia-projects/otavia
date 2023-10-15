@@ -33,19 +33,19 @@ trait Notice extends Call
 /** message which need reply */
 trait Ask[R <: Reply] extends Call {
 
-    private var s: Address[Call] = _
-    private var sid: Long        = 0
-    private var mid: Long        = 0
+    private var address: Address[Call] = _
+    private var sid: Long              = 0
+    private var mid: Long              = 0
 
-    def sender: Address[Call] = s
+    def sender: Address[Call] = address
 
     def senderId: Long = sid
 
     def askId: Long = mid
 
-    private[core] def setMessageContext(sender: AbstractActor[?]): Unit = {
+    private[core] def setAskContext(sender: AbstractActor[?]): Unit = {
         // TODO: support AOP when sender is AopActor
-        this.s = sender.self.asInstanceOf[Address[Call]]
+        this.address = sender.self.asInstanceOf[Address[Call]]
         this.sid = sender.actorId
         this.mid = sender.generateSendMessageId()
     }

@@ -36,7 +36,7 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
     override def ask[A <: M & Ask[? <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using
         sender: AbstractActor[?]
     ): ReplyFuture[ReplyOf[A]] = {
-        ask.setMessageContext(sender)
+        ask.setAskContext(sender)
         sender.attachStack(ask.askId, future)
         house.putAsk(ask)
         future

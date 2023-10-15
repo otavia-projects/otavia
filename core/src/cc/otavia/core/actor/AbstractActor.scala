@@ -132,7 +132,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
 
     final override def context: ActorContext = ctx
 
-    /** When this actor send ask message to other actor, a [[ReplyFuture]] will attach to current stack
+    /** When this actor send ask message to other actor, a [[Future]] will attach to current stack
      *
      *  @param askId
      *    message id of ask message send to other actor
@@ -158,68 +158,22 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
                 promise.setStack(currentStack)
                 promise.setId(askId)
                 currentStack.addUncompletedPromise(promise)
-                this.push(promise)
             case promise: ChannelReplyPromise =>
-                assert(promise.notInChain, "The ChannelPromise has been used, can't be use again!")
+                assert(promise.notInChain, "The ChannelReplyPromise has been used, can't be use again!")
                 promise.setStack(currentStack)
                 promise.setId(askId)
                 currentStack.addUncompletedPromise(promise)
-                this.push(promise)
             case _ =>
     }
 
     def receiveFuture(future: Future[?]): Unit = {
-        future match
-            case promise: ChannelPromise =>
-                pop(promise.id)
-                val stack = promise.actorStack
-                stack.addCompletedPromise(promise)
-                if (stack.state.resumable() || !stack.hasUncompletedPromise) {
-                    currentStack = stack
-                    resume()
-                }
-            case promise: ChannelReplyPromise =>
-                pop(promise.id)
-                val stack = promise.actorStack
-                stack.addCompletedPromise(promise)
-                if (stack.state.resumable() || !stack.hasUncompletedPromise) {
-                    currentStack = stack
-                    resume()
-                }
-            case promise: TimeoutEventPromise =>
-                ???
-    }
-
-    /** Exception handler when this actor received notice message or resume notice stack frame
-     *
-     *  @param e
-     *    exception
-     */
-    private[core] def handleNoticeException(stack: Stack, e: Throwable): Unit = { // TODO: refactor
-
-        val log = stack match
-            case s: ActorStack       => s"Stack with call message ${s.call} failed at handle $currentReceived message"
-            case s: BatchAskStack[?] => s"Stack with call message ${s.asks} failed at handle $currentReceived message"
-            case s: BatchNoticeStack[?] =>
-                s"Stack with call message ${s.notices} failed at handle $currentReceived message"
-            case s: ChannelStack[?] => ""
-            case _                  => ""
-        noticeExceptionStrategy match
-            case ExceptionStrategy.Restart =>
-                logger.error(log, e)
-                try {
-                    beforeRestart()
-                    restart()
-                    afterRestart()
-                } catch {
-                    case exception: Exception =>
-                        logger.error("Fatal error on restart", exception)
-                        system.shutdown()
-                }
-            case ExceptionStrategy.Ignore => logger.error(log, e)
-            case ExceptionStrategy.ShutdownSystem =>
-                logger.error(log, e)
-                system.shutdown()
+        val promise = future.promise.asInstanceOf[AbstractPromise[?]]
+        val stack   = future.promise.actorStack
+        stack.addCompletedPromise(promise)
+        if (stack.state.resumable() || !stack.hasUncompletedPromise) {
+            currentStack = stack
+            resume()
+        }
     }
 
     /** receive notice message by this method, the method will be call when this actor instance receive notice message
@@ -238,7 +192,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     private def runNoticeStack(): Unit = {
         val stack = currentStack.asInstanceOf[NoticeStack[M & Notice]]
         try {
-            val uncompleted = stack.uncompletedIterator()
+            val uncompleted = stack.uncompletedPromises()
             val oldState    = stack.state
             continueNotice(stack) match
                 case Some(state) =>
@@ -255,7 +209,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
                     stack.recycle() // NoticeStack not return value to other actor.
         } catch {
             case cause: Throwable =>
-                recycleUncompletedPromise(stack.uncompletedIterator())
+                recycleUncompletedPromise(stack.uncompletedPromises())
                 stack.setFailed()
                 cause.printStackTrace()
                 handleNoticeException(stack, cause)
@@ -277,7 +231,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     private def runBatchNoticeStack(): Unit = {
         val stack = currentStack.asInstanceOf[BatchNoticeStack[M & Notice]]
         try {
-            val uncompleted = stack.uncompletedIterator()
+            val uncompleted = stack.uncompletedPromises()
             val oldState    = stack.state
             batchContinueNotice(stack) match // change the stack to next state.
                 case Some(state) =>
@@ -299,7 +253,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
                 stack.recycle()
                 notices.foreach { notice => receiveNotice(notice) }
             case cause: Throwable =>
-                recycleUncompletedPromise(stack.uncompletedIterator())
+                recycleUncompletedPromise(stack.uncompletedPromises())
                 stack.setFailed()
                 handleNoticeException(stack, cause)
                 stack.recycle()
@@ -326,7 +280,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     private def runAskStack(): Unit = {
         val askStack = currentStack.asInstanceOf[AskStack[M & Ask[? <: Reply]]]
         try {
-            val uncompleted = askStack.uncompletedIterator()
+            val uncompleted = askStack.uncompletedPromises()
             val oldState    = askStack.state
             continueAsk(askStack) match // run stack and switch to next state
                 case Some(state) =>
@@ -339,14 +293,14 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
                     assert(askStack.hasUncompletedPromise, s"has no future to wait for $askStack")
                 case None =>
                     if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
-                    recycleUncompletedPromise(askStack.uncompletedIterator())
+                    recycleUncompletedPromise(askStack.uncompletedPromises())
                     assert(askStack.isDone, "continueAsk is return None but not call return method!")
                     askStack.recycle()
         } catch {
             case cause: Throwable =>
                 cause.printStackTrace()
                 askStack.`throw`(ExceptionMessage(cause)) // completed stack with Exception
-                recycleUncompletedPromise(askStack.uncompletedIterator())
+                recycleUncompletedPromise(askStack.uncompletedPromises())
                 askStack.recycle()
         } finally {
             currentStack = null
@@ -365,7 +319,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     final private def runBatchAskStack(): Unit = {
         val stack = currentStack.asInstanceOf[BatchAskStack[M & Ask[? <: Reply]]]
         try {
-            val uncompleted = stack.uncompletedIterator()
+            val uncompleted = stack.uncompletedPromises()
             val oldState    = stack.state
             batchContinueAsk(stack) match
                 case Some(state) =>
@@ -388,7 +342,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
                 asks.foreach { ask => receiveAsk(ask) }
             case cause: Throwable =>
                 stack.`throw`(ExceptionMessage(cause)) // completed stack with Exception
-                recycleUncompletedPromise(stack.uncompletedIterator())
+                recycleUncompletedPromise(stack.uncompletedPromises())
                 stack.recycle()
         } finally {
             currentStack = null
@@ -396,7 +350,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         }
     }
 
-    private[core] def recycleUncompletedPromise(uncompleted: Stack.UncompletedPromiseIterator): Unit = { // TODO: ChannelPromise
+    private[core] def recycleUncompletedPromise(uncompleted: PromiseIterator): Unit = { // TODO: ChannelPromise
         while (uncompleted.hasNext) {
             val promise = uncompleted.next()
             this.pop(promise.id)
@@ -480,6 +434,38 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
      *    IO/timeout event
      */
     protected def receiveReactorEvent(event: Event): Unit = {}
+
+    /** Exception handler when this actor received notice message or resume notice stack frame
+     *
+     *  @param e
+     *    exception
+     */
+    private[core] def handleNoticeException(stack: Stack, e: Throwable): Unit = { // TODO: refactor
+
+        val log = stack match
+            case s: ActorStack       => s"Stack with call message ${s.call} failed at handle $currentReceived message"
+            case s: BatchAskStack[?] => s"Stack with call message ${s.asks} failed at handle $currentReceived message"
+            case s: BatchNoticeStack[?] =>
+                s"Stack with call message ${s.notices} failed at handle $currentReceived message"
+            case s: ChannelStack[?] => ""
+            case _                  => ""
+        noticeExceptionStrategy match
+            case ExceptionStrategy.Restart =>
+                logger.error(log, e)
+                try {
+                    beforeRestart()
+                    restart()
+                    afterRestart()
+                } catch {
+                    case exception: Exception =>
+                        logger.error("Fatal error on restart", exception)
+                        system.shutdown()
+                }
+            case ExceptionStrategy.Ignore => logger.error(log, e)
+            case ExceptionStrategy.ShutdownSystem =>
+                logger.error(log, e)
+                system.shutdown()
+    }
 
 }
 
