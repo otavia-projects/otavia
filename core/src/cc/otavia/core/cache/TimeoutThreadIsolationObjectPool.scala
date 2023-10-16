@@ -21,10 +21,10 @@ import cc.otavia.core.timer.TimeoutTrigger
 
 abstract class TimeoutThreadIsolationObjectPool[T <: Poolable] extends ThreadIsolationObjectPool[T] {
 
-    private val threadLocal = new ActorThreadLocal[Poolable.SingleThreadPoolableHolder[T]] {
+    private val threadLocal = new ActorThreadLocal[SingleThreadPoolableHolder[T]] {
 
-        override protected def initialValue(): Poolable.SingleThreadPoolableHolder[T] =
-            new Poolable.SingleThreadPoolableHolder[T]()
+        override protected def initialValue(): SingleThreadPoolableHolder[T] =
+            new SingleThreadPoolableHolder[T]()
 
         override protected def initialTimeoutTrigger: Option[TimeoutTrigger] =
             TimeoutThreadIsolationObjectPool.this.initialTimeoutTrigger
@@ -36,7 +36,7 @@ abstract class TimeoutThreadIsolationObjectPool[T <: Poolable] extends ThreadIso
 
     }
 
-    override protected def holder(): Poolable.SingleThreadPoolableHolder[T] =
+    override protected def holder(): SingleThreadPoolableHolder[T] =
         if (ActorThread.currentThreadIsActorThread) threadLocal.get()
         else
             throw new IllegalStateException(

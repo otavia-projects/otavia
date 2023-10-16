@@ -18,6 +18,8 @@ package cc.otavia.core.cache
 
 import cc.otavia.core.system.ActorThread
 
+import scala.language.unsafeNulls
+
 /** Light-weight object pool.
  *  @tparam T
  *    the type of the pooled object
@@ -30,7 +32,7 @@ abstract class ObjectPool[T <: Poolable] {
      */
     protected final def newInstance(): T = {
         val instance = newObject()
-        instance.creator(Thread.currentThread().nn)
+        instance.creator(Thread.currentThread())
         instance
     }
 

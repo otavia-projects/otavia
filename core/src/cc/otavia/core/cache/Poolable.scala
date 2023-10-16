@@ -19,100 +19,29 @@ package cc.otavia.core.cache
 import cc.otavia.core.system.{ActorSystem, ActorThreadPool}
 import cc.otavia.core.util.Chainable
 
+import scala.language.unsafeNulls
+
 /** An object which can be pooled */
 trait Poolable extends Chainable {
 
     private var thread: Thread = _
 
-    private[core] def creator: Thread          = thread
+    /** The [[Thread]] which created this instance. */
+    private[core] def creator: Thread = thread
+
+    /** Set the creator [[Thread]]. */
     private[core] def creator(t: Thread): Unit = thread = t
 
+    /** Recycle this instance. */
     def recycle(): Unit
 
+    /** Clean the field of this instance. */
     protected def cleanInstance(): Unit
 
+    /** Clean all fields of this instance. */
     final def clean(): Unit = {
         this.deChain()
         this.cleanInstance()
-    }
-
-}
-
-object Poolable {
-
-    trait PoolableHolder[T <: Poolable] {
-
-        def size: Int
-        def maxSize: Int
-
-        def pop(): T | Null
-
-        def push(poolable: T): Unit
-
-    }
-
-    class SingleThreadPoolableHolder[T <: Poolable](val maxSize: Int = ActorSystem.DEFAULT_POOL_HOLDER_MAX_SIZE)
-        extends PoolableHolder[T] {
-
-        import scala.language.unsafeNulls
-
-        private var count: Int             = 0
-        private var head: Chainable | Null = _
-        private var tail: Chainable | Null = _
-
-        private def headnn: Chainable = head.asInstanceOf[Chainable]
-        private def tailnn: Chainable = tail.asInstanceOf[Chainable]
-
-        override def size: Int = count
-
-        override def pop(): T | Null = if (count > 1) {
-            val poolable = headnn
-            head = poolable.next // TODO: java.lang.NullPointerException
-            count -= 1
-            poolable.deChain()
-            poolable.asInstanceOf[T]
-        } else if (count == 1) {
-            val poolable = headnn
-            tail = null
-            head = null
-            count -= 1
-            poolable.asInstanceOf[T]
-        } else null
-
-        override def push(poolable: T): Unit = if (count == 0) {
-            head = poolable
-            tail = poolable
-            count = 1
-        } else {
-            if (count != maxSize) {
-                val oldHead = headnn
-                poolable.next = oldHead
-                head = poolable
-                count += 1
-            }
-        }
-
-        /** Clear this [[PoolableHolder]] until there are remain keep's objects.
-         *  @param keep
-         *    the number of object to remain.
-         */
-        def clean(keep: Int = 0): Unit = if (count > keep) {
-            if (keep == 0) {
-                head = null
-                tail = null
-                count = 0
-            } else {
-                tail = head
-                var c = keep - 1
-                while (c > 0) {
-                    tail = headnn.next
-                    c -= 1
-                }
-                tailnn.cleanNext()
-                count = keep
-            }
-        }
-
     }
 
 }

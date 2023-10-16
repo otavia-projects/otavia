@@ -37,30 +37,30 @@ import scala.language.unsafeNulls
  */
 abstract class ThreadLocal[V] extends TimeoutResource {
 
-    @volatile private var inited: Boolean                  = false
+    @volatile private var initial: Boolean                 = false
     private var threadLocalTimers: Array[ThreadLocalTimer] = _
 
-    private final def initIfNotInited(len: Int): Unit =
-        if (inited) {} else syncInit(len) // Reducing cpu branch prediction errors.
+    private final def initialIfNot(len: Int): Unit =
+        if (initial) {} else syncInit(len) // Reducing cpu branch prediction errors.
 
     private[cache] final def threadIndex(): Int = {
         val thread = ActorThread.currentThread()
-        initIfNotInited(thread.parent.size)
+        initialIfNot(thread.parent.size)
         thread.index
     }
 
     private def syncInit(len: Int): Unit = this.synchronized {
-        if (!inited) {
-            doInit(len)
-            if (isSupportedTimeout) threadLocalTimers = new Array[ThreadLocalTimer](len)
-            inited = true
+        if (!initial) {
+            doInitial(len)
+            if (isSupportTimeout) threadLocalTimers = new Array[ThreadLocalTimer](len)
+            initial = true
         }
     }
 
-    private[cache] def doInit(len: Int): Unit
+    private[cache] def doInitial(len: Int): Unit
 
-    /** Returns true if the thread local variable has been inited, otherwise false. */
-    final def isInited: Boolean = inited
+    /** Returns true if the thread local variable has been initial, otherwise false. */
+    final def isInitial: Boolean = initial
 
     /** Returns the initial value for this thread-local variable. */
     protected def initialValue(): V
@@ -68,7 +68,7 @@ abstract class ThreadLocal[V] extends TimeoutResource {
     /** Returns the current value for the current thread */
     def get(): V
 
-    private[cache] def updateGetTime(): Unit = if (isSupportedTimeout) {
+    private[cache] def updateGetTime(): Unit = if (isSupportTimeout) {
         val threadLocalTimer = threadLocalTimers(ActorThread.currentThread().index)
         threadLocalTimer.updateGetTime()
     }
@@ -79,7 +79,7 @@ abstract class ThreadLocal[V] extends TimeoutResource {
     /** Set the value for the current thread. */
     def set(v: V): Unit
 
-    private[cache] def updateSetTime(): Unit = if (isSupportedTimeout) {
+    private[cache] def updateSetTime(): Unit = if (isSupportTimeout) {
         val threadLocalTimer = threadLocalTimers(ActorThread.currentThread().index)
         threadLocalTimer.updateSetTime()
     }
@@ -93,7 +93,7 @@ abstract class ThreadLocal[V] extends TimeoutResource {
     def remove(): Unit
 
     /** Cancel the local variable timer task. */
-    def cancelTimer(): Unit = if (isSupportedTimeout) {
+    def cancelTimer(): Unit = if (isSupportTimeout) {
         val thread           = ActorThread.currentThread()
         val index            = thread.index
         val threadLocalTimer = threadLocalTimers(index)
@@ -124,7 +124,7 @@ abstract class ThreadLocal[V] extends TimeoutResource {
     }
 
     /** Whether this [[ThreadLocal]] support timeout. */
-    final def isSupportedTimeout: Boolean = initialTimeoutTrigger.nonEmpty
+    private final def isSupportTimeout: Boolean = initialTimeoutTrigger.nonEmpty
 
 }
 

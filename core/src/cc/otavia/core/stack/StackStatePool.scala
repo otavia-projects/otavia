@@ -28,10 +28,10 @@ import java.util.concurrent.TimeUnit
  */
 abstract class StackStatePool[S <: StackState with Poolable] extends ThreadIsolationObjectPool[S] {
 
-    private val threadLocal = new ActorThreadLocal[Poolable.SingleThreadPoolableHolder[S]] {
+    private val threadLocal = new ActorThreadLocal[SingleThreadPoolableHolder[S]] {
 
-        override protected def initialValue(): Poolable.SingleThreadPoolableHolder[S] =
-            new Poolable.SingleThreadPoolableHolder[S](ActorSystem.DEFAULT_POOL_HOLDER_MAX_SIZE * 10)
+        override protected def initialValue(): SingleThreadPoolableHolder[S] =
+            new SingleThreadPoolableHolder[S](ActorSystem.DEFAULT_POOL_HOLDER_MAX_SIZE * 10)
 
         override protected def initialTimeoutTrigger: Option[TimeoutTrigger] =
             Some(TimeoutTrigger.DelayPeriod(60, 60, TimeUnit.SECONDS, TimeUnit.SECONDS))
@@ -47,7 +47,7 @@ abstract class StackStatePool[S <: StackState with Poolable] extends ThreadIsola
 
     }
 
-    override protected def holder(): Poolable.SingleThreadPoolableHolder[S] = threadLocal.get()
+    override protected def holder(): SingleThreadPoolableHolder[S] = threadLocal.get()
 
     override def dropIfRecycleNotByCreated: Boolean = false
 

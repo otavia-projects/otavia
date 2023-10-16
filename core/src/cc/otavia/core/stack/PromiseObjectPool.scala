@@ -17,7 +17,7 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.cache.*
-import cc.otavia.core.cache.Poolable.SingleThreadPoolableHolder
+import cc.otavia.core.cache.SingleThreadPoolableHolder
 import cc.otavia.core.system.ActorThread
 import cc.otavia.core.timer.TimeoutTrigger
 
@@ -27,8 +27,8 @@ abstract class PromiseObjectPool[P <: AbstractPromise[?]] extends ThreadIsolatio
 
     private val threadLocal = new ActorThreadLocal[SingleThreadPoolableHolder[P]] {
 
-        override protected def initialValue(): Poolable.SingleThreadPoolableHolder[P] =
-            new Poolable.SingleThreadPoolableHolder[P]()
+        override protected def initialValue(): SingleThreadPoolableHolder[P] =
+            new SingleThreadPoolableHolder[P]()
 
         override protected def initialTimeoutTrigger: Option[TimeoutTrigger] =
             Some(TimeoutTrigger.DelayPeriod(60, 60, TimeUnit.SECONDS, TimeUnit.SECONDS))
@@ -43,7 +43,7 @@ abstract class PromiseObjectPool[P <: AbstractPromise[?]] extends ThreadIsolatio
 
     }
 
-    override protected def holder(): Poolable.SingleThreadPoolableHolder[P] =
+    override protected def holder(): SingleThreadPoolableHolder[P] =
         if (ActorThread.currentThreadIsActorThread) threadLocal.get()
         else
             throw new IllegalStateException(

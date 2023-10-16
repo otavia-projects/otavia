@@ -21,10 +21,10 @@ import cc.otavia.core.system.ActorThread
 abstract class PerActorThreadObjectPool[T <: Poolable](override val dropIfRecycleNotByCreated: Boolean = false)
     extends ThreadIsolationObjectPool[T] {
 
-    private val threadLocal: ActorThreadLocal[Poolable.SingleThreadPoolableHolder[T]] =
-        () => new Poolable.SingleThreadPoolableHolder[T]()
+    private val threadLocal: ActorThreadLocal[SingleThreadPoolableHolder[T]] =
+        () => new SingleThreadPoolableHolder[T]()
 
-    override protected def holder(): Poolable.SingleThreadPoolableHolder[T] = {
+    override protected def holder(): SingleThreadPoolableHolder[T] = {
         if (ActorThread.currentThreadIsActorThread) threadLocal.get()
         else
             throw new IllegalStateException(

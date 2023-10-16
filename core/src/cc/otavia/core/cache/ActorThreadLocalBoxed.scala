@@ -25,7 +25,7 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
 
     private def valueBox(index: Int): ValueBox[V] = variables(index) // .asInstanceOf[ValueBox[V]]
 
-    override private[cache] def doInit(len: Int): Unit = {
+    override private[cache] def doInitial(len: Int): Unit = {
         val arr = new Array[ValueBox[V]](len)
         arr.indices.foreach { index =>
             val box: ValueBox[V] = ValueBox()
@@ -66,13 +66,13 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
         box.set(value)
     }
 
-    override def isSet: Boolean = if (isInited) {
+    override def isSet: Boolean = if (isInitial) {
         val index = threadIndex()
         val box   = variables(index)
         box.nonEmpty
     } else false
 
-    override def remove(): Unit = if (isInited) {
+    override def remove(): Unit = if (isInitial) {
         val thread = ActorThread.currentThread()
         val index  = thread.index
         val box    = valueBox(index)

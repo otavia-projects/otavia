@@ -17,7 +17,7 @@
 package cc.otavia.core.stack.helper
 
 import cc.otavia.core.cache.*
-import cc.otavia.core.cache.Poolable.SingleThreadPoolableHolder
+import cc.otavia.core.cache.SingleThreadPoolableHolder
 import cc.otavia.core.message.Reply
 import cc.otavia.core.stack.helper.FutureState.pool
 import cc.otavia.core.stack.{ReplyFuture, StackState}
@@ -89,7 +89,7 @@ object FutureState {
 
         }
 
-        override protected def holder(): Poolable.SingleThreadPoolableHolder[FutureState[?]] =
+        override protected def holder(): SingleThreadPoolableHolder[FutureState[?]] =
             if (ActorThread.currentThreadIsActorThread) threadLocal.get()
             else
                 throw new IllegalStateException(

@@ -16,26 +16,14 @@
 
 package cc.otavia.core.cache
 
-import cc.otavia.core.system.ActorThread
+trait PoolableHolder[T <: Poolable] {
 
-abstract class ThreadIsolationObjectPool[T <: Poolable] extends ObjectPool[T] {
+    def size: Int
 
-    protected def holder(): SingleThreadPoolableHolder[T]
+    def maxSize: Int
 
-    def dropIfRecycleNotByCreated: Boolean
+    def pop(): T | Null
 
-    override def get(): T = {
-        val h   = holder()
-        val pop = h.pop()
-        if (pop != null) pop.asInstanceOf[T]
-        else newInstance()
-    }
-
-    override def recycle(poolable: T): Unit = {
-        poolable.clean()
-        if (dropIfRecycleNotByCreated) {
-            if (poolable.creator == ActorThread.currentThread()) holder().push(poolable) else {}
-        } else holder().push(poolable)
-    }
+    def push(poolable: T): Unit
 
 }

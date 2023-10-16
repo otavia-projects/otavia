@@ -31,7 +31,7 @@ abstract class ActorThreadLocal[V <: AnyRef] extends ThreadLocal[V] {
         v
     }
 
-    override private[cache] def doInit(len: Int): Unit = {
+    override private[cache] def doInitial(len: Int): Unit = {
         val arr = new Array[AnyRef](len)
         arr.indices.foreach { index => arr(index) = UNSET }
         variables = arr
@@ -69,7 +69,7 @@ abstract class ActorThreadLocal[V <: AnyRef] extends ThreadLocal[V] {
         variables(index) != UNSET
     }
 
-    override def remove(): Unit = if (isInited) {
+    override def remove(): Unit = if (isInitial) {
         val index = threadIndex()
         val v     = variables(index)
         variables(index) = UNSET

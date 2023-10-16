@@ -24,18 +24,18 @@ abstract class PerThreadObjectPool[T <: Poolable](override val dropIfRecycleNotB
     extends ThreadIsolationObjectPool[T] {
 
     // use by ActorThread
-    private val threadLocal = new ActorThreadLocal[Poolable.SingleThreadPoolableHolder[T]] {
-        override protected def initialValue(): Poolable.SingleThreadPoolableHolder[T] =
-            new Poolable.SingleThreadPoolableHolder[T]()
+    private val threadLocal = new ActorThreadLocal[SingleThreadPoolableHolder[T]] {
+        override protected def initialValue(): SingleThreadPoolableHolder[T] =
+            new SingleThreadPoolableHolder[T]()
     }
 
     // use by other Thread
-    private lazy val fastThreadLocal = new JThreadLocal[Poolable.SingleThreadPoolableHolder[T]] {
-        override def initialValue(): Poolable.SingleThreadPoolableHolder[T] =
-            new Poolable.SingleThreadPoolableHolder[T]()
+    private lazy val fastThreadLocal = new JThreadLocal[SingleThreadPoolableHolder[T]] {
+        override def initialValue(): SingleThreadPoolableHolder[T] =
+            new SingleThreadPoolableHolder[T]()
     }
 
-    override protected def holder(): Poolable.SingleThreadPoolableHolder[T] =
+    override protected def holder(): SingleThreadPoolableHolder[T] =
         if (ActorThread.currentThreadIsActorThread) threadLocal.get() else fastThreadLocal.get().nn
 
 }
