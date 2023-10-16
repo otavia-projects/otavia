@@ -21,6 +21,7 @@ import cc.otavia.core.actor.ChannelsActor.{Bind, BindReply, RegisterWaitState}
 import cc.otavia.core.address.Address
 import cc.otavia.core.channel.*
 import cc.otavia.core.message.*
+import cc.otavia.core.message.helper.UnitReply
 import cc.otavia.core.stack.*
 
 abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends ChannelsActor[Bind] {

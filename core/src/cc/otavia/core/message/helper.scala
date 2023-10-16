@@ -19,6 +19,8 @@ package cc.otavia.core.message
 /** Some notices classes that may be used frequently */
 object helper {
 
+    final case class UnitReply() extends Reply
+
     final case class IntNotice(value: Int) extends Notice
 
     final case class StringNotice(value: String) extends Notice

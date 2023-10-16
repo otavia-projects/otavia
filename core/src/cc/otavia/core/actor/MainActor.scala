@@ -17,7 +17,7 @@
 package cc.otavia.core.actor
 
 import cc.otavia.core.actor.MainActor.Args
-import cc.otavia.core.message.{Ask, Call, Notice, UnitReply}
+import cc.otavia.core.message.{Ask, Call, Notice}
 import cc.otavia.core.stack.{AskStack, NoticeStack, StackState}
 
 abstract class MainActor(val args: Array[String]) extends StateActor[Args] {

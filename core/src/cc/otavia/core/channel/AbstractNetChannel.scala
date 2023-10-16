@@ -59,8 +59,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
 ) extends AbstractChannel(null),
       WriteSink,
       ReadSink,
-      ChannelInternal[L, R],
-      ChannelInboundBuffer {
+      ChannelInternal[L, R] {
 
     /** Creates a new instance.
      *

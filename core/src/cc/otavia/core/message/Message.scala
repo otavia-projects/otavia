@@ -74,5 +74,3 @@ trait Reply extends Message {
     def isBatch: Boolean = batch
 
 }
-
-final case class UnitReply() extends Reply
