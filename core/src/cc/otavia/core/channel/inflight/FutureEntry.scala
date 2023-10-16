@@ -55,8 +55,8 @@ object FutureEntry {
             Some(TimeoutTrigger.DelayPeriod(180, 180, TimeUnit.SECONDS, TimeUnit.SECONDS))
 
         override protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit = {
-            val duration = System.nanoTime() - threadLocalTimer.recentlyGetTime
-            if (duration / (1000 * 1000 * 1000) > 180) {
+            val duration = System.currentTimeMillis() - threadLocalTimer.recentlyGetTime
+            if (duration / 1000 > 180) {
                 val h = holder()
                 if (h.size > 2) h.clean(2)
             }

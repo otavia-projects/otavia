@@ -18,7 +18,7 @@ package cc.otavia.core.actor
 
 import cc.otavia.core.actor.Actor.{ASK_TYPE, MessageType, NOTICE_TYPE, REPLY_TYPE}
 import cc.otavia.core.address.{ActorAddress, Address}
-import cc.otavia.core.cache.PerActorThreadObjectPool
+import cc.otavia.core.cache.Poolable
 import cc.otavia.core.message.*
 import cc.otavia.core.reactor.*
 import cc.otavia.core.slf4a.Logger
@@ -199,12 +199,14 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
                     if (state != oldState) {
                         stack.setState(state) // change the stack to next state.
                         if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                        this.recycleStackState(oldState)
                     } else { // state == oldState, recover uncompleted promise
                         if (uncompleted.hasNext) stack.addUncompletedPromiseIterator(uncompleted)
                     }
                     assert(stack.hasUncompletedPromise, s"has no future to wait for $stack")
                 case None =>
                     if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                    this.recycleStackState(oldState)
                     assert(stack.isDone, "receiveNotice is return None but not call return method!")
                     stack.recycle() // NoticeStack not return value to other actor.
         } catch {
@@ -238,12 +240,14 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
                     if (state != oldState) {
                         stack.setState(state) // change the stack to next state.
                         if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                        this.recycleStackState(oldState)
                     } else { // state == oldState, recover uncompleted promise
                         if (uncompleted.hasNext) stack.addUncompletedPromiseIterator(uncompleted)
                     }
                     assert(stack.hasUncompletedPromise, s"has no future to wait for $stack")
                 case None =>
                     if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                    this.recycleStackState(oldState)
                     assert(stack.isDone, "receiveNotice is return None but not call return method!")
                     stack.recycle() // NoticeStack not return value to other actor.
         } catch {
@@ -287,12 +291,14 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
                     if (state != oldState) {
                         askStack.setState(state) // this also recycled all completed promise
                         if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                        this.recycleStackState(oldState)
                     } else { // state == oldState, recover uncompleted promise
                         if (uncompleted.hasNext) askStack.addUncompletedPromiseIterator(uncompleted)
                     }
                     assert(askStack.hasUncompletedPromise, s"has no future to wait for $askStack")
                 case None =>
                     if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                    this.recycleStackState(oldState)
                     recycleUncompletedPromise(askStack.uncompletedPromises())
                     assert(askStack.isDone, "continueAsk is return None but not call return method!")
                     askStack.recycle()
@@ -326,12 +332,14 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
                     if (state != oldState) {
                         stack.setState(state) // this also recycled all completed promise
                         if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                        this.recycleStackState(oldState)
                     } else { // state == oldState, recover uncompleted promise
                         if (uncompleted.hasNext) stack.addUncompletedPromiseIterator(uncompleted)
                     }
                     assert(stack.hasUncompletedPromise, s"has no future to wait for $stack")
                 case None =>
                     if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
+                    this.recycleStackState(oldState)
                     assert(stack.isDone, "continueAsk is return None but not call return method!")
                     stack.recycle()
         } catch {
@@ -466,6 +474,10 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
                 logger.error(log, e)
                 system.shutdown()
     }
+
+    inline private def recycleStackState(state: StackState): Unit = state match
+        case state: Poolable => state.recycle()
+        case _               => // gc
 
 }
 

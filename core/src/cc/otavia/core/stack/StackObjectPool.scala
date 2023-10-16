@@ -38,8 +38,8 @@ private[core] abstract class StackObjectPool[S <: Stack] extends ThreadIsolation
 
         override def handleTimeout(registerId: Long, resourceTimer: ResourceTimer): Unit = {
             val threadLocalTimer: ThreadLocalTimer = resourceTimer.asInstanceOf[ThreadLocalTimer]
-            val duration                           = System.nanoTime() - threadLocalTimer.recentlyGetTime
-            if (duration / (1000 * 1000 * 1000) > 30) {
+            val duration                           = System.currentTimeMillis() - threadLocalTimer.recentlyGetTime
+            if (duration / 1000 > 30) {
                 val holder = this.get()
                 if (holder.size > 10) holder.clean(10)
             }

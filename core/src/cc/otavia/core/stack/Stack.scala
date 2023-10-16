@@ -145,12 +145,12 @@ abstract class Stack extends Poolable {
     private[core] def recycleCompletedPromises(): Unit = while (headPromise != null) {
         val promise = headPromise
         if (headPromise == tailPromise) tailPromise = null
-        headPromise = promise.next.asInstanceOf[AbstractPromise[?] | Null]
+        headPromise = promise.next.asInstanceOf[AbstractPromise[?]]
         promise.recycle()
     }
 
     private[core] def uncompletedPromises(): PromiseIterator = {
-        val iterator = new PromiseIterator(uhead, utail)
+        val iterator = PromiseIterator(uhead, utail)
         uhead = null
         utail = null
         iterator

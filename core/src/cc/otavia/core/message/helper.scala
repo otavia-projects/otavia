@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.cache
+package cc.otavia.core.message
 
-class ThreadLocalTimer(override val parent: ThreadLocal[?]) extends ResourceTimer(parent) {
+/** Some notices classes that may be used frequently */
+object helper {
 
-    private var recentlyGet: Long = System.currentTimeMillis()
-    private var recentlySet: Long = System.currentTimeMillis()
+    final case class IntNotice(value: Int) extends Notice
 
-    def recentlyGetTime: Long = recentlyGet
-    def updateGetTime(): Unit = recentlyGet = System.currentTimeMillis()
+    final case class StringNotice(value: String) extends Notice
 
-    def recentlySetTime: Long = recentlySet
-    def updateSetTime(): Unit = recentlySet = System.currentTimeMillis()
+    final case class ArrayNotice[@specialized T](value: Array[T]) extends Notice
+
+    final case class SeqNotice[T](value: Seq[T]) extends Notice
 
 }

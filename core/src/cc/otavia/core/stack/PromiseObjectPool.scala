@@ -19,7 +19,7 @@ abstract class PromiseObjectPool[P <: AbstractPromise[?]] extends ThreadIsolatio
 
         override def handleTimeout(registerId: Long, resourceTimer: ResourceTimer): Unit = {
             val threadLocalTimer: ThreadLocalTimer = resourceTimer.asInstanceOf[ThreadLocalTimer]
-            if ((System.nanoTime() - threadLocalTimer.recentlyGetTime) / (1000 * 1000 * 1000) > 30) {
+            if ((System.currentTimeMillis() - threadLocalTimer.recentlyGetTime) / 1000 > 30) {
                 val holder = this.get()
                 if (holder.size > 100) holder.clean(100)
             }

@@ -16,10 +16,15 @@
 
 package cc.otavia.core.stack
 
+import cc.otavia.core.cache.ActorThreadLocal
+import cc.otavia.core.stack.PromiseIterator.threadLocal
+
 import scala.language.unsafeNulls
 
-private[core] class PromiseIterator(var head: AbstractPromise[?], var tail: AbstractPromise[?])
-    extends Iterator[AbstractPromise[?]] {
+private[core] class PromiseIterator private () extends Iterator[AbstractPromise[?]] {
+
+    var head: AbstractPromise[?] = _
+    var tail: AbstractPromise[?] = _
 
     override def hasNext: Boolean = {
         val has = head != null
@@ -39,6 +44,21 @@ private[core] class PromiseIterator(var head: AbstractPromise[?], var tail: Abst
     def clean(): Unit = {
         head = null
         tail = null
+    }
+
+}
+
+private[core] object PromiseIterator {
+
+    def apply(head: AbstractPromise[?], tail: AbstractPromise[?]): PromiseIterator = {
+        val iterator = threadLocal.get()
+        iterator.head = head
+        iterator.tail = tail
+        iterator
+    }
+
+    private val threadLocal = new ActorThreadLocal[PromiseIterator] {
+        override protected def initialValue(): PromiseIterator = new PromiseIterator()
     }
 
 }
