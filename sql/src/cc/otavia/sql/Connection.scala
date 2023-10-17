@@ -16,13 +16,14 @@
 
 package cc.otavia.sql
 
-import cc.otavia.sql.Connection.{Auth, Connect, ConnectResult}
-import cc.otavia.sql.Statement.*
 import cc.otavia.core.actor.{ChannelsActor, SocketChannelsActor}
 import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelState}
 import cc.otavia.core.message.{Ask, ExceptionMessage, Reply}
 import cc.otavia.core.stack.StackState.*
+import cc.otavia.core.stack.helper.*
 import cc.otavia.core.stack.{AskStack, ChannelFuture, StackState}
+import cc.otavia.sql.Connection.{Auth, Connect, ConnectResult}
+import cc.otavia.sql.Statement.*
 
 import java.net.{ProtocolFamily, StandardProtocolFamily}
 import java.util
@@ -55,14 +56,14 @@ class Connection(override val family: ProtocolFamily = StandardProtocolFamily.IN
                 val options = driverFactory.parseOptions(auth.url, auth.info)
                 driver = driverFactory.newDriver(options)
                 channel = newChannelAndInit()
-                val state = new ChannelFutureState()
+                val state = ChannelFutureState()
                 channel.connect(options.socketAddress, state.future)
                 state.suspend()
             case state: ChannelFutureState => // waiting for authentication
-                val authState = new ChannelReplyState()
+                val authState = ChannelReplyFutureState()
                 channel.ask(Auth(stack.ask.url, stack.ask.info), authState.future)
                 authState.suspend()
-            case state: ChannelReplyState => // return authenticate result
+            case state: ChannelReplyFutureState => // return authenticate result
                 if (state.future.isSuccess) stack.`return`(ConnectResult(channel.id))
                 else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
     }

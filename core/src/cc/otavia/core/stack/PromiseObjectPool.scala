@@ -17,40 +17,23 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.cache.*
-import cc.otavia.core.cache.SingleThreadPoolableHolder
 import cc.otavia.core.system.ActorThread
 import cc.otavia.core.timer.TimeoutTrigger
 
 import java.util.concurrent.TimeUnit
 
-abstract class PromiseObjectPool[P <: AbstractPromise[?]] extends ThreadIsolationObjectPool[P] {
-
-    private val threadLocal = new ActorThreadLocal[SingleThreadPoolableHolder[P]] {
-
-        override protected def initialValue(): SingleThreadPoolableHolder[P] =
-            new SingleThreadPoolableHolder[P]()
-
-        override protected def initialTimeoutTrigger: Option[TimeoutTrigger] =
-            Some(TimeoutTrigger.DelayPeriod(60, 60, TimeUnit.SECONDS, TimeUnit.SECONDS))
-
-        override def handleTimeout(registerId: Long, resourceTimer: ResourceTimer): Unit = {
-            val threadLocalTimer: ThreadLocalTimer = resourceTimer.asInstanceOf[ThreadLocalTimer]
-            if ((System.currentTimeMillis() - threadLocalTimer.recentlyGetTime) / 1000 > 30) {
-                val holder = this.get()
-                if (holder.size > 100) holder.clean(100)
-            }
-        }
-
-    }
-
-    override protected def holder(): SingleThreadPoolableHolder[P] =
-        if (ActorThread.currentThreadIsActorThread) threadLocal.get()
-        else
-            throw new IllegalStateException(
-              "PerActorThreadObjectPool can not be used in thread which is not ActorThread, " +
-                  "maby you can use PerThreadObjectPool"
-            )
+abstract class PromiseObjectPool[P <: AbstractPromise[?]] extends ActorThreadIsolatedObjectPool[P] {
 
     override def dropIfRecycleNotByCreated: Boolean = false
+
+    override protected val timeoutTrigger: Option[TimeoutTrigger] =
+        Some(TimeoutTrigger.DelayPeriod(60, 60, TimeUnit.SECONDS, TimeUnit.SECONDS))
+
+    override protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit = {
+        if ((System.currentTimeMillis() - threadLocalTimer.recentlyGetTime) / 1000 > 30) {
+            val holder = this.holder()
+            if (holder.size > 100) holder.clean(100)
+        }
+    }
 
 }

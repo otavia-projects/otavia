@@ -35,7 +35,7 @@ object ProjectInfo {
     def repository              = github.browsableRepository.get
     def licenses                = Seq(License.`Apache-2.0`)
     def author                  = Seq("Yan Kun <yan_kun_1992@foxmail.com>")
-    def version                 = "0.3.1-SNAPSHOT"
+    def version                 = "0.3.2-SNAPSHOT"
     def scalaVersion            = "3.3.0"
     def scoverageVersion        = "1.4.0"
     def buildTool               = "mill"

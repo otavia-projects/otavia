@@ -25,6 +25,7 @@ import cc.otavia.core.message.*
 import cc.otavia.core.reactor.*
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.*
+import cc.otavia.core.stack.helper.ChannelFutureState
 import cc.otavia.core.system.ActorThread
 import cc.otavia.core.timer.Timer
 
@@ -159,8 +160,8 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
             init(channel)
         } match {
             case Success(_) =>
-                val state = new RegisterWaitState()
-                channel.register(state.registerFuture)
+                val state = ChannelFutureState()
+                channel.register(state.future)
                 state.suspend()
             case Failure(cause) =>
                 val closeFuture = channel.close(ChannelFuture()) // ignore close result.
@@ -238,10 +239,6 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 }
 
 object ChannelsActor {
-
-    final class RegisterWaitState extends StackState {
-        val registerFuture: ChannelFuture = ChannelFuture()
-    }
 
     final class CloseState(val futures: Iterable[ChannelFuture]) extends StackState
 

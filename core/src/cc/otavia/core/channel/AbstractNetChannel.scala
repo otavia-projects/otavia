@@ -24,7 +24,7 @@ import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.AbstractNetChannel.*
 import cc.otavia.core.channel.ChannelOption.*
 import cc.otavia.core.channel.estimator.*
-import cc.otavia.core.channel.internal.{ChannelOutboundBuffer, ReadSink, WriteBufferWaterMark, WriteSink}
+import cc.otavia.core.channel.internal.{ReadSink, WriteBufferWaterMark, WriteSink}
 import cc.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import cc.otavia.core.message.{ReactorEvent, TimeoutEvent}
 import cc.otavia.core.slf4a.Logger
@@ -72,8 +72,6 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
       new MaxMessagesWriteHandleFactory(Int.MaxValue)
     )
 
-    private var outboundBuffer: ChannelOutboundBuffer | Null = new ChannelOutboundBuffer()
-
     private var writeHandleFactory: WriteHandleFactory = defaultWriteHandleFactory
 
     private var msgSizeEstimator: MessageSizeEstimator = DEFAULT_MSG_SIZE_ESTIMATOR
@@ -105,9 +103,7 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
 
     override def isRegistered: Boolean = registered
 
-    private def totalPending: Long = outboundBuffer match
-        case null                       => -1
-        case out: ChannelOutboundBuffer => out.totalPendingWriteBytes + pipeline.pendingOutboundBytes
+    private def totalPending: Long = -1
 
     override final def writableBytes: Long = {
         val totalPending = this.totalPending
@@ -522,35 +518,13 @@ abstract class AbstractNetChannel[L <: SocketAddress, R <: SocketAddress] protec
 
     }
 
-    override private[core] def flushTransport(): Unit = {
-        outboundBuffer match
-            case null =>
-            case out: ChannelOutboundBuffer =>
-                out.addFlush()
-                writeFlushed()
-    }
+    override private[core] def flushTransport(): Unit = {}
 
     /** Writing previous flushed messages if [[isWriteFlushedScheduled]] returns false, otherwise do nothing. */
     protected final def writeFlushed(): Unit = if (!isWriteFlushedScheduled) writeFlushedNow()
 
     /** Writing previous flushed messages now. */
-    protected final def writeFlushedNow(): Unit = {
-        outboundBuffer match
-            case null =>
-            case out: ChannelOutboundBuffer =>
-                inWriteFlushed = true
-                try {
-                    if (!isActive) {
-                        if (!out.isEmpty) {
-                            ???
-                        }
-                    } else {
-                        writeSink.writeLoop(out)
-                    }
-                } finally {
-                    inWriteFlushed = false
-                }
-    }
+    protected final def writeFlushedNow(): Unit = {}
 
     protected def writeLoopComplete(allWriten: Boolean): Unit = if (!allWriten) invokeLater(() => writeFlushed())
 

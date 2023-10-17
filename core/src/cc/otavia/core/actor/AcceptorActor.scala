@@ -17,12 +17,13 @@
 package cc.otavia.core.actor
 
 import cc.otavia.core.actor.AcceptorActor.*
-import cc.otavia.core.actor.ChannelsActor.{Bind, BindReply, RegisterWaitState}
+import cc.otavia.core.actor.ChannelsActor.{Bind, BindReply}
 import cc.otavia.core.address.Address
 import cc.otavia.core.channel.*
 import cc.otavia.core.message.*
 import cc.otavia.core.message.helper.UnitReply
 import cc.otavia.core.stack.*
+import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState}
 
 abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends ChannelsActor[Bind] {
 
@@ -49,17 +50,17 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
         stack.state match
             case StackState.start =>
                 val channel = newChannelAndInit()
-                val state   = new BindState()
-                channel.bind(stack.ask.local, state.bindFuture)
+                val state   = ChannelFutureState()
+                channel.bind(stack.ask.local, state.future)
                 state.suspend()
-            case bindState: BindState =>
-                if (bindState.bindFuture.isSuccess) {
-                    val channel = bindState.bindFuture.channel
+            case bindState: ChannelFutureState =>
+                if (bindState.future.isSuccess) {
+                    val channel = bindState.future.channel
                     channels.put(channel.id, channel)
-                    afterBind(bindState.bindFuture.channel)
+                    afterBind(bindState.future.channel)
                     stack.`return`(BindReply(channel.id))
                 } else {
-                    stack.`throw`(ExceptionMessage(bindState.bindFuture.causeUnsafe))
+                    stack.`throw`(ExceptionMessage(bindState.future.causeUnsafe))
                 }
     }
 
@@ -78,13 +79,13 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
     private def handleAcceptedStack(stack: ChannelStack[Channel]): Option[StackState] = {
         stack.state match
             case StackState.start =>
-                val state = new DispatchState()
-                workers.ask(AcceptedChannel(stack.message), state.dispatchFuture)
+                val state = FutureState[UnitReply]()
+                workers.ask(AcceptedChannel(stack.message), state.future)
                 state.suspend()
-            case state: DispatchState =>
-                if (state.dispatchFuture.isSuccess) stack.`return`(None)
+            case state: FutureState[UnitReply] =>
+                if (state.future.isSuccess) stack.`return`(None)
                 else
-                    stack.`return`(state.dispatchFuture.causeUnsafe)
+                    stack.`return`(state.future.causeUnsafe)
     }
 
 }
@@ -96,17 +97,5 @@ object AcceptorActor {
     }
 
     final case class AcceptedChannel(channel: ChannelAddress) extends Ask[UnitReply]
-
-    private final class DispatchState extends StackState {
-
-        val dispatchFuture: ReplyFuture[UnitReply] = ReplyFuture[UnitReply]()
-
-        override def resumable(): Boolean = dispatchFuture.isDone
-
-    }
-
-    private final class BindState extends StackState {
-        val bindFuture: ChannelFuture = ChannelFuture()
-    }
 
 }

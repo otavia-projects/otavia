@@ -17,7 +17,6 @@
 package cc.otavia.core.cache
 
 import cc.otavia.core.cache.ActorThreadLocal.UNSET
-import cc.otavia.core.cache.ActorThreadLocalBoxed.ValueBox
 import cc.otavia.core.system.ActorThread
 
 abstract class ActorThreadLocal[V <: AnyRef] extends ThreadLocal[V] {

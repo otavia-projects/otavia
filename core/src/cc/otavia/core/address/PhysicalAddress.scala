@@ -33,36 +33,30 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
 
     private[core] val house: ActorHouse
 
-    override def ask[A <: M & Ask[? <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using
-        sender: AbstractActor[?]
-    ): ReplyFuture[ReplyOf[A]] = {
+    // format: off
+    override def ask[A <: M & Ask[? <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using sender: AbstractActor[?]): ReplyFuture[ReplyOf[A]] = {
+        // format: on
         ask.setAskContext(sender)
         sender.attachStack(ask.askId, future)
         house.putAsk(ask)
         future
     }
 
-    override def ask[A <: M & Ask[? <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]], timeout: Long)(using
-        sender: AbstractActor[?]
-    ): ReplyFuture[ReplyOf[A]] = {
+    // format: off
+    override def ask[A <: M & Ask[? <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]], timeout: Long)(using sender: AbstractActor[?]): ReplyFuture[ReplyOf[A]] = {
+        // format: on
         this.ask(ask, future)
         val promise = future.promise
 
-        val id =
-            sender.system.timer.registerAskTimeout(TimeoutTrigger.DelayTime(timeout), sender.self, ask.askId)
+        val id = sender.timer.registerAskTimeout(TimeoutTrigger.DelayTime(timeout), sender.self, ask.askId)
 
         promise.setTimeoutId(id)
         future
     }
 
-    override def notice(notice: M & Notice): Unit = {
-        house.putNotice(notice)
-    }
+    override def notice(notice: M & Notice): Unit = house.putNotice(notice)
 
-    override private[core] def reply(reply: Reply, sender: AbstractActor[?]): Unit = {
-        // reply.setMessageContext(sender)
-        house.putReply(reply)
-    }
+    override private[core] def reply(reply: Reply, sender: AbstractActor[?]): Unit = house.putReply(reply)
 
     override private[core] def inform(event: Event): Unit = house.putEvent(event)
 

@@ -18,7 +18,7 @@ package cc.otavia.core.address
 
 import cc.otavia.core.actor.{AbstractActor, Actor}
 import cc.otavia.core.message.*
-import cc.otavia.core.stack.StackState.FutureState
+import cc.otavia.core.stack.helper.FutureState
 import cc.otavia.core.stack.{AskStack, ReplyFuture}
 
 /** Address is the facade of an actor. Actors cannot call each other directly, only send messages to the actor via its
@@ -32,8 +32,6 @@ trait Address[-M <: Call] extends EventableAddress {
     /** send notice message to this address
      *  @param notice
      *    notice message to send
-     *  @param sender
-     *    who send this notice message
      */
     def notice(notice: M & Notice): Unit
 
@@ -47,12 +45,12 @@ trait Address[-M <: Call] extends EventableAddress {
      *  @tparam A
      *    the type of ask message
      */
-    def ask[A <: M & Ask[? <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using
-        sender: AbstractActor[?]
-    ): ReplyFuture[ReplyOf[A]]
+    // format: off
+    def ask[A <: M & Ask[? <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using sender: AbstractActor[?]): ReplyFuture[ReplyOf[A]]
+    // format: on
 
     final def ask[A <: M & Ask[? <: Reply]](ask: A)(using sender: AbstractActor[?]): FutureState[ReplyOf[A]] = {
-        val state = new FutureState[ReplyOf[A]]
+        val state = FutureState[ReplyOf[A]]()
         this.ask(ask, state.future)
         state
     }
@@ -70,9 +68,9 @@ trait Address[-M <: Call] extends EventableAddress {
      *  @tparam A
      *    the type of ask message
      */
-    def ask[A <: M & Ask[? <: Reply]](ask: A, f: ReplyFuture[ReplyOf[A]], timeout: Long)(using
-        sender: AbstractActor[?]
-    ): ReplyFuture[ReplyOf[A]]
+    // format: off
+    def ask[A <: M & Ask[? <: Reply]](ask: A, f: ReplyFuture[ReplyOf[A]], timeout: Long)(using sender: AbstractActor[?]): ReplyFuture[ReplyOf[A]]
+    // format: on
 
     /** send a reply message to this address, this method can not be use by user, use [[AskStack.`return`]] instead.
      *  @param reply

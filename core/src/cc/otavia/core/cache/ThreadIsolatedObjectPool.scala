@@ -16,18 +16,17 @@
 
 package cc.otavia.core.cache
 
+import cc.otavia.core.cache.AbstractThreadIsolatedObjectPool.*
 import cc.otavia.core.system.ActorThread
+import cc.otavia.core.timer.TimeoutTrigger
 
 import java.lang.ThreadLocal as JThreadLocal
+import scala.language.unsafeNulls
 
-abstract class PerThreadObjectPool[T <: Poolable](override val dropIfRecycleNotByCreated: Boolean = false)
-    extends ThreadIsolationObjectPool[T] {
+abstract class ThreadIsolatedObjectPool[T <: Poolable]() extends AbstractThreadIsolatedObjectPool[T] {
 
     // use by ActorThread
-    private val threadLocal = new ActorThreadLocal[SingleThreadPoolableHolder[T]] {
-        override protected def initialValue(): SingleThreadPoolableHolder[T] =
-            new SingleThreadPoolableHolder[T]()
-    }
+    private val threadLocal = new ObjectPoolThreadLocal[T](this)
 
     // use by other Thread
     private lazy val fastThreadLocal = new JThreadLocal[SingleThreadPoolableHolder[T]] {
@@ -36,6 +35,8 @@ abstract class PerThreadObjectPool[T <: Poolable](override val dropIfRecycleNotB
     }
 
     override protected def holder(): SingleThreadPoolableHolder[T] =
-        if (ActorThread.currentThreadIsActorThread) threadLocal.get() else fastThreadLocal.get().nn
+        if (ActorThread.currentThreadIsActorThread) threadLocal.get() else fastThreadLocal.get()
+
+    override def dropIfRecycleNotByCreated: Boolean = false
 
 }

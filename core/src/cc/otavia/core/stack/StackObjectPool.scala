@@ -26,35 +26,19 @@ import java.util.concurrent.TimeUnit
  *  @tparam S
  *    type of [[Stack]]
  */
-private[core] abstract class StackObjectPool[S <: Stack] extends ThreadIsolationObjectPool[S] {
-
-    private val threadLocal = new ActorThreadLocal[SingleThreadPoolableHolder[S]] {
-
-        override protected def initialValue(): SingleThreadPoolableHolder[S] =
-            new SingleThreadPoolableHolder[S]()
-
-        override protected def initialTimeoutTrigger: Option[TimeoutTrigger] =
-            Some(TimeoutTrigger.DelayPeriod(60, 60, TimeUnit.SECONDS, TimeUnit.SECONDS))
-
-        override def handleTimeout(registerId: Long, resourceTimer: ResourceTimer): Unit = {
-            val threadLocalTimer: ThreadLocalTimer = resourceTimer.asInstanceOf[ThreadLocalTimer]
-            val duration                           = System.currentTimeMillis() - threadLocalTimer.recentlyGetTime
-            if (duration / 1000 > 30) {
-                val holder = this.get()
-                if (holder.size > 10) holder.clean(10)
-            }
-        }
-
-    }
-
-    override protected def holder(): SingleThreadPoolableHolder[S] =
-        if (ActorThread.currentThreadIsActorThread) threadLocal.get()
-        else
-            throw new IllegalStateException(
-              "PerActorThreadObjectPool can not be used in thread which is not ActorThread, " +
-                  "maby you can use PerThreadObjectPool"
-            )
+private[core] abstract class StackObjectPool[S <: Stack] extends ActorThreadIsolatedObjectPool[S] {
 
     override def dropIfRecycleNotByCreated: Boolean = false
+
+    override protected val timeoutTrigger: Option[TimeoutTrigger] =
+        Some(TimeoutTrigger.DelayPeriod(60, 60, TimeUnit.SECONDS, TimeUnit.SECONDS))
+
+    override protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit = {
+        val duration = System.currentTimeMillis() - threadLocalTimer.recentlyGetTime
+        if (duration / 1000 > 30) {
+            val holder = this.holder()
+            if (holder.size > 10) holder.clean(10)
+        }
+    }
 
 }

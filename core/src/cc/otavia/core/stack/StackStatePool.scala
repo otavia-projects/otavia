@@ -26,29 +26,19 @@ import java.util.concurrent.TimeUnit
  *  @tparam S
  *    type of [[StackState]]
  */
-abstract class StackStatePool[S <: StackState with Poolable] extends ThreadIsolationObjectPool[S] {
+abstract class StackStatePool[S <: StackState & Poolable] extends ActorThreadIsolatedObjectPool[S] {
 
-    private val threadLocal = new ActorThreadLocal[SingleThreadPoolableHolder[S]] {
+    override def dropIfRecycleNotByCreated: Boolean = true
 
-        override protected def initialValue(): SingleThreadPoolableHolder[S] =
-            new SingleThreadPoolableHolder[S](ActorSystem.DEFAULT_POOL_HOLDER_MAX_SIZE * 10)
+    override protected val timeoutTrigger: Option[TimeoutTrigger] =
+        Some(TimeoutTrigger.DelayPeriod(60, 60, TimeUnit.SECONDS, TimeUnit.SECONDS))
 
-        override protected def initialTimeoutTrigger: Option[TimeoutTrigger] =
-            Some(TimeoutTrigger.DelayPeriod(60, 60, TimeUnit.SECONDS, TimeUnit.SECONDS))
-
-        override def handleTimeout(registerId: Long, resourceTimer: ResourceTimer): Unit = {
-            val threadLocalTimer: ThreadLocalTimer = resourceTimer.asInstanceOf[ThreadLocalTimer]
-            val duration                           = System.currentTimeMillis() - threadLocalTimer.recentlyGetTime
-            if (duration / 1000 > 60) {
-                val holder = this.get()
-                if (holder.size > 10) holder.clean(10)
-            }
+    override protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit = {
+        val duration = System.currentTimeMillis() - threadLocalTimer.recentlyGetTime
+        if (duration / 1000 > 60) {
+            val holder = this.holder()
+            if (holder.size > 10) holder.clean(10)
         }
-
     }
-
-    override protected def holder(): SingleThreadPoolableHolder[S] = threadLocal.get()
-
-    override def dropIfRecycleNotByCreated: Boolean = false
 
 }

@@ -25,8 +25,8 @@ import scala.language.unsafeNulls
 
 abstract class Stack extends Poolable {
 
-    private var stackState     = StackState.start
-    private var error: Boolean = false
+    private var stackState: StackState = StackState.start
+    private var error: Boolean         = false
 
     // completed promise
     private var headPromise: AbstractPromise[?] = _

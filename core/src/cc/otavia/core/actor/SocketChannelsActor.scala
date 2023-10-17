@@ -16,14 +16,13 @@
 
 package cc.otavia.core.actor
 
-import cc.otavia.core.actor.ChannelsActor.{Connect, ConnectReply, RegisterWaitState}
-import cc.otavia.core.actor.SocketChannelsActor.ConnectWaitState
+import cc.otavia.core.actor.ChannelsActor.{Connect, ConnectReply}
 import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.message.*
 import cc.otavia.core.reactor.Reactor
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.*
-import cc.otavia.core.stack.StackState.FutureState
+import cc.otavia.core.stack.helper.ChannelFutureState
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 
@@ -45,11 +44,11 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M | Connect]
                 // TODO: check remote whether resolved, if not send ask message AddressResolver actor
                 val remote  = stack.ask.remote
                 val channel = newChannelAndInit()
-                val state   = new ConnectWaitState()
-                channel.connect(remote, stack.ask.local, state.connectFuture)
+                val state   = ChannelFutureState()
+                channel.connect(remote, stack.ask.local, state.future)
                 state.suspend()
-            case connectWaitState: ConnectWaitState =>
-                val ch = connectWaitState.connectFuture.channel
+            case connectWaitState: ChannelFutureState =>
+                val ch = connectWaitState.future.channel
                 channels.put(ch.id, ch)
                 afterConnected(ch)
                 stack.`return`(ConnectReply(ch.id))
@@ -63,14 +62,6 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M | Connect]
         handler match
             case Some(h) => channel.pipeline.addLast(h)
             case None    => logger.warn(s"The channel $channel is not add any handler!")
-    }
-
-}
-
-object SocketChannelsActor {
-
-    final class ConnectWaitState extends StackState {
-        val connectFuture: ChannelFuture = ChannelFuture()
     }
 
 }

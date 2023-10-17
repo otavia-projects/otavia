@@ -28,7 +28,7 @@ private[core] trait TimeoutResource {
      *
      *  @param registerId
      *    timer task register id in [[Timer]].
-     *  @param threadLocalTimer
+     *  @param resourceTimer
      *    current time-out [[ResourceTimer]]
      */
     def handleTimeout(registerId: Long, resourceTimer: ResourceTimer): Unit = {

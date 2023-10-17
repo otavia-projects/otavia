@@ -16,8 +16,7 @@
 
 package cc.otavia.core.channel.inflight
 
-import cc.otavia.core.cache.ThreadLocalTimer
-import cc.otavia.core.cache.{Poolable, ThreadLocalTimer, TimeoutThreadIsolationObjectPool}
+import cc.otavia.core.cache.{ActorThreadIsolatedObjectPool, Poolable, ThreadLocalTimer}
 import cc.otavia.core.stack.{ChannelReplyFuture, ChannelReplyPromise}
 import cc.otavia.core.system.ActorThread
 import cc.otavia.core.timer.TimeoutTrigger
@@ -49,15 +48,15 @@ class FutureEntry extends Poolable { // future is chained in stack
 
 object FutureEntry {
 
-    private val pool = new TimeoutThreadIsolationObjectPool[FutureEntry] {
+    private val pool = new ActorThreadIsolatedObjectPool[FutureEntry] {
 
-        override protected def initialTimeoutTrigger: Option[TimeoutTrigger] =
+        override protected val timeoutTrigger: Option[TimeoutTrigger] =
             Some(TimeoutTrigger.DelayPeriod(180, 180, TimeUnit.SECONDS, TimeUnit.SECONDS))
 
         override protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit = {
             val duration = System.currentTimeMillis() - threadLocalTimer.recentlyGetTime
             if (duration / 1000 > 180) {
-                val h = holder()
+                val h = this.holder()
                 if (h.size > 2) h.clean(2)
             }
         }

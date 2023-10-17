@@ -37,8 +37,10 @@ import scala.language.unsafeNulls
  */
 abstract class ThreadLocal[V] extends TimeoutResource {
 
-    @volatile private var initial: Boolean                 = false
+    private var initial: Boolean                           = false
     private var threadLocalTimers: Array[ThreadLocalTimer] = _
+
+    @volatile private var triggered: Boolean = false
 
     private final def initialIfNot(len: Int): Unit =
         if (initial) {} else syncInit(len) // Reducing cpu branch prediction errors.
@@ -52,7 +54,7 @@ abstract class ThreadLocal[V] extends TimeoutResource {
     private def syncInit(len: Int): Unit = this.synchronized {
         if (!initial) {
             doInitial(len)
-            if (isSupportTimeout) threadLocalTimers = new Array[ThreadLocalTimer](len)
+            threadLocalTimers = new Array[ThreadLocalTimer](len)
             initial = true
         }
     }
@@ -110,6 +112,7 @@ abstract class ThreadLocal[V] extends TimeoutResource {
     final protected def initialTimer(): Unit = {
         initialTimeoutTrigger match
             case Some(trigger) =>
+                triggered = true
                 val thread           = ActorThread.currentThread()
                 val system           = thread.system
                 val threadLocalTimer = new ThreadLocalTimer(this)
@@ -121,10 +124,11 @@ abstract class ThreadLocal[V] extends TimeoutResource {
                 threadLocalTimer.updateRegisterId(id)
                 threadLocalTimers(thread.index) = threadLocalTimer
             case None =>
+                threadLocalTimers = null
     }
 
     /** Whether this [[ThreadLocal]] support timeout. */
-    private final def isSupportTimeout: Boolean = initialTimeoutTrigger.nonEmpty
+    private final def isSupportTimeout: Boolean = triggered
 
 }
 

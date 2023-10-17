@@ -17,10 +17,10 @@
 package cc.otavia.core.actor
 
 import cc.otavia.core.actor.AcceptorActor.AcceptedChannel
-import cc.otavia.core.actor.ChannelsActor.RegisterWaitState
 import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.message.*
 import cc.otavia.core.message.helper.UnitReply
+import cc.otavia.core.stack.helper.ChannelFutureState
 import cc.otavia.core.stack.{AskStack, StackState}
 
 import scala.reflect.{ClassTag, classTag}
@@ -35,8 +35,8 @@ abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | Accepted
             case StackState.`start` =>
                 val channel = stack.ask.channel
                 initAndRegister(channel, stack)
-            case registerWaitState: RegisterWaitState =>
-                val future = registerWaitState.registerFuture
+            case registerWaitState: ChannelFutureState =>
+                val future = registerWaitState.future
                 if (future.isSuccess) {
                     afterAccepted(future.channel)
                     stack.`return`(UnitReply())

@@ -17,8 +17,9 @@
 package cc.otavia.core.cache
 
 import cc.otavia.core.system.ActorThread
+import cc.otavia.core.timer.TimeoutTrigger
 
-abstract class ThreadIsolationObjectPool[T <: Poolable] extends ObjectPool[T] {
+abstract class AbstractThreadIsolatedObjectPool[T <: Poolable] extends ObjectPool[T] {
 
     protected def holder(): SingleThreadPoolableHolder[T]
 
@@ -34,8 +35,31 @@ abstract class ThreadIsolationObjectPool[T <: Poolable] extends ObjectPool[T] {
     override def recycle(poolable: T): Unit = {
         poolable.clean()
         if (dropIfRecycleNotByCreated) {
-            if (poolable.creator == ActorThread.currentThread()) holder().push(poolable) else {}
+            if (poolable.creator == Thread.currentThread()) holder().push(poolable) else {}
         } else holder().push(poolable)
+    }
+
+    protected val timeoutTrigger: Option[TimeoutTrigger]
+
+    protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit
+
+}
+
+object AbstractThreadIsolatedObjectPool {
+
+    class ObjectPoolThreadLocal[T <: Poolable](val parent: AbstractThreadIsolatedObjectPool[T])
+        extends ActorThreadLocal[SingleThreadPoolableHolder[T]] {
+
+        override protected def initialValue(): SingleThreadPoolableHolder[T] =
+            new SingleThreadPoolableHolder[T]()
+
+        override protected final def initialTimeoutTrigger: Option[TimeoutTrigger] = parent.timeoutTrigger
+
+        override def handleTimeout(registerId: Long, resourceTimer: ResourceTimer): Unit = {
+            val threadLocalTimer: ThreadLocalTimer = resourceTimer.asInstanceOf[ThreadLocalTimer]
+            parent.handleTimeout(registerId, threadLocalTimer)
+        }
+
     }
 
 }

@@ -17,7 +17,7 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.actor.{AbstractActor, Actor}
-import cc.otavia.core.cache.{ActorThreadLocal, Poolable, ThreadIsolationObjectPool, ThreadLocalTimer}
+import cc.otavia.core.cache.{AbstractThreadIsolatedObjectPool, ActorThreadLocal, Poolable, ThreadLocalTimer}
 import cc.otavia.core.message.*
 import cc.otavia.core.timer.Timer
 

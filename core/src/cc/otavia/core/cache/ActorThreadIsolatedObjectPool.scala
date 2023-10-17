@@ -16,20 +16,20 @@
 
 package cc.otavia.core.cache
 
+import cc.otavia.core.cache.AbstractThreadIsolatedObjectPool.*
 import cc.otavia.core.system.ActorThread
+import cc.otavia.core.timer.TimeoutTrigger
 
-abstract class PerActorThreadObjectPool[T <: Poolable](override val dropIfRecycleNotByCreated: Boolean = false)
-    extends ThreadIsolationObjectPool[T] {
+abstract class ActorThreadIsolatedObjectPool[T <: Poolable] extends AbstractThreadIsolatedObjectPool[T] {
 
-    private val threadLocal: ActorThreadLocal[SingleThreadPoolableHolder[T]] =
-        () => new SingleThreadPoolableHolder[T]()
+    private val threadLocal = new ObjectPoolThreadLocal[T](this)
 
     override protected def holder(): SingleThreadPoolableHolder[T] = {
         if (ActorThread.currentThreadIsActorThread) threadLocal.get()
         else
             throw new IllegalStateException(
-              "PerActorThreadObjectPool can not be used in thread which is not ActorThread, " +
-                  "maby you can use PerThreadObjectPool"
+              "ActorThreadIsolatedObjectPool can not be used in thread which is not ActorThread, " +
+                  "maybe you can use ThreadIsolatedObjectPool."
             )
     }
 

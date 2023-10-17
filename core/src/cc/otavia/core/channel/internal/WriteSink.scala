@@ -20,7 +20,6 @@ package cc.otavia.core.channel.internal
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.core.channel.estimator.{ReadHandleFactory, WriteHandleFactory}
-import cc.otavia.core.channel.internal.ChannelOutboundBuffer
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.channel.{AbstractNetChannel, ChannelPipeline, ChannelShutdownDirection, ServerChannel}
 
@@ -48,18 +47,6 @@ private[core] trait WriteSink {
             } else ???
         case _ => false
     }
-
-    def writeLoop(outboundBuffer: ChannelOutboundBuffer): Unit = try {
-        try {} catch {
-            case t: Throwable => ???
-        } finally {
-            try {
-                writeLoopComplete(outboundBuffer.isEmpty)
-            } catch {
-                case cause: Throwable => ???
-            }
-        }
-    } finally {}
 
     /** Update the [[Buffer.readerOffset]] of each buffer and return the number of completely written [[Buffer]]s.
      *

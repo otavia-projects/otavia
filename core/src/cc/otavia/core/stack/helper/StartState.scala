@@ -14,26 +14,11 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.stack
+package cc.otavia.core.stack.helper
 
-import cc.otavia.core.cache.Poolable
-import cc.otavia.core.message.Reply
-import cc.otavia.core.stack.helper.StartState
+import cc.otavia.core.stack.{Stack, StackState}
 
-trait StackState {
-
-    private val option: Option[StackState] = Some(this) // for pooling Some(this) object to reduce GC
-
-    def resumable(): Boolean = false
-
-    def id: Int = 0
-
-    def suspend(): Option[StackState] = option
-
-}
-
-object StackState {
-
-    val start: StartState = new StartState()
-
+/** The first [[StackState]] of a [[Stack]], it only have one constant value [[StackState.start]]. */
+class StartState private[core] () extends StackState {
+    final override def resumable(): Boolean = true
 }

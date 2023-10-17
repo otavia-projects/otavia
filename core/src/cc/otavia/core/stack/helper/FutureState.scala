@@ -17,10 +17,9 @@
 package cc.otavia.core.stack.helper
 
 import cc.otavia.core.cache.*
-import cc.otavia.core.cache.SingleThreadPoolableHolder
 import cc.otavia.core.message.Reply
 import cc.otavia.core.stack.helper.FutureState.pool
-import cc.otavia.core.stack.{ReplyFuture, StackState}
+import cc.otavia.core.stack.{ReplyFuture, StackState, StackStatePool}
 import cc.otavia.core.system.ActorThread
 import cc.otavia.core.timer.TimeoutTrigger
 
@@ -30,7 +29,7 @@ import scala.deriving.Mirror
 import scala.language.unsafeNulls
 import scala.reflect.{ClassTag, TypeTest, Typeable, classTag}
 
-class FutureState[R <: Reply] extends StackState with Poolable {
+class FutureState[R <: Reply] private () extends StackState with Poolable {
 
     private var stateId: Int       = 0
     private var fu: ReplyFuture[R] = _
@@ -69,37 +68,9 @@ object FutureState {
         state
     }
 
-    private val pool = new ThreadIsolationObjectPool[FutureState[?]] {
-
-        private val threadLocal = new ActorThreadLocal[SingleThreadPoolableHolder[FutureState[?]]] {
-
-            override protected def initialValue(): SingleThreadPoolableHolder[FutureState[?]] =
-                new SingleThreadPoolableHolder[FutureState[?]]()
-
-            override protected def initialTimeoutTrigger: Option[TimeoutTrigger] =
-                Some(TimeoutTrigger.DelayPeriod(60, 60, TimeUnit.SECONDS, TimeUnit.SECONDS))
-
-            override def handleTimeout(registerId: Long, resourceTimer: ResourceTimer): Unit = {
-                val threadLocalTimer: ThreadLocalTimer = resourceTimer.asInstanceOf[ThreadLocalTimer]
-                if ((System.currentTimeMillis() - threadLocalTimer.recentlyGetTime) / 1000 > 30) {
-                    val holder = this.get()
-                    if (holder.size > 10) holder.clean(10)
-                }
-            }
-
-        }
-
-        override protected def holder(): SingleThreadPoolableHolder[FutureState[?]] =
-            if (ActorThread.currentThreadIsActorThread) threadLocal.get()
-            else
-                throw new IllegalStateException(
-                  "PerActorThreadObjectPool can not be used in thread which is not ActorThread, " +
-                      "maybe you can use PerThreadObjectPool"
-                )
+    private val pool = new StackStatePool[FutureState[?]] {
 
         override protected def newObject(): FutureState[?] = new FutureState()
-
-        override def dropIfRecycleNotByCreated: Boolean = true
 
     }
 
