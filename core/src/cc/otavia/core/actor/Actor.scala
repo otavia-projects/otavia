@@ -71,18 +71,10 @@ trait Actor[+M <: Call] {
      *  implement this method, the actor will dead.
      */
     protected def restart(): Unit =
-        throw new NotImplementedError(getClass.getName.nn + ": an implementation is missing")
+        throw new NotImplementedError(getClass.getName + ": an implementation is missing: [restart]")
 
     /** Actor system call this method after call restart */
     protected def afterRestart(): Unit = {}
-
-    /** whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to
-     *  receiveBatchXXX method
-     */
-    def batchable: Boolean = false
-
-    /** max size message for each batch, usage for schedule system */
-    def maxBatchSize: Int = system.defaultMaxBatchSize
 
     def maxFetchPerRunning: Int = system.defaultMaxFetchPerRunning
 

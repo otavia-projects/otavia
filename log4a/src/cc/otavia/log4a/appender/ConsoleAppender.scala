@@ -19,7 +19,8 @@ package cc.otavia.log4a.appender
 import cc.otavia.core.actor.StateActor
 import cc.otavia.core.address.Address
 import cc.otavia.core.ioc.{Component, Primary}
-import cc.otavia.core.stack.{BatchNoticeStack, StackState}
+import cc.otavia.core.message.Notice
+import cc.otavia.core.stack.{BatchNoticeStack, NoticeStack, StackState}
 import cc.otavia.log4a.appender.Appender
 import cc.otavia.log4a.appender.Appender.*
 
@@ -36,42 +37,50 @@ class ConsoleAppender extends StateActor[LogMsg], Appender {
     private val cache     = new mutable.StringBuilder()
     private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
-    override def batchContinueNotice(stack: BatchNoticeStack[LogMsg]): Option[StackState] = {
-        stack.notices.foreach {
-            case trace: Trace =>
-                cache.append(Console.WHITE)
-                cache.append(trace.time.format(formatter))
-                cache.append("\tTRACE\t")
-                writeLogLine(trace)
-                cache.append(Console.RESET)
-            case debug: Debug =>
-                cache.append(debug.time.format(formatter))
-                cache.append("\tDEBUG\t")
-                writeLogLine(debug)
-            case info: Info =>
-                cache.append(Console.GREEN)
-                cache.append(info.time.format(formatter))
-                cache.append("\tINFO\t")
-                writeLogLine(info)
-                cache.append(Console.RESET)
-            case warn: Warn =>
-                cache.append(Console.YELLOW)
-                cache.append(warn.time.format(formatter))
-                cache.append("\tWARN\t")
-                writeLogLine(warn)
-                cache.append(Console.RESET)
-            case error: Error =>
-                cache.append(Console.RED)
-                cache.append(error.time.format(formatter))
-                cache.append("\tERROR\t")
-                writeLogLine(error)
-                cache.append(Console.RESET)
-            case fatal: Fatal => ???
-        }
+    override protected def batchContinueNotice(stack: BatchNoticeStack[LogMsg]): Option[StackState] = {
+        stack.notices.foreach(serializeLogMsg)
         print(cache.toString())
         cache.clear()
         stack.`return`()
     }
+
+    override protected def continueNotice(stack: NoticeStack[LogMsg]): Option[StackState] = {
+        serializeLogMsg(stack.notice)
+        print(cache.toString())
+        cache.clear()
+        stack.`return`()
+    }
+
+    private def serializeLogMsg(logMsg: LogMsg): Unit = logMsg match
+        case trace: Trace =>
+            cache.append(Console.WHITE)
+            cache.append(trace.time.format(formatter))
+            cache.append("\tTRACE\t")
+            writeLogLine(trace)
+            cache.append(Console.RESET)
+        case debug: Debug =>
+            cache.append(debug.time.format(formatter))
+            cache.append("\tDEBUG\t")
+            writeLogLine(debug)
+        case info: Info =>
+            cache.append(Console.GREEN)
+            cache.append(info.time.format(formatter))
+            cache.append("\tINFO\t")
+            writeLogLine(info)
+            cache.append(Console.RESET)
+        case warn: Warn =>
+            cache.append(Console.YELLOW)
+            cache.append(warn.time.format(formatter))
+            cache.append("\tWARN\t")
+            writeLogLine(warn)
+            cache.append(Console.RESET)
+        case error: Error =>
+            cache.append(Console.RED)
+            cache.append(error.time.format(formatter))
+            cache.append("\tERROR\t")
+            writeLogLine(error)
+            cache.append(Console.RESET)
+        case fatal: Fatal => ???
 
     private def writeLogLine(logMsg: LogMsg): Unit = {
         cache.append('[')
