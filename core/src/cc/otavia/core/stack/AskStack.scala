@@ -24,7 +24,7 @@ import cc.otavia.core.timer.Timer
 import java.util.concurrent.TimeUnit
 import scala.language.unsafeNulls
 
-class AskStack[A <: Ask[? <: Reply]] private () extends ActorStack {
+final class AskStack[A <: Ask[? <: Reply]] private () extends ActorStack {
 
     private var reply: Reply = _
 

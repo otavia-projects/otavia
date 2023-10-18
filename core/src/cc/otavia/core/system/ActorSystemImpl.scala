@@ -21,6 +21,7 @@ import cc.otavia.buffer.pool.{DirectPooledPageAllocator, HeapPooledPageAllocator
 import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.actor.*
 import cc.otavia.core.address.*
+import cc.otavia.core.cache.ThreadLocal
 import cc.otavia.core.channel.ChannelFactory
 import cc.otavia.core.ioc.{BeanDefinition, BeanManager, Module}
 import cc.otavia.core.message.Call
@@ -41,7 +42,8 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.{MILLISECONDS, MINUTES, TimeUnit}
 import scala.language.unsafeNulls
 
-class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFactory) extends ActorSystem {
+final private[core] class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFactory)
+    extends ActorSystem {
 
     actorThreadFactory.setSystem(this)
 
@@ -99,6 +101,8 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
     private val _reactor = transFactory.openReactor(this)
 
     private val gcTime = new AtomicLong(System.currentTimeMillis())
+
+    private val threadLocals: mutable.Set[ThreadLocal[?]] = mutable.HashSet.empty
 
     initialize = true
 
@@ -270,6 +274,9 @@ class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFacto
             busy = true
         else busy = false
     }
+
+    override private[core] def registerLongLifeThreadLocal(threadLocal: ThreadLocal[?]): Unit =
+        threadLocals.addOne(threadLocal)
 
     override private[core] def gc(): Unit = {
         val now  = System.currentTimeMillis()

@@ -17,18 +17,17 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.message.Notice
-import cc.otavia.core.message.{Ask, Notice}
+
+import scala.language.unsafeNulls
 
 class BatchNoticeStack[N <: Notice] private () extends Stack {
 
-    private var msgs: Seq[Notice] = _
-    private var done: Boolean     = false
+    private var messages: Seq[Notice] = _
+    private var done: Boolean         = false
 
-    override def recycle(): Unit = BatchNoticeStack.pool.recycle(this)
+    private[core] def setNotices(notices: Seq[Notice]): Unit = messages = notices
 
-    private[core] def setNotices(notices: Seq[Notice]): Unit = msgs = notices
-
-    def notices: Seq[N] = msgs.asInstanceOf[Seq[N]]
+    def notices: Seq[N] = messages.asInstanceOf[Seq[N]]
 
     def `return`(): None.type = {
         done = true
@@ -37,11 +36,19 @@ class BatchNoticeStack[N <: Notice] private () extends Stack {
 
     def isDone: Boolean = done
 
+    override def recycle(): Unit = BatchNoticeStack.pool.recycle(this)
+
+    override protected def cleanInstance(): Unit = {
+        done = false
+        messages = null
+        super.cleanInstance()
+    }
+
 }
 
 object BatchNoticeStack {
 
-    private val pool: StackObjectPool[BatchNoticeStack[?]] = new StackObjectPool[BatchNoticeStack[?]] {
+    private val pool = new StackObjectPool[BatchNoticeStack[?]] {
         override protected def newObject(): BatchNoticeStack[?] = new BatchNoticeStack[Nothing]()
     }
 

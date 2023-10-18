@@ -19,29 +19,25 @@ package cc.otavia.core.cache
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.util.Chainable
 
-class SingleThreadPoolableHolder[T <: Poolable](val maxSize: Int = ActorSystem.DEFAULT_POOL_HOLDER_MAX_SIZE)
+import scala.language.unsafeNulls
+
+final class SingleThreadPoolableHolder[T <: Poolable](val maxSize: Int = ActorSystem.DEFAULT_POOL_HOLDER_MAX_SIZE)
     extends PoolableHolder[T] {
 
-    import scala.language.unsafeNulls
-
-    private var count: Int             = 0
-    private var head: Chainable | Null = _
-    private var tail: Chainable | Null = _
-
-    private def headnn: Chainable = head.asInstanceOf[Chainable]
-
-    private def tailnn: Chainable = tail.asInstanceOf[Chainable]
+    private var count: Int      = 0
+    private var head: Chainable = _
+    private var tail: Chainable = _
 
     override def size: Int = count
 
     override def pop(): T | Null = if (count > 1) {
-        val poolable = headnn
-        head = poolable.next // TODO: java.lang.NullPointerException
+        val poolable = head
+        head = poolable.next
         count -= 1
         poolable.deChain()
         poolable.asInstanceOf[T]
     } else if (count == 1) {
-        val poolable = headnn
+        val poolable = head
         tail = null
         head = null
         count -= 1
@@ -54,7 +50,7 @@ class SingleThreadPoolableHolder[T <: Poolable](val maxSize: Int = ActorSystem.D
         count = 1
     } else {
         if (count != maxSize) {
-            val oldHead = headnn
+            val oldHead = head
             poolable.next = oldHead
             head = poolable
             count += 1
@@ -75,10 +71,10 @@ class SingleThreadPoolableHolder[T <: Poolable](val maxSize: Int = ActorSystem.D
             tail = head
             var c = keep - 1
             while (c > 0) {
-                tail = headnn.next
+                tail = tail.next
                 c -= 1
             }
-            tailnn.cleanNext()
+            tail.cleanNext()
             count = keep
         }
     }

@@ -29,12 +29,12 @@ abstract class Stack extends Poolable {
     private var error: Boolean         = false
 
     // completed promise
-    private var headPromise: AbstractPromise[?] = _
-    private var tailPromise: AbstractPromise[?] = _
+    private var completedHead: AbstractPromise[?] = _
+    private var completedTail: AbstractPromise[?] = _
 
     // uncompleted promise
-    private var uhead: AbstractPromise[?] = _
-    private var utail: AbstractPromise[?] = _
+    private var uncompletedHead: AbstractPromise[?] = _
+    private var uncompletedTail: AbstractPromise[?] = _
 
     // context
     private var actor: AbstractActor[?] = _
@@ -43,9 +43,9 @@ abstract class Stack extends Poolable {
 
     private[core] def setRuntimeActor(a: AbstractActor[?]): Unit = actor = a
 
-    def state: StackState = stackState
+    final def state: StackState = stackState
 
-    private[core] def setState(stackState: StackState): Unit = if (this.stackState != stackState) {
+    private[core] final def setState(stackState: StackState): Unit = if (this.stackState != stackState) {
         recycleCompletedPromises()
         this.stackState = stackState
     }
@@ -70,60 +70,60 @@ abstract class Stack extends Poolable {
             case null =>
                 next match
                     case null =>
-                        uhead = null
-                        utail = null
+                        uncompletedHead = null
+                        uncompletedTail = null
                     case nextNode: Chainable =>
                         nextNode.cleanPre()
-                        uhead = nextNode.asInstanceOf[AbstractPromise[?]]
+                        uncompletedHead = nextNode.asInstanceOf[AbstractPromise[?]]
             case preNode: Chainable =>
                 next match
                     case null =>
                         preNode.cleanNext()
-                        utail = preNode.asInstanceOf[AbstractPromise[?]]
+                        uncompletedTail = preNode.asInstanceOf[AbstractPromise[?]]
                     case nextNode: Chainable => preNode.next = nextNode
 
         // step 2: add completed to completed chain
-        if (headPromise == null) {
-            headPromise = completed
-            tailPromise = completed
+        if (completedHead == null) {
+            completedHead = completed
+            completedTail = completed
         } else {
-            val oldTail = tailPromise
+            val oldTail = completedTail
             oldTail.next = completed
             completed.pre = oldTail
-            tailPromise = completed
+            completedTail = completed
         }
     }
 
     private[core] def addUncompletedPromise(uncompleted: AbstractPromise[?]): Unit = {
-        if (uhead == null) {
-            uhead = uncompleted
-            utail = uncompleted
+        if (uncompletedHead == null) {
+            uncompletedHead = uncompleted
+            uncompletedTail = uncompleted
         } else {
-            val oldTail = utail
+            val oldTail = uncompletedTail
             oldTail.next = uncompleted
             uncompleted.pre = oldTail
-            utail = uncompleted
+            uncompletedTail = uncompleted
         }
     }
 
     private[core] def addUncompletedPromiseIterator(iterator: PromiseIterator): Unit = {
-        if (uhead == null) {
-            uhead = iterator.head
-            utail = iterator.tail
+        if (uncompletedHead == null) {
+            uncompletedHead = iterator.head
+            uncompletedTail = iterator.tail
         } else {
-            utail.next = iterator.head
-            iterator.head.next = utail
-            utail = iterator.tail
+            uncompletedTail.next = iterator.head
+            iterator.head.next = uncompletedTail
+            uncompletedTail = iterator.tail
         }
         iterator.clean()
     }
 
-    private[core] def hasUncompletedPromise: Boolean = uhead != null
+    private[core] def hasUncompletedPromise: Boolean = uncompletedHead != null
 
-    private[core] def hasCompletedPromise: Boolean = headPromise != null
+    private[core] def hasCompletedPromise: Boolean = completedHead != null
 
     private[core] def completedPromiseCount: Int = {
-        var cursor: Chainable = headPromise
+        var cursor: Chainable = completedHead
         var count             = 0
         while (cursor != null) {
             cursor = cursor.next
@@ -133,7 +133,7 @@ abstract class Stack extends Poolable {
     }
 
     private[core] def uncompletedPromiseCount: Int = {
-        var cursor: Chainable = uhead
+        var cursor: Chainable = uncompletedHead
         var count             = 0
         while (cursor != null) {
             cursor = cursor.next
@@ -142,34 +142,18 @@ abstract class Stack extends Poolable {
         count
     }
 
-    private[core] def recycleCompletedPromises(): Unit = while (headPromise != null) {
-        val promise = headPromise
-        if (headPromise == tailPromise) tailPromise = null
-        headPromise = promise.next.asInstanceOf[AbstractPromise[?]]
+    private[core] final def recycleCompletedPromises(): Unit = while (completedHead != null) {
+        val promise = completedHead
+        if (completedHead == completedTail) completedTail = null
+        completedHead = promise.next.asInstanceOf[AbstractPromise[?]]
         promise.recycle()
     }
 
     private[core] def uncompletedPromises(): PromiseIterator = {
-        val iterator = PromiseIterator(uhead, utail)
-        uhead = null
-        utail = null
+        val iterator = PromiseIterator(uncompletedHead, uncompletedTail)
+        uncompletedHead = null
+        uncompletedTail = null
         iterator
     }
-
-}
-
-abstract class ActorStack extends Stack {
-
-    private var msg: Call                    = _
-    private[core] def setCall(c: Call): Unit = msg = c
-
-    def call: Call = msg
-
-    override protected def cleanInstance(): Unit = {
-        msg = null
-        super.cleanInstance()
-    }
-
-    def isDone: Boolean
 
 }

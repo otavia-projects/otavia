@@ -42,18 +42,26 @@ abstract class ThreadLocal[V] extends TimeoutResource {
 
     @volatile private var triggered: Boolean = false
 
-    private final def initialIfNot(len: Int): Unit =
-        if (initial) {} else syncInit(len) // Reducing cpu branch prediction errors.
+    private final def initialIfNot(thread: ActorThread): Unit =
+        if (initial) {} else syncInit(thread) // Reducing cpu branch prediction errors.
 
     private[cache] final def threadIndex(): Int = {
         val thread = ActorThread.currentThread()
-        initialIfNot(thread.parent.size)
+        initialIfNot(thread)
         thread.index
     }
 
-    private def syncInit(len: Int): Unit = this.synchronized {
+    private def syncInit(thread: ActorThread): Unit = this.synchronized {
+        val len = thread.parent.size
         if (!initial) {
             doInitial(len)
+            initialTimeoutTrigger match
+                case Some(value) =>
+                    if (
+                      value.isInstanceOf[TimeoutTrigger.DelayPeriod] ||
+                      value.isInstanceOf[TimeoutTrigger.FirstTimePeriod]
+                    ) thread.system.registerLongLifeThreadLocal(this)
+                case None =>
             threadLocalTimers = new Array[ThreadLocalTimer](len)
             initial = true
         }

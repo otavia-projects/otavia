@@ -22,20 +22,12 @@ import scala.language.unsafeNulls
 
 class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
 
-    private var msgs: Seq[Ask[?]] = _
-    private var reply: Reply      = _
+    private var messages: Seq[Ask[?]] = _
+    private var reply: Reply          = _
 
-    override def recycle(): Unit = BatchAskStack.pool.recycle(this)
+    private[core] def setAsks(asks: Seq[Ask[?]]): Unit = this.messages = asks
 
-    private[core] def setAsks(asks: Seq[Ask[?]]): Unit = this.msgs = asks
-
-    def asks: Seq[A] = msgs.asInstanceOf[Seq[A]]
-
-    override protected def cleanInstance(): Unit = {
-        super.cleanInstance()
-        msgs = null
-        reply = null
-    }
+    def asks: Seq[A] = messages.asInstanceOf[Seq[A]]
 
     def `return`(ret: ReplyOf[A]): None.type = {
         // ret.setMessageContext(runtimeActor)
@@ -59,6 +51,14 @@ class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
     }
 
     def isDone: Boolean = reply != null
+
+    override def recycle(): Unit = BatchAskStack.pool.recycle(this)
+
+    override protected def cleanInstance(): Unit = {
+        messages = null
+        reply = null
+        super.cleanInstance()
+    }
 
 }
 

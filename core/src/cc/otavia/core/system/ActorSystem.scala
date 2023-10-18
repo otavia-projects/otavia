@@ -20,6 +20,7 @@ import cc.otavia.buffer.BufferAllocator
 import cc.otavia.common.{Report, SystemPropertyUtil}
 import cc.otavia.core.actor.{Actor, ActorFactory, MainActor, MessageOf}
 import cc.otavia.core.address.Address
+import cc.otavia.core.cache.ThreadLocal
 import cc.otavia.core.channel.{Channel, ChannelFactory}
 import cc.otavia.core.ioc.{BeanDefinition, Module}
 import cc.otavia.core.message.*
@@ -31,8 +32,6 @@ import cc.otavia.core.timer.Timer
 import java.lang.management.MemoryUsage
 import java.net.InetAddress
 import scala.language.unsafeNulls
-import scala.quoted
-import scala.reflect.ClassTag
 
 /** [[ActorSystem]] is a container of actor and channel group instance, a actor or channel group instance must be create
  *  by a actor system instance, actor instance in different actor system instance can not send message directly.
@@ -103,9 +102,13 @@ trait ActorSystem {
 
     private[core] def gc(): Unit
 
+    private[core] def registerLongLifeThreadLocal(threadLocal: ThreadLocal[?]): Unit
+
 }
 
 object ActorSystem {
+
+    private var system: ActorSystem = _
 
     private val DEFAULT_SYSTEM_NAME = s"ActorSystem:${InetAddress.getLocalHost.getHostName}"
 
@@ -142,9 +145,9 @@ object ActorSystem {
     val PRINT_BANNER: Boolean = SystemPropertyUtil.getBoolean("cc.otavia.system.banner", DEFAULT_PRINT_BANNER)
 
     // buffer setting
-    private val DEFAULT_PAGE_SIZE: Int      = 4
-    private val ENABLE_PAGE_SIZES: Set[Int] = Set(1, 2, 4, 8, 16)
-    private val K: Int                      = 1024
+    private val DEFAULT_PAGE_SIZE: Int        = 4
+    private val ENABLE_PAGE_SIZES: Array[Int] = Array(1, 2, 4, 8, 16)
+    private val K: Int                        = 1024
 
     val PAGE_SIZE: Int = {
         val size = SystemPropertyUtil.getInt("cc.otavia.buffer.page.size", DEFAULT_PAGE_SIZE)
@@ -159,9 +162,37 @@ object ActorSystem {
         }
     }
 
-    def apply(): ActorSystem =
-        new ActorSystemImpl(DEFAULT_SYSTEM_NAME, new ActorThreadFactory.DefaultActorThreadFactory)
+    /** Create an [[ActorSystem]] instance with default name [[DEFAULT_SYSTEM_NAME]].
+     *  @return
+     *    [[ActorSystem]] instance.
+     */
+    def apply(): ActorSystem = this.synchronized {
+        if (system == null) {
+            system = new ActorSystemImpl(DEFAULT_SYSTEM_NAME, new ActorThreadFactory.DefaultActorThreadFactory)
+        } else
+            throw new IllegalStateException(
+              "Can't create multiple ActorSystem instances within the same JVM instance, use method global to get the only instance that has been created."
+            )
+        system
+    }
 
-    def apply(name: String): ActorSystem = new ActorSystemImpl(name, new ActorThreadFactory.DefaultActorThreadFactory)
+    /** Create an [[ActorSystem]] instance with [[name]].
+     *  @param name
+     *    name of the [[ActorSystem]].
+     *  @return
+     *    [[ActorSystem]] instance.
+     */
+    def apply(name: String): ActorSystem = this.synchronized {
+        if (system == null) {
+            system = new ActorSystemImpl(name, new ActorThreadFactory.DefaultActorThreadFactory)
+        } else
+            throw new IllegalStateException(
+              "Can't create multiple ActorSystem instances within the same JVM instance, use method global to get the only instance that has been created."
+            )
+        system
+    }
+
+    /** Get the only instance that has been created, if not created, creating it and return it. */
+    def global: ActorSystem = this.synchronized { if (system == null) apply() else system }
 
 }

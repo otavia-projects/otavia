@@ -16,7 +16,6 @@
 
 package cc.otavia.core.stack
 
-import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.actor.{AbstractActor, ChannelsActor}
 import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.message.ReactorEvent
@@ -43,7 +42,7 @@ object ChannelFuture {
 
 }
 
-private[core] class ChannelPromise extends TimeoutablePromise[ReactorEvent] with ChannelFuture {
+final private[core] class ChannelPromise extends TimeoutablePromise[ReactorEvent] with ChannelFuture {
 
     private var ch: Channel                              = _
     private var event: ReactorEvent                      = _

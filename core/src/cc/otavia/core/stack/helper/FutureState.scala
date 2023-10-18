@@ -29,7 +29,7 @@ import scala.deriving.Mirror
 import scala.language.unsafeNulls
 import scala.reflect.{ClassTag, TypeTest, Typeable, classTag}
 
-class FutureState[R <: Reply] private () extends StackState with Poolable {
+final class FutureState[R <: Reply] private () extends StackState with Poolable {
 
     private var stateId: Int       = 0
     private var fu: ReplyFuture[R] = _

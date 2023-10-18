@@ -21,7 +21,7 @@ import cc.otavia.core.stack.{ChannelReplyFuture, StackState, StackStatePool}
 
 import scala.language.unsafeNulls
 
-class ChannelReplyFutureState private () extends StackState with Poolable {
+final class ChannelReplyFutureState private () extends StackState with Poolable {
 
     private var stateId: Int           = 0
     private var fu: ChannelReplyFuture = _

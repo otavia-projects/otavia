@@ -48,7 +48,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
     private val direct = new DirectPooledPageAllocator(ActorSystem.PAGE_SIZE)
     private val heap   = new HeapPooledPageAllocator(ActorSystem.PAGE_SIZE)
 
-    private val mutableSeq: mutable.Seq[AnyRef] = mutable.Seq.empty
+    private val mutableBuffer: mutable.ArrayBuffer[AnyRef] = mutable.ArrayBuffer.empty
 
     setName(s"otavia-actor-worker-$index")
 
@@ -204,8 +204,8 @@ object ActorThread {
     /** Check whether the current [[Thread]] is [[ActorThread]]. */
     final def currentThreadIsActorThread: Boolean = Thread.currentThread().isInstanceOf[ActorThread]
 
-    final def threadSeq[T]: mutable.Seq[T] = Thread.currentThread() match
-        case thread: ActorThread => thread.mutableSeq.asInstanceOf[mutable.Seq[T]]
-        case _                   => mutable.Seq.empty[T]
+    final def threadBuffer[T]: mutable.ArrayBuffer[T] = Thread.currentThread() match
+        case thread: ActorThread => thread.mutableBuffer.asInstanceOf[mutable.ArrayBuffer[T]]
+        case _                   => mutable.ArrayBuffer.empty[T]
 
 }

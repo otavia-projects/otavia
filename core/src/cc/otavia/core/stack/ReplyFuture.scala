@@ -34,7 +34,7 @@ object ReplyFuture {
     def apply[R <: Reply](): ReplyFuture[R] = ReplyPromise()
 }
 
-private[core] class ReplyPromise[R <: Reply] private () extends TimeoutablePromise[Reply] with ReplyFuture[R] {
+final private[core] class ReplyPromise[R <: Reply] private () extends TimeoutablePromise[Reply] with ReplyFuture[R] {
 
     private var reply: Reply         = _
     private var throwable: Throwable = _

@@ -151,25 +151,9 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable {
     override def run(): Unit = { // TODO: support batch receive
         if (status.compareAndSet(SCHEDULED, RUNNING)) {
             if (replyMailbox.size() > dweller.niceReply * 2) {
-                var cursor = replyMailbox.getChain(dweller.niceReply * 2)
-                while (cursor != null) {
-                    val msg = cursor
-                    cursor = msg.next
-                    msg.dechain()
-                    dweller.receiveReply(msg.asInstanceOf[Reply])
-                    runLaterTasks()
-                }
+                handleReplies(dweller.niceReply * 2)
             } else {
-                if (replyMailbox.nonEmpty) {
-                    var cursor = replyMailbox.getChain(dweller.niceReply)
-                    while (cursor != null) {
-                        val msg = cursor
-                        cursor = msg.next
-                        msg.dechain()
-                        dweller.receiveReply(msg.asInstanceOf[Reply])
-                        runLaterTasks()
-                    }
-                }
+                if (replyMailbox.nonEmpty) handleReplies(dweller.niceReply)
                 if (eventMailbox.nonEmpty) {
                     var cursor = eventMailbox.getChain(dweller.niceEvent)
                     while (cursor != null) {
@@ -191,13 +175,30 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable {
                     }
                 }
                 if (noticeMailbox.nonEmpty) {
-                    var cursor = noticeMailbox.getChain(dweller.niceNotice)
-                    while (cursor != null) {
-                        val msg = cursor
-                        cursor = msg.next
-                        msg.dechain()
-                        dweller.receiveNotice(msg.asInstanceOf[Notice])
-                        runLaterTasks()
+                    if (actor.batchable) {
+                        var cursor = noticeMailbox.getChain(dweller.maxBatchSize)
+                        val buf    = ActorThread.threadBuffer[Notice]
+                        while (cursor != null) {
+                            val notice = cursor.asInstanceOf[Notice]
+                            cursor = notice.next
+                            notice.dechain()
+                            if (dweller.batchNoticeFilter(notice)) buf.addOne(notice)
+                            else {
+                                if (buf.nonEmpty) handleBatchNotice(buf)
+                                dweller.receiveNotice(notice)
+                                runLaterTasks()
+                            }
+                        }
+                        if (buf.nonEmpty) handleBatchNotice(buf)
+                    } else {
+                        var cursor = noticeMailbox.getChain(dweller.niceNotice)
+                        while (cursor != null) {
+                            val msg = cursor
+                            cursor = msg.next
+                            msg.dechain()
+                            dweller.receiveNotice(msg.asInstanceOf[Notice])
+                            runLaterTasks()
+                        }
                     }
                 }
             }
@@ -208,6 +209,29 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable {
                 status.compareAndSet(RUNNING, WAITING)
             }
         }
+    }
+
+    private def handleReplies(size: Int): Unit = {
+        var cursor = replyMailbox.getChain(size)
+        while (cursor != null) {
+            val msg = cursor
+            cursor = msg.next
+            msg.dechain()
+            dweller.receiveReply(msg.asInstanceOf[Reply])
+            runLaterTasks()
+        }
+    }
+
+    private def handleBatchNotice(buf: collection.mutable.ArrayBuffer[Notice]): Unit = if (buf.size > 1) {
+        val notices = buf.toSeq
+        buf.clear()
+        dweller.receiveBatchNotice(notices)
+        runLaterTasks()
+    } else {
+        val notice = buf.head
+        buf.clear()
+        dweller.receiveNotice(notice)
+        runLaterTasks()
     }
 
     private def runLaterTasks(): Unit = {
