@@ -36,14 +36,12 @@ abstract class ActorThreadLocal[V <: AnyRef] extends ThreadLocal[V] {
         variables = arr
     }
 
-    override def get(): V = {
+    final override def get(): V = {
         val index = threadIndex()
-        if (variables(index) == UNSET) {
-            initializeValue(index)
-        } else {
-            updateGetTime()
+        if (variables(index) != UNSET) {
+            updateGetTime(index)
             variables(index).asInstanceOf[V]
-        }
+        } else initializeValue(index)
     }
 
     override def getIfExists: V | Null = {
@@ -51,7 +49,7 @@ abstract class ActorThreadLocal[V <: AnyRef] extends ThreadLocal[V] {
         if (variables(index) == UNSET) {
             null
         } else {
-            updateGetTime()
+            updateGetTime(index)
             variables(index).asInstanceOf[V]
         }
     }

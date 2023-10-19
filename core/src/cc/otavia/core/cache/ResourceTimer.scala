@@ -20,10 +20,13 @@ import cc.otavia.core.timer.Timer
 
 abstract class ResourceTimer(val parent: TimeoutResource) {
 
-    @volatile private var rid: Long      = Timer.INVALID_TIMEOUT_REGISTER_ID
-    private val initTime: Long           = System.nanoTime()
-    def registerId: Long                 = rid
-    def updateRegisterId(id: Long): Unit = rid = id
-    def initialTime: Long                = initTime
+    private var rid: Long      = Timer.INVALID_TIMEOUT_REGISTER_ID
+    private val initTime: Long = System.nanoTime()
+
+    final def registerId: Long = rid
+
+    final def updateRegisterId(id: Long): Unit = rid = id
+
+    final def initialTime: Long = initTime
 
 }

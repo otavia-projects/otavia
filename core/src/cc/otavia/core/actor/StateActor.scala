@@ -32,7 +32,7 @@ abstract class StateActor[M <: Call] extends AbstractActor[M] {
      */
     override def self: ActorAddress[M] = super.self.asInstanceOf[ActorAddress[M]]
 
-    final override protected def receiveReactorEvent(event: Event): Unit =
+    final override private[core] def receiveReactorEvent(event: Event): Unit =
         throw new UnsupportedOperationException("StateActor not support io event")
 
 }

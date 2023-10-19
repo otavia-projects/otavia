@@ -16,7 +16,7 @@
 
 package cc.otavia.core.cache
 
-class ThreadLocalTimer(override val parent: ThreadLocal[?]) extends ResourceTimer(parent) {
+final class ThreadLocalTimer(override val parent: ThreadLocal[?]) extends ResourceTimer(parent) {
 
     private var recentlyGet: Long = System.currentTimeMillis()
     private var recentlySet: Long = System.currentTimeMillis()

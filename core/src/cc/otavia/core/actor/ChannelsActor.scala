@@ -60,44 +60,42 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         channelId
     }
 
-    def receiveChannelMessage(stack: ChannelStack[?]): Unit = {
-        currentStack = stack
+    private[core] def receiveChannelMessage(stack: ChannelStack[?]): Unit = {
         currentChannelReceived = stack.message
-        runChannelStack()
+        dispatchChannelStack(stack)
     }
 
-    private def runChannelStack(): Unit = {
-        val channelStack = currentStack.asInstanceOf[ChannelStack[?]]
+    override final private[core] def dispatchChannelStack(stack: ChannelStack[?]): Unit = {
+        currentStack = stack
         try {
-            val uncompleted = channelStack.uncompletedPromises()
-            val oldState    = channelStack.state
-            continueChannel(channelStack) match // run stack and switch to next state
+            val uncompleted = stack.uncompletedPromises()
+            val oldState    = stack.state
+            continueChannel(stack) match // run stack and switch to next state
                 case Some(state) =>
                     if (state != oldState) {
-                        channelStack.setState(state) // this also recycled all completed promise
+                        stack.setState(state) // this also recycled all completed promise
                         if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
                     } else { // state == oldState, recover uncompleted promise
-                        if (uncompleted.hasNext) channelStack.addUncompletedPromiseIterator(uncompleted)
+                        if (uncompleted.hasNext) stack.addUncompletedPromiseIterator(uncompleted)
                     }
-                    assert(channelStack.hasUncompletedPromise, s"has no future to wait for $channelStack")
+                    assert(stack.hasUncompletedPromise, s"has no future to wait for $stack")
                 case None =>
                     if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
-                    recycleUncompletedPromise(channelStack.uncompletedPromises())
-                    assert(channelStack.isDone, "continueAsk is return None but not call return method!")
-                    channelStack.recycle()
+                    recycleUncompletedPromise(stack.uncompletedPromises())
+                    assert(stack.isDone, "continueAsk is return None but not call return method!")
+                    stack.recycle()
         } catch {
             case cause: Throwable =>
                 cause.printStackTrace()
-                channelStack.`return`(cause) // completed stack with Exception
-                recycleUncompletedPromise(channelStack.uncompletedPromises())
-                channelStack.recycle()
+                stack.`return`(cause) // completed stack with Exception
+                recycleUncompletedPromise(stack.uncompletedPromises())
+                stack.recycle()
         } finally {
             currentStack = null
-            currentReceived = null
         }
     }
 
-    final override protected def receiveReactorEvent(event: Event): Unit = event match
+    final override private[core] def receiveReactorEvent(event: Event): Unit = event match
         case e: ReactorEvent.RegisterReply =>
             e.channel.handleChannelRegisterReplyEvent(e)
             afterChannelRegisterReplyEvent(e)

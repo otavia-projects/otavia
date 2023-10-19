@@ -16,19 +16,23 @@
 
 package cc.otavia.core.stack
 
-import cc.otavia.core.message.Notice
+import cc.otavia.core.message.{Call, Notice}
 
 import scala.language.unsafeNulls
 
-final class NoticeStack[N <: Notice] private () extends ActorStack {
+final class NoticeStack[N <: Notice] private () extends Stack {
 
     private var done: Boolean = false
+    private var msg: Call     = _
 
-    def notice: N = call.asInstanceOf[N]
+    private[core] def setNotice(c: Call): Unit = msg = c
+
+    def notice: N = msg.asInstanceOf[N]
 
     override def recycle(): Unit = NoticeStack.stackPool.recycle(this)
 
     override protected def cleanInstance(): Unit = {
+        msg = null
         done = false
         super.cleanInstance()
     }
@@ -39,7 +43,7 @@ final class NoticeStack[N <: Notice] private () extends ActorStack {
         None
     }
 
-    override def isDone: Boolean = done
+    def isDone: Boolean = done
 
 }
 

@@ -24,13 +24,6 @@ abstract class ActorThreadIsolatedObjectPool[T <: Poolable] extends AbstractThre
 
     private val threadLocal = new ObjectPoolThreadLocal[T](this)
 
-    override protected def holder(): SingleThreadPoolableHolder[T] = {
-        if (ActorThread.currentThreadIsActorThread) threadLocal.get()
-        else
-            throw new IllegalStateException(
-              "ActorThreadIsolatedObjectPool can not be used in thread which is not ActorThread, " +
-                  "maybe you can use ThreadIsolatedObjectPool."
-            )
-    }
+    final override protected def holder(): SingleThreadPoolableHolder[T] = threadLocal.get()
 
 }

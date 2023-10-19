@@ -68,10 +68,8 @@ object ChannelStack {
         override protected def newObject(): ChannelStack[AnyRef] = new ChannelStack()
     }
 
-    def apply(): ChannelStack[AnyRef] = stackPool.get()
-
     def apply(channel: Channel, msg: AnyRef, msgId: Long): ChannelStack[AnyRef] = {
-        val stack = ChannelStack()
+        val stack = stackPool.get()
         stack.setChannel(channel)
         stack.setMessage(msg)
         stack.setMessageId(msgId)

@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
  */
 private[core] abstract class StackObjectPool[S <: Stack] extends ActorThreadIsolatedObjectPool[S] {
 
-    override def dropIfRecycleNotByCreated: Boolean = false
+    override def dropIfRecycleNotByCreated: Boolean = true
 
     override protected val timeoutTrigger: Option[TimeoutTrigger] =
         Some(TimeoutTrigger.DelayPeriod(60, 60, TimeUnit.SECONDS, TimeUnit.SECONDS))

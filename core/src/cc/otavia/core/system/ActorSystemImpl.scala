@@ -153,7 +153,7 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
                 }
     }
 
-    final private[system] def setActorContext[A <: Actor[? <: Call]](
+    private[system] def setActorContext[A <: Actor[? <: Call]](
         actor: A,
         thread: ActorThread
     ): Address[MessageOf[A]] = {

@@ -49,6 +49,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
     private val heap   = new HeapPooledPageAllocator(ActorSystem.PAGE_SIZE)
 
     private val mutableBuffer: mutable.ArrayBuffer[AnyRef] = mutable.ArrayBuffer.empty
+    private val mutableSet: mutable.HashSet[AnyRef]        = mutable.HashSet.empty
 
     setName(s"otavia-actor-worker-$index")
 
@@ -207,5 +208,9 @@ object ActorThread {
     final def threadBuffer[T]: mutable.ArrayBuffer[T] = Thread.currentThread() match
         case thread: ActorThread => thread.mutableBuffer.asInstanceOf[mutable.ArrayBuffer[T]]
         case _                   => mutable.ArrayBuffer.empty[T]
+
+    final def threadSet[T]: mutable.HashSet[T] = Thread.currentThread() match
+        case thread: ActorThread => thread.mutableSet.asInstanceOf[mutable.HashSet[T]]
+        case _                   => mutable.HashSet.empty[T]
 
 }

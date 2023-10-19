@@ -93,21 +93,23 @@ trait Actor[+M <: Call] {
 
     // method for receive message
 
-    /** receive notice message from other actor
+    /** receive notice message by this method, the method will be call when this actor instance receive notice message
      *  @param notice
-     *    notice message
+     *    notice message receive by this actor instance
      */
     private[core] def receiveNotice(notice: Notice): Unit
 
-    /** receive ask message from other actor
+    /** receive ask message by this method, the method will be call when this actor instance receive ask message
+     *
      *  @param ask
-     *    ask message
+     *    ask message received by this actor instance
      */
     private[core] def receiveAsk(ask: Ask[? <: Reply]): Unit
 
-    /** receive reply message from other actor
+    /** receive reply message by this method, the method will be call when this actor instance receive reply message
+     *
      *  @param reply
-     *    reply message
+     *    reply message receive by this actor instance
      */
     private[core] def receiveReply(reply: Reply): Unit
 

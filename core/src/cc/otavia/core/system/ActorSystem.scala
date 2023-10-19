@@ -116,7 +116,7 @@ object ActorSystem {
         Math.max(1, SystemPropertyUtil.getInt("cc.otavia.reactor.maxTaskPerRun", 16))
 
     val DEFAULT_POOL_HOLDER_MAX_SIZE: Int =
-        SystemPropertyUtil.getInt("cc.otavia.pool.holder.maxSize", 1024)
+        SystemPropertyUtil.getInt("cc.otavia.pool.holder.maxSize", 256)
 
     private val DEFAULT_ACTOR_THREAD_POOL_SIZE: Int = Runtime.getRuntime.availableProcessors()
     val ACTOR_THREAD_POOL_SIZE: Int =

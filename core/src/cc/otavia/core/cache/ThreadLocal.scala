@@ -78,8 +78,8 @@ abstract class ThreadLocal[V] extends TimeoutResource {
     /** Returns the current value for the current thread */
     def get(): V
 
-    private[cache] def updateGetTime(): Unit = if (isSupportTimeout) {
-        val threadLocalTimer = threadLocalTimers(ActorThread.currentThread().index)
+    final private[cache] def updateGetTime(index: Int): Unit = if (isSupportTimeout) {
+        val threadLocalTimer = threadLocalTimers(index)
         threadLocalTimer.updateGetTime()
     }
 
@@ -126,7 +126,7 @@ abstract class ThreadLocal[V] extends TimeoutResource {
                 val threadLocalTimer = new ThreadLocalTimer(this)
                 val id = system.timer.registerResourceTimeout(
                   trigger,
-                  ActorThread.currentThread().actorThreadAddress,
+                  thread.actorThreadAddress,
                   threadLocalTimer
                 )
                 threadLocalTimer.updateRegisterId(id)

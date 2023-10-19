@@ -16,47 +16,58 @@
 
 package cc.otavia.core.stack
 
-import cc.otavia.core.message.{Ask, ExceptionMessage, Reply, ReplyOf}
+import cc.otavia.core.address.Address
+import cc.otavia.core.message.*
+import cc.otavia.core.system.ActorThread
 
 import scala.language.unsafeNulls
 
-class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
+final class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
 
     private var messages: Seq[Ask[?]] = _
     private var reply: Reply          = _
+    private var done: Boolean         = false
 
     private[core] def setAsks(asks: Seq[Ask[?]]): Unit = this.messages = asks
 
     def asks: Seq[A] = messages.asInstanceOf[Seq[A]]
 
     def `return`(ret: ReplyOf[A]): None.type = {
-        // ret.setMessageContext(runtimeActor)
-        ret.setReplyId(asks.map(ask => (ask.senderId, ask.askId)))
         reply = ret
-        for (sender <- asks.map(_.sender).distinct) {
-            sender.reply(reply, runtimeActor)
-        }
-        None
+        val none = end(ret)
+        done = true
+        none
+    }
+
+    def `return`(rets: Seq[ReplyOf[A]]): None.type = {
+        ???
     }
 
     def `throw`(cause: ExceptionMessage): None.type = {
-        cause.setReplyId(asks.map(ask => (ask.senderId, ask.askId)))
-        // cause.setMessageContext(runtimeActor)
         reply = cause
         this.setFailed()
-        for (sender <- asks.map(_.sender).distinct) {
-            sender.reply(reply, runtimeActor)
-        }
+        val none = end(cause)
+        done = true
+        none
+    }
+
+    private def end(ret: Reply): None.type = {
+        ret.setReplyId(asks.map(ask => (ask.senderId, ask.askId)))
+        val set = ActorThread.threadSet[Address[Call]]
+        for (elem   <- asks) set.addOne(elem.sender)
+        for (sender <- set) sender.reply(reply, runtimeActor)
+        set.clear()
         None
     }
 
-    def isDone: Boolean = reply != null
+    def isDone: Boolean = done
 
     override def recycle(): Unit = BatchAskStack.pool.recycle(this)
 
     override protected def cleanInstance(): Unit = {
         messages = null
         reply = null
+        done = false
         super.cleanInstance()
     }
 

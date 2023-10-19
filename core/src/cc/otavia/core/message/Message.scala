@@ -18,13 +18,13 @@ package cc.otavia.core.message
 
 import cc.otavia.core.actor.{AbstractActor, Actor}
 import cc.otavia.core.address.Address
-import cc.otavia.core.stack.ActorStack
+import cc.otavia.core.stack.Stack
 import cc.otavia.core.util.Nextable
 
 /** Message is base unit for actor community */
 sealed trait Message extends Nextable with Serializable
 
-/** Message which will generate [[ActorStack]] when a [[Actor]] received. */
+/** Message which will generate [[Stack]] when a [[Actor]] received. */
 sealed trait Call extends Message
 
 /** message which do not need reply */
@@ -58,14 +58,16 @@ type ReplyOf[A <: Ask[? <: Reply]] <: Reply = A match
 /** reply message, it reply at least one ask message */
 trait Reply extends Message {
 
+    private var sid: Long = -1L
     private var rid: Long = -1L
 
     private var rids: Seq[(Long, Long)] = _
     private var batch: Boolean          = false
+    private var bound: Boolean          = false
 
-    def setReplyId(id: Long): Unit = { this.rid = id; batch = false }
+    def setReplyId(id: Long): Unit = { this.rid = id; batch = false; bound = true }
 
-    def setReplyId(ids: Seq[(Long, Long)]): Unit = { this.rids = ids; batch = true }
+    def setReplyId(ids: Seq[(Long, Long)]): Unit = { this.rids = ids; batch = true; bound = true }
 
     def replyId: Long = if (batch) throw new RuntimeException("") else this.rid
 

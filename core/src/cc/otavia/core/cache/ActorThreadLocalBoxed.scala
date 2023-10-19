@@ -46,7 +46,7 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
         val box   = valueBox(index)
         if (box.isEmpty) initializeValue(box)
         else {
-            updateGetTime()
+            updateGetTime(index)
             box.getValue
         }
     }
@@ -54,7 +54,7 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
     final def getIfExists: V | Null = {
         val index = threadIndex()
         val box   = valueBox(index)
-        if (box.nonEmpty) updateGetTime()
+        if (box.nonEmpty) updateGetTime(index)
         box.get
     }
 

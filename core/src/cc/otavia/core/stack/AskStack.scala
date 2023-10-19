@@ -24,16 +24,16 @@ import cc.otavia.core.timer.Timer
 import java.util.concurrent.TimeUnit
 import scala.language.unsafeNulls
 
-final class AskStack[A <: Ask[? <: Reply]] private () extends ActorStack {
+final class AskStack[A <: Ask[? <: Reply]] private () extends Stack {
 
+    private var call: Call   = _
     private var reply: Reply = _
+
+    private[core] def setAsk(c: Call): Unit = call = c
 
     def ask: A = call.asInstanceOf[A]
 
-    override def recycle(): Unit = AskStack.stackPool.recycle(this)
-
     def `return`(ret: ReplyOf[A]): None.type = {
-        // ret.setMessageContext(runtimeActor)
         ret.setReplyId(ask.askId)
         reply = ret
         ask.sender.reply(reply, runtimeActor)
@@ -41,7 +41,6 @@ final class AskStack[A <: Ask[? <: Reply]] private () extends ActorStack {
     }
 
     def `throw`(cause: ExceptionMessage): None.type = {
-        // cause.setMessageContext(runtimeActor)
         cause.setReplyId(ask.askId)
         reply = cause
         this.setFailed()
@@ -49,11 +48,16 @@ final class AskStack[A <: Ask[? <: Reply]] private () extends ActorStack {
         None
     }
 
+    def `throw`(cause: Throwable): None.type = this.`throw`(ExceptionMessage(cause))
+
     def isDone: Boolean = reply != null
 
+    override def recycle(): Unit = AskStack.stackPool.recycle(this)
+
     override protected def cleanInstance(): Unit = {
-        super.cleanInstance()
+        call = null
         reply = null
+        super.cleanInstance()
     }
 
     override def toString: String =

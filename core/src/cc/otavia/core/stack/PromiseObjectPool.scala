@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit
 
 abstract class PromiseObjectPool[P <: AbstractPromise[?]] extends ActorThreadIsolatedObjectPool[P] {
 
-    override def dropIfRecycleNotByCreated: Boolean = false
+    override def dropIfRecycleNotByCreated: Boolean = true
 
     override protected val timeoutTrigger: Option[TimeoutTrigger] =
         Some(TimeoutTrigger.DelayPeriod(60, 60, TimeUnit.SECONDS, TimeUnit.SECONDS))
@@ -32,7 +32,7 @@ abstract class PromiseObjectPool[P <: AbstractPromise[?]] extends ActorThreadIso
     override protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit = {
         if ((System.currentTimeMillis() - threadLocalTimer.recentlyGetTime) / 1000 > 30) {
             val holder = this.holder()
-            if (holder.size > 100) holder.clean(100)
+            if (holder.size > 10) holder.clean(10)
         }
     }
 
