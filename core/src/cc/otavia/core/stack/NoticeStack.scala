@@ -16,6 +16,7 @@
 
 package cc.otavia.core.stack
 
+import cc.otavia.core.actor.AbstractActor
 import cc.otavia.core.message.{Call, Notice}
 
 import scala.language.unsafeNulls
@@ -53,6 +54,10 @@ object NoticeStack {
         override protected def newObject(): NoticeStack[? <: Notice] = new NoticeStack[Nothing]()
     }
 
-    private[core] def apply[N <: Notice](): NoticeStack[N] = stackPool.get().asInstanceOf[NoticeStack[N]]
+    private[core] def apply[N <: Notice](actor: AbstractActor[?]): NoticeStack[N] = {
+        val stack = stackPool.get().asInstanceOf[NoticeStack[N]]
+        stack.setRuntimeActor(actor)
+        stack
+    }
 
 }

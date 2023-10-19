@@ -16,6 +16,7 @@
 
 package cc.otavia.core.stack
 
+import cc.otavia.core.actor.AbstractActor
 import cc.otavia.core.message.Notice
 
 import scala.language.unsafeNulls
@@ -52,6 +53,10 @@ object BatchNoticeStack {
         override protected def newObject(): BatchNoticeStack[?] = new BatchNoticeStack[Nothing]()
     }
 
-    def apply[N <: Notice](): BatchNoticeStack[N] = pool.get().asInstanceOf[BatchNoticeStack[N]]
+    def apply[N <: Notice](actor: AbstractActor[?]): BatchNoticeStack[N] = {
+        val stack = pool.get().asInstanceOf[BatchNoticeStack[N]]
+        stack.setRuntimeActor(actor)
+        stack
+    }
 
 }

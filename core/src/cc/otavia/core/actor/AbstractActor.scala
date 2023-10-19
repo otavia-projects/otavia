@@ -126,7 +126,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
 
     final override private[core] def receiveNotice(notice: Notice): Unit = {
         currentReceived = notice
-        val stack = NoticeStack[M & Notice]() // generate a NoticeStack instance from object pool.
+        val stack = NoticeStack[M & Notice](this) // generate a NoticeStack instance from object pool.
         stack.setNotice(notice)
         dispatchNoticeStack(stack)
         currentReceived = null
@@ -134,7 +134,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
 
     final override private[core] def receiveBatchNotice(notices: Seq[Notice]): Unit = {
         currentReceived = notices
-        val stack = BatchNoticeStack[M & Notice]() // generate a BatchNoticeStack instance from object pool.
+        val stack = BatchNoticeStack[M & Notice](this) // generate a BatchNoticeStack instance from object pool.
         stack.setNotices(notices)
         dispatchBatchNoticeStack(stack)
         currentReceived = null
@@ -151,7 +151,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
 
     final override private[core] def receiveBatchAsk(asks: Seq[Ask[?]]): Unit = {
         currentReceived = asks
-        val stack = BatchAskStack[M & Ask[?]]() // generate a BatchAskStack instance from object pool.
+        val stack = BatchAskStack[M & Ask[?]](this) // generate a BatchAskStack instance from object pool.
         stack.setAsks(asks)
         dispatchBatchAskStack(stack)
         currentReceived = null

@@ -16,6 +16,7 @@
 
 package cc.otavia.core.stack
 
+import cc.otavia.core.actor.AbstractActor
 import cc.otavia.core.address.Address
 import cc.otavia.core.message.*
 import cc.otavia.core.system.ActorThread
@@ -79,6 +80,10 @@ object BatchAskStack {
         override protected def newObject(): BatchAskStack[?] = new BatchAskStack[Nothing]
     }
 
-    def apply[A <: Ask[? <: Reply]](): BatchAskStack[A] = pool.get().asInstanceOf[BatchAskStack[A]]
+    def apply[A <: Ask[? <: Reply]](actor: AbstractActor[?]): BatchAskStack[A] = {
+        val stack = pool.get().asInstanceOf[BatchAskStack[A]]
+        stack.setRuntimeActor(actor)
+        stack
+    }
 
 }
