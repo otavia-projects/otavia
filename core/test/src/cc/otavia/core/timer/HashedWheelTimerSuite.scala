@@ -23,9 +23,10 @@ import scala.concurrent.duration.*
 
 class HashedWheelTimerSuite extends AnyFunSuite {
 
+    val system: ActorSystem = ActorSystem.global
+
     test("Should not expire") {
-        val system = ActorSystem()
-        val timer  = new HashedWheelTimer(system)
+        val timer = new HashedWheelTimer(system)
 
         val timeout = timer.newTimeout(_ => {}, 10, SECONDS)
 
@@ -36,8 +37,7 @@ class HashedWheelTimerSuite extends AnyFunSuite {
     }
 
     test("Should expire") {
-        val system = ActorSystem()
-        val timer  = new HashedWheelTimer(system)
+        val timer = new HashedWheelTimer(system)
 
         val timeout = timer.newTimeout(_ => {}, 1, MILLISECONDS)
 
@@ -47,8 +47,7 @@ class HashedWheelTimerSuite extends AnyFunSuite {
     }
 
     test("Cancel timeout") {
-        val system = ActorSystem()
-        val timer  = new HashedWheelTimer(system)
+        val timer = new HashedWheelTimer(system)
 
         val timeout = timer.newTimeout(_ => {}, 10, SECONDS)
 
@@ -61,8 +60,7 @@ class HashedWheelTimerSuite extends AnyFunSuite {
     }
 
     test("Period less than duration") {
-        val system = ActorSystem()
-        val timer  = new HashedWheelTimer(system)
+        val timer = new HashedWheelTimer(system)
 
         @volatile var count       = 0
         val start                 = System.currentTimeMillis()
@@ -88,8 +86,7 @@ class HashedWheelTimerSuite extends AnyFunSuite {
     }
 
     test("Stop before complete") {
-        val system = ActorSystem()
-        val timer  = new HashedWheelTimer(system)
+        val timer = new HashedWheelTimer(system)
 
         val timeout1 = timer.newTimeout(_ => {}, 10, SECONDS)
         val timeout2 = timer.newTimeout(_ => {}, 11, SECONDS)
@@ -107,8 +104,7 @@ class HashedWheelTimerSuite extends AnyFunSuite {
     }
 
     test("Delay fixed time") {
-        val system = ActorSystem()
-        val timer  = new HashedWheelTimer(system)
+        val timer = new HashedWheelTimer(system)
 
         @volatile var count: Int = 0
 
@@ -126,8 +122,7 @@ class HashedWheelTimerSuite extends AnyFunSuite {
     }
 
     test("Period delay") {
-        val system = ActorSystem()
-        val timer  = new HashedWheelTimer(system)
+        val timer = new HashedWheelTimer(system)
 
         @volatile var count: Int = 0
 
