@@ -29,6 +29,7 @@ import cc.otavia.core.stack.helper.ChannelFutureState
 import cc.otavia.core.system.ActorThread
 import cc.otavia.core.timer.Timer
 
+import java.io.File
 import java.net.*
 import java.nio.channels.SelectionKey
 import java.nio.file.attribute.FileAttribute
@@ -70,32 +71,16 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         try {
             val uncompleted = stack.uncompletedPromises()
             val oldState    = stack.state
-            continueChannel(stack) match // run stack and switch to next state
-                case Some(state) =>
-                    if (state != oldState) {
-                        stack.setState(state) // this also recycled all completed promise
-                        if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
-                    } else { // state == oldState, recover uncompleted promise
-                        if (uncompleted.hasNext) stack.addUncompletedPromiseIterator(uncompleted)
-                    }
-                    assert(stack.hasUncompletedPromise, s"has no future to wait for $stack")
-                case None =>
-                    if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
-                    recycleUncompletedPromise(stack.uncompletedPromises())
-                    assert(stack.isDone, "continueAsk is return None but not call return method!")
-                    stack.recycle()
+            this.switchState(stack, oldState, continueChannel(stack))
         } catch {
             case cause: Throwable =>
                 cause.printStackTrace()
                 stack.`return`(cause) // completed stack with Exception
-                recycleUncompletedPromise(stack.uncompletedPromises())
                 stack.recycle()
-        } finally {
-            currentStack = null
-        }
+        } finally currentStack = null
     }
 
-    final override private[core] def receiveReactorEvent(event: Event): Unit = event match
+    final override private[core] def receiveReactorEvent(event: Event): Unit = event match {
         case e: ReactorEvent.RegisterReply =>
             e.channel.handleChannelRegisterReplyEvent(e)
             afterChannelRegisterReplyEvent(e)
@@ -121,81 +106,55 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
             e.channel.handleChannelConnectReplyEvent(e)
         case e: ReactorEvent.ReadBuffer => e.channel.handleChannelReadBufferEvent(e)
         case e: ReactorEvent.OpenReply  => e.channel.handleChannelOpenReplyEvent(e)
-
-    // Event from Reactor
-
-    /** Handle channel close event */
-    protected def afterChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = {}
-
-    /** Handle channel register result event */
-    protected def afterChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {}
-
-    /** Handle channel deregister result event */
-    private def afterChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = {}
-
-    /** Handle channel readiness event */
-    private def afterChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit = {}
-
-    // Event from Timer
-
-    private def afterChannelTimeoutEvent(channelTimeoutEvent: ChannelTimeoutEvent): Unit = {}
-
-    // End handle event.
-
-    def handler: Option[ChannelInitializer[? <: Channel]] = None
-
-    /** Initial and register a channel for this [[ChannelsActor]]. It do the flowing things:
-     *    1. Create the [[Channel]].
-     *    1. Initial the [[Channel]] with [[init]].
-     *    1. Register the [[Channel]] to [[Reactor]]. When register channel success, the [[Reactor]] will send a
-     *       [[ReactorEvent.RegisterReply]] event to this actor, then the [[afterChannelRegisterReplyEvent]] will be
-     *       called to handle the register result [[Event]].
-     */
-    final protected def initAndRegister(channelAddress: ChannelAddress, stack: AskStack[?]): Option[StackState] = {
-        val channel = channelAddress.asInstanceOf[Channel]
-        if (!channel.isMounted) channel.mount(this)
-        Try {
-            init(channel)
-        } match {
-            case Success(_) =>
-                val state = ChannelFutureState()
-                channel.register(state.future)
-                state.suspend()
-            case Failure(cause) =>
-                val closeFuture = channel.close(ChannelFuture()) // ignore close result.
-                stack.`throw`(ExceptionMessage(cause))
-        }
     }
 
     /** Create a new channel and set executor and init it. */
     @throws[Exception]
-    final protected def newChannelAndInit(): ChannelAddress = {
+    final protected def createChannelAndInit(): ChannelAddress = {
         val channel = newChannel()
         channel.mount(this)
         try {
             init(channel)
+            channel
         } catch {
             case cause: Throwable =>
                 channel.closeAfterCreate()
                 throw cause
         }
-        channel
     }
 
-    /** Create a new [[Channel]] */
-    protected def newChannel(): Channel
+    final protected def createFileChannelAndInit(): ChannelAddress = {
+        val channel = system.channelFactory.openFileChannel()
+        channel.mount(this)
+        try {
+            initFileChannel(channel)
+            channel
+        } catch {
+            case cause: Throwable =>
+                channel.closeAfterCreate()
+                throw cause
+        }
+    }
 
-    @throws[Exception]
-    protected def init(channel: Channel): Unit
+    // format: off
+    final protected def openFileChannel(path: Path, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Option[ChannelFutureState] = {
+        // format: on
+        val channel               = createChannelAndInit()
+        val state                 = ChannelFutureState()
+        val future: ChannelFuture = state.future
+        channel.open(path, opts, attrs, future)
+        state.suspend().asInstanceOf[Option[ChannelFutureState]]
+    }
 
-    final protected def newFileChannel(): Channel = system.channelFactory.openFileChannel()
-
-    protected def openFileChannel(
-        path: Path,
-        options: Seq[OpenOption],
-        attrs: Seq[FileAttribute[?]],
-        future: ChannelFuture
-    ): ChannelFuture = ???
+    // format: off
+    final protected def openFileChannel(file: File, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Option[ChannelFutureState] = {
+        // format: on
+        val channel               = createChannelAndInit()
+        val state                 = ChannelFutureState()
+        val future: ChannelFuture = state.future
+        channel.open(file, opts, attrs, future)
+        state.suspend().asInstanceOf[Option[ChannelFutureState]]
+    }
 
     final protected def close(stack: AskStack[Close]): Option[StackState] = {
         stack.state match
@@ -224,15 +183,44 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
                 }
     }
 
-    // 1. how to design tail handler, channel group self ?
-    // 2. how to use message codec in handler
-    // 3. channel chooser
-
     final def inExecutor(): Boolean = {
         Thread.currentThread() match
-            case thread: cc.otavia.core.system.ActorThread => thread.currentRunningActor() == this
-            case _                                         => false
+            case thread: ActorThread => thread.currentRunningActor() == this
+            case _                   => false
     }
+
+    //// =================== USER API ====================
+
+    // Event from Reactor
+
+    /** Handle channel close event */
+    protected def afterChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = {}
+
+    /** Handle channel register result event */
+    protected def afterChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {}
+
+    /** Handle channel deregister result event */
+    protected def afterChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = {}
+
+    /** Handle channel readiness event */
+    protected def afterChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit = {}
+
+    // Event from Timer
+
+    protected def afterChannelTimeoutEvent(channelTimeoutEvent: ChannelTimeoutEvent): Unit = {}
+
+    // End handle event.
+
+    /** Create a new [[Channel]] */
+    protected def newChannel(): Channel =
+        throw new NotImplementedError(getClass.getName + ".newChannel: an implementation is missing")
+
+    @throws[Exception]
+    protected def init(channel: Channel): Unit = {}
+
+    protected def initFileChannel(channel: Channel): Unit = {}
+
+    def handler: Option[ChannelInitializer[? <: Channel]] = None
 
 }
 
@@ -242,9 +230,6 @@ object ChannelsActor {
 
     final case class Connect(remote: SocketAddress, local: Option[SocketAddress] = None) extends Ask[ConnectReply]
     case class ConnectReply(channelId: Int)                                              extends Reply
-
-    case class Disconnect(ids: Seq[Int] = Seq.empty) extends Ask[DisconnectReply]
-    case class DisconnectReply(ids: Seq[Int])        extends Reply
 
     case class Close(ids: Seq[Int] = Seq.empty) extends Ask[CloseReply]
     case class CloseReply(ids: Iterable[Int])   extends Reply

@@ -43,13 +43,12 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M | Connect]
             case StackState.start =>
                 // TODO: check remote whether resolved, if not send ask message AddressResolver actor
                 val remote  = stack.ask.remote
-                val channel = newChannelAndInit()
+                val channel = createChannelAndInit()
                 val state   = ChannelFutureState()
                 channel.connect(remote, stack.ask.local, state.future)
                 state.suspend()
-            case connectWaitState: ChannelFutureState =>
-                val ch = connectWaitState.future.channel
-                channels.put(ch.id, ch)
+            case connectState: ChannelFutureState =>
+                val ch = connectState.future.channel
                 afterConnected(ch)
                 stack.`return`(ConnectReply(ch.id))
     }

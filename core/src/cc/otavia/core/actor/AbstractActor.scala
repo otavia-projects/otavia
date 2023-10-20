@@ -193,136 +193,51 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     private def dispatchNoticeStack(stack: NoticeStack[M & Notice]): Unit = {
         currentStack = stack
         try {
-            val uncompleted = stack.uncompletedPromises()
-            val oldState    = stack.state
-            continueNotice(stack) match
-                case Some(state) =>
-                    if (state != oldState) {
-                        stack.setState(state) // change the stack to next state.
-                        if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
-                        this.recycleStackState(oldState)
-                    } else { // state == oldState, recover uncompleted promise
-                        if (uncompleted.hasNext) stack.addUncompletedPromiseIterator(uncompleted)
-                    }
-                    assert(stack.hasUncompletedPromise, s"has no future to wait for $stack")
-                case None =>
-                    if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
-                    this.recycleStackState(oldState)
-                    assert(stack.isDone, "continueNotice is return None but not call return method of NoticeStack!")
-                    stack.recycle() // NoticeStack not return value to other actor.
+            val oldState = stack.state
+            this.switchState(stack, oldState, continueNotice(stack))
         } catch {
             case cause: Throwable =>
-                recycleUncompletedPromise(stack.uncompletedPromises())
-                stack.setFailed()
                 cause.printStackTrace()
                 handleNoticeException(stack, cause)
                 stack.recycle()
-        } finally {
-            currentStack = null
-        }
+        } finally currentStack = null
     }
 
     private def dispatchBatchNoticeStack(stack: BatchNoticeStack[M & Notice]): Unit = {
         currentStack = stack
         try {
-            val uncompleted = stack.uncompletedPromises()
-            val oldState    = stack.state
-            batchContinueNotice(stack) match // change the stack to next state.
-                case Some(state) =>
-                    if (state != oldState) {
-                        stack.setState(state) // change the stack to next state.
-                        if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
-                        this.recycleStackState(oldState)
-                    } else { // state == oldState, recover uncompleted promise
-                        if (uncompleted.hasNext) stack.addUncompletedPromiseIterator(uncompleted)
-                    }
-                    assert(stack.hasUncompletedPromise, s"has no future to wait for $stack")
-                case None =>
-                    if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
-                    this.recycleStackState(oldState)
-                    assert(stack.isDone, "receiveNotice is return None but not call return method!")
-                    stack.recycle() // NoticeStack not return value to other actor.
+            val oldState = stack.state
+            this.switchState(stack, oldState, batchContinueNotice(stack))
         } catch {
-            case _: NotImplementedError => // receive message one by one.
-                val notices = stack.notices
-                currentStack = null
-                stack.recycle()
-                notices.foreach { notice => receiveNotice(notice) }
             case cause: Throwable =>
-                recycleUncompletedPromise(stack.uncompletedPromises())
-                stack.setFailed()
                 handleNoticeException(stack, cause)
                 stack.recycle()
-        } finally {
-            currentStack = null
-        }
+        } finally currentStack = null
     }
 
     private def dispatchAskStack(stack: AskStack[M & Ask[? <: Reply]]): Unit = {
         currentStack = stack
         try {
-            val uncompleted = stack.uncompletedPromises()
-            val oldState    = stack.state
-            continueAsk(stack) match // run stack and switch to next state
-                case Some(state) =>
-                    if (state != oldState) {
-                        stack.setState(state) // this also recycled all completed promise
-                        if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
-                        this.recycleStackState(oldState)
-                    } else { // state == oldState, recover uncompleted promise
-                        if (uncompleted.hasNext) stack.addUncompletedPromiseIterator(uncompleted)
-                    }
-                    assert(stack.hasUncompletedPromise, s"has no future to wait for $stack")
-                case None =>
-                    if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
-                    this.recycleStackState(oldState)
-                    recycleUncompletedPromise(stack.uncompletedPromises())
-                    assert(stack.isDone, "continueAsk is return None but not call return method!")
-                    stack.recycle()
+            val oldState = stack.state
+            this.switchState(stack, oldState, continueAsk(stack))
         } catch {
             case cause: Throwable =>
                 cause.printStackTrace()
                 stack.`throw`(ExceptionMessage(cause)) // completed stack with Exception
-                recycleUncompletedPromise(stack.uncompletedPromises())
                 stack.recycle()
-        } finally {
-            currentStack = null
-        }
+        } finally currentStack = null
     }
 
-    final private def dispatchBatchAskStack(stack: BatchAskStack[M & Ask[? <: Reply]]): Unit = {
+    private def dispatchBatchAskStack(stack: BatchAskStack[M & Ask[? <: Reply]]): Unit = {
         currentStack = stack
         try {
-            val uncompleted = stack.uncompletedPromises()
-            val oldState    = stack.state
-            batchContinueAsk(stack) match
-                case Some(state) =>
-                    if (state != oldState) {
-                        stack.setState(state) // this also recycled all completed promise
-                        if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
-                        this.recycleStackState(oldState)
-                    } else { // state == oldState, recover uncompleted promise
-                        if (uncompleted.hasNext) stack.addUncompletedPromiseIterator(uncompleted)
-                    }
-                    assert(stack.hasUncompletedPromise, s"has no future to wait for $stack")
-                case None =>
-                    if (uncompleted.hasNext) recycleUncompletedPromise(uncompleted)
-                    this.recycleStackState(oldState)
-                    assert(stack.isDone, "continueAsk is return None but not call return method!")
-                    stack.recycle()
+            val oldState = stack.state
+            this.switchState(stack, oldState, batchContinueAsk(stack))
         } catch {
-            case _: NotImplementedError =>
-                val asks = stack.asks
-                currentStack = null
-                stack.recycle()
-                asks.foreach { ask => receiveAsk(ask) }
             case cause: Throwable =>
                 stack.`throw`(ExceptionMessage(cause)) // completed stack with Exception
-                recycleUncompletedPromise(stack.uncompletedPromises())
                 stack.recycle()
-        } finally {
-            currentStack = null
-        }
+        } finally currentStack = null
     }
 
     private def dispatchAskTimeoutEvent(timeoutEvent: AskTimeoutEvent): Unit = {
@@ -338,7 +253,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     }
 
     private def handlePromiseCompleted(stack: Stack, promise: AbstractPromise[?]): Unit = {
-        stack.addCompletedPromise(promise)
+        stack.moveCompletedPromise(promise)
         if (stack.state.resumable() || !stack.hasUncompletedPromise) {
             // resume running current stack frame to next state
             currentStack match
@@ -350,6 +265,19 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
                 case _                      =>
         }
     }
+
+    final private[core] def switchState(stack: Stack, oldState: StackState, newState: Option[StackState]): Unit =
+        newState match
+            case Some(state) =>
+                if (oldState != state) {
+                    stack.setState(state)            // change the stack to new state.
+                    this.recycleStackState(oldState) // recycle old state if enable.
+                }
+                assert(stack.hasUncompletedPromise, s"has no future to wait for $stack")
+            case None =>
+                this.recycleStackState(oldState)
+                assert(stack.isDone, "None but not call return method of Stack!")
+                stack.recycle() // recycle stack instance.
 
     private[core] def recycleUncompletedPromise(uncompleted: PromiseIterator): Unit = {
         while (uncompleted.hasNext) {
@@ -367,13 +295,10 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     private[core] def handleNoticeException(stack: Stack, e: Throwable): Unit = { // TODO: refactor
 
         val log = stack match
-            case s: AskStack[?]      => s"Stack with call message ${s.ask} failed at handle $currentReceived message"
-            case s: NoticeStack[?]   => s"Stack with call message ${s.notice} failed at handle $currentReceived message"
-            case s: BatchAskStack[?] => s"Stack with call message ${s.asks} failed at handle $currentReceived message"
+            case s: NoticeStack[?] => s"Stack with call message ${s.notice} failed at handle $currentReceived message"
             case s: BatchNoticeStack[?] =>
                 s"Stack with call message ${s.notices} failed at handle $currentReceived message"
-            case s: ChannelStack[?] => ""
-            case _                  => ""
+            case _ => ""
         noticeExceptionStrategy match
             case ExceptionStrategy.Restart =>
                 logger.error(log, e)

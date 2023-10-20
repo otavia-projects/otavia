@@ -21,8 +21,9 @@ import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.message.*
 import cc.otavia.core.message.helper.UnitReply
 import cc.otavia.core.stack.helper.ChannelFutureState
-import cc.otavia.core.stack.{AskStack, StackState}
+import cc.otavia.core.stack.{AskStack, ChannelFuture, StackState}
 
+import scala.language.unsafeNulls
 import scala.reflect.{ClassTag, classTag}
 
 abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | AcceptedChannel] {
@@ -33,16 +34,26 @@ abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | Accepted
     final protected def handleAccepted(stack: AskStack[AcceptedChannel]): Option[StackState] = {
         stack.state match
             case StackState.`start` =>
-                val channel = stack.ask.channel
-                initAndRegister(channel, stack)
-            case registerWaitState: ChannelFutureState =>
-                val future = registerWaitState.future
+                val channel = stack.ask.channel.asInstanceOf[Channel]
+                if (!channel.isMounted) channel.mount(this)
+                var res: Option[StackState] = null
+                try {
+                    init(channel)
+                    val state = ChannelFutureState()
+                    channel.register(state.future)
+                    res = state.suspend()
+                } catch {
+                    case cause: Throwable =>
+                        channel.close(ChannelFuture()) // ignore close result.
+                        res = stack.`throw`(ExceptionMessage(cause))
+                }
+                res
+            case registerState: ChannelFutureState =>
+                val future = registerState.future
                 if (future.isSuccess) {
                     afterAccepted(future.channel)
                     stack.`return`(UnitReply())
-                } else {
-                    stack.`throw`(ExceptionMessage(future.causeUnsafe))
-                }
+                } else stack.`throw`(future.causeUnsafe)
     }
 
     protected def afterAccepted(channel: ChannelAddress): Unit = {

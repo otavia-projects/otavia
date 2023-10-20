@@ -55,7 +55,7 @@ class Connection(override val family: ProtocolFamily = StandardProtocolFamily.IN
                     case None       => DriverManager.defaultDriver(auth.url)
                 val options = driverFactory.parseOptions(auth.url, auth.info)
                 driver = driverFactory.newDriver(options)
-                channel = newChannelAndInit()
+                channel = createChannelAndInit()
                 val state = ChannelFutureState()
                 channel.connect(options.socketAddress, state.future)
                 state.suspend()

@@ -49,7 +49,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
     final protected def bind(stack: AskStack[Bind]): Option[StackState] = {
         stack.state match
             case StackState.start =>
-                val channel = newChannelAndInit()
+                val channel = createChannelAndInit()
                 val state   = ChannelFutureState()
                 channel.bind(stack.ask.local, state.future)
                 state.suspend()

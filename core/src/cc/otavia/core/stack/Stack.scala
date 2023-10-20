@@ -45,7 +45,7 @@ abstract class Stack extends Poolable {
 
     final def state: StackState = stackState
 
-    private[core] final def setState(stackState: StackState): Unit = if (this.stackState != stackState) {
+    private[core] final def setState(stackState: StackState): Unit = {
         recycleCompletedPromises()
         this.stackState = stackState
     }
@@ -53,14 +53,17 @@ abstract class Stack extends Poolable {
     private[core] def setFailed(): Unit = error = true
     private[core] def isFailed: Boolean = error
 
+    def isDone: Boolean
+
     override protected def cleanInstance(): Unit = {
         recycleCompletedPromises()
+        recycleUncompletedPromises()
         stackState = StackState.start
         error = false
         actor = null
     }
 
-    private[core] def addCompletedPromise(completed: AbstractPromise[?]): Unit = {
+    private[core] def moveCompletedPromise(completed: AbstractPromise[?]): Unit = {
         // the completed already in uncompleted chain. move it
         // step 1: remove it from uncompleted chain
         val pre  = completed.pre
@@ -89,7 +92,6 @@ abstract class Stack extends Poolable {
         } else {
             val oldTail = completedTail
             oldTail.next = completed
-            completed.pre = oldTail
             completedTail = completed
         }
     }
@@ -142,11 +144,23 @@ abstract class Stack extends Poolable {
         count
     }
 
-    private[core] final def recycleCompletedPromises(): Unit = while (completedHead != null) {
-        val promise = completedHead
-        if (completedHead == completedTail) completedTail = null
-        completedHead = promise.next.asInstanceOf[AbstractPromise[?]]
-        promise.recycle()
+    private[core] final def recycleCompletedPromises(): Unit = {
+        completedTail = null
+        while (completedHead != null) {
+            val promise = completedHead
+            completedHead = promise.next.asInstanceOf[AbstractPromise[?]]
+            promise.recycle()
+        }
+    }
+
+    private def recycleUncompletedPromises(): Unit = {
+        uncompletedTail = null
+        while (uncompletedHead != null) {
+            val promise = uncompletedHead
+            uncompletedHead = promise.next.asInstanceOf[AbstractPromise[?]]
+            uncompletedHead.cleanPre()
+            promise.recycle()
+        }
     }
 
     private[core] def uncompletedPromises(): PromiseIterator = {
