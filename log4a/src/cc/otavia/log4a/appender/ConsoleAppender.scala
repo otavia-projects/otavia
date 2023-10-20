@@ -87,7 +87,7 @@ class ConsoleAppender extends StateActor[LogMsg], Appender {
         cache.append(logMsg.thread)
         cache.append("]\t")
         cache.append(logMsg.loggerName)
-        cache.append('-')
+        cache.append('\t')
         cache.append(logMsg.log)
         cache.append('\n')
     }
