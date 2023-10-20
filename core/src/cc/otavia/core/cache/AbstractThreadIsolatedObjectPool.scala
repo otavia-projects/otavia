@@ -28,8 +28,7 @@ abstract class AbstractThreadIsolatedObjectPool[T <: Poolable] extends ObjectPoo
     override def get(): T = {
         val h   = holder()
         val pop = h.pop()
-        if (pop != null) pop.asInstanceOf[T]
-        else newInstance()
+        if (pop != null) pop.asInstanceOf[T] else newInstance()
     }
 
     override def recycle(poolable: T): Unit = {

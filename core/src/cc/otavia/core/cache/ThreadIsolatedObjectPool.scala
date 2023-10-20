@@ -29,13 +29,13 @@ abstract class ThreadIsolatedObjectPool[T <: Poolable]() extends AbstractThreadI
     private val threadLocal = new ObjectPoolThreadLocal[T](this)
 
     // use by other Thread
-    private lazy val fastThreadLocal = new JThreadLocal[SingleThreadPoolableHolder[T]] {
+    private val jdkThreadLocal = new JThreadLocal[SingleThreadPoolableHolder[T]] {
         override def initialValue(): SingleThreadPoolableHolder[T] =
             new SingleThreadPoolableHolder[T]()
     }
 
     override protected def holder(): SingleThreadPoolableHolder[T] =
-        if (ActorThread.currentThreadIsActorThread) threadLocal.get() else fastThreadLocal.get()
+        if (ActorThread.currentThreadIsActorThread) threadLocal.get() else jdkThreadLocal.get()
 
     override def dropIfRecycleNotByCreated: Boolean = false
 
