@@ -98,8 +98,15 @@ object SocketChannelsActor {
     trait Connect extends Ask[ConnectReply] {
 
         def remote: SocketAddress
-        def local: Option[SocketAddress] = None
+
+        def local: Option[SocketAddress]
 
     }
+
+    case class ConnectChannel(remote: SocketAddress, local: Option[SocketAddress])
+        extends Connect
+        with Ask[ConnectReply]
+
+
 
 }
