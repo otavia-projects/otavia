@@ -56,8 +56,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
             case bindState: ChannelFutureState =>
                 if (bindState.future.isSuccess) {
                     val channel = bindState.future.channel
-                    channels.put(channel.id, channel)
-                    afterBind(bindState.future.channel)
+                    afterBind(channel)
                     stack.`return`(BindReply(channel.id))
                 } else {
                     stack.`throw`(ExceptionMessage(bindState.future.causeUnsafe))

@@ -45,8 +45,6 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     private var channelCursor                  = 0
     private var currentChannelReceived: AnyRef = _
 
-    protected val channels: mutable.HashMap[Int, ChannelAddress] = mutable.HashMap.empty
-
     override def self: ActorAddress[M] = super.self.asInstanceOf[ActorAddress[M]]
 
     def address: ActorAddress[M] = self
@@ -69,8 +67,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     override final private[core] def dispatchChannelStack(stack: ChannelStack[?]): Unit = {
         currentStack = stack
         try {
-            val uncompleted = stack.uncompletedPromises()
-            val oldState    = stack.state
+            val oldState = stack.state
             this.switchState(stack, oldState, continueChannel(stack))
         } catch {
             case cause: Throwable =>
@@ -80,32 +77,37 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         } finally currentStack = null
     }
 
-    final override private[core] def receiveReactorEvent(event: Event): Unit = event match {
-        case e: ReactorEvent.RegisterReply =>
-            e.channel.handleChannelRegisterReplyEvent(e)
-            afterChannelRegisterReplyEvent(e)
-        case e: ReactorEvent.DeregisterReply =>
-            e.channel.handleChannelDeregisterReplyEvent(e)
-            afterChannelDeregisterReplyEvent(e)
-        case e: ReactorEvent.ChannelClose =>
-            e.channel.handleChannelCloseEvent(e)
-            afterChannelCloseEvent(e)
-        case e: ReactorEvent.ChannelReadiness =>
-            e.channel.handleChannelReadinessEvent(e)
-            afterChannelReadinessEvent(e)
-        case channelTimeoutEvent: ChannelTimeoutEvent =>
-            channelTimeoutEvent.channel.handleChannelTimeoutEvent(channelTimeoutEvent.registerId)
-            afterChannelTimeoutEvent(channelTimeoutEvent)
-        case e: ReactorEvent.AcceptedEvent =>
-            e.channel.handleChannelAcceptedEvent(e)
-        case e: ReactorEvent.ReadCompletedEvent =>
-            e.channel.handleChannelReadCompletedEvent(e)
-        case e: ReactorEvent.BindReply =>
-            e.channel.handleChannelBindReplyEvent(e)
-        case e: ReactorEvent.ConnectReply =>
-            e.channel.handleChannelConnectReplyEvent(e)
-        case e: ReactorEvent.ReadBuffer => e.channel.handleChannelReadBufferEvent(e)
-        case e: ReactorEvent.OpenReply  => e.channel.handleChannelOpenReplyEvent(e)
+    final override private[core] def receiveReactorEvent(event: ReactorEvent): Unit = {
+        event match {
+            case e: ReactorEvent.RegisterReply =>
+                e.channel.handleChannelRegisterReplyEvent(e)
+                afterChannelRegisterReplyEvent(e)
+            case e: ReactorEvent.DeregisterReply =>
+                e.channel.handleChannelDeregisterReplyEvent(e)
+                afterChannelDeregisterReplyEvent(e)
+            case e: ReactorEvent.ChannelClose =>
+                e.channel.handleChannelCloseEvent(e)
+                afterChannelCloseEvent(e)
+            case e: ReactorEvent.ChannelReadiness =>
+                e.channel.handleChannelReadinessEvent(e)
+                afterChannelReadinessEvent(e)
+            case e: ReactorEvent.AcceptedEvent =>
+                e.channel.handleChannelAcceptedEvent(e)
+            case e: ReactorEvent.ReadCompletedEvent =>
+                e.channel.handleChannelReadCompletedEvent(e)
+            case e: ReactorEvent.BindReply =>
+                e.channel.handleChannelBindReplyEvent(e)
+            case e: ReactorEvent.ConnectReply =>
+                e.channel.handleChannelConnectReplyEvent(e)
+            case e: ReactorEvent.ReadBuffer => e.channel.handleChannelReadBufferEvent(e)
+            case e: ReactorEvent.OpenReply  => e.channel.handleChannelOpenReplyEvent(e)
+        }
+    }
+
+    final override private[core] def receiveChannelTimeoutEvent(event: ChannelTimeoutEvent): Unit = {
+        val channel = event.channel
+        channel.handleChannelTimeoutEvent(event.registerId)
+        afterChannelTimeoutEvent(event)
     }
 
     /** Create a new channel and set executor and init it. */
@@ -123,6 +125,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         }
     }
 
+    @throws[Exception]
     final protected def createFileChannelAndInit(): ChannelAddress = {
         val channel = system.channelFactory.openFileChannel()
         channel.mount(this)
@@ -154,33 +157,6 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         val future: ChannelFuture = state.future
         channel.open(file, opts, attrs, future)
         state.suspend().asInstanceOf[Option[ChannelFutureState]]
-    }
-
-    final protected def close(stack: AskStack[Close]): Option[StackState] = {
-        stack.state match
-            case StackState.start =>
-                val removes = if (stack.ask.ids.isEmpty) channels.keys else stack.ask.ids
-                if (removes.isEmpty) stack.`return`(CloseReply(Iterable.empty))
-                else {
-                    val futures = removes
-                        .map { id =>
-                            val ch = channels.remove(id)
-                            ch.map(c => c.close(ChannelFuture()))
-                        }
-                        .filter(_.nonEmpty)
-                        .map(_.get)
-                    val state = new CloseState(futures)
-                    state.suspend()
-                }
-            case closeState: CloseState =>
-                if (closeState.futures.forall(_.isSuccess))
-                    stack.`return`(CloseReply(closeState.futures.map(_.channel.id)))
-                else {
-                    val fails = closeState.futures.filter(_.isFailed)
-                    val errors =
-                        fails.map(f => ThrowableUtil.stackTraceToString(f.causeUnsafe)).mkString("[", "\n", "]")
-                    stack.`throw`(ExceptionMessage(s"failed close at channel with ${errors}"))
-                }
     }
 
     final def inExecutor(): Boolean = {
@@ -225,24 +201,6 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 }
 
 object ChannelsActor {
-
-    final class CloseState(val futures: Iterable[ChannelFuture]) extends StackState
-
-    final case class Connect(remote: SocketAddress, local: Option[SocketAddress] = None) extends Ask[ConnectReply]
-    case class ConnectReply(channelId: Int)                                              extends Reply
-
-    case class Close(ids: Seq[Int] = Seq.empty) extends Ask[CloseReply]
-    case class CloseReply(ids: Iterable[Int])   extends Reply
-
-    object Connect {
-
-        def apply(host: String, port: Int): Connect = Connect(
-          InetSocketAddress.createUnresolved(host, port)
-        )
-
-        def apply(host: InetAddress, port: Int): Connect = Connect(new InetSocketAddress(host, port))
-
-    }
 
     case class Bind(local: SocketAddress) extends Ask[BindReply]
 

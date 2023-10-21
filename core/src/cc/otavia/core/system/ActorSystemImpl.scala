@@ -264,7 +264,7 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
         SystemMonitor(name, pool.size, beanManager.count, threadMonitor)
     }
 
-    override def channelFactory: ChannelFactory = chFactory
+    override private[core] def channelFactory: ChannelFactory = chFactory
 
     override def isBusy: Boolean = busy
 

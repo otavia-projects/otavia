@@ -32,9 +32,6 @@ abstract class StateActor[M <: Call] extends AbstractActor[M] {
      */
     override def self: ActorAddress[M] = super.self.asInstanceOf[ActorAddress[M]]
 
-    final override private[core] def receiveReactorEvent(event: Event): Unit =
-        throw new UnsupportedOperationException("StateActor not support io event")
-
     final override private[core] def dispatchChannelStack(stack: ChannelStack[?]): Unit =
         throw new UnsupportedOperationException("StateActor not support ChannelStack")
 

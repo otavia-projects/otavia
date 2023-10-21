@@ -16,9 +16,6 @@
 
 package cc.otavia.postgres
 
-import cc.otavia.sql.Connection.Auth
-import cc.otavia.sql.Driver
-import cc.otavia.sql.Statement.ExecuteUpdate
 import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.{ChannelHandlerContext, ChannelInflight}
@@ -26,6 +23,8 @@ import cc.otavia.core.slf4a.{Logger, LoggerFactory}
 import cc.otavia.postgres.protocol.Constants
 import cc.otavia.postgres.utils.ScramAuthentication.ScramClientInitialMessage
 import cc.otavia.postgres.utils.{BufferUtils, MD5Authentication, ScramAuthentication}
+import cc.otavia.sql.Statement.ExecuteUpdate
+import cc.otavia.sql.{Authentication, Driver}
 
 import java.nio.charset.StandardCharsets
 import scala.language.unsafeNulls
@@ -53,7 +52,7 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
 
     override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit =
         msg match
-            case _: Auth =>
+            case _: Authentication =>
                 if (status == ST_CONNECTING) {
                     authMsgId = msgId
                     sendStartupMessage()

@@ -16,37 +16,41 @@
 
 package cc.otavia.sql
 
+import cc.otavia.core.actor.SocketChannelsActor.{Connect, ConnectReply}
 import cc.otavia.core.actor.{ChannelsActor, SocketChannelsActor}
-import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelState}
+import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelInitializer, ChannelState}
 import cc.otavia.core.message.{Ask, ExceptionMessage, Reply}
 import cc.otavia.core.stack.StackState.*
 import cc.otavia.core.stack.helper.*
 import cc.otavia.core.stack.{AskStack, ChannelFuture, StackState}
-import cc.otavia.sql.Connection.{Auth, Connect, ConnectResult}
+import cc.otavia.sql.Authentication
 import cc.otavia.sql.Statement.*
 
 import java.net.{ProtocolFamily, StandardProtocolFamily}
-import java.util
-import java.util.Properties
 
 class Connection(override val family: ProtocolFamily = StandardProtocolFamily.INET)
-    extends ChannelsActor[Connect | ExecuteUpdate | ExecuteQuery[?]] {
+    extends SocketChannelsActor[Connection.MSG] {
 
     private var channel: ChannelAddress = _
     private var driver: Driver          = _
 
-    override protected def init(channel: Channel): Unit = {
-        channel.pipeline.addLast(driver)
+    override def handler: Option[ChannelInitializer[? <: Channel]] = Some(
+      new ChannelInitializer[Channel] {
+          override protected def initChannel(ch: Channel): Unit = ch.pipeline.addLast(driver)
+      }
+    )
+
+    override def continueAsk(stack: AskStack[Connection.MSG]): Option[StackState] = {
+        stack match
+            case stack: AskStack[?] if stack.ask.isInstanceOf[Authentication] =>
+                handleAuthentication(stack.asInstanceOf[AskStack[Authentication]])
+            case stack: AskStack[?] if stack.ask.isInstanceOf[ExecuteUpdate] =>
+                handleExecuteUpdate(stack.asInstanceOf[AskStack[ExecuteUpdate]])
+            case stack: AskStack[?] if stack.ask.isInstanceOf[ExecuteQuery[?]] =>
+                handleExecuteQuery(stack.asInstanceOf[AskStack[ExecuteQuery[?]]])
     }
 
-    override protected def newChannel(): Channel = system.channelFactory.openSocketChannel(family)
-
-    override def continueAsk(stack: AskStack[Connect | ExecuteUpdate | ExecuteQuery[?]]): Option[StackState] =
-        stack match
-            case stack: AskStack[Connect] if stack.ask.isInstanceOf[Connect] => handleConnect(stack)
-            case _                                                           => ???
-
-    private def handleConnect(stack: AskStack[Connect]): Option[StackState] = {
+    private def handleAuthentication(stack: AskStack[Authentication]): Option[StackState] = {
         stack.state match
             case StackState.start => // waiting for socket connected
                 val auth = stack.ask
@@ -55,16 +59,14 @@ class Connection(override val family: ProtocolFamily = StandardProtocolFamily.IN
                     case None       => DriverManager.defaultDriver(auth.url)
                 val options = driverFactory.parseOptions(auth.url, auth.info)
                 driver = driverFactory.newDriver(options)
-                channel = createChannelAndInit()
-                val state = ChannelFutureState()
-                channel.connect(options.socketAddress, state.future)
-                state.suspend()
-            case state: ChannelFutureState => // waiting for authentication
+                connect(options.socketAddress, None)
+            case state: ChannelFutureState => // waiting to authentication
+                channel = state.future.channel
                 val authState = ChannelReplyFutureState()
-                channel.ask(Auth(stack.ask.url, stack.ask.info), authState.future)
+                channel.ask(stack.ask, authState.future)
                 authState.suspend()
             case state: ChannelReplyFutureState => // return authenticate result
-                if (state.future.isSuccess) stack.`return`(ConnectResult(channel.id))
+                if (state.future.isSuccess) stack.`return`(ConnectReply(channel.id))
                 else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
     }
 
@@ -88,16 +90,5 @@ class Connection(override val family: ProtocolFamily = StandardProtocolFamily.IN
 }
 
 object Connection {
-
-    case class ConnectResult(connectionId: Int)                                               extends Reply
-    case class Connect(url: String, info: Map[String, String], driver: Option[String] = None) extends Ask[ConnectResult]
-    object Connect {
-        def apply(url: String, user: String, password: String): Connect = {
-            val info = Map("user" -> user, "password" -> password)
-            new Connect(url, info, None)
-        }
-    }
-
-    case class Auth(url: String, info: Map[String, String])
-
+    type MSG = Authentication | ExecuteUpdate | ExecuteQuery[? <: Row]
 }

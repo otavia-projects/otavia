@@ -16,7 +16,7 @@
 
 package cc.otavia.core.actor
 
-import cc.otavia.core.actor.ChannelsActor.{Connect, ConnectReply}
+import cc.otavia.core.actor.SocketChannelsActor.{Connect, ConnectReply}
 import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.message.*
 import cc.otavia.core.reactor.Reactor
@@ -26,7 +26,7 @@ import cc.otavia.core.stack.helper.ChannelFutureState
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 
-abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M | Connect] {
+abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
 
     /** Request to connect to the given [[SocketAddress]]. This method return a channel which is not connected to the
      *  remote address, it only register this channel to [[Reactor]], when register operation completes, this actor will
@@ -53,14 +53,53 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M | Connect]
                 stack.`return`(ConnectReply(ch.id))
     }
 
+    final protected def connect(connect: Connect): Option[ChannelFutureState] = {
+        val channel = createChannelAndInit()
+        val state   = ChannelFutureState()
+        channel.connect(connect.remote, connect.local, state.future)
+        state.suspend().asInstanceOf[Option[ChannelFutureState]]
+    }
+
+    final protected def connect(connect: Connect, future: ChannelFuture): ChannelFuture = {
+        val channel = createChannelAndInit()
+        channel.connect(connect.remote, connect.local, future)
+        future
+    }
+
+    final protected def connect(remote: SocketAddress, local: Option[SocketAddress]): Option[ChannelFutureState] = {
+        val channel = createChannelAndInit()
+        val state   = ChannelFutureState()
+        channel.connect(remote, local, state.future)
+        state.suspend().asInstanceOf[Option[ChannelFutureState]]
+    }
+
+    final protected def connect(remote: SocketAddress, l: Option[SocketAddress], fu: ChannelFuture): ChannelFuture = {
+        val channel = createChannelAndInit()
+        channel.connect(remote, l, fu)
+        fu
+    }
+
     protected def afterConnected(channel: ChannelAddress): Unit = {}
 
     override protected def newChannel(): Channel = system.channelFactory.openSocketChannel(family)
 
-    override def init(channel: Channel): Unit = {
+    override protected def init(channel: Channel): Unit = {
         handler match
             case Some(h) => channel.pipeline.addLast(h)
             case None    => logger.warn(s"The channel $channel is not add any handler!")
+    }
+
+}
+
+object SocketChannelsActor {
+
+    case class ConnectReply(channelId: Int) extends Reply
+
+    trait Connect extends Ask[ConnectReply] {
+
+        def remote: SocketAddress
+        def local: Option[SocketAddress] = None
+
     }
 
 }

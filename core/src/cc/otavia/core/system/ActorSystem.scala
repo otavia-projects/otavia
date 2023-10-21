@@ -88,7 +88,7 @@ trait ActorSystem {
     // IO transport layer
 
     /** [[ChannelFactory]] for TCP socket channel. */
-    def channelFactory: ChannelFactory
+    private[core] def channelFactory: ChannelFactory
 
     private[core] def pool: ActorThreadPool
 

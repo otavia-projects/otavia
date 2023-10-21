@@ -26,7 +26,7 @@ import cc.otavia.mysql.protocol.Packets.*
 import cc.otavia.mysql.protocol.{CapabilitiesFlag, CommandType}
 import cc.otavia.mysql.utils.*
 import cc.otavia.sql.Statement.ExecuteUpdate
-import cc.otavia.sql.{ConnectOptions, Connection, Driver}
+import cc.otavia.sql.{Authentication, ConnectOptions, Driver}
 
 import java.net.SocketAddress
 import java.nio.channels.ClosedChannelException
@@ -101,7 +101,7 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
 
     override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, mid: Long): Unit = {
         msg match
-            case _: Connection.Auth =>
+            case _: Authentication =>
                 if (status == ST_AUTHENTICATED) ctx.fireChannelRead(None, mid)
                 else if (status == ST_AUTHENTICATE_FAILED) ctx.fireChannelRead(authenticationFailed, mid)
                 else if (status == ST_CLOSING) ctx.fireChannelRead(ClosedChannelException(), mid)

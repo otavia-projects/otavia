@@ -17,7 +17,7 @@
 package cc.otavia.redis
 
 import cc.otavia.core
-import cc.otavia.core.actor.ChannelsActor.{Connect, ConnectReply}
+import cc.otavia.core.actor.SocketChannelsActor.{Connect, ConnectReply}
 import cc.otavia.core.actor.{ChannelsActor, SocketChannelsActor}
 import cc.otavia.core.channel.*
 import cc.otavia.core.message.*
@@ -33,7 +33,7 @@ object Client {
     type RIDES_CALL = Select | Set
 }
 
-class Client extends SocketChannelsActor[Command[? <: CommandResponse]] {
+class Client extends SocketChannelsActor[Command[? <: CommandResponse] | Connect] {
 
     private var channel: ChannelAddress = _
 

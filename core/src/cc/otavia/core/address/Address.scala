@@ -21,6 +21,8 @@ import cc.otavia.core.message.*
 import cc.otavia.core.stack.helper.FutureState
 import cc.otavia.core.stack.{AskStack, ReplyFuture}
 
+import scala.reflect.ClassTag
+
 /** Address is the facade of an actor. Actors cannot call each other directly, only send messages to the actor via its
  *  address.
  *
@@ -49,8 +51,10 @@ trait Address[-M <: Call] extends EventableAddress {
     def ask[A <: M & Ask[? <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using sender: AbstractActor[?]): ReplyFuture[ReplyOf[A]]
     // format: on
 
-    final def ask[A <: M & Ask[? <: Reply]](ask: A)(using sender: AbstractActor[?]): FutureState[ReplyOf[A]] = {
-        val state = FutureState[ReplyOf[A]]()
+    // format: off
+     final def ask[A <: M & Ask[? <: Reply], R <: ReplyOf[A] : ClassTag](ask: A)(using sender: AbstractActor[?]): FutureState[R] = {
+         // format: on
+        val state = FutureState[R]()
         this.ask(ask, state.future)
         state
     }

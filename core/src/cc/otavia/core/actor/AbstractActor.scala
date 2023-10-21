@@ -185,9 +185,10 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     }
 
     final override private[core] def receiveEvent(event: Event): Unit = event match {
-        case event: AskTimeoutEvent => dispatchAskTimeoutEvent(event)
-        case event: TimeoutEvent    => handleActorTimeout(event)
-        case _                      => receiveReactorEvent(event)
+        case event: AskTimeoutEvent     => dispatchAskTimeoutEvent(event)
+        case event: TimeoutEvent        => handleActorTimeout(event)
+        case event: ChannelTimeoutEvent => receiveChannelTimeoutEvent(event)
+        case event: ReactorEvent        => receiveReactorEvent(event)
     }
 
     private def dispatchNoticeStack(stack: NoticeStack[M & Notice]): Unit = {
@@ -331,7 +332,9 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
      *  @param event
      *    IO/timeout event
      */
-    private[core] def receiveReactorEvent(event: Event): Unit = {}
+    private[core] def receiveReactorEvent(event: ReactorEvent): Unit = {}
+
+    private[core] def receiveChannelTimeoutEvent(event: ChannelTimeoutEvent): Unit = {}
 
     //// ================= USER API =======================
 
