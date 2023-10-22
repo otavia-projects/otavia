@@ -63,13 +63,15 @@ class FutureQueue {
         promise
     } else if (count > 1) {
         val promise = queue.dequeue()
+        idmap.remove(promise.messageId)
         count -= 1
         promise
     } else throw new RuntimeException()
 
-    def headIsBarrier: Boolean = if (queue != null && queue.nonEmpty) queue.head.isBarrier
-    else if (recentlyAppend != null) recentlyAppend.isBarrier
-    else false
+    def headIsBarrier: Boolean =
+        if (queue != null && queue.nonEmpty) queue.head.isBarrier
+        else if (recentlyAppend != null) recentlyAppend.isBarrier
+        else false
 
 }
 

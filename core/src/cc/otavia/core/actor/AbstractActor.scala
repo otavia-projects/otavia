@@ -91,30 +91,22 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
      *    the reply message future for this ask message
      */
     private[core] def attachStack(askId: Long, future: Future[?]): Unit = {
-        future.promise match
+        val promise = future.promise.asInstanceOf[AbstractPromise[?]]
+        promise.setStack(currentStack)
+        promise.setId(askId)
+        currentStack.addUncompletedPromise(promise)
+        promise match
             case promise: ReplyPromise[? <: Reply] =>
                 sendAsks += 1
                 assert(promise.notInChain, "The ReplyFuture has been used, can't be use again!")
-                promise.setStack(currentStack)
-                promise.setId(askId)
-                currentStack.addUncompletedPromise(promise)
                 this.push(promise)
             case promise: TimeoutEventPromise =>
                 assert(promise.notInChain, "The TimeoutEventPromise has been used, can't be use again!")
-                promise.setStack(currentStack)
-                promise.setId(askId)
-                currentStack.addUncompletedPromise(promise)
                 this.push(promise)
             case promise: ChannelPromise =>
                 assert(promise.notInChain, "The ChannelPromise has been used, can't be use again!")
-                promise.setStack(currentStack)
-                promise.setId(askId)
-                currentStack.addUncompletedPromise(promise)
             case promise: ChannelReplyPromise =>
                 assert(promise.notInChain, "The ChannelReplyPromise has been used, can't be use again!")
-                promise.setStack(currentStack)
-                promise.setId(askId)
-                currentStack.addUncompletedPromise(promise)
             case _ =>
     }
 

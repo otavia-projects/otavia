@@ -259,14 +259,15 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         if (connecting || registering || connected) {
             val ongoing = ongoingChannelPromise
 
-            if (ongoing != null) ongoing.setFailure(new ClosedChannelException())
+            val cause = new ClosedChannelException()
+            if (ongoing != null) ongoing.setFailure(cause)
 
             connecting = false
             registering = false
             closing = true
             ongoingChannelPromise = promise
             reactor.close(this)
-            this.failedInflights()
+            this.failedFutures(cause)
             this.closeAdaptiveBuffers()
         } else if (closed) { promise.setSuccess(ReactorEvent.EMPTY_EVENT) }
         else if (closing) { promise.setFailure(new IllegalStateException("A close operation is running")) }

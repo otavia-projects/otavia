@@ -36,34 +36,26 @@ import scala.language.unsafeNulls
 /** Abstract class of file channel and network channel. */
 abstract class AbstractChannel(val system: ActorSystem) extends Channel, ChannelState {
 
-    protected val logger: Logger = Logger.getLogger(getClass, system)
+    protected val logger: Logger        = Logger.getLogger(getClass, system)
+    private var actor: ChannelsActor[?] = _
 
-    private var channelId: Int = -1
-
-    private var actor: ChannelsActor[?] | Null = _
-
-    private var pipe: ChannelPipelineImpl = _
-
+    private var channelId: Int                = -1
+    private var pipe: ChannelPipelineImpl     = _
     private var unsafe: AbstractUnsafeChannel = _
 
-    private var inboundMsgBarrier: AnyRef => Boolean  = _ => false
-    private var outboundMsgBarrier: AnyRef => Boolean = _ => true
-
-    private var maxOutInflight: Int = 1
+    private var inboundBarrier: AnyRef => Boolean  = _ => false
+    private var outboundBarrier: AnyRef => Boolean = _ => true
+    private var maxOutInflight: Int                = 1
 
     // outbound futures which is write to channel and wait channel reply
     private val outboundInflightFutures: FutureQueue = new FutureQueue()
-
     // outbound futures which is waiting channel to send
     private val outboundPendingFutures: FutureQueue = new FutureQueue()
-
     // inbound stack which is running by actor
     private val inboundInflightStacks: StackQueue = new StackQueue()
-
     // inbound stack to wait actor running
     private val inboundPendingStacks: StackQueue = new StackQueue()
-
-    private var channelMsgId: Long = ChannelInflight.INVALID_CHANNEL_MESSAGE_ID
+    private var channelMsgId: Long               = ChannelInflight.INVALID_CHANNEL_MESSAGE_ID
 
     protected var ongoingChannelPromise: ChannelPromise = _
 
@@ -74,15 +66,12 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     created = true
     registering = false
     registered = false
-
     connecting = false
     connected = false
 
     /** true if the channel has never been registered, false otherwise */
     neverRegistered = true
-
     neverActive = true
-
     inputClosedSeenErrorOnRead = false
 
     autoRead = true
@@ -95,36 +84,18 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     // impl ChannelInflight
 
-    final override def inboundMessageBarrier: AnyRef => Boolean = inboundMsgBarrier
+    final override def inboundMessageBarrier: AnyRef => Boolean                    = inboundBarrier
+    final override def setInboundMessageBarrier(barrier: AnyRef => Boolean): Unit  = inboundBarrier = barrier
+    final override def outboundMessageBarrier: AnyRef => Boolean                   = outboundBarrier
+    final override def setOutboundMessageBarrier(barrier: AnyRef => Boolean): Unit = outboundBarrier = barrier
+    override def setMaxOutboundInflight(max: Int): Unit                            = maxOutInflight = max
+    override def maxOutboundInflight: Int                                          = maxOutInflight
+    final override def outboundInflightSize: Int                                   = outboundInflightFutures.size
+    final override def outboundPendingSize: Int                                    = outboundPendingFutures.size
+    final override def inboundInflightSize: Int                                    = inboundInflightStacks.size
+    final override def inboundPendingSize: Int                                     = inboundPendingStacks.size
 
-    final override def setInboundMessageBarrier(barrier: AnyRef => Boolean): Unit = inboundMsgBarrier = barrier
-
-    final override def outboundMessageBarrier: AnyRef => Boolean = outboundMsgBarrier
-
-    final override def setOutboundMessageBarrier(barrier: AnyRef => Boolean): Unit = outboundMsgBarrier = barrier
-
-    override def setMaxOutboundInflight(max: Int): Unit = maxOutInflight = max
-
-    override def maxOutboundInflight: Int = maxOutInflight
-
-    private def attachStack(promise: AbstractPromise[?]): Unit = {
-        assert(promise.notInChain, "The Promise has been used, can't be use again!")
-        promise.setStack(this.executor.currentStack)
-        this.executor.currentStack.addUncompletedPromise(promise)
-    }
-
-    final override def outboundInflightSize: Int = outboundInflightFutures.size
-
-    final override def outboundPendingSize: Int = outboundPendingFutures.size
-
-    final override def inboundInflightSize: Int = inboundInflightStacks.size
-
-    final override def inboundPendingSize: Int = inboundPendingStacks.size
-
-    override def generateMessageId: Long = {
-        channelMsgId += 1
-        channelMsgId
-    }
+    override def generateMessageId: Long = { channelMsgId += 1; channelMsgId }
 
     override private[core] def onInboundMessage(msg: AnyRef): Unit = {
         if (outboundInflightFutures.isEmpty) {
@@ -143,35 +114,39 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
             else promise.setFailure(msg.asInstanceOf[Throwable])
         } else {
             val stack = ChannelStack(this, msg, id)
-            //        this.executor.continueChannelStack()
-
             this.executor.receiveChannelMessage(stack)
         }
         if (outboundPendingFutures.nonEmpty) processPendingFutures()
     }
 
-    protected def failedInflights(): Unit = {
-        // TODO
+    final private[core] def processPendingFutures(): Unit = if (outboundPendingFutures.headIsBarrier) {
+        if (outboundInflightFutures.isEmpty) {
+            val promise = outboundPendingFutures.pop()
+            outboundInflightFutures.append(promise)
+            // write message to pipeline, and send data by socket
+            this.writeAndFlush(promise.getAsk(), promise.messageId)
+        }
+    } else if (!outboundInflightFutures.headIsBarrier) {
+        while (
+          outboundPendingFutures.nonEmpty &&
+          outboundInflightFutures.size < maxOutboundInflight &&
+          !outboundPendingFutures.headIsBarrier
+        ) {
+            val promise = outboundPendingFutures.pop()
+            this.write(promise.getAsk(), promise.messageId)
+            outboundInflightFutures.append(promise)
+        }
+        this.flush()
     }
 
-    private def processPendingFutures(): Unit = {
-        if (outboundPendingFutures.headIsBarrier) {
-            if (outboundInflightFutures.isEmpty) {
-                val promise = outboundPendingFutures.pop()
-                // write message to pipeline, and send data by socket
-                this.writeAndFlush(promise.getAsk(), promise.messageId)
-                outboundInflightFutures.append(promise)
-            } // else do nothing and wait outboundInflightFutures become empty.
-        } else {
-            while (
-              outboundPendingFutures.nonEmpty && outboundInflightFutures.size < maxOutboundInflight &&
-              !outboundInflightFutures.headIsBarrier
-            ) {
-                val promise = outboundPendingFutures.pop()
-                this.write(promise.getAsk(), promise.messageId)
-                outboundInflightFutures.append(promise)
-            }
-            this.flush()
+    final protected def failedFutures(cause: Throwable): Unit = {
+        while (outboundInflightFutures.nonEmpty) {
+            val promise = outboundInflightFutures.pop()
+            promise.setFailure(cause)
+        }
+        while (outboundPendingFutures.nonEmpty) {
+            val promise = outboundPendingFutures.pop()
+            promise.setFailure(cause)
         }
     }
 
@@ -205,9 +180,9 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     override def id: Int = channelId
 
-    override def executor: ChannelsActor[?] = actor match
-        case a: ChannelsActor[?] => a
-        case null =>
+    override def executor: ChannelsActor[?] =
+        if (actor != null) actor
+        else
             throw new IllegalStateException(s"The channel $this is not mounted, use mount to mount channel.")
 
     final private[core] def mount(channelsActor: ChannelsActor[?]): Unit = {
