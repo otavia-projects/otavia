@@ -629,7 +629,7 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"cc/otavia/core/channel/AbstractChannel.html#closeInboundAdaptiveBuffers-94c","e":false,"i":"","n":"closeInboundAdaptiveBuffers","t":"closeInboundAdaptiveBuffers(): Unit","d":"cc.otavia.core.channel.AbstractChannel","k":"def","x":""},
 {"l":"cc/otavia/core/channel/AbstractChannel.html#closeOutboundAdaptiveBuffers-94c","e":false,"i":"","n":"closeOutboundAdaptiveBuffers","t":"closeOutboundAdaptiveBuffers(): Unit","d":"cc.otavia.core.channel.AbstractChannel","k":"def","x":""},
 {"l":"cc/otavia/core/channel/AbstractChannel.html#currentThread-0","e":false,"i":"","n":"currentThread","t":"currentThread: ActorThread","d":"cc.otavia.core.channel.AbstractChannel","k":"def","x":""},
-{"l":"cc/otavia/core/channel/AbstractChannel.html#failedInflights-94c","e":false,"i":"","n":"failedInflights","t":"failedInflights(): Unit","d":"cc.otavia.core.channel.AbstractChannel","k":"def","x":""},
+{"l":"cc/otavia/core/channel/AbstractChannel.html#failedFutures-4b8","e":false,"i":"","n":"failedFutures","t":"failedFutures(cause: Throwable): Unit","d":"cc.otavia.core.channel.AbstractChannel","k":"def","x":""},
 {"l":"cc/otavia/core/channel/AbstractChannel.html#invokeLater-47d","e":false,"i":"","n":"invokeLater","t":"invokeLater(task: Runnable): Unit","d":"cc.otavia.core.channel.AbstractChannel","k":"def","x":""},
 {"l":"cc/otavia/core/channel/AbstractChannel.html#logger-0","e":false,"i":"","n":"logger","t":"logger: Logger","d":"cc.otavia.core.channel.AbstractChannel","k":"val","x":""},
 {"l":"cc/otavia/core/channel/AbstractChannel.html#newPromise-21f","e":false,"i":"","n":"newPromise","t":"newPromise(): ChannelPromise","d":"cc.otavia.core.channel.AbstractChannel","k":"def","x":""},
