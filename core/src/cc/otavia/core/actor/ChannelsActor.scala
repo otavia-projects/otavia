@@ -142,7 +142,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     // format: off
     final protected def openFileChannel(path: Path, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Option[ChannelFutureState] = {
         // format: on
-        val channel               = createChannelAndInit()
+        val channel               = createFileChannelAndInit()
         val state                 = ChannelFutureState()
         val future: ChannelFuture = state.future
         channel.open(path, opts, attrs, future)
@@ -152,7 +152,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     // format: off
     final protected def openFileChannel(file: File, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Option[ChannelFutureState] = {
         // format: on
-        val channel               = createChannelAndInit()
+        val channel               = createFileChannelAndInit()
         val state                 = ChannelFutureState()
         val future: ChannelFuture = state.future
         channel.open(file, opts, attrs, future)

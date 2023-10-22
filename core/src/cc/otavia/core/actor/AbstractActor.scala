@@ -249,7 +249,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         stack.moveCompletedPromise(promise)
         if (stack.state.resumable() || !stack.hasUncompletedPromise) {
             // resume running current stack frame to next state
-            currentStack match
+            stack match
                 case stack: AskStack[?]     => dispatchAskStack(stack.asInstanceOf[AskStack[M & Ask[? <: Reply]]])
                 case stack: NoticeStack[?]  => dispatchNoticeStack(stack.asInstanceOf[NoticeStack[M & Notice]])
                 case s: BatchAskStack[?]    => dispatchBatchAskStack(s.asInstanceOf[BatchAskStack[M & Ask[? <: Reply]]])
