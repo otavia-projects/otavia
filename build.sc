@@ -67,8 +67,7 @@ object ProjectInfo {
 
 object common extends ScalaModule with BuildInfo with PublishModule {
 
-    override def scalaVersion = ProjectInfo.scalaVersion
-
+    override def scalaVersion         = ProjectInfo.scalaVersion
     override def buildInfoPackageName = "cc.otavia"
 
     override def buildInfoMembers = Seq(
@@ -93,11 +92,9 @@ object common extends ScalaModule with BuildInfo with PublishModule {
       BuildInfo.Value("copyright", "2022")
     )
 
-    override def pomSettings = ProjectInfo.settings
-
+    override def pomSettings    = ProjectInfo.settings
     override def publishVersion = ProjectInfo.version
-
-    override def artifactName = "otavia-common"
+    override def artifactName   = "otavia-common"
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
@@ -109,13 +106,10 @@ object common extends ScalaModule with BuildInfo with PublishModule {
 
 trait OtaviaModule extends ScalaModule with PublishModule {
 
-    override def scalaVersion = ProjectInfo.scalaVersion
-
-    override def publishVersion: T[String] = ProjectInfo.version
-
+    override def scalaVersion                = ProjectInfo.scalaVersion
+    override def publishVersion: T[String]   = ProjectInfo.version
     override def pomSettings: T[PomSettings] = ProjectInfo.settings
-
-    override def scalacOptions = T { scala.Seq("-Yexplicit-nulls") }
+    override def scalacOptions               = T { scala.Seq("-Yexplicit-nulls") }
 
 }
 
@@ -149,10 +143,8 @@ object buffer extends JvmBufferModule {
     object bench extends ScalaModule with JmhModule {
 
         override def scalaVersion = ProjectInfo.scalaVersion
-
-        def jmhCoreVersion = "1.37"
-
-        override def moduleDeps = Seq(buffer)
+        def jmhCoreVersion        = "1.37"
+        override def moduleDeps   = Seq(buffer)
 
     }
 
@@ -160,11 +152,9 @@ object buffer extends JvmBufferModule {
 
 object core extends OtaviaModule {
 
-    override def ivyDeps = Agg(ProjectInfo.netty5common)
-
+    override def ivyDeps      = Agg(ProjectInfo.netty5common)
     override def artifactName = "otavia-runtime"
-
-    override def moduleDeps = Seq(buffer, common)
+    override def moduleDeps   = Seq(buffer, common)
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
@@ -177,16 +167,14 @@ object core extends OtaviaModule {
 object testkit extends OtaviaModule {
 
     override def artifactName = "otavia-testkit"
-
-    override def moduleDeps = Seq(core)
+    override def moduleDeps   = Seq(core)
 
 }
 
 object handler extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
-
-    override def artifactName = "otavia-handler"
+    override def artifactName                   = "otavia-handler"
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
@@ -199,8 +187,7 @@ object handler extends OtaviaModule {
 object codec extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
-
-    override def artifactName = "otavia-codec"
+    override def artifactName                   = "otavia-codec"
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
@@ -212,8 +199,7 @@ object codec extends OtaviaModule {
 
 object `codec-http` extends OtaviaModule {
 
-    override def artifactName = "otavia-codec-http"
-
+    override def artifactName                   = "otavia-codec-http"
     override def moduleDeps: Seq[PublishModule] = scala.Seq(codec, serde, `serde-json`)
 
     object test extends ScalaTests with TestModule.ScalaTest {
@@ -226,16 +212,14 @@ object `codec-http` extends OtaviaModule {
 
 object sql extends OtaviaModule {
 
-    override def artifactName = "otavia-sql"
-
+    override def artifactName                   = "otavia-sql"
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, serde)
 
 }
 
 object `codec-redis` extends OtaviaModule {
 
-    override def artifactName: T[String] = "otavia-codec-redis"
-
+    override def artifactName: T[String]        = "otavia-codec-redis"
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, serde)
 
     object test extends ScalaTests with TestModule.ScalaTest {
@@ -248,48 +232,49 @@ object `codec-redis` extends OtaviaModule {
 
 object `codec-socks` extends OtaviaModule {
 
-    override def artifactName: T[String] = "otavia-codec-socks"
-
+    override def artifactName: T[String]        = "otavia-codec-socks"
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
 }
 
 object `codec-haproxy` extends OtaviaModule {
 
-    override def artifactName: T[String] = "otavia-codec-haproxy"
-
+    override def artifactName: T[String]        = "otavia-codec-haproxy"
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
 }
 
 object `codec-mqtt` extends OtaviaModule {
 
-    override def artifactName: T[String] = "otavia-codec-mqtt"
-
+    override def artifactName: T[String]        = "otavia-codec-mqtt"
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
 }
 
 object `codec-memcache` extends OtaviaModule {
 
-    override def artifactName: T[String] = "otavia-codec-memcache"
-
+    override def artifactName: T[String]        = "otavia-codec-memcache"
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
 }
 
 object `codec-smtp` extends OtaviaModule {
 
-    override def artifactName: T[String] = "otavia-codec-smtp"
-
+    override def artifactName: T[String]        = "otavia-codec-smtp"
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
 }
 
 object `codec-kafka` extends OtaviaModule {
 
-    override def artifactName: T[String] = "otavia-codec-kafka"
+    override def artifactName: T[String]        = "otavia-codec-kafka"
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
+}
+
+object `codec-dns` extends OtaviaModule {
+
+    override def artifactName: T[String]        = "otavia-codec-dns"
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
 
 }
@@ -297,10 +282,8 @@ object `codec-kafka` extends OtaviaModule {
 object log4a extends OtaviaModule {
 
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core)
-
-    override def artifactName: T[String] = "otavia-log4a"
-
-    override def ivyDeps = Agg(ProjectInfo.xml)
+    override def artifactName: T[String]        = "otavia-log4a"
+    override def ivyDeps                        = Agg(ProjectInfo.xml)
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
@@ -313,16 +296,14 @@ object log4a extends OtaviaModule {
 object serde extends OtaviaModule {
 
     override def artifactName = "otavia-serde"
-
-    override def moduleDeps = Seq(buffer, common)
+    override def moduleDeps   = Seq(buffer, common)
 
 }
 
 object `serde-json` extends OtaviaModule {
 
     override def artifactName = "otavia-serde-json"
-
-    override def moduleDeps = Seq(serde)
+    override def moduleDeps   = Seq(serde)
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
@@ -335,8 +316,7 @@ object `serde-json` extends OtaviaModule {
 object `serde-proto` extends OtaviaModule {
 
     override def artifactName = "otavia-serde-proto"
-
-    override def moduleDeps = Seq(serde)
+    override def moduleDeps   = Seq(serde)
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
@@ -349,8 +329,7 @@ object `serde-proto` extends OtaviaModule {
 object `sql-mysql-driver` extends OtaviaModule {
 
     override def artifactName = "otavia-mysql-driver"
-
-    override def moduleDeps = Seq(sql)
+    override def moduleDeps   = Seq(sql)
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
@@ -363,10 +342,8 @@ object `sql-mysql-driver` extends OtaviaModule {
 object `sql-postgres-driver` extends OtaviaModule {
 
     override def artifactName = "otavia-postgres-driver"
-
-    override def moduleDeps = Seq(sql)
-
-    override def ivyDeps = Agg(ProjectInfo.scram)
+    override def moduleDeps   = Seq(sql)
+    override def ivyDeps      = Agg(ProjectInfo.scram)
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
