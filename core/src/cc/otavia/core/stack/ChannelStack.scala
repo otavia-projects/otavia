@@ -40,11 +40,11 @@ class ChannelStack[+T <: AnyRef] private () extends Stack {
     override def recycle(): Unit = ChannelStack.stackPool.recycle(this)
 
     override protected def cleanInstance(): Unit = {
-        super.cleanInstance()
         msg = null
         belong = null
         msgId = -1
         ret = null
+        super.cleanInstance()
     }
 
     def isDone: Boolean = ret != null

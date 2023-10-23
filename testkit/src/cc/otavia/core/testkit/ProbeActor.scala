@@ -25,8 +25,8 @@ class ProbeActor[M <: Ask[? <: Reply], R <: ReplyOf[M]: ClassTag](
                 val state = FutureState[R]()
                 address.ask(msg, state.future)
                 state.suspend()
-            case state: FutureState[R] =>
-                result.success(expect(state.future))
+            case state: FutureState[?] if state.id == 0 =>
+                result.success(expect(state.future.asInstanceOf[ReplyFuture[R]]))
                 stack.`return`()
     }
 

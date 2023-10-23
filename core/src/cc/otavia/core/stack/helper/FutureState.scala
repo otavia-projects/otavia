@@ -33,11 +33,8 @@ final class FutureState[R <: Reply] private () extends StackState with Poolable 
 
     private var stateId: Int       = 0
     private var fu: ReplyFuture[R] = _
-    private var clz: Class[?]      = _
 
     def future: ReplyFuture[R] = fu
-
-    def replyClass: Class[?] = clz
 
     override def id: Int = stateId
 
@@ -46,24 +43,21 @@ final class FutureState[R <: Reply] private () extends StackState with Poolable 
     override protected def cleanInstance(): Unit = {
         fu = null
         stateId = 0
-        clz = null
     }
 
 }
 
 object FutureState {
 
-    def apply[R <: Reply: ClassTag](stateId: Int): FutureState[R] = {
+    def apply[R <: Reply](stateId: Int): FutureState[R] = {
         val state = pool.get().asInstanceOf[FutureState[R]]
         state.stateId = stateId
         state.fu = ReplyFuture()
-        state.clz = classTag[R].runtimeClass
         state
     }
 
-    def apply[R <: Reply: ClassTag](): FutureState[R] = {
+    def apply[R <: Reply](): FutureState[R] = {
         val state = pool.get().asInstanceOf[FutureState[R]]
-        state.clz = classTag[R].runtimeClass
         state.fu = ReplyFuture()
         state
     }

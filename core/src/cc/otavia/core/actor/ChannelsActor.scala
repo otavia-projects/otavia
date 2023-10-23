@@ -192,7 +192,9 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         throw new NotImplementedError(getClass.getName + ".newChannel: an implementation is missing")
 
     @throws[Exception]
-    protected def init(channel: Channel): Unit = {}
+    protected def init(channel: Channel): Unit = handler match
+        case Some(h) => channel.pipeline.addLast(h)
+        case None    =>
 
     protected def initFileChannel(channel: Channel): Unit = {}
 

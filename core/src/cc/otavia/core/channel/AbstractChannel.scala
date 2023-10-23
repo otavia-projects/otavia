@@ -45,7 +45,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     private var inboundBarrier: AnyRef => Boolean  = _ => false
     private var outboundBarrier: AnyRef => Boolean = _ => true
-    private var maxOutInflight: Int                = 1
+    private var maxInboundInflight: Int            = 1
+    private var maxOutboundInflight: Int           = 1
 
     // outbound futures which is write to channel and wait channel reply
     private val outboundInflightFutures: FutureQueue = new FutureQueue()
@@ -88,8 +89,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     final override def setInboundMessageBarrier(barrier: AnyRef => Boolean): Unit  = inboundBarrier = barrier
     final override def outboundMessageBarrier: AnyRef => Boolean                   = outboundBarrier
     final override def setOutboundMessageBarrier(barrier: AnyRef => Boolean): Unit = outboundBarrier = barrier
-    override def setMaxOutboundInflight(max: Int): Unit                            = maxOutInflight = max
-    override def maxOutboundInflight: Int                                          = maxOutInflight
+    override def setMaxFutureInflight(max: Int): Unit                              = maxOutboundInflight = max
+    override def maxFutureInflight: Int                                            = maxOutboundInflight
     final override def outboundInflightSize: Int                                   = outboundInflightFutures.size
     final override def outboundPendingSize: Int                                    = outboundPendingFutures.size
     final override def inboundInflightSize: Int                                    = inboundInflightStacks.size
@@ -103,7 +104,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
             inboundInflightStacks
             executor.receiveChannelMessage(stack)
         } else {
-            if (maxOutInflight == 1 && outboundInflightFutures.size == 1) {}
+            if (maxOutboundInflight == 1 && outboundInflightFutures.size == 1) {}
         }
     }
 
@@ -119,6 +120,10 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         if (outboundPendingFutures.nonEmpty) processPendingFutures()
     }
 
+    final private[core] def processPendingStacks(): Unit = {
+        // TODO:
+    }
+
     final private[core] def processPendingFutures(): Unit = if (outboundPendingFutures.headIsBarrier) {
         if (outboundInflightFutures.isEmpty) {
             val promise = outboundPendingFutures.pop()
@@ -129,7 +134,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     } else if (!outboundInflightFutures.headIsBarrier) {
         while (
           outboundPendingFutures.nonEmpty &&
-          outboundInflightFutures.size < maxOutboundInflight &&
+          outboundInflightFutures.size < maxFutureInflight &&
           !outboundPendingFutures.headIsBarrier
         ) {
             val promise = outboundPendingFutures.pop()

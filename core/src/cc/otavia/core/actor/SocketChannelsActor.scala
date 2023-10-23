@@ -83,12 +83,6 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
 
     override protected def newChannel(): Channel = system.channelFactory.openSocketChannel(family)
 
-    override protected def init(channel: Channel): Unit = {
-        handler match
-            case Some(h) => channel.pipeline.addLast(h)
-            case None    => logger.warn(s"The channel $channel is not add any handler!")
-    }
-
 }
 
 object SocketChannelsActor {
@@ -106,7 +100,5 @@ object SocketChannelsActor {
     case class ConnectChannel(remote: SocketAddress, local: Option[SocketAddress])
         extends Connect
         with Ask[ConnectReply]
-
-
 
 }

@@ -24,7 +24,7 @@ import cc.otavia.core.message.{Event, ResourceTimeoutEvent}
 import cc.otavia.core.system.ActorThread.{GC_PEER_ROUND, ST_RUNNING, ST_STARTING, ST_WAITING}
 import cc.otavia.core.system.monitor.ActorThreadMonitor
 
-import java.lang.ref.{PhantomReference, ReferenceQueue, SoftReference, WeakReference}
+import java.lang.ref.*
 import java.util.concurrent.{ConcurrentLinkedQueue, CopyOnWriteArraySet}
 import scala.collection.mutable
 import scala.language.unsafeNulls
@@ -41,7 +41,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
     private val address: ActorThreadAddress = new ActorThreadAddress(this)
 
     private val referenceQueue = new ReferenceQueue[ActorAddress[?]]()
-    private val refSet         = new CopyOnWriteArraySet[AddressPhantomReference]()
+    private val refSet         = mutable.HashSet.empty[Reference[?]]
 
     @volatile private var status: Int = ST_STARTING
 
@@ -124,7 +124,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
         while (true) {
             var success: Boolean = false
             // run current thread tasks
-            val stops    = this.stopActors()
+            val stops    = if (refSet.isEmpty) 0 else this.stopActors()
             val runHouse = manager.run()
             val runEvent = this.runThreadEvent()
 

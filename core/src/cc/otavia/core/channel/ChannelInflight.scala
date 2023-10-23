@@ -41,8 +41,8 @@ trait ChannelInflight {
      */
     def setOutboundMessageBarrier(barrier: AnyRef => Boolean): Unit
 
-    def maxOutboundInflight: Int
-    def setMaxOutboundInflight(max: Int): Unit
+    def maxFutureInflight: Int
+    def setMaxFutureInflight(max: Int): Unit
 
     def outboundInflightSize: Int
     def outboundPendingSize: Int

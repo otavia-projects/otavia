@@ -38,12 +38,6 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
         workers = system.buildActor(workerFactory, workerNumber)
     }
 
-    override def init(channel: Channel): Unit = {
-        if (handler.nonEmpty) {
-            channel.pipeline.addLast(handler.get)
-        }
-    }
-
     final override protected def newChannel(): Channel = system.channelFactory.openServerSocketChannel(family)
 
     final protected def bind(stack: AskStack[Bind]): Option[StackState] = {
@@ -81,8 +75,8 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
                 val state = FutureState[UnitReply]()
                 workers.ask(AcceptedChannel(stack.message), state.future)
                 state.suspend()
-            case state: FutureState[UnitReply] =>
-                if (state.future.isSuccess) stack.`return`(None)
+            case state: FutureState[?] if state.id == 0 =>
+                if (state.future.isSuccess) stack.`return`()
                 else
                     stack.`return`(state.future.causeUnsafe)
     }
