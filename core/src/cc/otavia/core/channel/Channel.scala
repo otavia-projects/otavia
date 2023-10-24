@@ -19,7 +19,7 @@
 package cc.otavia.core.channel
 
 import cc.otavia.buffer.AbstractBuffer
-import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, AdaptiveBuffer, RecyclablePageBuffer, PooledPageAllocator}
+import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, AdaptiveBuffer, PooledPageAllocator, RecyclablePageBuffer}
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.address.ActorAddress
 import cc.otavia.core.channel.message.ReadPlan
@@ -180,10 +180,7 @@ trait Channel extends ChannelInflight, EventHandle, ChannelAddress {
 
     final def writeAndFlush(msg: AnyRef, msgId: Long): Unit = pipeline.writeAndFlush(msg, msgId)
 
-    final def flush(): this.type = {
-        pipeline.flush()
-        this
-    }
+    final def flush(): this.type = { pipeline.flush(); this }
 
     final def sendOutboundEvent(event: AnyRef): Unit = pipeline.sendOutboundEvent(event)
 
@@ -197,18 +194,13 @@ trait Channel extends ChannelInflight, EventHandle, ChannelAddress {
 
     private[core] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit
 
-    private[core] def connectTransport(
-        remote: SocketAddress,
-        local: Option[SocketAddress],
-        promise: ChannelPromise
-    ): Unit
+    // format: off
+    private[core] def connectTransport(remote: SocketAddress, local: Option[SocketAddress], promise: ChannelPromise): Unit
+    // format: on
 
-    private[core] def openTransport(
-        path: Path,
-        options: Seq[OpenOption],
-        attrs: Seq[FileAttribute[?]],
-        promise: ChannelPromise
-    ): Unit
+    // format: off
+    private[core] def openTransport(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]], promise: ChannelPromise): Unit
+    // format: on
 
     private[core] def disconnectTransport(promise: ChannelPromise): Unit
 

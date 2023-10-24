@@ -16,6 +16,7 @@
 
 package cc.otavia.core.stack
 
+import cc.otavia.core.channel.inflight.QueueMapEntity
 import cc.otavia.core.message.ExceptionMessage
 
 import scala.language.unsafeNulls
@@ -30,7 +31,7 @@ object ChannelReplyFuture {
     def apply(): ChannelReplyFuture = ChannelReplyPromise()
 }
 
-class ChannelReplyPromise private () extends AbstractPromise[AnyRef] with ChannelReplyFuture {
+class ChannelReplyPromise private () extends AbstractPromise[AnyRef] with ChannelReplyFuture with QueueMapEntity {
 
     private var ask: AnyRef          = _
     private var value: AnyRef        = _
@@ -42,6 +43,8 @@ class ChannelReplyPromise private () extends AbstractPromise[AnyRef] with Channe
     def setMessageId(id: Long): Unit = this.msgId = id
 
     def messageId: Long = msgId
+
+    override def entityId: Long = msgId
 
     def setAsk(ask: AnyRef): Unit = this.ask = ask
     def getAsk(): AnyRef = {

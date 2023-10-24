@@ -53,11 +53,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
     protected def family: ProtocolFamily = StandardProtocolFamily.INET
 
-    private[core] def generateChannelId(): Int = {
-        val channelId = channelCursor
-        channelCursor += 1
-        channelId
-    }
+    private[core] def generateChannelId(): Int = { val channelId = channelCursor; channelCursor += 1; channelId }
 
     private[core] def receiveChannelMessage(stack: ChannelStack[?]): Unit = {
         currentChannelReceived = stack.message
@@ -68,12 +64,14 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         currentStack = stack
         try {
             val oldState = stack.state
-            this.switchState(stack, oldState, continueChannel(stack))
+            val newState = continueChannel(stack)
+            this.switchState(stack, oldState, newState)
+            if (newState.isEmpty) stack.internalChannel.processCompletedChannelStacks()
         } catch {
             case cause: Throwable =>
                 cause.printStackTrace()
                 stack.`return`(cause) // completed stack with Exception
-                stack.recycle()
+                stack.internalChannel.processCompletedChannelStacks()
         } finally currentStack = null
     }
 

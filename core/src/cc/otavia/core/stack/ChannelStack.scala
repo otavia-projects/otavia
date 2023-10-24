@@ -16,26 +16,36 @@
 
 package cc.otavia.core.stack
 
-import cc.otavia.core.channel.Channel
+import cc.otavia.core.channel.inflight.QueueMapEntity
+import cc.otavia.core.channel.{AbstractChannel, Channel, ChannelAddress}
 
 import scala.language.unsafeNulls
 
-class ChannelStack[+T <: AnyRef] private () extends Stack {
+class ChannelStack[+T <: AnyRef] private () extends Stack with QueueMapEntity {
 
-    private var msg: AnyRef     = _
-    private var belong: Channel = _
-    private var msgId: Long     = -1
+    private var msg: AnyRef             = _
+    private var belong: AbstractChannel = _
+    private var msgId: Long             = -1
 
-    private var ret: AnyRef = _
+    private var barrier: Boolean = false
 
-    def message: T                                = msg.asInstanceOf[T]
-    private[core] def setMessage(m: AnyRef): Unit = msg = m
+    private var done: Boolean = false
 
-    def channel: Channel                           = belong
-    private[core] def setChannel(c: Channel): Unit = belong = c
+    private var ret: AnyRef        = _
+    private var noticeRet: Boolean = false
+
+    def message: T                                         = msg.asInstanceOf[T]
+    private[core] def setMessage(m: AnyRef): Unit          = msg = m
+    def channel: ChannelAddress                            = belong
+    private[core] def internalChannel: AbstractChannel     = belong
+    private[core] def setChannel(c: AbstractChannel): Unit = belong = c
 
     def messageId: Long              = msgId
     def setMessageId(id: Long): Unit = msgId = id
+    override def entityId: Long      = msgId
+
+    override def isBarrier: Boolean  = barrier
+    def setBarrier(b: Boolean): Unit = barrier = b
 
     override def recycle(): Unit = ChannelStack.stackPool.recycle(this)
 
@@ -43,22 +53,30 @@ class ChannelStack[+T <: AnyRef] private () extends Stack {
         msg = null
         belong = null
         msgId = -1
+        barrier = false
+        done = false
         ret = null
+        noticeRet = false
         super.cleanInstance()
     }
 
-    def isDone: Boolean = ret != null
+    def isDone: Boolean = done
 
     def `return`(ret: AnyRef): None.type = {
         this.ret = ret
-        belong.write(ret, msgId)
+        done = true
         None
     }
 
     def `return`(): None.type = {
-        this.ret = None
+        this.noticeRet = true
+        done = true
         None
     }
+
+    private[core] def hasResult: Boolean = ret != null
+
+    private[core] def result: AnyRef = ret
 
 }
 
@@ -68,7 +86,7 @@ object ChannelStack {
         override protected def newObject(): ChannelStack[AnyRef] = new ChannelStack()
     }
 
-    def apply(channel: Channel, msg: AnyRef, msgId: Long): ChannelStack[AnyRef] = {
+    def apply(channel: AbstractChannel, msg: AnyRef, msgId: Long): ChannelStack[AnyRef] = {
         val stack = stackPool.get()
         stack.setChannel(channel)
         stack.setMessage(msg)

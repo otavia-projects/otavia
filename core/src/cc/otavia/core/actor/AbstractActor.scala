@@ -270,7 +270,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
             case None =>
                 this.recycleStackState(oldState)
                 assert(stack.isDone, "None but not call return method of Stack!")
-                stack.recycle() // recycle stack instance.
+                if (!stack.isInstanceOf[ChannelStack[?]]) stack.recycle() // recycle stack instance.
 
     private[core] def recycleUncompletedPromise(uncompleted: PromiseIterator): Unit = {
         while (uncompleted.hasNext) {

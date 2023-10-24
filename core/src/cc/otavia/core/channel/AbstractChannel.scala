@@ -21,11 +21,11 @@ package cc.otavia.core.channel
 import cc.otavia.buffer.AbstractBuffer
 import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, AdaptiveBuffer}
 import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.channel.inflight.{FutureQueue, StackQueue}
+import cc.otavia.core.channel.inflight.{FutureQueue, QueueMap, StackQueue}
 import cc.otavia.core.channel.message.{AdaptiveBufferChangeNotice, DatagramAdaptiveRangePacket, ReadPlan, ReadPlanFactory}
 import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.slf4a.Logger
-import cc.otavia.core.stack.{AbstractPromise, ChannelPromise, ChannelReplyFuture, ChannelStack}
+import cc.otavia.core.stack.*
 import cc.otavia.core.system.{ActorSystem, ActorThread}
 
 import java.net.SocketAddress
@@ -43,20 +43,21 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     private var pipe: ChannelPipelineImpl     = _
     private var unsafe: AbstractUnsafeChannel = _
 
-    private var inboundBarrier: AnyRef => Boolean  = _ => false
-    private var outboundBarrier: AnyRef => Boolean = _ => true
-    private var maxInboundInflight: Int            = 1
-    private var maxOutboundInflight: Int           = 1
+    private var futureBarrier: AnyRef => Boolean = _ => false
+    private var stackBarrier: AnyRef => Boolean  = _ => true
+    private var maxStackInflight: Int            = 1
+    private var maxFutureInflight: Int           = 1
 
     // outbound futures which is write to channel and wait channel reply
-    private val outboundInflightFutures: FutureQueue = new FutureQueue()
+    private val inflightFutures: QueueMap[ChannelReplyPromise] = new QueueMap[ChannelReplyPromise]()
     // outbound futures which is waiting channel to send
-    private val outboundPendingFutures: FutureQueue = new FutureQueue()
+    private val pendingFutures: QueueMap[ChannelReplyPromise] = new QueueMap[ChannelReplyPromise]()
     // inbound stack which is running by actor
-    private val inboundInflightStacks: StackQueue = new StackQueue()
+    private val inflightStacks: QueueMap[ChannelStack[?]] = new QueueMap[ChannelStack[?]]()
     // inbound stack to wait actor running
-    private val inboundPendingStacks: StackQueue = new StackQueue()
-    private var channelMsgId: Long               = ChannelInflight.INVALID_CHANNEL_MESSAGE_ID
+    private val pendingStacks: QueueMap[ChannelStack[?]] = new QueueMap[ChannelStack[?]]()
+
+    private var channelMsgId: Long = ChannelInflight.INVALID_CHANNEL_MESSAGE_ID
 
     protected var ongoingChannelPromise: ChannelPromise = _
 
@@ -85,72 +86,102 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     // impl ChannelInflight
 
-    final override def inboundMessageBarrier: AnyRef => Boolean                    = inboundBarrier
-    final override def setInboundMessageBarrier(barrier: AnyRef => Boolean): Unit  = inboundBarrier = barrier
-    final override def outboundMessageBarrier: AnyRef => Boolean                   = outboundBarrier
-    final override def setOutboundMessageBarrier(barrier: AnyRef => Boolean): Unit = outboundBarrier = barrier
-    override def setMaxFutureInflight(max: Int): Unit                              = maxOutboundInflight = max
-    override def maxFutureInflight: Int                                            = maxOutboundInflight
-    final override def outboundInflightSize: Int                                   = outboundInflightFutures.size
-    final override def outboundPendingSize: Int                                    = outboundPendingFutures.size
-    final override def inboundInflightSize: Int                                    = inboundInflightStacks.size
-    final override def inboundPendingSize: Int                                     = inboundPendingStacks.size
+    final override def futureMessageBarrier: AnyRef => Boolean                   = futureBarrier
+    final override def setFutureMessageBarrier(barrier: AnyRef => Boolean): Unit = futureBarrier = barrier
+    final override def stackMessageBarrier: AnyRef => Boolean                    = stackBarrier
+    final override def setStackMessageBarrier(barrier: AnyRef => Boolean): Unit  = stackBarrier = barrier
+    override def setMaxFutureInflight(max: Int): Unit                            = maxFutureInflight = max
+    override def setMaxStackInflight(max: Int): Unit                             = maxStackInflight = max
+    final override def inflightFutureSize: Int                                   = inflightFutures.size
+    final override def pendingFutureSize: Int                                    = pendingFutures.size
+    final override def inflightStackSize: Int                                    = inflightStacks.size
+    final override def pendingStackSize: Int                                     = pendingStacks.size
+    override def setStackHeadOfLine(hol: Boolean): Unit                          = stackHeadOfLine = hol
 
     override def generateMessageId: Long = { channelMsgId += 1; channelMsgId }
 
     override private[core] def onInboundMessage(msg: AnyRef): Unit = {
-        if (outboundInflightFutures.isEmpty) {
-            val stack = ChannelStack(this, msg, msgId = generateMessageId) // TODO: support channel notice message
-            inboundInflightStacks
-            executor.receiveChannelMessage(stack)
+        if (maxFutureInflight == 1 && inflightFutures.size == 1) {
+            val promise = inflightFutures.pop()
+            if (!msg.isInstanceOf[Throwable]) promise.setSuccess(msg)
+            else promise.setFailure(msg.asInstanceOf[Throwable])
         } else {
-            if (maxOutboundInflight == 1 && outboundInflightFutures.size == 1) {}
+            val stack = ChannelStack(this, msg, msgId = generateMessageId)
+            pendingStacks.append(stack)
+            processPendingStacks()
         }
+        if (pendingFutures.nonEmpty) processPendingFutures()
     }
 
     override private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit = {
-        if (outboundInflightFutures.hasMessage(id)) {
-            val promise = outboundInflightFutures.pop()
+        if (inflightFutures.contains(id)) {
+            val promise = inflightFutures.remove(id)
             if (!msg.isInstanceOf[Throwable]) promise.setSuccess(msg)
             else promise.setFailure(msg.asInstanceOf[Throwable])
         } else {
             val stack = ChannelStack(this, msg, id)
-            this.executor.receiveChannelMessage(stack)
+            pendingStacks.append(stack)
+            processPendingStacks()
         }
-        if (outboundPendingFutures.nonEmpty) processPendingFutures()
+        if (pendingFutures.nonEmpty) processPendingFutures()
     }
 
-    final private[core] def processPendingStacks(): Unit = {
-        // TODO:
+    final private[core] def processCompletedChannelStacks(): Unit =
+        while (inflightStacks.nonEmpty && inflightStacks.first.isDone) {
+            val stack = inflightStacks.pop()
+            if (stack.hasResult) this.writeAndFlush(stack.result, stack.messageId)
+            stack.recycle()
+        }
+
+    final private[core] def processPendingStacks(): Unit = if (pendingStacks.headIsBarrier) {
+        if (inflightStacks.isEmpty) processPendingStack()
+    } else if (!inflightStacks.headIsBarrier) {
+        while (
+          pendingStacks.nonEmpty &&
+          inflightStacks.size < maxStackInflight &&
+          !pendingStacks.headIsBarrier
+        ) processPendingStack()
+        processCompletedChannelStacks()
     }
 
-    final private[core] def processPendingFutures(): Unit = if (outboundPendingFutures.headIsBarrier) {
-        if (outboundInflightFutures.isEmpty) {
-            val promise = outboundPendingFutures.pop()
-            outboundInflightFutures.append(promise)
+    private def processPendingStack(): Unit = {
+        val stack = pendingStacks.pop()
+        inflightStacks.append(stack)
+        executor.receiveChannelMessage(stack)
+        if (stack.isDone && !stackHeadOfLine) {
+            inflightStacks.remove(stack.entityId)
+            if (stack.hasResult) this.writeAndFlush(stack.result, stack.messageId)
+            stack.recycle()
+        }
+    }
+
+    final private[core] def processPendingFutures(): Unit = if (pendingFutures.headIsBarrier) {
+        if (inflightFutures.isEmpty) {
+            val promise = pendingFutures.pop()
+            inflightFutures.append(promise)
             // write message to pipeline, and send data by socket
             this.writeAndFlush(promise.getAsk(), promise.messageId)
         }
-    } else if (!outboundInflightFutures.headIsBarrier) {
+    } else if (!inflightFutures.headIsBarrier) {
         while (
-          outboundPendingFutures.nonEmpty &&
-          outboundInflightFutures.size < maxFutureInflight &&
-          !outboundPendingFutures.headIsBarrier
+          pendingFutures.nonEmpty &&
+          inflightFutures.size < maxFutureInflight &&
+          !pendingFutures.headIsBarrier
         ) {
-            val promise = outboundPendingFutures.pop()
+            val promise = pendingFutures.pop()
             this.write(promise.getAsk(), promise.messageId)
-            outboundInflightFutures.append(promise)
+            inflightFutures.append(promise)
         }
         this.flush()
     }
 
     final protected def failedFutures(cause: Throwable): Unit = {
-        while (outboundInflightFutures.nonEmpty) {
-            val promise = outboundInflightFutures.pop()
+        while (inflightFutures.nonEmpty) {
+            val promise = inflightFutures.pop()
             promise.setFailure(cause)
         }
-        while (outboundPendingFutures.nonEmpty) {
-            val promise = outboundPendingFutures.pop()
+        while (pendingFutures.nonEmpty) {
+            val promise = pendingFutures.pop()
             promise.setFailure(cause)
         }
     }
@@ -161,10 +192,10 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     override def ask(value: AnyRef, future: ChannelReplyFuture): ChannelReplyFuture = {
         val promise = future.promise
         promise.setMessageId(generateMessageId)
-        promise.setBarrier(outboundMessageBarrier(value))
+        promise.setBarrier(stackMessageBarrier(value))
         promise.setAsk(value)
         executor.attachStack(executor.generateSendMessageId(), future)
-        outboundPendingFutures.append(promise)
+        pendingFutures.append(promise)
         processPendingFutures()
         future
     }

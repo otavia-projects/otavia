@@ -125,13 +125,13 @@ trait ChannelState extends CompressionBooleanLong {
      *  @param value
      *    head-of-line
      */
-    protected final def inboundHeadOfLine_=(value: Boolean): Unit = set(ST_INBOUND_HOL, value)
+    protected final def stackHeadOfLine_=(value: Boolean): Unit = set(ST_STACK_HOL, value)
 
     /** The [[Channel]] inbound is head-of-line */
-    protected final def inboundHeadOfLine: Boolean = get(ST_INBOUND_HOL)
+    protected final def stackHeadOfLine: Boolean = get(ST_STACK_HOL)
 
-    protected final def outboundHeadOfLine_=(value: Boolean): Unit = set(ST_OUTBOUND_HOL, value)
-    protected final def outboundHeadOfLine: Boolean                = get(ST_OUTBOUND_HOL)
+    protected final def futureHeadOfLine_=(value: Boolean): Unit = set(ST_FUTURE_HOL, value)
+    protected final def futureHeadOfLine: Boolean                = get(ST_FUTURE_HOL)
 
     protected def getStateString(): String = {
         val sb = new StringBuilder()
@@ -270,11 +270,11 @@ object ChannelState {
     private val ST_WRITABLE: Long        = 1L << ST_WRITABLE_OFFSET
 
     // Channel inflight state
-    private val ST_OUTBOUND_HOL_OFFSET: Long = 39
-    private val ST_OUTBOUND_HOL: Long        = 1L << ST_OUTBOUND_HOL_OFFSET
+    private val ST_FUTURE_HOL_OFFSET: Long = 39
+    private val ST_FUTURE_HOL: Long        = 1L << ST_FUTURE_HOL_OFFSET
 
-    private val ST_INBOUND_HOL_OFFSET: Long = 40
-    private val ST_INBOUND_HOL: Long        = 1L << ST_INBOUND_HOL_OFFSET
+    private val ST_STACK_HOL_OFFSET: Long = 40
+    private val ST_STACK_HOL: Long        = 1L << ST_STACK_HOL_OFFSET
 
     // End channel inflight state
 

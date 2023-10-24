@@ -1,0 +1,84 @@
+/*
+ * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package cc.otavia.core.channel.inflight
+
+import org.scalatest.funsuite.AnyFunSuiteLike
+
+class QueueMapSuite extends AnyFunSuiteLike {
+
+    import QueueMapSuite.*
+
+    test("queue op") {
+        val queueMap = new QueueMap[TestQueueMapEntity]()
+        0 until 10 foreach { idx =>
+            val entity = new TestQueueMapEntity()
+            entity.setId(idx)
+            queueMap.append(entity)
+        }
+        assert(queueMap.size == 10)
+        queueMap.remove(5)
+        assert(!queueMap.contains(5))
+        assert(queueMap.size == 9)
+        for (idx <- 0 until 10 if idx != 5) assert(queueMap.contains(idx))
+
+        val entity = new TestQueueMapEntity()
+        entity.setId(11)
+        queueMap.append(entity)
+
+        assert(queueMap.size == 10)
+
+        queueMap.remove(0)
+
+        assert(queueMap.size == 9)
+
+        queueMap.remove(11)
+
+        assert(queueMap.size == 8)
+
+        assert(!queueMap.headIsBarrier)
+
+    }
+
+    test("headIsBarrier") {
+        val entity = new TestQueueMapEntity()
+        entity.setId(0)
+        entity.setBarrier(true)
+
+        val queueMap = new QueueMap[TestQueueMapEntity]()
+
+        queueMap.append(entity)
+
+        assert(queueMap.headIsBarrier)
+    }
+
+}
+
+object QueueMapSuite {
+    class TestQueueMapEntity() extends QueueMapEntity {
+
+        private var id: Int          = 0
+        private var barrier: Boolean = false
+        override def entityId: Long  = id
+
+        override def isBarrier: Boolean = barrier
+
+        def setId(i: Int): Unit = id = i
+
+        def setBarrier(b: Boolean): Unit = barrier = b
+
+    }
+}
