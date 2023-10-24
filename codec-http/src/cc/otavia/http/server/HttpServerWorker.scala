@@ -31,9 +31,6 @@ class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Arr
 
     override def continueAsk(stack: AskStack[AcceptedChannel]): Option[StackState] = handleAccepted(stack)
 
-    override protected def afterAccepted(channel: ChannelAddress): Unit = {
-        logger.info(s"Accepted ${channel}")
-        super.afterAccepted(channel)
-    }
+    override protected def afterAccepted(channel: ChannelAddress): Unit = logger.debug("Accepted {}", channel)
 
 }
