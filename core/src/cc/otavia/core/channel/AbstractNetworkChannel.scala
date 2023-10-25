@@ -20,12 +20,13 @@ package cc.otavia.core.channel
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.common.Platform
-import cc.otavia.core.channel.AbstractNetChannel.{DEFAULT_CONNECT_TIMEOUT, SUPPORTED_CHANNEL_OPTIONS}
+import cc.otavia.core.channel.ChannelOption.*
 import cc.otavia.core.channel.internal.AdaptiveBufferOffset
 import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.stack.{ChannelPromise, Promise}
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.{TimeoutTrigger, Timer}
+import cc.otavia.core.transport.nio.channel.NioChannelOption
 
 import java.io.IOException
 import java.net.{InetSocketAddress, SocketAddress}
@@ -37,26 +38,69 @@ import scala.language.unsafeNulls
 
 abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChannel(system) {
 
+    import AbstractNetworkChannel.*
+
     private var connectTimeoutMillis: Int      = DEFAULT_CONNECT_TIMEOUT
     private var connectTimeoutRegisterId: Long = Timer.INVALID_TIMEOUT_REGISTER_ID
 
     private val outboundQueue: mutable.ArrayDeque[AdaptiveBufferOffset | FileRegion] = mutable.ArrayDeque.empty
 
-    /** Override to add support for more [[ChannelOption]]s. You need to also call super after handling the extra
-     *  options.
+    override protected def getExtendedOption[T](option: ChannelOption[T]): T = option match
+        case AUTO_READ               => ???
+        case WRITE_BUFFER_WATER_MARK => ???
+        case CONNECT_TIMEOUT_MILLIS  => ??? // connectTimeoutMillis.asInstanceOf[T]
+        case BUFFER_ALLOCATOR        => ???
+        case READ_HANDLE_FACTORY     => ???
+        case WRITE_HANDLE_FACTORY    => ???
+        case AUTO_CLOSE              => ???
+        case MESSAGE_SIZE_ESTIMATOR  => ??? // msgSizeEstimator.asInstanceOf[T]
+        case ALLOW_HALF_CLOSURE      => ???
+        case _                       => getTransportExtendedOption(option)
+
+    /** Override to add support for more [[ChannelOption]]s for networks [[Channel]]. You need to also call super after
+     *  handling the extra options.
      *
      *  @param option
      *    the [[ChannelOption]].
-     *  @param <
-     *    T> the value type.
+     *  @tparam T
+     *    the value type.
+     *  @return
+     *    the value for the option.
      *  @throws UnsupportedOperationException
      *    if the [[ChannelOption]] is not supported.
      */
-    protected def setExtendedOption[T](option: ChannelOption[T], value: T): Unit =
+    protected def getTransportExtendedOption[T](option: ChannelOption[T]): T =
         throw new UnsupportedOperationException(s"ChannelOption not supported: $option")
 
-    override def isOptionSupported(option: ChannelOption[?]): Boolean = SUPPORTED_CHANNEL_OPTIONS.contains(option) ||
-        isExtendedOptionSupported(option)
+    override final protected def setExtendedOption[T](option: ChannelOption[T], value: T): Unit = {
+        option match
+            case AUTO_READ               => // setAutoRead(value.asInstanceOf[Boolean])
+            case WRITE_BUFFER_WATER_MARK => ???
+            case CONNECT_TIMEOUT_MILLIS  => setConnectTimeoutMillis(value)
+            case BUFFER_ALLOCATOR        => ???
+            case READ_HANDLE_FACTORY     => ???
+            case WRITE_HANDLE_FACTORY    => ???
+            case AUTO_CLOSE              => autoClose = true
+            case MESSAGE_SIZE_ESTIMATOR  => // msgSizeEstimator = value.asInstanceOf[MessageSizeEstimator]
+            case ALLOW_HALF_CLOSURE      => allowHalfClosure = value
+            case _                       => setTransportExtendedOption(option, value)
+    }
+
+    /** Override to add support for more [[ChannelOption]]s for networks [[Channel]]. You need to also call super after
+     *  handling the extra options.
+     *
+     *  @param option
+     *    the [[ChannelOption]].
+     *  @tparam T
+     *    the value type.
+     *  @throws UnsupportedOperationException
+     *    if the [[ChannelOption]] is not supported.
+     */
+    protected def setTransportExtendedOption[T](option: ChannelOption[T], value: T): Unit =
+        throw new UnsupportedOperationException("ChannelOption not supported: " + option)
+
+    override protected def isExtendedOptionSupported(option: ChannelOption[?]): Boolean =
+        SUPPORTED_CHANNEL_OPTIONS.contains(option) || isTransportExtendedOptionSupported(option)
 
     /** Override to add support for more [[ChannelOption]]s. You need to also call super after handling the extra
      *  options.
@@ -66,7 +110,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
      *  @return
      *    true if supported, false otherwise.
      */
-    protected def isExtendedOptionSupported(option: ChannelOption[?]) = false
+    protected def isTransportExtendedOptionSupported(option: ChannelOption[?]) = false
 
     private def getConnectTimeoutMillis = connectTimeoutMillis
 
@@ -268,6 +312,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
             ongoingChannelPromise = promise
             reactor.close(this)
             this.failedFutures(cause)
+            this.failedStacks(cause)
             this.closeAdaptiveBuffers()
         } else if (closed) { promise.setSuccess(ReactorEvent.EMPTY_EVENT) }
         else if (closing) { promise.setFailure(new IllegalStateException("A close operation is running")) }
@@ -380,5 +425,23 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
     private def closeIfClosed(): Unit = if (!isOpen) closeTransport(newPromise())
 
     override def toString: String = s"${getClass.getSimpleName}(id=${id}, state=${getStateString()})"
+
+}
+
+object AbstractNetworkChannel {
+
+    final val DEFAULT_CONNECT_TIMEOUT = 30000
+
+    private val SUPPORTED_CHANNEL_OPTIONS: Set[ChannelOption[?]] = Set(
+      AUTO_READ,
+      WRITE_BUFFER_WATER_MARK,
+      CONNECT_TIMEOUT_MILLIS,
+      BUFFER_ALLOCATOR,
+      READ_HANDLE_FACTORY,
+      WRITE_HANDLE_FACTORY,
+      AUTO_CLOSE,
+      MESSAGE_SIZE_ESTIMATOR,
+      ALLOW_HALF_CLOSURE
+    )
 
 }

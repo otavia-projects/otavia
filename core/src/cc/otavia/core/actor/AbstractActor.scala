@@ -192,7 +192,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
             case cause: Throwable =>
                 cause.printStackTrace()
                 handleNoticeException(stack, cause)
-                stack.recycle()
+                recycleStack(stack)
         } finally currentStack = null
     }
 
@@ -204,7 +204,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         } catch {
             case cause: Throwable =>
                 handleNoticeException(stack, cause)
-                stack.recycle()
+                recycleStack(stack)
         } finally currentStack = null
     }
 
@@ -217,7 +217,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
             case cause: Throwable =>
                 cause.printStackTrace()
                 stack.`throw`(ExceptionMessage(cause)) // completed stack with Exception
-                stack.recycle()
+                recycleStack(stack)
         } finally currentStack = null
     }
 
@@ -229,7 +229,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         } catch {
             case cause: Throwable =>
                 stack.`throw`(ExceptionMessage(cause)) // completed stack with Exception
-                stack.recycle()
+                recycleStack(stack)
         } finally currentStack = null
     }
 
@@ -270,14 +270,21 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
             case None =>
                 this.recycleStackState(oldState)
                 assert(stack.isDone, "None but not call return method of Stack!")
-                if (!stack.isInstanceOf[ChannelStack[?]]) stack.recycle() // recycle stack instance.
+                if (!stack.isInstanceOf[ChannelStack[?]]) recycleStack(stack) // recycle stack instance.
 
-    private[core] def recycleUncompletedPromise(uncompleted: PromiseIterator): Unit = {
-        while (uncompleted.hasNext) {
-            val promise = uncompleted.next()
-            this.pop(promise.id)
-            promise.recycle()
-        }
+    private def recycleUncompletedPromise(uncompleted: PromiseIterator): Unit = while (uncompleted.hasNext) {
+        val promise = uncompleted.next()
+        this.pop(promise.id)
+        promise match
+            case promise: ChannelReplyPromise => promise.setStack(null)
+            case promise: ChannelPromise      => promise.setStack(null)
+            case _                            =>
+        promise.recycle()
+    }
+
+    final private[core] def recycleStack(stack: Stack): Unit = {
+        if (stack.hasUncompletedPromise) recycleUncompletedPromise(stack.uncompletedPromises())
+        stack.recycle()
     }
 
     /** Exception handler when this actor received notice message or resume notice stack frame

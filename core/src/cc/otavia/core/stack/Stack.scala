@@ -57,7 +57,6 @@ abstract class Stack extends Poolable {
 
     override protected def cleanInstance(): Unit = {
         recycleCompletedPromises()
-        recycleUncompletedPromises()
         stackState = StackState.start
         error = false
         actor = null

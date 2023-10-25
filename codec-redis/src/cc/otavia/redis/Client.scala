@@ -41,8 +41,8 @@ class Client extends SocketChannelsActor[Command[? <: CommandResponse] | Connect
       new ChannelInitializer[Channel] {
           override protected def initChannel(ch: Channel): Unit = {
               ch.pipeline.addFirst(new RedisCodec())
-              ch.setStackMessageBarrier(_ => false)
-              ch.setMaxFutureInflight(512)
+              ch.setOption(ChannelOption.CHANNEL_STACK_BARRIER, _ => false)
+              ch.setOption(ChannelOption.CHANNEL_MAX_FUTURE_INFLIGHT, 512)
           }
       }
     )

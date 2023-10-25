@@ -18,12 +18,33 @@
 
 package cc.otavia.core.transport.nio.channel
 
-import cc.otavia.core.channel.AbstractSocketChannel
+import cc.otavia.core.channel.{AbstractSocketChannel, ChannelOption}
 import cc.otavia.core.system.ActorSystem
 
 class NioSocketChannel(system: ActorSystem) extends AbstractSocketChannel(system) {
 
     override def unsafeChannel: NioUnsafeSocketChannel = super.unsafeChannel.asInstanceOf[NioUnsafeSocketChannel]
+
+    override final protected def getTransportExtendedOption[T](option: ChannelOption[T]): T = {
+        val socketOption = NioChannelOption.toSocketOption(option)
+        if (socketOption != null)
+            NioChannelOption
+                .getOption(unsafeChannel.ch, socketOption)
+                .getOrElse(super.getTransportExtendedOption(option))
+        else super.getTransportExtendedOption(option)
+    }
+
+    override final protected def setTransportExtendedOption[T](option: ChannelOption[T], value: T): Unit = {
+        val socketOption = NioChannelOption.toSocketOption(option)
+        if (socketOption != null) NioChannelOption.setOption(unsafeChannel.ch, socketOption, value)
+        else super.setTransportExtendedOption(option, value)
+    }
+
+    override final protected def isTransportExtendedOptionSupported(option: ChannelOption[?]): Boolean = {
+        val socketOption = NioChannelOption.toSocketOption(option)
+        if (socketOption != null) NioChannelOption.isOptionSupported(unsafeChannel.ch, socketOption)
+        else super.isTransportExtendedOptionSupported(option)
+    }
 
 }
 

@@ -21,6 +21,8 @@ package cc.otavia.core.channel
 import cc.otavia.buffer.AbstractBuffer
 import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, AdaptiveBuffer}
 import cc.otavia.core.actor.ChannelsActor
+import cc.otavia.core.channel.ChannelOption.*
+import cc.otavia.core.channel.estimator.MessageSizeEstimator
 import cc.otavia.core.channel.inflight.{FutureQueue, QueueMap, StackQueue}
 import cc.otavia.core.channel.message.{AdaptiveBufferChangeNotice, DatagramAdaptiveRangePacket, ReadPlan, ReadPlanFactory}
 import cc.otavia.core.message.ReactorEvent
@@ -36,6 +38,8 @@ import scala.language.unsafeNulls
 /** Abstract class of file channel and network channel. */
 abstract class AbstractChannel(val system: ActorSystem) extends Channel, ChannelState {
 
+    import AbstractChannel.*
+
     protected val logger: Logger        = Logger.getLogger(getClass, system)
     private var actor: ChannelsActor[?] = _
 
@@ -43,8 +47,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     private var pipe: ChannelPipelineImpl     = _
     private var unsafe: AbstractUnsafeChannel = _
 
-    private var futureBarrier: AnyRef => Boolean = _ => false
-    private var stackBarrier: AnyRef => Boolean  = _ => true
+    private var futureBarrier: AnyRef => Boolean = FALSE_FUNC
+    private var stackBarrier: AnyRef => Boolean  = TURE_FUNC
     private var maxStackInflight: Int            = 1
     private var maxFutureInflight: Int           = 1
 
@@ -86,17 +90,26 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     // impl ChannelInflight
 
-    final override def futureMessageBarrier: AnyRef => Boolean                   = futureBarrier
-    final override def setFutureMessageBarrier(barrier: AnyRef => Boolean): Unit = futureBarrier = barrier
-    final override def stackMessageBarrier: AnyRef => Boolean                    = stackBarrier
-    final override def setStackMessageBarrier(barrier: AnyRef => Boolean): Unit  = stackBarrier = barrier
-    override def setMaxFutureInflight(max: Int): Unit                            = maxFutureInflight = max
-    override def setMaxStackInflight(max: Int): Unit                             = maxStackInflight = max
-    final override def inflightFutureSize: Int                                   = inflightFutures.size
-    final override def pendingFutureSize: Int                                    = pendingFutures.size
-    final override def inflightStackSize: Int                                    = inflightStacks.size
-    final override def pendingStackSize: Int                                     = pendingStacks.size
-    override def setStackHeadOfLine(hol: Boolean): Unit                          = stackHeadOfLine = hol
+    /** Set inbound message barrier function
+     *
+     *  @param barrier
+     *    a function to check a [[AnyRef]] object is barrier.
+     */
+    final private def setFutureMessageBarrier(barrier: AnyRef => Boolean): Unit = futureBarrier = barrier
+
+    /** Set inbound message barrier
+     *
+     *  @param barrier
+     *    a function to check a [[AnyRef]] object is barrier.
+     */
+    private final def setStackMessageBarrier(barrier: AnyRef => Boolean): Unit = stackBarrier = barrier
+    private final def setMaxFutureInflight(max: Int): Unit                     = maxFutureInflight = max
+    private final def setMaxStackInflight(max: Int): Unit                      = maxStackInflight = max
+    final override def inflightFutureSize: Int                                 = inflightFutures.size
+    final override def pendingFutureSize: Int                                  = pendingFutures.size
+    final override def inflightStackSize: Int                                  = inflightStacks.size
+    final override def pendingStackSize: Int                                   = pendingStacks.size
+    private final def setStackHeadOfLine(hol: Boolean): Unit                   = stackHeadOfLine = hol
 
     override def generateMessageId: Long = { channelMsgId += 1; channelMsgId }
 
@@ -107,6 +120,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
             else promise.setFailure(msg.asInstanceOf[Throwable])
         } else {
             val stack = ChannelStack(this, msg, msgId = generateMessageId)
+            stack.setBarrier(stackBarrier(msg))
             pendingStacks.append(stack)
             processPendingStacks()
         }
@@ -120,6 +134,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
             else promise.setFailure(msg.asInstanceOf[Throwable])
         } else {
             val stack = ChannelStack(this, msg, id)
+            stack.setBarrier(stackBarrier(msg))
             pendingStacks.append(stack)
             processPendingStacks()
         }
@@ -130,7 +145,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         while (inflightStacks.nonEmpty && inflightStacks.first.isDone) {
             val stack = inflightStacks.pop()
             if (stack.hasResult) this.writeAndFlush(stack.result, stack.messageId)
-            stack.recycle()
+            actor.recycleStack(stack)
         }
 
     final private[core] def processPendingStacks(): Unit = if (pendingStacks.headIsBarrier) {
@@ -151,7 +166,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         if (stack.isDone && !stackHeadOfLine) {
             inflightStacks.remove(stack.entityId)
             if (stack.hasResult) this.writeAndFlush(stack.result, stack.messageId)
-            stack.recycle()
+            actor.recycleStack(stack)
         }
     }
 
@@ -186,13 +201,24 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         }
     }
 
+    final protected def failedStacks(cause: Throwable): Unit = {
+        while (inflightStacks.nonEmpty) {
+            val stack = inflightStacks.pop()
+            actor.recycleStack(stack)
+        }
+        while (pendingStacks.nonEmpty) {
+            val stack = pendingStacks.pop()
+            actor.recycleStack(stack)
+        }
+    }
+
     // end impl ChannelInflight
 
     // impl ChannelAddress
     override def ask(value: AnyRef, future: ChannelReplyFuture): ChannelReplyFuture = {
         val promise = future.promise
         promise.setMessageId(generateMessageId)
-        promise.setBarrier(stackMessageBarrier(value))
+        promise.setBarrier(stackBarrier(value))
         promise.setAsk(value)
         executor.attachStack(executor.generateSendMessageId(), future)
         pendingFutures.append(promise)
@@ -244,9 +270,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     /** Returns a new [[ChannelPipeline]] instance. */
     private def newChannelPipeline(): ChannelPipelineImpl = new ChannelPipelineImpl(this)
 
-    protected def currentThread: ActorThread = Thread.currentThread().asInstanceOf[ActorThread]
-
-    private def laterTasks = currentThread.laterTasks
+    private def laterTasks = ActorThread.currentThread().laterTasks
 
     // This method is used by outbound operation implementations to trigger an inbound event later.
     // They do not trigger an inbound event immediately because an outbound operation might have been
@@ -261,11 +285,65 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     // which means the execution of two inbound handler methods of the same handler overlap undesirably.
     protected def invokeLater(task: Runnable): Unit = laterTasks.append(task)
 
-    override def getOption[T](option: ChannelOption[T]): T = ???
+    override def getOption[T](option: ChannelOption[T]): T = option match
+        case CHANNEL_FUTURE_BARRIER      => futureBarrier
+        case CHANNEL_STACK_BARRIER       => stackBarrier
+        case CHANNEL_MAX_FUTURE_INFLIGHT => maxFutureInflight
+        case CHANNEL_MAX_STACK_INFLIGHT  => maxStackInflight
+        case CHANNEL_STACK_HEAD_OF_LINE  => stackHeadOfLine
+        case _                           => getExtendedOption(option)
 
-    override def setOption[T](option: ChannelOption[T], value: T): Channel = ???
+    /** Override to add support for more [[ChannelOption]]s. You need to also call super after handling the extra
+     *  options.
+     *
+     *  @param option
+     *    the [[ChannelOption]].
+     *  @tparam T
+     *    the value type.
+     *  @return
+     *    the value for the option.
+     *  @throws UnsupportedOperationException
+     *    if the [[ChannelOption]] is not supported.
+     */
+    protected def getExtendedOption[T](option: ChannelOption[T]): T =
+        throw new UnsupportedOperationException(s"ChannelOption not supported: $option")
 
-    override def isOptionSupported(option: ChannelOption[?]): Boolean = ???
+    override final def setOption[T](option: ChannelOption[T], value: T): Channel = {
+        option match
+            case CHANNEL_FUTURE_BARRIER      => setFutureMessageBarrier(value)
+            case CHANNEL_STACK_BARRIER       => setStackMessageBarrier(value)
+            case CHANNEL_MAX_FUTURE_INFLIGHT => setMaxFutureInflight(value)
+            case CHANNEL_MAX_STACK_INFLIGHT  => setMaxStackInflight(value)
+            case CHANNEL_STACK_HEAD_OF_LINE  => setStackHeadOfLine(value)
+            case _                           => setExtendedOption(option, value)
+        this
+    }
+
+    /** Override to add support for more [[ChannelOption]]s. You need to also call super after handling the extra
+     *  options.
+     *
+     *  @param option
+     *    the [[ChannelOption]].
+     *  @tparam T
+     *    the value type.
+     *  @throws UnsupportedOperationException
+     *    if the [[ChannelOption]] is not supported.
+     */
+    protected def setExtendedOption[T](option: ChannelOption[T], value: T): Unit =
+        throw new UnsupportedOperationException(s"ChannelOption not supported: $option")
+
+    override final def isOptionSupported(option: ChannelOption[?]): Boolean =
+        SUPPORTED_CHANNEL_OPTIONS.contains(option) || isExtendedOptionSupported(option)
+
+    /** Override to add support for more [[ChannelOption]]s. You need to also call super after handling the extra
+     *  options.
+     *
+     *  @param option
+     *    the [[ChannelOption]].
+     *  @return
+     *    true if supported, false otherwise.
+     */
+    protected def isExtendedOptionSupported(option: ChannelOption[?]) = false
 
     override def isOpen: Boolean = ???
 
@@ -352,5 +430,20 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     }
 
     final protected def newPromise(): ChannelPromise = ChannelPromise()
+
+}
+
+object AbstractChannel {
+
+    private val TURE_FUNC: AnyRef => Boolean  = _ => true
+    private val FALSE_FUNC: AnyRef => Boolean = _ => false
+
+    private val SUPPORTED_CHANNEL_OPTIONS: Set[ChannelOption[?]] = Set(
+      CHANNEL_FUTURE_BARRIER,
+      CHANNEL_STACK_BARRIER,
+      CHANNEL_MAX_FUTURE_INFLIGHT,
+      CHANNEL_MAX_STACK_INFLIGHT,
+      CHANNEL_STACK_HEAD_OF_LINE
+    )
 
 }

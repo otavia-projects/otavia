@@ -32,14 +32,35 @@ class NioServerSocketChannel(system: ActorSystem) extends AbstractServerChannel(
     override def unsafeChannel: NioUnsafeServerSocketChannel =
         super.unsafeChannel.asInstanceOf[NioUnsafeServerSocketChannel]
 
-    override protected def setExtendedOption[T](option: ChannelOption[T], value: T): Unit = {
+    override protected def getTransportExtendedOption[T](option: ChannelOption[T]): T = {
+        if (option == ChannelOption.SO_BACKLOG) unsafeChannel.getBacklog.asInstanceOf[T]
+        else {
+            val socketOption = NioChannelOption.toSocketOption(option)
+            if (socketOption != null)
+                NioChannelOption
+                    .getOption(unsafeChannel.ch, socketOption)
+                    .getOrElse(super.getTransportExtendedOption(option))
+            else super.getTransportExtendedOption(option)
+        }
+    }
+
+    override protected def setTransportExtendedOption[T](option: ChannelOption[T], value: T): Unit = {
         if (option == ChannelOption.SO_BACKLOG) unsafeChannel.setBacklog(value.asInstanceOf[Int])
         else {
             val socketOption = NioChannelOption.toSocketOption(option)
             if (socketOption != null) {
-                // NioChannelOption.setOption(javaChannel, socketOption, value)
+                NioChannelOption.setOption(unsafeChannel.ch, socketOption, value)
             } else
                 super.setExtendedOption(option, value)
+        }
+    }
+
+    override protected def isTransportExtendedOptionSupported(option: ChannelOption[?]): Boolean = {
+        if (option == ChannelOption.SO_BACKLOG) true
+        else {
+            val socketOption = NioChannelOption.toSocketOption(option)
+            if (socketOption != null) NioChannelOption.isOptionSupported(unsafeChannel.ch, socketOption)
+            else super.isTransportExtendedOptionSupported(option)
         }
     }
 

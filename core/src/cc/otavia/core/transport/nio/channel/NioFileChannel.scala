@@ -36,12 +36,6 @@ class NioFileChannel(system: ActorSystem) extends AbstractFileChannel(system) {
 
     override def unsafeChannel: NioUnsafeFileChannel = super.unsafeChannel.asInstanceOf[NioUnsafeFileChannel]
 
-    override def getOption[T](option: ChannelOption[T]): T = ???
-
-    override def setOption[T](option: ChannelOption[T], value: T): Channel = ???
-
-    override def isOptionSupported(option: ChannelOption[?]): Boolean = ???
-
     override def isOpen: Boolean = ???
 
     override def isActive: Boolean = ???

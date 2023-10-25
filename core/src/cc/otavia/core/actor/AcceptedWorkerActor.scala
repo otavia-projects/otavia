@@ -38,7 +38,7 @@ abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | Accepted
                 if (!channel.isMounted) channel.mount(this)
                 var res: Option[StackState] = null
                 try {
-                    init(channel)
+                    initChannel(channel)
                     val state = ChannelFutureState()
                     channel.register(state.future)
                     res = state.suspend()

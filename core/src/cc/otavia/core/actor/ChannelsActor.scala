@@ -58,6 +58,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     private[core] def receiveChannelMessage(stack: ChannelStack[?]): Unit = {
         currentChannelReceived = stack.message
         dispatchChannelStack(stack)
+        currentChannelReceived = null
     }
 
     override final private[core] def dispatchChannelStack(stack: ChannelStack[?]): Unit = {
@@ -105,7 +106,6 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     final override private[core] def receiveChannelTimeoutEvent(event: ChannelTimeoutEvent): Unit = {
         val channel = event.channel
         channel.handleChannelTimeoutEvent(event.registerId)
-        afterChannelTimeoutEvent(event)
     }
 
     /** Create a new channel and set executor and init it. */
@@ -114,7 +114,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         val channel = newChannel()
         channel.mount(this)
         try {
-            init(channel)
+            initChannel(channel)
             channel
         } catch {
             case cause: Throwable =>
@@ -181,8 +181,6 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
     // Event from Timer
 
-    protected def afterChannelTimeoutEvent(channelTimeoutEvent: ChannelTimeoutEvent): Unit = {}
-
     // End handle event.
 
     /** Create a new [[Channel]] */
@@ -190,7 +188,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         throw new NotImplementedError(getClass.getName + ".newChannel: an implementation is missing")
 
     @throws[Exception]
-    protected def init(channel: Channel): Unit = handler match
+    protected def initChannel(channel: Channel): Unit = handler match
         case Some(h) => channel.pipeline.addLast(h)
         case None    =>
 

@@ -18,11 +18,11 @@
 
 package cc.otavia.core.channel.internal
 
-class AdaptiveBufferOffset(private[this] var _endIndex: Int = 0) {
+class AdaptiveBufferOffset(private[this] var endIdx: Int = 0) {
 
-    def endIndex: Int = _endIndex
+    def endIndex: Int = endIdx
 
     def endIndex_=(value: Int): Unit =
-        _endIndex = value
+        endIdx = value
 
 }

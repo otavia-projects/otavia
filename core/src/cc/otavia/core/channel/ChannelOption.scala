@@ -19,17 +19,25 @@
 package cc.otavia.core.channel
 
 import cc.otavia.buffer.BufferAllocator
-import io.netty5.util.{AbstractConstant, ConstantPool}
 import cc.otavia.core.channel.ChannelOption.pool
 import cc.otavia.core.channel.estimator.{MessageSizeEstimator, ReadHandleFactory, WriteHandleFactory}
 import cc.otavia.core.channel.internal.WriteBufferWaterMark
 
 import java.net.NetworkInterface
 import java.util.Objects.requireNonNull
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
+import scala.language.unsafeNulls
 
-class ChannelOption[T](id: Int, name: String) extends AbstractConstant[ChannelOption[T]](id, name) {
+class ChannelOption[T] private[otavia] (val name: String) {
 
-    def this(name: String) = this(pool.nextId(), name)
+    import ChannelOption.*
+
+    if (pool.exists(name)) throw new IllegalArgumentException(s"ChannelOption with name $name already exists!")
+
+    val id: Int = nextId.getAndIncrement()
+
+    pool.add(name, this)
 
     /** Validate the value which is set for the [[ChannelOption]]. Sub-classes may override this for special checks. */
     def validate(value: T): Unit = requireNonNull(value, "value")
@@ -38,20 +46,30 @@ class ChannelOption[T](id: Int, name: String) extends AbstractConstant[ChannelOp
 
 object ChannelOption {
 
-    private val pool: ConstantPool[ChannelOption[AnyRef]] = new ConstantPool[ChannelOption[AnyRef]]() {
-        override protected def newConstant(id: Int, name: String): ChannelOption[AnyRef] = {
-            new ChannelOption[AnyRef](id, name)
-        }
+    private val nextId: AtomicInteger = new AtomicInteger(1)
+
+    private val pool: ChannelOptionPool = this.synchronized(new ChannelOptionPool())
+
+    private class ChannelOptionPool() {
+
+        private val map: ConcurrentHashMap[String, ChannelOption[?]] =
+            new ConcurrentHashMap[String, ChannelOption[?]]()
+
+        def valueOf(name: String): ChannelOption[?] =
+            if (map.containsKey(name)) map.get(name) else new ChannelOption[AnyRef](name)
+
+        def add(name: String, option: ChannelOption[?]): Unit = map.put(name, option)
+
+        def exists(name: String): Boolean = map.containsKey(name)
+
     }
 
     /** Returns the [[ChannelOption]] of the specified name. */
-    @SuppressWarnings(Array("unchecked"))
     def valueOf[T](name: String): ChannelOption[T] = pool.valueOf(name).asInstanceOf[ChannelOption[T]]
 
     /** Shortcut of valueOf(String) valueOf(firstNameComponent.getName() + "#" + secondNameComponent). */
-    @SuppressWarnings(Array("unchecked"))
     def valueOf[T](firstNameComponent: Class[?], secondNameComponent: String): ChannelOption[T] =
-        pool.valueOf(firstNameComponent, secondNameComponent).asInstanceOf[ChannelOption[T]]
+        pool.valueOf(firstNameComponent.getName + "#" + secondNameComponent).asInstanceOf[ChannelOption[T]]
 
     /** Returns true if a [[ChannelOption]] exists for the given name. */
     def exists(name: String): Boolean = pool.exists(name)
@@ -62,54 +80,57 @@ object ChannelOption {
      *  @deprecated
      *    use [[valueOf]]
      */
-    @deprecated
-    @SuppressWarnings(Array("unchecked"))
-    def newInstance[T](name: String): ChannelOption[T] = pool.newInstance(name).asInstanceOf[ChannelOption[T]]
+    private def newInstance[T](name: String): ChannelOption[T] = new ChannelOption[T](name)
 
-    val BUFFER_ALLOCATOR: ChannelOption[BufferAllocator]            = valueOf("BUFFER_ALLOCATOR")
-    val READ_HANDLE_FACTORY: ChannelOption[ReadHandleFactory]       = valueOf("READ_HANDLE_FACTORY")
-    val WRITE_HANDLE_FACTORY: ChannelOption[WriteHandleFactory]     = valueOf("WRITE_HANDLE_FACTORY")
-    val MESSAGE_SIZE_ESTIMATOR: ChannelOption[MessageSizeEstimator] = valueOf("MESSAGE_SIZE_ESTIMATOR")
+    val BUFFER_ALLOCATOR: ChannelOption[BufferAllocator]            = newInstance("BUFFER_ALLOCATOR")
+    val READ_HANDLE_FACTORY: ChannelOption[ReadHandleFactory]       = newInstance("READ_HANDLE_FACTORY")
+    val WRITE_HANDLE_FACTORY: ChannelOption[WriteHandleFactory]     = newInstance("WRITE_HANDLE_FACTORY")
+    val MESSAGE_SIZE_ESTIMATOR: ChannelOption[MessageSizeEstimator] = newInstance("MESSAGE_SIZE_ESTIMATOR")
 
-    val CONNECT_TIMEOUT_MILLIS: ChannelOption[Integer] = valueOf("CONNECT_TIMEOUT_MILLIS")
+    val CHANNEL_FUTURE_BARRIER: ChannelOption[AnyRef => Boolean] = newInstance("CHANNEL_FUTURE_BARRIER")
+    val CHANNEL_STACK_BARRIER: ChannelOption[AnyRef => Boolean]  = newInstance("CHANNEL_STACK_BARRIER")
+    val CHANNEL_MAX_STACK_INFLIGHT: ChannelOption[Int]           = newInstance("CHANNEL_MAX_STACK_INFLIGHT")
+    val CHANNEL_MAX_FUTURE_INFLIGHT: ChannelOption[Int]          = newInstance("CHANNEL_MAX_FUTURE_INFLIGHT")
+    val CHANNEL_STACK_HEAD_OF_LINE: ChannelOption[Boolean]       = newInstance("CHANNEL_STACK_HEAD_OF_LINE")
 
-    val MAX_MESSAGES_PER_WRITE: ChannelOption[Integer] = valueOf("MAX_MESSAGES_PER_WRITE")
+    val CONNECT_TIMEOUT_MILLIS: ChannelOption[Integer] = newInstance("CONNECT_TIMEOUT_MILLIS")
 
-    val WRITE_BUFFER_WATER_MARK: ChannelOption[WriteBufferWaterMark] = valueOf("WRITE_BUFFER_WATER_MARK")
+    val MAX_MESSAGES_PER_WRITE: ChannelOption[Integer] = newInstance("MAX_MESSAGES_PER_WRITE")
 
-    val ALLOW_HALF_CLOSURE: ChannelOption[Boolean] = valueOf("ALLOW_HALF_CLOSURE")
-    val AUTO_READ: ChannelOption[Boolean]          = valueOf("AUTO_READ")
+    val WRITE_BUFFER_WATER_MARK: ChannelOption[WriteBufferWaterMark] = newInstance("WRITE_BUFFER_WATER_MARK")
+
+    val ALLOW_HALF_CLOSURE: ChannelOption[Boolean] = newInstance("ALLOW_HALF_CLOSURE")
+    val AUTO_READ: ChannelOption[Boolean]          = newInstance("AUTO_READ")
 
     /** If true then the [[Channel]] is closed automatically and immediately on write failure. The default value is
      *  true.
      */
-    val AUTO_CLOSE: ChannelOption[Boolean] = valueOf("AUTO_CLOSE")
+    val AUTO_CLOSE: ChannelOption[Boolean] = newInstance("AUTO_CLOSE")
 
-    val SO_BROADCAST: ChannelOption[Boolean] = valueOf("SO_BROADCAST")
-    val SO_KEEPALIVE: ChannelOption[Boolean] = valueOf("SO_KEEPALIVE")
-    val SO_SNDBUF: ChannelOption[Integer]    = valueOf("SO_SNDBUF")
-    val SO_RCVBUF: ChannelOption[Integer]    = valueOf("SO_RCVBUF")
-    val SO_REUSEADDR: ChannelOption[Boolean] = valueOf("SO_REUSEADDR")
-    val SO_LINGER: ChannelOption[Integer]    = valueOf("SO_LINGER")
-    val SO_BACKLOG: ChannelOption[Integer]   = valueOf("SO_BACKLOG")
-    val SO_TIMEOUT: ChannelOption[Integer]   = valueOf("SO_TIMEOUT")
+    val SO_BROADCAST: ChannelOption[Boolean] = newInstance("SO_BROADCAST")
+    val SO_KEEPALIVE: ChannelOption[Boolean] = newInstance("SO_KEEPALIVE")
+    val SO_SNDBUF: ChannelOption[Integer]    = newInstance("SO_SNDBUF")
+    val SO_RCVBUF: ChannelOption[Integer]    = newInstance("SO_RCVBUF")
+    val SO_REUSEADDR: ChannelOption[Boolean] = newInstance("SO_REUSEADDR")
+    val SO_LINGER: ChannelOption[Integer]    = newInstance("SO_LINGER")
+    val SO_BACKLOG: ChannelOption[Integer]   = newInstance("SO_BACKLOG")
+    val SO_TIMEOUT: ChannelOption[Integer]   = newInstance("SO_TIMEOUT")
 
-    val IP_TOS: ChannelOption[Integer]                     = valueOf("IP_TOS")
-    val IP_MULTICAST_IF: ChannelOption[NetworkInterface]   = valueOf("IP_MULTICAST_IF")
-    val IP_MULTICAST_TTL: ChannelOption[Integer]           = valueOf("IP_MULTICAST_TTL")
-    val IP_MULTICAST_LOOP_DISABLED: ChannelOption[Boolean] = valueOf("IP_MULTICAST_LOOP_DISABLED")
+    val IP_TOS: ChannelOption[Integer]                     = newInstance("IP_TOS")
+    val IP_MULTICAST_IF: ChannelOption[NetworkInterface]   = newInstance("IP_MULTICAST_IF")
+    val IP_MULTICAST_TTL: ChannelOption[Integer]           = newInstance("IP_MULTICAST_TTL")
+    val IP_MULTICAST_LOOP_DISABLED: ChannelOption[Boolean] = newInstance("IP_MULTICAST_LOOP_DISABLED")
 
-    val TCP_NODELAY: ChannelOption[Boolean] = valueOf("TCP_NODELAY")
+    val TCP_NODELAY: ChannelOption[Boolean] = newInstance("TCP_NODELAY")
 
     /** Client-side TCP FastOpen. Sending data with the initial TCP handshake. */
-    val TCP_FASTOPEN_CONNECT: ChannelOption[Boolean] = valueOf("TCP_FASTOPEN_CONNECT")
+    val TCP_FASTOPEN_CONNECT: ChannelOption[Boolean] = newInstance("TCP_FASTOPEN_CONNECT")
 
     /** Server-side TCP FastOpen. Configures the maximum number of outstanding (waiting to be accepted) TFO connections.
      */
     val TCP_FASTOPEN: ChannelOption[Integer] = valueOf(classOf[ChannelOption[?]], "TCP_FASTOPEN")
 
-    val DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION: ChannelOption[Boolean] = valueOf(
-      "DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION"
-    )
+    val DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION: ChannelOption[Boolean] =
+        newInstance("DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION")
 
 }

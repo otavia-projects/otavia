@@ -23,35 +23,11 @@ import java.net.SocketAddress
 
 trait ChannelInflight {
 
-    /** Inbound message barrier function */
-    def futureMessageBarrier: AnyRef => Boolean
-
-    /** Set inbound message barrier function
-     *  @param barrier
-     *    a function to check a [[AnyRef]] object is barrier.
-     */
-    def setFutureMessageBarrier(barrier: AnyRef => Boolean): Unit
-
-    /** Outbound message barrier function. */
-    def stackMessageBarrier: AnyRef => Boolean
-
-    /** Set inbound message barrier
-     *  @param barrier
-     *    a function to check a [[AnyRef]] object is barrier.
-     */
-    def setStackMessageBarrier(barrier: AnyRef => Boolean): Unit
-
-    def setMaxFutureInflight(max: Int): Unit
-
-    def setMaxStackInflight(max: Int): Unit
-
     def inflightFutureSize: Int
     def pendingFutureSize: Int
 
     def inflightStackSize: Int
     def pendingStackSize: Int
-
-    def setStackHeadOfLine(hol: Boolean): Unit
 
     /** generate a unique id for the channel message
      *

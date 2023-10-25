@@ -26,7 +26,7 @@ import cc.otavia.handler.http.ServerCodec
 class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Array[Byte]])
     extends AcceptedWorkerActor[Nothing] {
 
-    final override protected def init(channel: Channel): Unit =
+    final override protected def initChannel(channel: Channel): Unit =
         channel.pipeline.addLast(new ServerCodec(routerMatcher, dates))
 
     override def continueAsk(stack: AskStack[AcceptedChannel]): Option[StackState] = handleAccepted(stack)

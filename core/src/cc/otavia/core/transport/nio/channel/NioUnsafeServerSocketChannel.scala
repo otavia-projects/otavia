@@ -42,16 +42,16 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, re
 
     override def localAddress: SocketAddress = javaChannel.getLocalAddress
 
-    private def getBacklog(): Int = backlog
+    final private[nio] def getBacklog: Int = backlog
 
-    private[nio] def setBacklog(back: Int): Unit = {
+    private[nio] def setBacklog(back: Int): Unit = this.synchronized {
         assert(back >= 0, s"in setBacklog(back: Int) back:$back (expected: >= 0)")
         this.backlog = back
     }
 
     override def unsafeBind(local: SocketAddress): Unit = {
         val bindWasActive = isActive
-        javaChannel.bind(local, getBacklog())
+        javaChannel.bind(local, getBacklog)
         bound = true
         val firstActive = !bindWasActive && channel.unsafeChannel.isActive
         channel.executorAddress.inform(ReactorEvent.BindReply(channel, firstActive, None))
