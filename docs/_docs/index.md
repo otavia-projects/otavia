@@ -14,6 +14,7 @@ layout: main
 [![GitHub Pages](https://github.com/otavia-projects/otavia/actions/workflows/gh-pages.yml/badge.svg)](https://otavia-projects.github.io/otavia/home.html)
 ![Static Badge](https://img.shields.io/badge/JDK-17%2B-blue)
 ![Static Badge](https://img.shields.io/badge/Scala-3.3-blue)
+![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/cc.otavia/otavia-runtime_3?server=https%3A%2F%2Fs01.oss.sonatype.org)
 
 ## Introduction
 
@@ -62,55 +63,68 @@ In `otavia`, developer only focus on
 
 ### core modules
 
-- `buffer`: A zero-deps buffer implementation for replace `java.nio.ByteBuffer` forked from Netty.
-- `serde`: A generic serialization and deserialization framework based on `buffer`.
-- `core`: Core Actor model, IO model(channel), slf4a, reactor model, IOC, message model, and thread model.
-- `codec`: Some generic ChannelHandler.
-- `handler`: Some special ChannelHandler, eg, SSL, io traffic control, timeout.
-- `async`: A implementation of `async/await` transformation for Actor message sending/waiting based on CPS(Continuation
+- `otavia-buffer`: A zero-deps buffer implementation for replace `java.nio.ByteBuffer` forked from Netty.
+- `otavia-serde`: A generic serialization and deserialization framework based on `buffer`.
+- `otavia-runtime`: Core Actor model, IO model(channel), slf4a, reactor model, IOC, message model, and thread model.
+- `otavia-codec`: Some generic ChannelHandler.
+- `otavia-handler`: Some special ChannelHandler, eg, SSL, io traffic control, timeout.
+- `otavia-async`: A implementation of `async/await` transformation for Actor message sending/waiting based on CPS(
+  Continuation
   Passing Style) transformation powered by metaprogramming of Scala 3.
+- `otavia-sql`: Actor database connect specification for RDBMS.
+- `otavia-sql-macro`: Derivation for class use in `otavia-sql`.
 
 ### serde ecosystem
 
-- `serde-json`: JSON serialization and deserialization.
-- `serde-json-macro`: Macro for `serde-json`.
-- `serde-http`: HTTP serialization and deserialization.
-- `serde-proto`: Protocol buffer serialization and deserialization.
-- `serde-proto-macro`: Macro for `serde-proto`.
+- `otavia-serde-json`: JSON serialization and deserialization.
+- `otavia-json-macro`: Macro for `otavia-serde-json`.
+- `otavia-serde-http`: HTTP serialization and deserialization.
+- `otavia-http-macro`: Macro for `otavia-serde-http`.
+- `otavia-serde-proto`: Protocol buffer serialization and deserialization.
+- `otavia-proto-macro`: Macro for `otavia-serde-proto`.
 
 ### channel codec ecosystem
 
-- `codec-adbc`: Actor database connect (adbc) specification for RDBMS.
-- `codec-haproxy`: Haproxy ChannelHandlers and Actors.
-- `codec-http`: HTTP ChannelHandlers and Actors.
-- `codec-memcache`: Memcache ChannelHandlers and Actors.
-- `codec-mqtt`: MQTT ChannelHandlers and Actors.
-- `codec-redis`: Redis ChannelHandlers and Actors.
-- `codec-smtp`: SMTP ChannelHandlers and Actors.
-- `codec-socks`: SOCKS4/5 ChannelHandlers and Actors.
-- `codec-kafka`: KAFKA ChannelHandlers and Actors.
+- `otavia-codec-haproxy`: Haproxy ChannelHandlers and Actors.
+- `otavia-codec-http`: HTTP ChannelHandlers and Actors.
+- `otavia-codec-memcache`: Memcache ChannelHandlers and Actors.
+- `otavia-codec-mqtt`: MQTT ChannelHandlers and Actors.
+- `otavia-codec-redis`: Redis ChannelHandlers and Actors.
+- `otavia-codec-smtp`: SMTP ChannelHandlers and Actors.
+- `otavia-codec-socks`: SOCKS4/5 ChannelHandlers and Actors.
+- `otavia-codec-kafka`: KAFKA ChannelHandlers and Actors.
+- `otavia-codec-dns`: DNS ChannelHandlers and Actors.
+
+### database drivers
+
+- `otavia-mysql-driver`: mysql driver for otavia.
+- `otavia-postgres-driver`: postgres driver for otavia.
 
 ### slf4a logger ecosystem
 
-- `log4a`: A simple slf4a logger implementation.
+- `otavia-log4a`: A simple slf4a logger implementation.
 
 ### web framework
 
-- `web`: A simple web framework.
+- `sponge`: A simple web framework based on otavia ecosystem.
+
+### io transport
+
+- `otavia-native-transport`: a native io transport via JNI.
 
 ## Project plans
 
-| version | plan                                                                                                                                     |
-|---------|------------------------------------------------------------------------------------------------------------------------------------------|
-| 0.2.*   | `buffer` completed.                                                                                                                      |
-| 0.3.*   | `core` runnable. complete first runnable `core` with NIO transport, Actor model, message model, thread model, IOC, slf4a, reactor model. |
-| 0.4.*   | `serde-json`, `serde-http`, `codec`, `codec-http` can work.                                                                              |
-| 0.5.*   | Design `codec-adbc`, and a demo Mysql driver implementation.                                                                             |
-| 0.\*.*  | Implement `codec-*`, `handler`, `serde-*`.                                                                                               |
-| 0.\*.*  | More RDBMS drivers based on `codec-adbc`.                                                                                                |
-| 0.\*.*  | Implement `async`.                                                                                                                       |
-| 0.\*.*  | Higher test coverage.                                                                                                                    |
-| 1.0.*   | Stabilize core API and core module API. Production ready!                                                                                |
+| version | plan                                                                                                                                                         |
+|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.2.*   | `otavia-buffer` completed.                                                                                                                                   |
+| 0.3.*   | `otavia-runtime` runnable. complete first runnable `otavia-runtime` with NIO transport, Actor model, message model, thread model, IOC, slf4a, reactor model. |
+| 0.4.*   | `otavia-serde-json`, `otavia-serde-http`, `otavia-codec`, `otavia-codec-http` can work.                                                                      |
+| 0.5.*   | Design `otavia-sql`, and a demo Mysql driver implementation.                                                                                                 |
+| 0.\*.*  | Implement `otavia-codec-*`, `otavia-handler`, `otavia-serde-*`.                                                                                              |
+| 0.\*.*  | More RDBMS drivers based on `otavia-sql`.                                                                                                                    |
+| 0.\*.*  | Implement `otavia-async`.                                                                                                                                    |
+| 0.\*.*  | Higher test coverage.                                                                                                                                        |
+| 1.0.*   | Stabilize core API and core module API. Production ready!                                                                                                    |
 
 > The Future: version 2.0
 > 1. remote actor: support send/receive message to/from remote actor.
