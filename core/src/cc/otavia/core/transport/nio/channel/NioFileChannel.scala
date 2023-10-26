@@ -36,20 +36,6 @@ class NioFileChannel(system: ActorSystem) extends AbstractFileChannel(system) {
 
     override def unsafeChannel: NioUnsafeFileChannel = super.unsafeChannel.asInstanceOf[NioUnsafeFileChannel]
 
-    override def isOpen: Boolean = ???
-
-    override def isActive: Boolean = ???
-
-    override def isRegistered: Boolean = ???
-
-    override def isShutdown(direction: ChannelShutdownDirection): Boolean = ???
-
-    override def localAddress: Option[SocketAddress] = ???
-
-    override def remoteAddress: Option[SocketAddress] = ???
-
-    override def writableBytes: Long = ???
-
     override private[core] def closeAfterCreate(): Unit = ???
 
 }

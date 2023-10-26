@@ -26,7 +26,7 @@ import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.reactor.*
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
-import cc.otavia.core.transport.nio.channel.{AbstractNioChannel, AbstractNioUnsafeChannel, NioUnsafeChannel}
+import cc.otavia.core.transport.nio.channel.{AbstractNioUnsafeChannel, NioUnsafeChannel}
 import cc.otavia.core.transport.reactor.nio.NioHandler.*
 import io.netty5.util.internal.{PlatformDependent, ReflectionUtil}
 
@@ -392,8 +392,8 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
     override def wakeup(): Unit =
         if (wakenUp.compareAndSet(true, false)) selector.wakeup()
 
-    override def isCompatible(handleType: Class[? <: Channel]): Boolean =
-        classOf[AbstractNioChannel[?, ?]].isAssignableFrom(handleType)
+    override def isCompatible(handleType: Class[? <: Channel]): Boolean = ???
+    // classOf[AbstractNioChannel[?, ?]].isAssignableFrom(handleType)
 
     @throws[IOException]
     private def selectNow(): Int = selector.selectNow()

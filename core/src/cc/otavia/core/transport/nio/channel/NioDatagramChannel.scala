@@ -32,6 +32,10 @@ class NioDatagramChannel(system: ActorSystem) extends AbstractDatagramChannel(sy
 
     override def unsafeChannel: NioUnsafeDatagramChannel = super.unsafeChannel.asInstanceOf[NioUnsafeDatagramChannel]
 
+    override def localAddress: Option[SocketAddress] = Some(unsafeChannel.localAddress)
+
+    override def remoteAddress: Option[SocketAddress] = ???
+
     override final protected def getTransportExtendedOption[T](option: ChannelOption[T]): T = {
         if (option == ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION) {
             activeOnOpen.asInstanceOf[T]

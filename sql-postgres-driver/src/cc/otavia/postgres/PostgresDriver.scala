@@ -232,7 +232,7 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
 
     private def successAuthAndResponse(): Unit = {
         status = ST_AUTHENTICATED
-        if (authMsgId != ChannelInflight.INVALID_CHANNEL_MESSAGE_ID) ctx.fireChannelRead(None, authMsgId)
+        if (ChannelInflight.isValidChannelMessageId(authMsgId)) ctx.fireChannelRead(None, authMsgId)
     }
 
 }

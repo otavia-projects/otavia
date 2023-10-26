@@ -98,7 +98,7 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
         println("\n")
     }
 
-    private val _reactor = transFactory.openReactor(this)
+    private val react = transFactory.openReactor(this)
 
     private val gcTime = new AtomicLong(System.currentTimeMillis())
 
@@ -119,7 +119,7 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
 
     override private[core] def pool: ActorThreadPool = actorThreadPool
 
-    override private[core] def reactor = _reactor
+    override private[core] def reactor = react
 
     override def timer: Timer = timerImpl
 

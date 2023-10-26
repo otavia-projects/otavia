@@ -84,4 +84,6 @@ trait Address[-M <: Call] extends EventableAddress {
      */
     private[core] def reply(reply: Reply, sender: AbstractActor[?]): Unit
 
+    private[core] def `throw`(cause: ExceptionMessage, sender: AbstractActor[?]): Unit = ???
+
 }

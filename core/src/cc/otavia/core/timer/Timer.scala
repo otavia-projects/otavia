@@ -98,13 +98,12 @@ trait Timer {
      */
     private[core] def registerAskTimeout(trigger: TimeoutTrigger, sender: EventableAddress, askId: Long): Long
 
-    final def askTimeout(future: TimeoutEventFuture, delay: Long, unit: TimeUnit = MILLISECONDS)(using
-        sender: AbstractActor[?]
+    final def sleepStack(future: TimeoutEventFuture, delay: Long, unit: TimeUnit = MILLISECONDS)(using
+        actor: AbstractActor[?]
     ): TimeoutEventFuture = {
-        val aid = sender.generateSendMessageId()
-        future.promise.setId(aid)
-        sender.attachStack(aid, future)
-        registerAskTimeout(TimeoutTrigger.DelayTime(delay, unit), sender.self, aid)
+        val aid = actor.generateSendMessageId()
+        actor.attachStack(aid, future)
+        registerAskTimeout(TimeoutTrigger.DelayTime(delay, unit), actor.self, aid)
         future
     }
 

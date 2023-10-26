@@ -392,13 +392,13 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
 
     private def failAuthAndResponse(cause: Throwable): Unit = {
         status = ST_AUTHENTICATE_FAILED
-        if (authMsgId != ChannelInflight.INVALID_CHANNEL_MESSAGE_ID) ctx.fireChannelRead(cause, authMsgId)
+        if (ChannelInflight.isValidChannelMessageId(authMsgId)) ctx.fireChannelRead(cause, authMsgId)
         else authenticationFailed = cause
     }
 
     private def successAuthAndResponse(): Unit = {
         status = ST_AUTHENTICATED
-        if (authMsgId != ChannelInflight.INVALID_CHANNEL_MESSAGE_ID) ctx.fireChannelRead(None, authMsgId)
+        if (ChannelInflight.isValidChannelMessageId(authMsgId)) ctx.fireChannelRead(None, authMsgId)
     }
 
 }

@@ -21,9 +21,15 @@ package cc.otavia.core.transport.nio.channel
 import cc.otavia.core.channel.{AbstractSocketChannel, ChannelOption}
 import cc.otavia.core.system.ActorSystem
 
+import java.net.SocketAddress
+
 class NioSocketChannel(system: ActorSystem) extends AbstractSocketChannel(system) {
 
     override def unsafeChannel: NioUnsafeSocketChannel = super.unsafeChannel.asInstanceOf[NioUnsafeSocketChannel]
+
+    override def localAddress: Option[SocketAddress] = Some(unsafeChannel.localAddress)
+
+    override def remoteAddress: Option[SocketAddress] = ???
 
     override final protected def getTransportExtendedOption[T](option: ChannelOption[T]): T = {
         val socketOption = NioChannelOption.toSocketOption(option)

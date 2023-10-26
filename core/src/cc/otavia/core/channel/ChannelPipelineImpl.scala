@@ -709,7 +709,7 @@ class ChannelPipelineImpl(override val channel: Channel) extends ChannelPipeline
     }
 
     final def forceCloseTransport(): Unit = {
-        val abstractChannel = channel.asInstanceOf[AbstractNetChannel[?, ?]]
+        val abstractChannel = channel.asInstanceOf[AbstractChannel]
         abstractChannel.closeTransport(ChannelPromise())
     }
 
@@ -733,7 +733,7 @@ class ChannelPipelineImpl(override val channel: Channel) extends ChannelPipeline
      *    the new [[pendingOutboundBytes]].
      */
     private def pendingOutboundBytesUpdated(pendingOutboundBytes: Long): Unit = {
-        val abstractChannel = channel.asInstanceOf[AbstractNetChannel[?, ?]]
+        val abstractChannel = channel.asInstanceOf[AbstractNetworkChannel]
         abstractChannel.updateWritabilityIfNeeded(true, false)
     }
 

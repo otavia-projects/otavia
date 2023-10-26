@@ -17,7 +17,6 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.message.AskTimeoutEvent
-import cc.otavia.core.message.AskTimeoutEvent
 
 import scala.language.unsafeNulls
 
@@ -28,7 +27,13 @@ trait TimeoutEventFuture extends Future[AskTimeoutEvent] {
 }
 
 object TimeoutEventFuture {
-    def apply(): TimeoutEventFuture = new TimeoutEventPromise()
+
+    private[stack] val pool = new PromiseObjectPool[TimeoutEventPromise] {
+        override protected def newObject(): TimeoutEventPromise = new TimeoutEventPromise()
+    }
+
+    def apply(): TimeoutEventFuture = pool.get()
+
 }
 
 private[core] class TimeoutEventPromise extends AbstractPromise[AskTimeoutEvent] with TimeoutEventFuture {
@@ -43,9 +48,7 @@ private[core] class TimeoutEventPromise extends AbstractPromise[AskTimeoutEvent]
 
     override def future: Future[AskTimeoutEvent] = this
 
-    override def recycle(): Unit = {
-        // TODO:
-    }
+    override def recycle(): Unit = TimeoutEventFuture.pool.recycle(this)
 
     override protected def cleanInstance(): Unit = {
         event = null

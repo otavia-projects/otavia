@@ -79,32 +79,28 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     final override private[core] def receiveReactorEvent(event: ReactorEvent): Unit = {
         event match {
             case e: ReactorEvent.RegisterReply =>
-                e.channel.handleChannelRegisterReplyEvent(e)
-                afterChannelRegisterReplyEvent(e)
+                e.channel.asInstanceOf[AbstractChannel].handleChannelRegisterReplyEvent(e)
+                afterChannelRegistered(e)
             case e: ReactorEvent.DeregisterReply =>
-                e.channel.handleChannelDeregisterReplyEvent(e)
-                afterChannelDeregisterReplyEvent(e)
+                e.channel.asInstanceOf[AbstractChannel].handleChannelDeregisterReplyEvent(e)
             case e: ReactorEvent.ChannelClose =>
-                e.channel.handleChannelCloseEvent(e)
-                afterChannelCloseEvent(e)
+                e.channel.asInstanceOf[AbstractChannel].handleChannelCloseEvent(e)
+                afterChannelClosed(e.channel, e.cause)
             case e: ReactorEvent.ChannelReadiness =>
-                e.channel.handleChannelReadinessEvent(e)
-                afterChannelReadinessEvent(e)
-            case e: ReactorEvent.AcceptedEvent =>
-                e.channel.handleChannelAcceptedEvent(e)
+                e.channel.asInstanceOf[AbstractChannel].handleChannelReadinessEvent(e)
+            case e: ReactorEvent.AcceptedEvent => e.channel.asInstanceOf[AbstractChannel].handleChannelAcceptedEvent(e)
             case e: ReactorEvent.ReadCompletedEvent =>
-                e.channel.handleChannelReadCompletedEvent(e)
-            case e: ReactorEvent.BindReply =>
-                e.channel.handleChannelBindReplyEvent(e)
+                e.channel.asInstanceOf[AbstractChannel].handleChannelReadCompletedEvent(e)
+            case e: ReactorEvent.BindReply => e.channel.asInstanceOf[AbstractChannel].handleChannelBindReplyEvent(e)
             case e: ReactorEvent.ConnectReply =>
-                e.channel.handleChannelConnectReplyEvent(e)
-            case e: ReactorEvent.ReadBuffer => e.channel.handleChannelReadBufferEvent(e)
-            case e: ReactorEvent.OpenReply  => e.channel.handleChannelOpenReplyEvent(e)
+                e.channel.asInstanceOf[AbstractChannel].handleChannelConnectReplyEvent(e)
+            case e: ReactorEvent.ReadBuffer => e.channel.asInstanceOf[AbstractChannel].handleChannelReadBufferEvent(e)
+            case e: ReactorEvent.OpenReply  => e.channel.asInstanceOf[AbstractChannel].handleChannelOpenReplyEvent(e)
         }
     }
 
     final override private[core] def receiveChannelTimeoutEvent(event: ChannelTimeoutEvent): Unit = {
-        val channel = event.channel
+        val channel = event.channel.asInstanceOf[AbstractChannel]
         channel.handleChannelTimeoutEvent(event.registerId)
     }
 
@@ -168,16 +164,10 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     // Event from Reactor
 
     /** Handle channel close event */
-    protected def afterChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = {}
+    protected def afterChannelClosed(channel: Channel, cause: Option[Throwable]): Unit = {}
 
     /** Handle channel register result event */
-    protected def afterChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {}
-
-    /** Handle channel deregister result event */
-    protected def afterChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = {}
-
-    /** Handle channel readiness event */
-    protected def afterChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit = {}
+    protected def afterChannelRegistered(event: ReactorEvent.RegisterReply): Unit = {}
 
     // Event from Timer
 

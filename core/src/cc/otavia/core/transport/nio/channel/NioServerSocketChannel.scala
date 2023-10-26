@@ -20,7 +20,6 @@ package cc.otavia.core.transport.nio.channel
 
 import cc.otavia.core.channel.*
 import cc.otavia.core.channel.estimator.ServerChannelWriteHandleFactory
-import cc.otavia.core.channel.internal.{ReadSink, WriteSink}
 import cc.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.system.ActorSystem
@@ -31,6 +30,10 @@ class NioServerSocketChannel(system: ActorSystem) extends AbstractServerChannel(
 
     override def unsafeChannel: NioUnsafeServerSocketChannel =
         super.unsafeChannel.asInstanceOf[NioUnsafeServerSocketChannel]
+
+    override def localAddress: Option[SocketAddress] = Some(unsafeChannel.localAddress)
+
+    override def remoteAddress: Option[SocketAddress] = ???
 
     override protected def getTransportExtendedOption[T](option: ChannelOption[T]): T = {
         if (option == ChannelOption.SO_BACKLOG) unsafeChannel.getBacklog.asInstanceOf[T]

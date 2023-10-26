@@ -21,7 +21,7 @@ package cc.otavia.core.channel
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.common.Platform
 import cc.otavia.core.channel.ChannelOption.*
-import cc.otavia.core.channel.internal.AdaptiveBufferOffset
+import cc.otavia.core.channel.internal.{AdaptiveBufferOffset, WriteBufferWaterMark}
 import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.stack.{ChannelPromise, Promise}
 import cc.otavia.core.system.ActorSystem
@@ -43,7 +43,9 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
     private var connectTimeoutMillis: Int      = DEFAULT_CONNECT_TIMEOUT
     private var connectTimeoutRegisterId: Long = Timer.INVALID_TIMEOUT_REGISTER_ID
 
-    private val outboundQueue: mutable.ArrayDeque[AdaptiveBufferOffset | FileRegion] = mutable.ArrayDeque.empty
+    // writeBufferWaterMark
+    private var waterMarkLow: Int  = WriteBufferWaterMark.DEFAULT_LOW_WATER_MARK
+    private var waterMarkHigh: Int = WriteBufferWaterMark.DEFAULT_HIGH_WATER_MARK
 
     override protected def getExtendedOption[T](option: ChannelOption[T]): T = option match
         case AUTO_READ               => ???
@@ -159,7 +161,9 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
             invokeLater(() => promise.setFailure(new IllegalStateException(s"channel $this is not mounted to actor!")))
         else if (!registered) { // if not register
             if (registering)
-                invokeLater(() => promise.setFailure(new IllegalStateException("A registering operation is running")))
+                invokeLater(() =>
+                    promise.setFailure(new IllegalStateException("A register operation is already running"))
+                )
             else {
                 pipeline.register(newPromise())
                 ongoingChannelPromise.onCompleted {
@@ -196,7 +200,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         reactor.bind(this, local)
     }
 
-    override private[core] def handleChannelBindReplyEvent(event: ReactorEvent.BindReply): Unit = {
+    override final private[core] def handleChannelBindReplyEvent(event: ReactorEvent.BindReply): Unit = {
         val promise = ongoingChannelPromise
         ongoingChannelPromise = null
         event.cause match
@@ -258,7 +262,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         }
     }
 
-    override private[core] def handleChannelConnectReplyEvent(event: ReactorEvent.ConnectReply): Unit =
+    override final private[core] def handleChannelConnectReplyEvent(event: ReactorEvent.ConnectReply): Unit =
         if (ongoingChannelPromise != null) {
             val promise = ongoingChannelPromise
             this.ongoingChannelPromise = null
@@ -282,7 +286,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         promise.setFailure(new ConnectTimeoutException(s"connection timed out: $this"))
     }
 
-    override private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit = {
+    override final private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit = {
         if (eventRegisterId == connectTimeoutRegisterId) {
             // handle connect timeout event.
             if (connecting) handleConnectTimeout() // else ignore the event
@@ -343,7 +347,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
             this.ongoingChannelPromise = promise
         }
 
-    override private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = {
+    override final private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = {
         event.cause match
             case Some(value) =>
                 logger.warn("Unexpected exception occurred while deregistering a channel.", value)
@@ -374,28 +378,6 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         promise.setSuccess(event)
     }
 
-    override private[core] def writeTransport(msg: AnyRef): Unit = {
-        msg match
-            case fileRegion: FileRegion => outboundQueue.addOne(fileRegion)
-            case adaptiveBuffer: AdaptiveBuffer if adaptiveBuffer == channelOutboundAdaptiveBuffer =>
-                if (outboundQueue.nonEmpty && outboundQueue.last.isInstanceOf[AdaptiveBufferOffset]) {
-                    outboundQueue.last.asInstanceOf[AdaptiveBufferOffset].endIndex = adaptiveBuffer.writerOffset
-                } else outboundQueue.addOne(new AdaptiveBufferOffset(adaptiveBuffer.writerOffset))
-            case _ => throw new UnsupportedOperationException()
-    }
-
-    override private[core] def flushTransport(): Unit = {
-        val resize = if (outboundQueue.size > 64) true else false
-        while (outboundQueue.nonEmpty) {
-            val payload = outboundQueue.removeHead()
-            payload match
-                case fileRegion: FileRegion => reactor.flush(this, fileRegion)
-                case adaptiveBufferOffset: AdaptiveBufferOffset =>
-                    val chain = channelOutboundAdaptiveBuffer.splitBefore(adaptiveBufferOffset.endIndex)
-                    reactor.flush(this, chain)
-        }
-    }
-
     protected final def readIfIsAutoRead(): Unit = if (autoRead) pipeline.read()
 
     /** Calls [[ChannelPipeline.fireChannelActive]] if it was not done yet.
@@ -423,6 +405,34 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
     }
 
     private def closeIfClosed(): Unit = if (!isOpen) closeTransport(newPromise())
+
+    private def totalPending: Long = -1
+
+    override final def writableBytes: Long = {
+        val totalPending = this.totalPending
+        if (totalPending == -1) 0
+        else {
+            val bytes = ???
+        }
+        ???
+    }
+
+    private[core] def updateWritabilityIfNeeded(notify: Boolean, notifyLater: Boolean): Unit = {
+        val totalPending = this.totalPending
+        if (totalPending > waterMarkHigh) {
+            writable = false
+            fireChannelWritabilityChangedIfNeeded(notify, notifyLater)
+        } else if (totalPending < waterMarkLow) {
+            writable = true
+            fireChannelWritabilityChangedIfNeeded(notify, notifyLater)
+        }
+    }
+
+    private def fireChannelWritabilityChangedIfNeeded(notify: Boolean, later: Boolean): Unit = if (notify) {
+        if (later) invokeLater(() => pipeline.fireChannelWritabilityChanged())
+        else
+            pipeline.fireChannelWritabilityChanged()
+    }
 
     override def toString: String = s"${getClass.getSimpleName}(id=${id}, state=${getStateString()})"
 

@@ -228,7 +228,7 @@ trait ChannelAddress {
      *  @return
      *    same [[ChannelFuture]] in params future
      */
-    def register(future: ChannelFuture): ChannelFuture = {
+    private[core] def register(future: ChannelFuture): ChannelFuture = {
         setFutureCtx(future)
         pipeline.register(future)
     }
@@ -243,7 +243,7 @@ trait ChannelAddress {
      *  @return
      *    same [[ChannelFuture]] in params future
      */
-    def deregister(future: ChannelFuture): ChannelFuture = {
+    private[core] def deregister(future: ChannelFuture): ChannelFuture = {
         setFutureCtx(future)
         pipeline.deregister(future)
     }

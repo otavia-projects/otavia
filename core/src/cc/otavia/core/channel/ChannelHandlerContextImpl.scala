@@ -425,17 +425,13 @@ final class ChannelHandlerContextImpl(
     }
 
     override def disconnect(future: ChannelFuture): ChannelFuture = {
-        val abstractChannel = channel.asInstanceOf[AbstractNetChannel[?, ?]]
-        if (!abstractChannel.supportingDisconnect) close(future)
-        else {
-            try {
-                val nextCtx = findContextOutbound(ChannelHandlerMask.MASK_DISCONNECT)
-                nextCtx.invokeDisconnect(future)
-            } catch {
-                case e: Throwable => future.promise.setFailure(e)
-            }
-            future
+        try {
+            val nextCtx = findContextOutbound(ChannelHandlerMask.MASK_DISCONNECT)
+            nextCtx.invokeDisconnect(future)
+        } catch {
+            case e: Throwable => future.promise.setFailure(e)
         }
+        future
     }
 
     private def invokeDisconnect(future: ChannelFuture): Unit = {

@@ -34,6 +34,12 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
 
     private var path: Path = _
 
+    override final def localAddress: Option[SocketAddress] = None
+
+    override final def remoteAddress: Option[SocketAddress] = None
+
+    override final def isShutdown(direction: ChannelShutdownDirection): Boolean = !isOpen
+
     override private[core] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit =
         channelPromise.setFailure(new UnsupportedOperationException())
 
@@ -62,14 +68,6 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
         promise.setSuccess(ReactorEvent.EMPTY_EVENT)
     }
 
-    override private[core] def writeTransport(msg: AnyRef): Unit = {
-        ???
-    }
-
-    override private[core] def flushTransport(): Unit = {
-        // TODO: impl
-    }
-
     override private[core] def openTransport(
         path: Path,
         options: Seq[OpenOption],
@@ -87,7 +85,7 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
         }
     }
 
-    override private[core] def handleChannelOpenReplyEvent(event: ReactorEvent.OpenReply): Unit = {
+    override final private[core] def handleChannelOpenReplyEvent(event: ReactorEvent.OpenReply): Unit = {
         val promise = ongoingChannelPromise
         ongoingChannelPromise = null
         event.cause match

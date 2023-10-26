@@ -39,10 +39,11 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable {
     private var dweller: AbstractActor[? <: Call] = _
     private var atp: Int                          = 0
 
-    private val noticeMailbox: MailBox = new MailBox(this)
-    private val askMailbox: MailBox    = new MailBox(this)
-    private val replyMailbox: MailBox  = new MailBox(this)
-    private val eventMailbox: MailBox  = new MailBox(this)
+    private val noticeMailbox: MailBox    = new MailBox(this)
+    private val askMailbox: MailBox       = new MailBox(this)
+    private val replyMailbox: MailBox     = new MailBox(this)
+    private val exceptionMailbox: MailBox = new MailBox(this)
+    private val eventMailbox: MailBox     = new MailBox(this)
 
     private[system] val status: AtomicInteger = new AtomicInteger(CREATED)
 
@@ -126,6 +127,8 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable {
     def putAsk(ask: Ask[?]): Unit = put(ask, askMailbox)
 
     def putReply(reply: Reply): Unit = put(reply, replyMailbox)
+
+    def putException(cause: ExceptionMessage): Unit = put(cause, exceptionMailbox)
 
     def putEvent(event: Event): Unit = put(event, eventMailbox)
 

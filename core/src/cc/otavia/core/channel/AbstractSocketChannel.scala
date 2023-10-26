@@ -23,6 +23,6 @@ import cc.otavia.core.system.ActorSystem
 
 abstract class AbstractSocketChannel(system: ActorSystem) extends AbstractNetworkChannel(system) {
 
-    override private[core] def disconnectTransport(promise: ChannelPromise): Unit = closeTransport(promise)
+    override final private[core] def disconnectTransport(promise: ChannelPromise): Unit = closeTransport(promise)
 
 }

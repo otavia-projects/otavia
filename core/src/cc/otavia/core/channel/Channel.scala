@@ -23,6 +23,7 @@ import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, AdaptiveBuffer, Poole
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.address.ActorAddress
 import cc.otavia.core.channel.message.ReadPlan
+import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.reactor.Reactor
 import cc.otavia.core.stack.{ChannelFuture, ChannelPromise}
 import cc.otavia.core.system.ActorSystem
@@ -32,7 +33,7 @@ import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 
-trait Channel extends ChannelInflight, EventHandle, ChannelAddress {
+trait Channel extends ChannelAddress {
 
     /** Executor of this channel instance, the channel inbound and outbound event must execute in the binding executor
      */
@@ -192,40 +193,32 @@ trait Channel extends ChannelInflight, EventHandle, ChannelAddress {
 
     def unsafeChannel: UnsafeChannel
 
-    private[core] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit
-
-    // format: off
-    private[core] def connectTransport(remote: SocketAddress, local: Option[SocketAddress], promise: ChannelPromise): Unit
-    // format: on
-
-    // format: off
-    private[core] def openTransport(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]], promise: ChannelPromise): Unit
-    // format: on
-
-    private[core] def disconnectTransport(promise: ChannelPromise): Unit
-
-    private[core] def closeTransport(promise: ChannelPromise): Unit
-
-    private[core] def shutdownTransport(direction: ChannelShutdownDirection, promise: ChannelPromise): Unit
-
-    /** Call by head handler on pipeline register outbound event.
-     *
-     *  send channel register to reactor, and handle reactor reply at [[handleChannelRegisterReplyEvent]]
-     */
-    private[core] def registerTransport(promise: ChannelPromise): Unit
-
-    private[core] def deregisterTransport(promise: ChannelPromise): Unit
-
-    private[core] def readTransport(readPlan: ReadPlan): Unit = reactor.read(this, readPlan)
-
-    private[core] def writeTransport(msg: AnyRef): Unit
-
-    private[core] def flushTransport(): Unit
-
     // read socket data to this buffer
     def channelInboundAdaptiveBuffer: AdaptiveBuffer = pipeline.channelInboundBuffer
 
     // write data to socket from this buffer
     def channelOutboundAdaptiveBuffer: AdaptiveBuffer = pipeline.channelOutboundBuffer
+
+    //// Channel Inflight
+    def inflightFutureSize: Int
+
+    def pendingFutureSize: Int
+
+    def inflightStackSize: Int
+
+    def pendingStackSize: Int
+
+    /** generate a unique id for the channel message
+     *
+     *  @return
+     *    id
+     */
+    def generateMessageId: Long
+
+    /** Message from tail handler from pipeline. */
+    private[core] def onInboundMessage(msg: AnyRef): Unit
+
+    /** Message from tail handler from pipeline. */
+    private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit
 
 }

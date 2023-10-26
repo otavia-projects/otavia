@@ -22,8 +22,8 @@ import cc.otavia.buffer.AbstractBuffer
 import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, AdaptiveBuffer}
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.ChannelOption.*
-import cc.otavia.core.channel.estimator.MessageSizeEstimator
 import cc.otavia.core.channel.inflight.{FutureQueue, QueueMap, StackQueue}
+import cc.otavia.core.channel.internal.AdaptiveBufferOffset
 import cc.otavia.core.channel.message.{AdaptiveBufferChangeNotice, DatagramAdaptiveRangePacket, ReadPlan, ReadPlanFactory}
 import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.slf4a.Logger
@@ -33,6 +33,7 @@ import cc.otavia.core.system.{ActorSystem, ActorThread}
 import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
+import scala.collection.mutable
 import scala.language.unsafeNulls
 
 /** Abstract class of file channel and network channel. */
@@ -64,6 +65,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     private var channelMsgId: Long = ChannelInflight.INVALID_CHANNEL_MESSAGE_ID
 
     protected var ongoingChannelPromise: ChannelPromise = _
+
+    private val outboundQueue: mutable.ArrayDeque[AdaptiveBufferOffset | FileRegion] = mutable.ArrayDeque.empty
 
     private var direct: AbstractPooledPageAllocator = _
     private var heap: AbstractPooledPageAllocator   = _
@@ -220,7 +223,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         promise.setMessageId(generateMessageId)
         promise.setBarrier(stackBarrier(value))
         promise.setAsk(value)
-        executor.attachStack(executor.generateSendMessageId(), future)
+        actor.attachStack(actor.generateSendMessageId(), future)
         pendingFutures.append(promise)
         processPendingFutures()
         future
@@ -242,10 +245,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     override def id: Int = channelId
 
-    override def executor: ChannelsActor[?] =
-        if (actor != null) actor
-        else
-            throw new IllegalStateException(s"The channel $this is not mounted, use mount to mount channel.")
+    override final def executor: ChannelsActor[?] = actor
 
     final private[core] def mount(channelsActor: ChannelsActor[?]): Unit = {
         assert(!mounted, s"The channel $this has been mounted already, you can't mount it twice!")
@@ -285,7 +285,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     // which means the execution of two inbound handler methods of the same handler overlap undesirably.
     protected def invokeLater(task: Runnable): Unit = laterTasks.append(task)
 
-    override def getOption[T](option: ChannelOption[T]): T = option match
+    override final def getOption[T](option: ChannelOption[T]): T = option match
         case CHANNEL_FUTURE_BARRIER      => futureBarrier
         case CHANNEL_STACK_BARRIER       => stackBarrier
         case CHANNEL_MAX_FUTURE_INFLIGHT => maxFutureInflight
@@ -345,17 +345,13 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
      */
     protected def isExtendedOptionSupported(option: ChannelOption[?]) = false
 
-    override def isOpen: Boolean = ???
+    override final def isOpen: Boolean = unsafe.isOpen
 
-    override def isActive: Boolean = ???
+    override final def isActive: Boolean = unsafe.isActive
 
-    override def isRegistered: Boolean = ???
+    override final def isRegistered: Boolean = registered
 
     override def isShutdown(direction: ChannelShutdownDirection): Boolean = ???
-
-    override def localAddress: Option[SocketAddress] = ???
-
-    override def remoteAddress: Option[SocketAddress] = ???
 
     override def writableBytes: Long = ???
 
@@ -365,27 +361,13 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     // impl EventHandle
 
-    override private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = ???
-
-    override private[core] def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit = ???
-
-    override private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit = ???
-
-    override private[core] def handleChannelAcceptedEvent(event: ReactorEvent.AcceptedEvent): Unit =
+    final private[core] def handleChannelAcceptedEvent(event: ReactorEvent.AcceptedEvent): Unit =
         event.channel.pipeline.fireChannelRead(event.accepted)
 
-    override private[core] def handleChannelReadCompletedEvent(event: ReactorEvent.ReadCompletedEvent): Unit =
+    final private[core] def handleChannelReadCompletedEvent(event: ReactorEvent.ReadCompletedEvent): Unit =
         pipe.fireChannelReadComplete()
 
-    override private[core] def handleChannelBindReplyEvent(event: ReactorEvent.BindReply): Unit = ???
-
-    override private[core] def handleChannelConnectReplyEvent(event: ReactorEvent.ConnectReply): Unit = ???
-
-    override private[core] def handleChannelDisconnectReplyEvent(event: ReactorEvent.DisconnectReply): Unit = {}
-
-    override private[core] def handleChannelOpenReplyEvent(event: ReactorEvent.OpenReply): Unit = {}
-
-    override private[core] def handleChannelReadBufferEvent(event: ReactorEvent.ReadBuffer): Unit = {
+    final private[core] def handleChannelReadBufferEvent(event: ReactorEvent.ReadBuffer): Unit = {
         event.sender match
             case Some(address) => // fire UDP message
                 val start = channelInboundAdaptiveBuffer.writerOffset
@@ -429,7 +411,86 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         pipeline.closeOutboundAdaptiveBuffers()
     }
 
-    final protected def newPromise(): ChannelPromise = ChannelPromise()
+    final protected def newPromise(): ChannelPromise = new ChannelPromise()
+
+    // unsafe transport
+
+    final private[core] def writeTransport(msg: AnyRef): Unit = {
+        msg match
+            case fileRegion: FileRegion => outboundQueue.addOne(fileRegion)
+            case adaptiveBuffer: AdaptiveBuffer if adaptiveBuffer == channelOutboundAdaptiveBuffer =>
+                if (outboundQueue.nonEmpty && outboundQueue.last.isInstanceOf[AdaptiveBufferOffset]) {
+                    outboundQueue.last.asInstanceOf[AdaptiveBufferOffset].endIndex = adaptiveBuffer.writerOffset
+                } else outboundQueue.addOne(new AdaptiveBufferOffset(adaptiveBuffer.writerOffset))
+            case _ => throw new UnsupportedOperationException()
+    }
+
+    final private[core] def flushTransport(): Unit = {
+        val resize = if (outboundQueue.size > 64) true else false
+        while (outboundQueue.nonEmpty) {
+            val payload = outboundQueue.removeHead()
+            payload match
+                case fileRegion: FileRegion => reactor.flush(this, fileRegion)
+                case adaptiveBufferOffset: AdaptiveBufferOffset =>
+                    val chain = channelOutboundAdaptiveBuffer.splitBefore(adaptiveBufferOffset.endIndex)
+                    reactor.flush(this, chain)
+        }
+    }
+
+    private[core] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit
+
+    // format: off
+    private[core] def connectTransport(remote: SocketAddress, local: Option[SocketAddress], promise: ChannelPromise): Unit
+    // format: on
+
+    // format: off
+    private[core] def openTransport(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]], promise: ChannelPromise): Unit
+    // format: on
+
+    private[core] def disconnectTransport(promise: ChannelPromise): Unit
+
+    private[core] def closeTransport(promise: ChannelPromise): Unit
+
+    private[core] def shutdownTransport(direction: ChannelShutdownDirection, promise: ChannelPromise): Unit
+
+    /** Call by head handler on pipeline register outbound event.
+     *
+     *  send channel register to reactor, and handle reactor reply at [[handleChannelRegisterReplyEvent]]
+     */
+    private[core] def registerTransport(promise: ChannelPromise): Unit
+
+    private[core] def deregisterTransport(promise: ChannelPromise): Unit
+
+    private[core] def readTransport(readPlan: ReadPlan): Unit = reactor.read(this, readPlan)
+
+    //// Event Handler: A handle that will process [[Event]] from [[Reactor]] and [[Timer]].
+
+    // Event from Reactor
+
+    /** Handle channel close event */
+    private[core] def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = {}
+
+    /** Handle channel register result event */
+    private[core] def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {}
+
+    /** Handle channel deregister result event */
+    private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = {}
+
+    /** Handle channel readiness event */
+    private[core] def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit = {}
+
+    private[core] def handleChannelBindReplyEvent(event: ReactorEvent.BindReply): Unit = {}
+
+    private[core] def handleChannelConnectReplyEvent(event: ReactorEvent.ConnectReply): Unit = {}
+
+    private[core] def handleChannelDisconnectReplyEvent(event: ReactorEvent.DisconnectReply): Unit = {}
+
+    private[core] def handleChannelOpenReplyEvent(event: ReactorEvent.OpenReply): Unit = {}
+
+    // Event from Timer
+
+    /** Handle channel timeout event */
+    private[core] def handleChannelTimeoutEvent(eventRegisterId: Long): Unit = {}
 
 }
 

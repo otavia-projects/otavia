@@ -21,29 +21,10 @@ import cc.otavia.core.stack.{ChannelFuture, ChannelReplyFuture, Future}
 
 import java.net.SocketAddress
 
-trait ChannelInflight {
-
-    def inflightFutureSize: Int
-    def pendingFutureSize: Int
-
-    def inflightStackSize: Int
-    def pendingStackSize: Int
-
-    /** generate a unique id for the channel message
-     *
-     *  @return
-     *    id
-     */
-    def generateMessageId: Long
-
-    /** Message from tail handler from pipeline. */
-    private[core] def onInboundMessage(msg: AnyRef): Unit
-
-    /** Message from tail handler from pipeline. */
-    private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit
-
-}
-
 object ChannelInflight {
+
     val INVALID_CHANNEL_MESSAGE_ID: Long = -1
+
+    def isValidChannelMessageId(id: Long): Boolean = id != INVALID_CHANNEL_MESSAGE_ID
+
 }
