@@ -4,7 +4,7 @@
 </div> 
 <h1 align="center"><b>otavia</b></h1> 
 <p align="center"><b>A super fast IO &amp; Actor programming model</b></p> 
-<p><img src="https://img.shields.io/github/license/yankun1992/otavia" alt="GitHub"> <a href="https://otavia-projects.github.io/otavia/home.html"><img src="https://github.com/otavia-projects/otavia/actions/workflows/gh-pages.yml/badge.svg" alt="GitHub Pages"></a> <img src="https://img.shields.io/badge/JDK-17%2B-blue" alt="Static Badge"> <img src="https://img.shields.io/badge/Scala-3.3-blue" alt="Static Badge"></p> 
+<p><img src="https://img.shields.io/github/license/yankun1992/otavia" alt="GitHub"> <a href="https://otavia-projects.github.io/otavia/home.html"><img src="https://github.com/otavia-projects/otavia/actions/workflows/gh-pages.yml/badge.svg" alt="GitHub Pages"></a> <img src="https://img.shields.io/badge/JDK-17%2B-blue" alt="Static Badge"> <img src="https://img.shields.io/badge/Scala-3.3-blue" alt="Static Badge"> <img src="https://img.shields.io/nexus/s/cc.otavia/otavia-runtime_3?server=https%3A%2F%2Fs01.oss.sonatype.org" alt="Sonatype Nexus (Snapshots)"></p> 
 <section id="introduction-1"> 
  <h2 class="h500"><a href="#introduction-1" class="anchor"></a>Introduction</h2> 
  <p><a href="https://otavia-projects.github.io/otavia/home.html">Otavia</a> is an IO and Actor programming model power by Scala 3, it provides a toolkit to make writing high-performance concurrent programs more easily.</p> 
@@ -43,48 +43,64 @@
 <section id="core-modules-1"> 
  <h3 class="h400"><a href="#core-modules-1" class="anchor"></a>core modules</h3> 
  <ul> 
-  <li><code>buffer</code>: A zero-deps buffer implementation for replace <code>java.nio.ByteBuffer</code> forked from Netty.</li> 
-  <li><code>serde</code>: A generic serialization and deserialization framework based on <code>buffer</code>.</li> 
-  <li><code>core</code>: Core Actor model, IO model(channel), slf4a, reactor model, IOC, message model, and thread model.</li> 
-  <li><code>codec</code>: Some generic ChannelHandler.</li> 
-  <li><code>handler</code>: Some special ChannelHandler, eg, SSL, io traffic control, timeout.</li> 
-  <li><code>async</code>: A implementation of <code>async/await</code> transformation for Actor message sending/waiting based on CPS(Continuation Passing Style) transformation powered by metaprogramming of Scala 3.</li> 
+  <li><code>otavia-buffer</code>: A zero-deps buffer implementation for replace <code>java.nio.ByteBuffer</code> forked from Netty.</li> 
+  <li><code>otavia-serde</code>: A generic serialization and deserialization framework based on <code>buffer</code>.</li> 
+  <li><code>otavia-runtime</code>: Core Actor model, IO model(channel), slf4a, reactor model, IOC, message model, and thread model.</li> 
+  <li><code>otavia-codec</code>: Some generic ChannelHandler.</li> 
+  <li><code>otavia-handler</code>: Some special ChannelHandler, eg, SSL, io traffic control, timeout.</li> 
+  <li><code>otavia-async</code>: A implementation of <code>async/await</code> transformation for Actor message sending/waiting based on CPS( Continuation Passing Style) transformation powered by metaprogramming of Scala 3.</li> 
+  <li><code>otavia-sql</code>: Actor database connect specification for RDBMS.</li> 
+  <li><code>otavia-sql-macro</code>: Derivation for class use in <code>otavia-sql</code>.</li> 
  </ul> 
 </section> 
 <section id="serde-ecosystem-1"> 
  <h3 class="h400"><a href="#serde-ecosystem-1" class="anchor"></a>serde ecosystem</h3> 
  <ul> 
-  <li><code>serde-json</code>: JSON serialization and deserialization.</li> 
-  <li><code>serde-json-macro</code>: Macro for <code>serde-json</code>.</li> 
-  <li><code>serde-http</code>: HTTP serialization and deserialization.</li> 
-  <li><code>serde-proto</code>: Protocol buffer serialization and deserialization.</li> 
-  <li><code>serde-proto-macro</code>: Macro for <code>serde-proto</code>.</li> 
+  <li><code>otavia-serde-json</code>: JSON serialization and deserialization.</li> 
+  <li><code>otavia-json-macro</code>: Macro for <code>otavia-serde-json</code>.</li> 
+  <li><code>otavia-serde-http</code>: HTTP serialization and deserialization.</li> 
+  <li><code>otavia-http-macro</code>: Macro for <code>otavia-serde-http</code>.</li> 
+  <li><code>otavia-serde-proto</code>: Protocol buffer serialization and deserialization.</li> 
+  <li><code>otavia-proto-macro</code>: Macro for <code>otavia-serde-proto</code>.</li> 
  </ul> 
 </section> 
 <section id="channel-codec-ecosystem-1"> 
  <h3 class="h400"><a href="#channel-codec-ecosystem-1" class="anchor"></a>channel codec ecosystem</h3> 
  <ul> 
-  <li><code>codec-adbc</code>: Actor database connect (adbc) specification for RDBMS.</li> 
-  <li><code>codec-haproxy</code>: Haproxy ChannelHandlers and Actors.</li> 
-  <li><code>codec-http</code>: HTTP ChannelHandlers and Actors.</li> 
-  <li><code>codec-memcache</code>: Memcache ChannelHandlers and Actors.</li> 
-  <li><code>codec-mqtt</code>: MQTT ChannelHandlers and Actors.</li> 
-  <li><code>codec-redis</code>: Redis ChannelHandlers and Actors.</li> 
-  <li><code>codec-smtp</code>: SMTP ChannelHandlers and Actors.</li> 
-  <li><code>codec-socks</code>: SOCKS4/5 ChannelHandlers and Actors.</li> 
-  <li><code>codec-kafka</code>: KAFKA ChannelHandlers and Actors.</li> 
+  <li><code>otavia-codec-haproxy</code>: Haproxy ChannelHandlers and Actors.</li> 
+  <li><code>otavia-codec-http</code>: HTTP ChannelHandlers and Actors.</li> 
+  <li><code>otavia-codec-memcache</code>: Memcache ChannelHandlers and Actors.</li> 
+  <li><code>otavia-codec-mqtt</code>: MQTT ChannelHandlers and Actors.</li> 
+  <li><code>otavia-codec-redis</code>: Redis ChannelHandlers and Actors.</li> 
+  <li><code>otavia-codec-smtp</code>: SMTP ChannelHandlers and Actors.</li> 
+  <li><code>otavia-codec-socks</code>: SOCKS4/5 ChannelHandlers and Actors.</li> 
+  <li><code>otavia-codec-kafka</code>: KAFKA ChannelHandlers and Actors.</li> 
+  <li><code>otavia-codec-dns</code>: DNS ChannelHandlers and Actors.</li> 
+ </ul> 
+</section> 
+<section id="database-drivers-1"> 
+ <h3 class="h400"><a href="#database-drivers-1" class="anchor"></a>database drivers</h3> 
+ <ul> 
+  <li><code>otavia-mysql-driver</code>: mysql driver for otavia.</li> 
+  <li><code>otavia-postgres-driver</code>: postgres driver for otavia.</li> 
  </ul> 
 </section> 
 <section id="slf4a-logger-ecosystem-1"> 
  <h3 class="h400"><a href="#slf4a-logger-ecosystem-1" class="anchor"></a>slf4a logger ecosystem</h3> 
  <ul> 
-  <li><code>log4a</code>: A simple slf4a logger implementation.</li> 
+  <li><code>otavia-log4a</code>: A simple slf4a logger implementation.</li> 
  </ul> 
 </section> 
 <section id="web-framework-1"> 
  <h3 class="h400"><a href="#web-framework-1" class="anchor"></a>web framework</h3> 
  <ul> 
-  <li><code>web</code>: A simple web framework.</li> 
+  <li><code>sponge</code>: A simple web framework based on otavia ecosystem.</li> 
+ </ul> 
+</section> 
+<section id="io-transport-1"> 
+ <h3 class="h400"><a href="#io-transport-1" class="anchor"></a>io transport</h3> 
+ <ul> 
+  <li><code>otavia-native-transport</code>: a native io transport via JNI.</li> 
  </ul> 
 </section> 
 <section id="project-plans-1"> 
@@ -99,31 +115,31 @@
   <tbody> 
    <tr> 
     <td>0.2.*</td> 
-    <td><code>buffer</code> completed.</td> 
+    <td><code>otavia-buffer</code> completed.</td> 
    </tr> 
    <tr> 
     <td>0.3.*</td> 
-    <td><code>core</code> runnable. complete first runnable <code>core</code> with NIO transport, Actor model, message model, thread model, IOC, slf4a, reactor model.</td> 
+    <td><code>otavia-runtime</code> runnable. complete first runnable <code>otavia-runtime</code> with NIO transport, Actor model, message model, thread model, IOC, slf4a, reactor model.</td> 
    </tr> 
    <tr> 
     <td>0.4.*</td> 
-    <td><code>serde-json</code>, <code>serde-http</code>, <code>codec</code>, <code>codec-http</code> can work.</td> 
+    <td><code>otavia-serde-json</code>, <code>otavia-serde-http</code>, <code>otavia-codec</code>, <code>otavia-codec-http</code> can work.</td> 
    </tr> 
    <tr> 
     <td>0.5.*</td> 
-    <td>Design <code>codec-adbc</code>, and a demo Mysql driver implementation.</td> 
+    <td>Design <code>otavia-sql</code>, and a demo Mysql driver implementation.</td> 
    </tr> 
    <tr> 
     <td>0.*.*</td> 
-    <td>Implement <code>codec-*</code>, <code>handler</code>, <code>serde-*</code>.</td> 
+    <td>Implement <code>otavia-codec-*</code>, <code>otavia-handler</code>, <code>otavia-serde-*</code>.</td> 
    </tr> 
    <tr> 
     <td>0.*.*</td> 
-    <td>More RDBMS drivers based on <code>codec-adbc</code>.</td> 
+    <td>More RDBMS drivers based on <code>otavia-sql</code>.</td> 
    </tr> 
    <tr> 
     <td>0.*.*</td> 
-    <td>Implement <code>async</code>.</td> 
+    <td>Implement <code>otavia-async</code>.</td> 
    </tr> 
    <tr> 
     <td>0.*.*</td> 
@@ -142,4 +158,4 @@
    <li>auto distribution: hot move actor instance to cluster actor system based on Actor community detection and make the smallest cost of distribution.</li> 
   </ol> 
  </blockquote> 
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#introduction-1">Introduction</a></li><li><a href="#features-1">Features</a></li><li><a href="#programming-model-1">Programming Model</a></li><li><a href="#project-modules-1">Project modules</a><ul><li><a href="#core-modules-1">core modules</a></li><li><a href="#serde-ecosystem-1">serde ecosystem</a></li><li><a href="#channel-codec-ecosystem-1">channel codec ecosystem</a></li><li><a href="#slf4a-logger-ecosystem-1">slf4a logger ecosystem</a></li><li><a href="#web-framework-1">web framework</a></li></ul></li><li><a href="#project-plans-1">Project plans</a></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#introduction-1">Introduction</a></li><li><a href="#features-1">Features</a></li><li><a href="#programming-model-1">Programming Model</a></li><li><a href="#project-modules-1">Project modules</a><ul><li><a href="#core-modules-1">core modules</a></li><li><a href="#serde-ecosystem-1">serde ecosystem</a></li><li><a href="#channel-codec-ecosystem-1">channel codec ecosystem</a></li><li><a href="#database-drivers-1">database drivers</a></li><li><a href="#slf4a-logger-ecosystem-1">slf4a logger ecosystem</a></li><li><a href="#web-framework-1">web framework</a></li><li><a href="#io-transport-1">io transport</a></li></ul></li><li><a href="#project-plans-1">Project plans</a></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
