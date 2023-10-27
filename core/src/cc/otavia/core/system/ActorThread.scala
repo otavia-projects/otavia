@@ -53,6 +53,12 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 
     setName(s"otavia-actor-worker-$index")
 
+    // prepare allocate buffer
+    final private[core] def prepared(): Unit = {
+        if (direct.size == 0) direct.allocate().close()
+        if (heap.size == 0) heap.allocate().close()
+    }
+
     /** A [[BufferAllocator]] which allocate heap memory. */
     def directAllocator: AbstractPooledPageAllocator = direct
 

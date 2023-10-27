@@ -30,23 +30,39 @@ import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
 /** The [[Channel]] in [[Reactor]] */
-abstract class AbstractUnsafeChannel(val channel: Channel) extends UnsafeChannel {
-
-    private var inputClosedSeenErrorOnRead: Boolean = false
-    protected var isAllowHalfClosure: Boolean       = false
-
-    protected var autoRead: Boolean = true
+abstract class AbstractUnsafeChannel(val channel: Channel) extends UnsafeChannel with ChannelState {
 
     // read sink
     protected var currentReadPlan: ReadPlan = _
 
     private var readFactory: ReadPlanFactory = _
 
+    // initial channel state on constructing
+    created = true
+
+    /** true if the channel has never been registered, false otherwise */
+    neverRegistered = true
+    neverActive = true
+
+    autoRead = true
+    autoClose = true
+    writable = true
+
+    final private[core] def setAutoRead(auto: Boolean): Unit = this.synchronized {
+        autoRead = auto
+        if (!auto) clearScheduledRead()
+    }
+
     def readPlanFactory: ReadPlanFactory = readFactory
 
-    protected def setReadPlanFactory(factory: ReadPlanFactory): Unit = {
-        this.readFactory = factory
-    }
+    final private[core] def setReadPlanFactory(factory: ReadPlanFactory): Unit =
+        this.synchronized { this.readFactory = factory }
+
+    final private[core] def setAutoClose(auto: Boolean): Unit = this.synchronized { autoClose = auto }
+
+    final protected def isAllowHalfClosure: Boolean = allowHalfClosure
+
+    final private[core] def setAllowHalfClosure(allow: Boolean): Unit = this.synchronized { allowHalfClosure = allow }
 
     // write sink
 

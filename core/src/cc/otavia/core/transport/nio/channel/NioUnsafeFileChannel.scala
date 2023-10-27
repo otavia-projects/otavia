@@ -19,7 +19,6 @@
 package cc.otavia.core.transport.nio.channel
 
 import cc.otavia.buffer.pool.RecyclablePageBuffer
-import cc.otavia.core.channel.estimator.ReadBufferAllocator
 import cc.otavia.core.channel.message.{FileReadPlan, MaxMessagesReadPlanFactory, ReadPlan}
 import cc.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelShutdownDirection, FileRegion}
 import cc.otavia.core.message.ReactorEvent
@@ -67,7 +66,7 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
     }
 
     override def unsafeShutdown(direction: ChannelShutdownDirection): Unit =
-        executorAddress.inform(ReactorEvent.ShutdownReply(channel, cause = Some(new UnsupportedOperationException())))
+        throw new IllegalStateException("Never should be call!")
 
     override def unsafeRead(readPlan: ReadPlan): Unit = {
         readPlan match

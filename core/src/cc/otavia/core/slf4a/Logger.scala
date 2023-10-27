@@ -76,20 +76,6 @@ trait Logger {
      */
     def trace(format: String, arg1: Any, arg2: Any): Unit
 
-    /** Log a message at the [[TRACE]] level according to the specified format and arguments.
-     *
-     *  This form avoids superfluous string concatenation when the logger is disabled for the [[TRACE]] level. However,
-     *  this variant incurs the hidden (and relatively small) cost of creating an [[Seq]] before invoking the method,
-     *  even if this logger is disabled for [[TRACE]]. The variants taking one and two arguments exist solely in order
-     *  to avoid this hidden cost.
-     *
-     *  @param format
-     *    the format string
-     *  @param args
-     *    a list of 3 or more arguments
-     */
-    def trace(format: String, args: Any*): Unit
-
     /** Log an exception (throwable) at the TRACE level with an accompanying message.
      *  @param msg
      *    the message accompanying the exception
@@ -134,20 +120,6 @@ trait Logger {
      *    the second argument
      */
     def debug(format: String, arg1: Any, arg2: Any): Unit
-
-    /** Log a message at the [[DEBUG]] level according to the specified format and arguments.
-     *
-     *  This form avoids superfluous string concatenation when the logger is disabled for the [[DEBUG]] level. However,
-     *  this variant incurs the hidden (and relatively small) cost of creating an [[Seq]] before invoking the method,
-     *  even if this logger is disabled for [[DEBUG]]. The variants taking one and two arguments exist solely in order
-     *  to avoid this hidden cost.
-     *
-     *  @param format
-     *    the format string
-     *  @param arguments
-     *    a list of 3 or more arguments
-     */
-    def debug(format: String, args: Any*): Unit
 
     /** Log an exception (throwable) at the [[DEBUG]] level with an accompanying message.
      *  @param msg

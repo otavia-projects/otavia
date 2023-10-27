@@ -34,9 +34,6 @@ import scala.language.unsafeNulls
 class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp: Int)
     extends AbstractNioUnsafeChannel[SocketChannel](channel, ch, readInterestOp) {
 
-    private var inputShutdown  = false
-    private var outputShutdown = false
-
     setReadPlanFactory((channel: Channel) => new NioSocketChannelReadPlan())
 
     override def localAddress: SocketAddress = javaChannel.getLocalAddress
@@ -78,18 +75,24 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
     override def unsafeDisconnect(): Unit =
         throw new UnsupportedOperationException("should never execute this method")
 
-    override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = direction match
-        case Inbound =>
-            javaChannel.shutdownInput()
-            inputShutdown = true
-        case Outbound =>
-            javaChannel.shutdownOutput()
-            outputShutdown = true
+    override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = {
+        try {
+            direction match
+                case Inbound =>
+                    javaChannel.shutdownInput()
+                    shutdownedInbound = true
+                case Outbound =>
+                    javaChannel.shutdownOutput()
+                    shutdownedOutbound = true
+            executorAddress.inform(ReactorEvent.ShutdownReply(this.channel, direction))
+        } catch {
+            case e: Throwable => executorAddress.inform(ReactorEvent.ShutdownReply(this.channel, direction, Some(e)))
+        }
+    }
 
     override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit = {
         var closed = false
         payload match
-            case fileRegion: FileRegion => ???
             case buffer: RecyclablePageBuffer =>
                 var cursor = buffer
                 while (cursor != null) {
@@ -97,6 +100,7 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
                     cursor = cursor.next
                     buf.next = null
                     if (!closed) {
+                        val writable   = buf.readableBytes
                         val byteBuffer = buf.byteBuffer
                         byteBuffer.limit(buf.writerOffset)
                         byteBuffer.position(buf.readerOffset)
@@ -110,17 +114,20 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
                     }
                     buf.close()
                 }
+            case fileRegion: FileRegion => ???
     }
 
-    override def isOpen: Boolean = ch.isOpen
+    override def isOpen: Boolean = this.synchronized { ch.isOpen }
 
-    override def isActive: Boolean = ch.isOpen && ch.isConnected
+    override def isActive: Boolean = this.synchronized { ch.isOpen && ch.isConnected }
 
     override def isShutdown(direction: ChannelShutdownDirection): Boolean = if (!isActive) true
     else {
-        direction match
-            case Inbound  => inputShutdown
-            case Outbound => outputShutdown
+        this.synchronized {
+            direction match
+                case Inbound  => shutdownedInbound
+                case Outbound => shutdownedOutbound
+        }
     }
 
     override protected def doReadNow(): Boolean = {
@@ -140,8 +147,10 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
         } else if (read == 0) {
             page.close()
             false
-        } else true
-
+        } else {
+            page.close()
+            true
+        }
     }
 
 }

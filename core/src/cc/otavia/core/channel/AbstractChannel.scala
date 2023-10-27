@@ -22,7 +22,7 @@ import cc.otavia.buffer.AbstractBuffer
 import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, AdaptiveBuffer}
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.ChannelOption.*
-import cc.otavia.core.channel.inflight.{FutureQueue, QueueMap, StackQueue}
+import cc.otavia.core.channel.inflight.QueueMap
 import cc.otavia.core.channel.internal.AdaptiveBufferOffset
 import cc.otavia.core.channel.message.{AdaptiveBufferChangeNotice, DatagramAdaptiveRangePacket, ReadPlan, ReadPlanFactory}
 import cc.otavia.core.message.ReactorEvent
@@ -66,7 +66,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     protected var ongoingChannelPromise: ChannelPromise = _
 
-    private val outboundQueue: mutable.ArrayDeque[AdaptiveBufferOffset | FileRegion] = mutable.ArrayDeque.empty
+    protected var outboundQueue: mutable.ArrayDeque[AdaptiveBufferOffset | FileRegion] = mutable.ArrayDeque.empty
 
     private var direct: AbstractPooledPageAllocator = _
     private var heap: AbstractPooledPageAllocator   = _
@@ -89,7 +89,10 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     allowHalfClosure = false
     inWriteFlushed = false
 
-    closeInitiated = false
+    closed = false
+    closing = false
+
+    override final def isMounted: Boolean = mounted
 
     // impl ChannelInflight
 
@@ -351,7 +354,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     override final def isRegistered: Boolean = registered
 
-    override def isShutdown(direction: ChannelShutdownDirection): Boolean = ???
+    override def isShutdown(direction: ChannelShutdownDirection): Boolean = unsafe.isShutdown(direction)
 
     override def writableBytes: Long = ???
 

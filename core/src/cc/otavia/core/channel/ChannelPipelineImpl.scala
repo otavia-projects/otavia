@@ -23,7 +23,6 @@ import cc.otavia.common.ClassUtils
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import cc.otavia.core.channel.ChannelPipelineImpl.*
-import cc.otavia.core.channel.estimator.MessageSizeEstimator
 import cc.otavia.core.channel.message.FixedReadPlanFactory.FixedReadPlan
 import cc.otavia.core.channel.message.{FixedReadPlanFactory, ReadPlan}
 import cc.otavia.core.slf4a.Logger
@@ -59,9 +58,6 @@ class ChannelPipelineImpl(override val channel: Channel) extends ChannelPipeline
     private val touch: Boolean = ResourceLeakDetector.isEnabled
 
     private final val handlers = new mutable.ArrayBuffer[ChannelHandlerContextImpl](4)
-
-    final lazy val estimatorHandle: MessageSizeEstimator.Handle =
-        channel.getOption(ChannelOption.MESSAGE_SIZE_ESTIMATOR).newHandle
 
     private var _pendingOutboundBytes: Long = 0
 

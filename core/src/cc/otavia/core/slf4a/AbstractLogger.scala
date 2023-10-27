@@ -22,24 +22,20 @@ import cc.otavia.core.slf4a.helpers.MessageFormatter
 
 abstract class AbstractLogger extends Logger, Serializable, ModuleListener {
 
-    override def trace(format: String, arg: Any): Unit = ???
-//        if (isTraceEnabled) trace(MessageFormatter.format(format, arg))
+    override def trace(format: String, arg: Any): Unit =
+        if (isTraceEnabled) trace(MessageFormatter.format(format, arg))
 
     override def trace(format: String, arg1: Any, arg2: Any): Unit = ???
 
-    override def trace(format: String, args: Any*): Unit = ???
+    override def trace(msg: String, e: Throwable): Unit =
+        if (isTraceEnabled) trace(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
 
-    override def trace(msg: String, e: Throwable): Unit = ???
-//        if (isTraceEnabled) trace(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
-
-    override def debug(format: String, arg: Any): Unit = ???
+    override def debug(format: String, arg: Any): Unit = if (isDebugEnabled) debug(s"$format${arg}")
 
     override def debug(format: String, arg1: Any, arg2: Any): Unit = ???
 
-    override def debug(format: String, args: Any*): Unit = ???
-
-    override def debug(msg: String, e: Throwable): Unit = ???
-//        if (isDebugEnabled) trace(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
+    override def debug(msg: String, e: Throwable): Unit =
+        if (isDebugEnabled) debug(s"$msg\n${ThrowableUtil.stackTraceToString(e)}")
 
     override def info(format: String, arg: Any): Unit = ???
 

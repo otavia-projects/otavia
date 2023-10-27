@@ -21,7 +21,9 @@ package cc.otavia.core.channel
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.common.Platform
 import cc.otavia.core.channel.ChannelOption.*
+import cc.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
 import cc.otavia.core.channel.internal.{AdaptiveBufferOffset, WriteBufferWaterMark}
+import cc.otavia.core.channel.message.ReadPlanFactory
 import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.stack.{ChannelPromise, Promise}
 import cc.otavia.core.system.ActorSystem
@@ -30,7 +32,7 @@ import cc.otavia.core.transport.nio.channel.NioChannelOption
 
 import java.io.IOException
 import java.net.{InetSocketAddress, SocketAddress}
-import java.nio.channels.{AlreadyConnectedException, ClosedChannelException, ConnectionPendingException}
+import java.nio.channels.{AlreadyConnectedException, ClosedChannelException, ConnectionPendingException, NotYetConnectedException}
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import scala.collection.mutable
@@ -48,15 +50,12 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
     private var waterMarkHigh: Int = WriteBufferWaterMark.DEFAULT_HIGH_WATER_MARK
 
     override protected def getExtendedOption[T](option: ChannelOption[T]): T = option match
-        case AUTO_READ               => ???
-        case WRITE_BUFFER_WATER_MARK => ???
-        case CONNECT_TIMEOUT_MILLIS  => ??? // connectTimeoutMillis.asInstanceOf[T]
-        case BUFFER_ALLOCATOR        => ???
-        case READ_HANDLE_FACTORY     => ???
-        case WRITE_HANDLE_FACTORY    => ???
-        case AUTO_CLOSE              => ???
-        case MESSAGE_SIZE_ESTIMATOR  => ??? // msgSizeEstimator.asInstanceOf[T]
-        case ALLOW_HALF_CLOSURE      => ???
+        case AUTO_READ               => autoRead
+        case WRITE_BUFFER_WATER_MARK => new WriteBufferWaterMark(waterMarkLow, waterMarkHigh)
+        case CONNECT_TIMEOUT_MILLIS  => connectTimeoutMillis
+        case READ_PLAN_FACTORY       => unsafeChannel.readPlanFactory
+        case AUTO_CLOSE              => autoClose
+        case ALLOW_HALF_CLOSURE      => allowHalfClosure
         case _                       => getTransportExtendedOption(option)
 
     /** Override to add support for more [[ChannelOption]]s for networks [[Channel]]. You need to also call super after
@@ -76,14 +75,11 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
 
     override final protected def setExtendedOption[T](option: ChannelOption[T], value: T): Unit = {
         option match
-            case AUTO_READ               => // setAutoRead(value.asInstanceOf[Boolean])
-            case WRITE_BUFFER_WATER_MARK => ???
+            case AUTO_READ               => setAutoRead(value)
+            case WRITE_BUFFER_WATER_MARK => setWriteBufferWaterMark(value)
             case CONNECT_TIMEOUT_MILLIS  => setConnectTimeoutMillis(value)
-            case BUFFER_ALLOCATOR        => ???
-            case READ_HANDLE_FACTORY     => ???
-            case WRITE_HANDLE_FACTORY    => ???
-            case AUTO_CLOSE              => autoClose = true
-            case MESSAGE_SIZE_ESTIMATOR  => // msgSizeEstimator = value.asInstanceOf[MessageSizeEstimator]
+            case READ_PLAN_FACTORY       => setReadPlanFactory(value)
+            case AUTO_CLOSE              => setAutoClose(value)
             case ALLOW_HALF_CLOSURE      => allowHalfClosure = value
             case _                       => setTransportExtendedOption(option, value)
     }
@@ -114,12 +110,37 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
      */
     protected def isTransportExtendedOptionSupported(option: ChannelOption[?]) = false
 
-    private def getConnectTimeoutMillis = connectTimeoutMillis
+    private def setAutoRead(auto: Boolean): Unit = {
+        if (!registered) autoRead = auto
+        else {
+            if (auto && !autoRead) {
+                autoRead = true
+                pipeline.read()
+            } else if (!auto && autoRead) {
+                autoRead = false
+                unsafeChannel.setAutoRead(false)
+            }
+        }
+    }
+
+    private def setWriteBufferWaterMark(mark: WriteBufferWaterMark): Unit = {
+        waterMarkLow = mark.low
+        waterMarkHigh = mark.high
+    }
+
+    private def setReadPlanFactory(factory: ReadPlanFactory): Unit = unsafeChannel.setReadPlanFactory(factory)
 
     private def setConnectTimeoutMillis(connectTimeoutMillis: Int): Unit = {
         assert(connectTimeoutMillis >= 0, s"connectTimeoutMillis $connectTimeoutMillis (expected: >= 0)")
         this.connectTimeoutMillis = connectTimeoutMillis
     }
+
+    private def setAutoClose(auto: Boolean): Unit = {
+        autoClose = auto
+        unsafeChannel.setAutoClose(auto)
+    }
+
+    private def setAllowHalfClosure(allow: Boolean): Unit = unsafeChannel.setAllowHalfClosure(allow)
 
     override private[core] def registerTransport(promise: ChannelPromise): Unit =
         if (registering)
@@ -307,25 +328,32 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         if (connecting || registering || connected) {
             val ongoing = ongoingChannelPromise
 
-            val cause = new ClosedChannelException()
-            if (ongoing != null) ongoing.setFailure(cause)
+            if (ongoing != null) ongoing.setFailure(new ClosedChannelException())
 
             connecting = false
             registering = false
             closing = true
             ongoingChannelPromise = promise
             reactor.close(this)
-            this.failedFutures(cause)
-            this.failedStacks(cause)
-            this.closeAdaptiveBuffers()
         } else if (closed) { promise.setSuccess(ReactorEvent.EMPTY_EVENT) }
         else if (closing) { promise.setFailure(new IllegalStateException("A close operation is running")) }
-        else promise.setFailure(new IOException("channel was not connected!"))
+        else promise.setFailure(new NotYetConnectedException())
     }
 
     override private[core] def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = {
         closing = false
         closed = true
+
+        if (ongoingChannelPromise != null) {
+            ongoingChannelPromise.setSuccess(event)
+            ongoingChannelPromise = null
+        }
+
+        val cause = new ClosedChannelException()
+
+        this.failedFutures(cause)
+        this.failedStacks(cause)
+        this.closeAdaptiveBuffers()
 
         pipeline.fireChannelInactive()
         if (registered) pipeline.fireChannelUnregistered()
@@ -336,8 +364,31 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
 
     }
 
-    override private[core] def shutdownTransport(direction: ChannelShutdownDirection, promise: ChannelPromise): Unit =
-        ???
+    override private[core] def shutdownTransport(direction: ChannelShutdownDirection, promise: ChannelPromise): Unit = {
+        if (!isActive) {
+            if (isOpen) promise.setFailure(new NotYetConnectedException())
+            else promise.setFailure(new ClosedChannelException())
+        } else if (isShutdown(direction)) {
+            promise.setSuccess(ReactorEvent.EMPTY_EVENT)
+        } else {
+            reactor.shutdown(this, direction)
+            promise.setSuccess(ReactorEvent.EMPTY_EVENT)
+        }
+    }
+
+    final private[core] def handleShutdownReply(event: ReactorEvent.ShutdownReply): Unit = {
+        event.direction match
+            case Inbound  => pipeline.fireChannelShutdown(event.direction)
+            case Outbound => shutdownOutput(new ClosedChannelException())
+    }
+
+    private def shutdownOutput(cause: Throwable): Unit = {
+        if (this.outboundQueue != null) {
+            this.outboundQueue = null
+            this.failedFutures(cause)
+            pipeline.fireChannelShutdown(ChannelShutdownDirection.Outbound)
+        }
+    }
 
     override private[core] def deregisterTransport(promise: ChannelPromise): Unit =
         if (!registered) promise.setSuccess(ReactorEvent.EMPTY_EVENT)
@@ -378,7 +429,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         promise.setSuccess(event)
     }
 
-    protected final def readIfIsAutoRead(): Unit = if (autoRead) pipeline.read()
+    private final def readIfIsAutoRead(): Unit = if (autoRead) pipeline.read()
 
     /** Calls [[ChannelPipeline.fireChannelActive]] if it was not done yet.
      *
@@ -434,7 +485,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
             pipeline.fireChannelWritabilityChanged()
     }
 
-    override def toString: String = s"${getClass.getSimpleName}(id=${id}, state=${getStateString()})"
+    override def toString: String = s"${getClass.getSimpleName}(id=${id}, state=${getStateString})"
 
 }
 
@@ -446,11 +497,8 @@ object AbstractNetworkChannel {
       AUTO_READ,
       WRITE_BUFFER_WATER_MARK,
       CONNECT_TIMEOUT_MILLIS,
-      BUFFER_ALLOCATOR,
-      READ_HANDLE_FACTORY,
-      WRITE_HANDLE_FACTORY,
+      READ_PLAN_FACTORY,
       AUTO_CLOSE,
-      MESSAGE_SIZE_ESTIMATOR,
       ALLOW_HALF_CLOSURE
     )
 

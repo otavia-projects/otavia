@@ -23,7 +23,6 @@ import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.channel.{Channel, ChannelShutdownDirection, FileRegion}
 import cc.otavia.core.message.ReactorEvent
-import cc.otavia.core.transport.nio.channel.NioUnsafeServerSocketChannel.{BACKLOG, NioServerSocketReadPlan}
 
 import java.net.SocketAddress
 import java.nio.channels.{SelectableChannel, SelectionKey, ServerSocketChannel}
@@ -34,9 +33,9 @@ import scala.language.unsafeNulls
 class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, readInterestOp: Int)
     extends AbstractNioUnsafeChannel[ServerSocketChannel](channel, ch, readInterestOp) {
 
-    private var backlog: Int = BACKLOG
+    import NioUnsafeServerSocketChannel.*
 
-    private var bound: Boolean = false
+    private var backlog: Int = BACKLOG
 
     setReadPlanFactory((channel: Channel) => new NioServerSocketReadPlan())
 
@@ -65,8 +64,10 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, re
     override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit =
         throw new UnsupportedOperationException()
 
-    override def unsafeShutdown(direction: ChannelShutdownDirection): Unit =
-        throw new UnsupportedOperationException()
+    override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = {
+        val cause = Some(new UnsupportedOperationException())
+        executorAddress.inform(ReactorEvent.ShutdownReply(channel, direction, cause))
+    }
 
     override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit =
         throw new UnsupportedOperationException()

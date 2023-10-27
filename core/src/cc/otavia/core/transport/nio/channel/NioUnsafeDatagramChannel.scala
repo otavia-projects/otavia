@@ -33,11 +33,6 @@ import scala.language.unsafeNulls
 class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readInterestOp: Int)
     extends AbstractNioUnsafeChannel[DatagramChannel](channel, ch, readInterestOp) {
 
-    private var bound: Boolean = false
-
-    private var inputShutdown  = false
-    private var outputShutdown = false
-
     setReadPlanFactory((channel: Channel) => new NioDatagramChannelReadPlan())
 
     override def localAddress: SocketAddress = try {
@@ -72,9 +67,13 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
         channel.executorAddress.inform(ReactorEvent.DisconnectReply(channel))
     }
 
-    override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = direction match
-        case ChannelShutdownDirection.Inbound  => inputShutdown = true
-        case ChannelShutdownDirection.Outbound => outputShutdown = true
+    override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = {
+        direction match
+            case ChannelShutdownDirection.Inbound  => shutdownedInbound = true
+            case ChannelShutdownDirection.Outbound => shutdownedOutbound = true
+
+        executorAddress.inform(ReactorEvent.ShutdownReply(channel, direction))
+    }
 
     override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit = {
         payload match
@@ -101,9 +100,11 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
 
     override def isShutdown(direction: ChannelShutdownDirection): Boolean = if (!isActive) true
     else {
-        direction match
-            case Inbound  => inputShutdown
-            case Outbound => outputShutdown
+        this.synchronized {
+            direction match
+                case Inbound  => shutdownedInbound
+                case Outbound => shutdownedOutbound
+        }
     }
 
     override protected def doReadNow(): Boolean = {

@@ -79,4 +79,6 @@ abstract class AbstractPooledPageAllocator(val fixedCapacity: Int) extends Poole
         buffer
     }
 
+    def size: Int = count
+
 }

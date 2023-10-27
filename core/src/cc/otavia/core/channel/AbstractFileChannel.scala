@@ -101,9 +101,9 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
 
     override private[core] def closeTransport(promise: ChannelPromise): Unit = {
         if (!opened) promise.setFailure(new IllegalStateException("File not opened!"))
-        else if (closeInitiated || closed) promise.setSuccess(ReactorEvent.EMPTY_EVENT)
+        else if (closing || closed) promise.setSuccess(ReactorEvent.EMPTY_EVENT)
         else {
-            closeInitiated = true
+            closing = true
             this.ongoingChannelPromise = promise
             reactor.close(this)
         }
@@ -115,13 +115,13 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
         event.cause match
             case None =>
                 closed = true
-                closeInitiated = false
+                closing = false
                 pipeline.fireChannelInactive()
                 promise.setSuccess(event)
             case Some(cause) =>
                 promise.setFailure(cause)
     }
 
-    override def toString: String = s"FileChannel(path=${path.toAbsolutePath}, state=${getStateString()})"
+    override def toString: String = s"FileChannel(path=${path.toAbsolutePath}, state=${getStateString})"
 
 }

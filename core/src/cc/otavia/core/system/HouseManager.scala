@@ -17,9 +17,10 @@
 package cc.otavia.core.system
 
 import cc.otavia.common.SystemPropertyUtil
-import cc.otavia.core.actor.Actor
+import cc.otavia.core.actor.{Actor, ChannelsActor}
 import cc.otavia.core.message.{Event, Message}
 import cc.otavia.core.slf4a.Logger
+import cc.otavia.core.system.ActorHouse.CHANNELS_ACTOR
 import cc.otavia.core.system.HouseManager.*
 import cc.otavia.core.system.monitor.HouseManagerMonitor
 
@@ -109,6 +110,7 @@ class HouseManager(val thread: ActorThread) {
             val house = mountingQueue.dequeue()
             if (house != null) {
                 currentRunning = house.actor
+                if (house.actorType == CHANNELS_ACTOR) thread.prepared()
                 house.doMount()
                 currentRunning = null
                 success = true

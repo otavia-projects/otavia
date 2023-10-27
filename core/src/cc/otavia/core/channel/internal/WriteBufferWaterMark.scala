@@ -32,7 +32,7 @@ package cc.otavia.core.channel.internal
  *    the high water mark for the write buffer.
  *  @param validate
  */
-final class WriteBufferWaterMark private[core] (val low: Int, val high: Int, validate: Boolean = true) {
+final class WriteBufferWaterMark(val low: Int, val high: Int, validate: Boolean = true) {
 
     if (validate) {
         assert(low >= 0, s"low value is ${low} (expected: >= 0)")

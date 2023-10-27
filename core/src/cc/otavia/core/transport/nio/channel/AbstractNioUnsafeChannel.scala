@@ -33,8 +33,6 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
     extends AbstractUnsafeChannel(channel)
     with NioUnsafeChannel {
 
-    private var inputClosedSeenErrorOnRead: Boolean = false
-
     protected var _selectionKey: SelectionKey = _
 
     protected def javaChannel: C = ch
@@ -99,13 +97,12 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
 
     override def unsafeRead(readPlan: ReadPlan): Unit = if (_selectionKey.isValid) {
         if (readPlan == AutoReadPlan) {
+            this.setAutoRead(true)
             this.currentReadPlan = readPlanFactory.newPlan(channel)
         } else this.currentReadPlan = readPlan
         val ops = _selectionKey.interestOps()
         if ((ops & readInterestOp) == 0)
             _selectionKey.interestOps(ops | readInterestOp)
-
-        // readNow()
     }
 
     override def unsafeOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = {
@@ -126,7 +123,7 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
 
     protected def finishConnect(): Unit = {}
 
-    protected def readNow(): Unit = {
+    private def readNow(): Unit = {
         if (isShutdown(ChannelShutdownDirection.Inbound) && (inputClosedSeenErrorOnRead || !isAllowHalfClosure)) {
             clearScheduledRead()
         } else {

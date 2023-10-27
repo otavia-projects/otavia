@@ -31,8 +31,6 @@ object NOPLogger extends Logger {
 
     override def trace(format: String, arg1: Any, arg2: Any): Unit = {}
 
-    override def trace(format: String, args: Any*): Unit = {}
-
     override def trace(msg: String, e: Throwable): Unit = {}
 
     override def isDebugEnabled: Boolean = false
@@ -42,8 +40,6 @@ object NOPLogger extends Logger {
     override def debug(format: String, arg: Any): Unit = {}
 
     override def debug(format: String, arg1: Any, arg2: Any): Unit = {}
-
-    override def debug(format: String, args: Any*): Unit = {}
 
     override def debug(msg: String, e: Throwable): Unit = {}
 

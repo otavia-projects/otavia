@@ -23,7 +23,6 @@ import scala.language.unsafeNulls
 
 /** A trait for manage lifecycle for [[Channel]] */
 trait ChannelState extends CompressionBooleanLong {
-    this: Channel =>
 
     protected final def created_=(value: Boolean): Unit = set(ST_CREATED, value)
     protected final def created: Boolean                = get(ST_CREATED)
@@ -88,9 +87,6 @@ trait ChannelState extends CompressionBooleanLong {
     protected final def allowHalfClosure_=(value: Boolean): Unit = set(ST_ALLOW_HALF_CLOSURE, value)
     protected final def allowHalfClosure: Boolean                = get(ST_ALLOW_HALF_CLOSURE)
 
-    protected final def closeInitiated_=(value: Boolean): Unit = set(ST_CLOSE_INITIATED, value)
-    protected final def closeInitiated: Boolean                = get(ST_CLOSE_INITIATED)
-
     protected final def inWriteFlushed_=(value: Boolean): Unit = set(ST_IN_WRITE_FLUSHED, value)
     protected final def inWriteFlushed: Boolean                = get(ST_IN_WRITE_FLUSHED)
 
@@ -112,15 +108,7 @@ trait ChannelState extends CompressionBooleanLong {
 
     protected final def opened_=(value: Boolean): Unit = set(ST_OPENED, value)
     protected final def opened: Boolean                = get(ST_OPENED)
-
-    override final def isMounted: Boolean = mounted
-
-//    protected final def readSomething_=(value: Boolean): Unit = set(ST_READ_SOMETHING, value)
-//    protected final def readSomething: Boolean                = get(ST_READ_SOMETHING)
-
-//    protected final def continueReading_=(value: Boolean): Unit = set(ST_CONTINUE_READING, value)
-//    protected final def continueReading: Boolean                = get(ST_CONTINUE_READING)
-
+    
     /** Set the [[Channel]] inbound head-of-line
      *  @param value
      *    head-of-line
@@ -133,9 +121,8 @@ trait ChannelState extends CompressionBooleanLong {
     protected final def futureHeadOfLine_=(value: Boolean): Unit = set(ST_FUTURE_HOL, value)
     protected final def futureHeadOfLine: Boolean                = get(ST_FUTURE_HOL)
 
-    protected def getStateString(): String = {
+    protected def getStateString: String = {
         val sb = new StringBuilder()
-        if (created) sb.append("created ")
         if (neverRegistered) sb.append("neverRegistered ")
         if (registering) sb.append("registering ")
         if (registered) sb.append("registered ")
@@ -156,7 +143,6 @@ trait ChannelState extends CompressionBooleanLong {
         if (autoRead) sb.append("autoRead ")
         if (autoClose) sb.append("autoClose ")
         if (allowHalfClosure) sb.append("allowHalfClosure ")
-        if (closeInitiated) sb.append("closeInitiated ")
         if (inWriteFlushed) sb.append("inWriteFlushed ")
         if (writable) sb.append("writable ")
         if (neverActive) sb.append("neverActive ")
@@ -239,13 +225,6 @@ object ChannelState {
     private val ST_OPENED: Long        = 1L << ST_OPENED_OFFSET
     // End channel lifecycle state , 22 is connecting
 
-    // state in ReadSink
-    private val ST_READ_SOMETHING_OFFSET: Long = 20
-    private val ST_READ_SOMETHING: Long        = 1L << ST_READ_SOMETHING_OFFSET
-
-    private val ST_CONTINUE_READING_OFFSET: Long = 21
-    private val ST_CONTINUE_READING: Long        = 1L << ST_CONTINUE_READING_OFFSET
-
     // end ReadSink
 
     private val ST_AUTO_READ_OFFSET: Long = 32
@@ -256,9 +235,6 @@ object ChannelState {
 
     private val ST_ALLOW_HALF_CLOSURE_OFFSET: Long = 34
     private val ST_ALLOW_HALF_CLOSURE: Long        = 1L << ST_ALLOW_HALF_CLOSURE_OFFSET
-
-    private val ST_CLOSE_INITIATED_OFFSET: Long = 35
-    private val ST_CLOSE_INITIATED: Long        = 1L << ST_CLOSE_INITIATED_OFFSET
 
     private val ST_IN_WRITE_FLUSHED_OFFSET: Long = 36
     private val ST_IN_WRITE_FLUSHED: Long        = 1L << ST_IN_WRITE_FLUSHED_OFFSET

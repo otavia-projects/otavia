@@ -20,8 +20,8 @@ package cc.otavia.core.channel
 
 import cc.otavia.buffer.BufferAllocator
 import cc.otavia.core.channel.ChannelOption.pool
-import cc.otavia.core.channel.estimator.{MessageSizeEstimator, ReadHandleFactory, WriteHandleFactory}
 import cc.otavia.core.channel.internal.WriteBufferWaterMark
+import cc.otavia.core.channel.message.ReadPlanFactory
 
 import java.net.NetworkInterface
 import java.util.Objects.requireNonNull
@@ -82,10 +82,7 @@ object ChannelOption {
      */
     private def newInstance[T](name: String): ChannelOption[T] = new ChannelOption[T](name)
 
-    val BUFFER_ALLOCATOR: ChannelOption[BufferAllocator]            = newInstance("BUFFER_ALLOCATOR")
-    val READ_HANDLE_FACTORY: ChannelOption[ReadHandleFactory]       = newInstance("READ_HANDLE_FACTORY")
-    val WRITE_HANDLE_FACTORY: ChannelOption[WriteHandleFactory]     = newInstance("WRITE_HANDLE_FACTORY")
-    val MESSAGE_SIZE_ESTIMATOR: ChannelOption[MessageSizeEstimator] = newInstance("MESSAGE_SIZE_ESTIMATOR")
+    val READ_PLAN_FACTORY: ChannelOption[ReadPlanFactory] = newInstance("READ_PLAN_FACTORY")
 
     val CHANNEL_FUTURE_BARRIER: ChannelOption[AnyRef => Boolean] = newInstance("CHANNEL_FUTURE_BARRIER")
     val CHANNEL_STACK_BARRIER: ChannelOption[AnyRef => Boolean]  = newInstance("CHANNEL_STACK_BARRIER")
@@ -94,8 +91,6 @@ object ChannelOption {
     val CHANNEL_STACK_HEAD_OF_LINE: ChannelOption[Boolean]       = newInstance("CHANNEL_STACK_HEAD_OF_LINE")
 
     val CONNECT_TIMEOUT_MILLIS: ChannelOption[Integer] = newInstance("CONNECT_TIMEOUT_MILLIS")
-
-    val MAX_MESSAGES_PER_WRITE: ChannelOption[Integer] = newInstance("MAX_MESSAGES_PER_WRITE")
 
     val WRITE_BUFFER_WATER_MARK: ChannelOption[WriteBufferWaterMark] = newInstance("WRITE_BUFFER_WATER_MARK")
 

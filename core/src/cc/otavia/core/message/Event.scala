@@ -18,7 +18,7 @@ package cc.otavia.core.message
 
 import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.cache.ResourceTimer
-import cc.otavia.core.channel.Channel
+import cc.otavia.core.channel.{Channel, ChannelShutdownDirection}
 import cc.otavia.core.util.Nextable
 
 import java.net.SocketAddress
@@ -59,7 +59,7 @@ enum ReactorEvent extends Event {
 
     case DisconnectReply(channel: Channel, cause: Option[Throwable] = None)
 
-    case ShutdownReply(channel: Channel, cause: Option[Throwable] = None)
+    case ShutdownReply(channel: Channel, direction: ChannelShutdownDirection, cause: Option[Throwable] = None)
 
     case ChannelReadiness(channel: Channel, readyOps: Int)
     case ChannelClose(channel: Channel, cause: Option[Throwable] = None)
