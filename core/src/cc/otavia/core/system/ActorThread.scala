@@ -29,7 +29,7 @@ import java.util.concurrent.{ConcurrentLinkedQueue, CopyOnWriteArraySet}
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-class ActorThread(private[core] val system: ActorSystem) extends Thread() {
+final class ActorThread(private[core] val system: ActorSystem) extends Thread() {
 
     private val id = system.pool.nextThreadId()
 
@@ -54,7 +54,7 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
     setName(s"otavia-actor-worker-$index")
 
     // prepare allocate buffer
-    final private[core] def prepared(): Unit = {
+    private[core] def prepared(): Unit = {
         if (direct.size == 0) direct.allocate().close()
         if (heap.size == 0) heap.allocate().close()
     }
@@ -160,14 +160,14 @@ class ActorThread(private[core] val system: ActorSystem) extends Thread() {
         }
     }
 
-    final private def suspendThread(millis: Long = 50): Unit = {
+    private def suspendThread(millis: Long = 50): Unit = {
         this.synchronized {
             status = ST_WAITING
             this.wait(millis)
         }
     }
 
-    final private def runThreadEvent(): Boolean = {
+    private def runThreadEvent(): Boolean = {
         if (!eventQueue.isEmpty) {
             val event = eventQueue.poll().asInstanceOf[ResourceTimeoutEvent]
 

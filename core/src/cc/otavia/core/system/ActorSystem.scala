@@ -94,8 +94,6 @@ trait ActorSystem {
 
     final def actorWorkerSize: Int = pool.size
 
-    private[system] def setActorContext[A <: Actor[? <: Call]](actor: A, thread: ActorThread): Address[MessageOf[A]]
-
     def monitor(): SystemMonitor
 
     def isBusy: Boolean

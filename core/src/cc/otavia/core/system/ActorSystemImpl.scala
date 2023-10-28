@@ -130,7 +130,7 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
     override def defaultMaxBatchSize: Int = ???
 
     // format: off
-    override final def buildActor[A <: Actor[? <: Call]](factory: ActorFactory[A], num: Int = 1,
+    override def buildActor[A <: Actor[? <: Call]](factory: ActorFactory[A], num: Int = 1,
         global: Boolean = false, qualifier: Option[String] = None, primary: Boolean = false
     ): Address[MessageOf[A]] = {
     // format: on
@@ -144,7 +144,7 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
         address.asInstanceOf[Address[MessageOf[A]]]
     }
 
-    private final def mountActor(address: Address[?]): Unit = {
+    private def mountActor(address: Address[?]): Unit = {
         address match
             case addr: ActorAddress[?] => addr.house.mount()
             case robinAddress: RobinAddress[?] =>
@@ -153,21 +153,7 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
                 }
     }
 
-    private[system] def setActorContext[A <: Actor[? <: Call]](
-        actor: A,
-        thread: ActorThread
-    ): Address[MessageOf[A]] = {
-        val house = thread.createActorHouse()
-        house.setActor(actor.asInstanceOf[AbstractActor[? <: Call]])
-        val address = house.createActorAddress[MessageOf[A]]()
-        val context = ActorContext(this, address, generator.getAndIncrement())
-
-        actor.asInstanceOf[AbstractActor[?]].setCtx(context)
-
-        address
-    }
-
-    private def setActorContext0(actor: AbstractActor[?], thread: ActorThread): ActorAddress[?] = {
+    private def setActorContext(actor: AbstractActor[?], thread: ActorThread): ActorAddress[?] = {
         val house = thread.createActorHouse()
         house.setActor(actor)
         val address = house.createUntypedAddress()
@@ -183,7 +169,7 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
             val actor   = factory.create().asInstanceOf[AbstractActor[? <: Call]]
             val isIO    = actor.isInstanceOf[ChannelsActor[?]]
             val thread  = pool.next(isIO)
-            val address = setActorContext0(actor, thread)
+            val address = setActorContext(actor, thread)
             logger.debug(s"Created actor $actor")
             (address, actor.getClass)
         } else if (num > 1) {
@@ -194,7 +180,7 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
             val address = range.map { index =>
                 val actor  = actors(index)
                 val thread = threads(index)
-                setActorContext0(actor, thread)
+                setActorContext(actor, thread)
             }
             logger.debug(s"Created actors ${actors.mkString("Array(", ", ", ")")}")
 
