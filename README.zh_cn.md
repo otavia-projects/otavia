@@ -3,7 +3,7 @@
 </div>
 <h1 align=center>otavia</h1>
 
-<p align=center ><b>一个超快的 IO & Actor 编程模型</b></p>
+<p align=center ><b>一个有趣的 IO & Actor 编程模型</b></p>
 
 ![GitHub](https://img.shields.io/github/license/yankun1992/otavia)
 [![GitHub Pages](https://github.com/otavia-projects/otavia/actions/workflows/gh-pages.yml/badge.svg)](https://otavia-projects.github.io/otavia/home.html)

@@ -1,11 +1,9 @@
 index: index.md
 subsection:
   - title: Quick Start
-    index: quick_start/index.md
-    directory: quick_start
-    subsection:
-      - title: Send notice message
-        page: quick_start/send_notice_message.md
+    page: quick_start.md
+  - title: Core Concept
+    page: core_concept.md
   - title: Guide
     index: guide/index.md
     directory: guide
@@ -32,17 +30,15 @@ subsection:
     subsection:
       - title: Buffer
         page: module/buffer.md
-  - title: Chinese Document
+  - title: 中文文档
     index: zh/index.md
     directory: zh
     subsection:
-      - title: Quick Start
-        index: zh/quick_start/index.md
-        directory: zh/quick_start
-        subsection:
-          - title: Send notice message
-            page: zh/quick_start/send_notice_message.md
-      - title: Guide
+      - title: 快速开始
+        page: zh/quick_start.md
+      - title: 核心概念
+        page: zh/core_concept.md
+      - title: 详细指南
         index: zh/guide/index.md
         directory: guide
         subsection:
@@ -58,7 +54,7 @@ subsection:
             page: zh/guide/reactor_model.md
           - title: SLF4A
             page: zh/guide/slf4a.md
-      - title: Modules
+      - title: 主要模块
         index: zh/module/index.md
         directory: module
         subsection:

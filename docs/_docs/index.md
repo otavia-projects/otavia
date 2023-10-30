@@ -78,8 +78,7 @@ In `otavia`, developer only focus on
 
 - `otavia-serde-json`: JSON serialization and deserialization.
 - `otavia-json-macro`: Macro for `otavia-serde-json`.
-- `otavia-serde-http`: HTTP serialization and deserialization.
-- `otavia-http-macro`: Macro for `otavia-serde-http`.
+- `otavia-http-macro`: Macro for `otavia-codec-http`.
 - `otavia-serde-proto`: Protocol buffer serialization and deserialization.
 - `otavia-proto-macro`: Macro for `otavia-serde-proto`.
 
@@ -110,7 +109,7 @@ In `otavia`, developer only focus on
 
 ### io transport
 
-- `otavia-native-transport`: a native io transport via JNI.
+- `otavia-native-transport`: A native io transport via JNI.
 
 ## Project plans
 
