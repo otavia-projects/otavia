@@ -358,15 +358,44 @@ actor 实例将被 JVM 的垃圾回收系统自动回收。
 
 Actor 里有如下几种方法可以在不同的生命周期过程中调用
 
-- `afterMount`:
-- `beforeRestart`:
-- `restart`:
-- `afterRestart`:
-- `AutoCleanable.clean`:
+- `afterMount`: Actor 实例挂载到 `ActorSystem` 之后调用，**对于 Actor 实例 `context` 相关的方法只有挂载之后才可以使用**。
+- `beforeRestart`: 重启之前调用。
+- `restart`: 重启 Actor 实例的方法。
+- `afterRestart`: 重启之后调用。
+- `AutoCleanable.cleaner`: 如果您实现的Actor需要清理一些不安全的资源，继承 `AutoCleanable` trait 然后实现 `cleaner` 方法。
+
+以下图片显示了Actor实例的所有可能的生命过程：
 
 ![](../../_assets/images/actor_life_cycle.drawio.svg)
 
+我们来定义一个 Actor 显示各种生命周期的回调
 
+```scala
+case class Start() extends Notice
+
+final class LifeActor extends StateActor[Start] with AutoCleanable {
+  override protected def afterMount(): Unit = println("LifeActor: afterMount")
+
+  override protected def beforeRestart(): Unit = println("LifeActor: beforeRestart")
+
+  override protected def restart(): Unit = println("LifeActor: restart")
+
+  override protected def afterRestart(): Unit = println("LifeActor: afterRestart")
+
+  override def cleaner(): ActorCleaner = new ActorCleaner {
+
+    println("creating actor cleaner")
+
+    override protected def clean(): Unit = println("clean actor resource before actor stop")
+
+  }
+
+  // if occurs some error which developer is not catch, this will trigger the actor restart
+  override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = throw new Error("")
+}
+```
+
+## 处理IO
 
 
 
