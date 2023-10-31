@@ -5,15 +5,13 @@ title: 快速开始
 
 ## 环境要求
 
-| environment | version |
-|-------------|---------|
-| JDK         | 17+     |
-| Scala       | 3.3+    |
+![Static Badge](https://img.shields.io/badge/JDK-17%2B-blue)
+![Static Badge](https://img.shields.io/badge/Scala-3.3%2B-blue)
 
 `otavia` 虽然主要运行在JVM平台上，但是为了保证可靠的编译时类型安全，目前只支持 `Scala 3`, 如果您对 `Scala 3`
 目前不是很熟悉，您可以参考以下资料进行学习。
 
-- 基础知识（对于学习 otavia 来说足够了）: [Scala 3 Book](https://docs.scala-lang.org/zh-cn/scala3/book/introduction.html)
+- 基础知识（对于学习 `otavia` 足够了）: [Scala 3 Book](https://docs.scala-lang.org/zh-cn/scala3/book/introduction.html)
 - 高级知识：[Scala 3 Language Reference](https://docs.scala-lang.org/scala3/reference/)
 
 以下所有示例的源码可以在 [otavia-examples](https://github.com/otavia-projects/otavia-examples) 中找到。
@@ -34,8 +32,7 @@ ivy"cc.otavia::otavia-runtime:{version}"
 
 如果使用 maven:
 
-```xml
-
+```text
 <dependency>
     <groupId>cc.otavia</groupId>
     <artifactId>otavia-runtime</artifactId>
@@ -220,7 +217,7 @@ final class MultiMsgActor() extends StateActor[Echo | Hello | Ping] {
 
 `otavia` 运行时包含了一个强大的计时器组件 `Timer` ，您可以使用多种方式与 `Timer` 进行交互，以下将介绍主要的使用场景：
 
-### 定时条件触发时回调 handleActorTimeout
+### 处理注册的定时事件
 
 Actor 有方法处理注册的定时事件，其定义为
 
@@ -256,7 +253,103 @@ final class TickActor() extends StateActor[Nothing] { // [Nothing] if no message
 
 ### Stack Sleep
 
+如果我们想让一个 `Stack` 等待一段时间才开始执行，我们可以让 `StackState` 关联到一个 `TimeoutEventFuture` , 这个 `Future`
+会将超时事件作为结果。只有收到超时事件的时候，`TimeoutEventFuture` 才完成。
+
+在之前的示例中，`PingActor` 处理 `Start` 消息的时候使用了 `FutureState` , 这是 `otavia` 定义的一些比较常用的状态类，如果
+这些状态类不能满足您的需要，您也可以自定义 `StackState`。
+
+让我们改造一下之前的 `PingActor`，现在我们要求这个Actor收到 `Start` 消息之后发送 `Ping` 请求，然后收到 `Pong` 消息的时候
+同时需要等待2秒才能继续调度这个 `NoticeStack` 执行。
+
+现在 `FutureState` 已经不能满足我们的需求了，因为其只绑定了一个 `ReplyFuture`, 现在我们不仅需要绑定 `ReplyFuture`，还需要
+绑定 `TimeoutEventFuture`，只有这两种 `Future` 都完成的时候才开始执行这个 `Stack`。让我们来定义我们新的 `StackState` 吧。
+
+```scala
+class PongTimeoutState extends StackState {
+  val pongFuture = ReplyFuture[Pong]()
+  val timeoutFuture = TimeoutEventFuture()
+}
+```
+
+接下来，重新实现我们的 `PingActor`
+
+```scala
+final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
+  override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
+    case _: StartState =>
+      println("PingActor handle Start message")
+      println("PingActor send Ping Message")
+      val state = PongTimeoutState()
+      pongActorAddress.ask(Ping(stack.notice.sid), state.pongFuture)
+      timer.sleepStack(state.timeoutFuture, 2 * 1000)
+      state.suspend()
+    case state: PongTimeoutState =>
+      val future = state.pongFuture
+      if (future.isSuccess) {
+        println(s"PingActor received ${future.getNow} message success!")
+        assert(future.getNow.pingId == stack.ask.sid)
+      }
+      stack.`return`()
+  }
+}
+```
+
+好了，完成了！现在我们的 `PingActor` 即使收到 `Pong` 回复消息，也要等待2秒这个 `Stack` 才会被继续调度执行。
+
 ### 给 Reply 消息设置超时
+
+有时候，当我们发送一个 `Ask` 消息，对面的 Actor 可能会耗时比较久，但是我们不想让我们的请求 Actor 等待太久，这种情况我们可以
+怎么办呢？也许聪明的您已经想到答案了！`Stack` 怎么样到达可执行状态呢，之前我们讲过：
+> 一个 `StackState` 可以关联一个或者多个 `Future` , 只有当 `StackState` 的 `resumable` 方法为 `ture` 或者关联的所
+> 有的 `Future` 都达到完成状态的时候，这个 `Stack` 才可以继续被调度执行。
+
+所以我们可以重载 `StackState` 的 `resumable` 方法！ 现在来重新定义一下我们 `PongTimeoutState`
+
+```scala
+class PongTimeoutState extends StackState {
+  val pongFuture = ReplyFuture[Pong]()
+  val timeoutFuture = TimeoutEventFuture()
+
+  override def resumable(): Boolean = timeoutFuture.isDone
+}
+```
+
+现在只要 `timeoutFuture` 完成，那么 `Stack` 就会被继续调度执行了。接下来我们只需检测我们的 `pongFuture.isDone` 判断
+是否完成。
+
+这的确是一种方法，但是考虑到这种超时需求比较常见，`otavia` 提供了更简单的方法，我们只需对最开始的 `PingActor` 进行一点点改动：
+
+```scala
+final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
+  override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
+    case _: StartState =>
+      println("PingActor handle Start message")
+      println("PingActor send Ping Message")
+      val state = FutureState(1)
+      pongActorAddress.ask(Ping(stack.notice.sid), state.future, 2 * 1000)
+      state.suspend()
+    case state: FutureState[Pong] if state.id == 1 =>
+      val future = state.future
+      if (future.isSuccess) {
+        println(s"PingActor received ${future.getNow} message success!")
+        assert(future.getNow.pingId == stack.ask.sid)
+      }
+      stack.`return`()
+  }
+}
+```
+
+注意到不同的地方了吗！`ask` 方法自带了一个超时参数!
+
+```scala
+pongActorAddress.ask(Ping(stack.notice.sid), state.future, 2 * 1000) // new 
+pongActorAddress.ask(Ping(stack.notice.sid), state.future) // old
+```
+
+如果2秒后仍然没有收到 `Pong` 消息，那么这个 `Future` 将会被设置成完成状态，但是与之前不同的是我们不能从 `Future` 里面拿到
+`Pong` 消息了，他的状态已经是失败了，即 `isDone=ture isSuccess=false isFailed=ture`。因为这个 `StackState` 只关联
+了一个 `Future`，而这个 `Future` 已经是完成状态了，所以这个 `Stack` 就可以继续被调度执行了。
 
 ## Actor 的生命周期
 

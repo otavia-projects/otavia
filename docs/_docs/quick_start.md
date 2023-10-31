@@ -5,10 +5,8 @@ title: Quick Start
 
 ## Environment
 
-| environment | version |
-|-------------|---------|
-| JDK         | 17+     |
-| Scala       | 3.3+    |
+![Static Badge](https://img.shields.io/badge/JDK-17%2B-blue)
+![Static Badge](https://img.shields.io/badge/Scala-3.3%2B-blue)
 
 Although otavia mainly runs on the JVM platform, it currently only supports `Scala 3` in order to ensure reliable
 compile-time type safety, so if you're not familiar with `Scala 3` at the moment, you can learn about it with the
@@ -36,8 +34,7 @@ ivy"cc.otavia::otavia-runtime:{version}"
 
 if maven:
 
-```xml
-
+```text
 <dependency>
     <groupId>cc.otavia</groupId>
     <artifactId>otavia-runtime</artifactId>
@@ -246,6 +243,6 @@ There are several methods in Actor that can be called during different lifecycle
 - `afterRestart`:
 - `AutoCleanable.clean`:
 
-![](../../_assets/images/actor_life_cycle.drawio.svg)
+![](../_assets/images/actor_life_cycle.drawio.svg)
 
 

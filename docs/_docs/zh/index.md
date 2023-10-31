@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Chinese Document
+title: 中文文档
 ---
 
 # Chinese Document
