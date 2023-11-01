@@ -82,18 +82,17 @@ ivy"cc.otavia::otavia-runtime:{version}"
 
 maven
 
-```xml
-
+```text
 <dependency>
-    <groupId>cc.otavia</groupId>
-    <artifactId>otavia-runtime</artifactId>
-    <version>{version}</version>
+  <groupId>cc.otavia</groupId>
+  <artifactId>otavia-runtime</artifactId>
+  <version>{version}</version>
 </dependency>
 ```
 
 ### Basic examples
 
-See document to learn the [tutorials](https://otavia-projects.github.io/otavia/docs/quick_start/index.html).
+See document to learn the [tutorials](https://otavia-projects.github.io/otavia/docs/quick_start.html).
 
 ## Contributes
 

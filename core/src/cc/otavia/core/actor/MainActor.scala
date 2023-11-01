@@ -20,7 +20,7 @@ import cc.otavia.core.actor.MainActor.Args
 import cc.otavia.core.message.{Ask, Call, Notice}
 import cc.otavia.core.stack.{AskStack, NoticeStack, StackState}
 
-abstract class MainActor(val args: Array[String]) extends StateActor[Args] {
+abstract class MainActor(val args: Array[String] = Array.empty) extends StateActor[Args] {
 
     final override def afterMount(): Unit = {
         self.notice(Args(args))

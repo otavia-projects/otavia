@@ -76,8 +76,7 @@ ivy"cc.otavia::otavia-runtime:{version}"
 
 maven
 
-```xml
-
+```text
 <dependency>
     <groupId>cc.otavia</groupId>
     <artifactId>otavia-runtime</artifactId>
@@ -87,7 +86,7 @@ maven
 
 ### 基本示例
 
-查看 [教程](https://otavia-projects.github.io/otavia/docs/quick_start/index.html) 学习。
+查看 [教程](https://otavia-projects.github.io/otavia/docs/quick_start.html) 学习。
 
 ## 贡献
 
