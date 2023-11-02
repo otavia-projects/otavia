@@ -9,17 +9,19 @@
  </ul> 
  <p>The source code for all the following examples can be found at <a href="https://github.com/otavia-projects/otavia-examples">otavia-examples</a>.</p> 
 </section> 
-<section id="add-dependency-1"> 
- <h2 class="h500"><a href="#add-dependency-1" class="anchor"></a>Add dependency</h2> 
+<section id="add-dependencies-1"> 
+ <h2 class="h500"><a href="#add-dependencies-1" class="anchor"></a>Add dependencies</h2> 
  <p>If you use sbt, add the dependency:</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>libraryDependencies += "cc.otavia" %% "otavia-runtime" % "{version}"
+</span><span line-number="2" class=""><span class="tooltip-container"></span>libraryDependencies += "cc.otavia" %% "otavia-codec" % "{version}"
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
  <p>If you use mill:</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>ivy"cc.otavia::otavia-runtime:{version}"
+</span><span line-number="2" class=""><span class="tooltip-container"></span>ivy"cc.otavia::otavia-codec:{version}"
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
@@ -30,6 +32,11 @@
 </span><span line-number="3" class=""><span class="tooltip-container"></span>    &lt;artifactId&gt;otavia-runtime&lt;/artifactId&gt;
 </span><span line-number="4" class=""><span class="tooltip-container"></span>    &lt;version&gt;{version}&lt;/version&gt;
 </span><span line-number="5" class=""><span class="tooltip-container"></span>&lt;/dependency&gt;
+</span><span line-number="6" class=""><span class="tooltip-container"></span>&lt;dependency&gt;
+</span><span line-number="7" class=""><span class="tooltip-container"></span>    &lt;groupId&gt;cc.otavia&lt;/groupId&gt;
+</span><span line-number="8" class=""><span class="tooltip-container"></span>    &lt;artifactId&gt;otavia-codec&lt;/artifactId&gt;
+</span><span line-number="9" class=""><span class="tooltip-container"></span>    &lt;version&gt;{version}&lt;/version&gt;
+</span><span line-number="10" class=""><span class="tooltip-container"></span>&lt;/dependency&gt;
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
@@ -191,4 +198,4 @@
   <li><code>AutoCleanable.clean</code>:</li> 
  </ul> 
  <p><img src="../images/actor_life_cycle.drawio.svg" alt=""></p> 
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#environment-1">Environment</a></li><li><a href="#add-dependency-1">Add dependency</a></li><li><a href="#simple-ping-pong-actors-1">Simple Ping-Pong Actors</a><ul><li><a href="#defining-messages-1">Defining Messages</a></li><li><a href="#implementing-the-actor-1">Implementing the actor</a></li><li><a href="#running-the-actor-1">Running the actor</a></li></ul></li><li><a href="#actor-that-receives-multiple-types-of-messages-1">Actor that receives multiple types of messages</a></li><li><a href="#timer-3">Timer</a></li><li><a href="#lifecycle-of-actor-1">LifeCycle of Actor</a></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#environment-1">Environment</a></li><li><a href="#add-dependencies-1">Add dependencies</a></li><li><a href="#simple-ping-pong-actors-1">Simple Ping-Pong Actors</a><ul><li><a href="#defining-messages-1">Defining Messages</a></li><li><a href="#implementing-the-actor-1">Implementing the actor</a></li><li><a href="#running-the-actor-1">Running the actor</a></li></ul></li><li><a href="#actor-that-receives-multiple-types-of-messages-1">Actor that receives multiple types of messages</a></li><li><a href="#timer-3">Timer</a></li><li><a href="#lifecycle-of-actor-1">LifeCycle of Actor</a></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
