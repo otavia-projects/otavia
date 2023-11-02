@@ -51,7 +51,7 @@ trait Future[+V] {
      *  @return
      *    true if this operation has completed, otherwise false.
      */
-    def isDone: Boolean
+    def isDone: Boolean = isSuccess || isFailed
 
     /** Returns true if and only if the operation was completed and failed with [[TimeoutException]]. */
     final def isTimeout: Boolean = if (isFailed) causeUnsafe.isInstanceOf[TimeoutException] else false

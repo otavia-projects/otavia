@@ -30,9 +30,8 @@ trait QueueMapEntity {
     def isBarrier: Boolean
 
     @tailrec
-    private[inflight] final def findHashNode(id: Long): QueueMapEntity = {
+    private[inflight] final def findHashNode(id: Long): QueueMapEntity =
         if (id == entityId) this else if (hashNext eq null) null else hashNext.findHashNode(id)
-    }
 
     def cleanEntity(): Unit = {
         hashNext = null

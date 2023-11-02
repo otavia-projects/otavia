@@ -20,7 +20,7 @@ package cc.otavia.testkit
 
 import cc.otavia.core.address.Address
 import cc.otavia.core.message.{Ask, Reply, ReplyOf}
-import cc.otavia.core.stack.ReplyFuture
+import cc.otavia.core.stack.MessageFuture
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.testkit.ProbeActor
 
@@ -32,7 +32,7 @@ class TestProbe(system: ActorSystem) {
     def askAndExpect[M <: Ask[? <: Reply], R <: ReplyOf[M]: ClassTag](
         actor: Address[M],
         ask: M,
-        expect: ReplyFuture[R] => Boolean
+        expect: MessageFuture[R] => Boolean
     ): Boolean = {
         val result = Promise.apply[Boolean]()
         system.buildActor(() => new ProbeActor(actor, ask, expect, result))

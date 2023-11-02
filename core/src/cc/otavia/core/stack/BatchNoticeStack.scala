@@ -49,7 +49,7 @@ class BatchNoticeStack[N <: Notice] private () extends Stack {
 
 object BatchNoticeStack {
 
-    private val pool = new StackObjectPool[BatchNoticeStack[?]] {
+    private val pool = new StackPool[BatchNoticeStack[?]] {
         override protected def newObject(): BatchNoticeStack[?] = new BatchNoticeStack[Nothing]()
     }
 

@@ -82,7 +82,7 @@ class ChannelStack[+T <: AnyRef] private () extends Stack with QueueMapEntity {
 
 object ChannelStack {
 
-    private val stackPool = new StackObjectPool[ChannelStack[AnyRef]] {
+    private val stackPool = new StackPool[ChannelStack[AnyRef]] {
         override protected def newObject(): ChannelStack[AnyRef] = new ChannelStack()
     }
 

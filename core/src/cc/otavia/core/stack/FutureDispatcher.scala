@@ -26,8 +26,8 @@ private[core] abstract class FutureDispatcher {
 
     import FutureDispatcher.*
 
-    private var table: Array[AbstractPromise[?]] = _
-    private var mask: Int                        = tableSizeFor(initialCapacity) - 1
+    private var table: Array[MessagePromise[?]] = _
+    private var mask: Int                       = tableSizeFor(initialCapacity) - 1
 
     private var threshold: Int = newThreshold(tableSizeFor(initialCapacity))
 
@@ -40,7 +40,7 @@ private[core] abstract class FutureDispatcher {
 
     inline private def index(id: Long): Int = (id & mask).toInt
 
-    inline private def findNode(id: Long): AbstractPromise[?] = {
+    inline private def findNode(id: Long): MessagePromise[?] = {
         if (table ne null) {
             table(index(id)) match
                 case null    => null
@@ -48,42 +48,42 @@ private[core] abstract class FutureDispatcher {
         } else null
     }
 
-    final protected def push(promise: AbstractPromise[?]): Unit = {
-        if (table eq null) table = new Array[AbstractPromise[?]](tableSizeFor(initialCapacity))
+    final protected def push(promise: MessagePromise[?]): Unit = {
+        if (table eq null) table = new Array[MessagePromise[?]](tableSizeFor(initialCapacity))
         else if (contentSize + 1 >= threshold) resizeTable(table.length * 2)
         put0(promise)
     }
 
-    private final def put0(promise: AbstractPromise[?]): Unit = {
+    private final def put0(promise: MessagePromise[?]): Unit = {
         val idx = index(promise.id)
         table(idx) match
             case null => table(idx) = promise
             case old =>
                 var tail = old
-                while (tail._next ne null) tail = tail._next
-                tail._next = promise
+                while (tail.hashNext ne null) tail = tail.hashNext
+                tail.hashNext = promise
     }
 
-    final protected def pop(id: Long): AbstractPromise[?] = {
+    final protected def pop(id: Long): MessagePromise[?] = {
         val idx = index(id)
         val promise = table(idx) match
             case null => null
             case node if node.id == id =>
-                table(idx) = node._next
+                table(idx) = node.hashNext
                 contentSize -= 1
-                node._next = null
+                node.hashNext = null
                 node
             case node =>
                 var prev   = node
-                var cursor = node._next
+                var cursor = node.hashNext
                 while ((cursor ne null) && cursor.id != id) {
                     prev = cursor
-                    cursor = cursor._next
+                    cursor = cursor.hashNext
                 }
                 if (cursor ne null) {
-                    prev._next = cursor._next
+                    prev.hashNext = cursor.hashNext
                     contentSize -= 1
-                    cursor._next = null
+                    cursor.hashNext = null
                 }
                 cursor
 
@@ -97,7 +97,7 @@ private[core] abstract class FutureDispatcher {
 
     private final def resizeTable(newLen: Int): Unit = {
         val oldTable = table
-        table = new Array[AbstractPromise[?]](newLen)
+        table = new Array[MessagePromise[?]](newLen)
         mask = newLen - 1
         threshold = newThreshold(table.length)
 
@@ -105,8 +105,8 @@ private[core] abstract class FutureDispatcher {
             var cursor = node
             while (cursor ne null) {
                 val promise = cursor
-                cursor = cursor._next
-                promise._next = null
+                cursor = cursor.hashNext
+                promise.hashNext = null
                 put0(promise)
             }
         }

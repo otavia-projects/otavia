@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
  *  @tparam S
  *    type of [[Stack]]
  */
-private[core] abstract class StackObjectPool[S <: Stack] extends ActorThreadIsolatedObjectPool[S] {
+private[core] abstract class StackPool[S <: Stack] extends ActorThreadIsolatedObjectPool[S] {
 
     override def dropIfRecycleNotByCreated: Boolean = true
 

@@ -19,7 +19,7 @@ package cc.otavia.core.address
 import cc.otavia.core.actor.{AbstractActor, Actor}
 import cc.otavia.core.message.*
 import cc.otavia.core.stack.helper.FutureState
-import cc.otavia.core.stack.{AskStack, ReplyFuture}
+import cc.otavia.core.stack.{AskStack, MessageFuture}
 
 import scala.reflect.ClassTag
 
@@ -48,7 +48,7 @@ trait Address[-M <: Call] extends EventableAddress {
      *    the type of ask message
      */
     // format: off
-    def ask[A <: M & Ask[? <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using sender: AbstractActor[?]): ReplyFuture[ReplyOf[A]]
+    def ask[A <: M & Ask[? <: Reply]](ask: A, future: MessageFuture[ReplyOf[A]])(using sender: AbstractActor[?]): MessageFuture[ReplyOf[A]]
     // format: on
 
     // format: off
@@ -60,7 +60,8 @@ trait Address[-M <: Call] extends EventableAddress {
     }
 
     /** send ask message to this address, and set [[timeout]] milliseconds to get the respect [[Reply]], otherwise the
-     *  [[ReplyFuture]] will set [[scala.concurrent.TimeoutException]].
+     *  [[MessageFuture]] will set [[scala.concurrent.TimeoutException]].
+ *
      *  @param ask
      *    ask message to send
      *  @param f
@@ -73,7 +74,7 @@ trait Address[-M <: Call] extends EventableAddress {
      *    the type of ask message
      */
     // format: off
-    def ask[A <: M & Ask[? <: Reply]](ask: A, f: ReplyFuture[ReplyOf[A]], timeout: Long)(using sender: AbstractActor[?]): ReplyFuture[ReplyOf[A]]
+    def ask[A <: M & Ask[? <: Reply]](ask: A, f: MessageFuture[ReplyOf[A]], timeout: Long)(using sender: AbstractActor[?]): MessageFuture[ReplyOf[A]]
     // format: on
 
     /** send a reply message to this address, this method can not be use by user, use [[AskStack.`return`]] instead.

@@ -17,23 +17,27 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.cache.Poolable
+import cc.otavia.core.timer.Timer
 
 import scala.annotation.tailrec
 import scala.language.unsafeNulls
 
 /** An abstract class for [[Promise]] */
-abstract class AbstractPromise[V] extends Promise[V] with Poolable {
+abstract class AbstractPromise[V] extends Promise[V] with Future[V] with Poolable {
 
     protected var stack: Stack = _
     protected var aid: Long    = -1
 
-    /** Used by [[FutureDispatcher]], this class is see as Node in hashmap */
-    private[stack] var _next: AbstractPromise[?] = _
+    private var tid: Long = Timer.INVALID_TIMEOUT_REGISTER_ID
 
-    @tailrec
-    private[stack] final def findNode(id: Long): AbstractPromise[?] = {
-        if (id == aid) this else if (_next eq null) null else _next.findNode(id)
-    }
+    protected var result: AnyRef   = _
+    protected var error: Throwable = _
+
+    def setTimeoutId(id: Long): Unit = tid = id
+
+    def timeoutId: Long = tid
+
+    final override def canTimeout: Boolean = tid != Timer.INVALID_TIMEOUT_REGISTER_ID
 
     final override def actorStack: Stack        = stack
     final override def setStack(s: Stack): Unit = stack = s
@@ -41,11 +45,29 @@ abstract class AbstractPromise[V] extends Promise[V] with Poolable {
     final def id: Long              = aid
     final def setId(id: Long): Unit = aid = id
 
+    override def isSuccess: Boolean = result ne null
+
+    override def isFailed: Boolean = error ne null
+
+    override def getNow: V = if (result == null && error == null) throw new IllegalStateException("not completed yet")
+    else if (error != null) throw error
+    else result.asInstanceOf[V]
+
+    override def cause: Option[Throwable] = if (result == null && error == null)
+        throw new IllegalStateException("not completed yet")
+    else Option(error)
+
+    override def causeUnsafe: Throwable = if (result == null && error == null)
+        throw new IllegalStateException("not completed yet")
+    else if (result != null) throw new IllegalStateException("the future is success")
+    else error
+
     override protected def cleanInstance(): Unit = {
         stack = null
         aid = -1
+        tid = Timer.INVALID_TIMEOUT_REGISTER_ID
+        result = null
+        error = null
     }
-
-    override def canTimeout: Boolean = false
 
 }

@@ -22,7 +22,7 @@ import cc.otavia.core.timer.TimeoutTrigger
 
 import java.util.concurrent.TimeUnit
 
-abstract class PromiseObjectPool[P <: AbstractPromise[?]] extends ActorThreadIsolatedObjectPool[P] {
+abstract class PromisePool[P <: AbstractPromise[?]] extends ActorThreadIsolatedObjectPool[P] {
 
     override def dropIfRecycleNotByCreated: Boolean = true
 

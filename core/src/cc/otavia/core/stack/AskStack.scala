@@ -68,7 +68,7 @@ final class AskStack[A <: Ask[? <: Reply]] private () extends Stack {
 
 object AskStack {
 
-    private val stackPool = new StackObjectPool[AskStack[? <: Ask[?]]] {
+    private val stackPool = new StackPool[AskStack[? <: Ask[?]]] {
         override protected def newObject(): AskStack[? <: Ask[?]] = new AskStack[Nothing]()
     }
 

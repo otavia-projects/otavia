@@ -22,7 +22,7 @@ import cc.otavia.core.actor.{ChannelsActor, SocketChannelsActor}
 import cc.otavia.core.channel.*
 import cc.otavia.core.message.*
 import cc.otavia.core.stack.*
-import cc.otavia.core.stack.helper.ChannelReplyFutureState
+import cc.otavia.core.stack.helper.ChannelFutureState
 import cc.otavia.handler.codec.redis.RedisCodec
 import cc.otavia.redis.cmd.*
 
@@ -57,10 +57,10 @@ class Client extends SocketChannelsActor[Command[? <: CommandResponse] | Connect
     private def handleCommand(stack: AskStack[Command[? <: CommandResponse]]): Option[StackState] = {
         stack.state match
             case StackState.start =>
-                val state = ChannelReplyFutureState()
+                val state = ChannelFutureState()
                 channel.ask(stack.ask, state.future)
                 state.suspend()
-            case state: ChannelReplyFutureState =>
+            case state: ChannelFutureState =>
                 if (state.future.isSuccess)
                     stack.`return`(state.future.getNow.asInstanceOf[ReplyOf[Command[? <: CommandResponse]]])
                 else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))

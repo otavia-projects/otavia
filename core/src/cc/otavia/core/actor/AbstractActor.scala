@@ -96,17 +96,12 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         promise.setId(askId)
         currentStack.addUncompletedPromise(promise)
         promise match
-            case promise: ReplyPromise[? <: Reply] =>
+            case promise: MessagePromise[? <: Reply] =>
                 sendAsks += 1
                 assert(promise.notInChain, "The ReplyFuture has been used, can't be use again!")
                 this.push(promise)
-            case promise: TimeoutEventPromise =>
-                assert(promise.notInChain, "The TimeoutEventPromise has been used, can't be use again!")
-                this.push(promise)
             case promise: ChannelPromise =>
                 assert(promise.notInChain, "The ChannelPromise has been used, can't be use again!")
-            case promise: ChannelReplyPromise =>
-                assert(promise.notInChain, "The ChannelReplyPromise has been used, can't be use again!")
             case _ =>
     }
 
@@ -153,20 +148,20 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         if (!reply.isBatch) {
             // reply future maybe has been recycled cause by time-out, or it stack has been throw an error.
             if (this.contains(reply.replyId)) {
-                val promise = this.pop(reply.replyId).asInstanceOf[ReplyPromise[?]]
+                val promise = this.pop(reply.replyId)
                 if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
                 receiveReply0(reply, promise)
             }    // drop reply otherwise
         } else { // reply is batch
             for ((senderId, rid) <- reply.replyIds if senderId == actorId && contains(rid)) {
-                val promise = pop(rid).asInstanceOf[ReplyPromise[?]]
+                val promise = pop(rid)
                 if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
                 receiveReply0(reply, promise)
             }
         }
     }
 
-    private def receiveReply0(reply: Reply, promise: ReplyPromise[?]): Unit = {
+    private def receiveReply0(reply: Reply, promise: MessagePromise[?]): Unit = {
         currentReceived = reply
         reply match
             case message: ExceptionMessage => promise.setFailure(message)
@@ -181,6 +176,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         case event: TimeoutEvent        => handleActorTimeout(event)
         case event: ChannelTimeoutEvent => receiveChannelTimeoutEvent(event)
         case event: ReactorEvent        => receiveReactorEvent(event)
+        case _                          =>
     }
 
     private def dispatchNoticeStack(stack: NoticeStack[M & Notice]): Unit = {
@@ -236,9 +232,12 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     private def dispatchAskTimeoutEvent(timeoutEvent: AskTimeoutEvent): Unit = {
         val promise = this.pop(timeoutEvent.askId)
         if (promise != null) {
-            promise match
-                case promise: TimeoutEventPromise => promise.setSuccess(timeoutEvent)
-                case promise: ReplyPromise[?]     => promise.setFailure(new TimeoutException())
+            if (promise.canTimeout) promise.setFailure(new TimeoutException())
+            else {
+                val timeoutReply = TimeoutReply()
+                timeoutReply.setReplyId(promise.id)
+                promise.setSuccess(TimeoutReply())
+            }
 
             val stack = promise.actorStack
             handlePromiseCompleted(stack, promise)
@@ -275,10 +274,6 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     private def recycleUncompletedPromise(uncompleted: PromiseIterator): Unit = while (uncompleted.hasNext) {
         val promise = uncompleted.next()
         this.pop(promise.id)
-        promise match
-            case promise: ChannelReplyPromise => promise.setStack(null)
-            case promise: ChannelPromise      => promise.setStack(null)
-            case _                            =>
         promise.recycle()
     }
 

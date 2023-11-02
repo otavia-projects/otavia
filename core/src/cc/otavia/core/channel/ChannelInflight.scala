@@ -17,7 +17,7 @@
 package cc.otavia.core.channel
 
 import cc.otavia.core.message.{Event, ReactorEvent}
-import cc.otavia.core.stack.{ChannelFuture, ChannelReplyFuture, Future}
+import cc.otavia.core.stack.{ChannelFuture, Future}
 
 import java.net.SocketAddress
 

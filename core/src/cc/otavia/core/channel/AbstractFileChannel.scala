@@ -21,7 +21,7 @@ package cc.otavia.core.channel
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.message.ReactorEvent
-import cc.otavia.core.stack.{ChannelPromise, ChannelReplyFuture}
+import cc.otavia.core.stack.{ChannelFuture, ChannelPromise}
 import cc.otavia.core.system.ActorSystem
 
 import java.net.SocketAddress

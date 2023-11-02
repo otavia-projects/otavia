@@ -76,3 +76,5 @@ trait Reply extends Message {
     def isBatch: Boolean = batch
 
 }
+
+case class TimeoutReply() extends Reply

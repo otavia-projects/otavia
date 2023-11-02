@@ -34,13 +34,13 @@ private[core] trait Promise[V] {
      *
      *  If it is success or failed already it will throw an [[IllegalStateException]].
      */
-    def setSuccess(result: V): Promise[V]
+    def setSuccess(result: AnyRef): Unit
 
     /** Marks this promise as a failure.
      *
      *  If it is success or failed already it will throw an [[IllegalStateException]].
      */
-    def setFailure(cause: Throwable): Promise[V]
+    def setFailure(cause: Throwable): Unit
 
     /** Return the [[Future]] instance is associated with this promise. This future will be completed upon completion of
      *  this promise.

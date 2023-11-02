@@ -19,7 +19,7 @@ package cc.otavia.core.stack.helper
 import cc.otavia.core.cache.*
 import cc.otavia.core.message.Reply
 import cc.otavia.core.stack.helper.FutureState.pool
-import cc.otavia.core.stack.{ReplyFuture, StackState, StackStatePool}
+import cc.otavia.core.stack.{MessageFuture, StackState, StackStatePool}
 import cc.otavia.core.system.ActorThread
 import cc.otavia.core.timer.TimeoutTrigger
 
@@ -32,9 +32,9 @@ import scala.reflect.{ClassTag, TypeTest, Typeable, classTag}
 final class FutureState[R <: Reply] private () extends StackState with Poolable {
 
     private var stateId: Int       = 0
-    private var fu: ReplyFuture[R] = _
+    private var fu: MessageFuture[R] = _
 
-    def future: ReplyFuture[R] = fu
+    def future: MessageFuture[R] = fu
 
     override def id: Int = stateId
 
@@ -52,13 +52,13 @@ object FutureState {
     def apply[R <: Reply](stateId: Int): FutureState[R] = {
         val state = pool.get().asInstanceOf[FutureState[R]]
         state.stateId = stateId
-        state.fu = ReplyFuture()
+        state.fu = MessageFuture()
         state
     }
 
     def apply[R <: Reply](): FutureState[R] = {
         val state = pool.get().asInstanceOf[FutureState[R]]
-        state.fu = ReplyFuture()
+        state.fu = MessageFuture()
         state
     }
 

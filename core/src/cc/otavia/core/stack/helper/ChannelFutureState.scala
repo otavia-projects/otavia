@@ -17,7 +17,7 @@
 package cc.otavia.core.stack.helper
 
 import cc.otavia.core.cache.Poolable
-import cc.otavia.core.stack.{ChannelFuture, ReplyFuture, StackState, StackStatePool}
+import cc.otavia.core.stack.{ChannelFuture, MessageFuture, StackState, StackStatePool}
 
 import scala.language.unsafeNulls
 

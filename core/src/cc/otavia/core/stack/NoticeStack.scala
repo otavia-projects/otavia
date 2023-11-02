@@ -50,7 +50,7 @@ final class NoticeStack[N <: Notice] private () extends Stack {
 
 object NoticeStack {
 
-    private val stackPool = new StackObjectPool[NoticeStack[? <: Notice]] {
+    private val stackPool = new StackPool[NoticeStack[? <: Notice]] {
         override protected def newObject(): NoticeStack[? <: Notice] = new NoticeStack[Nothing]()
     }
 

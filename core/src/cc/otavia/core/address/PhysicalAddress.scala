@@ -18,7 +18,7 @@ package cc.otavia.core.address
 
 import cc.otavia.core.actor.{AbstractActor, Actor, ChannelsActor, StateActor}
 import cc.otavia.core.message.*
-import cc.otavia.core.stack.ReplyFuture
+import cc.otavia.core.stack.MessageFuture
 import cc.otavia.core.system.{ActorHouse, House}
 import cc.otavia.core.timer.TimeoutTrigger
 
@@ -34,7 +34,7 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
     private[core] val house: ActorHouse
 
     // format: off
-    override def ask[A <: M & Ask[? <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using sender: AbstractActor[?]): ReplyFuture[ReplyOf[A]] = {
+    override def ask[A <: M & Ask[? <: Reply]](ask: A, future: MessageFuture[ReplyOf[A]])(using sender: AbstractActor[?]): MessageFuture[ReplyOf[A]] = {
         // format: on
         ask.setAskContext(sender)
         sender.attachStack(ask.askId, future)
@@ -43,7 +43,7 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
     }
 
     // format: off
-    override def ask[A <: M & Ask[? <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]], timeout: Long)(using sender: AbstractActor[?]): ReplyFuture[ReplyOf[A]] = {
+    override def ask[A <: M & Ask[? <: Reply]](ask: A, future: MessageFuture[ReplyOf[A]], timeout: Long)(using sender: AbstractActor[?]): MessageFuture[ReplyOf[A]] = {
         // format: on
         this.ask(ask, future)
         val promise = future.promise

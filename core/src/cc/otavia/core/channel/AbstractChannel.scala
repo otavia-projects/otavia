@@ -54,9 +54,9 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     private var maxFutureInflight: Int           = 1
 
     // outbound futures which is write to channel and wait channel reply
-    private val inflightFutures: QueueMap[ChannelReplyPromise] = new QueueMap[ChannelReplyPromise]()
+    private val inflightFutures: QueueMap[ChannelPromise] = new QueueMap[ChannelPromise]()
     // outbound futures which is waiting channel to send
-    private val pendingFutures: QueueMap[ChannelReplyPromise] = new QueueMap[ChannelReplyPromise]()
+    private val pendingFutures: QueueMap[ChannelPromise] = new QueueMap[ChannelPromise]()
     // inbound stack which is running by actor
     private val inflightStacks: QueueMap[ChannelStack[?]] = new QueueMap[ChannelStack[?]]()
     // inbound stack to wait actor running
@@ -221,11 +221,12 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     // end impl ChannelInflight
 
     // impl ChannelAddress
-    override def ask(value: AnyRef, future: ChannelReplyFuture): ChannelReplyFuture = {
+    override def ask(value: AnyRef, future: ChannelFuture): ChannelFuture = {
         val promise = future.promise
         promise.setMessageId(generateMessageId)
         promise.setBarrier(stackBarrier(value))
         promise.setAsk(value)
+        promise.setChannel(this)
         actor.attachStack(actor.generateSendMessageId(), future)
         pendingFutures.append(promise)
         processPendingFutures()

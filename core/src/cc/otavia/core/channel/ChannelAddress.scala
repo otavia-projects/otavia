@@ -19,7 +19,7 @@ package cc.otavia.core.channel
 import cc.otavia.core.actor.{Actor, ChannelsActor}
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.reactor.Reactor
-import cc.otavia.core.stack.{ChannelFuture, ChannelReplyFuture, Future}
+import cc.otavia.core.stack.{ChannelFuture, Future}
 import cc.otavia.core.system.ActorSystem
 
 import java.io.File
@@ -276,7 +276,7 @@ trait ChannelAddress {
      *  @return
      *    the reply message future.
      */
-    def ask(value: AnyRef, future: ChannelReplyFuture): ChannelReplyFuture
+    def ask(value: AnyRef, future: ChannelFuture): ChannelFuture
 
     // actor send notice message to channel
     def notice(value: AnyRef): Unit

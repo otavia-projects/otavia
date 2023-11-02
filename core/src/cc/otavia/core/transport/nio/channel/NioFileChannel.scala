@@ -22,7 +22,6 @@ import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.*
 import cc.otavia.core.channel.message.{FileReadPlan, ReadPlan, ReadPlanFactory}
 import cc.otavia.core.message.ReactorEvent
-import cc.otavia.core.stack.{ChannelPromise, ChannelReplyFuture}
 import cc.otavia.core.system.ActorSystem
 
 import java.io.File

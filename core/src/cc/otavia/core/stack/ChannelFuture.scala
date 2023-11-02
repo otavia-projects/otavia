@@ -17,6 +17,7 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.actor.{AbstractActor, ChannelsActor}
+import cc.otavia.core.channel.inflight.QueueMapEntity
 import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.timer.Timer
@@ -24,7 +25,7 @@ import cc.otavia.core.timer.Timer
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-trait ChannelFuture extends Future[ReactorEvent] {
+trait ChannelFuture extends Future[AnyRef] {
 
     override private[core] def promise: ChannelPromise = this.asInstanceOf[ChannelPromise]
 
@@ -34,7 +35,7 @@ trait ChannelFuture extends Future[ReactorEvent] {
 
 object ChannelFuture {
 
-    private[stack] val pool = new PromiseObjectPool[ChannelPromise] {
+    private[stack] val pool = new PromisePool[ChannelPromise] {
         override protected def newObject(): ChannelPromise = new ChannelPromise()
     }
 
@@ -42,22 +43,36 @@ object ChannelFuture {
 
 }
 
-final private[core] class ChannelPromise extends TimeoutablePromise[ReactorEvent] with ChannelFuture {
+final private[core] class ChannelPromise extends AbstractPromise[AnyRef] with ChannelFuture with QueueMapEntity {
 
-    private var ch: Channel                              = _
-    private var event: ReactorEvent                      = _
-    private var throwable: Throwable                     = _
-    private var listeners: mutable.Queue[ChannelPromise] = _
-    private var callback: ChannelPromise => Unit         = _
+    private var ch: Channel                      = _
+    private var ask: AnyRef                      = _
+    private var callback: ChannelPromise => Unit = _
+
+    private var msgId: Long      = -1
+    private var barrier: Boolean = false
+
+    def setMessageId(id: Long): Unit = this.msgId = id
+
+    def messageId: Long = msgId
+
+    override def entityId: Long = msgId
+
+    def setAsk(ask: AnyRef): Unit = this.ask = ask
+
+    def getAsk(): AnyRef = {
+        val v = ask
+        this.ask = null
+        v
+    }
+
+    def setBarrier(barrier: Boolean): Unit = this.barrier = barrier
+
+    def isBarrier: Boolean = barrier
 
     private[core] def setChannel(channel: Channel): Unit = ch = channel
 
     def channel: ChannelAddress = ch
-
-    def addListener(listener: ChannelPromise): Unit = {
-        if (listeners == null) listeners = mutable.Queue.empty
-        listeners.enqueue(listener)
-    }
 
     private def completed(): Unit = {
         if (callback ne null) execute(callback)
@@ -67,16 +82,14 @@ final private[core] class ChannelPromise extends TimeoutablePromise[ReactorEvent
         }
     }
 
-    override def setSuccess(result: ReactorEvent): ChannelPromise = {
-        event = result
+    override def setSuccess(result: AnyRef): Unit = {
+        this.result = result
         this.completed()
-        this
     }
 
-    override def setFailure(cause: Throwable): ChannelPromise = {
-        throwable = cause
+    override def setFailure(cause: Throwable): Unit = {
+        error = cause
         this.completed()
-        this
     }
 
     override def future: ChannelFuture = this
@@ -85,35 +98,14 @@ final private[core] class ChannelPromise extends TimeoutablePromise[ReactorEvent
 
     override protected def cleanInstance(): Unit = {
         ch = null
-        event = null
-        throwable = null
+        ask = null
         callback = null
+        msgId = -1
+        barrier = false
         super.cleanInstance()
     }
 
-    override def isSuccess: Boolean = event ne null
-
-    override def isFailed: Boolean = throwable ne null
-
-    override def isDone: Boolean = isSuccess || isFailed
-
-    override def getNow: ReactorEvent = if (event == null && throwable == null)
-        throw new IllegalStateException("not completed yet")
-    else if (throwable != null) throw throwable
-    else event
-
-    override def cause: Option[Throwable] = Option(throwable)
-
-    override def causeUnsafe: Throwable = if (event == null && throwable == null)
-        throw new IllegalStateException("not completed yet")
-    else if (event != null) throw new IllegalStateException("the future is success")
-    else throwable
-
-    def execute(task: ChannelPromise => Unit): Unit = task(this)
-
-    def onSuccess(task: ChannelPromise => Unit): Unit = ???
-
-    def onFailure(task: ChannelPromise => Unit): Unit = ???
+    private def execute(task: ChannelPromise => Unit): Unit = task(this)
 
     def onCompleted(task: ChannelPromise => Unit): Unit = if (isDone) execute(task) else callback = task
 

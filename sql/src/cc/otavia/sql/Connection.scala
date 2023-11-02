@@ -62,10 +62,10 @@ class Connection(override val family: ProtocolFamily = StandardProtocolFamily.IN
                 connect(options.socketAddress, None)
             case state: ChannelFutureState => // waiting to authentication
                 channel = state.future.channel
-                val authState = ChannelReplyFutureState()
+                val authState = ChannelFutureState()
                 channel.ask(stack.ask, authState.future)
                 authState.suspend()
-            case state: ChannelReplyFutureState => // return authenticate result
+            case state: ChannelFutureState => // return authenticate result
                 if (state.future.isSuccess) stack.`return`(ConnectReply(channel.id))
                 else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
     }

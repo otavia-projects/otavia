@@ -20,7 +20,7 @@ import cc.otavia.core.actor.AbstractActor
 import cc.otavia.core.message.{Ask, Call, Notice, Reply}
 import cc.otavia.core.actor.AbstractActor
 import cc.otavia.core.message.*
-import cc.otavia.core.stack.ReplyFuture
+import cc.otavia.core.stack.MessageFuture
 
 class RobinAddress[M <: Call](val underlying: Array[Address[M]]) extends ProxyAddress[M] {
 
@@ -33,16 +33,16 @@ class RobinAddress[M <: Call](val underlying: Array[Address[M]]) extends ProxyAd
         underlying(index).notice(notice)
     }
 
-    override def ask[A <: M & Ask[_ <: Reply]](ask: A, future: ReplyFuture[ReplyOf[A]])(using
-        sender: AbstractActor[? <: Call]
-    ): ReplyFuture[ReplyOf[A]] = {
+    override def ask[A <: M & Ask[_ <: Reply]](ask: A, future: MessageFuture[ReplyOf[A]])(using
+                                                                                          sender: AbstractActor[? <: Call]
+    ): MessageFuture[ReplyOf[A]] = {
         val address = getAddress
         address.ask(ask, future)
     }
 
-    override def ask[A <: M & Ask[_ <: Reply]](ask: A, f: ReplyFuture[ReplyOf[A]], timeout: Long)(using
-        sender: AbstractActor[? <: Call]
-    ): ReplyFuture[ReplyOf[A]] = {
+    override def ask[A <: M & Ask[_ <: Reply]](ask: A, f: MessageFuture[ReplyOf[A]], timeout: Long)(using
+                                                                                                    sender: AbstractActor[? <: Call]
+    ): MessageFuture[ReplyOf[A]] = {
         val address = getAddress
         address.ask(ask, f, timeout)
     }
