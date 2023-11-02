@@ -18,18 +18,20 @@ following information.
 The source code for all the following examples can be found
 at [otavia-examples](https://github.com/otavia-projects/otavia-examples).
 
-## Add dependency
+## Add dependencies
 
 If you use sbt, add the dependency:
 
 ```scala
 libraryDependencies += "cc.otavia" %% "otavia-runtime" % "{version}"
+libraryDependencies += "cc.otavia" %% "otavia-codec" % "{version}"
 ```
 
 If you use mill:
 
 ```scala
 ivy"cc.otavia::otavia-runtime:{version}"
+ivy"cc.otavia::otavia-codec:{version}"
 ```
 
 if maven:
@@ -38,6 +40,11 @@ if maven:
 <dependency>
     <groupId>cc.otavia</groupId>
     <artifactId>otavia-runtime</artifactId>
+    <version>{version}</version>
+</dependency>
+<dependency>
+    <groupId>cc.otavia</groupId>
+    <artifactId>otavia-codec</artifactId>
     <version>{version}</version>
 </dependency>
 ```

@@ -9,7 +9,7 @@ title: 快速开始
 ![Static Badge](https://img.shields.io/badge/Scala-3.3%2B-blue)
 
 `otavia` 虽然主要运行在JVM平台上，但是为了保证可靠的编译时类型安全，目前只支持 `Scala 3`, 如果您对 `Scala 3`
-目前不是很熟悉，您可以参考以下资料进行学习。
+不是很熟悉，您可以参考以下资料进行学习。
 
 - 基础知识（对于学习 `otavia` 足够了）: [Scala 3 Book](https://docs.scala-lang.org/zh-cn/scala3/book/introduction.html)
 - 高级知识：[Scala 3 Language Reference](https://docs.scala-lang.org/scala3/reference/)
@@ -18,7 +18,8 @@ title: 快速开始
 
 ## 添加依赖
 
-如果您使用 sbt , 请添加以下依赖：
+如果您使用 sbt , 请添加以下依赖，其中 version =
+![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/cc.otavia/otavia-runtime_3?server=https%3A%2F%2Fs01.oss.sonatype.org)
 
 ```scala
 libraryDependencies += "cc.otavia" %% "otavia-runtime" % "{version}"
@@ -49,12 +50,12 @@ ivy"cc.otavia::otavia-codec:{version}"
 
 ## 简单的 Ping-Pong Actors
 
-这个简单的示例定义了两个 `Actor`: `PingActor` 和 `PongActor`, `PingActor` 接收 `Start` 消息，并且向 `PongActor `
+这个简单的示例定义了两个 `Actor`: `PingActor` 和 `PongActor`, `PingActor` 接收 `Start` 消息，并且向 `PongActor`
 发送 `Ping` 消息， 每个发送的 `Ping` 消息都必须对应一个 `Pong` 回复消息。
 
 ### 定义消息
 
-根据以上描述，我们需要3种消息，这3种消息分别代表3种不同角色的消息，这也是 `otavia` 3种基本的消息类型。`Start`
+根据以上描述，我们需要3种消息，这3种消息分别代表3种不同角色，这也是 `otavia` 3种基本的消息类型。`Start`
 消息是一种 `Notice` 消息， `Notice` 消息是 `otavia` 中一种不需要获得回复的消息，只要有相关 `Actor` 的地址，
 您就可以向 `Actor` 发送 `Notice` 消息；`Ping` 是一种 `Ask` 消息，这种消息必须对应一种回复消息，如果一个 `Actor` 向
 其他 `Actor` 发送了这种消息，就意味着他必须收到一个对应的回复消息（有点像方法定义中的方法参数）；`Pong` 是一种回复消息，
@@ -67,7 +68,7 @@ case class Start(sid: Int) extends Notice
 ```
 
 `Pong` 必须继承 `Reply` trait, `Ping` 是 `Ask` 类型的消息，必须继承 `Ask` trait, `Ask` trait 带有一个类型约束，
-用来描述这个 `Ask` 消息期望获得的回复的消息类型
+用来描述这个 `Ask` 消息期望获得的回复的消息类型。
 
 ```scala
 case class Pong(pingId: Int) extends Reply
@@ -77,13 +78,13 @@ case class Ping(id: Int) extends Ask[Pong]
 
 ### 实现 Actor
 
-有了消息之后，我们来定义我们 Actor。
+有了消息之后，我们来定义我们的 `Actor`。
 
 首先我们确定我们的 `Actor` 能接收的消息类型，因为 `otavia` 是一种消息类型安全的 `Actor` 编程框架，所以我们先来确定每种
 `Actor` 能接收的消息类型： `PingActor` 能接收 `Start` 消息和 `Pong` 消息，`PongActor` 接收 `Ping` 消息并且回复
 `Pong` 消息。因为在 `otavia` 中回复消息通过 `Ask` 消息进行约束，所以在 `Actor` 的定义中就不需要对这种消息进行约束，由
 于 `PingActor` 需要给 `PongActor` 发送消息，所以 `PingActor` 需要知道 `PongActor` 的地址。 大概能定义出我们
-的Actor的类名及泛型参数如下：
+的 `Actor` 的类及泛型参数如下：
 
 ```scala
 final class PongActor() extends StateActor[Ping] {
@@ -105,11 +106,12 @@ final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start]
 
 ```scala
 final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
+
   override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
     case _: StartState =>
       println("PingActor handle Start message")
       println("PingActor send Ping Message")
-      val state = FutureState(1)
+      val state = FutureState[Pong](1)
       pongActorAddress.ask(Ping(stack.notice.sid), state.future)
       state.suspend()
     case state: FutureState[Pong] if state.id == 1 =>
@@ -120,11 +122,12 @@ final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start]
       }
       stack.`return`()
   }
+
 }
 ```
 
-`continueNotice` 是 `Actor` 处理 `Notice` 消息的入口，从其他地方发送来的 `Notice` 消息都会从这个方法传入 `Actor`,
-接下来我们来实现 `PongActor`, `PongActor` 接收 `Ping` 这种 `Ask` 消息，然后回复一个 `Pong` `Reply` 消息：
+`continueNotice` 是 `Actor` 处理 `Notice` 消息的入口，从其他地方发送来的 `Notice` 消息都会通过这个方法传入 `Actor`,
+接下来我们来实现 `PongActor`, `PongActor` 接收 `Ping` 这种 `Ask` 消息，然后回复一个 `Pong` 消息：
 
 ```scala
 final class PongActor() extends StateActor[Ping] {
@@ -136,15 +139,19 @@ final class PongActor() extends StateActor[Ping] {
 }
 ```
 
-`continueAsk` 是 `Actor` 处理 `Ask` 消息的入口，从其他地方发送来的 `Ask` 消息都会从这个方法传入 `Actor`。
+`continueAsk` 是 `Actor` 处理 `Ask` 消息的入口，从其他 `Actor` 发送来的 `Ask` 消息都会从这个方法传入 `Actor`。
 
-我们可以发现，处理消息 `continueXXX` 的方法并不是直接处理消息，而是将消息装入了 `Stack` 中，`Notice` 消息装入
-`NoticeStack` 中，`Ask` 消息装入 `AskStack` 中。在 `otavia` 中，为了方便管理消息的依赖关系和发送 `Reply`
-消息，引入了 `Stack` 这种数据结构，引入了 `Future` 来接收 `Ask` 消息的返回 `Reply` 消息（注意这里的 `Future` 不是 scala
+我们可以发现， `Actor` 内处理消息的 `continueXXX` 方法并不是直接处理消息，而是将消息装入了 `Stack` 中，`Notice` 消息装入
+`NoticeStack` 中，`Ask` 消息装入 `AskStack` 中。在 `otavia` 中，为了方便管理消息的依赖关系和安全的发送 `Reply`
+消息，引入了 `Stack` 这种数据结构。同时引入了 `Future` 来接收 `Ask` 消息的返回 `Reply` 消息（注意这里的 `Future` 不是 scala
 标准库的 `Future`） ，为了等待 `Future` 达到可执行状态，引入了 `StackState` ， 一个 `StackState` 可以关联一个或者多个
 `Future` , 只有当 `StackState` 的 `resumable` 方法为 `ture` 或者关联的所有的 `Future` 都达到完成状态的时候，这个
-`Stack` 才可以继续被调度执行，`continueXXX` 每次执行的时候从一个状态开始，结束的时候返回 `Option[StackState]`，
-`return` 方法用于结束 `Stack`, 如果是 `AskStack`，`return` 方法用于发送 `AskStack` 中 `Ask` 消息的返回 `Reply` 消息。
+`Stack` 才可以继续被调度执行，`continueXXX` 每次执行的时候从一个状态开始，结束的时候返回 `Option[StackState]`
+，即代表 `Stack` 进入一个新的状态。`StackState` 的 `suspend` 方法返回 `Option[StackState]`。`return` 方法返回 `None`
+用于结束 `Stack`。如果是 `AskStack`，`return` 方法用于发送 `AskStack` 中 `Ask` 消息的返回 `Reply` 消息。
+
+一个 `Stack` 只能有一个 `StackState`，初始的状态为 `StartStack`，每次 `continueXXX`执行完成就切换到一个新的
+`StackState`, 最后的 `return` 方法将返回 `None`，代表 `Stack` 完成！
 
 ![](../../_assets/images/stack_resume.drawio.svg)
 
@@ -269,13 +276,13 @@ final class TickActor() extends StateActor[Nothing] { // [Nothing] if no message
 让我们改造一下之前的 `PingActor`，现在我们要求这个Actor收到 `Start` 消息之后发送 `Ping` 请求，然后收到 `Pong` 消息的时候
 同时需要等待2秒才能继续调度这个 `NoticeStack` 执行。
 
-现在 `FutureState` 已经不能满足我们的需求了，因为其只绑定了一个 `ReplyFuture`, 现在我们不仅需要绑定 `ReplyFuture`，还需要
+现在 `FutureState` 已经不能满足我们的需求了，因为其只绑定了一个 `MessageFuture`, 现在我们不仅需要绑定 `MessageFuture`，还需要
 绑定 `TimeoutEventFuture`，只有这两种 `Future` 都完成的时候才开始执行这个 `Stack`。让我们来定义我们新的 `StackState` 吧。
 
 ```scala
 class PongTimeoutState extends StackState {
-  val pongFuture = ReplyFuture[Pong]()
-  val timeoutFuture = TimeoutEventFuture()
+  val pongFuture = MessageFuture[Pong]()
+  val timeoutFuture = MessageFuture[TimeoutReply]()
 }
 ```
 
@@ -315,8 +322,8 @@ final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start]
 
 ```scala
 class PongTimeoutState extends StackState {
-  val pongFuture = ReplyFuture[Pong]()
-  val timeoutFuture = TimeoutEventFuture()
+  val pongFuture = MessageFuture[Pong]()
+  val timeoutFuture = MessageFuture[TimeoutReply]()
 
   override def resumable(): Boolean = timeoutFuture.isDone
 }
@@ -459,11 +466,11 @@ final class ReadLinesActor(file: File, charset: Charset = StandardCharsets.UTF_8
     stack.state match {
       case StackState.start =>
         openFileChannel(file, Seq(StandardOpenOption.READ), attrs = Seq.empty)
-      case openState: ChannelFutureState =>
-        val linesState = ChannelReplyFutureState()
+      case openState: ChannelFutureState if openState.id == 0 =>
+        val linesState = ChannelFutureState(1)
         openState.future.channel.ask(FileReadPlan(-1, -1), linesState.future)
         linesState.suspend()
-      case linesState: ChannelReplyFutureState =>
+      case linesState: ChannelFutureState if linesState.id == 1 =>
         stack.`return`(LinesReply(linesState.future.getNow.asInstanceOf[Seq[String]]))
     }
   }
@@ -492,7 +499,7 @@ state.suspend().asInstanceOf[Option[ChannelFutureState]]
 对象：
 
 ```scala
-val linesState = ChannelReplyFutureState()
+val linesState = ChannelFutureState(1)
 openState.future.channel.ask(FileReadPlan(-1, -1), linesState.future)
 ```
 
@@ -718,7 +725,7 @@ final class TestActor extends StateActor[Start] with Injectable {
       queryService.ask(Query1(), state.future)
       state.suspend()
     case state: FutureState[?] =>
-      val pong = state.future.asInstanceOf[ReplyFuture[Result1]].getNow
+      val pong = state.future.asInstanceOf[MessageFuture[Result1]].getNow
       stack.`return`()
   }
 }
