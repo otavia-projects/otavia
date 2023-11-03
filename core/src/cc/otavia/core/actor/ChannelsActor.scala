@@ -136,7 +136,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     }
 
     // format: off
-    final protected def openFileChannel(path: Path, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Option[ChannelFutureState] = {
+    final protected def openFileChannelAndSuspend(path: Path, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Option[ChannelFutureState] = {
         // format: on
         val channel               = createFileChannelAndInit()
         val state                 = ChannelFutureState()
@@ -146,7 +146,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     }
 
     // format: off
-    final protected def openFileChannel(file: File, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Option[ChannelFutureState] = {
+    final protected def openFileChannelAndSuspend(file: File, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Option[ChannelFutureState] = {
         // format: on
         val channel               = createFileChannelAndInit()
         val state                 = ChannelFutureState()
@@ -162,6 +162,9 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     }
 
     //// =================== USER API ====================
+
+    protected def continueChannel(stack: ChannelStack[AnyRef]): Option[StackState] =
+        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
 
     // Event from Reactor
 

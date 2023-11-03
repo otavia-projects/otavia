@@ -356,9 +356,6 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     protected def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState] =
         throw new NotImplementedError(getClass.getName + ": an implementation is missing")
 
-    protected def continueChannel(stack: ChannelStack[AnyRef]): Option[StackState] =
-        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
-
     /** whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to
      *  receiveBatchXXX method
      */
