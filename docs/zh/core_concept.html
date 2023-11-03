@@ -1,22 +1,25 @@
 <!DOCTYPE html><html data-pathToRoot="../../"><head><meta charset="utf-8"></meta><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"></meta><title>核心概念</title><link rel="shortcut icon" type="image/x-icon" href="../../favicon.ico"></link><script type="text/javascript" src="../../scripts/theme.js"></script><script type="text/javascript" src="../../scripts/searchData.js" defer="true"></script><script type="text/javascript" src="../../scripts/scastieConfiguration.js" defer="true"></script><link rel="stylesheet" href="../../styles/theme/bundle.css"></link><link rel="stylesheet" href="../../styles/theme/components/bundle.css"></link><link rel="stylesheet" href="../../styles/theme/components/button/bundle.css"></link><link rel="stylesheet" href="../../styles/theme/layout/bundle.css"></link><link rel="stylesheet" href="../../styles/nord-light.css"></link><link rel="stylesheet" href="../../styles/dotty-icons.css"></link><link rel="stylesheet" href="../../styles/filter-bar.css"></link><link rel="stylesheet" href="../../styles/code-snippets.css"></link><link rel="stylesheet" href="../../styles/searchbar.css"></link><link rel="stylesheet" href="../../styles/social-links.css"></link><link rel="stylesheet" href="../../styles/versions-dropdown.css"></link><link rel="stylesheet" href="../../styles/content-contributors.css"></link><link rel="stylesheet" href="../../styles/fontawesome.css"></link><script type="text/javascript" src="../../hljs/highlight.pack.js" defer="true"></script><script type="text/javascript" src="../../scripts/hljs-scala3.js" defer="true"></script><script type="text/javascript" src="../../scripts/ux.js" defer="true"></script><script type="text/javascript" src="../../scripts/common/component.js" defer="true"></script><script type="text/javascript" src="../../scripts/common/utils.js" defer="true"></script><script type="text/javascript" src="../../scripts/components/FilterBar.js" defer="true"></script><script type="text/javascript" src="../../scripts/components/DocumentableList.js" defer="true"></script><script type="text/javascript" src="../../scripts/components/Input.js" defer="true"></script><script type="text/javascript" src="../../scripts/components/FilterGroup.js" defer="true"></script><script type="text/javascript" src="../../scripts/components/Filter.js" defer="true"></script><script type="text/javascript" src="../../scripts/scaladoc-scalajs.js" defer="true"></script><script type="text/javascript" src="../../scripts/contributors.js" defer="true"></script><script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.min.js" defer="true"></script><script type="text/javascript" src="https://d3js.org/d3.v6.min.js" defer="true"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/graphlib-dot@0.6.2/dist/graphlib-dot.min.js" defer="true"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dagre-d3/0.6.1/dagre-d3.min.js" defer="true"></script><script type="text/javascript" src="https://scastie.scala-lang.org/embedded.js" defer="true"></script><script type="text/javascript" src="../../scripts/data.js" defer="true"></script><link rel="stylesheet" href="../../styles/staticsitestyles.css"></link><script>var pathToRoot = "../../";</script><meta charset="utf-8"> 
 <title>Hello, world!</title></head><body><div id=""><div id="header" class="body-small"><div class="header-container-left"><a href="../../home.html" class="logo-container"><span class="project-name h300">otavia</span></a><span onclick="dropdownHandler(event)" class="text-button with-arrow" id="dropdown-trigger"><a><div class="projectVersion">0.3.2-SNAPSHOT</div></a></span><div id="version-dropdown" class="dropdown-menu"></div></div><div class="header-container-right"><button id="search-toggle" class="icon-button"></button><span id="theme-toggle" class="icon-button"></span><span id="mobile-menu-toggle" class="icon-button hamburger"></span></div></div><div id="mobile-menu"><div class="mobile-menu-header body-small"><span class="mobile-menu-logo"><span class="project-name h300">otavia</span></span><button id="mobile-menu-close" class="icon-button close"></button></div><div class="mobile-menu-container body-medium"><input id="mobile-scaladoc-searchbar-input" class="scaladoc-searchbar-input" type="search" placeholder="Find anything"></input><span id="mobile-theme-toggle" class="mobile-menu-item mode"></span></div></div><span id="mobile-sidebar-toggle" class="floating-button"></span><div id="leftColumn" class="body-small"><div class="switcher-container"><a id="docs-nav-button" class="switcher h100 selected" href="../index.html">Docs</a><a id="api-nav-button" class="switcher h100 " href="../../index.html">API</a></div><nav id="docs-nav" class="side-menu"><div class="ni n0 "><span class="nh de"><a href="../quick_start.html"><span>Quick Start</span></a></span></div><div class="ni n0 "><span class="nh de"><a href="../core_concept.html"><span>Core Concept</span></a></span></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../guide/index.html"><span>Guide</span></a></span><div class="ni n1 "><span class="nh de"><a href="../guide/actor_model.html"><span>Actor Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../guide/channel_pipeline.html"><span>Channel Pipeline</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../guide/io_model.html"><span>IO Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../guide/ioc.html"><span>Actor IOC </span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../guide/message_model.html"><span>Message Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../guide/reactor_model.html"><span>Reactor Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../guide/slf4a.html"><span>SLF4A</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../guide/serde.html"><span>Serde framework</span></a></span></div></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../module/index.html"><span>Modules</span></a></span><div class="ni n1 "><span class="nh de"><a href="../module/buffer.html"><span>Buffer</span></a></span></div></div><div class="ni n0 expanded"><span class="nh h100 expanded cs de"><button class="ar icon-button expanded"></button><a href="index.html"><span>中文文档</span></a></span><div class="ni n1 "><span class="nh de"><a href="quick_start.html"><span>快速开始</span></a></span></div><div class="ni n1 expanded"><span class="nh h100 selected de"><a href="#"><span>核心概念</span></a></span></div><div class="ni n1"><span class="nh de"><button class="ar icon-button "></button><a href="guide/index.html"><span>Guide</span></a></span><div class="ni n2 "><span class="nh de"><a href="guide/channel_pipeline.html"><span>Channel Pipeline</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="guide/io_model.html"><span>IO Model</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="guide/ioc.html"><span>Actor IOC </span></a></span></div><div class="ni n2 "><span class="nh de"><a href="guide/message_model.html"><span>Message Model</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="guide/reactor_model.html"><span>Reactor Model</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="guide/slf4a.html"><span>SLF4A</span></a></span></div></div><div class="ni n1"><span class="nh de"><button class="ar icon-button "></button><a href="module/index.html"><span>Modules</span></a></span><div class="ni n2 "><span class="nh de"><a href="module/buffer.html"><span>Buffer</span></a></span></div></div></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../blog/index.html"><span>Blog</span></a></span><div class="ni n1 "><span class="nh de"><a href="../blog/2023/05/19/hello-world-blog.zh-cn.html"><span>你好世界</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../blog/2023/05/19/hello-world-blog.html"><span>hello world blog</span></a></span></div></div></nav></div><div id="footer" class="body-small"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div id="scaladoc-searchBar"></div><div id="main"><div class="breadcrumbs container"><a href="../index.html">otavia</a>/<a href="index.html">中文文档</a>/<a href="core_concept.html">核心概念</a></div><div id="content" class="body-medium"><div><section id="现有编程模型的挑战-1"> 
  <h2 class="h500"><a href="#现有编程模型的挑战-1" class="anchor"></a>现有编程模型的挑战</h2> 
- <p>随着摩尔定律的逐渐失效与现代软件系统规模的疯狂增长，单核CPU甚至单机已经不能很好的满足要求。为了应对这种挑战，现代软件系统不仅 需要在单机上很好运用多核CPU，甚至还需要将一个系统分布运行在多台计算机上完成业务。这些挑战严重的冲击着目前的主流编程范式，也让 目前主流编程范式向新的方向进化。</p> 
- <p>第一是异步编程，但是面向对象编程范式和异步结合的时候往往产生回调地狱，这种方法破坏了面向对象的封装性，而且也是代码逻辑更加分散， 使软件变得不容易维护。</p> 
- <p>第二是函数式编程变得更加流行，目前基本主流的编程语言都支持部分函数式特性了。函数式编程提出了一个美好的愿景：一切都是不可变的， 这使得编写代码就像定义一个数学函数，一旦函数完成定义，每次调用时只要输入一致那么输出也一致，除此之外不会有任何其余行为。这种 编程范式是一种很美妙的思想，采用这种方式编写的代码不仅安全而且更加容易测试，代码的行为也更可控。但是函数式也有一个致命的缺点： 那就是不容易处理状态，而一个现实的软件系统往往需要处理很多状态、IO等。虽然函数式编程也有Monad、Effect等组件来处理状态，但是 这些技术对于很多开发者来说难以理解，而且学习成本很高。</p> 
- <p>与此同时，有一个古老的编程范式似乎更加适合处理这种复杂的高并发分布式的软件系统。这就是1973提出的Actor模型。但是Actor模型 也同样存在一些缺点使其并没有向面向对象编程那样大规模流行起来。</p> 
- <p><code>otavia</code> 是基于 <code>Scala 3</code> 实现的一个Actor编程模型，并且希望探索出一条Actor模型与现代编程语言进行更加有效结合的路径， 也希望探索出一些方法解决传统Actor模型的一些缺陷。文章以下内容将概括式的介绍 <code>otavia</code> 中的核心概念与设计。</p> 
+ <p>随着摩尔定律的逐渐失效与现代软件系统规模的疯狂增长，单核 CPU 甚至单机已经不再满足我们的要求了。为了应对这种挑战，现代软件系统不仅 需要在单机上很好的使用多核 CPU，甚至还需要将一个系统分布运行在多台计算机上完成业务。这些挑战严重的冲击着目前的主流编程范式，也让 目前主流编程语言向新的方向进化。</p> 
+ <p>第一是异步编程，但是面向对象编程范式和异步结合的时候往往产生回调地狱，这种方法破坏了面向对象的封装性，而且也让代码逻辑更加分散， 使软件变得不容易维护。</p> 
+ <p>第二是函数式编程变得更加流行，目前基本主流的编程语言都支持部分函数式特性了。函数式编程提出了一个美好的愿景：一切都是不可变的！ 这使得编写代码就像定义一个数学函数，一旦函数完成定义，每次调用时只要输入一致那么输出也一致，除此之外不会有任何其余行为。这种 编程范式是一种很美妙的思想，采用这种方式编写的代码不仅安全而且更加容易测试，代码的行为也更可控。但是函数式也有一些的缺点： 那就是不容易处理状态，而一个现实的软件系统往往需要处理很多状态、IO 等。虽然函数式编程也有 <code>Monad</code>、<code>Effect</code> 等技术来应对 这些场景，但是这些技术对于很多开发者来说太复杂了，而且学习成本比较高。还记得那句名言么？</p> 
+ <blockquote> 
+  <p>Monad 不过是自函子范畴上的一个幺半群嘛，有啥难以理解的？</p> 
+ </blockquote> 
+ <p>与此同时，有一个古老的编程范式似乎更加适合处理现代这种复杂的高并发分布式的软件系统。那就是1973提出的 Actor 模型。但是 Actor 模型同样也存在一些缺点，或许这也是其并没有像面向对象编程那样大规模流行起来的原因。</p> 
+ <p><code>otavia</code> 是基于 <code>Scala 3</code> 实现的一个 Actor 编程模型，并且希望探索出一条 Actor 模型与现代编程语言进行更加有效结合的路径， 也希望探索出一些方法解决传统 Actor 模型的一些缺陷。文章以下内容将概括式的介绍 <code>otavia</code> 中的核心概念与设计。</p> 
 </section> 
 <section id="otavia-的设计哲学-1"> 
  <h2 class="h500"><a href="#otavia-的设计哲学-1" class="anchor"></a>otavia 的设计哲学</h2> 
- <p>面向对象编程是一种非常有用的编程思想，虽然原始的面向对象思想有点类似于Actor模型，即对象等价于Actor，但是由于直接的方法调用 的代价远远小于消息传递，现代主流的编程语言对面向对象的实现都将其退化为了一种代码组织与封装的方式。这在单线程的情况下很美好， 一切都被组织得井井有条。</p> 
- <p>但是危机发生在多线程多CPU核心之后：多线程就像一群野蛮的公牛一样在脆弱的对象丛林里横冲直撞！现在程序的执行路径不在单一，不再被 对象井井有条的管控。相反，现在你需要仔仔细细关心每一个对象是否会被多个线程同时进入，你需要仔仔细细检查程序的并发安全问题。但是 这并不容易做到，特别是对于一个规模巨大的软件系统，你不知道有多少线程在你的对象丛林里冲撞，所以你需要去人肉模拟每一个线程的运行 路径，追踪他们的运行路径，然后找出哪些对象应该需要处理并发安全问题。想象一下，你要追踪这群丛林里的野蛮公牛，一个一个细致的检查 他们踩到了哪些草丛！天啊，这想一想就让人发疯。这种挑战已经让人疲惫了，但是还有更加严重的问题：这些公牛踩到某些草丛的时候会突然 静止！他们被阻塞从而挂起了，这降低了系统CPU的使用率，而这可能又会导致启动更多的线程，并发竞争越来越严重，直到系统在一个没有被 严格检查的并发问题下崩溃！</p> 
- <p>值得高兴的是目前已经出现了一些新的技术来解决这些问题。目前如日中天的技术方案便是协程、JVM虚拟线程。但是在我看来，这些技术有效 的缓解了线程被挂起从而导致CPU使用率低的问题，但是并发竞争导致我们必须仔细设计我们的对象的问题并没有缓解。</p> 
- <p>问题变得这么严重我认为主要的原因就是目前主流编程语言和面向对象编程范式缺失了一部分关键的特性！即缺乏对并发进行组织，缺乏对执行 流的组织！而目前并发和执行流是和对象耦合在一起的，这在早期单线程环境中没有什么大的问题，但是现在多线程多CPU环境下，这些问题就 变得非常严重了！</p> 
- <p>组织并发和执行流，正是actor模型擅长的领域！而 <code>Scala 3</code> 的出现，让我看到了设计出一种更加贴合面向对象思想的actor编程工具的 愿景。 于是，在经历了很长一段时间思考之后，我设计了 <code>otavia</code> 及其相关工具集。目的是探索一种更加简单、安全的编程范式来应对 当前的挑战。也为了开拓一种新的思路提供给大家来一起推动编程思想的发展！</p> 
- <p>我认为一个更加好的代价划分体系应该像下面的层级关系，<code>otavia</code> 的设计也遵循了这种层级关系</p> 
+ <p>面向对象编程是一种非常有用的编程思想，虽然原始的面向对象思想有点类似于 Actor 模型，即对象等价于 Actor，但是由于直接调用方法 的代价远远小于消息传递，现代主流的编程语言对面向对象的实现都将其退化为了一种代码组织与封装的方式。这在单线程的情况下很美好， 一切都被组织得井井有条。</p> 
+ <p>但是危机发生在多线程多 CPU 核心之后：多线程就像一群野蛮的公牛一样在脆弱的对象丛林里横冲直撞！现在程序的执行路径不在单一，不再被 对象井井有条的管控。相反，现在你需要仔仔细细关心每一个对象是否会被多个线程同时进入，你需要仔仔细细检查程序的并发安全问题。但是 这并不容易做到。特别是对于一个规模巨大的软件系统，你不知道有多少线程在你的对象丛林里冲撞，所以你需要去人肉模拟每一个线程的运行 路径，追踪他们的运行路径，然后找出哪些对象应该需要处理并发安全问题。想象一下，你要追踪这群丛林里的野蛮公牛，一个一个细致的检查 他们踩到了哪些草丛！天啊，这想一想就让人发疯。这种工作已经让人疲惫不堪了，但是还有更加严重的问题：这些公牛踩到某些草丛的时候会 突然静止！他们被阻塞从而被挂起了，这降低了系统CPU的使用率，而这可能又会导致启动更多的线程，并发竞争越来越严重，直到系统在一个 没有被严格检查的并发问题下崩溃！</p> 
+ <p>值得高兴的是目前已经出现了一些新的技术来解决这些问题。目前如日中天的技术方案便是协程、JVM 虚拟线程。但是在我看来，这些技术有效 的缓解了线程被挂起从而导致 CPU 使用率低的问题，但是并发竞争导致我们必须仔细设计我们的对象的问题并没有缓解。</p> 
+ <p>问题变得这么严重我们认为主要的原因就是目前主流编程语言和面向对象编程范式缺失了一部分关键的特性！即缺乏对并发进行组织，缺乏对执行 流的组织！而目前并发和执行流是和对象耦合在一起的，这在早期的单线程环境中没有什么问题，但是现在多线程多 CPU 环境下，这些问题就 变得非常严重了！</p> 
+ <p>组织并发和执行流，正是 Actor 模型擅长的领域！而 <code>Scala 3</code> 的出现，让我们看到了设计出一种更加贴合面向对象思想的 Actor 编程 工具的愿景。于是，在经历了很长一段时间构思之后，我设计了 <code>otavia</code> 及其相关工具集。目的是探索一种更加简单、安全的编程范式来应对 当前的挑战。也为了开拓一种新的思路提供给大家来一起推动编程工具的发展！</p> 
+ <p>我认为一个更加好的层级划分体系应该像下面这样，<code>otavia</code> 的设计也遵循了这种层级关系</p> 
  <p><strong>系统 &gt; 进程 &gt; 线程 &gt; 虚拟线程/有栈协程 &gt; <code>Actor &gt; 对象 &gt; 函数</code></strong></p> 
- <p>在这种层级中，Actor是并发的终点，也就是说，Actor及其之后的部分都应该是单线程运行的！Actor 之间通过发送消息进行通信，多条消息 会在 Actor 的邮箱中一条一条的以单线程的方式被处理。Actor内部的逻辑您可以使用面向对象也可以选择函数式，甚至像 <code>Scala</code> 一样将 他们结合起来！现在，一切又变得简单了，你可以大胆的使用对象而不必担心那群野蛮的公牛了！</p> 
+ <p>在这种层级中，Actor 是并发的终点，也就是说，Actor 及其之后的部分都应该是单线程运行的！Actor 之间通过发送消息进行通信，多条消息 会在 Actor 的邮箱中一条一条的以单线程的方式被处理。Actor 内部的逻辑您可以选择面向对象也可以选择函数式，甚至像 <code>Scala</code> 一样将 他们结合起来！现在，一切又变得简单了，你可以大胆的使用对象而不必担心那群野蛮的公牛了！</p> 
  <p><code>otavia project</code> 是一个非常有趣的项目计划，热烈欢迎您的任何贡献！</p> 
  <ul> 
   <li><a href="https://github.com/otavia-projects/otavia">GitHub - otavia-projects/otavia Your shiny new IO &amp; Actor programming model!</a></li> 
@@ -25,64 +28,98 @@
 </section> 
 <section id="核心运行时-1"> 
  <h2 class="h500"><a href="#核心运行时-1" class="anchor"></a>核心运行时</h2> 
- <p><code>otavia</code> 中并发与资源的基本单元为 <code>Actor</code>, 对于大多数场景来说，用户只需要实现各种自定义的 <code>Actor</code> 然后通过 <code>Actor</code> 之间 的消息交互来实现整体的系统功能。但是在现有的编程基础设施中，要做到理想的 <code>Actor</code> 编程模型并不简单，因为真实的编程场景不只是程 序内部组件的交互，还涉及与系统外部的其他组件进行交互，而这又涉及 IO 编程，甚至还涉及定时任务。为了满足这些需求，<code>otavia</code> 在 原始Actor模型的基础上增加了一些新的组件。</p> 
- <p>构成 <code>otavia</code> 运行时的核心组件是：</p> 
+ <p><code>otavia</code> 中管理并发与资源的基本单元为 <code>Actor</code>, 用户只需要实现各种自定义的 <code>Actor</code> 然后通过 <code>Actor</code> 之间的消息交互来实现整体的系统功能。但是想要做到理想的 <code>Actor</code> 编程模型并不简单，因为真实的编程场景不只是程 序内部组件的交互，还涉及与系统外部的其他组件进行交互，而这又涉及 IO 编程，甚至还涉及定时任务。为了满足这些需求，<code>otavia</code> 在 原始 Actor 模型的基础上增加了一些新的组件。构成 <code>otavia</code> 运行时的核心组件是：</p> 
  <ul> 
-  <li><code>Actor</code>: <code>Actor</code> 是 <code>otavia</code> 中并发与资源的基本单元，其有两个基本子类。<code>Actor</code> 之间通过发送消息进行通信。 
+  <li><code>Actor</code>: <code>Actor</code> 是 <code>otavia</code> 中并发与资源的基本单元，其有两个基本子类。<code>Actor</code> 之间通过发送消息进行通信。<code>Actor</code> 还可以通过 <code>Event</code> 的方式与 <code>ActorSystem</code> 的其他组件进行交互。<code>Event</code> 的种类是固定的，用户不能自定义。 
    <ul> 
     <li><code>StateActor</code>：普通 <code>Actor</code> 。</li> 
     <li><code>ChannelsActor</code>： 用于处理 IO 的 <code>Actor</code> 。</li> 
    </ul> </li> 
-  <li><code>ActorSystem</code>: <code>Actor</code> 实例容器，负责创建<code>Actor</code> 实例、管理 <code>Actor</code> 实例的生命周期，和调度 <code>Actor</code> 实例的执行。</li> 
-  <li><code>Timer</code>: 产生定时事件，生成超时 <code>Event</code> 并且发送给相关Actor。</li> 
+  <li><code>ActorSystem</code>: <code>Actor</code> 实例容器，负责创建 <code>Actor</code> 实例、管理 <code>Actor</code> 实例的生命周期，和调度 <code>Actor</code> 实例的执行。</li> 
+  <li><code>Timer</code>: 产生定时事件，生成超时 <code>Event</code> 并且发送给相关 <code>Actor</code>。</li> 
   <li><code>Reactor</code>: 处理 IO 传输，并且把 IO 结果以 <code>Event</code> 的方式发送给 <code>ChannelsActor</code>。</li> 
-  <li><code>Address</code>: Actor实例之间相互隔离，他们之间通过 <code>Address</code> 进行消息的发送。</li> 
-  <li><code>Message</code>: 用于 Actor 之间相互通信，有3种基础类型的消息: <code>Notice</code>、<code>Reply</code>、<code>Ask[R &lt;: Reply]</code></li> 
+  <li><code>Address</code>: <code>Actor</code> 实例之间相互隔离，他们之间只能通过 <code>Address</code> 进行消息的发送。</li> 
+  <li><code>Message</code>: 用于 <code>Actor</code> 之间相互通信，有3种基础类型的消息: <code>Notice</code>、<code>Reply</code>、<code>Ask[R &lt;: Reply]</code>，用户定义的消息必须继承其中的一种或多种。</li> 
  </ul> 
  <p><img src="../../images/programming_model.drawio.svg" alt=""></p> 
- <p>使用 <code>otavia</code> 编程，用户必须先启动一个 <code>ActorSystem</code> 实例，这个实例代表了 <code>otavia</code> 的运行时。<code>ActorSystem</code> 里面包含了调度 Actor 实例运行的线程池，<code>Timer</code> 组件、<code>Reactor</code> 组件。接下来用户只需要使用 <code>ActorSystem</code> 启动自己的 <code>Actor</code> 实例。 <code>ActorSystem</code> 会向调用者返回对应 <code>Actor</code> 实例的地址。接下来，用户就可以通过这个 <code>Address</code> 向 Actor 发送消息了。 一旦 Actor 接收到消息，<code>ActorSystem</code> 就会分配一个空闲线程来执行这个 Actor 实例。</p> 
+ <p>使用 <code>otavia</code> 编程，用户必须先启动一个 <code>ActorSystem</code> 实例，这个实例代表了 <code>otavia</code> 的运行时。<code>ActorSystem</code> 里面包含了 调度 <code>Actor</code> 实例运行的线程池、<code>Timer</code> 组件和 <code>Reactor</code> 组件。接下来用户只需要使用 <code>ActorSystem</code> 启动自己的 <code>Actor</code> 实例。<code>ActorSystem</code> 会向调用者返回对应 <code>Actor</code> 实例的 <code>Address</code>。接下来，用户就可以通过这个 <code>Address</code> 向 <code>Actor</code> 发送 消息了。与面向对象中调用方法不一样的地方是，发送消息并不会直接执行处理消息的逻辑，而是将消息放入对应 <code>Actor</code> 的邮箱中等待处理。 一旦 <code>Actor</code> 的邮箱中有可以处理的消息，<code>ActorSystem</code> 就会调度一个空闲线程来执行这个 <code>Actor</code> 实例。</p> 
  <p><img src="../../images/actor_instance.drawio.svg" alt=""></p> 
- <p>另一种 Actor 实例获得线程执行的条件是收到 <code>Event</code>。 在 <code>otavia</code> 中 <code>Event</code> 只能由 <code>Timer</code> 和 <code>Reactor</code> 产生， 用户 编程时只需要关心由 <code>Timer</code> 产生的 <code>Event</code>， 处理由 <code>Reactor</code> 产生的 <code>Event</code> 由 <code>ChannelsActor</code> 进行了进一步的 封装。</p> 
+ <p>另一种 <code>Actor</code> 实例获得线程执行的条件是收到 <code>Event</code>，<code>Event</code> 同样也是放入 <code>Actor</code> 的邮箱中等待处理。 在 <code>otavia</code> 中 <code>Event</code> 只能由 <code>Timer</code> 和 <code>Reactor</code> 产生， 用户编程时只需要关心由 <code>Timer</code> 产生的 <code>TimerEvent</code>， 处理由 <code>Reactor</code> 产生的 <code>ReactorEvent</code> 由 <code>ChannelsActor</code> 进行了进一步的封装。</p> 
 </section> 
 <section id="actor-3"> 
  <h2 class="h500"><a href="#actor-3" class="anchor"></a>Actor</h2> 
  <p><code>otavia</code> 中有两类基本的 <code>Actor</code> ，<code>StateActor</code> 和 <code>ChannelsActor</code>， 用户可以根据自己的需要选择继承其中的一种。</p> 
  <p><img src="../../images/two_types_actor.drawio.svg" alt=""></p> 
- <p><code>StateActor</code>: 普通 Actor ， 用户可以实现这种 Actor 来管理状态，发送、接收消息。这种 Actor 还可以与 <code>Timer</code> 进行交互 用于注册一个超时事件，当超时事件触发的时候， <code>Timer</code> 会向 Actor 发送 <code>Event</code>， 然后 <code>ActorSystem</code> 调度 Actor 执行 以处理 <code>Event</code>。</p> 
- <p><code>ChannelsActor</code>：在 <code>StateActor</code> 功能的基础之上新增了管理 <code>Channel</code> 的功能，<code>otavia</code> 中的 <code>Channel</code> 从 Netty 移植 而来，也基本跟 Netty 保持一致。但是与 Netty 不同的是，<code>otavia</code> 中的 <code>Channel</code> 必须跟一个 <code>ChannelsActor</code> 绑定，以 <code>ChannelsActor</code> 的一部分进行运行。</p> 
- <p>为了方便使用，<code>otavia</code> 根据不同的场景抽象了以下几种常用的Actor，您可以继承其中的一种来实现您的功能：</p> 
+ <p><code>StateActor</code>: 普通 <code>Actor</code> ， 用户可以实现这种 <code>Actor</code> 来管理状态，发送、接收消息。这种 <code>Actor</code> 还可以与 <code>Timer</code> 进行 交互，用于注册一个超时事件，当超时事件触发的时候，<code>Timer</code> 会向 <code>Actor</code> 发送 <code>TimeoutEvent</code>， 然后 <code>ActorSystem</code> 调度 <code>Actor</code> 执行以处理 <code>TimeoutEvent</code>。</p> 
+ <p><code>ChannelsActor</code>：在 <code>StateActor</code> 功能的基础之上新增了管理 <code>Channel</code> 的功能，<code>otavia</code> 中的 <code>Channel</code> 从 Netty 移植 而来，也基本跟 Netty 保持一致。但是与 Netty 不同的是，<code>otavia</code> 中的 <code>Channel</code> 必须跟一个 <code>ChannelsActor</code> 绑定，作为 <code>ChannelsActor</code> 的一部分进行运行。</p> 
+ <p>为了方便使用，<code>otavia</code> 根据不同的场景抽象了以下几种常用的 <code>Actor</code>，您可以继承其中的一种来实现您的功能：</p> 
  <p><img src="../../images/actor_type.drawio.svg" alt=""></p> 
+</section> 
+<section id="stack-1"> 
+ <h3 class="h400"><a href="#stack-1" class="anchor"></a>Stack</h3> 
+ <p><code>Stack</code> 是 <code>otavia</code> 中管理 <code>Actor</code> 消息的执行的载体</p> 
+ <p><img src="../../images/stack_resume.drawio.svg" alt=""></p> 
 </section> 
 <section id="各种-channelsactor-1"> 
  <h3 class="h400"><a href="#各种-channelsactor-1" class="anchor"></a>各种 ChannelsActor</h3> 
  <p>为了更好的对各种不同 <code>Channel</code> 的管理，<code>otavia</code> 实现了几种不同种类的 <code>ChannelsActor</code>，他们分别是：</p> 
  <ul> 
-  <li><code>AcceptorActor</code>: 管理TCP监听的Channel，其需要实例化一组 <code>AcceptedWorkerActor</code>, 对于监听Channel接受的普通 <code>Channel</code> 会作为消息发送给其中一个 <code>AcceptedWorkerActor</code>, 并且由 <code>AcceptedWorkerActor</code> 对接受的 <code>Channel</code> 进行管理。</li> 
-  <li><code>AcceptedWorkerActor</code>: <code>AcceptorActor</code> 的工作 Actor。</li> 
-  <li><code>SocketChannelsActor</code>: 管理TCP客户端 <code>Channel</code>。</li> 
-  <li><code>DatagramChannelsActor</code>: 管理UDP <code>Channel</code>。</li> 
+  <li><code>AcceptorActor</code>: 管理 TCP 监听的 <code>Channel</code>，其需要实例化一组 <code>AcceptedWorkerActor</code>, 对于监听 <code>Channel</code> 接受的 普通 <code>Channel</code> 会作为消息发送给其中一个 <code>AcceptedWorkerActor</code>, 并且由 <code>AcceptedWorkerActor</code> 对接受的 <code>Channel</code> 进行管理。</li> 
+  <li><code>AcceptedWorkerActor</code>: <code>AcceptorActor</code> 的工作 <code>Actor</code>。</li> 
+  <li><code>SocketChannelsActor</code>: 管理 TCP 客户端 <code>Channel</code>。</li> 
+  <li><code>DatagramChannelsActor</code>: 管理 UDP <code>Channel</code>。</li> 
  </ul> 
+ <p>其中所有类型的 <code>ChannelsActor</code> 都可以管理文件 <code>Channel</code>，如果您只需要使用文件 <code>Channel</code>，你可以直接继承 <code>ChannelsActor</code>。</p> 
 </section> 
 <section id="channel-1"> 
  <h2 class="h500"><a href="#channel-1" class="anchor"></a>Channel</h2> 
- <p>在 <code>otavia</code> 中，一个 <code>Channel</code> 就代表一个IO对象，比如一个打开的文件、一个网络连接等，因为 <code>Channel</code> 是从 Netty 移植而来， 所以基本的组件也跟 Netty 差不多，也有 <code>ChannelPipeline</code> <code>ChannelHandler</code> <code>ChannelHandlerContext</code> 等组件，并且工作 方式也跟 Netty 差不多。</p> 
+ <p>在 <code>otavia</code> 中，一个 <code>Channel</code> 就代表一个 IO 对象，比如一个打开的文件、一个网络连接等，因为 <code>Channel</code> 是从 Netty 移植而来， 所以基本的组件也跟 Netty 差不多，也有 <code>ChannelPipeline</code> <code>ChannelHandler</code> <code>ChannelHandlerContext</code> 等组件，并且工作 方式也跟 Netty 差不多。</p> 
  <p><img src="../../images/architecture_of_channel.drawio.svg" alt=""></p> 
- <p>但是为了 Channel 更好的与 otavia 的 Actor 结合，也需要做出一些调整：</p> 
+ <p>但是为了 <code>Channel</code> 更好的与 <code>otavia</code> 的 <code>ChannelsActor</code> 结合，也需要做出一些调整：</p> 
  <ol> 
-  <li>Netty 的 <code>Channel</code> 创建成功后需要注册到 <code>EventLoop</code> 上，<code>EventLoop</code> 是一个线程，这个线程会监听IO事件，然后调度相关的 <code>Channel</code> 进行执行。同样对于 outbound 调用，也需要转换成任务提交到 <code>EventLoop</code> 线程上排队执行。<code>otavia</code> 中没有 <code>EventLoop</code>，<code>otavia</code> 中的 <code>Channel</code> 创建成功后需要挂载到一个 <code>ChannelsActor</code> 内，<code>ChannelsActor</code> 会将 <code>Channel</code> 中的 <code>UnsafeChannel</code> 注册到 <code>Reactor</code> 上，<code>Reactor</code> 会监听相关 <code>Channel</code> 的IO事件，然后产生<code>Event</code> 发送给挂载的 <code>ChannelsActor</code>，<code>ChannelsActor</code> 被调度执行的时候会将 <code>Event</code> 分配给相关的 <code>Channel</code> 执行 inbound 流程。</li> 
-  <li>Netty 的 <code>EventLoop</code> 不仅监听IO事件，而且IO事件发生的时候还会调度相关的 Channel 进行执行，IO的监听、IO数据的读写和 ChannelPipeline 的执行都在同一个 <code>EventLoop</code> 线程内。但是 <code>otavia</code> 中IO的监听、IO数据的读写由 Reactor 负责， 然后按需生成相关的 Event 发送给 <code>ChannelsActor</code>， 由 ChannelsActor 负责调度 ChannelPipeline 的执行。</li> 
-  <li>Netty 中所有的业务逻辑都必须封装成 ChannelHandler 放入 ChannelPipeline 中执行，如果一个inbound事件到达 ChannelPipeline 尾部 TailHandler 仍然没有处理，那么 Netty 会忽略掉这个事件。但是 otavia 中 inbound 事件到达 TailHandler 之后会到达 Channel 内的 Inflight，然后由 Inflight 分发给 <code>ChannelsActor</code> 内部的 <code>Stack</code> 处理。 事实上，在 otavia 中 ChannelPipeline 的职责更加集中在字节序列的转换与编解码工作，比如TLS、压缩、数据对象的序列化 与反序列化等。其他复杂的业务逻辑直接通过将反序列化的对象传入 Channel 的 Inflight 组件，然后交给 <code>ChannelsActor</code> 处理。</li> 
+  <li>Netty 的 <code>Channel</code> 创建成功后需要注册到 <code>EventLoop</code> 上，<code>EventLoop</code> 是一个线程，这个线程会监听 IO 事件，然后调度相关的 <code>Channel</code> 进行执行。同样对于 outbound 调用，也需要转换成任务提交到 <code>EventLoop</code> 线程上排队执行。<code>otavia</code> 中没有 <code>EventLoop</code>。<code>otavia</code> 中的 <code>Channel</code> 创建成功后需要挂载到一个 <code>ChannelsActor</code> 上，<code>ChannelsActor</code> 会将 <code>Channel</code> 中的 <code>UnsafeChannel</code> 注册到 <code>Reactor</code> 上。<code>Reactor</code> 会监听相关 <code>Channel</code> 的 IO 事件，然后产生相关的 <code>ReactorEvent</code> 发送给挂载的 <code>ChannelsActor</code>，<code>ChannelsActor</code> 被调度执行的时候会将 <code>ReactorEvent</code> 分配给相关的 <code>Channel</code> 执行 inbound 流程。</li> 
+  <li>Netty 的 <code>EventLoop</code> 不仅监听IO事件，而且IO事件发生的时候还会调度相关的 <code>Channel</code> 进行执行，IO 的监听、IO 数据的读写和 <code>ChannelPipeline</code> 的执行都在同一个 <code>EventLoop</code> 线程内。但是 <code>otavia</code> 中 IO 的监听、IO 数据的读写由 <code>Reactor</code> 负责， 然后按需生成相关的 <code>ReactorEvent</code> 发送给 <code>ChannelsActor</code>， 由 <code>ChannelsActor</code> 负责调度 <code>ChannelPipeline</code> 的执行。</li> 
+  <li>Netty 中所有的业务逻辑都必须封装成 <code>ChannelHandler</code> 放入 <code>ChannelPipeline</code> 中执行，如果一个 inbound 事件到达 <code>ChannelPipeline</code> 尾部 <code>TailHandler</code> 仍然没有处理，那么 Netty 会忽略掉这个事件。但是 <code>otavia</code> 中 inbound 事件到达 <code>TailHandler</code> 之后会继续传输到到 <code>Channel</code> 内的 <code>Inflight</code>，然后由 <code>Inflight</code> 分发给 <code>ChannelsActor</code> 内部的 <code>Stack</code> 处理。事实上，在 <code>otavia</code> 中 <code>ChannelPipeline</code> 的职责更加集中在字节序列的转换与编解码工作，比如 TLS、压缩、数 据对象的序列化与反序列化等。其他复杂的业务逻辑直接通过将反序列化的对象传入 <code>Channel</code> 的 <code>Inflight</code> 组件，然后交给 <code>ChannelsActor</code> 继续处理后续复杂的业务逻辑。</li> 
  </ol> 
 </section> 
 <section id="channelpipeline-1"> 
  <h3 class="h400"><a href="#channelpipeline-1" class="anchor"></a>ChannelPipeline</h3> 
- <p>ChannelPipeline 与 Netty 中的 ChannelPipeline 基本一致，首位节点分别是 HeadHandler 和 TailHandler，当 Channel 初始化的时候，用户可以通过Channel向ChannelPipeline中添加自定义的 ChannelHandler，与Netty一样，ChannelHandler也被 <code>ChannelHandlerContext</code>包裹，然后由 <code>ChannelHandlerContext</code> 将所有的 ChannelHandler 串联起来。</p> 
- <p>Reactor 向 ChannelsActor 发送来的 ReactorEvent 会触发 ChannelPipeline 的 inbound 事件，inbound 事件从 HeadHandler 向 TailHandler 方向传递。调用Channel的outbound相关的方法会触发outbound事件从 TailHandler 向 HeadHandler 方向传递。 outbound 事件到达 HeadHandler 之后最终会转化为提交到 <code>Reactor</code> 的命令。</p> 
+ <p><code>ChannelPipeline</code> 与 Netty 中的 <code>ChannelPipeline</code> 基本一致，首尾节点分别是 <code>HeadHandler</code> 和 <code>TailHandler</code>，当 <code>Channel</code> 初始化的时候，用户可以通过 <code>Channel</code> 向 <code>ChannelPipeline</code> 中添加自定义的 <code>ChannelHandler</code>，与 Netty 一样， <code>ChannelHandler</code> 也被 <code>ChannelHandlerContext</code> 包裹，然后由 <code>ChannelHandlerContext</code> 将所有的 <code>ChannelHandler</code> 串 联成一个队列按顺序执行。</p> 
+ <p><code>Reactor</code> 向 <code>ChannelsActor</code> 发送来的 <code>ReactorEvent</code> 会触发 <code>ChannelPipeline</code> 的 inbound 事件，inbound 事件从 <code>HeadHandler</code> 向 <code>TailHandler</code> 方向传递。调用 <code>Channel</code> 的 outbound 相关的方法会触发 outbound 事件从 <code>TailHandler</code> 向 <code>HeadHandler</code> 方向传递。outbound 事件到达 <code>HeadHandler</code> 之后最终会转化为提交到 <code>Reactor</code> 的命令。</p> 
  <p><img src="../../images/pipeline.drawio.svg" alt=""></p> 
 </section> 
 <section id="channel-inflight-1"> 
- <h4 class="h300"><a href="#channel-inflight-1" class="anchor"></a>Channel Inflight</h4> 
+ <h3 class="h400"><a href="#channel-inflight-1" class="anchor"></a>Channel Inflight</h3> 
+ <p><code>Inflight</code> 并不是一个真实存在组件，其只是 <code>Channel</code> 中部分数据结构和机制的代表，用户不需要直接与他们交互，只需要通过 <code>Channel</code> 的 <code>setOption</code> 方法设置一些属性来控制 <code>Inflight</code> 的行为。</p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>// outbound futures which is write to channel and wait channel reply
+</span><span line-number="2" class=""><span class="tooltip-container"></span>private val inflightFutures: QueueMap[ChannelPromise] = new QueueMap[ChannelPromise]()
+</span><span line-number="3" class=""><span class="tooltip-container"></span>// outbound futures which is waiting channel to send
+</span><span line-number="4" class=""><span class="tooltip-container"></span>private val pendingFutures: QueueMap[ChannelPromise] = new QueueMap[ChannelPromise]()
+</span><span line-number="5" class=""><span class="tooltip-container"></span>// inbound stack which is running by actor
+</span><span line-number="6" class=""><span class="tooltip-container"></span>private val inflightStacks: QueueMap[ChannelStack[?]] = new QueueMap[ChannelStack[?]]()
+</span><span line-number="7" class=""><span class="tooltip-container"></span>// inbound stack to wait actor running
+</span><span line-number="8" class=""><span class="tooltip-container"></span>private val pendingStacks: QueueMap[ChannelStack[?]] = new QueueMap[ChannelStack[?]]()
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
  <p><img src="../../images/channel_inflight.drawio.svg" alt=""></p> 
+ <p><code>Inflight</code> 是一种对网络通信数据包发送控制的抽象。我们一般怎么样使用一个网络连接呢？大多数情况是发送一个数据包，然后等待响应 数据包的返回，在响应数据包返回之前，我们不能继续通过这个网络连接发送另外的请求数据包。但是这是一种对网络连接低效的使用方式， 所以有很多应用层协议支持在一个网络连接上连续发送多个请求数据包，比如 HTTP 1.1 中的 pipeline 机制、redis 的 pipeline 机制 等。但是由于这些机制一般实现起来相对复杂，很多应用并没有支持这种优化方式。</p> 
+ <p>在 <code>otavia</code> 中， 但是在 <code>otavia</code> 中，强大的 <code>Inflight</code> 让实现上述功能变得非常简单！在 <code>Channel</code> 存在以下几种组件来支持这种对网络连接的高效 使用：</p> 
+ <ul> 
+  <li><code>inflightFutures</code>:</li> 
+  <li><code>pendingFutures</code>:</li> 
+  <li><code>inflightStacks</code>:</li> 
+  <li><code>pendingStacks</code>:</li> 
+ </ul> 
+ <p>你可以通过 <code>setOption</code> 来控制这些组件的行为来适应不同的网络连接工作方式：</p> 
+ <ul> 
+  <li><code>CHANNEL_FUTURE_BARRIER</code>:</li> 
+  <li><code>CHANNEL_STACK_BARRIER</code>:</li> 
+  <li><code>CHANNEL_MAX_FUTURE_INFLIGHT</code>:</li> 
+  <li><code>CHANNEL_MAX_STACK_INFLIGHT</code>:</li> 
+  <li><code>CHANNEL_STACK_HEAD_OF_LINE</code>:</li> 
+ </ul> 
 </section> 
 <section id="消息模型-1"> 
  <h2 class="h500"><a href="#消息模型-1" class="anchor"></a>消息模型</h2> 
@@ -90,10 +127,6 @@
 </section> 
 <section id="事件-1"> 
  <h2 class="h500"><a href="#事件-1" class="anchor"></a>事件</h2> 
-</section> 
-<section id="stack-1"> 
- <h2 class="h500"><a href="#stack-1" class="anchor"></a>Stack</h2> 
- <p><img src="../../images/stack_resume.drawio.svg" alt=""></p> 
 </section> 
 <section id="timer-5"> 
  <h2 class="h500"><a href="#timer-5" class="anchor"></a>Timer</h2> 
@@ -118,4 +151,4 @@
 </section> 
 <section id="测试工具-1"> 
  <h3 class="h400"><a href="#测试工具-1" class="anchor"></a>测试工具</h3> 
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#现有编程模型的挑战-1">现有编程模型的挑战</a></li><li><a href="#otavia-的设计哲学-1">otavia 的设计哲学</a></li><li><a href="#核心运行时-1">核心运行时</a></li><li><a href="#actor-3">Actor</a><ul><li><a href="#各种-channelsactor-1">各种 ChannelsActor</a></li></ul></li><li><a href="#channel-1">Channel</a><ul><li><a href="#channelpipeline-1">ChannelPipeline</a><ul><li><a href="#channel-inflight-1">Channel Inflight</a></li></ul></li></ul></li><li><a href="#消息模型-1">消息模型</a></li><li><a href="#事件-1">事件</a></li><li><a href="#stack-1">Stack</a></li><li><a href="#timer-5">Timer</a></li><li><a href="#生态系统中其他的核心模块-1">生态系统中其他的核心模块</a><ul><li><a href="#cps变换-1">CPS变换</a></li><li><a href="#buffer-1">Buffer</a></li><li><a href="#序列化反序列化框架-1">序列化反序列化框架</a></li><li><a href="#sql-1">SQL</a></li><li><a href="#日志-1">日志</a></li><li><a href="#测试工具-1">测试工具</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#现有编程模型的挑战-1">现有编程模型的挑战</a></li><li><a href="#otavia-的设计哲学-1">otavia 的设计哲学</a></li><li><a href="#核心运行时-1">核心运行时</a></li><li><a href="#actor-3">Actor</a><ul><li><a href="#stack-1">Stack</a></li><li><a href="#各种-channelsactor-1">各种 ChannelsActor</a></li></ul></li><li><a href="#channel-1">Channel</a><ul><li><a href="#channelpipeline-1">ChannelPipeline</a></li><li><a href="#channel-inflight-1">Channel Inflight</a></li></ul></li><li><a href="#消息模型-1">消息模型</a></li><li><a href="#事件-1">事件</a></li><li><a href="#timer-5">Timer</a></li><li><a href="#生态系统中其他的核心模块-1">生态系统中其他的核心模块</a><ul><li><a href="#cps变换-1">CPS变换</a></li><li><a href="#buffer-1">Buffer</a></li><li><a href="#序列化反序列化框架-1">序列化反序列化框架</a></li><li><a href="#sql-1">SQL</a></li><li><a href="#日志-1">日志</a></li><li><a href="#测试工具-1">测试工具</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

@@ -118,12 +118,12 @@
  </div> 
  <p><code>continueAsk</code> 是 <code>Actor</code> 处理 <code>Ask</code> 消息的入口，从其他 <code>Actor</code> 发送来的 <code>Ask</code> 消息都会从这个方法传入 <code>Actor</code>。</p> 
  <p>我们可以发现， <code>Actor</code> 内处理消息的 <code>continueXXX</code> 方法并不是直接处理消息，而是将消息装入了 <code>Stack</code> 中，<code>Notice</code> 消息装入 <code>NoticeStack</code> 中，<code>Ask</code> 消息装入 <code>AskStack</code> 中。在 <code>otavia</code> 中，为了方便管理消息的依赖关系和安全的发送 <code>Reply</code> 消息，引入了 <code>Stack</code> 这种数据结构。同时引入了 <code>Future</code> 来接收 <code>Ask</code> 消息的返回 <code>Reply</code> 消息（注意这里的 <code>Future</code> 不是 scala 标准库的 <code>Future</code>） ，为了等待 <code>Future</code> 达到可执行状态，引入了 <code>StackState</code> ， 一个 <code>StackState</code> 可以关联一个或者多个 <code>Future</code> , 只有当 <code>StackState</code> 的 <code>resumable</code> 方法为 <code>ture</code> 或者关联的所有的 <code>Future</code> 都达到完成状态的时候，这个 <code>Stack</code> 才可以继续被调度执行，<code>continueXXX</code> 每次执行的时候从一个状态开始，结束的时候返回 <code>Option[StackState]</code> ，即代表 <code>Stack</code> 进入一个新的状态。<code>StackState</code> 的 <code>suspend</code> 方法返回 <code>Option[StackState]</code>。<code>return</code> 方法返回 <code>None</code> 用于结束 <code>Stack</code>。如果是 <code>AskStack</code>，<code>return</code> 方法用于发送 <code>AskStack</code> 中 <code>Ask</code> 消息的返回 <code>Reply</code> 消息。</p> 
- <p>一个 <code>Stack</code> 只能有一个 <code>StackState</code>，初始的状态为 <code>StartStack</code>，每次 <code>continueXXX</code>执行完成就切换到一个新的 <code>StackState</code>, 最后的 <code>return</code> 方法将返回 <code>None</code>，代表 <code>Stack</code> 完成！</p> 
+ <p>一个 <code>Stack</code> 只能有一个 <code>StackState</code>，初始的状态为 <code>StartStack</code>，每次 <code>continueXXX</code> 执行完成就切换到一个新的 <code>StackState</code>, 最后的 <code>return</code> 方法将返回 <code>None</code>，代表 <code>Stack</code> 完成！</p> 
  <p><img src="../../images/stack_resume.drawio.svg" alt=""></p> 
  <p>至此，我们需要的所有的 <code>Actor</code> 和消息都已经完全实现了。接下来，启动一个 <code>ActorSystem</code> 来运行这些 <code>Actor</code> 吧</p> 
 </section> 
 <section id="运行-actor-1"> 
- <h3 class="h400"><a href="#运行-actor-1" class="anchor"></a>运行 actor</h3> 
+ <h3 class="h400"><a href="#运行-actor-1" class="anchor"></a>运行 Actor</h3> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>@main def run(): Unit = {
 </span><span line-number="2" class=""><span class="tooltip-container"></span>  val system = ActorSystem()
@@ -135,14 +135,13 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>通过 <code>ActorSystem()</code> 我们就可以轻松创建一个 <code>ActorSystem</code>, <code>ActorSystem</code> 是 <code>otavia</code> 中 actor 的运行时容器， 一个 JVM 实例 只允许启动一个 <code>ActorSystem</code> 实例。通过 <code>ActorSystem</code> 的 <code>buildActor</code> 方法，我们可以实例化我们定义的 actor ， <code>buildActor</code> 方法并不会返回 actor 实例对象本身，相反他返回的是一个地址，我们可以通过这个地址发送对应 actor 能处理的消息。</p> 
- <p>以上的一切都是编译时类型安全的，如果您向 <code>buildActor</code> 返回的地址发送对应 actor 不能处理的消息，这将不能通过编译。如果您使用 <code>AskStack</code> 的 <code>return</code> 方法返回与对应 <code>Ask</code> 消息不匹配的 <code>Reply</code> 消息，这也将不能通过编译。</p> 
+ <p>通过 <code>ActorSystem()</code> 我们就可以轻松创建一个 <code>ActorSystem</code>, <code>ActorSystem</code> 是 <code>otavia</code> 中 <code>Actor</code> 的运行时容器， 一个 JVM 实例只允许启动一个 <code>ActorSystem</code> 实例。通过 <code>ActorSystem</code> 的 <code>buildActor</code> 方法，我们可以实例化我们定义的 <code>Actor</code> ， <code>buildActor</code> 方法并不会返回 <code>Actor</code> 实例对象本身，相反他返回的是一个代表 <code>Actor</code> 的地址，我们可以通过这个 地址发送 <code>Actor</code> 能处理的消息。</p> 
+ <p>以上的一切都是编译时类型安全的，如果您向 <code>buildActor</code> 返回的地址发送 <code>Actor</code> 不能处理的消息，这将不能通过编译。如果您使用 <code>AskStack</code> 的 <code>return</code> 方法返回与 <code>Ask</code> 消息不匹配的 <code>Reply</code> 消息，这也将不能通过编译。</p> 
 </section> 
 <section id="接收多种类型消息的-actor-1"> 
  <h2 class="h500"><a href="#接收多种类型消息的-actor-1" class="anchor"></a>接收多种类型消息的 Actor</h2> 
- <p>以上的示例演示了处理一种消息类型的 actor， 但是在真实的场景中我们往往需要在一个 actor 中处理多种类型的消息。这在 <code>Scala 3</code> 中非常简单，而且由于 <code>Scala 3</code> 强大的 <code>Union Types</code> 和 <code>Intersection Types</code>，我们还可以做到处理多种消息的编译时类型安全。</p> 
- <p>假如我们需要实现一个 actor， 这个 actor 需要处理的消息为：接收 <code>Hello</code> 消息并且返回 <code>World</code> 消息， 接收 <code>Ping</code> 消息并且 返回 <code>Pong</code> 消息， 接收 <code>Echo</code> 消息并且不返回任何消息。</p> 
- <p>以上需求需要我们定义如下几种消息：</p> 
+ <p>以上的示例演示了处理一种消息类型的 <code>Actor</code>， 但是在真实的场景中我们往往需要在一个 <code>Actor</code> 中处理多种类型的消息。这在 <code>Scala 3</code> 中非常简单，而且由于 <code>Scala 3</code> 强大的 <code>Union Types</code> 和 <code>Intersection Types</code>，我们还可以做到处理多种 消息的编译时类型安全。</p> 
+ <p>假如我们需要实现一个 <code>Actor</code>， 这个 <code>Actor</code> 的行为为：接收 <code>Hello</code> 消息并且返回 <code>World</code> 消息， 接收 <code>Ping</code> 消息并且 返回 <code>Pong</code> 消息， 接收 <code>Echo</code> 消息不返回任何消息。那么我们可以先定义消息的类型：</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>case class Echo() extends Notice
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
@@ -156,7 +155,7 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>然后来实现我们的 actor：</p> 
+ <p>然后来实现我们的 <code>Actor</code>：</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class MultiMsgActor() extends StateActor[Echo | Hello | Ping] {
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
@@ -185,6 +184,7 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
+ <p>你可能会想，要是一个消息同时继承了 <code>Notice</code> 和 <code>Ask</code>，这个消息最终是被 <code>continueNotice</code> 还是 <code>continueAsk</code> 处理呢？ 答案是都有可能，<code>otavia</code> 不是根据消息的种类来决定其应该被怎么处理，而是通过消息的发送方式，<code>Address</code> 中有 <code>notice</code> 和 <code>ask</code> 方法，以 <code>notice</code> 方法发送的消息最终被 <code>continueNotice</code> 处理， <code>ask</code> 方法发送的消息被 <code>continueAsk</code> 处理！</p> 
 </section> 
 <section id="计时-1"> 
  <h2 class="h500"><a href="#计时-1" class="anchor"></a>计时</h2> 
@@ -192,18 +192,12 @@
 </section> 
 <section id="处理注册的定时事件-1"> 
  <h3 class="h400"><a href="#处理注册的定时事件-1" class="anchor"></a>处理注册的定时事件</h3> 
- <p>Actor 有方法处理注册的定时事件，其定义为</p> 
- <div class="snippet mono-small-block" scala-snippet=""> 
-  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>protected def handleActorTimeout(timeoutEvent: TimeoutEvent): Unit = {}
-</span></code></pre> 
-  <div class="buttons"></div> 
- </div> 
- <p>如果定时事件触发，<code>Timer</code> 将会发送 <code>TimeoutEvent</code> 事件给 actor 实例，最终超时事件将会通过 <code>handleActorTimeout</code> 方法传入 actor 中</p> 
+ <p><code>Actor</code> 可以通过 <code>Timer</code> 的 <code>registerActorTimeout</code> 方法注册一个超时事件触发任务。当达到超时条件时，<code>Timer</code> 会生成一个 <code>TimeoutEvent</code> 并且发送给注册的 <code>Actor</code>。然后超时事件会通过 <code>Actor</code> 的 <code>handleActorTimeout</code> 方法进行处理。</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class TickActor() extends StateActor[Nothing] { // [Nothing] if no message need process!
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
-</span><span line-number="3" class=""><span class="tooltip-container"></span>  private var onceTickId: Long = 0
-</span><span line-number="4" class=""><span class="tooltip-container"></span>  private var periodTickId: Long = 0
+</span><span line-number="3" class=""><span class="tooltip-container"></span>  private var onceTickId: Long = Timer.INVALID_TIMEOUT_REGISTER_ID
+</span><span line-number="4" class=""><span class="tooltip-container"></span>  private var periodTickId: Long = Timer.INVALID_TIMEOUT_REGISTER_ID
 </span><span line-number="5" class=""><span class="tooltip-container"></span>
 </span><span line-number="6" class=""><span class="tooltip-container"></span>  override protected def afterMount(): Unit = {
 </span><span line-number="7" class=""><span class="tooltip-container"></span>    onceTickId = timer.registerActorTimeout(TimeoutTrigger.DelayTime(1, TimeUnit.SECONDS), self)
@@ -223,13 +217,14 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
+ <p>值得注意的时 <code>Actor</code> 对象内 <code>timer</code> 方法的使用必须在 <code>Actor</code> 挂载到 <code>ActorSystem</code> 之后，只有挂载之后，运行时相关的信息才 会被注入到 <code>Actor</code> 实例内。所以您不能在 <code>Actor</code> 对象的构造器内直接使用 <code>timer</code> 方法，因为这个时候 <code>Actor</code> 实例还没有挂载 到 <code>ActorSystem</code> 中，使用运行时相关的方法都会导致空指针异常。这在后文的 <code>Actor</code> 生命周期中有介绍。</p> 
 </section> 
 <section id="stack-sleep-1"> 
  <h3 class="h400"><a href="#stack-sleep-1" class="anchor"></a>Stack Sleep</h3> 
- <p>如果我们想让一个 <code>Stack</code> 等待一段时间才开始执行，我们可以让 <code>StackState</code> 关联到一个 <code>TimeoutEventFuture</code> , 这个 <code>Future</code> 会将超时事件作为结果。只有收到超时事件的时候，<code>TimeoutEventFuture</code> 才完成。</p> 
+ <p>如果我们想让一个 <code>Stack</code> 等待一段时间才开始执行，我们可以让 <code>StackState</code> 关联到一个 <code>MessageFuture[TimeoutReply]</code> , 这个 <code>Future</code> 会将超时事件作为结果。只有收到超时事件的时候，<code>MessageFuture[TimeoutReply]</code> 才完成。</p> 
  <p>在之前的示例中，<code>PingActor</code> 处理 <code>Start</code> 消息的时候使用了 <code>FutureState</code> , 这是 <code>otavia</code> 定义的一些比较常用的状态类，如果 这些状态类不能满足您的需要，您也可以自定义 <code>StackState</code>。</p> 
- <p>让我们改造一下之前的 <code>PingActor</code>，现在我们要求这个Actor收到 <code>Start</code> 消息之后发送 <code>Ping</code> 请求，然后收到 <code>Pong</code> 消息的时候 同时需要等待2秒才能继续调度这个 <code>NoticeStack</code> 执行。</p> 
- <p>现在 <code>FutureState</code> 已经不能满足我们的需求了，因为其只绑定了一个 <code>MessageFuture</code>, 现在我们不仅需要绑定 <code>MessageFuture</code>，还需要 绑定 <code>TimeoutEventFuture</code>，只有这两种 <code>Future</code> 都完成的时候才开始执行这个 <code>Stack</code>。让我们来定义我们新的 <code>StackState</code> 吧。</p> 
+ <p>让我们改造一下之前的 <code>PingActor</code>，现在我们要求这个 <code>Actor</code> 收到 <code>Start</code> 消息之后发送 <code>Ping</code> 请求，然后收到 <code>Pong</code> 消息 的时候还需要等待2秒才能继续调度这个 <code>NoticeStack</code> 执行。</p> 
+ <p>现在 <code>FutureState</code> 已经不能满足我们的需求了，因为其只绑定了一个 <code>MessageFuture[Pong]</code>, 现在我们不仅需要绑定 <code>MessageFuture[Pong]</code>，还需要绑定 <code>MessageFuture[TimeoutReply]</code>，只有这两个 <code>Future</code> 都完成的时候才开始执行这个 <code>Stack</code>。让我们来定义我们新的 <code>StackState</code> 吧。</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>class PongTimeoutState extends StackState {
 </span><span line-number="2" class=""><span class="tooltip-container"></span>  val pongFuture = MessageFuture[Pong]()
@@ -265,7 +260,7 @@
 </section> 
 <section id="给-reply-消息设置超时-1"> 
  <h3 class="h400"><a href="#给-reply-消息设置超时-1" class="anchor"></a>给 Reply 消息设置超时</h3> 
- <p>有时候，当我们发送一个 <code>Ask</code> 消息，对面的 Actor 可能会耗时比较久，但是我们不想让我们的请求 Actor 等待太久，这种情况我们可以 怎么办呢？也许聪明的您已经想到答案了！<code>Stack</code> 怎么样到达可执行状态呢，之前我们讲过：</p> 
+ <p>有时候，当我们发送一个 <code>Ask</code> 消息，对面的 <code>Actor</code> 可能会耗时比较久，但是我们不想让我们的请求 <code>Actor</code> 等待太久，这种情况我们 怎么办呢？也许聪明的您已经想到答案了！之前我们讲过：</p> 
  <blockquote> 
   <p>一个 <code>StackState</code> 可以关联一个或者多个 <code>Future</code> , 只有当 <code>StackState</code> 的 <code>resumable</code> 方法为 <code>ture</code> 或者关联的所 有的 <code>Future</code> 都达到完成状态的时候，这个 <code>Stack</code> 才可以继续被调度执行。</p> 
  </blockquote> 
@@ -280,18 +275,17 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>现在只要 <code>timeoutFuture</code> 完成，那么 <code>Stack</code> 就会被继续调度执行了。接下来我们只需检测我们的 <code>pongFuture.isDone</code> 判断 是否完成。</p> 
- <p>这的确是一种方法，但是考虑到这种超时需求比较常见，<code>otavia</code> 提供了更简单的方法，我们只需对最开始的 <code>PingActor</code> 进行一点点改动：</p> 
+ <p>现在只要 <code>timeoutFuture</code> 完成，那么 <code>Stack</code> 就会被继续调度执行了。接下来我们只需检测我们的 <code>pongFuture.isDone</code> 判断 是否完成。这的确是一种方法，但是考虑到这种超时需求比较常见，<code>otavia</code> 提供了更简单的方法，我们只需对最开始的 <code>PingActor</code> 进行一点点改动：</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
 </span><span line-number="2" class=""><span class="tooltip-container"></span>  override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
 </span><span line-number="3" class=""><span class="tooltip-container"></span>    case _: StartState =&gt;
 </span><span line-number="4" class=""><span class="tooltip-container"></span>      println("PingActor handle Start message")
 </span><span line-number="5" class=""><span class="tooltip-container"></span>      println("PingActor send Ping Message")
-</span><span line-number="6" class=""><span class="tooltip-container"></span>      val state = FutureState(1)
+</span><span line-number="6" class=""><span class="tooltip-container"></span>      val state = FutureState()
 </span><span line-number="7" class=""><span class="tooltip-container"></span>      pongActorAddress.ask(Ping(stack.notice.sid), state.future, 2 * 1000)
 </span><span line-number="8" class=""><span class="tooltip-container"></span>      state.suspend()
-</span><span line-number="9" class=""><span class="tooltip-container"></span>    case state: FutureState[Pong] if state.id == 1 =&gt;
+</span><span line-number="9" class=""><span class="tooltip-container"></span>    case state: FutureState[Pong] =&gt;
 </span><span line-number="10" class=""><span class="tooltip-container"></span>      val future = state.future
 </span><span line-number="11" class=""><span class="tooltip-container"></span>      if (future.isSuccess) {
 </span><span line-number="12" class=""><span class="tooltip-container"></span>        println(s"PingActor received ${future.getNow} message success!")
@@ -314,18 +308,17 @@
 </section> 
 <section id="actor-的生命周期-1"> 
  <h2 class="h500"><a href="#actor-的生命周期-1" class="anchor"></a>Actor 的生命周期</h2> 
- <p>在 <code>otavia</code> 中，用户不用花太多心思管理 actor 的生命周期，actor 实例仍然被 JVM 垃圾回收管理，只要这个 actor 没有地址引用他，那么这个 actor 实例将被 JVM 的垃圾回收系统自动回收。</p> 
- <p>Actor 里有如下几种方法可以在不同的生命周期过程中调用</p> 
+ <p>在 <code>otavia</code> 中，用户不用花太多心思管理 <code>Actor</code> 的生命周期，<code>Actor</code> 实例仍然被 JVM 垃圾回收管理，只要这个 <code>Actor</code> 不被 根对象引用，那么这个 <code>Actor</code> 实例将被 JVM 的垃圾回收系统自动回收。<code>Actor</code> 里有如下几种方法可以在不同的生命周期过程中调用</p> 
  <ul> 
   <li><code>afterMount</code>: Actor 实例挂载到 <code>ActorSystem</code> 之后调用，<strong>对于 Actor 实例 <code>context</code> 相关的方法只有挂载之后才可以使用</strong>。</li> 
   <li><code>beforeRestart</code>: 重启之前调用。</li> 
-  <li><code>restart</code>: 重启 Actor 实例的方法。</li> 
+  <li><code>restart</code>: 重启 <code>Actor</code> 实例的方法。</li> 
   <li><code>afterRestart</code>: 重启之后调用。</li> 
-  <li><code>AutoCleanable.cleaner</code>: 如果您实现的Actor需要清理一些不安全的资源，继承 <code>AutoCleanable</code> trait 然后实现 <code>cleaner</code> 方法。</li> 
+  <li><code>AutoCleanable.cleaner</code>: 如果您实现的 <code>Actor</code> 需要清理一些不安全的资源，继承 <code>AutoCleanable</code> trait 然后实现 <code>cleaner</code> 方法。</li> 
  </ul> 
- <p>以下图片显示了Actor实例的所有可能的生命过程：</p> 
+ <p>以下图片显示了 <code>Actor</code> 实例的生命周期：</p> 
  <p><img src="../../images/actor_life_cycle.drawio.svg" alt=""></p> 
- <p>我们来定义一个 Actor 显示各种生命周期的回调</p> 
+ <p>我们来定义一个 <code>Actor</code> 看看生命周期中的各种钩子方法吧：</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>case class Start() extends Notice
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
@@ -348,33 +341,37 @@
 </span><span line-number="19" class=""><span class="tooltip-container"></span>
 </span><span line-number="20" class=""><span class="tooltip-container"></span>  // if occurs some error which developer is not catch, this will trigger the actor restart
 </span><span line-number="21" class=""><span class="tooltip-container"></span>  // you can also override the noticeExceptionStrategy method to change the strategy
-</span><span line-number="22" class=""><span class="tooltip-container"></span>  override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = throw new Error("")
-</span><span line-number="23" class=""><span class="tooltip-container"></span>}
+</span><span line-number="22" class=""><span class="tooltip-container"></span>  override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = {
+</span><span line-number="23" class=""><span class="tooltip-container"></span>    println("process message")
+</span><span line-number="24" class=""><span class="tooltip-container"></span>    throw new Error("")
+</span><span line-number="25" class=""><span class="tooltip-container"></span>  }
+</span><span line-number="26" class=""><span class="tooltip-container"></span>}
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
+ <p>其中 <code>afterMount</code> 方法最主要用来进行依赖注入，关于依赖注入，后文会进行详细讲解。</p> 
 </section> 
 <section id="处理io-1"> 
  <h2 class="h500"><a href="#处理io-1" class="anchor"></a>处理IO</h2> 
- <p>现在我们已经学会了 1)定义Actor 2)定义消息 3)发送消息 4)接收消息处理消息 5)使用Timer触发超时。</p> 
- <p>但是在真实的业务中，我们往往需要处理很多IO任务，而IO任务又时常阻塞我们的程序，这也是导致我们的程序性能底下的原因之一。与此同时， 一些新的技术比如 epoll 、io_uring 等蓬勃发展，这使得我们可以不阻塞的处理IO任务。 JVM 中也提供了 NIO 来支持网络 IO ，但是 想要运用好这些技术并不容易，因为 JVM 提供的 <code>java.nio.ByteBuffer</code> 和 <code>java.nio.channels.Channel</code> 等 API 太底层。 目前 在 JVM 邻域大家使用更多的是 <a href="https://netty.io/">Netty</a>。</p> 
- <p>感谢 <code>Netty</code> 为 JVM 领域提供的强大的 IO 编程范式！受 <code>Netty</code> 启发，<code>otavia</code> 中的 IO 栈基本从 <code>Netty</code> 移植而来！ 在 <code>otavia</code> 中处理 IO 任务跟在 <code>Netty</code> 中非常像，可以说基本保持了概念和API的一致。这也极大的方便了 <code>otavia</code> 从广泛的 <code>Netty</code> 生态系统中吸收营养，移植各种 codec 代码。查看 <a href="https://github.com/otavia-projects">otavia 生态</a>。</p> 
+ <p>现在我们已经学会了 1)定义 <code>Actor</code> 2)定义消息 3)发送消息 4)接收消息处理消息 5)使用 <code>Timer</code> 触发超时。</p> 
+ <p>但是在真实的业务中，我们往往需要处理很多IO任务，而IO任务又时常阻塞我们的程序，这也是导致我们的程序性能底下的原因之一。与此同时， 一些新的技术比如 epoll 、io_uring 等蓬勃发展，这使得我们可以不阻塞的处理IO任务。 JVM 中也提供了 NIO 来支持网络 IO ，但是 想要运用好这些技术并不容易，因为 JVM 提供的 <code>java.nio.ByteBuffer</code> 和 <code>java.nio.channels.Channel</code> 等 API 太底层。 目前在 JVM 邻域大家使用更多的是 <a href="https://netty.io/">Netty</a>。</p> 
+ <p>感谢 <code>Netty</code> 为 JVM 领域提供的强大的 IO 编程工具！受 <code>Netty</code> 启发，<code>otavia</code> 中的 IO 模块基本从 <code>Netty</code> 移植而来！ 在 <code>otavia</code> 中处理 IO 任务跟在 <code>Netty</code> 中非常像，可以说基本保持了API的一致。这也极大的方便了 <code>otavia</code> 从广泛的 <code>Netty</code> 生态系统中吸收营养，移植各种网络协议的编解码代码。<a href="https://github.com/otavia-projects">查看 otavia 生态</a>。</p> 
  <p><img src="../../images/two_types_actor.drawio.svg" alt=""></p> 
- <p>在 <code>otavia</code>，<code>Channel</code> 必须运行在 <code>ChannelsActor</code> 中，同样 <code>Channel</code> 中也包含了一个 ChannelPipeline 组件，其中串联 了一个 <code>ChannelHandler</code> 队列</p> 
+ <p><code>otavia</code> 同样使用 <code>Channel</code> 代表一个 IO 对象，比如一个打开的文件、一个网络连接。但是在 <code>otavia</code> 中，<code>Channel</code> 必须运行 在 <code>ChannelsActor</code> 中，同样 <code>Channel</code> 中也包含了一个 <code>ChannelPipeline</code> 组件，其中有一个 <code>ChannelHandler</code> 队列。</p> 
  <p><img src="../../images/pipeline.drawio.svg" alt=""></p> 
  <p>为了更好的对各种不同 <code>Channel</code> 的管理，<code>otavia</code> 实现了几种不同种类的 <code>ChannelsActor</code>，他们分别是：</p> 
  <ul> 
-  <li><code>AcceptorActor</code>: 管理TCP监听的Channel，其需要实例化一组 <code>AcceptedWorkerActor</code>, 对于监听Channel接受的普通 <code>Channel</code> 会作为消息发送给其中一个 <code>AcceptedWorkerActor</code>, 并且由 <code>AcceptedWorkerActor</code> 对接受的 <code>Channel</code> 进行管理。</li> 
-  <li><code>AcceptedWorkerActor</code>: <code>AcceptorActor</code> 的工作 Actor。</li> 
+  <li><code>AcceptorActor</code>: 管理监听TCP连接的 <code>Channel</code>，其需要实例化一组 <code>AcceptedWorkerActor</code>, 对于监听 <code>Channel</code> 接受的普通 <code>Channel</code>，会作为消息发送给其中一个 <code>AcceptedWorkerActor</code>, 并且由 <code>AcceptedWorkerActor</code> 对接受的 <code>Channel</code> 进行管理 和数据的处理。</li> 
+  <li><code>AcceptedWorkerActor</code>: <code>AcceptorActor</code> 的工作 <code>Actor</code>。</li> 
   <li><code>SocketChannelsActor</code>: 管理TCP客户端 <code>Channel</code>。</li> 
   <li><code>DatagramChannelsActor</code>: 管理UDP <code>Channel</code>。</li> 
  </ul> 
- <p>用户根据需要选择一种类型的<code>ChannelsActor</code>进行实现。现在，让我们从一个简单的文件读取的例子开始我们的旅程！</p> 
+ <p>用户根据需要选择一种类型的 <code>ChannelsActor</code> 进行实现。现在，让我们从一个简单的文件读取的例子开始我们的旅程！</p> 
 </section> 
 <section id="文件io-1"> 
  <h3 class="h400"><a href="#文件io-1" class="anchor"></a>文件IO</h3> 
- <p>Netty 只支持网络IO，<code>otavia</code> 不仅支持网络而且还支持文件。现在我们要实现一个 Actor， 他接收一个读取文件请求，然后将文件以 <code>Seq[String]</code> 的方式返回。</p> 
- <p>首先，让我们来定义这个 Actor 需要处理和返回的消息</p> 
+ <p>Netty 只支持网络IO，<code>otavia</code> 不仅支持网络而且还支持文件。现在我们要实现一个 <code>Actor</code>， 他接收一个读取文件请求，然后将文件以 <code>Seq[String]</code> 的方式返回。</p> 
+ <p>首先，让我们来定义这个 <code>Actor</code> 需要处理和返回的消息</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>case class LinesReply(lines: Seq[String]) extends Reply
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
@@ -382,7 +379,7 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>接下来我们来实现我们的 Actor，这个 Actor 有怎么样的行为呢？首先需要打开文件！这样我们就有了代表这个文件的 <code>Channel</code>, 然后我们 将读文件的请求发送给这个 <code>Channel</code></p> 
+ <p>接下来我们来实现我们的 <code>Actor</code>，这个 <code>Actor</code> 有怎么样的行为呢？首先需要打开文件！这样我们就有了代表这个文件的 <code>Channel</code>, 然后我们将读文件的命令发送给这个 <code>Channel</code></p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class ReadLinesActor(file: File, charset: Charset = StandardCharsets.UTF_8)
 </span><span line-number="2" class=""><span class="tooltip-container"></span>  extends ChannelsActor[ReadLines] {
@@ -392,7 +389,7 @@
 </span><span line-number="6" class=""><span class="tooltip-container"></span>  override def continueAsk(stack: AskStack[ReadLines]): Option[StackState] = {
 </span><span line-number="7" class=""><span class="tooltip-container"></span>    stack.state match {
 </span><span line-number="8" class=""><span class="tooltip-container"></span>      case StackState.start =&gt;
-</span><span line-number="9" class=""><span class="tooltip-container"></span>        openFileChannel(file, Seq(StandardOpenOption.READ), attrs = Seq.empty)
+</span><span line-number="9" class=""><span class="tooltip-container"></span>        openFileChannelAndSuspend(file, Seq(StandardOpenOption.READ), attrs = Seq.empty)
 </span><span line-number="10" class=""><span class="tooltip-container"></span>      case openState: ChannelFutureState if openState.id == 0 =&gt;
 </span><span line-number="11" class=""><span class="tooltip-container"></span>        val linesState = ChannelFutureState(1)
 </span><span line-number="12" class=""><span class="tooltip-container"></span>        openState.future.channel.ask(FileReadPlan(-1, -1), linesState.future)
@@ -405,7 +402,7 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>首先我们使用 <code>openFileChannel</code> 打开文件并且返回一个 <code>StackState</code> 状态，文件打开完成的时候这个状态就达到可运行状态。其个方法 是 <code>ChannelsActor</code> 提供的一个快捷方法，我们可以查看源码，其实现为：</p> 
+ <p>首先我们使用 <code>openFileChannelAndSuspend</code> 打开文件并且返回一个 <code>StackState</code> 状态，文件打开完成的时候这个状态就达到可运 行状态。其个方法是 <code>ChannelsActor</code> 提供的一个快捷方法，我们可以查看源码，其实现为：</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>val channel = createFileChannelAndInit()
 </span><span line-number="2" class=""><span class="tooltip-container"></span>val state = ChannelFutureState()
@@ -415,8 +412,8 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>没什么特别的，跟我们之前讲过的 <code>Stack</code> 差不多，只不过这里的 <code>StackState</code> 是 <code>ChannelFutureState</code> , 关联的 <code>Future</code> 是 <code>ChannelFuture</code>, 然后使用 <code>channel.open</code> 将这个 <code>Future</code> 传给 <code>Channel</code>。open 不是阻塞的，调用后就会立即返回，如果 这个文件真的打开完成，那么其他机制会将这个 <code>ChannelFuture</code> 设置成完成状态。然后继续调度与其关联的 <code>Stack</code>。</p> 
- <p>这里我们还看见了一个 <code>createFileChannelAndInit</code> 方法，从方法名称我们就可以看出这是创建了一个文件 <code>Channel</code>，除此之外还对 这个 <code>Channel</code> 进行了初始化， 这个方法最终会调用 <code>ChannelsActor.initFileChannel</code> 方法对 <code>Channel</code> 进行初始化。</p> 
+ <p>没什么特别的，跟我们之前讲过的 <code>Stack</code> 差不多，只不过这里的 <code>StackState</code> 是 <code>ChannelFutureState</code> , 关联的 <code>Future</code> 是 <code>ChannelFuture</code>, 然后使用 <code>channel.open</code> 将这个 <code>Future</code> 传给 <code>Channel</code>。<code>open</code> 不是阻塞的，调用后就会立即返回。如果 这个文件真的打开完成，那么 <code>Reactor</code> 就会向 <code>ChannelsActor</code> 发送一个 <code>ReactorEvent</code>, <code>ChannelsActor</code> 收到事件后会将 这个 <code>ChannelFuture</code> 设置成完成状态。然后判断与其关联的 <code>Stack</code> 是否可以执行。</p> 
+ <p>这里我们还看见了一个 <code>createFileChannelAndInit</code> 方法，从方法名称我们就可以看出这是创建了一个文件 <code>Channel</code>，除此之外还对 这个 <code>Channel</code> 进行了初始化。 这个方法会调用 <code>ChannelsActor.initFileChannel</code> 方法对 <code>Channel</code> 进行初始化。</p> 
  <p>现在我们可以来实现我们的 <code>ReadLinesActor.initFileChannel</code> 了。我们可以看见我们在文件打开之后传入了一个 <code>FileReadPlan</code> 对象：</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>val linesState = ChannelFutureState(1)
@@ -424,7 +421,7 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>这个 <code>ask</code> 方法最终会将 <code>FileReadPlan</code> 通过 <code>Channel</code> 的 <code>write</code> inbound 方法传入 <code>ChannelPipeline</code>。 <code>ChannelPipeline</code> 里面的 <code>ChannelHandler</code> 是我们自己实现的，这跟 <code>Netty</code> 一样。</p> 
+ <p>这个 <code>ask</code> 方法最终会将 <code>FileReadPlan</code> 通过 <code>Channel</code> 的 <code>write</code> 方法传入 <code>ChannelPipeline</code>。 <code>ChannelPipeline</code> 里面的 <code>ChannelHandler</code> 是我们自己实现的，这跟 <code>Netty</code> 基本一样。</p> 
  <p>现在我们来实现我们的 <code>ChannelHandler</code> 吧。这个 <code>ChannelHandler</code> 需要实现哪些功能能？首先我们要能处理 <code>write</code> inbound 事件， 其次，我们需要对 <code>channelRead</code> outbound 事件进行处理；然后读文件完成的时候我们要处理 <code>channelReadComplete</code> outbound 事件， 在 <code>channelReadComplete</code> 事件中，我们需要生成最终的结果消息返回给我们的 <code>ReadLinesActor</code>。</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>class ReadLinesHandler(charset: Charset) extends ByteToMessageDecoder {
@@ -433,8 +430,8 @@
 </span><span line-number="4" class=""><span class="tooltip-container"></span>  private var currentMsgId: Long = -1
 </span><span line-number="5" class=""><span class="tooltip-container"></span>
 </span><span line-number="6" class=""><span class="tooltip-container"></span>  override def write(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit = msg match {
-</span><span line-number="7" class=""><span class="tooltip-container"></span>    case fileReadPlan: FileReadPlan =&gt;
-</span><span line-number="8" class=""><span class="tooltip-container"></span>      ctx.read(fileReadPlan)
+</span><span line-number="7" class=""><span class="tooltip-container"></span>    case readPlan: FileReadPlan =&gt;
+</span><span line-number="8" class=""><span class="tooltip-container"></span>      ctx.read(readPlan)
 </span><span line-number="9" class=""><span class="tooltip-container"></span>      currentMsgId = msgId
 </span><span line-number="10" class=""><span class="tooltip-container"></span>    case _ =&gt;
 </span><span line-number="11" class=""><span class="tooltip-container"></span>      ctx.write(msg, msgId)
@@ -444,7 +441,7 @@
 </span><span line-number="15" class=""><span class="tooltip-container"></span>    var continue = true
 </span><span line-number="16" class=""><span class="tooltip-container"></span>    while (continue) {
 </span><span line-number="17" class=""><span class="tooltip-container"></span>      val length = input.bytesBefore('\n'.toByte) + 1
-</span><span line-number="18" class=""><span class="tooltip-container"></span>      if (length != 0) {
+</span><span line-number="18" class=""><span class="tooltip-container"></span>      if (length &gt; 0) {
 </span><span line-number="19" class=""><span class="tooltip-container"></span>        lines.addOne(input.readCharSequence(length, charset).toString)
 </span><span line-number="20" class=""><span class="tooltip-container"></span>      } else continue = false
 </span><span line-number="21" class=""><span class="tooltip-container"></span>    }
@@ -469,7 +466,7 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>我们可以看见我们实现的 <code>write</code> 方法有一个 <code>msgId</code> 参数，这是 <code>ask</code> 方法生成的本 <code>Channel</code> 内唯一的消息编号，因为 <code>write</code> 方法是非阻塞的，其并不会等待底层的IO完成直接拿到结果，而是直接通过 <code>ChannelHandlerContext.read</code> 向底层提交一个读数据的计划， 这个读数据的具体IO工作在 <code>otavia</code> 中会由 <code>Reactor</code> 完成，读到的数据会以 <code>Event</code> 的方式通知 <code>Channel</code> ，<code>Channel</code> 会 通过 <code>channelRead</code> 以 outbound 方向在 <code>ChannelPipeline</code> 中传播。这里我们继承的是 <code>ByteToMessageDecoder</code> ，其 <code>channelRead</code> 会调用 <code>decode</code> 方法，这个方法主要用于将字节序列转换成我们需要的对象。当底层读取数据完成，也会向 <code>Channel</code> 发送 <code>Event</code>，对应的是这种事件将会转换成 <code>channelReadComplete</code> outbound 事件在 <code>ChannelPipeline</code> 传播。我们需要在 我们的 <code>ReadLinesHandler</code> 重写 <code>channelReadComplete</code> 方法以生成最终的结果并继续将结果以 <code>channelRead</code> 继续向 outbound 方向传播。注意到了么，我们 <code>fireChannelRead</code> 的方法同时也有一个 <code>msgId</code> 参数，这个参数会让这个消息最终找到我们之前的 <code>ask</code> 方法里面的 <code>Future</code>。接下来故事又回到了我们的 Actor 的 <code>Stack</code> 调度。</p> 
+ <p>我们可以看见我们实现的 <code>write</code> 方法有一个 <code>msgId</code> 参数，这是 <code>ask</code> 方法生成的 <code>Channel</code> 内唯一的消息编号，因为 <code>write</code> 方法是非阻塞的，其并不会等待底层的IO完成直接拿到结果，而是直接通过 <code>ChannelHandlerContext.read</code> 向 <code>Reactor</code> 提交一个读 数据的计划，这个读数据的具体IO工作在 <code>otavia</code> 中会由 <code>Reactor</code> 完成，读到的数据会以 <code>Event</code> 的方式发送给 <code>ChannelsActor</code>。 然后 <code>ChannelsActor</code> 会将 <code>Event</code> 分发给具体的 <code>Channel</code>， <code>Channel</code> 会通过 <code>channelRead</code> 以 outbound 方向在 <code>ChannelPipeline</code> 中传播。这里我们继承的是 <code>ByteToMessageDecoder</code> ，他的 <code>channelRead</code> 方法会调用 <code>decode</code> 方法， 这个方法主要用于将字节序列转换成我们需要的对象。当 <code>Reactor</code> 读取数据完成，也会向 <code>ChannelsActor</code> 发送 <code>Event</code>，相对应的， 这种事件将会转换成 <code>channelReadComplete</code> outbound 事件在 <code>ChannelPipeline</code> 传播。我们需要在我们的 <code>ReadLinesHandler</code> 重写 <code>channelReadComplete</code> 方法以生成最终的结果并继续将结果以 <code>channelRead</code> 继续向 outbound 方向传播。注意到了么，我们 <code>fireChannelRead</code> 的方法同时也有一个 <code>msgId</code> 参数，这个参数会让这个消息最终找到我们之前的 <code>ask</code> 方法里面的 <code>Future</code>。接下来故事又回到了我们的 <code>Actor</code> 的 <code>Stack</code> 调度。</p> 
  <p>现在让我们启动我们的程序来读一个文本文件吧！</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>@main def start(): Unit = {
@@ -490,12 +487,12 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>您可能会想这也太麻烦了，我直接用 java 的文件API几行代码就搞定了，你却写了那么多。因为凡是有收益就有所付出，这种付出的收益就是这种 文件IO是不会阻塞当前调用的线程的！ <code>otavia</code> 具体的IO读写工作是由 <code>Reactor</code> 组件完成的，其默认的传输层实现是基于 NIO, 但是 传输层也保留了 SPI 接口，我们可以替换这个默认的 NIO 传输层，基于 epoll、kqueue、IOCP 甚至 io_uring 实现一个更加高性能的 传输层！而对于上层的代码是不需要一点变更的，只要您按照规范实现了这个传输层模块，引入依赖，就会立即生效！而实现这个高效的传输层模块 正是 <code>otavia</code> <a href="https://github.com/otavia-projects">生态</a> 中 <a href="https://github.com/otavia-projects/native-transport">native-transport</a> 的目标！</p> 
+ <p>您可能会想这也太麻烦了，我直接用 java 的文件API几行代码就搞定了，你却写了那么多！因为凡是有收益就有所付出，这种付出的收益就是这种 文件IO是不会阻塞当前调用的线程的！ <code>otavia</code> 具体的IO读写工作是由 <code>Reactor</code> 组件完成的，其默认的传输层实现是基于 NIO。 但是 传输层也保留了 SPI 接口，我们可以替换这个默认的 NIO 传输层，基于 epoll、kqueue、IOCP 甚至 io_uring 实现一个更加高性能的 传输层！而对于上层的代码是不需要一点变更的，只要您按照规范实现了这个传输层模块，引入依赖，就会立即生效！而实现这个高效的传输层模块 正是 <a href="https://github.com/otavia-projects">otavia 生态</a> 中 <a href="https://github.com/otavia-projects/native-transport">native-transport</a> 项目的目标！如果你感兴趣，热烈欢迎您的贡献！</p> 
 </section> 
 <section id="网络io-1"> 
  <h3 class="h400"><a href="#网络io-1" class="anchor"></a>网络IO</h3> 
- <p>现在我们来实现一个基于网络的 echo server，这个服务可以使用 telnet 链接，在 telnet 里面发送数据，这个服务将数据原样返回给 telnet。因为是TCP服务，我们使用 <code>AcceptedWorkerActor</code> 与 <code>AcceptorActor</code> 来实现。我们实现的类分别为 <code>EchoAcceptor</code> 和 <code>EchoWorker</code></p> 
- <p>首先我们来实现 <code>EchoAcceptor</code>，这个 actor 管理一个监听连接的 Channel，接受连接后生成新的 Channel，然后将这个新 Channel 发送给 <code>EchoWorker</code>。</p> 
+ <p>现在我们来实现一个基于TCP网络的 echo server，这个服务可以使用 telnet 链接，在 telnet 里面发送数据，这个服务将数据原样返回给 telnet。因为是TCP服务，我们使用 <code>AcceptedWorkerActor</code> 与 <code>AcceptorActor</code> 来实现。我们实现的类分别为 <code>EchoAcceptor</code> 和 <code>EchoWorker</code></p> 
+ <p>首先我们来实现 <code>EchoAcceptor</code>，这个 <code>Actor</code> 管理一个监听连接的 <code>Channel</code>，接受连接后生成新的 <code>Channel</code>，然后将这个新 <code>Channel</code> 发送给 <code>EchoWorker</code>。由 <code>EchoWorker</code> 负责具体的工作任务。</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class EchoAcceptor extends AcceptorActor[EchoWorker] {
 </span><span line-number="2" class=""><span class="tooltip-container"></span>  override protected def workerNumber: Int = 4
@@ -506,8 +503,7 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>在 <code>EchoAcceptor</code> 中我们定义了如何创建 <code>EchoWorker</code> 的 <code>workerFactory</code> 和创建多少个 <code>EchoWorker</code> 实例的 <code>workerNumber</code>, 这个 actor 接收 <code>ChannelsActor.Bind</code> 请求，然后启动一个 ServerChannel，和 <code>workerNumber</code> 个 <code>EchoWorker</code> 实例。</p> 
- <p>接下来我们定义我们的 <code>EchoWorker</code></p> 
+ <p>在 <code>EchoAcceptor</code> 中我们定义了如何创建 <code>EchoWorker</code> 的 <code>workerFactory</code> 和创建多少个 <code>EchoWorker</code> 实例的 <code>workerNumber</code>。 <code>EchoAcceptor</code> 接收 <code>ChannelsActor.Bind</code> 请求，然后启动一个 <code>Channel</code> 绑定到一个端口上用于 监听网络连接。同时会创建 <code>workerNumber</code> 个 <code>EchoWorker</code> 实例用于分发接收的网络连接。 接下来我们定义我们的 <code>EchoWorker</code></p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class EchoWorker extends AcceptedWorkerActor[Nothing] {
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
@@ -522,7 +518,7 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>注意到 <code>initChannel</code> 方法了么，与之前文件处理中的 <code>initFileChannel</code> 相识，这个是用来初始化网络 Channel 的方法。同样我们也需要 定义我们的 <code>ChannelHandler</code> 然后通过这个方法将 <code>ChannelHandler</code> 加入到接受的 <code>Channel</code> 的 <code>ChannelPipeline</code> 中。现在 我们来实现我们的 <code>ChannelHandler</code></p> 
+ <p>注意到 <code>initChannel</code> 方法了么？与之前文件处理中的 <code>initFileChannel</code> 类似，不过这个是用来初始化网络 <code>Channel</code> 的方法。 同样我们也需要定义我们的 <code>ChannelHandler</code> 然后通过这个方法将 <code>ChannelHandler</code> 加入到 <code>Channel</code> 的 <code>ChannelPipeline</code> 中。现在我们来实现我们的 <code>ChannelHandler</code></p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class EchoWorkerHandler extends ByteToMessageDecoder {
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
@@ -533,14 +529,14 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>有了 <code>EchoWorkerHandler</code> 之后，实现 <code>initChannel</code></p> 
+ <p>现在我们有了 <code>EchoWorkerHandler</code>，然后添加到我们的 <code>ChannelPipeline</code> 吧</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>override protected def initChannel(channel: Channel): Unit =
 </span><span line-number="2" class=""><span class="tooltip-container"></span>  channel.pipeline.addLast(new EchoWorkerHandler())
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>开始启动我们的echo server 吧</p> 
+ <p>现在一切已经就绪了，开始启动我们的 echo server 吧！</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>@main def start(): Unit = {
 </span><span line-number="2" class=""><span class="tooltip-container"></span>  val actorSystem = ActorSystem()
@@ -560,12 +556,12 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>现在启动 telnet 连接我们的 echo server 试一下吧！</p> 
+ <p>快启动 telnet 连接我们的 echo server 试一下吧！</p> 
 </section> 
 <section id="全局actor与依赖注入-1"> 
  <h2 class="h500"><a href="#全局actor与依赖注入-1" class="anchor"></a>全局Actor与依赖注入</h2> 
- <p>依赖注入是一种很有效的拆解代码耦合的思想，这种思想同样对于 Actor 模型来说也是很有用的。想象一下，我们有时候对于我们的Actor能接收 什么消息是固定的，但是在不同场景中我们却有不同的具体实现。如果使用 <code>buildActor</code> 来构造这些 actor，那么就产生了严重的代码耦合， 我们每次场景变动我们都需要修改这部分代码，这使得代码耦合得非常严重。为了解决这种问题，<code>otavia</code> 将依赖注入的思想引入了进来。接下来 我们将使用一个简单的例子来演示 <code>otavia</code> 中依赖注入的方法。</p> 
- <p>假设我们的系统中需要依赖一种服务Actor，我们知道其接收和返回的消息类型，但是不同场景中这种服务的具体实现有些差异。如下是我们的服务的 消息定义。</p> 
+ <p>依赖注入是一种很有效的拆解代码耦合的思想，这种思想同样对于 <code>Actor</code> 模型来说也同样有用。想象一下，我们有时候对于我们的 <code>Actor</code> 能接收什么消息是固定的，但是在不同场景中我们却有不同的具体实现。如果使用 <code>buildActor</code> 来构造这些 actor，那么就产生了严重的 代码耦合。每当场景变动我们都需要修改这部分代码，这非常的不灵活。为了解决这种问题，<code>otavia</code> 将依赖注入的思想引入了进来。接下来 我们将使用一个简单的例子来演示 <code>otavia</code> 中依赖注入的方法。</p> 
+ <p>假设我们的系统中需要依赖一种服务 <code>Actor</code>，我们知道其接收和返回的消息类型，但是不同场景中这种服务的具体实现有些差异。如下是我们的 服务的消息定义。</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>case class Result1() extends Reply
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
@@ -577,13 +573,13 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>然后我们可以定义一个trait来约束我们的服务actor能接收的消息。这与面向对象依赖注入使用接口定义服务一样，只是面向对象中使用接口约束 能调用的方法而 <code>otavia</code> 中使用接口约束能处理的消息！</p> 
+ <p>然后我们可以定义一个 <code>trait</code> 来约束我们的服务 <code>Actor</code> 能接收的消息。这与面向对象中依赖注入使用接口定义服务一样，只是面向对象 中使用接口约束能调用的方法而 <code>otavia</code> 中使用接口约束能处理的消息！</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>trait QueryService extends Actor[Query1 | Query2]
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>有了这个 <code>QueryService</code> 接口之后，我们实现的具体服务 Actor 只需继承这个接口。</p> 
+ <p>有了这个 <code>QueryService</code> 接口之后，我们实现的具体服务 <code>Actor</code> 只需继承这个接口。</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class QueryServiceImpl() extends StateActor with QueryService {
 </span><span line-number="2" class=""><span class="tooltip-container"></span>  override def continueAsk(stack: AskStack[Query1 | Query2]): Option[StackState] = ??? // impl logic
@@ -595,15 +591,15 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>对于依赖 <code>QueryService</code> 的 Actor</p> 
+ <p>对于依赖 <code>QueryService</code> 的 <code>Actor</code>，可以扩展 <code>Injectable</code>, 然后就可以使用 <code>autowire</code> 在 <code>ActorSystem</code> 中查找相关 的 <code>Actor</code> 的地址。</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>case class Start() extends Notice
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
 </span><span line-number="3" class=""><span class="tooltip-container"></span>final class TestActor extends StateActor[Start] with Injectable {
 </span><span line-number="4" class=""><span class="tooltip-container"></span>
-</span><span line-number="5" class=""><span class="tooltip-container"></span>  private var queryService: Address[Query1 | Query2] = _
+</span><span line-number="5" class=""><span class="tooltip-container"></span>  private var queryService: Address[MessageOf[QueryService]] = _
 </span><span line-number="6" class=""><span class="tooltip-container"></span>
-</span><span line-number="7" class=""><span class="tooltip-container"></span>  override protected def afterMount(): Unit = queryService = autowire[QueryService]
+</span><span line-number="7" class=""><span class="tooltip-container"></span>  override protected def afterMount(): Unit = queryService = autowire[QueryService]()
 </span><span line-number="8" class=""><span class="tooltip-container"></span>
 </span><span line-number="9" class=""><span class="tooltip-container"></span>  override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
 </span><span line-number="10" class=""><span class="tooltip-container"></span>    case StackState.start =&gt;
@@ -618,10 +614,10 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>现在即使我们替换 <code>QueryService</code> 的实现， 我们的 <code>TestActor</code> 也不用更改！如何让 <code>autowire[QueryService]</code> 找到具体 的实现actor呢，只需要在实例化实现actor的时候将其设置为全局actor。</p> 
+ <p>现在即使我们替换 <code>QueryService</code> 的实现， 我们的 <code>TestActor</code> 也不用更改！如何让 <code>autowire[QueryService]</code> 找到具体 的实现 <code>Actor</code> 呢，只需要在实例化实现 <code>Actor</code> 的时候将其设置为全局 <code>Actor</code>。</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>system.buildActor(() =&gt; new QueryServiceImpl(), global = true)
-</span><span line-number="2" class=""><span class="tooltip-container"></span>// or if use another
+</span><span line-number="2" class=""><span class="tooltip-container"></span>// or if use the other one
 </span><span line-number="3" class=""><span class="tooltip-container"></span>system.buildActor(() =&gt; new QueryServiceCase2(), global = true)
 </span></code></pre> 
   <div class="buttons"></div> 
@@ -629,6 +625,6 @@
 </section> 
 <section id="批量处理-1"> 
  <h2 class="h500"><a href="#批量处理-1" class="anchor"></a>批量处理</h2> 
- <p>对某些场景来说，能够批量化处理消息是一个很有用的技术。启动批量化很简单，您只需要重新您的Actor的 <code>batchable</code> 方法，将其返回值 改为 <code>true</code>， 然后重写 <code>batchNoticeFilter</code> 或者 <code>batchAskFilter</code> 方法用来选择进入批量调度的消息。</p> 
+ <p>对某些场景来说，能够批量化处理消息是一个很有用的技术。启动批量化很简单，您只需要重写您的 <code>Actor</code> 的 <code>batchable</code> 方法，将其 返回值改为 <code>true</code>， 然后重写 <code>batchNoticeFilter</code> 或者 <code>batchAskFilter</code> 方法用来选择进入批量调度的消息。</p> 
  <p>具体代码您可以参考 <a href="https://github.com/otavia-projects/otavia/blob/main/log4a/src/cc/otavia/log4a/appender/ConsoleAppender.scala">这里</a></p> 
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#环境要求-1">环境要求</a></li><li><a href="#添加依赖-1">添加依赖</a></li><li><a href="#简单的-ping-pong-actors-1">简单的 Ping-Pong Actors</a><ul><li><a href="#定义消息-1">定义消息</a></li><li><a href="#实现-actor-1">实现 Actor</a></li><li><a href="#运行-actor-1">运行 actor</a></li></ul></li><li><a href="#接收多种类型消息的-actor-1">接收多种类型消息的 Actor</a></li><li><a href="#计时-1">计时</a><ul><li><a href="#处理注册的定时事件-1">处理注册的定时事件</a></li><li><a href="#stack-sleep-1">Stack Sleep</a></li><li><a href="#给-reply-消息设置超时-1">给 Reply 消息设置超时</a></li></ul></li><li><a href="#actor-的生命周期-1">Actor 的生命周期</a></li><li><a href="#处理io-1">处理IO</a><ul><li><a href="#文件io-1">文件IO</a></li><li><a href="#网络io-1">网络IO</a></li></ul></li><li><a href="#全局actor与依赖注入-1">全局Actor与依赖注入</a></li><li><a href="#批量处理-1">批量处理</a></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#环境要求-1">环境要求</a></li><li><a href="#添加依赖-1">添加依赖</a></li><li><a href="#简单的-ping-pong-actors-1">简单的 Ping-Pong Actors</a><ul><li><a href="#定义消息-1">定义消息</a></li><li><a href="#实现-actor-1">实现 Actor</a></li><li><a href="#运行-actor-1">运行 Actor</a></li></ul></li><li><a href="#接收多种类型消息的-actor-1">接收多种类型消息的 Actor</a></li><li><a href="#计时-1">计时</a><ul><li><a href="#处理注册的定时事件-1">处理注册的定时事件</a></li><li><a href="#stack-sleep-1">Stack Sleep</a></li><li><a href="#给-reply-消息设置超时-1">给 Reply 消息设置超时</a></li></ul></li><li><a href="#actor-的生命周期-1">Actor 的生命周期</a></li><li><a href="#处理io-1">处理IO</a><ul><li><a href="#文件io-1">文件IO</a></li><li><a href="#网络io-1">网络IO</a></li></ul></li><li><a href="#全局actor与依赖注入-1">全局Actor与依赖注入</a></li><li><a href="#批量处理-1">批量处理</a></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
