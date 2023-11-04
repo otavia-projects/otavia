@@ -34,6 +34,7 @@ provides a toolkit to make writing high-performance concurrent programs more eas
   self-heal and stay responsive in the face of failures.
 - **High Performance**: build Millions actor instance and send many billion message in seconds.
 - **Type Safe**: Message send between actor is type safe in compile time.
+- **Zero-Cost ask-pattern**: Send ask message and get reply message like call a method, but zero-cost.
 - **IOC of Actor**: The actor system is also see as a IOC container, user can autowire actor by actor type.
 - **Powerful IO Stack**: The IO stack is fork from [Netty](https://netty.io), but support AIO and file channel.
 - **Async and Await**: Async send ask message and await to continue.

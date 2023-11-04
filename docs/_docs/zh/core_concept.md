@@ -94,6 +94,39 @@ title: 核心概念
 中 `Event` 只能由 `Timer` 和 `Reactor` 产生， 用户编程时只需要关心由 `Timer` 产生的 `TimerEvent`， 处理由 `Reactor`
 产生的 `ReactorEvent` 由 `ChannelsActor` 进行了进一步的封装。
 
+## Event
+
+`Event` 是 `Actor` 与 `ActorSystem` 运行时进行交互的基本单元，其种类是固定的，用户不能自定义。`Event` 主要分为两种类型
+
+- `TimerEvent` : 由 `Timer` 产生，用于通知一个超时事件。编程的时候直接会使用到的只有 `TimeoutEvent`, 其余 `TimerEvent`
+  用于支持其他超时机制，而且被 `Actor` 进行了封装。
+- `ReactorEvent`: 由 `Reactor` 产生，用于通知一个 IO 事件。编程时不用直接处理这种 `Event`, 其被 `ChannelsActor` 进行了封装。
+
+`ActorSystem` 运行时向 `Actor` 实例发送 `Event` 也不会直接调用 `Actor` 实例，而是将 `Event` 放入 `Actor` 实例的邮箱中，然后由
+`ActorSystem` 运行时分配空闲的线程调度 `Actor` 实例执行。
+
+## 消息模型
+
+消息是 `Actor` 用来通信的一种特殊对象，建议使用 `case class` 来定义。`otavia` 为了保证消息传输的编译时安全，对消息的类型进行了
+分类
+
+![](../../_assets/images/message_types.drawio.svg)
+
+按照消息的用途，`otavia` 将消息分成了两种类型，`Call` 消息是一个请求消息，其用于向 `Actor` 请求一个执行过程，并且期望获得一个返回消息。
+`Reply` 就是返回消息。这有点像对象中方法的抽象。我们来看看我们怎么样定义一个方法呢？首先，我们需要给方法起一个名字，然后定义方法的参数，接着
+定义方法的返回值类型。在 `otavia` 中 `Call` 代表了方法名和方法参数，`Reply` 代表返回值类型。因为消息发送的代价是大于方法调用的，所以对于
+返回值为 `Unit` 的方法，在 `otavia` 中将对应的 `Call` 简化为了 `Notice` ，需要返回值的情况抽象为了 `Ask[R <: Reply]`
+，其中 `Notice` 消息是不需要返回 `Reply` 消息的，就像返回值为 `Unit` 的方法没有实际返回值一样。
+
+![](../../_assets/images/message_model.drawio.svg)
+
+`Ask` 是一个带类型参数 `R <: Reply` 的 trait，这个参数用来指定这个 `Ask` 消息期望获取的具体的 `Reply` 消息的类型。所以
+`otavia` 中 `Actor` 只需要通过类型参数约束能接收的 `Call` 消息类型就可以做到完全的编译时类型安全。`Actor` 的类型参数为：
+
+```scala
+trait Actor[+M <: Call] 
+```
+
 ## Actor
 
 `otavia` 中有两类基本的 `Actor` ，`StateActor` 和 `ChannelsActor`， 用户可以根据自己的需要选择继承其中的一种。
@@ -101,7 +134,7 @@ title: 核心概念
 ![](../../_assets/images/two_types_actor.drawio.svg)
 
 `StateActor`: 普通 `Actor` ， 用户可以实现这种 `Actor` 来管理状态，发送、接收消息。这种 `Actor` 还可以与 `Timer` 进行
-交互，用于注册一个超时事件，当超时事件触发的时候，`Timer` 会向 `Actor` 发送 `TimeoutEvent`， 然后 `ActorSystem` 调度
+交互，用于注册一个超时事件。当超时事件触发的时候，`Timer` 会向 `Actor` 发送 `TimeoutEvent`， 然后 `ActorSystem` 调度
 `Actor` 执行以处理 `TimeoutEvent`。
 
 `ChannelsActor`：在 `StateActor` 功能的基础之上新增了管理 `Channel` 的功能，`otavia` 中的 `Channel` 从 Netty 移植
@@ -114,7 +147,7 @@ title: 核心概念
 
 ### Stack
 
-`Stack` 是 `otavia` 中管理 `Actor` 消息的执行的载体
+`Stack` 是 `otavia` 中管理 `Actor` 消息的执行的载体。
 
 ![](../../_assets/images/stack_resume.drawio.svg)
 
@@ -208,12 +241,6 @@ private val pendingStacks: QueueMap[ChannelStack[?]] = new QueueMap[ChannelStack
 - `CHANNEL_MAX_FUTURE_INFLIGHT`:
 - `CHANNEL_MAX_STACK_INFLIGHT`:
 - `CHANNEL_STACK_HEAD_OF_LINE`:
-
-## 消息模型
-
-![](../../_assets/images/message_types.drawio.svg)
-
-## 事件
 
 ## Timer
 
