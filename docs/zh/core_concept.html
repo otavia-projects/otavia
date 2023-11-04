@@ -46,18 +46,40 @@
  <p><img src="../../images/actor_instance.drawio.svg" alt=""></p> 
  <p>另一种 <code>Actor</code> 实例获得线程执行的条件是收到 <code>Event</code>，<code>Event</code> 同样也是放入 <code>Actor</code> 的邮箱中等待处理。 在 <code>otavia</code> 中 <code>Event</code> 只能由 <code>Timer</code> 和 <code>Reactor</code> 产生， 用户编程时只需要关心由 <code>Timer</code> 产生的 <code>TimerEvent</code>， 处理由 <code>Reactor</code> 产生的 <code>ReactorEvent</code> 由 <code>ChannelsActor</code> 进行了进一步的封装。</p> 
 </section> 
+<section id="event-1"> 
+ <h2 class="h500"><a href="#event-1" class="anchor"></a>Event</h2> 
+ <p><code>Event</code> 是 <code>Actor</code> 与 <code>ActorSystem</code> 运行时进行交互的基本单元，其种类是固定的，用户不能自定义。<code>Event</code> 主要分为两种类型</p> 
+ <ul> 
+  <li><code>TimerEvent</code> : 由 <code>Timer</code> 产生，用于通知一个超时事件。编程的时候直接会使用到的只有 <code>TimeoutEvent</code>, 其余 <code>TimerEvent</code> 用于支持其他超时机制，而且被 <code>Actor</code> 进行了封装。</li> 
+  <li><code>ReactorEvent</code>: 由 <code>Reactor</code> 产生，用于通知一个 IO 事件。编程时不用直接处理这种 <code>Event</code>, 其被 <code>ChannelsActor</code> 进行了封装。</li> 
+ </ul> 
+ <p><code>ActorSystem</code> 运行时向 <code>Actor</code> 实例发送 <code>Event</code> 也不会直接调用 <code>Actor</code> 实例，而是将 <code>Event</code> 放入 <code>Actor</code> 实例的邮箱中，然后由 <code>ActorSystem</code> 运行时分配空闲的线程调度 <code>Actor</code> 实例执行。</p> 
+</section> 
+<section id="消息模型-1"> 
+ <h2 class="h500"><a href="#消息模型-1" class="anchor"></a>消息模型</h2> 
+ <p>消息是 <code>Actor</code> 用来通信的一种特殊对象，建议使用 <code>case class</code> 来定义。<code>otavia</code> 为了保证消息传输的编译时安全，对消息的类型进行了 分类</p> 
+ <p><img src="../../images/message_types.drawio.svg" alt=""></p> 
+ <p>按照消息的用途，<code>otavia</code> 将消息分成了两种类型，<code>Call</code> 消息是一个请求消息，其用于向 <code>Actor</code> 请求一个执行过程，并且期望获得一个返回消息。 <code>Reply</code> 就是返回消息。这有点像对象中方法的抽象。我们来看看我们怎么样定义一个方法呢？首先，我们需要给方法起一个名字，然后定义方法的参数，接着 定义方法的返回值类型。在 <code>otavia</code> 中 <code>Call</code> 代表了方法名和方法参数，<code>Reply</code> 代表返回值类型。因为消息发送的代价是大于方法调用的，所以对于 返回值为 <code>Unit</code> 的方法，在 <code>otavia</code> 中将对应的 <code>Call</code> 简化为了 <code>Notice</code> ，需要返回值的情况抽象为了 <code>Ask[R &lt;: Reply]</code> ，其中 <code>Notice</code> 消息是不需要返回 <code>Reply</code> 消息的，就像返回值为 <code>Unit</code> 的方法没有实际返回值一样。</p> 
+ <p><img src="../../images/message_model.drawio.svg" alt=""></p> 
+ <p><code>Ask</code> 是一个带类型参数 <code>R &lt;: Reply</code> 的 trait，这个参数用来指定这个 <code>Ask</code> 消息期望获取的具体的 <code>Reply</code> 消息的类型。所以 <code>otavia</code> 中 <code>Actor</code> 只需要通过类型参数约束能接收的 <code>Call</code> 消息类型就可以做到完全的编译时类型安全。<code>Actor</code> 的类型参数为：</p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>trait Actor[+M &lt;: Call]
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
+</section> 
 <section id="actor-3"> 
  <h2 class="h500"><a href="#actor-3" class="anchor"></a>Actor</h2> 
  <p><code>otavia</code> 中有两类基本的 <code>Actor</code> ，<code>StateActor</code> 和 <code>ChannelsActor</code>， 用户可以根据自己的需要选择继承其中的一种。</p> 
  <p><img src="../../images/two_types_actor.drawio.svg" alt=""></p> 
- <p><code>StateActor</code>: 普通 <code>Actor</code> ， 用户可以实现这种 <code>Actor</code> 来管理状态，发送、接收消息。这种 <code>Actor</code> 还可以与 <code>Timer</code> 进行 交互，用于注册一个超时事件，当超时事件触发的时候，<code>Timer</code> 会向 <code>Actor</code> 发送 <code>TimeoutEvent</code>， 然后 <code>ActorSystem</code> 调度 <code>Actor</code> 执行以处理 <code>TimeoutEvent</code>。</p> 
+ <p><code>StateActor</code>: 普通 <code>Actor</code> ， 用户可以实现这种 <code>Actor</code> 来管理状态，发送、接收消息。这种 <code>Actor</code> 还可以与 <code>Timer</code> 进行 交互，用于注册一个超时事件。当超时事件触发的时候，<code>Timer</code> 会向 <code>Actor</code> 发送 <code>TimeoutEvent</code>， 然后 <code>ActorSystem</code> 调度 <code>Actor</code> 执行以处理 <code>TimeoutEvent</code>。</p> 
  <p><code>ChannelsActor</code>：在 <code>StateActor</code> 功能的基础之上新增了管理 <code>Channel</code> 的功能，<code>otavia</code> 中的 <code>Channel</code> 从 Netty 移植 而来，也基本跟 Netty 保持一致。但是与 Netty 不同的是，<code>otavia</code> 中的 <code>Channel</code> 必须跟一个 <code>ChannelsActor</code> 绑定，作为 <code>ChannelsActor</code> 的一部分进行运行。</p> 
  <p>为了方便使用，<code>otavia</code> 根据不同的场景抽象了以下几种常用的 <code>Actor</code>，您可以继承其中的一种来实现您的功能：</p> 
  <p><img src="../../images/actor_type.drawio.svg" alt=""></p> 
 </section> 
 <section id="stack-1"> 
  <h3 class="h400"><a href="#stack-1" class="anchor"></a>Stack</h3> 
- <p><code>Stack</code> 是 <code>otavia</code> 中管理 <code>Actor</code> 消息的执行的载体</p> 
+ <p><code>Stack</code> 是 <code>otavia</code> 中管理 <code>Actor</code> 消息的执行的载体。</p> 
  <p><img src="../../images/stack_resume.drawio.svg" alt=""></p> 
 </section> 
 <section id="各种-channelsactor-1"> 
@@ -121,13 +143,6 @@
   <li><code>CHANNEL_STACK_HEAD_OF_LINE</code>:</li> 
  </ul> 
 </section> 
-<section id="消息模型-1"> 
- <h2 class="h500"><a href="#消息模型-1" class="anchor"></a>消息模型</h2> 
- <p><img src="../../images/message_types.drawio.svg" alt=""></p> 
-</section> 
-<section id="事件-1"> 
- <h2 class="h500"><a href="#事件-1" class="anchor"></a>事件</h2> 
-</section> 
 <section id="timer-5"> 
  <h2 class="h500"><a href="#timer-5" class="anchor"></a>Timer</h2> 
 </section> 
@@ -151,4 +166,4 @@
 </section> 
 <section id="测试工具-1"> 
  <h3 class="h400"><a href="#测试工具-1" class="anchor"></a>测试工具</h3> 
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#现有编程模型的挑战-1">现有编程模型的挑战</a></li><li><a href="#otavia-的设计哲学-1">otavia 的设计哲学</a></li><li><a href="#核心运行时-1">核心运行时</a></li><li><a href="#actor-3">Actor</a><ul><li><a href="#stack-1">Stack</a></li><li><a href="#各种-channelsactor-1">各种 ChannelsActor</a></li></ul></li><li><a href="#channel-1">Channel</a><ul><li><a href="#channelpipeline-1">ChannelPipeline</a></li><li><a href="#channel-inflight-1">Channel Inflight</a></li></ul></li><li><a href="#消息模型-1">消息模型</a></li><li><a href="#事件-1">事件</a></li><li><a href="#timer-5">Timer</a></li><li><a href="#生态系统中其他的核心模块-1">生态系统中其他的核心模块</a><ul><li><a href="#cps变换-1">CPS变换</a></li><li><a href="#buffer-1">Buffer</a></li><li><a href="#序列化反序列化框架-1">序列化反序列化框架</a></li><li><a href="#sql-1">SQL</a></li><li><a href="#日志-1">日志</a></li><li><a href="#测试工具-1">测试工具</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#现有编程模型的挑战-1">现有编程模型的挑战</a></li><li><a href="#otavia-的设计哲学-1">otavia 的设计哲学</a></li><li><a href="#核心运行时-1">核心运行时</a></li><li><a href="#event-1">Event</a></li><li><a href="#消息模型-1">消息模型</a></li><li><a href="#actor-3">Actor</a><ul><li><a href="#stack-1">Stack</a></li><li><a href="#各种-channelsactor-1">各种 ChannelsActor</a></li></ul></li><li><a href="#channel-1">Channel</a><ul><li><a href="#channelpipeline-1">ChannelPipeline</a></li><li><a href="#channel-inflight-1">Channel Inflight</a></li></ul></li><li><a href="#timer-5">Timer</a></li><li><a href="#生态系统中其他的核心模块-1">生态系统中其他的核心模块</a><ul><li><a href="#cps变换-1">CPS变换</a></li><li><a href="#buffer-1">Buffer</a></li><li><a href="#序列化反序列化框架-1">序列化反序列化框架</a></li><li><a href="#sql-1">SQL</a></li><li><a href="#日志-1">日志</a></li><li><a href="#测试工具-1">测试工具</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
