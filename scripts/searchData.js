@@ -1969,6 +1969,7 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"cc/otavia/testkit/TestProbe.html#","e":false,"i":"","n":"TestProbe","t":"TestProbe(system: ActorSystem)","d":"cc.otavia.testkit","k":"class","x":""},
 {"l":"cc/otavia/testkit/TestProbe.html#askAndExpect-ffffffb0","e":false,"i":"","n":"askAndExpect","t":"askAndExpect[M <: Ask[_ <: Reply], R <: ReplyOf[M] : ClassTag](actor: Address[M], ask: M, expect: MessageFuture[R] => Boolean): Boolean","d":"cc.otavia.testkit.TestProbe","k":"def","x":""},
 {"l":"docs/index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k":"static","x":""},
+{"l":"docs/name_from.html#","e":false,"i":"","n":"Name From","t":"Name From","d":"","k":"static","x":""},
 {"l":"docs/quick_start.html#","e":false,"i":"","n":"Quick Start","t":"Quick Start","d":"","k":"static","x":""},
 {"l":"docs/core_concept.html#","e":false,"i":"","n":"Core Concept","t":"Core Concept","d":"","k":"static","x":""},
 {"l":"docs/guide/index.html#","e":false,"i":"","n":"Guide","t":"Guide","d":"","k":"static","x":""},
