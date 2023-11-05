@@ -147,10 +147,60 @@ trait Actor[+M <: Call]
 
 ### Stack
 
-`Stack` 是 `otavia` 中管理 `Actor` 消息的执行的载体。当 Actor 处理一个 Call 类型消息的时候，消息并不是直接传入，而是装入一个 Stack 然后
-再传给 Actor 执行。
+`Stack` 是 `otavia` 中管理 `Actor` 消息的执行的载体。当 `Actor` 处理一个 `Call` 类型消息的时候，消息并不是直接传入，而是装入一个
+`Stack` 然后再传给 `Actor` 执行。使用 `Address` 的 `notice` 方法发送的 `Notice` 消息最终会装入 `NoticeStack` 执行
+`continueNotice` 方法；用 `ask` 方法发送的 `Ask` 消息最终会装入 `AskStack` 执行 `continueAsk` 方法。开发者实现的 `Actor`
+需要实现以下方法来处理 `Call` 消息
+
+```scala
+protected def continueAsk(stack: AskStack[M & Ask[? <: Reply]]): Option[StackState]
+
+protected def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState]
+```
+
+`Stack` 包含一个 `StackState`，其初始值为 `StackState.start`， `continueXXX` 方法的返回值 `Option[StackState]` 代表每次
+`continueXXX` 执行完成之后 `Stack` 切换为新的 `StackState`。`Stack` 使用 `return` 方法结束，`return` 方法自身的返回值为
+`None`。如果 `Stack` 是 `AskStack`，`return` 方法需要输入一个 `Reply` 消息作为 `Ask` 消息的返回消息。
 
 ![](../../_assets/images/stack_resume.drawio.svg)
+
+一个 `StackState` 必须关联一个或者多个 `Future`，当 `StackState` 的 `resumable` 方法返回值为 `true` 或者关联的所有
+`Future` 都为完成状态的时候，会再次使用 `continueXXX` 执行这个 `Stack`。注意这里的 `Future` 并不是 `Scala` 标准库里的
+`Future`，`otavia` 实现了一套自己的 `Future/Promise` 系统用来触发 `Stack` 的执行。
+
+#### Stack 的种类
+
+不同的消息有不同的 `Stack` 子类
+
+- `NoticeStack`: 用于管理 `notice` 发送的 `Notice` 消息的执行。
+- `AskStack`: 用于管理 `ask` 发送的 `Ask` 消息的执行。
+- `BatchNoticeStack`: 用于批量执行 `Notice` 消息。
+- `batchContinueAsk`: 用于批量执行 `Ask` 消息。
+- `ChannelStack`: 用于执行 `Channel` 发送来的请求。
+
+**开发者定义的消息可能同时继承 `Notice` 和 `Ask` trait，其最终是作为 `Notice` 消息处理还是 `Ask` 消息处理，取决于消息发送的方式，
+如果使用 `Address` 的 `notice` 方法发送，那么作为 `Notice` 消息处理， 如果被 `ask` 方法发送，那么作为 `Ask` 消息处理。**
+
+#### Future 的种类
+
+`Future` 是用于收取一个异步消息的容器，每当一个 `Future` 完成的时候，就会检查 `Stack` 是否满足继续执行的条件，一旦满足，就会开始重新
+执行 `Stack`。`Future` 按照用途有如下两类
+
+- `MessageFuture`: 用于获取一个 `Reply` 消息或者超时生成的 `TimeoutReply` 消息。
+- `ChannelFuture`: 用于获取一个 `Channel` 执行的结果或者 `Channel` 传来的消息。
+
+#### 零成本抽象
+
+尽管我们使用了 `Stack`、`Future` 等管理消息的执行，但是并不用担心消息太多导致创造太多对象而对 GC 造成压力。因为这些对象都由
+`otavia` 运行时创建，并且都是由对象池管理的，能做到最大程度的对象复用。同时，开发者实现的 `StackState` 如果被高频使用也可以使用
+对象池，`otavia` 为使用对象池提供了非常简单的方法。你可以参考
+[FutureState](https://github.com/otavia-projects/otavia/blob/main/core/src/cc/otavia/core/stack/helper/FutureState.scala)
+
+#### 使用 Stack 管理消息执行的好处
+
+使用 `Stack` 管理消息的执行，我们可以很好的管理消息之间的依赖关系，而且发送消息更加像直接调用一个对象的方法。更进一步，我们甚至可以
+使用 `Scala 3` 的元编程工具实现一套基于 CPS(Continuation Passing Style) 的 `async/await` 语法。而这正是项目
+[otavia-async](https://github.com/otavia-projects/otavia-async) 的目标，如果您对这个项目感兴趣，热烈欢迎您的贡献！
 
 ### 各种 ChannelsActor
 
