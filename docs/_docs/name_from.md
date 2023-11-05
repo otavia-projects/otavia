@@ -16,4 +16,7 @@ outer wall is predominantly calcium phosphate.
 
 ![fossil](../_assets/images/otavia_antiqua_fossil.jpg)
 
+It was probably the first multicellular animal to appear on Earth. This means that all animal life, from precursor cells
+to dinosaurs to modern humans, is included and can be traced directly back to the organism Otavia.
+
 More information on wikipedia: [Otavia](https://en.wikipedia.org/wiki/Otavia)

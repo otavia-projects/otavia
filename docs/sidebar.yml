@@ -36,6 +36,8 @@ subsection:
     index: zh/index.md
     directory: zh
     subsection:
+      - title: 名称来源
+        page: zh/name_from.md
       - title: 快速开始
         page: zh/quick_start.md
       - title: 核心概念
