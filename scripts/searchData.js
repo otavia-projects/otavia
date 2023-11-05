@@ -1984,6 +1984,7 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"docs/module/index.html#","e":false,"i":"","n":"Modules","t":"Modules","d":"","k":"static","x":""},
 {"l":"docs/module/buffer.html#","e":false,"i":"","n":"Buffer","t":"Buffer","d":"","k":"static","x":""},
 {"l":"docs/zh/index.html#","e":false,"i":"","n":"中文文档","t":"中文文档","d":"","k":"static","x":""},
+{"l":"docs/zh/name_from.html#","e":false,"i":"","n":"名称来源","t":"名称来源","d":"","k":"static","x":""},
 {"l":"docs/zh/quick_start.html#","e":false,"i":"","n":"快速开始","t":"快速开始","d":"","k":"static","x":""},
 {"l":"docs/zh/core_concept.html#","e":false,"i":"","n":"核心概念","t":"核心概念","d":"","k":"static","x":""},
 {"l":"docs/zh/guide/index.html#","e":false,"i":"","n":"Guide","t":"Guide","d":"","k":"static","x":""},
