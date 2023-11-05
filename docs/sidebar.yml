@@ -1,5 +1,7 @@
 index: index.md
 subsection:
+  - title: Name From
+    page: name_from.md
   - title: Quick Start
     page: quick_start.md
   - title: Core Concept

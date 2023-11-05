@@ -147,7 +147,8 @@ trait Actor[+M <: Call]
 
 ### Stack
 
-`Stack` 是 `otavia` 中管理 `Actor` 消息的执行的载体。
+`Stack` 是 `otavia` 中管理 `Actor` 消息的执行的载体。当 Actor 处理一个 Call 类型消息的时候，消息并不是直接传入，而是装入一个 Stack 然后
+再传给 Actor 执行。
 
 ![](../../_assets/images/stack_resume.drawio.svg)
 
