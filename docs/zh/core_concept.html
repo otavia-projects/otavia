@@ -79,8 +79,45 @@
 </section> 
 <section id="stack-1"> 
  <h3 class="h400"><a href="#stack-1" class="anchor"></a>Stack</h3> 
- <p><code>Stack</code> 是 <code>otavia</code> 中管理 <code>Actor</code> 消息的执行的载体。当 Actor 处理一个 Call 类型消息的时候，消息并不是直接传入，而是装入一个 Stack 然后 再传给 Actor 执行。</p> 
+ <p><code>Stack</code> 是 <code>otavia</code> 中管理 <code>Actor</code> 消息的执行的载体。当 <code>Actor</code> 处理一个 <code>Call</code> 类型消息的时候，消息并不是直接传入，而是装入一个 <code>Stack</code> 然后再传给 <code>Actor</code> 执行。使用 <code>Address</code> 的 <code>notice</code> 方法发送的 <code>Notice</code> 消息最终会装入 <code>NoticeStack</code> 执行 <code>continueNotice</code> 方法；用 <code>ask</code> 方法发送的 <code>Ask</code> 消息最终会装入 <code>AskStack</code> 执行 <code>continueAsk</code> 方法。开发者实现的 <code>Actor</code> 需要实现以下方法来处理 <code>Call</code> 消息</p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>protected def continueAsk(stack: AskStack[M &amp; Ask[? &lt;: Reply]]): Option[StackState]
+</span><span line-number="2" class=""><span class="tooltip-container"></span>
+</span><span line-number="3" class=""><span class="tooltip-container"></span>protected def continueNotice(stack: NoticeStack[M &amp; Notice]): Option[StackState]
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
+ <p><code>Stack</code> 包含一个 <code>StackState</code>，其初始值为 <code>StackState.start</code>， <code>continueXXX</code> 方法的返回值 <code>Option[StackState]</code> 代表每次 <code>continueXXX</code> 执行完成之后 <code>Stack</code> 切换为新的 <code>StackState</code>。<code>Stack</code> 使用 <code>return</code> 方法结束，<code>return</code> 方法自身的返回值为 <code>None</code>。如果 <code>Stack</code> 是 <code>AskStack</code>，<code>return</code> 方法需要输入一个 <code>Reply</code> 消息作为 <code>Ask</code> 消息的返回消息。</p> 
  <p><img src="../../images/stack_resume.drawio.svg" alt=""></p> 
+ <p>一个 <code>StackState</code> 必须关联一个或者多个 <code>Future</code>，当 <code>StackState</code> 的 <code>resumable</code> 方法返回值为 <code>true</code> 或者关联的所有 <code>Future</code> 都为完成状态的时候，会再次使用 <code>continueXXX</code> 执行这个 <code>Stack</code>。注意这里的 <code>Future</code> 并不是 <code>Scala</code> 标准库里的 <code>Future</code>，<code>otavia</code> 实现了一套自己的 <code>Future/Promise</code> 系统用来触发 <code>Stack</code> 的执行。</p> 
+</section> 
+<section id="stack-的种类-1"> 
+ <h4 class="h300"><a href="#stack-的种类-1" class="anchor"></a>Stack 的种类</h4> 
+ <p>不同的消息有不同的 <code>Stack</code> 子类</p> 
+ <ul> 
+  <li><code>NoticeStack</code>: 用于管理 <code>notice</code> 发送的 <code>Notice</code> 消息的执行。</li> 
+  <li><code>AskStack</code>: 用于管理 <code>ask</code> 发送的 <code>Ask</code> 消息的执行。</li> 
+  <li><code>BatchNoticeStack</code>: 用于批量执行 <code>Notice</code> 消息。</li> 
+  <li><code>batchContinueAsk</code>: 用于批量执行 <code>Ask</code> 消息。</li> 
+  <li><code>ChannelStack</code>: 用于执行 <code>Channel</code> 发送来的请求。</li> 
+ </ul> 
+ <p><strong>开发者定义的消息可能同时继承 <code>Notice</code> 和 <code>Ask</code> trait，其最终是作为 <code>Notice</code> 消息处理还是 <code>Ask</code> 消息处理，取决于消息发送的方式， 如果使用 <code>Address</code> 的 <code>notice</code> 方法发送，那么作为 <code>Notice</code> 消息处理， 如果被 <code>ask</code> 方法发送，那么作为 <code>Ask</code> 消息处理。</strong></p> 
+</section> 
+<section id="future-的种类-1"> 
+ <h4 class="h300"><a href="#future-的种类-1" class="anchor"></a>Future 的种类</h4> 
+ <p><code>Future</code> 是用于收取一个异步消息的容器，每当一个 <code>Future</code> 完成的时候，就会检查 <code>Stack</code> 是否满足继续执行的条件，一旦满足，就会开始重新 执行 <code>Stack</code>。<code>Future</code> 按照用途有如下两类</p> 
+ <ul> 
+  <li><code>MessageFuture</code>: 用于获取一个 <code>Reply</code> 消息或者超时生成的 <code>TimeoutReply</code> 消息。</li> 
+  <li><code>ChannelFuture</code>: 用于获取一个 <code>Channel</code> 执行的结果或者 <code>Channel</code> 传来的消息。</li> 
+ </ul> 
+</section> 
+<section id="零成本抽象-1"> 
+ <h4 class="h300"><a href="#零成本抽象-1" class="anchor"></a>零成本抽象</h4> 
+ <p>尽管我们使用了 <code>Stack</code>、<code>Future</code> 等管理消息的执行，但是并不用担心消息太多导致创造太多对象而对 GC 造成压力。因为这些对象都由 <code>otavia</code> 运行时创建，并且都是由对象池管理的，能做到最大程度的对象复用。同时，开发者实现的 <code>StackState</code> 如果被高频使用也可以使用 对象池，<code>otavia</code> 为使用对象池提供了非常简单的方法。你可以参考 <a href="https://github.com/otavia-projects/otavia/blob/main/core/src/cc/otavia/core/stack/helper/FutureState.scala">FutureState</a></p> 
+</section> 
+<section id="使用-stack-管理消息执行的好处-1"> 
+ <h4 class="h300"><a href="#使用-stack-管理消息执行的好处-1" class="anchor"></a>使用 Stack 管理消息执行的好处</h4> 
+ <p>使用 <code>Stack</code> 管理消息的执行，我们可以很好的管理消息之间的依赖关系，而且发送消息更加像直接调用一个对象的方法。更进一步，我们甚至可以 使用 <code>Scala 3</code> 的元编程工具实现一套基于 CPS(Continuation Passing Style) 的 <code>async/await</code> 语法。而这正是项目 <a href="https://github.com/otavia-projects/otavia-async">otavia-async</a> 的目标，如果您对这个项目感兴趣，热烈欢迎您的贡献！</p> 
 </section> 
 <section id="各种-channelsactor-1"> 
  <h3 class="h400"><a href="#各种-channelsactor-1" class="anchor"></a>各种 ChannelsActor</h3> 
@@ -166,4 +203,4 @@
 </section> 
 <section id="测试工具-1"> 
  <h3 class="h400"><a href="#测试工具-1" class="anchor"></a>测试工具</h3> 
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#现有编程模型的挑战-1">现有编程模型的挑战</a></li><li><a href="#otavia-的设计哲学-1">otavia 的设计哲学</a></li><li><a href="#核心运行时-1">核心运行时</a></li><li><a href="#event-1">Event</a></li><li><a href="#消息模型-1">消息模型</a></li><li><a href="#actor-3">Actor</a><ul><li><a href="#stack-1">Stack</a></li><li><a href="#各种-channelsactor-1">各种 ChannelsActor</a></li></ul></li><li><a href="#channel-1">Channel</a><ul><li><a href="#channelpipeline-1">ChannelPipeline</a></li><li><a href="#channel-inflight-1">Channel Inflight</a></li></ul></li><li><a href="#timer-5">Timer</a></li><li><a href="#生态系统中其他的核心模块-1">生态系统中其他的核心模块</a><ul><li><a href="#cps变换-1">CPS变换</a></li><li><a href="#buffer-1">Buffer</a></li><li><a href="#序列化反序列化框架-1">序列化反序列化框架</a></li><li><a href="#sql-1">SQL</a></li><li><a href="#日志-1">日志</a></li><li><a href="#测试工具-1">测试工具</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#现有编程模型的挑战-1">现有编程模型的挑战</a></li><li><a href="#otavia-的设计哲学-1">otavia 的设计哲学</a></li><li><a href="#核心运行时-1">核心运行时</a></li><li><a href="#event-1">Event</a></li><li><a href="#消息模型-1">消息模型</a></li><li><a href="#actor-3">Actor</a><ul><li><a href="#stack-1">Stack</a><ul><li><a href="#stack-的种类-1">Stack 的种类</a></li><li><a href="#future-的种类-1">Future 的种类</a></li><li><a href="#零成本抽象-1">零成本抽象</a></li><li><a href="#使用-stack-管理消息执行的好处-1">使用 Stack 管理消息执行的好处</a></li></ul></li><li><a href="#各种-channelsactor-1">各种 ChannelsActor</a></li></ul></li><li><a href="#channel-1">Channel</a><ul><li><a href="#channelpipeline-1">ChannelPipeline</a></li><li><a href="#channel-inflight-1">Channel Inflight</a></li></ul></li><li><a href="#timer-5">Timer</a></li><li><a href="#生态系统中其他的核心模块-1">生态系统中其他的核心模块</a><ul><li><a href="#cps变换-1">CPS变换</a></li><li><a href="#buffer-1">Buffer</a></li><li><a href="#序列化反序列化框架-1">序列化反序列化框架</a></li><li><a href="#sql-1">SQL</a></li><li><a href="#日志-1">日志</a></li><li><a href="#测试工具-1">测试工具</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
