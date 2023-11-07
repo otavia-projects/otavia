@@ -77,7 +77,7 @@ Actor 模型的基础上增加了一些新的组件。构成 `otavia` 运行时�
     * `ChannelsActor`： 用于处理 IO 的 `Actor` 。
 - `ActorSystem`: `Actor` 实例的容器，负责创建 `Actor` 实例、管理 `Actor` 实例的生命周期，和调度 `Actor` 实例的执行。
 - `Timer`: 产生定时事件，生成超时 `Event` 并且发送给相关 `Actor`。
-- `Reactor`: 处理 `ChannelsActor` 提交的 IO 请求，监听 IO 事件， 处理 IO 读写，并且把 IO 结果以 `Event` 的方式发送
+- `Reactor`: 处理 `ChannelsActor` 提交的 IO 命令，监听 IO 事件， 处理 IO 读写，并且把 IO 结果以 `Event` 的方式发送
   给 `ChannelsActor`。
 - `Address`: `Actor` 实例之间相互隔离，他们之间只能通过 `Address` 发送消息进行通信。
 - `Message`: 用于 `Actor` 之间相互通信，有3种基本类型的消息: `Notice`、`Reply`、`Ask[R <: Reply]`，用户定义的消息
@@ -110,8 +110,8 @@ Actor 模型的基础上增加了一些新的组件。构成 `otavia` 运行时�
 
 ## 消息模型
 
-消息是 `Actor` 用来通信的一种特殊对象，建议使用 `case class` 来定义。`otavia` 为了保证消息发送的编译时安全，对消息的类型进行了
-分类
+消息是 `Actor` 用来通信的一种特殊对象，建议使用 `case class` 来定义。`otavia` 为了保证消息发送的编译时安全，根据消息的用途对消息的类型
+进行了分类
 
 ![](../../_assets/images/message_types.drawio.svg)
 
@@ -147,8 +147,8 @@ trait Address[-M <: Call]
 ![](../../_assets/images/two_types_actor.drawio.svg)
 
 `StateActor`: 普通 `Actor` ， 用户可以实现这种 `Actor` 来管理状态，发送、接收消息。这种 `Actor` 还可以与 `Timer` 进行
-交互，用于注册一个超时事件。当超时事件触发的时候，`Timer` 会向 `Actor` 发送 `TimeoutEvent`， 然后 `ActorSystem` 调度
-`Actor` 执行以处理 `TimeoutEvent`。
+交互，用于注册一个超时事件。当超时事件触发的时候，`Timer` 会向 `StateActor` 发送 `TimeoutEvent`， 然后 `ActorSystem` 调度
+`StateActor` 执行以处理 `TimeoutEvent`。
 
 `ChannelsActor`：在 `StateActor` 功能的基础之上新增了管理 `Channel` 的功能，`otavia` 中的 `Channel` 从 Netty 移植
 而来，也基本跟 Netty 保持一致。但是与 Netty 不同的是，`otavia` 中的 `Channel` 必须跟一个 `ChannelsActor` 绑定，作为
@@ -160,7 +160,7 @@ trait Address[-M <: Call]
 
 ### Stack
 
-`Stack` 是 `otavia` 中管理 `Actor` 消息的执行的载体。当 `Actor` 处理一个 `Call` 类型消息的时候，消息并不是直接传入，而是装入一个
+`Stack` 是 `Actor` 中管理消息的执行的载体。当 `Actor` 处理一个 `Call` 类型消息的时候，消息并不是直接传入，而是装入一个
 `Stack` 然后再传给 `Actor` 执行。使用 `Address` 的 `notice` 方法发送的 `Notice` 消息最终会装入 `NoticeStack` 执行
 `continueNotice` 方法；用 `ask` 方法发送的 `Ask` 消息最终会装入 `AskStack` 执行 `continueAsk` 方法。开发者实现的 `Actor`
 需要实现以下方法来处理 `Call` 消息
@@ -173,7 +173,7 @@ protected def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState]
 
 `Stack` 包含一个 `StackState`，其初始值为 `StackState.start`， `continueXXX` 方法的返回值 `Option[StackState]` 代表每次
 `continueXXX` 执行完成之后 `Stack` 切换为新的 `StackState`。`Stack` 使用 `return` 方法结束，`return` 方法自身的返回值为
-`None`，代表 `Stack` 的 `StackState` 切换为 `None`。如果 `Stack` 是 `AskStack`，`return` 方法需要输入一个 `Reply`
+`None`，代表 `Stack` 不再切换新的 `StackState`。如果 `Stack` 是 `AskStack`，`return` 方法需要输入一个 `Reply`
 消息作为 `Ask` 消息的回复消息。
 
 ![](../../_assets/images/stack_resume.drawio.svg)
@@ -192,12 +192,12 @@ protected def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState]
 - `batchContinueAsk`: 用于批量执行 `Ask` 消息。
 - `ChannelStack`: 用于执行 `Channel` 发送来的请求。
 
-**开发者定义的消息可能同时继承 `Notice` 和 `Ask` trait，其最终是作为 `Notice` 消息处理还是 `Ask` 消息处理，取决于消息发送的方式，
-如果使用 `Address` 的 `notice` 方法发送，那么作为 `Notice` 消息处理， 如果被 `ask` 方法发送，那么作为 `Ask` 消息处理。**
+**开发者定义的消息可能同时继承 `Notice` 和 `Ask` trait，其最终是作为 `Notice` 消息处理还是 `Ask` 消息处理，取决于消息发送的方式：
+如果使用 `Address` 的 `notice` 方法发送，那么作为 `Notice` 消息处理； 如果被 `ask` 方法发送，那么作为 `Ask` 消息处理。**
 
 #### Future 的种类
 
-`Future` 是用于收取一个异步消息的容器，每当一个 `Future` 完成的时候，就会检查 `Stack` 是否满足继续执行的条件，一旦满足，就会
+`Future` 是用于收取一个异步消息的容器，每当一个 `Future` 完成的时候，就会检查与其关联的 `StackState` 是否满足执行的条件，一旦满足，就会
 重新调用 `continueXXX` 方法执行 `Stack`。`Future` 按照用途有如下两类
 
 - `MessageFuture`: 用于获取一个 `Reply` 消息或者超时生成的 `TimeoutReply` 消息。
@@ -205,7 +205,7 @@ protected def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState]
 
 #### 零成本抽象
 
-尽管我们使用了 `Stack`、`Future` 等管理消息的执行，但是并不用担心系统发送消息太多导致创造太多对象而对 GC 造成压力。因为这些对象
+尽管我们使用了 `Stack`、`Future` 等管理消息的执行，但是并不用担心系统发送消息太多导致创造太多额外的对象而对 GC 造成压力。因为这些对象
 都是由 `otavia` 运行时创建，并且都是被对象池管理的，能做到最大程度的对象复用。同时，开发者实现的 `StackState` 如果被高频使用也可以使用
 对象池。`otavia` 为使用对象池提供了非常简单的方法。你可以参考
 [FutureState](https://github.com/otavia-projects/otavia/blob/main/core/src/cc/otavia/core/stack/helper/FutureState.scala)
@@ -230,9 +230,33 @@ protected def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState]
 
 其中所有类型的 `ChannelsActor` 都可以管理文件 `Channel`，如果您只需要使用文件 `Channel`，你可以直接继承 `ChannelsActor`。
 
+### Actor 的生命周期
+
+`Actor` 的整个生命周期都被 `otavia` 运行时管理。当 `ActorSystem` 创建一个 `Actor` 对象之后，会立即给调用者返回这个 `Actor`
+对象的 `Address`。与此同时，这个 `Actor` 对象会被放入挂载队列中等待挂载到 `ActorSystem`。只有 `Actor` 对象完成挂载之后，运行时
+才会调度 `Actor` 处理邮箱中的 `Message` 或者 `Event`。`Actor` 对象挂载的时候会设置运行时相关属性，所以 `Actor` 内与运行时相关的
+属性只能在挂载之后才能使用，比如 `logger` 、`context` 等。`Actor` 提供了一些钩子方法用于在不同的生命周期运行。
+
+- `afterMount`: `Actor` 实例挂载到 `ActorSystem` 之后调用。
+- `beforeRestart`: 重启之前调用。
+- `restart`: 重启 `Actor` 实例的方法。
+- `afterRestart`: 重启之后调用。
+- `AutoCleanable.cleaner`: 如果您实现的 `Actor` 需要清理一些不安全的资源，继承 `AutoCleanable` trait 然后实现 `cleaner`
+  方法。
+
+虽然 `Actor` 实例的生命周期被 `ActorSystem` 管理，但是其销毁仍然由 JVM 的垃圾回收负责。如果一个 `Actor` 实例不再被任何
+GC 根对象引用，就会被 JVM 垃圾回收。如果您的 `Actor` 存在一些不安全资源不能被 JVM 垃圾回收，您可以扩展
+`AutoCleanable` 然后实现 `cleaner` 方法。 `cleaner` 方法创建一个自定义的 `ActorCleaner` 对象来清理不安全的资源。
+因为 `ActorCleaner` 是依靠 JVM 的幽灵引用来识别将会被垃圾回收的 `Actor`，所以当您实现 `ActorCleaner` 的时候，需要小心保
+证其不能持有这个 `Actor` 对象的引用或者这个 `Actor` 的地址，否则这个 `Actor` 将永远不会被垃圾回收。
+
+下图显示了 `Actor` 的完整的生命周期过程：
+
+![](../../_assets/images/actor_life_cycle.drawio.svg)
+
 ## Channel
 
-在 `otavia` 中，一个 `Channel` 就代表一个 IO 对象，比如一个打开的文件、一个网络连接等，因为 `Channel` 是从 Netty 移植而来，
+在 `otavia` 中，一个 `Channel` 就代表一个 IO 对象，比如一个打开的文件、一个网络连接等。因为 `Channel` 是从 Netty 移植而来，
 所以基本的组件也跟 Netty 差不多，也有 `ChannelPipeline` `ChannelHandler` `ChannelHandlerContext` 等组件，并且工作
 方式也跟 Netty 差不多。
 
@@ -240,13 +264,13 @@ protected def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState]
 
 但是为了 `Channel` 更好的与 `otavia` 的 `ChannelsActor` 结合，也需要做出一些调整：
 
-1. Netty 的 `Channel` 创建成功后需要注册到 `EventLoop` 上，`EventLoop` 是一个线程，这个线程会监听 IO 事件，然后调度相关的
-   `Channel` 进行执行。同样对于 outbound 调用，也需要转换成任务提交到 `EventLoop` 线程上排队执行。`otavia` 中没有
-   `EventLoop`。`otavia` 中的 `Channel` 创建成功后需要挂载到一个 `ChannelsActor` 上，`ChannelsActor` 会将
-   `Channel` 中的 `UnsafeChannel` 注册到 `Reactor` 上。`Reactor` 会监听相关 `Channel` 的 IO 事件，然后产生相关的
-   `ReactorEvent` 发送给挂载的 `ChannelsActor`，`ChannelsActor` 被调度执行的时候会将 `ReactorEvent`
+1. Netty 的 `Channel` 创建成功后需要注册到 `EventLoop` 上。`EventLoop` 是一个线程，这个线程会监听 IO
+   事件，然后调度相关的 `Channel` 进行执行。同样对于 `Channel` 的 outbound 调用，也需要转换成任务提交到 `EventLoop`
+   线程上排队执行。`otavia` 中没有 `EventLoop` 这个组件。`otavia` 中的 `Channel` 创建成功后需要挂载到一个 `ChannelsActor`
+   上，`ChannelsActor` 会将`Channel` 中的 `UnsafeChannel` 注册到 `Reactor` 上。`Reactor` 会监听相关 `Channel` 的 IO
+   事件，然后产生相关的 `ReactorEvent` 发送给挂载的 `ChannelsActor`，`ChannelsActor` 被调度执行的时候会将 `ReactorEvent`
    分配给相关的 `Channel` 执行 inbound 流程。
-2. Netty 的 `EventLoop` 不仅监听IO事件，而且IO事件发生的时候还会调度相关的 `Channel` 进行执行，IO 的监听、IO 数据的读写和
+2. Netty 的 `EventLoop` 不仅监听 IO 事件，而且 IO 事件发生的时候还会调度相关的 `Channel` 进行执行，IO 的监听、IO 数据的读写和
    `ChannelPipeline` 的执行都在同一个 `EventLoop` 线程内。但是 `otavia` 中 IO 的监听、IO 数据的读写由 `Reactor` 负责，
    然后按需生成相关的 `ReactorEvent` 发送给 `ChannelsActor`， 由 `ChannelsActor` 负责调度 `ChannelPipeline` 的执行。
 3. Netty 中所有的业务逻辑都必须封装成 `ChannelHandler` 放入 `ChannelPipeline` 中执行，如果一个 inbound 事件到达
@@ -254,7 +278,7 @@ protected def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState]
    `TailHandler` 之后会继续传输到到 `Channel` 内的 `Inflight`，然后由 `Inflight` 分发给 `ChannelsActor` 内部的
    `Stack` 处理。事实上，在 `otavia` 中 `ChannelPipeline` 的职责更加集中在字节序列的转换与编解码工作，比如 TLS、压缩、数
    据对象的序列化与反序列化等。其他复杂的业务逻辑直接通过将反序列化的对象传入 `Channel` 的 `Inflight` 组件，然后交给
-   `ChannelsActor` 继续处理后续复杂的业务逻辑。
+   `ChannelsActor` 进行进一步的处理。
 
 ### Channel 行为的抽象
 
@@ -329,14 +353,14 @@ private val pendingStacks: QueueMap[ChannelStack[?]] = new QueueMap[ChannelStack
   barrier，如果一个请求是 barrier，那么其必须等待 `inflightStacks` 处理完成才能进入 `inflightStacks`，同时
   `inflightStacks` 处理 barrier 的时候只能处理这一个 `ChannelStack`，处理完成才能继续处理 `pendingStacks` 中的
   `ChannelStack`。默认值为 `_ => true`。
-- `CHANNEL_MAX_FUTURE_INFLIGHT`: `inflightFutures` 能处理的最大 `ChannelFuture` 的数量，达到最大数量的时候，新的
+- `CHANNEL_MAX_FUTURE_INFLIGHT`: `inflightFutures` 能同时处理的最大 `ChannelFuture` 的数量，达到最大数量的时候，新的
   `ChannelFuture` 都加入 `pendingFutures` 排队等待进入 `inflightFutures` 。默认值为 1。
-- `CHANNEL_MAX_STACK_INFLIGHT`: `inflightStacks` 能处理的最大 `ChannelStack` 的数量，达到最大数量的时候，新的
+- `CHANNEL_MAX_STACK_INFLIGHT`: `inflightStacks` 能同时处理的最大 `ChannelStack` 的数量，达到最大数量的时候，新的
   `ChannelStack` 都加入 `pendingStacks` 排队等待进入 `inflightStacks` 。默认值为 1。
-- `CHANNEL_STACK_HEAD_OF_LINE`: 用于设置 `Channel` 处理 `ChannelStack` 是否队头阻塞。当 `CHANNEL_MAX_STACK_INFLIGHT`
-  设置为大于1，`inflightStacks` 同时有多个 `ChannelStack` 进入 `ChannelsActor` 进行调度执行，后发起的 `ChannelStack`
-  可能比先发起的 `ChannelStack` 更早完成，当设置成队头阻塞的时候，后完成的不能直接执行后续 `ChannelPipeline` 中的流程，
-  而要等待所有先发起调度的 `ChannelStack` 完成之后才能被继续执行 `ChannelPipeline` 的流程。默认值为 `false`。
+- `CHANNEL_STACK_HEAD_OF_LINE`: 用于设置 `Channel` 处理 `ChannelStack` 是否队头阻塞。当 `inflightStacks`
+  同时有多个 `ChannelStack` 进入 `ChannelsActor` 进行调度执行，后发起的 `ChannelStack`
+  可能比先发起的 `ChannelStack` 更早完成。当设置成队头阻塞的时候，后完成的不能直接执行后续 `ChannelPipeline` 中的流程，
+  而要等待所有先发起调度的 `ChannelStack` 完成之后才能被继续执行。默认值为 `false`。
 
 组合设置这些值将在不同场景中更加正确和高效的使用网络连接资源！
 
@@ -366,7 +390,7 @@ private val pendingStacks: QueueMap[ChannelStack[?]] = new QueueMap[ChannelStack
 
 ## 生态系统中其他的核心模块
 
-otavia 除了核心的运行时之外，还包含了一个广泛的生态。以下只介绍跟核心模块关联比较紧密的部分模块的设计目标。其他模块你可以
+`otavia` 除了核心的运行时之外，还包含了一个广泛的生态。以下只介绍跟核心模块关联比较紧密的部分模块的设计目标。其他模块你可以
 [查看 otavia 生态](https://github.com/otavia-projects)。
 
 ### CPS 变换
@@ -392,8 +416,8 @@ IO 对象。
 
 ### codec
 
-codec 模块提供了一些常用的 `ChannelHandler` 的抽象类，开发者可以根据自己的需求选择继承其中。`otavia` 根据 `ChannelHandler`
-处于 `ChannelPipeline` 中的位置和功能对 `ChannelHandler` 进行了一些分类。
+`codec` 模块提供了一些常用的 `ChannelHandler` 的抽象类，开发者可以根据自己的需求选择继承其中的一种。`otavia` 根据
+`ChannelHandler` 处于 `ChannelPipeline` 中的位置和功能对 `ChannelHandler` 进行了一些分类。
 
 - `Byte2ByteXXcoder`: 用于字节序列的转换，输入输出都是字节序列，比如 TLS、压缩等。
 - `Byte2MessageDecoder`: 用于对象反序列化，输入是自己序列，输出是对象。
@@ -404,11 +428,11 @@ codec 模块提供了一些常用的 `ChannelHandler` 的抽象类，开发者�
 
 ![](../../_assets/images/channel_handler_types.drawio.svg)
 
-除此之外，codec 模块还提供一些工具和实现完成的 `ChannelHandler`，比如 Base64、压缩等。
+除此之外，`codec` 模块还提供一些工具类和实现完成的 `ChannelHandler`，比如 Base64、压缩等。
 
 ### 序列化反序列化框架
 
-`Serde` 期望为所有的序列化与反序列化提供一个统一的接口。因为目前 Scala 生态中大多数序列化反序列化框架基本基本都是序列化到
+`Serde` 期望为所有的序列化与反序列化工具提供一个统一的接口。因为目前 Scala 生态中大多数序列化反序列化框架基本基本都是序列化到
 `java.nio.ByteBuffer` 或者 `Array[Byte]`，不能与 `otavia` 的 `Buffer` 高性能的工作在一起（涉及一次数据拷贝，而且不
 容易利用内存池）。 所以 `otavia` 引入了 `Serde[T]` 接口，其使用 `Buffer` 作为基本的序列化反序列化目标。所以基于 `Serde`
 实现的序列化框架可以高效的和 `AdaptiveBuffer` 一起工作，避免不必要的内存拷贝而且能直接利用内存池。同时，开发者也可以实现自
@@ -418,7 +442,7 @@ codec 模块提供了一些常用的 `ChannelHandler` 的抽象类，开发者�
 
 ### SQL
 
-`otavia` 中访问关系型数据库的标准，参考了 JDBC 的设计。
+`otavia` 中 `Actor` 访问关系型数据库的标准，参考了 JDBC 的设计。
 
 ### 日志
 
