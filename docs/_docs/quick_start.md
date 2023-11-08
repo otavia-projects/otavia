@@ -8,19 +8,19 @@ title: Quick Start
 ![Static Badge](https://img.shields.io/badge/JDK-17%2B-blue)
 ![Static Badge](https://img.shields.io/badge/Scala-3.3%2B-blue)
 
-Although otavia mainly runs on the JVM platform, it currently only supports `Scala 3` in order to ensure reliable
-compile-time type safety, so if you're not familiar with `Scala 3` at the moment, you can learn about it with the
-following information.
+`otavia` runs mainly on the JVM platform and currently only supports `Scala 3` for reliable compile-time type safety. If
+you are not familiar with `Scala 3`, you can refer to the following information to learn it.
 
-- basic(enough for otavia): [Scala 3 Book](https://docs.scala-lang.org/scala3/book/introduction.html)
-- advance: [Scala 3 Language Reference](https://docs.scala-lang.org/scala3/reference/)
+- Basic(enough for `otavia`): [Scala 3 Book](https://docs.scala-lang.org/scala3/book/introduction.html)
+- Advance: [Scala 3 Language Reference](https://docs.scala-lang.org/scala3/reference/)
 
-The source code for all the following examples can be found
-at [otavia-examples](https://github.com/otavia-projects/otavia-examples).
+The source code for some of the following examples can be found
+in [otavia-examples](https://github.com/otavia-projects/otavia-examples).
 
 ## Add dependencies
 
-If you use sbt, add the dependency:
+If you use sbt, add the dependency with
+version ![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/cc.otavia/otavia-runtime_3?server=https%3A%2F%2Fs01.oss.sonatype.org)
 
 ```scala
 libraryDependencies += "cc.otavia" %% "otavia-runtime" % "{version}"
@@ -51,17 +51,17 @@ if maven:
 
 ## Simple Ping-Pong Actors
 
-This simple example defines two Actors: `PingActor` and `PongActor`. `PingActor` receives the `Start` message and sends
-a `Ping` message to the `PongActor`. Each `Ping` message sent must correspond to a `Pong` reply message.
+This simple example defines two `Actors`: `PingActor` and `PongActor`, where `PingActor` receives a `Start` message and
+sends a `Ping` message to `PongActor`, and each `Ping` message sent must receive a reply message of type `Pong`.
 
 ### Defining Messages
 
-According to the above description, we need three kinds of messages, each of which represents three different roles,
-which are also the three basic types of messages in `otavia`: `Start` is a `Notice` message, which is a kind of message
-in otavia that does not need to get a reply, as long as you have the address of the `Actor` in question, you can send
-the message to it. `Ping` is an `Ask` message, which must correspond to a `Reply` message, so if an Actor sends this
-message to another Actor, it means that it must receive a corresponding `Reply` message (kind of like a method parameter
-in a method definition); and `Pong` is a `Reply` message, which is kind of like a return value in a method definition.
+According to the above description, we need 3 types of messages, and these are the 3 basic types of messages
+in `otavia`. A `Start` message is a `Notice` message, a `Notice` message is a type of message in `otavia` that does not
+need to get a reply, as long as there is an address for the `Actor` you can send a `Notice` message to
+the `Actor`. `Ping` is an `Ask` message that must have a reply message associated with it, so if an `Actor` sends it to
+another `Actor`, it means it must receive a reply message (kind of like a method parameter in a method definition).
+A `Pong` is a reply message, which is a bit like a return value in a method definition.
 
 The `Start` message is of type `Notice`, so it must inherit the `Notice` trait.
 
@@ -100,24 +100,25 @@ final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start]
 ```
 
 Here comes `StateActor` which we can ignore for now, the final `Actor` in `otavia` must inherit either `StateActor`
-or `ChannelsActor`, `ChannelsActor` is the `Actor` that is used to deal with IO, and all the rest of the `Actor`s
-are `StateActor`.
+or `ChannelsActor`. The `ChannelsActor` is the `Actor` that handles IO, and all the rest of the `Actors`
+are `StateActor`s.
 
-Next, let's implement the specific message processing!
+Next, let's implement the methods for processing messages!
 
-First, there is the `PingActor` , which needs to process the `Start` message, and during the process, it needs to send
-a `Ping` message, then wait for `Pong` to reply to the message, and then end the processing of the `Start` message.
+First there is the `PingActor` , which has to process the `Start` message and send the `Ping` message during processing,
+then wait for the `Pong` message as a reply message, and finally end the processing of the `Start` message.
 
 ```scala
 final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
+
   override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
     case _: StartState =>
       println("PingActor handle Start message")
       println("PingActor send Ping Message")
-      val state = FutureState(1)
+      val state = FutureState[Pong]()
       pongActorAddress.ask(Ping(stack.notice.sid), state.future)
       state.suspend()
-    case state: FutureState[Pong] if state.id == 1 =>
+    case state: FutureState[Pong] =>
       val future = state.future
       if (future.isSuccess) {
         println(s"PingActor received ${future.getNow} message success!")
@@ -125,12 +126,13 @@ final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start]
       }
       stack.`return`()
   }
+
 }
 ```
 
-`continueNotice` is the entry point for `Actor` to process a `Notice` message. `Notice` messages sent from elsewhere
-will be passed into `Actor` from this method, and we're going to implement `PongActor` next. `PongActor` receives `Ping`
-this kind of `Ask` message, and then replies with a `Pong` `Reply` message:
+`continueNotice` is the entry point for `Actor` to process `Notice` messages. Any `Notice` messages sent from elsewhere
+are passed into the `Actor` through this method. Next we'll implement the `PongActor`. The `PongActor` receives a `Ping`
+message and replies with a `Pong` message:
 
 ```scala
 final class PongActor() extends StateActor[Ping] {
@@ -155,6 +157,20 @@ be scheduled if the `resumable` method of the `StackState` is `ture`, or if all 
 completion. The `continueXXX` method starts at a state and returns `Option[StackState]` at the end of each execution.
 The `return` method is used to terminate a `Stack`: in the case of an `AskStack`, the `return` method is used to send
 the return `Reply` message of the `Ask` message in the `AskStack`.
+
+We can see that the `continueXXX` method within `Actor`, which handles messages, does not process the message directly,
+but rather loads the message into a `Stack`: `Notice` messages are loaded into a `NoticeStack`, and `Ask` messages are
+loaded into an `AskStack`. In `otavia`, the `Stack` data structure was introduced to make it easier to manage message
+dependencies and to send compile-time type-safe `Reply` messages. A `Future` was also introduced to receive the
+return `Reply` message from an `Ask` message (note that the `Future` here is not the `Future` of the Scala standard
+library). In order to wait for a `Future` to reach an executable state, a `StackState` is introduced. A `StackState` can
+be associated with one or more `Future`s, and the `StackState` will only be completed when the `resumable` method of
+the `StackState` has been `ture`ed, or if all of its associated `Futures` have reached a completed state. The `Stack`
+can continue to be scheduled only when the `resumable` method of `StackState` is `ture` or all associated `Futures` have
+reached completion. `continueXXX` starts from a `StackState` and returns `Option[StackState]` at the end of each
+execution, i.e. the `Stack` is switched to a new `StackState`. The `suspend` method of `StackState`
+returns `Option[StackState]`, and the `return` method returns `None` for ending `Stack`. In the case of an `AskStack`,
+the `return` method is also used to send a return `Reply` message for an `Ask` message in the `AskStack`.
 
 ![](../../_assets/images/stack_resume.drawio.svg)
 

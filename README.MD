@@ -26,8 +26,8 @@ concurrent programs more easily.
 
 You can learn more about `otavia` in the following document.
 
-- [Quick Start](./docs/_docs/zh/quick_start.md)
-- [Core Concept and Design](./docs/_docs/zh/core_concept.md)
+- [Quick Start](./docs/_docs/quick_start.md)
+- [Core Concept and Design](./docs/_docs/core_concept.md)
 
 More document can be found at [website](https://otavia-projects.github.io/otavia/home.html)
 

@@ -14,7 +14,7 @@ title: 快速开始
 - 基础知识（对于学习 `otavia` 足够了）: [Scala 3 Book](https://docs.scala-lang.org/zh-cn/scala3/book/introduction.html)
 - 高级知识：[Scala 3 Language Reference](https://docs.scala-lang.org/scala3/reference/)
 
-以下所有示例的源码可以在 [otavia-examples](https://github.com/otavia-projects/otavia-examples) 中找到。
+以下部分示例的源码可以在 [otavia-examples](https://github.com/otavia-projects/otavia-examples) 中找到。
 
 ## 添加依赖
 
@@ -50,15 +50,15 @@ ivy"cc.otavia::otavia-codec:{version}"
 
 ## 简单的 Ping-Pong Actors
 
-这个简单的示例定义了两个 `Actor`: `PingActor` 和 `PongActor`, `PingActor` 接收 `Start` 消息，并且向 `PongActor`
-发送 `Ping` 消息， 每个发送的 `Ping` 消息都必须对应一个 `Pong` 回复消息。
+这个简单的示例定义了两个 `Actor`: `PingActor` 和 `PongActor`, `PingActor` 接收 `Start` 消息，然后向 `PongActor`
+发送 `Ping` 消息， 每个发送的 `Ping` 消息都必须接收一个 `Pong` 类型的回复消息。
 
 ### 定义消息
 
-根据以上描述，我们需要3种消息，这3种消息分别代表3种不同角色，这也是 `otavia` 3种基本的消息类型。`Start`
-消息是一种 `Notice` 消息， `Notice` 消息是 `otavia` 中一种不需要获得回复的消息，只要有相关 `Actor` 的地址，
-您就可以向 `Actor` 发送 `Notice` 消息；`Ping` 是一种 `Ask` 消息，这种消息必须对应一种回复消息，如果一个 `Actor` 向
-其他 `Actor` 发送了这种消息，就意味着他必须收到一个对应的回复消息（有点像方法定义中的方法参数）；`Pong` 是一种回复消息，
+根据以上描述，我们需要3种消息，而这也正是 `otavia` 3种基本的消息类型。`Start`
+消息是一种 `Notice` 消息， `Notice` 消息是 `otavia` 中一种不需要获得回复的消息，只要有 `Actor` 的地址，
+您就可以向 `Actor` 发送 `Notice` 消息；`Ping` 是一种 `Ask` 消息，这种消息必须关联一种回复消息，如果一个 `Actor` 向
+其他 `Actor` 发送了这种消息，就意味着其必须收到一个回复消息（有点像方法定义中的方法参数）；`Pong` 是一种回复消息，
 回复消息有点像方法定义中的返回值。
 
 `Start` 消息是 `Notice` 类型，所以必须继承 `Notice` trait
@@ -67,7 +67,7 @@ ivy"cc.otavia::otavia-codec:{version}"
 case class Start(sid: Int) extends Notice
 ```
 
-`Pong` 必须继承 `Reply` trait, `Ping` 是 `Ask` 类型的消息，必须继承 `Ask` trait, `Ask` trait 带有一个类型约束，
+`Pong` 必须继承 `Reply` trait, `Ping` 是 `Ask` 类型的消息，所以必须继承 `Ask` trait。 `Ask` trait 带有一个类型约束，
 用来描述这个 `Ask` 消息期望获得的回复的消息类型。
 
 ```scala
@@ -101,7 +101,7 @@ final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start]
 
 接下来让我们来实现具体的消息处理吧！
 
-首先是 `PingActor` , 他需要处理 `Start` 消息，并且处理过程中需要发送 `Ping` 消息，然后等待 `Pong` 回复消息，然后结束
+首先是 `PingActor` , 他需要处理 `Start` 消息，并且处理过程中需要发送 `Ping` 消息，然后等待 `Pong` 回复消息，最后结束
 `Start` 消息的处理。
 
 ```scala
@@ -111,10 +111,10 @@ final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start]
     case _: StartState =>
       println("PingActor handle Start message")
       println("PingActor send Ping Message")
-      val state = FutureState[Pong](1)
+      val state = FutureState[Pong]()
       pongActorAddress.ask(Ping(stack.notice.sid), state.future)
       state.suspend()
-    case state: FutureState[Pong] if state.id == 1 =>
+    case state: FutureState[Pong] =>
       val future = state.future
       if (future.isSuccess) {
         println(s"PingActor received ${future.getNow} message success!")
@@ -139,16 +139,19 @@ final class PongActor() extends StateActor[Ping] {
 }
 ```
 
-`continueAsk` 是 `Actor` 处理 `Ask` 消息的入口，从其他 `Actor` 发送来的 `Ask` 消息都会从这个方法传入 `Actor`。
+`continueAsk` 是 `Actor` 处理 `Ask` 消息的入口。从其他 `Actor` 发送来的 `Ask` 消息都会从这个方法传入 `Actor`。
 
-我们可以发现， `Actor` 内处理消息的 `continueXXX` 方法并不是直接处理消息，而是将消息装入了 `Stack` 中，`Notice` 消息装入
-`NoticeStack` 中，`Ask` 消息装入 `AskStack` 中。在 `otavia` 中，为了方便管理消息的依赖关系和安全的发送 `Reply`
-消息，引入了 `Stack` 这种数据结构。同时引入了 `Future` 来接收 `Ask` 消息的返回 `Reply` 消息（注意这里的 `Future` 不是 scala
-标准库的 `Future`） ，为了等待 `Future` 达到可执行状态，引入了 `StackState` ， 一个 `StackState` 可以关联一个或者多个
-`Future` , 只有当 `StackState` 的 `resumable` 方法为 `ture` 或者关联的所有的 `Future` 都达到完成状态的时候，这个
-`Stack` 才可以继续被调度执行，`continueXXX` 每次执行的时候从一个状态开始，结束的时候返回 `Option[StackState]`
-，即代表 `Stack` 进入一个新的状态。`StackState` 的 `suspend` 方法返回 `Option[StackState]`。`return` 方法返回 `None`
-用于结束 `Stack`。如果是 `AskStack`，`return` 方法用于发送 `AskStack` 中 `Ask` 消息的返回 `Reply` 消息。
+我们可以发现， `Actor` 的 `continueXXX` 方法并不是直接将消息作为参数，而是将消息装入 `Stack` 中一起作为参数：`Notice` 消息装入
+`NoticeStack` 中，`Ask` 消息装入 `AskStack` 中。 
+
+在 `otavia` 中，为了方便管理消息的依赖关系和编译时安全的发送 `Reply`
+消息，引入了 `Stack` 这种数据结构。同时引入了 `Future` 来接收 `Ask` 消息的返回 `Reply` 消息（注意这里的 `Future` 不是 
+Scala 标准库的 `Future`） 。为了等待 `Future` 达到可执行状态，引入了 `StackState` ， 一个 `StackState` 可以关联一个
+或者多个 `Future` , 只有当 `StackState` 的 `resumable` 方法为 `ture` 或者关联的所有的 `Future` 都达到完成状态的时候，
+这个 `Stack` 才可以继续被调度执行。`continueXXX` 每次执行的时候从一个 `StackState` 开始，结束的时候返回 
+`Option[StackState]`，即代表 `Stack` 切换为一个新的 `StackState`。`StackState` 的 `suspend` 方法返回 
+`Option[StackState]`，`return` 方法返回 `None` 用于结束 `Stack`。如果是 `AskStack`，`return` 方法还用于
+发送 `AskStack` 中 `Ask` 消息的返回 `Reply` 消息。
 
 一个 `Stack` 只能有一个 `StackState`，初始的状态为 `StartStack`，每次 `continueXXX` 执行完成就切换到一个新的
 `StackState`, 最后的 `return` 方法将返回 `None`，代表 `Stack` 完成！
