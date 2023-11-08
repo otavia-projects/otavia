@@ -7,7 +7,7 @@
   <li>基础知识（对于学习 <code>otavia</code> 足够了）: <a href="https://docs.scala-lang.org/zh-cn/scala3/book/introduction.html">Scala 3 Book</a></li> 
   <li>高级知识：<a href="https://docs.scala-lang.org/scala3/reference/">Scala 3 Language Reference</a></li> 
  </ul> 
- <p>以下所有示例的源码可以在 <a href="https://github.com/otavia-projects/otavia-examples">otavia-examples</a> 中找到。</p> 
+ <p>以下部分示例的源码可以在 <a href="https://github.com/otavia-projects/otavia-examples">otavia-examples</a> 中找到。</p> 
 </section> 
 <section id="添加依赖-1"> 
  <h2 class="h500"><a href="#添加依赖-1" class="anchor"></a>添加依赖</h2> 
@@ -43,18 +43,18 @@
 </section> 
 <section id="简单的-ping-pong-actors-1"> 
  <h2 class="h500"><a href="#简单的-ping-pong-actors-1" class="anchor"></a>简单的 Ping-Pong Actors</h2> 
- <p>这个简单的示例定义了两个 <code>Actor</code>: <code>PingActor</code> 和 <code>PongActor</code>, <code>PingActor</code> 接收 <code>Start</code> 消息，并且向 <code>PongActor</code> 发送 <code>Ping</code> 消息， 每个发送的 <code>Ping</code> 消息都必须对应一个 <code>Pong</code> 回复消息。</p> 
+ <p>这个简单的示例定义了两个 <code>Actor</code>: <code>PingActor</code> 和 <code>PongActor</code>, <code>PingActor</code> 接收 <code>Start</code> 消息，然后向 <code>PongActor</code> 发送 <code>Ping</code> 消息， 每个发送的 <code>Ping</code> 消息都必须接收一个 <code>Pong</code> 类型的回复消息。</p> 
 </section> 
 <section id="定义消息-1"> 
  <h3 class="h400"><a href="#定义消息-1" class="anchor"></a>定义消息</h3> 
- <p>根据以上描述，我们需要3种消息，这3种消息分别代表3种不同角色，这也是 <code>otavia</code> 3种基本的消息类型。<code>Start</code> 消息是一种 <code>Notice</code> 消息， <code>Notice</code> 消息是 <code>otavia</code> 中一种不需要获得回复的消息，只要有相关 <code>Actor</code> 的地址， 您就可以向 <code>Actor</code> 发送 <code>Notice</code> 消息；<code>Ping</code> 是一种 <code>Ask</code> 消息，这种消息必须对应一种回复消息，如果一个 <code>Actor</code> 向 其他 <code>Actor</code> 发送了这种消息，就意味着他必须收到一个对应的回复消息（有点像方法定义中的方法参数）；<code>Pong</code> 是一种回复消息， 回复消息有点像方法定义中的返回值。</p> 
+ <p>根据以上描述，我们需要3种消息，而这也正是 <code>otavia</code> 3种基本的消息类型。<code>Start</code> 消息是一种 <code>Notice</code> 消息， <code>Notice</code> 消息是 <code>otavia</code> 中一种不需要获得回复的消息，只要有 <code>Actor</code> 的地址， 您就可以向 <code>Actor</code> 发送 <code>Notice</code> 消息；<code>Ping</code> 是一种 <code>Ask</code> 消息，这种消息必须关联一种回复消息，如果一个 <code>Actor</code> 向 其他 <code>Actor</code> 发送了这种消息，就意味着其必须收到一个回复消息（有点像方法定义中的方法参数）；<code>Pong</code> 是一种回复消息， 回复消息有点像方法定义中的返回值。</p> 
  <p><code>Start</code> 消息是 <code>Notice</code> 类型，所以必须继承 <code>Notice</code> trait</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>case class Start(sid: Int) extends Notice
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p><code>Pong</code> 必须继承 <code>Reply</code> trait, <code>Ping</code> 是 <code>Ask</code> 类型的消息，必须继承 <code>Ask</code> trait, <code>Ask</code> trait 带有一个类型约束， 用来描述这个 <code>Ask</code> 消息期望获得的回复的消息类型。</p> 
+ <p><code>Pong</code> 必须继承 <code>Reply</code> trait, <code>Ping</code> 是 <code>Ask</code> 类型的消息，所以必须继承 <code>Ask</code> trait。 <code>Ask</code> trait 带有一个类型约束， 用来描述这个 <code>Ask</code> 消息期望获得的回复的消息类型。</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>case class Pong(pingId: Int) extends Reply
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
@@ -80,7 +80,7 @@
  </div> 
  <p>这里出现了 <code>StateActor</code> 我们暂时可以先不用管，<code>otavia</code> 中的最终 <code>Actor</code> 必须继承 <code>StateActor</code> 或 <code>ChannelsActor</code>， <code>ChannelsActor</code> 是用于处理 IO 的 <code>Actor</code> , 其余所有的 <code>Actor</code> 都是 <code>StateActor</code>。</p> 
  <p>接下来让我们来实现具体的消息处理吧！</p> 
- <p>首先是 <code>PingActor</code> , 他需要处理 <code>Start</code> 消息，并且处理过程中需要发送 <code>Ping</code> 消息，然后等待 <code>Pong</code> 回复消息，然后结束 <code>Start</code> 消息的处理。</p> 
+ <p>首先是 <code>PingActor</code> , 他需要处理 <code>Start</code> 消息，并且处理过程中需要发送 <code>Ping</code> 消息，然后等待 <code>Pong</code> 回复消息，最后结束 <code>Start</code> 消息的处理。</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
@@ -88,10 +88,10 @@
 </span><span line-number="4" class=""><span class="tooltip-container"></span>    case _: StartState =&gt;
 </span><span line-number="5" class=""><span class="tooltip-container"></span>      println("PingActor handle Start message")
 </span><span line-number="6" class=""><span class="tooltip-container"></span>      println("PingActor send Ping Message")
-</span><span line-number="7" class=""><span class="tooltip-container"></span>      val state = FutureState[Pong](1)
+</span><span line-number="7" class=""><span class="tooltip-container"></span>      val state = FutureState[Pong]()
 </span><span line-number="8" class=""><span class="tooltip-container"></span>      pongActorAddress.ask(Ping(stack.notice.sid), state.future)
 </span><span line-number="9" class=""><span class="tooltip-container"></span>      state.suspend()
-</span><span line-number="10" class=""><span class="tooltip-container"></span>    case state: FutureState[Pong] if state.id == 1 =&gt;
+</span><span line-number="10" class=""><span class="tooltip-container"></span>    case state: FutureState[Pong] =&gt;
 </span><span line-number="11" class=""><span class="tooltip-container"></span>      val future = state.future
 </span><span line-number="12" class=""><span class="tooltip-container"></span>      if (future.isSuccess) {
 </span><span line-number="13" class=""><span class="tooltip-container"></span>        println(s"PingActor received ${future.getNow} message success!")
@@ -116,8 +116,9 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p><code>continueAsk</code> 是 <code>Actor</code> 处理 <code>Ask</code> 消息的入口，从其他 <code>Actor</code> 发送来的 <code>Ask</code> 消息都会从这个方法传入 <code>Actor</code>。</p> 
- <p>我们可以发现， <code>Actor</code> 内处理消息的 <code>continueXXX</code> 方法并不是直接处理消息，而是将消息装入了 <code>Stack</code> 中，<code>Notice</code> 消息装入 <code>NoticeStack</code> 中，<code>Ask</code> 消息装入 <code>AskStack</code> 中。在 <code>otavia</code> 中，为了方便管理消息的依赖关系和安全的发送 <code>Reply</code> 消息，引入了 <code>Stack</code> 这种数据结构。同时引入了 <code>Future</code> 来接收 <code>Ask</code> 消息的返回 <code>Reply</code> 消息（注意这里的 <code>Future</code> 不是 scala 标准库的 <code>Future</code>） ，为了等待 <code>Future</code> 达到可执行状态，引入了 <code>StackState</code> ， 一个 <code>StackState</code> 可以关联一个或者多个 <code>Future</code> , 只有当 <code>StackState</code> 的 <code>resumable</code> 方法为 <code>ture</code> 或者关联的所有的 <code>Future</code> 都达到完成状态的时候，这个 <code>Stack</code> 才可以继续被调度执行，<code>continueXXX</code> 每次执行的时候从一个状态开始，结束的时候返回 <code>Option[StackState]</code> ，即代表 <code>Stack</code> 进入一个新的状态。<code>StackState</code> 的 <code>suspend</code> 方法返回 <code>Option[StackState]</code>。<code>return</code> 方法返回 <code>None</code> 用于结束 <code>Stack</code>。如果是 <code>AskStack</code>，<code>return</code> 方法用于发送 <code>AskStack</code> 中 <code>Ask</code> 消息的返回 <code>Reply</code> 消息。</p> 
+ <p><code>continueAsk</code> 是 <code>Actor</code> 处理 <code>Ask</code> 消息的入口。从其他 <code>Actor</code> 发送来的 <code>Ask</code> 消息都会从这个方法传入 <code>Actor</code>。</p> 
+ <p>我们可以发现， <code>Actor</code> 的 <code>continueXXX</code> 方法并不是直接将消息作为参数，而是将消息装入 <code>Stack</code> 中一起作为参数：<code>Notice</code> 消息装入 <code>NoticeStack</code> 中，<code>Ask</code> 消息装入 <code>AskStack</code> 中。</p> 
+ <p>在 <code>otavia</code> 中，为了方便管理消息的依赖关系和编译时安全的发送 <code>Reply</code> 消息，引入了 <code>Stack</code> 这种数据结构。同时引入了 <code>Future</code> 来接收 <code>Ask</code> 消息的返回 <code>Reply</code> 消息（注意这里的 <code>Future</code> 不是 Scala 标准库的 <code>Future</code>） 。为了等待 <code>Future</code> 达到可执行状态，引入了 <code>StackState</code> ， 一个 <code>StackState</code> 可以关联一个 或者多个 <code>Future</code> , 只有当 <code>StackState</code> 的 <code>resumable</code> 方法为 <code>ture</code> 或者关联的所有的 <code>Future</code> 都达到完成状态的时候， 这个 <code>Stack</code> 才可以继续被调度执行。<code>continueXXX</code> 每次执行的时候从一个 <code>StackState</code> 开始，结束的时候返回 <code>Option[StackState]</code>，即代表 <code>Stack</code> 切换为一个新的 <code>StackState</code>。<code>StackState</code> 的 <code>suspend</code> 方法返回 <code>Option[StackState]</code>，<code>return</code> 方法返回 <code>None</code> 用于结束 <code>Stack</code>。如果是 <code>AskStack</code>，<code>return</code> 方法还用于 发送 <code>AskStack</code> 中 <code>Ask</code> 消息的返回 <code>Reply</code> 消息。</p> 
  <p>一个 <code>Stack</code> 只能有一个 <code>StackState</code>，初始的状态为 <code>StartStack</code>，每次 <code>continueXXX</code> 执行完成就切换到一个新的 <code>StackState</code>, 最后的 <code>return</code> 方法将返回 <code>None</code>，代表 <code>Stack</code> 完成！</p> 
  <p><img src="../../images/stack_resume.drawio.svg" alt=""></p> 
  <p>至此，我们需要的所有的 <code>Actor</code> 和消息都已经完全实现了。接下来，启动一个 <code>ActorSystem</code> 来运行这些 <code>Actor</code> 吧</p> 
