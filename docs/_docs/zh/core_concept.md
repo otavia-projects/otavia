@@ -186,8 +186,8 @@ protected def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState]
 
 不同的消息有不同的 `Stack` 子类
 
-- `NoticeStack`: 用于管理 `notice` 发送的 `Notice` 消息的执行。
-- `AskStack`: 用于管理 `ask` 发送的 `Ask` 消息的执行。
+- `NoticeStack`: 用于管理 `Notice` 消息的执行。
+- `AskStack`: 用于管理 `Ask` 消息的执行。
 - `BatchNoticeStack`: 用于批量执行 `Notice` 消息。
 - `batchContinueAsk`: 用于批量执行 `Ask` 消息。
 - `ChannelStack`: 用于执行 `Channel` 发送来的请求。
@@ -221,9 +221,9 @@ protected def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState]
 
 为了更好的对各种不同 `Channel` 的管理，`otavia` 实现了几种不同种类的 `ChannelsActor`，他们分别是：
 
-- `AcceptorActor`: 管理监听 TCP 连接的 `Channel`，其需要实例化一组 `AcceptedWorkerActor` 作为工作 `Actor`,
-  对于监听 `Channel` 接受的普通 `Channel` 会包装为消息发送给其中一个 `AcceptedWorkerActor`, 并且由 `AcceptedWorkerActor`
-  对接受的 `Channel` 进行管理。
+- `AcceptorActor`: 管理监听TCP连接的 `Channel`，其需要实例化一组 `AcceptedWorkerActor`, 对于监听 `Channel` 接受的普通
+  `Channel`，会作为消息发送给其中一个 `AcceptedWorkerActor`, 并且由 `AcceptedWorkerActor` 对接受的 `Channel` 进行管理
+  和数据的处理。
 - `AcceptedWorkerActor`: `AcceptorActor` 的工作 `Actor`。
 - `SocketChannelsActor`: 管理 TCP 客户端 `Channel`。
 - `DatagramChannelsActor`: 管理 UDP `Channel`。

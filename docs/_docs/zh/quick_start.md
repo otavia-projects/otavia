@@ -142,21 +142,36 @@ final class PongActor() extends StateActor[Ping] {
 `continueAsk` 是 `Actor` 处理 `Ask` 消息的入口。从其他 `Actor` 发送来的 `Ask` 消息都会从这个方法传入 `Actor`。
 
 我们可以发现， `Actor` 的 `continueXXX` 方法并不是直接将消息作为参数，而是将消息装入 `Stack` 中一起作为参数：`Notice` 消息装入
-`NoticeStack` 中，`Ask` 消息装入 `AskStack` 中。 
+`NoticeStack` 中，`Ask` 消息装入 `AskStack` 中。 与大多数其他 Actor 编程框架不一样，`otavia` 中消息的发送和接收都被严格的管理，
+这虽然丧失了一部分灵活性，但是却保证了发送消息和接收消息的编译时类型安全，并且让发送消息和接收消息的过程更加类似于方法的调用。我们来看看
+我们是怎么样发送消息和接收消息的吧：
 
-在 `otavia` 中，为了方便管理消息的依赖关系和编译时安全的发送 `Reply`
-消息，引入了 `Stack` 这种数据结构。同时引入了 `Future` 来接收 `Ask` 消息的返回 `Reply` 消息（注意这里的 `Future` 不是 
-Scala 标准库的 `Future`） 。为了等待 `Future` 达到可执行状态，引入了 `StackState` ， 一个 `StackState` 可以关联一个
-或者多个 `Future` , 只有当 `StackState` 的 `resumable` 方法为 `ture` 或者关联的所有的 `Future` 都达到完成状态的时候，
-这个 `Stack` 才可以继续被调度执行。`continueXXX` 每次执行的时候从一个 `StackState` 开始，结束的时候返回 
-`Option[StackState]`，即代表 `Stack` 切换为一个新的 `StackState`。`StackState` 的 `suspend` 方法返回 
-`Option[StackState]`，`return` 方法返回 `None` 用于结束 `Stack`。如果是 `AskStack`，`return` 方法还用于
-发送 `AskStack` 中 `Ask` 消息的返回 `Reply` 消息。
+1. 使用 `Address` 的 `notice` 方法发送 `Notice` 消息，调用 `notice` 方法会立即返回。`notice` 方法没有返回值。
+2. 使用 `Address` 的 `ask` 方法发送 `Ask` 消息，同时 `ask` 方法需要传入一个 `Future`。当 `Actor` 接收到与这个 `Ask`
+   消息关联的 `Reply` 消息的时候，这个 `Reply` 消息就会被放入 `Future` 中，同时 `Future` 的状态会被设置为完成。
+3. `Future` 只能关联到一个 `StackState`，但是 `StackState` 可以关联多个 `Future`。
+4. 一个 `Stack` 只能拥有一个 `StackState`。当 `continueXXX` 方法结束时，如果返回值为 `Some(StackState)`，
+   就将这个 `StackState` 设置为 `Stack` 的当前状态，同时释放老的 `StackState` 及其关联的 `Future`。
+5. `Future` 完成的时候会通过 `StackState` 检查与其关联的 `Stack` 是否可以再次被 `continueXXX` 方法执行。当 `StackState`
+   的 `resumable` 方法返回 `ture` 或者关联的所有的 `Future` 都达到完成状态的时候与其关联的 `Stack` 就可以再次被执行。
+6. `StackState` 由开发者自定义，`resumable` 方法可以被重写。当然 `otavia` 预定义了一些常用的 `StackState`，比如示例中
+   使用的 `FutureState`。`StackState` 提供了 `suspend` 方法返回 `Option[StackState]`。
+7. 当 `Actor` 处理 `Notice` 消息或者 `Ask` 消息的时候，就将消息装入一个新建的 `Stack` 中，并且将 `Stack` 的
+   `StackState` 设置为一个特殊的值 `StackState.start`，然后将 `Stack` 传递给 `continueXXX` 方法开始执行。
+   `StackState.start` 是一个类型为 `StartState` 的特殊 `StackState`，其不关联任何 `Future` 并且 `resumable` 方
+   法返回 `ture`。
+8. `Stack` 使用 `return` 方法结束与其绑定消息的处理，所以 `return` 方法返回值为 `None`。对于 `AskStack`，`return` 需要一个
+   `Reply` 消息作为参数发送给 `Ask` 消息的发送者作为 `Ask` 消息的回复消息。
 
-一个 `Stack` 只能有一个 `StackState`，初始的状态为 `StartStack`，每次 `continueXXX` 执行完成就切换到一个新的
-`StackState`, 最后的 `return` 方法将返回 `None`，代表 `Stack` 完成！
+以上一切消息的发送和接收都是编译时类型安全的！一个 `Stack` 只能有一个 `StackState`，其初始的状态为 `StartStack`，
+每次 `continueXXX` 执行完成就切换到一个新的 `StackState`, 最后的 `return` 方法将返回 `None`，代表 `Stack` 完成！
 
 ![](../../_assets/images/stack_resume.drawio.svg)
+
+虽然上诉过程看起来比较复杂，但是这些步骤大多数都不需要开发者直接完成。开发者实现 `continueXXX` 方法的时候，只需要对 `Stack`
+的 `StackState` 进行模式匹配 ，然后执行对应的业务逻辑。如果有需要等待异步消息，就返回一个新的 `StackState`
+，否则使用 `return`
+方法结束 `Stack`。
 
 至此，我们需要的所有的 `Actor` 和消息都已经完全实现了。接下来，启动一个 `ActorSystem` 来运行这些 `Actor` 吧
 
@@ -231,7 +246,7 @@ final class MultiMsgActor() extends StateActor[Echo | Hello | Ping] {
 ```
 
 你可能会想，要是一个消息同时继承了 `Notice` 和 `Ask`，这个消息最终是被 `continueNotice` 还是 `continueAsk` 处理呢？
-答案是都有可能，`otavia` 不是根据消息的种类来决定其应该被怎么处理，而是通过消息的发送方式，`Address` 中有 `notice` 和
+答案是都有可能。`otavia` 不是根据消息的种类来决定其应该被怎么处理，而是通过消息的发送方式。`Address` 中有 `notice` 和
 `ask` 方法，以 `notice` 方法发送的消息最终被 `continueNotice` 处理， `ask` 方法发送的消息被 `continueAsk` 处理！
 
 ## 计时
@@ -266,7 +281,7 @@ final class TickActor() extends StateActor[Nothing] { // [Nothing] if no message
 }
 ```
 
-值得注意的时 `Actor` 对象内 `timer` 方法的使用必须在 `Actor` 挂载到 `ActorSystem` 之后，只有挂载之后，运行时相关的信息才
+值得注意的是 `Actor` 对象内 `timer` 方法的使用必须在 `Actor` 挂载到 `ActorSystem` 之后，只有挂载之后，运行时相关的信息才
 会被注入到 `Actor` 实例内。所以您不能在 `Actor` 对象的构造器内直接使用 `timer` 方法，因为这个时候 `Actor` 实例还没有挂载
 到 `ActorSystem` 中，使用运行时相关的方法都会导致空指针异常。这在后文的 `Actor` 生命周期中有介绍。
 
@@ -335,9 +350,9 @@ class PongTimeoutState extends StackState {
 }
 ```
 
-现在只要 `timeoutFuture` 完成，那么 `Stack` 就会被继续调度执行了。接下来我们只需检测我们的 `pongFuture.isDone` 判断
-是否完成。这的确是一种方法，但是考虑到这种超时需求比较常见，`otavia` 提供了更简单的方法，我们只需对最开始的 `PingActor`
-进行一点点改动：
+现在只要 `timeoutFuture` 完成，那么 `Stack` 就可以重新执行了。不过当我们使用 `pongFuture` 时需要通过 `pongFuture.isDone`
+检测其是否完成。这的确是一种方法，但是考虑到这是一种比较常见的需求，`otavia` 提供了更简单的方法，我们只需对最开始的
+`PingActor` 进行一点点微小的改动：
 
 ```scala
 final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
@@ -372,10 +387,11 @@ pongActorAddress.ask(Ping(stack.notice.sid), state.future) // old
 
 ## Actor 的生命周期
 
-在 `otavia` 中，用户不用花太多心思管理 `Actor` 的生命周期，`Actor` 实例仍然被 JVM 垃圾回收管理，只要这个 `Actor` 不被
-根对象引用，那么这个 `Actor` 实例将被 JVM 的垃圾回收系统自动回收。`Actor` 里有如下几种方法可以在不同的生命周期过程中调用
+在 `otavia` 中，用户不用花太多心思管理 `Actor` 的生命周期，`Actor` 实例仍然被 JVM 垃圾回收管理。只要这个 `Actor` 不再被
+GC 根对象引用，那么这个 `Actor` 实例将被 JVM 的垃圾回收系统自动回收。`Actor` 里有如下几种钩子方法可以在不同的生命周期过程中调用
 
-- `afterMount`: Actor 实例挂载到 `ActorSystem` 之后调用，**对于 Actor 实例 `context` 相关的方法只有挂载之后才可以使用**。
+- `afterMount`: `Actor` 实例挂载到 `ActorSystem` 之后调用，**对于 Actor 实例 `context` 相关的方法只有挂载之后才可以使用
+  **。
 - `beforeRestart`: 重启之前调用。
 - `restart`: 重启 `Actor` 实例的方法。
 - `afterRestart`: 重启之后调用。
@@ -423,19 +439,19 @@ final class LifeActor extends StateActor[Start] with AutoCleanable {
 
 现在我们已经学会了 1)定义 `Actor` 2)定义消息 3)发送消息 4)接收消息处理消息 5)使用 `Timer` 触发超时。
 
-但是在真实的业务中，我们往往需要处理很多IO任务，而IO任务又时常阻塞我们的程序，这也是导致我们的程序性能底下的原因之一。与此同时，
-一些新的技术比如 epoll 、io_uring 等蓬勃发展，这使得我们可以不阻塞的处理IO任务。 JVM 中也提供了 NIO 来支持网络 IO ，但是
-想要运用好这些技术并不容易，因为 JVM 提供的 `java.nio.ByteBuffer` 和 `java.nio.channels.Channel` 等 API 太底层。
-目前在 JVM 邻域大家使用更多的是 [Netty](https://netty.io/)。
+但是在真实的业务中，我们往往需要处理很多 IO 任务，而 IO 任务又时常阻塞我们的线程，这也是导致我们的程序性能底下的原因之一。与此同时，
+一些新的技术比如 epoll 、io_uring 等蓬勃发展，这使得我们可以不阻塞地处理 IO 任务。 JVM 中也提供了 NIO 来支持网络 IO ，但是
+想要使用好 NIO 并不容易，因为 JVM 提供的 `java.nio.ByteBuffer` 和 `java.nio.channels.Channel` 等 API 太底层。
+目前在 JVM 里更常见的是使用 [Netty](https://netty.io/) 来处理IO任务。
 
-感谢 `Netty` 为 JVM 领域提供的强大的 IO 编程工具！受 `Netty` 启发，`otavia` 中的 IO 模块基本从 `Netty` 移植而来！ 在
-`otavia` 中处理 IO 任务跟在 `Netty` 中非常像，可以说基本保持了API的一致。这也极大的方便了 `otavia` 从广泛的 `Netty`
+感谢 Netty 为 JVM 领域提供的强大的 IO 编程工具！受 Netty 启发，`otavia` 中的 IO 模块基本从 `Netty` 移植而来！ 在
+`otavia` 中处理 IO 任务跟在 Netty 中非常像，可以说基本保持了 API 的一致。这也极大的方便了 `otavia` 从广泛的 Netty
 生态系统中吸收营养，移植各种网络协议的编解码代码。[查看 otavia 生态](https://github.com/otavia-projects)。
 
 ![](../../_assets/images/two_types_actor.drawio.svg)
 
 `otavia` 同样使用 `Channel` 代表一个 IO 对象，比如一个打开的文件、一个网络连接。但是在 `otavia` 中，`Channel` 必须运行
-在 `ChannelsActor` 中，同样 `Channel` 中也包含了一个 `ChannelPipeline` 组件，其中有一个 `ChannelHandler` 队列。
+在 `ChannelsActor` 中。同样 `Channel` 中也包含了一个 `ChannelPipeline` 组件，其中有一个 `ChannelHandler` 队列。
 
 ![](../../_assets/images/pipeline.drawio.svg)
 
@@ -445,14 +461,14 @@ final class LifeActor extends StateActor[Start] with AutoCleanable {
   `Channel`，会作为消息发送给其中一个 `AcceptedWorkerActor`, 并且由 `AcceptedWorkerActor` 对接受的 `Channel` 进行管理
   和数据的处理。
 - `AcceptedWorkerActor`: `AcceptorActor` 的工作 `Actor`。
-- `SocketChannelsActor`: 管理TCP客户端 `Channel`。
-- `DatagramChannelsActor`: 管理UDP `Channel`。
+- `SocketChannelsActor`: 管理 TCP 客户端 `Channel`。
+- `DatagramChannelsActor`: 管理 UDP `Channel`。
 
-用户根据需要选择一种类型的 `ChannelsActor` 进行实现。现在，让我们从一个简单的文件读取的例子开始我们的旅程！
+您需要根据需求选择一种类型的 `ChannelsActor` 进行实现。现在，让我们从一个简单的文件读取的例子开始我们的旅程！
 
 ### 文件IO
 
-Netty 只支持网络IO，`otavia` 不仅支持网络而且还支持文件。现在我们要实现一个 `Actor`， 他接收一个读取文件请求，然后将文件以
+Netty 只支持网络 IO，`otavia` 不仅支持网络而且还支持文件。现在我们要实现一个 `Actor`， 他接收一个读取文件请求，然后将文件以
 `Seq[String]` 的方式返回。
 
 首先，让我们来定义这个 `Actor` 需要处理和返回的消息
@@ -491,6 +507,7 @@ final class ReadLinesActor(file: File, charset: Charset = StandardCharsets.UTF_8
 行状态。其个方法是 `ChannelsActor` 提供的一个快捷方法，我们可以查看源码，其实现为：
 
 ```scala
+// source code from ChannelsActor
 val channel = createFileChannelAndInit()
 val state = ChannelFutureState()
 val future: ChannelFuture = state.future
@@ -498,12 +515,12 @@ channel.open(path, opts, attrs, future)
 state.suspend().asInstanceOf[Option[ChannelFutureState]]
 ```
 
-没什么特别的，跟我们之前讲过的 `Stack` 差不多，只不过这里的 `StackState` 是 `ChannelFutureState` , 关联的 `Future` 是
-`ChannelFuture`, 然后使用 `channel.open` 将这个 `Future` 传给 `Channel`。`open` 不是阻塞的，调用后就会立即返回。如果
+没什么特别的，跟我们之前讲过的 `Stack` 的执行过程差不多，只不过这里的 `StackState` 是 `ChannelFutureState` , 关联的
+`Future` 是 `ChannelFuture`, 然后使用 `channel.open` 将这个 `Future` 传给 `Channel`。`open` 不是阻塞的，调用后就会立即返回。如果
 这个文件真的打开完成，那么 `Reactor` 就会向 `ChannelsActor` 发送一个 `ReactorEvent`, `ChannelsActor` 收到事件后会将
-这个 `ChannelFuture` 设置成完成状态。然后判断与其关联的 `Stack` 是否可以执行。
+这个 `ChannelFuture` 设置成完成状态。然后判断与其关联的 `Stack` 是否可以重新执行。
 
-这里我们还看见了一个 `createFileChannelAndInit` 方法，从方法名称我们就可以看出这是创建了一个文件 `Channel`，除此之外还对
+这里我们还看见了一个 `createFileChannelAndInit` 方法，从方法名称我们就可以猜测出这个方法创建了一个文件 `Channel`，并且还对
 这个 `Channel` 进行了初始化。 这个方法会调用 `ChannelsActor.initFileChannel` 方法对 `Channel` 进行初始化。
 
 现在我们可以来实现我们的 `ReadLinesActor.initFileChannel` 了。我们可以看见我们在文件打开之后传入了一个 `FileReadPlan`
@@ -515,9 +532,9 @@ openState.future.channel.ask(FileReadPlan(-1, -1), linesState.future)
 ```
 
 这个 `ask` 方法最终会将 `FileReadPlan` 通过 `Channel` 的 `write` 方法传入 `ChannelPipeline`。
-`ChannelPipeline` 里面的 `ChannelHandler` 是我们自己实现的，这跟 `Netty` 基本一样。
+`ChannelPipeline` 里面的 `ChannelHandler` 是我们自己实现的，这跟 Netty 基本一样。
 
-现在我们来实现我们的 `ChannelHandler` 吧。这个 `ChannelHandler` 需要实现哪些功能能？首先我们要能处理 `write` inbound 事件，
+现在我们来实现我们的 `ChannelHandler` 吧。这个 `ChannelHandler` 需要实现哪些功能呢？首先我们要能处理 `write` inbound 事件，
 其次，我们需要对 `channelRead` outbound 事件进行处理；然后读文件完成的时候我们要处理 `channelReadComplete` outbound 事件，
 在 `channelReadComplete` 事件中，我们需要生成最终的结果消息返回给我们的 `ReadLinesActor`。
 
@@ -564,7 +581,7 @@ override protected def initFileChannel(channel: Channel): Unit =
   channel.pipeline.addFirst(new ReadLinesHandler(charset))
 ```
 
-我们可以看见我们实现的 `write` 方法有一个 `msgId` 参数，这是 `ask` 方法生成的 `Channel` 内唯一的消息编号，因为 `write`
+我们可以注意到我们实现的 `write` 方法有一个 `msgId` 参数，这是 `ask` 方法生成的 `Channel` 内唯一的消息编号，因为 `write`
 方法是非阻塞的，其并不会等待底层的IO完成直接拿到结果，而是直接通过 `ChannelHandlerContext.read` 向 `Reactor` 提交一个读
 数据的计划，这个读数据的具体IO工作在 `otavia` 中会由 `Reactor` 完成，读到的数据会以 `Event` 的方式发送给 `ChannelsActor`。
 然后 `ChannelsActor` 会将 `Event` 分发给具体的 `Channel`， `Channel` 会通过 `channelRead` 以 outbound 方向在
