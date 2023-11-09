@@ -102,8 +102,8 @@
  <h4 class="h300"><a href="#stack-的种类-1" class="anchor"></a>Stack 的种类</h4> 
  <p>不同的消息有不同的 <code>Stack</code> 子类</p> 
  <ul> 
-  <li><code>NoticeStack</code>: 用于管理 <code>notice</code> 发送的 <code>Notice</code> 消息的执行。</li> 
-  <li><code>AskStack</code>: 用于管理 <code>ask</code> 发送的 <code>Ask</code> 消息的执行。</li> 
+  <li><code>NoticeStack</code>: 用于管理 <code>Notice</code> 消息的执行。</li> 
+  <li><code>AskStack</code>: 用于管理 <code>Ask</code> 消息的执行。</li> 
   <li><code>BatchNoticeStack</code>: 用于批量执行 <code>Notice</code> 消息。</li> 
   <li><code>batchContinueAsk</code>: 用于批量执行 <code>Ask</code> 消息。</li> 
   <li><code>ChannelStack</code>: 用于执行 <code>Channel</code> 发送来的请求。</li> 
@@ -130,7 +130,7 @@
  <h3 class="h400"><a href="#各种-channelsactor-1" class="anchor"></a>各种 ChannelsActor</h3> 
  <p>为了更好的对各种不同 <code>Channel</code> 的管理，<code>otavia</code> 实现了几种不同种类的 <code>ChannelsActor</code>，他们分别是：</p> 
  <ul> 
-  <li><code>AcceptorActor</code>: 管理监听 TCP 连接的 <code>Channel</code>，其需要实例化一组 <code>AcceptedWorkerActor</code> 作为工作 <code>Actor</code>, 对于监听 <code>Channel</code> 接受的普通 <code>Channel</code> 会包装为消息发送给其中一个 <code>AcceptedWorkerActor</code>, 并且由 <code>AcceptedWorkerActor</code> 对接受的 <code>Channel</code> 进行管理。</li> 
+  <li><code>AcceptorActor</code>: 管理监听TCP连接的 <code>Channel</code>，其需要实例化一组 <code>AcceptedWorkerActor</code>, 对于监听 <code>Channel</code> 接受的普通 <code>Channel</code>，会作为消息发送给其中一个 <code>AcceptedWorkerActor</code>, 并且由 <code>AcceptedWorkerActor</code> 对接受的 <code>Channel</code> 进行管理 和数据的处理。</li> 
   <li><code>AcceptedWorkerActor</code>: <code>AcceptorActor</code> 的工作 <code>Actor</code>。</li> 
   <li><code>SocketChannelsActor</code>: 管理 TCP 客户端 <code>Channel</code>。</li> 
   <li><code>DatagramChannelsActor</code>: 管理 UDP <code>Channel</code>。</li> 

@@ -117,9 +117,20 @@
   <div class="buttons"></div> 
  </div> 
  <p><code>continueAsk</code> is the entry point for <code>Actor</code> to process <code>Ask</code> messages, and <code>Ask</code> messages sent from elsewhere are passed into <code>Actor</code> from this method.</p> 
- <p>We can see that the method that handles the message <code>continueXXX</code> does not process the message directly, but loads the message into the <code>Stack</code>, the <code>Notice</code> message into the <code>NoticeStack</code>, and the <code>Ask</code> message into the <code>AskStack</code>. In <code>otavia</code>, the <code>Stack</code> data structure is introduced to facilitate the management of message dependencies and the sending of <code>Reply</code> messages; A <code>Future</code> is introduced to receive the return <code>Reply</code> message from an <code>Ask</code> message (note that the <code>Future</code> here is not the <code>Future</code> of the scala standard library); To wait for a <code>Future</code> to reach an executable state, a <code>StackState</code> is introduced. A <code>StackState</code> can be associated with one or more <code>Future</code>s, and a <code>Stack</code> can only be scheduled if the <code>resumable</code> method of the <code>StackState</code> is <code>ture</code>, or if all associated <code>Futures</code> have reached completion. The <code>continueXXX</code> method starts at a state and returns <code>Option[StackState]</code> at the end of each execution. The <code>return</code> method is used to terminate a <code>Stack</code>: in the case of an <code>AskStack</code>, the <code>return</code> method is used to send the return <code>Reply</code> message of the <code>Ask</code> message in the <code>AskStack</code>.</p> 
- <p>We can see that the <code>continueXXX</code> method within <code>Actor</code>, which handles messages, does not process the message directly, but rather loads the message into a <code>Stack</code>: <code>Notice</code> messages are loaded into a <code>NoticeStack</code>, and <code>Ask</code> messages are loaded into an <code>AskStack</code>. In <code>otavia</code>, the <code>Stack</code> data structure was introduced to make it easier to manage message dependencies and to send compile-time type-safe <code>Reply</code> messages. A <code>Future</code> was also introduced to receive the return <code>Reply</code> message from an <code>Ask</code> message (note that the <code>Future</code> here is not the <code>Future</code> of the Scala standard library). In order to wait for a <code>Future</code> to reach an executable state, a <code>StackState</code> is introduced. A <code>StackState</code> can be associated with one or more <code>Future</code>s, and the <code>StackState</code> will only be completed when the <code>resumable</code> method of the <code>StackState</code> has been <code>ture</code>ed, or if all of its associated <code>Futures</code> have reached a completed state. The <code>Stack</code> can continue to be scheduled only when the <code>resumable</code> method of <code>StackState</code> is <code>ture</code> or all associated <code>Futures</code> have reached completion. <code>continueXXX</code> starts from a <code>StackState</code> and returns <code>Option[StackState]</code> at the end of each execution, i.e. the <code>Stack</code> is switched to a new <code>StackState</code>. The <code>suspend</code> method of <code>StackState</code> returns <code>Option[StackState]</code>, and the <code>return</code> method returns <code>None</code> for ending <code>Stack</code>. In the case of an <code>AskStack</code>, the <code>return</code> method is also used to send a return <code>Reply</code> message for an <code>Ask</code> message in the <code>AskStack</code>.</p> 
+ <p>We can see that the <code>continueXXX</code> method of <code>Actor</code> does not take messages as arguments directly, but rather loads them into <code>Stack</code>s: <code>Notice</code> messages are loaded into <code>NoticeStack</code> and <code>Ask</code> messages are loaded into <code>AskStack</code>. Unlike most other Actor programming frameworks, sending and receiving messages in <code>otavia</code> is tightly managed, which takes away some of the flexibility but ensures that sending and receiving messages are compile-time type-safe, and makes the process of sending and receiving messages more akin to method calls. Let's take a look at how we send and receive messages:</p> 
+ <ol> 
+  <li>Sends a <code>Notice</code> message using the <code>notice</code> method of <code>Address</code>. Calling the <code>notice</code> method returns immediately and has no return value.</li> 
+  <li>Use the <code>Address</code>'s <code>ask</code> method to send an <code>Ask</code> message, and the <code>ask</code> method also takes a <code>Future</code> as an argument. When the <code>Actor</code> receives a <code>Reply</code> message associated with this <code>Ask</code> message, the <code>Reply</code> message is placed into the <code>Future</code> and the state of the <code>Future</code> is set to complete.</li> 
+  <li>A <code>Future</code> can only be associated with one <code>StackState</code>, but a <code>StackState</code> can be associated with multiple <code>Future</code>s.</li> 
+  <li>A <code>Stack</code> can only have one <code>StackState</code>. At the end of the <code>continueXXX</code> method, if the return value is <code>Some(StackState)</code>, set this <code>StackState</code> to the latest state of the <code>Stack</code> and release the old <code>StackState</code> and its associated <code>Future</code>.</li> 
+  <li>When a <code>Future</code> completes, the <code>StackState</code> checks to see if the associated <code>Stack</code> can be executed again by the <code>continueXXX</code> method. When the <code>resumable</code> method of <code>StackState</code> returns <code>ture</code> or all associated <code>Future</code>s reach completion, the associated <code>Stack</code> can be executed again.</li> 
+  <li>The <code>StackState</code> is customizable by the developer and the <code>resumable</code> method can be overridden. Of course, <code>otavia</code> also predefines some common <code>StackState</code>s, such as <code>FutureState</code> used in the example. <code>StackState</code> provides <code>suspend</code> method to return <code>Option[StackState]</code>.</li> 
+  <li>When the <code>Actor</code> processes a <code>Notice</code> message or an <code>Ask</code> message, it loads the message into a newly created <code>Stack</code>, sets the <code>StackState</code> of the <code>Stack</code> to <code>StackState.start</code>, and passes the <code>Stack</code> to the <code>continueXXX</code> method to begin execution. . <code>StackState.start</code> is a special <code>StackState</code> of type <code>StartState</code> that is not associated with any <code>Future</code> and whose <code>resumable</code> method returns <code>ture</code>.</li> 
+  <li>The <code>Stack</code> uses the <code>return</code> method to end processing of the message it is bound to, so the return value of the <code>return</code> method is <code>None</code>. For <code>AskStack</code>, the <code>return</code> method takes a <code>Reply</code> message as an argument to send to the sender of the <code>Ask</code> message as a reply message to the <code>Ask</code> message.</li> 
+ </ol> 
+ <p>All of the above is compile-time type-safe for sending and receiving messages! A <code>Stack</code> can only have one <code>StackState</code>, its initial state is <code>StartStack</code>, every time <code>continueXXX</code> completes, it switches to a new <code>StackState</code>, and the last <code>return</code> method will return <code>None</code>, which means the <code>Stack</code> is complete!</p> 
  <p><img src="../images/stack_resume.drawio.svg" alt=""></p> 
+ <p>Although the message processing may seem complex, most of these steps do not need to be done directly by the developer. The developer implements the <code>continueXXX</code> method by simply pattern matching the <code>Stack</code>'s <code>StackState</code> and then executing the corresponding business logic. If there is a need to wait for some asynchronous messages, a new <code>StackState</code> is returned, otherwise the <code>return</code> method is used to end the <code>Stack</code>.</p> 
  <p>At this point, all the <code>Actors</code> and messages we need are fully implemented. Next, start an <code>ActorSystem</code> to run these <code>Actors</code>.</p> 
 </section> 
 <section id="running-the-actor-1"> 
@@ -135,8 +146,8 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>With <code>ActorSystem()</code> we can easily create an <code>ActorSystem</code>, which is a runtime container for the actor in <code>otavia</code>. A JVM instance is only allowed to start one <code>ActorSystem</code> instance. The <code>buildActor</code> method of <code>ActorSystem</code> allows us to instantiate our defined actor. The <code>buildActor</code> method does not return the actor instance object itself, instead it returns an address to which we can send messages that the actor can handle.</p> 
- <p>Everything above is compile-time type-safe; if you send a message to the address returned by <code>buildActor</code> that the corresponding actor can't handle, it won't compile. If you use the AskStack<code>'s</code>return<code>method to return a</code> Reply<code>message that does not match the corresponding</code>Ask` message, this will also fail to compile.</p> 
+ <p>With <code>ActorSystem()</code> we can easily create an <code>ActorSystem</code>, which is a runtime container for the actor in <code>otavia</code>. A JVM instance is only allowed to start one <code>ActorSystem</code> instance. The <code>buildActor</code> method of <code>ActorSystem</code> allows us to instantiate our <code>Actor</code>. The <code>buildActor</code> method does not return the <code>Actor</code> object itself, instead it returns an <code>Address</code> to which we can send messages that the <code>Actor</code> can handle.</p> 
+ <p>Everything above is compile-time type-safe; if you send a message to the address returned by <code>buildActor</code> that the corresponding actor can't handle, it won't compile. Same, if you use the <code>AskStack</code>'s <code>return</code> method to send a <code>Reply</code> message that does not match the corresponding <code>Ask</code> message, this will also fail to compile.</p> 
 </section> 
 <section id="actor-that-receives-multiple-types-of-messages-1"> 
  <h2 class="h500"><a href="#actor-that-receives-multiple-types-of-messages-1" class="anchor"></a>Actor that receives multiple types of messages</h2> 
@@ -185,20 +196,287 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
+ <p>You might wonder, if a message inherits both <code>Notice</code> and <code>Ask</code>, will the message end up being processed by <code>continueNotice</code> or <code>continueAsk</code>? The answer is both. <code>Otavia</code> does not determine how a message should be handled based on the type of message, but by how it is sent. There are <code>notice</code> and <code>ask</code> methods in <code>Address</code>, and messages sent by the <code>notice</code> method are eventually processed by <code>continueNotice</code>, while messages sent by the <code>ask</code> method are processed by <code>continueAsk</code>!</p> 
 </section> 
 <section id="timer-3"> 
  <h2 class="h500"><a href="#timer-3" class="anchor"></a>Timer</h2> 
+ <p>The <code>otavia</code> runtime includes a powerful timer component, <code>Timer</code>, which you can interact with in a number of ways, the main usage scenarios are described below:</p> 
+</section> 
+<section id="handling-of-registered-timed-events-1"> 
+ <h3 class="h400"><a href="#handling-of-registered-timed-events-1" class="anchor"></a>Handling of registered timed events</h3> 
+ <p>An <code>Actor</code> can register for a timeout trigger task via the <code>registerActorTimeout</code> method of <code>Timer</code>. When the timeout condition is reached, the <code>Timer</code> generates a <code>TimeoutEvent</code> and sends it to the registered <code>Actor</code>. The timeout event is then handled by the <code>handleActorTimeout</code> method of the <code>Actor</code>.</p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class TickActor() extends StateActor[Nothing] { // [Nothing] if no message need process!
+</span><span line-number="2" class=""><span class="tooltip-container"></span>
+</span><span line-number="3" class=""><span class="tooltip-container"></span>  private var onceTickId: Long = Timer.INVALID_TIMEOUT_REGISTER_ID
+</span><span line-number="4" class=""><span class="tooltip-container"></span>  private var periodTickId: Long = Timer.INVALID_TIMEOUT_REGISTER_ID
+</span><span line-number="5" class=""><span class="tooltip-container"></span>
+</span><span line-number="6" class=""><span class="tooltip-container"></span>  override protected def afterMount(): Unit = {
+</span><span line-number="7" class=""><span class="tooltip-container"></span>    onceTickId = timer.registerActorTimeout(TimeoutTrigger.DelayTime(1, TimeUnit.SECONDS), self)
+</span><span line-number="8" class=""><span class="tooltip-container"></span>    periodTickId = timer.registerActorTimeout(TimeoutTrigger.DelayPeriod(2, 2, TimeUnit.SECONDS, TimeUnit.SECONDS), self)
+</span><span line-number="9" class=""><span class="tooltip-container"></span>  }
+</span><span line-number="10" class=""><span class="tooltip-container"></span>
+</span><span line-number="11" class=""><span class="tooltip-container"></span>  override protected def handleActorTimeout(timeoutEvent: TimeoutEvent): Unit = {
+</span><span line-number="12" class=""><span class="tooltip-container"></span>    if (timeoutEvent.registerId == periodTickId) {
+</span><span line-number="13" class=""><span class="tooltip-container"></span>      println(s"period timeout event triggered at ${LocalDateTime.now()}")
+</span><span line-number="14" class=""><span class="tooltip-container"></span>    } else if (timeoutEvent.registerId == onceTickId) {
+</span><span line-number="15" class=""><span class="tooltip-container"></span>      println(s"once timeout event triggered at ${LocalDateTime.now()}")
+</span><span line-number="16" class=""><span class="tooltip-container"></span>    } else {
+</span><span line-number="17" class=""><span class="tooltip-container"></span>      println("Never run this")
+</span><span line-number="18" class=""><span class="tooltip-container"></span>    }
+</span><span line-number="19" class=""><span class="tooltip-container"></span>  }
+</span><span line-number="20" class=""><span class="tooltip-container"></span>}
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
+ <p>It is important to note that the <code>timer</code> method within the <code>Actor</code> object must be used after the <code>Actor</code> has been mounted on the <code>ActorSystem</code>. Only after the <code>Actor</code> has been mounted will runtime-related information be injected into the <code>Actor</code> object. Therefore, you cannot use the <code>timer</code> method directly in the constructor of the <code>Actor</code> object because the <code>Actor</code> instance has not been mounted to the <code>ActorSystem</code> yet, and using the runtime-related methods will result in a null pointer exception. This is described later in the <code>Actor</code> lifecycle.</p> 
+</section> 
+<section id="stack-sleep-2"> 
+ <h3 class="h400"><a href="#stack-sleep-2" class="anchor"></a>Stack Sleep</h3> 
+ <p>If we want a <code>Stack</code> to wait a certain amount of time before it starts re-executing, we can have <code>StackState</code> associated with a <code>MessageFuture[TimeoutReply]</code> , and this <code>Future</code> will take the timeout event as a result. The <code>MessageFuture[TimeoutReply]</code> completes only when the timeout event is received.</p> 
+ <p>In the previous example, <code>PingActor</code> handles the <code>Start</code> message with <code>FutureState</code> , which is one of the more common state classes defined by <code>otavia</code>, but you can also customize <code>StackState</code> if these don't meet your needs.</p> 
+ <p>Now <code>FutureState</code> is not enough for us because it is bound to only one <code>MessageFuture[Pong]</code>, now we need to bind not only <code>MessageFuture[Pong]</code> but also <code>MessageFuture[TimeoutReply]</code>. <code>Stack</code> can be re-executed only when both <code>Future</code>s have completed. Let's define our new <code>StackState</code>.</p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>class PongTimeoutState extends StackState {
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  val pongFuture = MessageFuture[Pong]()
+</span><span line-number="3" class=""><span class="tooltip-container"></span>  val timeoutFuture = MessageFuture[TimeoutReply]()
+</span><span line-number="4" class=""><span class="tooltip-container"></span>}
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
+ <p>Next, re-implement our <code>PingActor</code></p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
+</span><span line-number="3" class=""><span class="tooltip-container"></span>    case _: StartState =&gt;
+</span><span line-number="4" class=""><span class="tooltip-container"></span>      println("PingActor handle Start message")
+</span><span line-number="5" class=""><span class="tooltip-container"></span>      println("PingActor send Ping Message")
+</span><span line-number="6" class=""><span class="tooltip-container"></span>      val state = PongTimeoutState()
+</span><span line-number="7" class=""><span class="tooltip-container"></span>      pongActorAddress.ask(Ping(stack.notice.sid), state.pongFuture)
+</span><span line-number="8" class=""><span class="tooltip-container"></span>      timer.sleepStack(state.timeoutFuture, 2 * 1000)
+</span><span line-number="9" class=""><span class="tooltip-container"></span>      state.suspend()
+</span><span line-number="10" class=""><span class="tooltip-container"></span>    case state: PongTimeoutState =&gt;
+</span><span line-number="11" class=""><span class="tooltip-container"></span>      val future = state.pongFuture
+</span><span line-number="12" class=""><span class="tooltip-container"></span>      if (future.isSuccess) {
+</span><span line-number="13" class=""><span class="tooltip-container"></span>        println(s"PingActor received ${future.getNow} message success!")
+</span><span line-number="14" class=""><span class="tooltip-container"></span>        assert(future.getNow.pingId == stack.ask.sid)
+</span><span line-number="15" class=""><span class="tooltip-container"></span>      }
+</span><span line-number="16" class=""><span class="tooltip-container"></span>      stack.`return`()
+</span><span line-number="17" class=""><span class="tooltip-container"></span>  }
+</span><span line-number="18" class=""><span class="tooltip-container"></span>}
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
+ <p>Okay, that's done! Now our <code>PingActor</code> needs to receive the <code>Pong</code> reply message and also wait 2 seconds for this <code>Stack</code> to be resumed.</p> 
+</section> 
+<section id="setting-a-timeout-for-reply-messages-1"> 
+ <h3 class="h400"><a href="#setting-a-timeout-for-reply-messages-1" class="anchor"></a>Setting a Timeout for Reply Messages</h3> 
+ <p>Sometimes, when we send an <code>Ask</code> message, the <code>Actor</code> on the other side may take a long time, but we don't want our requesting <code>Actor</code> to wait too long, what do we do in this case? Maybe you've already figured out the answer! We've talked about this before:</p> 
+ <blockquote> 
+  <p>A <code>StackState</code> can be associated with one or more <code>Future</code>s , and a <code>Stack</code> can only resume execution if the <code>resumable</code> method of the <code>StackState</code> is <code>ture</code>, or all associated <code>Future</code>s have reached completion.</p> 
+ </blockquote> 
+ <p>So we can override the <code>resumable</code> method of <code>StackState</code>! Now let's redefine our <code>PongTimeoutState</code> method.</p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>class PongTimeoutState extends StackState {
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  val pongFuture = MessageFuture[Pong]()
+</span><span line-number="3" class=""><span class="tooltip-container"></span>  val timeoutFuture = MessageFuture[TimeoutReply]()
+</span><span line-number="4" class=""><span class="tooltip-container"></span>
+</span><span line-number="5" class=""><span class="tooltip-container"></span>  override def resumable(): Boolean = timeoutFuture.isDone
+</span><span line-number="6" class=""><span class="tooltip-container"></span>}
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
+ <p>Now as soon as <code>timeoutFuture</code> completes, then <code>Stack</code> can be re-executed. However, when we use <code>pongFuture</code> we need to check for completion with <code>pongFuture.isDone</code>. That's one way to do it, but given that this is a relatively common scenario, <code>otavia</code> provides a simpler way. All we need to do is make a small change to our previous implementation of <code>PingActor</code>:</p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
+</span><span line-number="3" class=""><span class="tooltip-container"></span>    case _: StartState =&gt;
+</span><span line-number="4" class=""><span class="tooltip-container"></span>      println("PingActor handle Start message")
+</span><span line-number="5" class=""><span class="tooltip-container"></span>      println("PingActor send Ping Message")
+</span><span line-number="6" class=""><span class="tooltip-container"></span>      val state = FutureState()
+</span><span line-number="7" class=""><span class="tooltip-container"></span>      pongActorAddress.ask(Ping(stack.notice.sid), state.future, 2 * 1000)
+</span><span line-number="8" class=""><span class="tooltip-container"></span>      state.suspend()
+</span><span line-number="9" class=""><span class="tooltip-container"></span>    case state: FutureState[Pong] =&gt;
+</span><span line-number="10" class=""><span class="tooltip-container"></span>      val future = state.future
+</span><span line-number="11" class=""><span class="tooltip-container"></span>      if (future.isSuccess) {
+</span><span line-number="12" class=""><span class="tooltip-container"></span>        println(s"PingActor received ${future.getNow} message success!")
+</span><span line-number="13" class=""><span class="tooltip-container"></span>        assert(future.getNow.pingId == stack.ask.sid)
+</span><span line-number="14" class=""><span class="tooltip-container"></span>      }
+</span><span line-number="15" class=""><span class="tooltip-container"></span>      stack.`return`()
+</span><span line-number="16" class=""><span class="tooltip-container"></span>  }
+</span><span line-number="17" class=""><span class="tooltip-container"></span>}
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
+ <p>Notice the difference! The <code>ask</code> method comes with a timeout parameter!</p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>pongActorAddress.ask(Ping(stack.notice.sid), state.future, 2 * 1000) // new 
+</span><span line-number="2" class=""><span class="tooltip-container"></span>pongActorAddress.ask(Ping(stack.notice.sid), state.future) // old
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
+ <p>If the <code>Pong</code> message is not received after 2 seconds, then the <code>Future</code> will be set to complete, but unlike before, we can't get the <code>Pong</code> message from inside the <code>Future</code>, it's already in a failed state, i.e. <code>isDone=ture isSuccess=false isFailed= ture</code>. Since this <code>StackState</code> is associated with only one <code>Future</code>, and this <code>Future</code> is already in a completed state, this <code>Stack</code> can continue to be scheduled for execution.</p> 
 </section> 
 <section id="lifecycle-of-actor-1"> 
  <h2 class="h500"><a href="#lifecycle-of-actor-1" class="anchor"></a>LifeCycle of Actor</h2> 
- <p>In <code>otavia</code>, users don't have to spend much time managing the life cycle of an actor. The actor instance is still managed by the JVM garbage collection, and as long as the actor has no address that references it, the actor instance will be automatically recycled by the JVM's garbage collection system.</p> 
- <p>There are several methods in Actor that can be called during different lifecycle processes</p> 
+ <p>In <code>otavia</code>, the user doesn't have to worry much about managing the life cycle of <code>Actor</code>, the <code>Actor</code> instance is still managed by the JVM garbage collection. As long as the <code>Actor</code> is no longer referenced by the GC root object, the <code>Actor</code> instance will be automatically reclaimed by the JVM's garbage collection system. There are several hook methods in <code>Actor</code> that can be called during different life cycles, such as</p> 
  <ul> 
-  <li><code>afterMount</code>:</li> 
-  <li><code>beforeRestart</code>:</li> 
-  <li><code>restart</code>:</li> 
-  <li><code>afterRestart</code>:</li> 
-  <li><code>AutoCleanable.clean</code>:</li> 
+  <li><code>afterMount</code>: Called after the <code>Actor</code> instance is mounted to <code>ActorSystem</code> <strong>For Actor instances <code>context</code> related methods are only available after mounting</strong>.</li> 
+  <li><code>beforeRestart</code>: Called before reboot.</li> 
+  <li><code>restart</code>: Methods for restarting <code>Actor</code> instances.</li> 
+  <li><code>afterRestart</code>: Called after a reboot.</li> 
+  <li><code>AutoCleanable.cleaner</code>: If your implementation of <code>Actor</code> needs to clean up some unsafe resources, inherit the <code>AutoCleanable</code> trait and implement the <code>cleaner</code> method.</li> 
  </ul> 
+ <p>The following figure shows the complete lifecycle of an <code>Actor</code>:</p> 
  <p><img src="../images/actor_life_cycle.drawio.svg" alt=""></p> 
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#environment-1">Environment</a></li><li><a href="#add-dependencies-1">Add dependencies</a></li><li><a href="#simple-ping-pong-actors-1">Simple Ping-Pong Actors</a><ul><li><a href="#defining-messages-1">Defining Messages</a></li><li><a href="#implementing-the-actor-1">Implementing the actor</a></li><li><a href="#running-the-actor-1">Running the actor</a></li></ul></li><li><a href="#actor-that-receives-multiple-types-of-messages-1">Actor that receives multiple types of messages</a></li><li><a href="#timer-3">Timer</a></li><li><a href="#lifecycle-of-actor-1">LifeCycle of Actor</a></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+ <p>Let's define an <code>Actor</code> and look at the various hook methods in the lifecycle:</p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>case class Start() extends Notice
+</span><span line-number="2" class=""><span class="tooltip-container"></span>
+</span><span line-number="3" class=""><span class="tooltip-container"></span>final class LifeActor extends StateActor[Start] with AutoCleanable {
+</span><span line-number="4" class=""><span class="tooltip-container"></span>  override protected def afterMount(): Unit = println("LifeActor: afterMount")
+</span><span line-number="5" class=""><span class="tooltip-container"></span>
+</span><span line-number="6" class=""><span class="tooltip-container"></span>  override protected def beforeRestart(): Unit = println("LifeActor: beforeRestart")
+</span><span line-number="7" class=""><span class="tooltip-container"></span>
+</span><span line-number="8" class=""><span class="tooltip-container"></span>  override protected def restart(): Unit = println("LifeActor: restart")
+</span><span line-number="9" class=""><span class="tooltip-container"></span>
+</span><span line-number="10" class=""><span class="tooltip-container"></span>  override protected def afterRestart(): Unit = println("LifeActor: afterRestart")
+</span><span line-number="11" class=""><span class="tooltip-container"></span>
+</span><span line-number="12" class=""><span class="tooltip-container"></span>  override def cleaner(): ActorCleaner = new ActorCleaner {
+</span><span line-number="13" class=""><span class="tooltip-container"></span>
+</span><span line-number="14" class=""><span class="tooltip-container"></span>    println("creating actor cleaner")
+</span><span line-number="15" class=""><span class="tooltip-container"></span>
+</span><span line-number="16" class=""><span class="tooltip-container"></span>    override protected def clean(): Unit = println("clean actor resource before actor stop")
+</span><span line-number="17" class=""><span class="tooltip-container"></span>
+</span><span line-number="18" class=""><span class="tooltip-container"></span>  }
+</span><span line-number="19" class=""><span class="tooltip-container"></span>
+</span><span line-number="20" class=""><span class="tooltip-container"></span>  // if occurs some error which developer is not catch, this will trigger the actor restart
+</span><span line-number="21" class=""><span class="tooltip-container"></span>  // you can also override the noticeExceptionStrategy method to change the strategy
+</span><span line-number="22" class=""><span class="tooltip-container"></span>  override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = {
+</span><span line-number="23" class=""><span class="tooltip-container"></span>    println("process message")
+</span><span line-number="24" class=""><span class="tooltip-container"></span>    throw new Error("")
+</span><span line-number="25" class=""><span class="tooltip-container"></span>  }
+</span><span line-number="26" class=""><span class="tooltip-container"></span>}
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
+ <p>The <code>afterMount</code> method is mainly used for dependency injection, which will be explained in more detail later.</p> 
+</section> 
+<section id="handling-io-1"> 
+ <h2 class="h500"><a href="#handling-io-1" class="anchor"></a>Handling IO</h2> 
+ <p>Now we have learned to 1) Define <code>Actor</code> 2) Define messages 3) Send a message 4) Receive a message and process a message 5) Trigger a timeout using <code>Timer</code>.</p> 
+ <p>But in real business, we often need to deal with a lot of IO tasks, and IO tasks will block our threads, which is one of the reasons why our programs are underperforming. At the same time, some new technologies such as epoll, io_uring, etc. are booming, which allow us to handle IO tasks without blocking. The JVM also provides NIO to support non-blocking IO, but it's not easy to use NIO because the APIs provided by the JVM, such as <code>java.nio.ByteBuffer</code> and <code>java.nio.channels.Channel</code>, are too low-level. It's more common to use Netty to handle IO tasks in the JVM.</p> 
+ <p>Thanks to Netty for providing a powerful IO programming tool for the JVM world! Inspired by Netty, the IO module in <code>otavia</code> is basically ported from <code>Netty</code>! Handling IO tasks in <code>otavia</code> is very much the same as in Netty, and the API is basically the same. This also makes it very easy for <code>otavia</code> to take advantage of the extensive Netty ecosystem and port codecs for various network protocols. <a href="https://github.com/otavia-projects">View otavia ecosystem</a>.</p> 
+ <p><img src="../images/two_types_actor.drawio.svg" alt=""></p> 
+ <p><code>otavia</code> also uses <code>Channel</code> to represent an IO object, such as an open file, a network connection. In <code>otavia</code>, however, the <code>Channel</code> must run in a <code>ChannelsActor</code>. Also <code>Channel</code> contains a <code>ChannelPipeline</code> component with a <code>ChannelHandler</code> queue.</p> 
+ <p><img src="../images/pipeline.drawio.svg" alt=""></p> 
+ <p>In order to better manage different <code>Channel</code>s, <code>otavia</code> implements several different kinds of <code>ChannelsActor</code>, they are:</p> 
+ <ul> 
+  <li><code>AcceptorActor</code>: manages the <code>Channel</code> that listens for TCP connections, which needs to instantiate a set of <code>AcceptedWorkerActor</code>s as working <code>Actor</code>s. Normal <code>Channel</code>s that are accepted by the listening <code>Channel</code> are wrapped in a message and sent to one of the <code>AcceptedWorkerActor</code>s, and managed by the selected <code>AcceptedWorkerActor</code>.</li> 
+  <li><code>AcceptedWorkerActor</code>: The working <code>Actor</code> for the <code>AcceptorActor</code>.</li> 
+  <li><code>SocketChannelsActor</code>: manages the TCP client <code>Channel</code>.</li> 
+  <li><code>DatagramChannelsActor</code>: manages the UDP <code>Channel</code>.</li> 
+ </ul> 
+ <p>You will need to choose a type of <code>ChannelsActor</code> to implement depending on your needs. Now, let's start our journey with a simple file reading example!</p> 
+</section> 
+<section id="files-io-1"> 
+ <h3 class="h400"><a href="#files-io-1" class="anchor"></a>Files IO</h3> 
+ <p>Netty only supports network IO, <code>otavia</code> supports not only network but also files. Now we're going to implement an <code>Actor</code> that receives a request to read a file and returns the file as a <code>Seq[String]</code>.</p> 
+ <p>First, let's define the messages that this <code>Actor</code> needs to process and return.</p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>case class LinesReply(lines: Seq[String]) extends Reply
+</span><span line-number="2" class=""><span class="tooltip-container"></span>
+</span><span line-number="3" class=""><span class="tooltip-container"></span>case class ReadLines() extends Ask[LinesReply]
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
+ <p>Next we will implement our <code>Actor</code>, what is the behavior of this <code>Actor</code>? First we need to open the file! So we have a <code>Channel</code> that represents the file, and we send the command to read the file to this <code>Channel</code>.</p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class ReadLinesActor(file: File, charset: Charset = StandardCharsets.UTF_8)
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  extends ChannelsActor[ReadLines] {
+</span><span line-number="3" class=""><span class="tooltip-container"></span>
+</span><span line-number="4" class=""><span class="tooltip-container"></span>  override protected def initFileChannel(channel: Channel): Unit = ???
+</span><span line-number="5" class=""><span class="tooltip-container"></span>
+</span><span line-number="6" class=""><span class="tooltip-container"></span>  override def continueAsk(stack: AskStack[ReadLines]): Option[StackState] = {
+</span><span line-number="7" class=""><span class="tooltip-container"></span>    stack.state match {
+</span><span line-number="8" class=""><span class="tooltip-container"></span>      case StackState.start =&gt;
+</span><span line-number="9" class=""><span class="tooltip-container"></span>        openFileChannelAndSuspend(file, Seq(StandardOpenOption.READ), attrs = Seq.empty)
+</span><span line-number="10" class=""><span class="tooltip-container"></span>      case openState: ChannelFutureState if openState.id == 0 =&gt;
+</span><span line-number="11" class=""><span class="tooltip-container"></span>        val linesState = ChannelFutureState(1)
+</span><span line-number="12" class=""><span class="tooltip-container"></span>        openState.future.channel.ask(FileReadPlan(-1, -1), linesState.future)
+</span><span line-number="13" class=""><span class="tooltip-container"></span>        linesState.suspend()
+</span><span line-number="14" class=""><span class="tooltip-container"></span>      case linesState: ChannelFutureState if linesState.id == 1 =&gt;
+</span><span line-number="15" class=""><span class="tooltip-container"></span>        stack.`return`(LinesReply(linesState.future.getNow.asInstanceOf[Seq[String]]))
+</span><span line-number="16" class=""><span class="tooltip-container"></span>    }
+</span><span line-number="17" class=""><span class="tooltip-container"></span>  }
+</span><span line-number="18" class=""><span class="tooltip-container"></span>}
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
+ <p>First we use the <code>openFileChannelAndSuspend</code> method to open the file and return a <code>StackState</code>, which will be ready to run when the file is opened. This method is a shortcut provided by the <code>ChannelsActor</code>, and we can see from the source code that it is implemented as:</p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>// source code from ChannelsActor
+</span><span line-number="2" class=""><span class="tooltip-container"></span>val channel = createFileChannelAndInit()
+</span><span line-number="3" class=""><span class="tooltip-container"></span>val state = ChannelFutureState()
+</span><span line-number="4" class=""><span class="tooltip-container"></span>val future: ChannelFuture = state.future
+</span><span line-number="5" class=""><span class="tooltip-container"></span>channel.open(path, opts, attrs, future)
+</span><span line-number="6" class=""><span class="tooltip-container"></span>state.suspend().asInstanceOf[Option[ChannelFutureState]]
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
+ <p>Nothing special, it's pretty much the same as the <code>Stack</code> we talked about before, except that here the <code>StackState</code> is a <code>ChannelFutureState</code> and the associated <code>Future</code> is a <code>ChannelFuture</code>. This <code>ChannelFuture</code> is then passed to <code>Channel</code> using the <code>channel.open</code> method. The <code>open</code> method is not blocking and returns immediately after it is called, and if this file is opened, then <code>Reactor</code> sends <code>ChannelsActor</code> a <code>ReactorEvent</code>, <code>ChannelsActor</code> receives the event and sets the <code>ChannelFuture</code> to completion. The <code>ChannelActor</code> then checks to see if the <code>Stack</code> associated with it can be re-executed.</p> 
+ <p>Here we also see a <code>createFileChannelAndInit</code> method, which we can guess from the name creates a file <code>Channel</code> and also initializes the <code>Channel</code>. This method calls the <code>ChannelsActor.initFileChannel</code> method to initialize the <code>Channel</code>.</p> 
+ <p>Now we can implement our <code>ReadLinesActor.initFileChannel</code>. We can see that we passed in a <code>FileReadPlan</code> instance after the file was opened:</p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>val linesState = ChannelFutureState(1)
+</span><span line-number="2" class=""><span class="tooltip-container"></span>openState.future.channel.ask(FileReadPlan(-1, -1), linesState.future)
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
+ <p>The <code>ask</code> method will eventually pass <code>FileReadPlan</code> into <code>ChannelPipeline</code> via the <code>write</code> method of <code>Channel</code>. The <code>ChannelHandler</code> inside the <code>ChannelPipeline</code> needs to be implemented by us, which is basically the same as in Netty.</p> 
+ <p>Now let's implement our <code>ChannelHandler</code>. What does this <code>ChannelHandler</code> need to do? First, we need to be able to handle the <code>write</code> inbound event, and second, we need to handle the <code>channelRead</code> outbound event. Then we need to handle the <code>channelReadComplete</code> outbound event when the read is complete, and in the <code>channelReadComplete</code> method, we need to generate the final result message back to our <code>ReadLinesActor</code>.</p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>class ReadLinesHandler(charset: Charset) extends ByteToMessageDecoder {
+</span><span line-number="2" class=""><span class="tooltip-container"></span>
+</span><span line-number="3" class=""><span class="tooltip-container"></span>  private val lines = ArrayBuffer.empty[String]
+</span><span line-number="4" class=""><span class="tooltip-container"></span>  private var currentMsgId: Long = -1
+</span><span line-number="5" class=""><span class="tooltip-container"></span>
+</span><span line-number="6" class=""><span class="tooltip-container"></span>  override def write(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit = msg match {
+</span><span line-number="7" class=""><span class="tooltip-container"></span>    case readPlan: FileReadPlan =&gt;
+</span><span line-number="8" class=""><span class="tooltip-container"></span>      ctx.read(readPlan)
+</span><span line-number="9" class=""><span class="tooltip-container"></span>      currentMsgId = msgId
+</span><span line-number="10" class=""><span class="tooltip-container"></span>    case _ =&gt;
+</span><span line-number="11" class=""><span class="tooltip-container"></span>      ctx.write(msg, msgId)
+</span><span line-number="12" class=""><span class="tooltip-container"></span>  }
+</span><span line-number="13" class=""><span class="tooltip-container"></span>
+</span><span line-number="14" class=""><span class="tooltip-container"></span>  override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = {
+</span><span line-number="15" class=""><span class="tooltip-container"></span>    var continue = true
+</span><span line-number="16" class=""><span class="tooltip-container"></span>    while (continue) {
+</span><span line-number="17" class=""><span class="tooltip-container"></span>      val length = input.bytesBefore('\n'.toByte) + 1
+</span><span line-number="18" class=""><span class="tooltip-container"></span>      if (length &gt; 0) {
+</span><span line-number="19" class=""><span class="tooltip-container"></span>        lines.addOne(input.readCharSequence(length, charset).toString)
+</span><span line-number="20" class=""><span class="tooltip-container"></span>      } else continue = false
+</span><span line-number="21" class=""><span class="tooltip-container"></span>    }
+</span><span line-number="22" class=""><span class="tooltip-container"></span>  }
+</span><span line-number="23" class=""><span class="tooltip-container"></span>
+</span><span line-number="24" class=""><span class="tooltip-container"></span>  override def channelReadComplete(ctx: ChannelHandlerContext): Unit = {
+</span><span line-number="25" class=""><span class="tooltip-container"></span>    val seq = lines.toSeq
+</span><span line-number="26" class=""><span class="tooltip-container"></span>    lines.clear()
+</span><span line-number="27" class=""><span class="tooltip-container"></span>    val msgId = currentMsgId
+</span><span line-number="28" class=""><span class="tooltip-container"></span>    currentMsgId = -1
+</span><span line-number="29" class=""><span class="tooltip-container"></span>    ctx.fireChannelRead(seq, msgId)
+</span><span line-number="30" class=""><span class="tooltip-container"></span>  }
+</span><span line-number="31" class=""><span class="tooltip-container"></span>
+</span><span line-number="32" class=""><span class="tooltip-container"></span>}
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
+ <p>Then we also need to add this <code>ReadLinesHandler</code> to the <code>ChannelPipeline</code> of our <code>Channel</code>, remember the <code>initFileChannel</code> method that we didn't implement in the <code>ReadLinesActor</code> before. Now we can finalize this method!</p> 
+ <div class="snippet mono-small-block" scala-snippet=""> 
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>override protected def initFileChannel(channel: Channel): Unit =
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  channel.pipeline.addFirst(new ReadLinesHandler(charset))
+</span></code></pre> 
+  <div class="buttons"></div> 
+ </div> 
+ <p>Now let's start our program to read a text file!</p> 
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#environment-1">Environment</a></li><li><a href="#add-dependencies-1">Add dependencies</a></li><li><a href="#simple-ping-pong-actors-1">Simple Ping-Pong Actors</a><ul><li><a href="#defining-messages-1">Defining Messages</a></li><li><a href="#implementing-the-actor-1">Implementing the actor</a></li><li><a href="#running-the-actor-1">Running the actor</a></li></ul></li><li><a href="#actor-that-receives-multiple-types-of-messages-1">Actor that receives multiple types of messages</a></li><li><a href="#timer-3">Timer</a><ul><li><a href="#handling-of-registered-timed-events-1">Handling of registered timed events</a></li><li><a href="#stack-sleep-2">Stack Sleep</a></li><li><a href="#setting-a-timeout-for-reply-messages-1">Setting a Timeout for Reply Messages</a></li></ul></li><li><a href="#lifecycle-of-actor-1">LifeCycle of Actor</a></li><li><a href="#handling-io-1">Handling IO</a><ul><li><a href="#files-io-1">Files IO</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
