@@ -18,115 +18,47 @@ layout: main
 
 ## Introduction
 
-[Otavia](https://otavia-projects.github.io/otavia/home.html) is an IO and Actor programming model power by Scala 3, it
-provides a toolkit to make writing high-performance concurrent programs more easily.
+`otavia` is an IO and Actor programming model power by Scala 3, it provides a toolkit to make writing high-performance
+concurrent programs more easily.
 
-## Features
+You can get a quick overview of the basic usage and core design of `otavia` in the following documentation:
 
+- [Quick Start](./quick_start.md)
+- [Core Concepts and Design](./core_concept.md)
+
+You can also learn about other modules in `otavia` through other documentation on this site.
+
+## Features at a Glance
+
+- **Full-Link Asynchronous**：Everything is asynchronous, no blocking, no thread suspending.
+- **Forget Threads, Forget Locks**：You will no longer be plagued by multithreading problems; everything you write runs
+  in a single thread!
 - **Simpler Concurrent**: Actors and Channel let you build systems that scale up, using the resources of a server more
   efficiently, and out.
 - **Resilient by Design**: Building on the principles of The Reactive Manifesto Otavia allows you to write systems that
   self-heal and stay responsive in the face of failures.
 - **High Performance**: build Millions actor instance and send many billion message in seconds.
 - **Type Safe**: Message send between actor is type safe in compile time.
-- **IOC of Actor**: The actor system is also see as a IOC container, user can autowire actor by actor type.
-- **Powerful IO Stack**: The IO stack is fork from [Netty](https://netty.io), but support AIO and file channel.
-- **Async and Await**: Async send ask message and await to continue.
+- **Zero-Cost Ask-Pattern**: Send ask message and get reply message like call a method, but zero-cost.
+- **DI of Actor**: An `ActorSystem` is also seen as a container for `Actor` instances, and developers can type-safely
+  inject dependent `Actor`s at compile time.
+- **Powerful IO Stack**: The IO stack is ported from [Netty](https://netty.io), but support AIO and file channel.
+- **async/await**: Implement a set of `async/await` syntaxes based on the CPS (Continuation Passing Style)
+  using `Scala 3` metaprogramming tools.
+- **Simple threading model**: The threading model of the `otavia` runtime is very simple and efficient, allowing you to
+  maximize the utilization of your system's CPU!
+- **Zero-Deps**: The core modules does not depend on any third-party packages.
 - **Open Ecosystem**: Otavia provides a module mechanism that allows users to easily use third-party module libraries.
 
-## Programming Model
+## Ecosystem
 
-In `otavia`, developer only focus on
+The IO stack of `otavia` is ported from Netty. In order to make the IO tasks work better with the Actor model, `otavia`
+is not fully compatible with Netty. Happily, most of the application-layer network protocol codecs in the Netty
+ecosystem can be easily ported to `otavia`, so we maintain this ecosystem project to port various application-layer
+network protocol codecs from Netty and [Eclipse Vert.x](https://vertx.io/).
 
-- `Actor`: The basic unit of resource and code execution, `Actor` instances cannot access each other's resources
-  directly, they can only communicate with each other through `Message`. `Actor` has two basic subclasses `StateActor`
-  and `ChannelsActor`, user-implemented `Actor` must inherit from one of these two classes.
-- `Message`: messages, `Actor`s communicate with each other via `message`, immutable.
-- `Address`: The client to which the message of an `Actor` instance is sent. `Actor` cannot access other `Actor`
-  instances directly, but can only send `message` to the `Actor` instance or collection of instances it represents
-  via `Address`.
-- `Event`: Events, `Actor` can register events of interest to `Reactor` and `Timer`, and when an event occurs, `Reactor`
-  and `Timer` send `Event` to `Actor`.
-- `StateActor`: The basic execution unit, responsible for receiving messages and sending messages, users need to
-  implement their own `Actor` according to their business logic, and can register timeout events with `Timer`.
-- `ChannelsActor`: basic execution unit and manages the life cycle of a set of `Channel`s, responsible for encoding and
-  transmitting incoming messages to the corresponding `Channel` and reading data from the `Channel` to decode the
-  message and send it to other `Actor` instances. It can register IO events of interest to the `Channel` with
-  the `Reactor`. When the registered events reach the conditions `Reactor` sends `Event` events.
-- `Reactor`: IO event listener that monitors registered `Channel` events and generates `Event` which is then sent to the
-  relevant `ChannelsActor` instance.
-- `Timer`: Timeout event generator that sends `Event` to the corresponding `Actor`.
-- `ActorSystem`: `Actor` instance container, responsible for creating `Actor` instances, managing the life cycle
-  of `Actor` instances and scheduling the execution of ready `Actor` instances.
+- [GitHub - otavia-projects](https://github.com/otavia-projects)
 
-## Project modules
+## Contributes
 
-### core modules
-
-- `otavia-buffer`: A zero-deps buffer implementation for replace `java.nio.ByteBuffer` forked from Netty.
-- `otavia-serde`: A generic serialization and deserialization framework based on `buffer`.
-- `otavia-runtime`: Core Actor model, IO model(channel), slf4a, reactor model, IOC, message model, and thread model.
-- `otavia-codec`: Some generic ChannelHandler.
-- `otavia-handler`: Some special ChannelHandler, eg, SSL, io traffic control, timeout.
-- `otavia-async`: A implementation of `async/await` transformation for Actor message sending/waiting based on CPS(
-  Continuation
-  Passing Style) transformation powered by metaprogramming of Scala 3.
-- `otavia-sql`: Actor database connect specification for RDBMS.
-- `otavia-sql-macro`: Derivation for class use in `otavia-sql`.
-
-### serde ecosystem
-
-- `otavia-serde-json`: JSON serialization and deserialization.
-- `otavia-json-macro`: Macro for `otavia-serde-json`.
-- `otavia-http-macro`: Macro for `otavia-codec-http`.
-- `otavia-serde-proto`: Protocol buffer serialization and deserialization.
-- `otavia-proto-macro`: Macro for `otavia-serde-proto`.
-
-### channel codec ecosystem
-
-- `otavia-codec-haproxy`: Haproxy ChannelHandlers and Actors.
-- `otavia-codec-http`: HTTP ChannelHandlers and Actors.
-- `otavia-codec-memcache`: Memcache ChannelHandlers and Actors.
-- `otavia-codec-mqtt`: MQTT ChannelHandlers and Actors.
-- `otavia-codec-redis`: Redis ChannelHandlers and Actors.
-- `otavia-codec-smtp`: SMTP ChannelHandlers and Actors.
-- `otavia-codec-socks`: SOCKS4/5 ChannelHandlers and Actors.
-- `otavia-codec-kafka`: KAFKA ChannelHandlers and Actors.
-- `otavia-codec-dns`: DNS ChannelHandlers and Actors.
-
-### database drivers
-
-- `otavia-mysql-driver`: mysql driver for otavia.
-- `otavia-postgres-driver`: postgres driver for otavia.
-
-### slf4a logger ecosystem
-
-- `otavia-log4a`: A simple slf4a logger implementation.
-
-### web framework
-
-- `sponge`: A simple web framework based on otavia ecosystem.
-
-### io transport
-
-- `otavia-native-transport`: A native io transport via JNI.
-
-## Project plans
-
-| version | plan                                                                                                                                                         |
-|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 0.2.*   | `otavia-buffer` completed.                                                                                                                                   |
-| 0.3.*   | `otavia-runtime` runnable. complete first runnable `otavia-runtime` with NIO transport, Actor model, message model, thread model, IOC, slf4a, reactor model. |
-| 0.4.*   | `otavia-serde-json`, `otavia-serde-http`, `otavia-codec`, `otavia-codec-http` can work.                                                                      |
-| 0.5.*   | Design `otavia-sql`, and a demo Mysql driver implementation.                                                                                                 |
-| 0.\*.*  | Implement `otavia-codec-*`, `otavia-handler`, `otavia-serde-*`.                                                                                              |
-| 0.\*.*  | More RDBMS drivers based on `otavia-sql`.                                                                                                                    |
-| 0.\*.*  | Implement `otavia-async`.                                                                                                                                    |
-| 0.\*.*  | Higher test coverage.                                                                                                                                        |
-| 1.0.*   | Stabilize core API and core module API. Production ready!                                                                                                    |
-
-> The Future: version 2.0
-> 1. remote actor: support send/receive message to/from remote actor.
-> 2. auto distribution: hot move actor instance to cluster actor system based on Actor community detection and
-     make the smallest cost of distribution.
-
+Any contributions are welcome!

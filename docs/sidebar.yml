@@ -4,7 +4,7 @@ subsection:
     page: name_from.md
   - title: Quick Start
     page: quick_start.md
-  - title: Core Concept
+  - title: Core Concepts and Design
     page: core_concept.md
   - title: Guide
     index: guide/index.md
@@ -40,7 +40,7 @@ subsection:
         page: zh/name_from.md
       - title: 快速开始
         page: zh/quick_start.md
-      - title: 核心概念
+      - title: 核心概念与设计
         page: zh/core_concept.md
       - title: 详细指南
         index: zh/guide/index.md

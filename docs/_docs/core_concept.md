@@ -1,6 +1,6 @@
 ---
 layout: main
-title: Core Concept
+title: Core Concepts and Design
 ---
 
 ## Challenges of existing programming paradigm

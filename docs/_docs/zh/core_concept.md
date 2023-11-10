@@ -1,6 +1,6 @@
 ---
 layout: main
-title: 核心概念
+title: 核心概念与设计
 ---
 
 ## 现有编程模型的挑战

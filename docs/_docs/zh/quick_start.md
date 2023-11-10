@@ -612,17 +612,17 @@ override protected def initFileChannel(channel: Channel): Unit =
 }
 ```
 
-您可能会想这也太麻烦了，我直接用 java 的文件API几行代码就搞定了，你却写了那么多！因为凡是有收益就有所付出，这种付出的收益就是这种
-文件IO是不会阻塞当前调用的线程的！ `otavia` 具体的IO读写工作是由 `Reactor` 组件完成的，其默认的传输层实现是基于 NIO。 但是
-传输层也保留了 SPI 接口，我们可以替换这个默认的 NIO 传输层，基于 epoll、kqueue、IOCP 甚至 io_uring 实现一个更加高性能的
-传输层！而对于上层的代码是不需要一点变更的，只要您按照规范实现了这个传输层模块，引入依赖，就会立即生效！而实现这个高效的传输层模块
-正是 [otavia 生态](https://github.com/otavia-projects) 中
+您可能会想这也太麻烦了，我直接用 java 的文件 API 几行代码就搞定了，你却写了那么多！因为凡是有收益就有所付出，这种付出的收益就是
+这种文件 IO 是不会阻塞当前 `Actor` 的执行线程的！ `otavia` 具体的 IO 读写工作是由 `Reactor` 组件完成的，其默认的传输层实
+现是基于 NIO。 因为传输层是使用 SPI 机制实现的，所以我们可以替换这个默认的 NIO 传输层，基于 epoll、kqueue、IOCP 甚至
+io_uring 等技术实现一个更加高性能的传输层！而这对于上层的代码是不需要一点变更的，只要您按照 SPI 规范实现了这个传输层模块，引入
+依赖，就会立即生效！而实现这个高效的传输层模块正是 [otavia 生态](https://github.com/otavia-projects) 中
 [native-transport](https://github.com/otavia-projects/native-transport) 项目的目标！如果你感兴趣，热烈欢迎您的贡献！
 
-### 网络IO
+### 网络 IO
 
-现在我们来实现一个基于TCP网络的 echo server，这个服务可以使用 telnet 链接，在 telnet 里面发送数据，这个服务将数据原样返回给
-telnet。因为是TCP服务，我们使用 `AcceptedWorkerActor` 与 `AcceptorActor` 来实现。我们实现的类分别为
+现在我们来实现一个基于 TCP 网络的 echo server，这个服务可以使用 telnet 链接，在 telnet 里面发送数据，这个服务将数据原样
+返回给 telnet。因为是 TCP 服务，我们使用 `AcceptedWorkerActor` 与 `AcceptorActor` 来实现。我们实现的类分别为
 `EchoAcceptor` 和 `EchoWorker`
 
 首先我们来实现 `EchoAcceptor`，这个 `Actor` 管理一个监听连接的 `Channel`，接受连接后生成新的 `Channel`，然后将这个新
@@ -637,8 +637,8 @@ final class EchoAcceptor extends AcceptorActor[EchoWorker] {
 }
 ```
 
-在 `EchoAcceptor` 中我们定义了如何创建 `EchoWorker` 的 `workerFactory` 和创建多少个 `EchoWorker` 实例的
-`workerNumber`。 `EchoAcceptor` 接收 `ChannelsActor.Bind` 请求，然后启动一个 `Channel` 绑定到一个端口上用于
+在 `EchoAcceptor` 中我们定义了如何创建 `EchoWorker` 的 `workerFactory` 方法和创建多少个 `EchoWorker` 实例的
+`workerNumber`方法。 `EchoAcceptor` 接收 `ChannelsActor.Bind` 请求，然后创建一个 `Channel` 并且绑定到一个端口上用于
 监听网络连接。同时会创建 `workerNumber` 个 `EchoWorker` 实例用于分发接收的网络连接。 接下来我们定义我们的 `EchoWorker`
 
 ```scala
@@ -694,15 +694,17 @@ override protected def initChannel(channel: Channel): Unit =
 }
 ```
 
-快启动 telnet 连接我们的 echo server 试一下吧！
+快启动 telnet 连接 echo server 试一下吧！
+
+> 这个例子只是简单介绍了一下 Channel 的用法，并没有展示出 Channel 与 ChannelsActor 更加强大的交互方式。
+> 您可以通过 [核心概念与设计](./core_concept.md#channel) 了解更多。
 
 ## 全局Actor与依赖注入
 
-依赖注入是一种很有效的拆解代码耦合的思想，这种思想同样对于 `Actor`
-模型来说也同样有用。想象一下，我们有时候对于我们的 `Actor`
-能接收什么消息是固定的，但是在不同场景中我们却有不同的具体实现。如果使用 `buildActor` 来构造这些 actor，那么就产生了严重的
+依赖注入是一种很有效的拆解代码耦合的思想，这种思想同样对于 `Actor` 模型来说也同样有用。试想一下，有时候我们的 `Actor`
+能接收的消息类型是固定的，但是在不同场景中我们却有不同的实现。如果使用 `buildActor` 来构造这些 `Actor`，那么就产生了严重的
 代码耦合。每当场景变动我们都需要修改这部分代码，这非常的不灵活。为了解决这种问题，`otavia` 将依赖注入的思想引入了进来。接下来
-我们将使用一个简单的例子来演示 `otavia` 中依赖注入的方法。
+我们将使用一个简单的例子来演示 `otavia` 中依赖注入 `Actor` 的方法。
 
 假设我们的系统中需要依赖一种服务 `Actor`，我们知道其接收和返回的消息类型，但是不同场景中这种服务的具体实现有些差异。如下是我们的
 服务的消息定义。
@@ -717,7 +719,7 @@ case class Result2() extends Reply
 case class Query2() extends Ask[Result2]
 ```
 
-然后我们可以定义一个 `trait` 来约束我们的服务 `Actor` 能接收的消息。这与面向对象中依赖注入使用接口定义服务一样，只是面向对象
+然后我们可以定义一个 `trait` 来约束我们的服务 `Actor` 能接收的消息。这与面向对象中依赖注入使用接口定义服务类似，只是面向对象
 中使用接口约束能调用的方法而 `otavia` 中使用接口约束能处理的消息！
 
 ```scala
@@ -731,13 +733,14 @@ final class QueryServiceImpl() extends StateActor with QueryService {
   override def continueAsk(stack: AskStack[Query1 | Query2]): Option[StackState] = ??? // impl logic
 }
 
+// 另一种场景的 QueryService
 final class QueryServiceCase2() extends SocketChannelsActor with QueryService {
   override def continueAsk(stack: AskStack[Query1 | Query2]): Option[StackState] = ??? // impl logic
 }
 ```
 
-对于依赖 `QueryService` 的 `Actor`，可以扩展 `Injectable`, 然后就可以使用 `autowire` 在 `ActorSystem` 中查找相关
-的 `Actor` 的地址。
+对于依赖 `QueryService` 的 `Actor`，可以扩展 `Injectable`, 然后就可以使用 `autowire` 方法在 `ActorSystem` 中查找
+可用的 `QueryService` 的 `Address`。
 
 ```scala
 case class Start() extends Notice
@@ -760,7 +763,7 @@ final class TestActor extends StateActor[Start] with Injectable {
 }
 ```
 
-现在即使我们替换 `QueryService` 的实现， 我们的 `TestActor` 也不用更改！如何让 `autowire[QueryService]` 找到具体
+现在即使我们替换 `QueryService` 的实现， 我们的 `TestActor` 也不用做任何更改！如何让 `autowire[QueryService]()` 找到具体
 的实现 `Actor` 呢，只需要在实例化实现 `Actor` 的时候将其设置为全局 `Actor`。
 
 ```scala
@@ -769,7 +772,7 @@ system.buildActor(() => new QueryServiceImpl(), global = true)
 system.buildActor(() => new QueryServiceCase2(), global = true)
 ```
 
-## 批量处理
+## 批量处理消息
 
 对某些场景来说，能够批量化处理消息是一个很有用的技术。启动批量化很简单，您只需要重写您的 `Actor` 的 `batchable` 方法，将其
 返回值改为 `true`， 然后重写 `batchNoticeFilter` 或者 `batchAskFilter` 方法用来选择进入批量调度的消息。
