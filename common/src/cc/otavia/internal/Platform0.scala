@@ -16,8 +16,12 @@
  * limitations under the License.
  */
 
-package cc.otavia.common
+package cc.otavia.internal
 
+import cc.otavia.common.SystemPropertyUtil
+import sun.misc.Unsafe
+
+import java.lang.reflect.Field
 import scala.language.unsafeNulls
 
 object Platform0 {
@@ -25,7 +29,13 @@ object Platform0 {
     private val JAVA_VERSION: Int         = javaVersion0
     private final val IS_ANDROID: Boolean = isAndroid0
 
+    private val f = classOf[Unsafe].getDeclaredField("theUnsafe")
+    f.setAccessible(true)
+
+    private var UNSAFE: Unsafe = f.get(classOf[Unsafe]).asInstanceOf[Unsafe]
+
     def isAndroid: Boolean = IS_ANDROID
+
     private def isAndroid0 = {
         // Idea: Sometimes java binaries include Android classes on the classpath, even if it isn't actually Android.
         // Rather than check if certain classes are present, just check the VM, which is tied to the JDK.
@@ -48,5 +58,13 @@ object Platform0 {
             version(1)
         } else version(0)
     }
+
+    private[internal] def getInt(`object`: AnyRef, fieldOffset: Long) = UNSAFE.getInt(`object`, fieldOffset)
+
+    private[internal] def putInt(data: AnyRef, offset: Long, value: Int): Unit = UNSAFE.putInt(data, offset, value)
+
+    private[internal] def putObject(o: AnyRef, offset: Long, x: AnyRef): Unit = UNSAFE.putObject(o, offset, x)
+
+    private[internal] def objectFieldOffset(field: Field) = UNSAFE.objectFieldOffset(field)
 
 }

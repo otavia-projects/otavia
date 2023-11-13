@@ -18,7 +18,8 @@
 
 package cc.otavia.handler.codec.string
 
-import cc.otavia.common.{Platform, SystemPropertyUtil}
+import cc.otavia.common.SystemPropertyUtil
+import cc.otavia.internal.Platform
 
 /** A class to represent line separators in different environments. */
 class LineSeparator(val value: String) {

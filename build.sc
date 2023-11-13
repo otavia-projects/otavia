@@ -43,12 +43,11 @@ object ProjectInfo {
 
     def testDep = ivy"org.scalatest::scalatest:3.2.17"
 
-    def netty5codec  = ivy"io.netty:netty5-codec:5.0.0.Alpha5"
-    def netty5common = ivy"io.netty:netty5-common:5.0.0.Alpha5"
-    def xml          = ivy"org.scala-lang.modules::scala-xml:2.1.0"
-    def proto        = ivy"io.github.zero-deps::proto:2.1.2"
-    def jedis        = ivy"redis.clients:jedis:4.4.3"
-    def scram        = ivy"com.ongres.scram:client:2.1"
+    def netty5codec = ivy"io.netty:netty5-codec:5.0.0.Alpha5"
+    def xml         = ivy"org.scala-lang.modules::scala-xml:2.1.0"
+    def proto       = ivy"io.github.zero-deps::proto:2.1.2"
+    def jedis       = ivy"redis.clients:jedis:4.4.3"
+    def scram       = ivy"com.ongres.scram:client:2.1"
 
     val settings = PomSettings(
       description = description,
@@ -152,7 +151,6 @@ object buffer extends JvmBufferModule {
 
 object core extends OtaviaModule {
 
-    override def ivyDeps      = Agg(ProjectInfo.netty5common)
     override def artifactName = "otavia-runtime"
     override def moduleDeps   = Seq(buffer, common)
 

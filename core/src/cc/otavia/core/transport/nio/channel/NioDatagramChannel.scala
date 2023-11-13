@@ -18,10 +18,10 @@
 
 package cc.otavia.core.transport.nio.channel
 
-import cc.otavia.common.Platform
 import cc.otavia.core.channel.socket.DomainSocketAddress
 import cc.otavia.core.channel.{AbstractDatagramChannel, ChannelOption}
 import cc.otavia.core.system.ActorSystem
+import cc.otavia.internal.Platform
 
 import java.net.{InetSocketAddress, SocketAddress, StandardSocketOptions, UnixDomainSocketAddress}
 import scala.language.unsafeNulls

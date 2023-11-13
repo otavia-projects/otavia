@@ -28,7 +28,7 @@ import cc.otavia.core.channel.message.{FixedReadPlanFactory, ReadPlan}
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.{ChannelFuture, ChannelPromise}
 import cc.otavia.core.system.ActorSystem
-import io.netty5.util.{Resource, ResourceLeakDetector}
+import cc.otavia.util.Resource
 
 import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
@@ -55,7 +55,7 @@ class ChannelPipelineImpl(override val channel: Channel) extends ChannelPipeline
     head.setAddComplete()
     tail.setAddComplete()
 
-    private val touch: Boolean = ResourceLeakDetector.isEnabled
+    private val touch: Boolean = true
 
     private final val handlers = new mutable.ArrayBuffer[ChannelHandlerContextImpl](4)
 

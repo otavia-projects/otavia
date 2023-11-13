@@ -19,7 +19,7 @@
 package cc.otavia.core.transport.reactor.nio
 
 import cc.otavia.buffer.pool.RecyclablePageBuffer
-import cc.otavia.common.{Platform, SystemPropertyUtil, ThrowableUtil}
+import cc.otavia.common.{SystemPropertyUtil, ThrowableUtil}
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.channel.{Channel, ChannelException, FileRegion}
 import cc.otavia.core.message.ReactorEvent
@@ -28,7 +28,7 @@ import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.transport.nio.channel.{AbstractNioUnsafeChannel, NioUnsafeChannel}
 import cc.otavia.core.transport.reactor.nio.NioHandler.*
-import io.netty5.util.internal.{PlatformDependent, ReflectionUtil}
+import cc.otavia.internal.{Platform, ReflectionUtil}
 
 import java.io.{IOException, UncheckedIOException}
 import java.net.SocketAddress
@@ -97,21 +97,21 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
                             val selectedKeysField       = selectorImplClass.getDeclaredField("selectedKeys")
                             val publicSelectedKeysField = selectorImplClass.getDeclaredField("publicSelectedKeys")
                             var success: Boolean        = false
-                            if (PlatformDependent.hasUnsafe) {
+                            if (Platform.hasUnsafe) {
                                 // Let us try to use sun.misc.Unsafe to replace the SelectionKeySet.
                                 // This allows us to also do this in Java9+ without any extra flags.
                                 val selectedKeysFieldOffset: Long =
-                                    PlatformDependent.objectFieldOffset(selectedKeysField)
+                                    Platform.objectFieldOffset(selectedKeysField)
                                 val publicSelectedKeysFieldOffset: Long =
-                                    PlatformDependent.objectFieldOffset(publicSelectedKeysField)
+                                    Platform.objectFieldOffset(publicSelectedKeysField)
 
                                 if (selectedKeysFieldOffset != -1 && publicSelectedKeysFieldOffset != -1) {
-                                    PlatformDependent.putObject(
+                                    Platform.putObject(
                                       unwrappedSelector,
                                       selectedKeysFieldOffset,
                                       selectedKeySet
                                     )
-                                    PlatformDependent.putObject(
+                                    Platform.putObject(
                                       unwrappedSelector,
                                       publicSelectedKeysFieldOffset,
                                       selectedKeySet
@@ -120,11 +120,13 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
                                 }
                             }
                             if (!success) {
-                                val cause1 = ReflectionUtil.trySetAccessible(selectedKeysField, true)
-                                if (cause1 != null) throw cause1
+                                ReflectionUtil.trySetAccessible(selectedKeysField, true) match
+                                    case Some(cause) => throw cause
+                                    case None        =>
 
-                                val cause2 = ReflectionUtil.trySetAccessible(publicSelectedKeysField, true)
-                                if (cause2 != null) throw cause2
+                                ReflectionUtil.trySetAccessible(publicSelectedKeysField, true) match
+                                    case Some(cause) => throw cause
+                                    case None        =>
 
                                 selectedKeysField.set(unwrappedSelector, selectedKeySet)
                                 publicSelectedKeysField.set(unwrappedSelector, selectedKeySet)

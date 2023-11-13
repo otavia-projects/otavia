@@ -18,12 +18,12 @@
 
 package cc.otavia.core.timer
 
-import cc.otavia.common.Platform
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.HashedWheelTimer.*
 import cc.otavia.core.timer.HashedWheelTimer.HashedWheelBucket.LONG_DEADLINE
 import cc.otavia.core.util.{Chainable, Nextable, SpinLockQueue}
+import cc.otavia.internal.Platform
 
 import java.util.concurrent.*
 import java.util.concurrent.atomic.{AtomicInteger, AtomicIntegerFieldUpdater, AtomicLong}

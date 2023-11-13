@@ -19,7 +19,6 @@
 package cc.otavia.core.channel
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
-import cc.otavia.common.Platform
 import cc.otavia.core.channel.ChannelOption.*
 import cc.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
 import cc.otavia.core.channel.internal.{AdaptiveBufferOffset, WriteBufferWaterMark}
@@ -29,6 +28,7 @@ import cc.otavia.core.stack.{ChannelPromise, Promise}
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.{TimeoutTrigger, Timer}
 import cc.otavia.core.transport.nio.channel.NioChannelOption
+import cc.otavia.internal.Platform
 
 import java.io.IOException
 import java.net.{InetSocketAddress, SocketAddress}

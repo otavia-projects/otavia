@@ -27,7 +27,7 @@ import cc.otavia.core.channel.internal.ChannelHandlerMask.*
 import cc.otavia.core.channel.message.{AutoReadPlan, ReadPlan}
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.ChannelFuture
-import io.netty5.util.Resource
+import cc.otavia.util.Resource
 
 import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute

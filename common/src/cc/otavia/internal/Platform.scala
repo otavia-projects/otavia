@@ -16,10 +16,12 @@
  * limitations under the License.
  */
 
-package cc.otavia.common
+package cc.otavia.internal
 
-import cc.otavia.common.{Platform0, SystemPropertyUtil}
+import cc.otavia.common.SystemPropertyUtil
+import cc.otavia.internal.Platform0
 
+import java.lang.reflect.Field
 import java.util.Locale
 import scala.language.unsafeNulls
 
@@ -33,6 +35,8 @@ object Platform {
     private val IS_OSX           = isOsx0
     private val IS_J9_JVM        = isJ9Jvm0
     private val IS_IVKVM_DOT_NET = isIkvmDotNet0
+
+    def hasUnsafe: Boolean = true // TODO:
 
     def isWindows: Boolean = NORMALIZED_OS == "windows"
     def isAndroid: Boolean = Platform0.isAndroid
@@ -85,9 +89,8 @@ object Platform {
             "root" == username || "toor" == username
     }
 
-    private def isOsx0 = {
-        "osx" == NORMALIZED_OS
-    }
+    private def isOsx0 = "osx" == NORMALIZED_OS
+
     private def isJ9Jvm0 = {
         val vmName = SystemPropertyUtil.get("java.vm.name", "").toLowerCase
         vmName.startsWith("ibm j9") || vmName.startsWith("eclipse openj9")
@@ -97,5 +100,9 @@ object Platform {
         val vmName = SystemPropertyUtil.get("java.vm.name", "").toUpperCase(Locale.US)
         vmName == "IKVM.NET"
     }
+
+    def getInt(`object`: AnyRef, fieldOffset: Long): Int    = Platform0.getInt(`object`, fieldOffset)
+    def putObject(o: AnyRef, offset: Long, x: AnyRef): Unit = Platform0.putObject(o, offset, x)
+    def objectFieldOffset(field: Field): Long               = Platform0.objectFieldOffset(field)
 
 }

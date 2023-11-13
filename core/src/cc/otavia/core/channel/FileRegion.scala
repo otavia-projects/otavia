@@ -18,12 +18,12 @@
 
 package cc.otavia.core.channel
 
-import io.netty5.util.ReferenceCounted
+import cc.otavia.util.ReferenceCounted
 
 import java.io.IOException
 import java.nio.channels.WritableByteChannel
 
-/** A region of a file that is sent via a {@link Channel} which supports <a
+/** A region of a file that is sent via a [[Channel]] which supports <a
  *  href="https://en.wikipedia.org/wiki/Zero-copy">zero-copy file transfer</a>.
  *
  *  <h3>Upgrade your JDK / JRE</h3>
@@ -71,11 +71,4 @@ trait FileRegion extends ReferenceCounted {
     @throws[IOException]
     def transferTo(target: WritableByteChannel, position: Long): Long
 
-    override def retain: FileRegion
-
-    override def retain(increment: Int): FileRegion
-
-    override def touch: FileRegion
-
-    override def touch(hint: AnyRef): FileRegion
 }

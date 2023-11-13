@@ -18,8 +18,8 @@
 
 package cc.otavia.core.channel
 
-import io.netty5.util.{AbstractReferenceCounted, IllegalReferenceCountException, ReferenceCounted}
 import cc.otavia.core.channel.DefaultFileRegion.validate
+import cc.otavia.util.*
 
 import java.io.{File, IOException, RandomAccessFile}
 import java.nio.channels.{FileChannel, WritableByteChannel}
@@ -56,7 +56,7 @@ class DefaultFileRegion(override val position: Long, override val count: Long)
 
     /** Create a new instance using the given [[File]]. The [[File]] will be opened lazily or explicitly via [[open()]].
      *
-     *  @param f
+     *  @param file
      *    the [[File]] which should be transferred
      *  @param position
      *    the position from which the transfer should start
@@ -76,7 +76,7 @@ class DefaultFileRegion(override val position: Long, override val count: Long)
      */
     @throws[IOException]
     def open(): Unit =
-        if (!isOpen && refCnt() > 0) this.fileChannel = Some(new RandomAccessFile(file.get, "r").getChannel.nn)
+        if (!isOpen && refCnt > 0) this.fileChannel = Some(new RandomAccessFile(file.get, "r").getChannel.nn)
 
     override def deallocate(): Unit = fileChannel match
         case Some(value) =>
@@ -101,7 +101,7 @@ class DefaultFileRegion(override val position: Long, override val count: Long)
         if (count < 0 || position < 0)
             throw new IllegalArgumentException(s"$position (expected: 0 - ${this.count - 1})")
         if (count == 0) 0
-        else if (refCnt() == 0) throw new IllegalReferenceCountException(0)
+        else if (refCnt == 0) throw new IllegalReferenceCountException(0)
         else {
             // Call open to make sure fc is initialized. This is a no-oop if we called it before.
             open()
@@ -109,19 +109,6 @@ class DefaultFileRegion(override val position: Long, override val count: Long)
             if (written > 0) _transferred += written else if (written == 0) validate(this, position)
             written
         }
-    }
-
-    override def touch: FileRegion               = this
-    override def touch(hint: AnyRef): FileRegion = this
-
-    override def retain: FileRegion = {
-        super.retain()
-        this
-    }
-
-    override def retain(increment: Int): FileRegion = {
-        super.retain(increment)
-        this
     }
 
 }
