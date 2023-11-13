@@ -47,7 +47,7 @@ class Client extends SocketChannelsActor[Command[? <: CommandResponse] | Connect
       }
     )
 
-    override def continueAsk(stack: AskStack[Command[? <: CommandResponse] | Connect]): Option[StackState] = {
+    override def resumeAsk(stack: AskStack[Command[? <: CommandResponse] | Connect]): Option[StackState] = {
         stack match
             case s: AskStack[Connect] if s.ask.isInstanceOf[Connect] =>
                 if (channel == null) connect(s) else stack.`throw`(ExceptionMessage(new AlreadyConnectedException()))

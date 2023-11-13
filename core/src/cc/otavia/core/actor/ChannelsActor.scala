@@ -65,7 +65,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         currentStack = stack
         try {
             val oldState = stack.state
-            val newState = continueChannel(stack)
+            val newState = resumeChannelStack(stack)
             this.switchState(stack, oldState, newState)
             if (newState.isEmpty) stack.internalChannel.processCompletedChannelStacks()
         } catch {
@@ -163,7 +163,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
     //// =================== USER API ====================
 
-    protected def continueChannel(stack: ChannelStack[AnyRef]): Option[StackState] =
+    protected def resumeChannelStack(stack: ChannelStack[AnyRef]): Option[StackState] =
         throw new NotImplementedError(getClass.getName + ": an implementation is missing")
 
     // Event from Reactor

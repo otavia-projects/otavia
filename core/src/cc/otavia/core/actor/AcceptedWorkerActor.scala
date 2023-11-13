@@ -30,7 +30,7 @@ abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | Accepted
 
     override protected def newChannel(): Channel = throw new UnsupportedOperationException()
 
-    /** handle [[AcceptedChannel]] message, this method will called by [[continueAsk]] */
+    /** handle [[AcceptedChannel]] message, this method will called by [[resumeAsk]] */
     final protected def handleAccepted(stack: AskStack[AcceptedChannel]): Option[StackState] = {
         stack.state match
             case StackState.`start` =>

@@ -212,18 +212,18 @@ to inherit one of them to fulfill your needs:
 
 `Stack` is the carrier that manages the execution of messages in `Actor`. When an `Actor` handles a message of
 type `Call`, the message is not passed in directly, but is loaded into a `Stack` which is then passed to the `Actor` for
-execution. A `Notice` message is loaded into a `NoticeStack` that executes the `continueNotice` method; an `Ask` message
-is loaded into an `AskStack` that executes the `continueAsk` method. A developer implementation of `Actor` needs to
+execution. A `Notice` message is loaded into a `NoticeStack` that executes the `resumeNotice` method; an `Ask` message
+is loaded into an `AskStack` that executes the `resumeAsk` method. A developer implementation of `Actor` needs to
 implement the following methods to handle `Call` messages.
 
 ```scala
-protected def continueAsk(stack: AskStack[M & Ask[? <: Reply]]): Option[StackState]
+protected def resumeAsk(stack: AskStack[M & Ask[? <: Reply]]): Option[StackState]
 
-protected def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState]
+protected def resumeNotice(stack: NoticeStack[M & Notice]): Option[StackState]
 ```
 
-`Stack` contains a `StackState` with an initial value of `stackstate.start`. The return value of the `continueXXX`
-method `Option[StackState]` means that Stack switches to a new `StackState` after each continueXXX execution. `Stack`
+`Stack` contains a `StackState` with an initial value of `stackstate.start`. The return value of the `resumeXXX`
+method `Option[StackState]` means that Stack switches to a new `StackState` after each resumeXXX execution. `Stack`
 ends with the `return` method, which itself returns a value of `None`, meaning that `Stack` no longer switches to the
 new `StackState`. If `Stack` is `AskStack`, the `return` method requires an input `Reply` message as a reply to
 the `Ask` message.
@@ -231,7 +231,7 @@ the `Ask` message.
 ![](../_assets/images/stack_resume.drawio.svg)
 
 A `StackState` must be associated with one or more `Future`s. When the `resumable` method of the `StackState`
-returns `true` or all associated `Future`s are completed, `continueXXX` will be called again to execute the `Stack`.
+returns `true` or all associated `Future`s are completed, `resumeXXX` will be called again to execute the `Stack`.
 Note that the `Future` here is not a `Future` from the `Scala` standard library; `otavia` implements its
 own `Future/Promise` system for receiving asynchronous messages and triggering the re-execution of `Stacks`.
 
@@ -242,7 +242,7 @@ Different messages have different `Stack` subclasses.
 - `NoticeStack`: Manages the execution of `Notice` messages.
 - `AskStack`: Manages the execution of `Ask` messages.
 - `BatchNoticeStack`: Used to batch execute `Notice` messages.
-- `batchContinueAsk`: Used to batch execute `Ask` messages.
+- `BatchAskStack`: Used to batch execute `Ask` messages.
 - `ChannelStack`: Executes requests sent by `Channel`.
 
 **Developer-defined messages may inherit both the `Notice` and `Ask` traits, and whether they end up being treated
@@ -253,7 +253,7 @@ method, it is treated as an `Ask` message.**
 #### Types of Future
 
 A `Future` is a receiver for an asynchronous message, and whenever a `Future` completes, the `StackState` associated
-with it is checked to see if the conditions for execution are met. Once satisfied, the `continueXXX` method is called
+with it is checked to see if the conditions for execution are met. Once satisfied, the `resumeXXX` method is called
 again to execute the `Stack`. There are two types of `Future`s according to their purpose.
 
 - `MessageFuture`: Used to receive a `Reply` message or a `TimeoutReply` message generated due to a timeout.
@@ -497,7 +497,7 @@ the [otavia ecosystem](https://github.com/otavia-projects).
 ### CPS transformation
 
 The execution of a `Call` message in `otavia` requires a `Stack` to be started, and then the entire `Call` message
-execution lifecycle is managed by the `Stack`. So the `continueXXX` method implemented by the developer needs to match
+execution lifecycle is managed by the `Stack`. So the `resumeXXX` method implemented by the developer needs to match
 the `StackState` execution and return a new `StackState`. Because the pattern is relatively fixed, we can use
 the `Scala 3` metaprogramming tools to implement a set of `async/await` syntaxes based on CPS transformations, which
 allows us to write code in a continuously blocking style.

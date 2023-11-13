@@ -183,7 +183,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentStack = stack
         try {
             val oldState = stack.state
-            this.switchState(stack, oldState, continueNotice(stack))
+            this.switchState(stack, oldState, resumeNotice(stack))
         } catch {
             case cause: Throwable =>
                 cause.printStackTrace()
@@ -196,7 +196,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentStack = stack
         try {
             val oldState = stack.state
-            this.switchState(stack, oldState, batchContinueNotice(stack))
+            this.switchState(stack, oldState, resumeBatchNotice(stack))
         } catch {
             case cause: Throwable =>
                 handleNoticeException(stack, cause)
@@ -208,7 +208,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentStack = stack
         try {
             val oldState = stack.state
-            this.switchState(stack, oldState, continueAsk(stack))
+            this.switchState(stack, oldState, resumeAsk(stack))
         } catch {
             case cause: Throwable =>
                 cause.printStackTrace()
@@ -221,7 +221,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentStack = stack
         try {
             val oldState = stack.state
-            this.switchState(stack, oldState, batchContinueAsk(stack))
+            this.switchState(stack, oldState, resumeBatchAsk(stack))
         } catch {
             case cause: Throwable =>
                 stack.`throw`(ExceptionMessage(cause)) // completed stack with Exception
@@ -342,7 +342,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
      *    an option value containing the resumable [[StackState]] waited for some reply message, or `None` if the stack
      *    frame has finished.
      */
-    protected def continueAsk(stack: AskStack[M & Ask[? <: Reply]]): Option[StackState] =
+    protected def resumeAsk(stack: AskStack[M & Ask[? <: Reply]]): Option[StackState] =
         throw new NotImplementedError(getClass.getName + ": an implementation is missing")
 
     /** implement this method to handle notice message and resume when received reply message for this notice message
@@ -353,7 +353,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
      *    an option value containing the resumable [[StackState]] waited for some reply message, or `None` if the stack
      *    frame has finished.
      */
-    protected def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState] =
+    protected def resumeNotice(stack: NoticeStack[M & Notice]): Option[StackState] =
         throw new NotImplementedError(getClass.getName + ": an implementation is missing")
 
     /** whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to
@@ -368,10 +368,10 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
 
     val batchAskFilter: Ask[?] => Boolean = TURE_FUNC
 
-    protected def batchContinueNotice(stack: BatchNoticeStack[M & Notice]): Option[StackState] =
+    protected def resumeBatchNotice(stack: BatchNoticeStack[M & Notice]): Option[StackState] =
         throw new NotImplementedError(getClass.getName + ": an implementation is missing")
 
-    protected def batchContinueAsk(stack: BatchAskStack[M & Ask[? <: Reply]]): Option[StackState] =
+    protected def resumeBatchAsk(stack: BatchAskStack[M & Ask[? <: Reply]]): Option[StackState] =
         throw new NotImplementedError(getClass.getName + ": an implementation is missing")
 
     /** handle user registered timeout event.

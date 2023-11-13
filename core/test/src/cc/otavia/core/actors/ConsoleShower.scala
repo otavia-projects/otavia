@@ -23,7 +23,7 @@ import cc.otavia.core.stack.{NoticeStack, StackState}
 
 class ConsoleShower extends StateActor[MessageOf[Shower]] with Shower {
 
-    override def continueNotice(stack: NoticeStack[ShowEvent]): Option[StackState] = handleInfo(stack)
+    override def resumeNotice(stack: NoticeStack[ShowEvent]): Option[StackState] = handleInfo(stack)
 
     private def handleInfo(stack: NoticeStack[ShowEvent]): Option[StackState] = {
         val msg = stack.notice

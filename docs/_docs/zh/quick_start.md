@@ -107,7 +107,7 @@ final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start]
 ```scala
 final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
 
-  override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
+  override def resumeNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
     case _: StartState =>
       println("PingActor handle Start message")
       println("PingActor send Ping Message")
@@ -126,12 +126,12 @@ final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start]
 }
 ```
 
-`continueNotice` 是 `Actor` 处理 `Notice` 消息的入口，从其他地方发送来的 `Notice` 消息都会通过这个方法传入 `Actor`,
+`resumeNotice` 是 `Actor` 处理 `Notice` 消息的入口，从其他地方发送来的 `Notice` 消息都会通过这个方法传入 `Actor`,
 接下来我们来实现 `PongActor`, `PongActor` 接收 `Ping` 这种 `Ask` 消息，然后回复一个 `Pong` 消息：
 
 ```scala
 final class PongActor() extends StateActor[Ping] {
-  override def continueAsk(stack: AskStack[Ping]): Option[StackState] = {
+  override def resumeAsk(stack: AskStack[Ping]): Option[StackState] = {
     println(s"PongActor received ${stack.ask} message")
     println(s"PongActor reply ${stack.ask} with Pong message")
     stack.`return`(Pong(stack.ask.id))
@@ -139,9 +139,9 @@ final class PongActor() extends StateActor[Ping] {
 }
 ```
 
-`continueAsk` 是 `Actor` 处理 `Ask` 消息的入口。从其他 `Actor` 发送来的 `Ask` 消息都会从这个方法传入 `Actor`。
+`resumeAsk` 是 `Actor` 处理 `Ask` 消息的入口。从其他 `Actor` 发送来的 `Ask` 消息都会从这个方法传入 `Actor`。
 
-我们可以发现， `Actor` 的 `continueXXX` 方法并不是直接将消息作为参数，而是将消息装入 `Stack` 中一起作为参数：`Notice` 消息装入
+我们可以发现， `Actor` 的 `resumeXXX` 方法并不是直接将消息作为参数，而是将消息装入 `Stack` 中一起作为参数：`Notice` 消息装入
 `NoticeStack` 中，`Ask` 消息装入 `AskStack` 中。 与大多数其他 Actor 编程框架不一样，`otavia` 中消息的发送和接收都被严格的管理，
 这虽然丧失了一部分灵活性，但是却保证了发送消息和接收消息的编译时类型安全，并且让发送消息和接收消息的过程更加类似于方法的调用。我们来看看
 我们是怎么样发送消息和接收消息的吧：
@@ -150,25 +150,25 @@ final class PongActor() extends StateActor[Ping] {
 2. 使用 `Address` 的 `ask` 方法发送 `Ask` 消息，同时 `ask` 方法需要传入一个 `Future`。当 `Actor` 接收到与这个 `Ask`
    消息关联的 `Reply` 消息的时候，这个 `Reply` 消息就会被放入 `Future` 中，同时 `Future` 的状态会被设置为完成。
 3. `Future` 只能关联到一个 `StackState`，但是 `StackState` 可以关联多个 `Future`。
-4. 一个 `Stack` 只能拥有一个 `StackState`。当 `continueXXX` 方法结束时，如果返回值为 `Some(StackState)`，
+4. 一个 `Stack` 只能拥有一个 `StackState`。当 `resumeXXX` 方法结束时，如果返回值为 `Some(StackState)`，
    就将这个 `StackState` 设置为 `Stack` 的当前状态，同时释放老的 `StackState` 及其关联的 `Future`。
-5. `Future` 完成的时候会通过 `StackState` 检查与其关联的 `Stack` 是否可以再次被 `continueXXX` 方法执行。当 `StackState`
+5. `Future` 完成的时候会通过 `StackState` 检查与其关联的 `Stack` 是否可以再次被 `resumeXXX` 方法执行。当 `StackState`
    的 `resumable` 方法返回 `ture` 或者关联的所有的 `Future` 都达到完成状态的时候与其关联的 `Stack` 就可以再次被执行。
 6. `StackState` 由开发者自定义，`resumable` 方法可以被重写。当然 `otavia` 预定义了一些常用的 `StackState`，比如示例中
    使用的 `FutureState`。`StackState` 提供了 `suspend` 方法返回 `Option[StackState]`。
 7. 当 `Actor` 处理 `Notice` 消息或者 `Ask` 消息的时候，就将消息装入一个新建的 `Stack` 中，并且将 `Stack` 的
-   `StackState` 设置为一个特殊的值 `StackState.start`，然后将 `Stack` 传递给 `continueXXX` 方法开始执行。
+   `StackState` 设置为一个特殊的值 `StackState.start`，然后将 `Stack` 传递给 `resumeXXX` 方法开始执行。
    `StackState.start` 是一个类型为 `StartState` 的特殊 `StackState`，其不关联任何 `Future` 并且 `resumable` 方
    法返回 `ture`。
 8. `Stack` 使用 `return` 方法结束与其绑定消息的处理，所以 `return` 方法返回值为 `None`。对于 `AskStack`，`return` 需要一个
    `Reply` 消息作为参数发送给 `Ask` 消息的发送者作为 `Ask` 消息的回复消息。
 
 以上一切消息的发送和接收都是编译时类型安全的！一个 `Stack` 只能有一个 `StackState`，其初始的状态为 `StartStack`，
-每次 `continueXXX` 执行完成就切换到一个新的 `StackState`, 最后的 `return` 方法将返回 `None`，代表 `Stack` 完成！
+每次 `resumeXXX` 执行完成就切换到一个新的 `StackState`, 最后的 `return` 方法将返回 `None`，代表 `Stack` 完成！
 
 ![](../../_assets/images/stack_resume.drawio.svg)
 
-虽然上诉过程看起来比较复杂，但是这些步骤大多数都不需要开发者直接完成。开发者实现 `continueXXX` 方法的时候，只需要对 `Stack`
+虽然上诉过程看起来比较复杂，但是这些步骤大多数都不需要开发者直接完成。开发者实现 `resumeXXX` 方法的时候，只需要对 `Stack`
 的 `StackState` 进行模式匹配 ，然后执行对应的业务逻辑。如果有需要等待异步消息，就返回一个新的 `StackState`
 ，否则使用 `return`
 方法结束 `Stack`。
@@ -221,12 +221,12 @@ case class Ping() extends Ask[Pong]
 ```scala
 final class MultiMsgActor() extends StateActor[Echo | Hello | Ping] {
 
-  override def continueNotice(stack: NoticeStack[Echo]): Option[StackState] = {
+  override def resumeNotice(stack: NoticeStack[Echo]): Option[StackState] = {
     println("MultiMsgActor received Echo message")
     stack.`return`()
   }
 
-  override def continueAsk(stack: AskStack[Hello | Ping]): Option[StackState] = {
+  override def resumeAsk(stack: AskStack[Hello | Ping]): Option[StackState] = {
     stack match {
       case stack: AskStack[Hello] if stack.ask.isInstanceOf[Hello] => handleHello(stack)
       case stack: AskStack[Ping] if stack.ask.isInstanceOf[Ping] => handlePing(stack)
@@ -245,9 +245,9 @@ final class MultiMsgActor() extends StateActor[Echo | Hello | Ping] {
 }
 ```
 
-你可能会想，要是一个消息同时继承了 `Notice` 和 `Ask`，这个消息最终是被 `continueNotice` 还是 `continueAsk` 处理呢？
+你可能会想，要是一个消息同时继承了 `Notice` 和 `Ask`，这个消息最终是被 `resumeNotice` 还是 `resumeAsk` 处理呢？
 答案是都有可能。`otavia` 不是根据消息的种类来决定其应该被怎么处理，而是通过消息的发送方式。`Address` 中有 `notice` 和
-`ask` 方法，以 `notice` 方法发送的消息最终被 `continueNotice` 处理， `ask` 方法发送的消息被 `continueAsk` 处理！
+`ask` 方法，以 `notice` 方法发送的消息最终被 `resumeNotice` 处理， `ask` 方法发送的消息被 `resumeAsk` 处理！
 
 ## 计时
 
@@ -311,7 +311,7 @@ class PongTimeoutState extends StackState {
 
 ```scala
 final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
-  override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
+  override def resumeNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
     case _: StartState =>
       println("PingActor handle Start message")
       println("PingActor send Ping Message")
@@ -356,7 +356,7 @@ class PongTimeoutState extends StackState {
 
 ```scala
 final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
-  override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
+  override def resumeNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
     case _: StartState =>
       println("PingActor handle Start message")
       println("PingActor send Ping Message")
@@ -426,7 +426,7 @@ final class LifeActor extends StateActor[Start] with AutoCleanable {
 
   // if occurs some error which developer is not catch, this will trigger the actor restart
   // you can also override the noticeExceptionStrategy method to change the strategy
-  override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = {
+  override def resumeNotice(stack: NoticeStack[Start]): Option[StackState] = {
     println("process message")
     throw new Error("")
   }
@@ -488,7 +488,7 @@ final class ReadLinesActor(file: File, charset: Charset = StandardCharsets.UTF_8
 
   override protected def initFileChannel(channel: Channel): Unit = ???
 
-  override def continueAsk(stack: AskStack[ReadLines]): Option[StackState] = {
+  override def resumeAsk(stack: AskStack[ReadLines]): Option[StackState] = {
     stack.state match {
       case StackState.start =>
         openFileChannelAndSuspend(file, Seq(StandardOpenOption.READ), attrs = Seq.empty)
@@ -646,7 +646,7 @@ final class EchoWorker extends AcceptedWorkerActor[Nothing] {
 
   override protected def initChannel(channel: Channel): Unit = ???
 
-  override def continueAsk(stack: AskStack[AcceptedChannel]): Option[StackState] =
+  override def resumeAsk(stack: AskStack[AcceptedChannel]): Option[StackState] =
     handleAccepted(stack)
 
   override protected def afterAccepted(channel: ChannelAddress): Unit =
@@ -730,12 +730,12 @@ trait QueryService extends Actor[Query1 | Query2]
 
 ```scala
 final class QueryServiceImpl() extends StateActor with QueryService {
-  override def continueAsk(stack: AskStack[Query1 | Query2]): Option[StackState] = ??? // impl logic
+  override def resumeAsk(stack: AskStack[Query1 | Query2]): Option[StackState] = ??? // impl logic
 }
 
 // 另一种场景的 QueryService
 final class QueryServiceCase2() extends SocketChannelsActor with QueryService {
-  override def continueAsk(stack: AskStack[Query1 | Query2]): Option[StackState] = ??? // impl logic
+  override def resumeAsk(stack: AskStack[Query1 | Query2]): Option[StackState] = ??? // impl logic
 }
 ```
 
@@ -751,7 +751,7 @@ final class TestActor extends StateActor[Start] with Injectable {
 
   override protected def afterMount(): Unit = queryService = autowire[QueryService]()
 
-  override def continueNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
+  override def resumeNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
     case StackState.start =>
       val state = FutureState[Result1]()
       queryService.ask(Query1(), state.future)

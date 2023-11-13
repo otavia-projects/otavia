@@ -40,7 +40,7 @@ class Connection(override val family: ProtocolFamily = StandardProtocolFamily.IN
       }
     )
 
-    override def continueAsk(stack: AskStack[Connection.MSG]): Option[StackState] = {
+    override def resumeAsk(stack: AskStack[Connection.MSG]): Option[StackState] = {
         stack match
             case stack: AskStack[?] if stack.ask.isInstanceOf[Authentication] =>
                 handleAuthentication(stack.asInstanceOf[AskStack[Authentication]])

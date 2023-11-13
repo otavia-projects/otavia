@@ -19,7 +19,7 @@ class ProbeActor[M <: Ask[? <: Reply], R <: ReplyOf[M]: ClassTag](
 
     override protected def afterMount(): Unit = self.notice(ProbeStart())
 
-    override def continueNotice(stack: NoticeStack[ProbeStart]): Option[StackState] = {
+    override def resumeNotice(stack: NoticeStack[ProbeStart]): Option[StackState] = {
         stack.state match
             case StackState.start =>
                 val state = FutureState[R]()

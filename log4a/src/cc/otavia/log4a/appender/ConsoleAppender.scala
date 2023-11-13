@@ -37,14 +37,14 @@ class ConsoleAppender extends StateActor[LogMsg], Appender {
     private val cache     = new mutable.StringBuilder()
     private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
-    override protected def batchContinueNotice(stack: BatchNoticeStack[LogMsg]): Option[StackState] = {
+    override protected def resumeBatchNotice(stack: BatchNoticeStack[LogMsg]): Option[StackState] = {
         stack.notices.foreach(serializeLogMsg)
         print(cache.toString())
         cache.clear()
         stack.`return`()
     }
 
-    override protected def continueNotice(stack: NoticeStack[LogMsg]): Option[StackState] = {
+    override protected def resumeNotice(stack: NoticeStack[LogMsg]): Option[StackState] = {
         serializeLogMsg(stack.notice)
         print(cache.toString())
         cache.clear()

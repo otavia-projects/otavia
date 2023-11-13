@@ -29,7 +29,7 @@ class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Arr
     final override protected def initChannel(channel: Channel): Unit =
         channel.pipeline.addLast(new ServerCodec(routerMatcher, dates))
 
-    override def continueAsk(stack: AskStack[AcceptedChannel]): Option[StackState] = handleAccepted(stack)
+    override def resumeAsk(stack: AskStack[AcceptedChannel]): Option[StackState] = handleAccepted(stack)
 
     override protected def afterAccepted(channel: ChannelAddress): Unit = logger.debug("Accepted {}", channel)
 

@@ -27,7 +27,7 @@ abstract class MainActor(val args: Array[String] = Array.empty) extends StateAct
         logger.info(s"Send main args ${args.mkString("[", ", ", "]")} to main actor [${getClass.getName}]")
     }
 
-    final override def continueNotice(stack: NoticeStack[Args]): Option[StackState] = main0(stack)
+    final override def resumeNotice(stack: NoticeStack[Args]): Option[StackState] = main0(stack)
 
     def main0(stack: NoticeStack[Args]): Option[StackState]
 

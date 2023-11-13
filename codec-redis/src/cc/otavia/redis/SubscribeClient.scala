@@ -22,7 +22,6 @@ import cc.otavia.core.message.{Ask, Notice, Reply}
 import cc.otavia.core.stack.StackState
 
 //class SubscribeClient extends ChannelsActor[SubscribeClient.MSG] {
-//  override def continueChannelMessage(msg: AnyRef | ChannelFrame): Option[StackState] = ???
 //
 //  override def init(channel: Channel): Unit = ???
 //

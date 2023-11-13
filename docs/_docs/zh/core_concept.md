@@ -162,24 +162,24 @@ trait Address[-M <: Call]
 
 `Stack` 是 `Actor` 中管理消息的执行的载体。当 `Actor` 处理一个 `Call` 类型消息的时候，消息并不是直接传入，而是装入一个
 `Stack` 然后再传给 `Actor` 执行。使用 `Address` 的 `notice` 方法发送的 `Notice` 消息最终会装入 `NoticeStack` 执行
-`continueNotice` 方法；用 `ask` 方法发送的 `Ask` 消息最终会装入 `AskStack` 执行 `continueAsk` 方法。开发者实现的 `Actor`
+`resumeNotice` 方法；用 `ask` 方法发送的 `Ask` 消息最终会装入 `AskStack` 执行 `resumeAsk` 方法。开发者实现的 `Actor`
 需要实现以下方法来处理 `Call` 消息
 
 ```scala
-protected def continueAsk(stack: AskStack[M & Ask[? <: Reply]]): Option[StackState]
+protected def resumeAsk(stack: AskStack[M & Ask[? <: Reply]]): Option[StackState]
 
-protected def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState]
+protected def resumeNotice(stack: NoticeStack[M & Notice]): Option[StackState]
 ```
 
-`Stack` 包含一个 `StackState`，其初始值为 `StackState.start`， `continueXXX` 方法的返回值 `Option[StackState]` 代表每次
-`continueXXX` 执行完成之后 `Stack` 切换为新的 `StackState`。`Stack` 使用 `return` 方法结束，`return` 方法自身的返回值为
+`Stack` 包含一个 `StackState`，其初始值为 `StackState.start`， `resumeXXX` 方法的返回值 `Option[StackState]` 代表每次
+`resumeXXX` 执行完成之后 `Stack` 切换为新的 `StackState`。`Stack` 使用 `return` 方法结束，`return` 方法自身的返回值为
 `None`，代表 `Stack` 不再切换新的 `StackState`。如果 `Stack` 是 `AskStack`，`return` 方法需要输入一个 `Reply`
 消息作为 `Ask` 消息的回复消息。
 
 ![](../../_assets/images/stack_resume.drawio.svg)
 
 一个 `StackState` 必须关联一个或者多个 `Future`，当 `StackState` 的 `resumable` 方法返回值为 `true` 或者关联的所有
-`Future` 都为完成状态的时候，会再次调用 `continueXXX` 执行这个 `Stack`。注意这里的 `Future` 并不是 `Scala` 标准库里的
+`Future` 都为完成状态的时候，会再次调用 `resumeXXX` 执行这个 `Stack`。注意这里的 `Future` 并不是 `Scala` 标准库里的
 `Future`，`otavia` 实现了一套自己的 `Future/Promise` 系统用来接收异步的消息和触发 `Stack` 的执行。
 
 #### Stack 的种类
@@ -189,7 +189,7 @@ protected def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState]
 - `NoticeStack`: 用于管理 `Notice` 消息的执行。
 - `AskStack`: 用于管理 `Ask` 消息的执行。
 - `BatchNoticeStack`: 用于批量执行 `Notice` 消息。
-- `batchContinueAsk`: 用于批量执行 `Ask` 消息。
+- `BatchAskStack`: 用于批量执行 `Ask` 消息。
 - `ChannelStack`: 用于执行 `Channel` 发送来的请求。
 
 **开发者定义的消息可能同时继承 `Notice` 和 `Ask` trait，其最终是作为 `Notice` 消息处理还是 `Ask` 消息处理，取决于消息发送的方式：
@@ -198,7 +198,7 @@ protected def continueNotice(stack: NoticeStack[M & Notice]): Option[StackState]
 #### Future 的种类
 
 `Future` 是用于收取一个异步消息的容器，每当一个 `Future` 完成的时候，就会检查与其关联的 `StackState` 是否满足执行的条件，一旦满足，就会
-重新调用 `continueXXX` 方法执行 `Stack`。`Future` 按照用途有如下两类
+重新调用 `resumeXXX` 方法执行 `Stack`。`Future` 按照用途有如下两类
 
 - `MessageFuture`: 用于获取一个 `Reply` 消息或者超时生成的 `TimeoutReply` 消息。
 - `ChannelFuture`: 用于获取一个 `Channel` 执行的结果或者 `Channel` 传来的消息。
@@ -396,7 +396,7 @@ private val pendingStacks: QueueMap[ChannelStack[?]] = new QueueMap[ChannelStack
 ### CPS 变换
 
 `otavia` 中执行 `Call` 消息需要启动一个 `Stack`，然后整个 `Call` 消息执行的生命周期都由 `Stack` 管理。所以开发者实现
-的 `continueXXX` 方法都是需要匹配 `StackState` 然后执行然后返回一个新的 `StackState`。因为模式相对固定，所以我们可以使
+的 `resumeXXX` 方法都是需要匹配 `StackState` 然后执行然后返回一个新的 `StackState`。因为模式相对固定，所以我们可以使
 用 `Scala 3` 的元编程工具基于 CPS 变换实现一套 `async/await` 语法，这让我们可以使用连续阻塞式的风格编写代码。
 
 项目地址 [GitHub - otavia-projects/otavia-async](https://github.com/otavia-projects/otavia-async)
