@@ -86,17 +86,17 @@
 </section> 
 <section id="stack-2"> 
  <h3 class="h400"><a href="#stack-2" class="anchor"></a>Stack</h3> 
- <p><code>Stack</code> is the carrier that manages the execution of messages in <code>Actor</code>. When an <code>Actor</code> handles a message of type <code>Call</code>, the message is not passed in directly, but is loaded into a <code>Stack</code> which is then passed to the <code>Actor</code> for execution. A <code>Notice</code> message is loaded into a <code>NoticeStack</code> that executes the <code>continueNotice</code> method; an <code>Ask</code> message is loaded into an <code>AskStack</code> that executes the <code>continueAsk</code> method. A developer implementation of <code>Actor</code> needs to implement the following methods to handle <code>Call</code> messages.</p> 
+ <p><code>Stack</code> is the carrier that manages the execution of messages in <code>Actor</code>. When an <code>Actor</code> handles a message of type <code>Call</code>, the message is not passed in directly, but is loaded into a <code>Stack</code> which is then passed to the <code>Actor</code> for execution. A <code>Notice</code> message is loaded into a <code>NoticeStack</code> that executes the <code>resumeNotice</code> method; an <code>Ask</code> message is loaded into an <code>AskStack</code> that executes the <code>resumeAsk</code> method. A developer implementation of <code>Actor</code> needs to implement the following methods to handle <code>Call</code> messages.</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
-  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>protected def continueAsk(stack: AskStack[M &amp; Ask[? &lt;: Reply]]): Option[StackState]
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>protected def resumeAsk(stack: AskStack[M &amp; Ask[? &lt;: Reply]]): Option[StackState]
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
-</span><span line-number="3" class=""><span class="tooltip-container"></span>protected def continueNotice(stack: NoticeStack[M &amp; Notice]): Option[StackState]
+</span><span line-number="3" class=""><span class="tooltip-container"></span>protected def resumeNotice(stack: NoticeStack[M &amp; Notice]): Option[StackState]
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p><code>Stack</code> contains a <code>StackState</code> with an initial value of <code>stackstate.start</code>. The return value of the <code>continueXXX</code> method <code>Option[StackState]</code> means that Stack switches to a new <code>StackState</code> after each continueXXX execution. <code>Stack</code> ends with the <code>return</code> method, which itself returns a value of <code>None</code>, meaning that <code>Stack</code> no longer switches to the new <code>StackState</code>. If <code>Stack</code> is <code>AskStack</code>, the <code>return</code> method requires an input <code>Reply</code> message as a reply to the <code>Ask</code> message.</p> 
+ <p><code>Stack</code> contains a <code>StackState</code> with an initial value of <code>stackstate.start</code>. The return value of the <code>resumeXXX</code> method <code>Option[StackState]</code> means that Stack switches to a new <code>StackState</code> after each resumeXXX execution. <code>Stack</code> ends with the <code>return</code> method, which itself returns a value of <code>None</code>, meaning that <code>Stack</code> no longer switches to the new <code>StackState</code>. If <code>Stack</code> is <code>AskStack</code>, the <code>return</code> method requires an input <code>Reply</code> message as a reply to the <code>Ask</code> message.</p> 
  <p><img src="../images/stack_resume.drawio.svg" alt=""></p> 
- <p>A <code>StackState</code> must be associated with one or more <code>Future</code>s. When the <code>resumable</code> method of the <code>StackState</code> returns <code>true</code> or all associated <code>Future</code>s are completed, <code>continueXXX</code> will be called again to execute the <code>Stack</code>. Note that the <code>Future</code> here is not a <code>Future</code> from the <code>Scala</code> standard library; <code>otavia</code> implements its own <code>Future/Promise</code> system for receiving asynchronous messages and triggering the re-execution of <code>Stacks</code>.</p> 
+ <p>A <code>StackState</code> must be associated with one or more <code>Future</code>s. When the <code>resumable</code> method of the <code>StackState</code> returns <code>true</code> or all associated <code>Future</code>s are completed, <code>resumeXXX</code> will be called again to execute the <code>Stack</code>. Note that the <code>Future</code> here is not a <code>Future</code> from the <code>Scala</code> standard library; <code>otavia</code> implements its own <code>Future/Promise</code> system for receiving asynchronous messages and triggering the re-execution of <code>Stacks</code>.</p> 
 </section> 
 <section id="types-of-stack-1"> 
  <h4 class="h300"><a href="#types-of-stack-1" class="anchor"></a>Types of Stack</h4> 
@@ -105,14 +105,14 @@
   <li><code>NoticeStack</code>: Manages the execution of <code>Notice</code> messages.</li> 
   <li><code>AskStack</code>: Manages the execution of <code>Ask</code> messages.</li> 
   <li><code>BatchNoticeStack</code>: Used to batch execute <code>Notice</code> messages.</li> 
-  <li><code>batchContinueAsk</code>: Used to batch execute <code>Ask</code> messages.</li> 
+  <li><code>BatchAskStack</code>: Used to batch execute <code>Ask</code> messages.</li> 
   <li><code>ChannelStack</code>: Executes requests sent by <code>Channel</code>.</li> 
  </ul> 
  <p><strong>Developer-defined messages may inherit both the <code>Notice</code> and <code>Ask</code> traits, and whether they end up being treated as <code>Notice</code> messages or <code>Ask</code> messages depends on how the message was sent: If it is sent using the <code>notice</code> method of <code>Address</code>, it is treated as a <code>Notice</code> message; if it is sent by the <code>ask</code> method, it is treated as an <code>Ask</code> message.</strong></p> 
 </section> 
 <section id="types-of-future-1"> 
  <h4 class="h300"><a href="#types-of-future-1" class="anchor"></a>Types of Future</h4> 
- <p>A <code>Future</code> is a receiver for an asynchronous message, and whenever a <code>Future</code> completes, the <code>StackState</code> associated with it is checked to see if the conditions for execution are met. Once satisfied, the <code>continueXXX</code> method is called again to execute the <code>Stack</code>. There are two types of <code>Future</code>s according to their purpose.</p> 
+ <p>A <code>Future</code> is a receiver for an asynchronous message, and whenever a <code>Future</code> completes, the <code>StackState</code> associated with it is checked to see if the conditions for execution are met. Once satisfied, the <code>resumeXXX</code> method is called again to execute the <code>Stack</code>. There are two types of <code>Future</code>s according to their purpose.</p> 
  <ul> 
   <li><code>MessageFuture</code>: Used to receive a <code>Reply</code> message or a <code>TimeoutReply</code> message generated due to a timeout.</li> 
   <li><code>ChannelFuture</code>: Get the result of a <code>Channel</code> execution or a message from a <code>Channel</code>.</li> 
@@ -229,7 +229,7 @@
 </section> 
 <section id="cps-transformation-1"> 
  <h3 class="h400"><a href="#cps-transformation-1" class="anchor"></a>CPS transformation</h3> 
- <p>The execution of a <code>Call</code> message in <code>otavia</code> requires a <code>Stack</code> to be started, and then the entire <code>Call</code> message execution lifecycle is managed by the <code>Stack</code>. So the <code>continueXXX</code> method implemented by the developer needs to match the <code>StackState</code> execution and return a new <code>StackState</code>. Because the pattern is relatively fixed, we can use the <code>Scala 3</code> metaprogramming tools to implement a set of <code>async/await</code> syntaxes based on CPS transformations, which allows us to write code in a continuously blocking style.</p> 
+ <p>The execution of a <code>Call</code> message in <code>otavia</code> requires a <code>Stack</code> to be started, and then the entire <code>Call</code> message execution lifecycle is managed by the <code>Stack</code>. So the <code>resumeXXX</code> method implemented by the developer needs to match the <code>StackState</code> execution and return a new <code>StackState</code>. Because the pattern is relatively fixed, we can use the <code>Scala 3</code> metaprogramming tools to implement a set of <code>async/await</code> syntaxes based on CPS transformations, which allows us to write code in a continuously blocking style.</p> 
  <p>Project repository: <a href="https://github.com/otavia-projects/otavia-async">GitHub - otavia-projects/otavia-async</a></p> 
 </section> 
 <section id="buffer-2"> 
