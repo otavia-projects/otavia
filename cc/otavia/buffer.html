@@ -167,8 +167,8 @@
 0 &lt;= readerOffset &lt;= writerOffset &lt;= capacity 
 </pre> 
               <p>=== Byte Order === Buffers are always big endian, and this cannot be changed. Usages that need to get, set, read, or write, little-endian values will have to flip the byte order of the values they read and write.</p> 
-              <p>=== Splitting buffers === The split() method breaks a buffer into two. The two buffers will share the underlying memory, but their regions will not overlap, ensuring that the memory is safely shared between the two. Splitting a buffer is useful for when you want to hand over a region of a buffer to some other, perhaps unknown, piece of code, and relinquish your ownership of that buffer region in the process. Examples include aggregating messages into an accumulator buffer, and sending messages down the pipeline for further processing, as split buffer regions, once their data has been received in its entirety. If you instead wish to temporarily share a region of a buffer, you will have to pass offset and length along with the buffer, or you will have to make a copy of the region.</p> 
-              <p>=== Buffers as constants === Sometimes, the same bit of data will be processed or transmitted over and over again. In such cases, it can be tempting to allocate and fill a buffer once, and then reuse it. Such reuse must be done carefully, however, to avoid a number of bugs. The <a href="buffer/BufferAllocator.html">BufferAllocator</a> has a BufferAllocator.constBufferSupplier(byte[]) method that solves this, and prevents these bugs from occurring.</p> 
+              <p>=== Splitting buffers === The split() method is not support.</p> 
+              <p>=== Buffers as constants === Constants buffer is not support, use Array[Byte] directly.</p> 
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
