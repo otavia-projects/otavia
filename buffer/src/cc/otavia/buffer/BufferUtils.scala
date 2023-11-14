@@ -34,8 +34,8 @@ object BufferUtils {
 
     final def readStringAsShort(buffer: Buffer, len: Int): Short = {
         var length = len
-        while (buffer.skipIfNexts(INTEGER_TRIM)) length -= 1
-        val minus = buffer.skipIfNext('-')
+        while (buffer.skipIfNextAre(INTEGER_TRIM)) length -= 1
+        val minus = buffer.skipIfNextIs('-')
         if (minus) length -= 1
         var res: Short = 0
         while {

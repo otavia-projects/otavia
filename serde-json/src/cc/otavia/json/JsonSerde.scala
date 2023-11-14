@@ -46,7 +46,7 @@ trait JsonSerde[A] extends Serde[A] with SerdeOps {
     // TODO: replace to exceptXXX, if false throws error
     final protected def skipObjectStart(in: Buffer): Boolean = {
         skipBlanks(in)
-        in.skipIfNext(JsonConstants.TOKEN_OBJECT_START)
+        in.skipIfNextIs(JsonConstants.TOKEN_OBJECT_START)
     }
 
     final protected def serializeArrayStart(out: Buffer): this.type = {
@@ -56,7 +56,7 @@ trait JsonSerde[A] extends Serde[A] with SerdeOps {
 
     final protected def skipArrayStart(in: Buffer): Boolean = {
         skipBlanks(in)
-        in.skipIfNext(JsonConstants.TOKEN_ARRAY_START)
+        in.skipIfNextIs(JsonConstants.TOKEN_ARRAY_START)
     }
 
     final protected def serializeObjectEnd(out: Buffer): this.type = {
@@ -66,7 +66,7 @@ trait JsonSerde[A] extends Serde[A] with SerdeOps {
 
     final protected def skipObjectEnd(in: Buffer): Boolean = {
         skipBlanks(in)
-        in.skipIfNext(JsonConstants.TOKEN_OBJECT_END)
+        in.skipIfNextIs(JsonConstants.TOKEN_OBJECT_END)
     }
 
     final protected def serializeArrayEnd(out: Buffer): this.type = {
@@ -76,7 +76,7 @@ trait JsonSerde[A] extends Serde[A] with SerdeOps {
 
     final protected def skipArrayEnd(in: Buffer): Boolean = {
         skipBlanks(in)
-        in.skipIfNext(JsonConstants.TOKEN_ARRAY_END)
+        in.skipIfNextIs(JsonConstants.TOKEN_ARRAY_END)
     }
 
     final protected def serializeKey(key: String, out: Buffer): this.type = {
@@ -140,16 +140,16 @@ trait JsonSerde[A] extends Serde[A] with SerdeOps {
 
     override final protected def deserializeBoolean(in: Buffer): Boolean = {
         skipBlanks(in)
-        if (in.skipIfNexts(JsonConstants.TOKEN_TURE)) true
-        else if (in.skipIfNexts(JsonConstants.TOKEN_FALSE)) false
+        if (in.skipIfNextAre(JsonConstants.TOKEN_TURE)) true
+        else if (in.skipIfNextAre(JsonConstants.TOKEN_FALSE)) false
         else throw new JsonFormatException()
     }
 
     override final protected def deserializeChar(in: Buffer): Char = {
         skipBlanks(in)
-        assert(in.skipIfNext(JsonConstants.TOKEN_DOUBLE_QUOTE), s"except \" but get ${in.readByte}")
+        assert(in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE), s"except \" but get ${in.readByte}")
         val b = in.readByte
-        assert(in.skipIfNext(JsonConstants.TOKEN_DOUBLE_QUOTE), s"except \" but get ${in.readByte}")
+        assert(in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE), s"except \" but get ${in.readByte}")
         b.toChar
     }
 
@@ -157,8 +157,8 @@ trait JsonSerde[A] extends Serde[A] with SerdeOps {
 
     override final protected def deserializeInt(in: Buffer): Int = {
         skipBlanks(in)
-        in.skipIfNext(JsonConstants.TOKEN_PLUS)
-        val minus    = in.skipIfNext(JsonConstants.TOKEN_MINUS)
+        in.skipIfNextIs(JsonConstants.TOKEN_PLUS)
+        val minus    = in.skipIfNextIs(JsonConstants.TOKEN_MINUS)
         var ret: Int = 0
         while (in.readableBytes > 0 && in.nextIn(JsonConstants.TOKEN_NUMBERS)) {
             val b = in.readByte
@@ -169,8 +169,8 @@ trait JsonSerde[A] extends Serde[A] with SerdeOps {
 
     override final protected def deserializeLong(in: Buffer): Long = {
         skipBlanks(in)
-        in.skipIfNext(JsonConstants.TOKEN_PLUS)
-        val minus     = in.skipIfNext(JsonConstants.TOKEN_MINUS)
+        in.skipIfNextIs(JsonConstants.TOKEN_PLUS)
+        val minus     = in.skipIfNextIs(JsonConstants.TOKEN_MINUS)
         var ret: Long = 0
         while (in.readableBytes > 0 && in.nextIn(JsonConstants.TOKEN_NUMBERS)) {
             val b = in.readByte
@@ -181,8 +181,8 @@ trait JsonSerde[A] extends Serde[A] with SerdeOps {
 
     override final protected def deserializeFloat(in: Buffer): Float = {
         skipBlanks(in)
-        in.skipIfNext(JsonConstants.TOKEN_PLUS)
-        val minus               = in.skipIfNext(JsonConstants.TOKEN_MINUS)
+        in.skipIfNextIs(JsonConstants.TOKEN_PLUS)
+        val minus               = in.skipIfNextIs(JsonConstants.TOKEN_MINUS)
         var intPart: Float      = 0
         var floatPart: Float    = 0f
         var startFloat: Boolean = false
@@ -203,8 +203,8 @@ trait JsonSerde[A] extends Serde[A] with SerdeOps {
 
     override final protected def deserializeDouble(in: Buffer): Double = {
         skipBlanks(in)
-        in.skipIfNext(JsonConstants.TOKEN_PLUS)
-        val minus               = in.skipIfNext(JsonConstants.TOKEN_MINUS)
+        in.skipIfNextIs(JsonConstants.TOKEN_PLUS)
+        val minus               = in.skipIfNextIs(JsonConstants.TOKEN_MINUS)
         var intPart: Double     = 0d
         var floatPart: Double   = 0d
         var startFloat: Boolean = false
@@ -225,7 +225,7 @@ trait JsonSerde[A] extends Serde[A] with SerdeOps {
 
     override final protected def deserializeString(in: Buffer): String = {
         skipBlanks(in)
-        assert(in.skipIfNext(JsonConstants.TOKEN_DOUBLE_QUOTE), s"except \" but get ${in.readByte}")
+        assert(in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE), s"except \" but get ${in.readByte}")
         val len = in.bytesBefore(JsonConstants.TOKEN_DOUBLE_QUOTE) // TODO: escape
         val str = in.readCharSequence(len, charsets).toString
         in.readByte
@@ -390,12 +390,12 @@ object JsonSerde {
         override def deserialize(in: Buffer): Seq[T] = {
             val seq = mutable.Seq.empty[T]
             skipBlanks(in)
-            assert(in.skipIfNext(JsonConstants.TOKEN_ARRAY_START), "")
-            while (!in.skipIfNext(JsonConstants.TOKEN_ARRAY_END)) {
+            assert(in.skipIfNextIs(JsonConstants.TOKEN_ARRAY_START), "")
+            while (!in.skipIfNextIs(JsonConstants.TOKEN_ARRAY_END)) {
                 skipBlanks(in)
                 seq.appended(se.deserialize(in))
                 skipBlanks(in)
-                in.skipIfNext(JsonConstants.TOKEN_COMMA)
+                in.skipIfNextIs(JsonConstants.TOKEN_COMMA)
             }
             seq.toSeq
         }
@@ -422,12 +422,12 @@ object JsonSerde {
         override def deserialize(in: Buffer): mutable.Seq[T] = {
             val seq = mutable.Seq.empty[T]
             skipBlanks(in)
-            assert(in.skipIfNext(JsonConstants.TOKEN_ARRAY_START), "")
-            while (!in.skipIfNext(JsonConstants.TOKEN_ARRAY_END)) {
+            assert(in.skipIfNextIs(JsonConstants.TOKEN_ARRAY_START), "")
+            while (!in.skipIfNextIs(JsonConstants.TOKEN_ARRAY_END)) {
                 skipBlanks(in)
                 seq.appended(se.deserialize(in))
                 skipBlanks(in)
-                in.skipIfNext(JsonConstants.TOKEN_COMMA)
+                in.skipIfNextIs(JsonConstants.TOKEN_COMMA)
             }
             seq
         }
@@ -451,7 +451,7 @@ object JsonSerde {
 
         override def deserialize(in: Buffer): Option[T] = {
             skipBlanks(in)
-            if (in.skipIfNexts(JsonConstants.TOKEN_NULL)) None else Some(se.deserialize(in))
+            if (in.skipIfNextAre(JsonConstants.TOKEN_NULL)) None else Some(se.deserialize(in))
         }
 
         override def serialize(value: Option[T], out: Buffer): Unit = value match

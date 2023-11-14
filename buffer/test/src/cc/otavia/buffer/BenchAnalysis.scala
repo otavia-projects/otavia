@@ -71,7 +71,7 @@ object BenchAnalysis {
         }
         val end = System.currentTimeMillis()
 
-        println(s"[bytesBefore2, heap = ${heap}] ${end - start}")
+        println(s"[bytesBefore 2, heap = ${heap}] ${end - start}")
     }
 
     private def bytesBefore3(heap: Boolean = false): Unit = {
@@ -105,7 +105,7 @@ object BenchAnalysis {
         }
         val end = System.currentTimeMillis()
 
-        println(s"[bytesBefore3, heap = ${heap}] ${end - start}")
+        println(s"[bytesBefore 3, heap = ${heap}] ${end - start}")
     }
 
     private def bytesBefore4(heap: Boolean = false): Unit = {
@@ -139,7 +139,7 @@ object BenchAnalysis {
         }
         val end = System.currentTimeMillis()
 
-        println(s"[bytesBefore4, heap = ${heap}] ${end - start}")
+        println(s"[bytesBefore 4, heap = ${heap}] ${end - start}")
     }
 
     private def bytesBefore5(heap: Boolean = false): Unit = {
@@ -161,19 +161,19 @@ object BenchAnalysis {
         var i = 0
 
         while (i < 100_000) { // Warmup
-            adaptiveBuffer.bytesBefore5('H', 'T', 'T', 'P', ' ')
+            adaptiveBuffer.bytesBefore(Array[Byte]('H', 'T', 'T', 'P', ' '))
             i += 1
         }
 
         i = 0
         val start = System.currentTimeMillis()
         while (i < 10_000_000) {
-            adaptiveBuffer.bytesBefore5('H', 'T', 'T', 'P', ' ')
+            adaptiveBuffer.bytesBefore(Array[Byte]('H', 'T', 'T', 'P', ' '))
             i += 1
         }
         val end = System.currentTimeMillis()
 
-        println(s"[bytesBefore5, heap = ${heap}] ${end - start}")
+        println(s"[bytesBefore 5, heap = ${heap}] ${end - start}")
     }
 
     private def bytesBefore6(heap: Boolean = false): Unit = {
@@ -195,19 +195,19 @@ object BenchAnalysis {
         var i = 0
 
         while (i < 100_000) { // Warmup
-            adaptiveBuffer.bytesBefore6('H', 'T', 'T', 'P', ' ', '1')
+            adaptiveBuffer.bytesBefore(Array[Byte]('H', 'T', 'T', 'P', ' ', '1'))
             i += 1
         }
 
         i = 0
         val start = System.currentTimeMillis()
         while (i < 10_000_000) {
-            adaptiveBuffer.bytesBefore6('H', 'T', 'T', 'P', ' ', '1')
+            adaptiveBuffer.bytesBefore(Array[Byte]('H', 'T', 'T', 'P', ' ', '1'))
             i += 1
         }
         val end = System.currentTimeMillis()
 
-        println(s"[bytesBefore6, heap = ${heap}] ${end - start}")
+        println(s"[bytesBefore 6, heap = $heap] ${end - start}")
     }
 
     private def bytesBefore7(heap: Boolean = false): Unit = {
@@ -229,19 +229,19 @@ object BenchAnalysis {
         var i = 0
 
         while (i < 100_000) { // Warmup
-            adaptiveBuffer.bytesBefore7('H', 'T', 'T', 'P', ' ', '1', '.')
+            adaptiveBuffer.bytesBefore(Array[Byte]('H', 'T', 'T', 'P', ' ', '1', '.'))
             i += 1
         }
 
         i = 0
         val start = System.currentTimeMillis()
         while (i < 10_000_000) {
-            adaptiveBuffer.bytesBefore7('H', 'T', 'T', 'P', ' ', '1', '.')
+            adaptiveBuffer.bytesBefore(Array[Byte]('H', 'T', 'T', 'P', ' ', '1', '.'))
             i += 1
         }
         val end = System.currentTimeMillis()
 
-        println(s"[bytesBefore7, heap = ${heap}] ${end - start}")
+        println(s"[bytesBefore 7, heap = $heap] ${end - start}")
     }
 
     private def bytesBefore8(heap: Boolean = false): Unit = {
@@ -263,19 +263,19 @@ object BenchAnalysis {
         var i = 0
 
         while (i < 100_000) { // Warmup
-            adaptiveBuffer.bytesBefore8('H', 'T', 'T', 'P', ' ', '1', '.', '1')
+            adaptiveBuffer.bytesBefore(Array[Byte]('H', 'T', 'T', 'P', ' ', '1', '.', '1'))
             i += 1
         }
 
         i = 0
         val start = System.currentTimeMillis()
         while (i < 10_000_000) {
-            adaptiveBuffer.bytesBefore8('H', 'T', 'T', 'P', ' ', '1', '.', '1')
+            adaptiveBuffer.bytesBefore(Array[Byte]('H', 'T', 'T', 'P', ' ', '1', '.', '1'))
             i += 1
         }
         val end = System.currentTimeMillis()
 
-        println(s"[bytesBefore8, heap = ${heap}] ${end - start}")
+        println(s"[bytesBefore 8, heap = ${heap}] ${end - start}")
     }
 
 }

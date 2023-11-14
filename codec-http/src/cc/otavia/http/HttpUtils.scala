@@ -20,23 +20,23 @@ import cc.otavia.buffer.Buffer
 
 object HttpUtils {
 
-    final def parseMethod(buffer: Buffer): HttpMethod = if (buffer.skipIfNexts(HttpMethod.GET.bytes)) { // GET method
+    final def parseMethod(buffer: Buffer): HttpMethod = if (buffer.skipIfNextAre(HttpMethod.GET.bytes)) { // GET method
         HttpMethod.GET
-    } else if (buffer.skipIfNexts(HttpMethod.POST.bytes)) { // POST method
+    } else if (buffer.skipIfNextAre(HttpMethod.POST.bytes)) { // POST method
         HttpMethod.POST
-    } else if (buffer.skipIfNexts(HttpMethod.PUT.bytes)) { // PUT method
+    } else if (buffer.skipIfNextAre(HttpMethod.PUT.bytes)) { // PUT method
         HttpMethod.PUT
-    } else if (buffer.skipIfNexts(HttpMethod.OPTIONS.bytes)) { // OPTIONS method
+    } else if (buffer.skipIfNextAre(HttpMethod.OPTIONS.bytes)) { // OPTIONS method
         HttpMethod.OPTIONS
-    } else if (buffer.skipIfNexts(HttpMethod.HEAD.bytes)) { // HEAD method
+    } else if (buffer.skipIfNextAre(HttpMethod.HEAD.bytes)) { // HEAD method
         HttpMethod.HEAD
-    } else if (buffer.skipIfNexts(HttpMethod.PATCH.bytes)) { // PATCH method
+    } else if (buffer.skipIfNextAre(HttpMethod.PATCH.bytes)) { // PATCH method
         HttpMethod.PATCH
-    } else if (buffer.skipIfNexts(HttpMethod.DELETE.bytes)) { // DELETE method
+    } else if (buffer.skipIfNextAre(HttpMethod.DELETE.bytes)) { // DELETE method
         HttpMethod.DELETE
-    } else if (buffer.skipIfNexts(HttpMethod.TRACE.bytes)) { // TRACE method
+    } else if (buffer.skipIfNextAre(HttpMethod.TRACE.bytes)) { // TRACE method
         HttpMethod.TRACE
-    } else if (buffer.skipIfNexts(HttpMethod.CONNECT.bytes)) { // CONNECT method
+    } else if (buffer.skipIfNextAre(HttpMethod.CONNECT.bytes)) { // CONNECT method
         HttpMethod.CONNECT
     } else throw new RuntimeException()
 

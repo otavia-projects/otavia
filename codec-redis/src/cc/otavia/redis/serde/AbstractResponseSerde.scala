@@ -30,7 +30,7 @@ abstract class AbstractResponseSerde[R <: CommandResponse] extends RedisSerde[R]
     }
 
     final protected def deserializeSimpleError(in: Buffer): String = {
-        in.skipIfNext('-')
+        in.skipIfNextIs('-')
         val len      = in.bytesBefore('\r'.toByte, '\n')
         val errorMsg = in.readCharSequence(len).toString
         in.skipReadableBytes(2)

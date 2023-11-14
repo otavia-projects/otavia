@@ -97,7 +97,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
 
     private def parseHeadLine(buffer: Buffer, lineLength: Int): Unit = {
         val start = buffer.readerOffset
-        while (buffer.skipIfNext(HttpConstants.SP)) {}
+        while (buffer.skipIfNextIs(HttpConstants.SP)) {}
         currentRouter = routerMatcher.choice(buffer)
         buffer.readerOffset(start + lineLength + 2)
         parseState = ST_PARSE_HEADERS
@@ -139,10 +139,10 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
     }
 
     private def httpVersion(buffer: Buffer): HttpVersion = {
-        while (buffer.skipIfNext(HttpConstants.SP)) {}
+        while (buffer.skipIfNextIs(HttpConstants.SP)) {}
         val version =
-            if (buffer.skipIfNexts(HttpVersion.HTTP_1_1.bytes)) HttpVersion.HTTP_1_1
-            else if (buffer.skipIfNexts(HttpVersion.HTTP_2.bytes)) HttpVersion.HTTP_2
+            if (buffer.skipIfNextAre(HttpVersion.HTTP_1_1.bytes)) HttpVersion.HTTP_1_1
+            else if (buffer.skipIfNextAre(HttpVersion.HTTP_2.bytes)) HttpVersion.HTTP_2
             else HttpVersion.HTTP_1_0
         buffer.skipReadableBytes(buffer.bytesBefore(HttpConstants.HEADER_LINE_END) + 2)
         version

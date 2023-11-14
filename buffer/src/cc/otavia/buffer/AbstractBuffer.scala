@@ -18,6 +18,8 @@
 
 package cc.otavia.buffer
 
+import cc.otavia.buffer.BytesUtil.ignoreCaseEqual
+
 import java.lang.{Byte as JByte, Double as JDouble, Float as JFloat, Long as JLong, Short as JShort}
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
 import java.nio.charset.{Charset, StandardCharsets}
@@ -92,7 +94,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
 
     override def writeBytes(length: Int, value: Byte): Buffer = {
         if (writableBytes < length)
-            throw new IndexOutOfBoundsException(s"except length ${length}, but only ${writableBytes}")
+            throw new IndexOutOfBoundsException(s"except length ${length}, but only $writableBytes")
         var i = 0
         while (i < length) {
             underlying.put(widx + i, value)
@@ -150,13 +152,24 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         this
     }
 
-    override def bytesBefore(needle: Byte): Int = {
-        var offset: Int       = ridx
+    override def bytesBefore(needle: Byte): Int = bytesBefore1(needle, ridx, widx)
+
+    private def bytesBefore1(a: Byte, from: Int, to: Int): Int = {
+        var offset: Int       = from
         var continue: Boolean = true
-        while (continue && offset < widx) {
-            if (underlying.get(offset) == needle) continue = false else offset += 1
+        while (continue && offset < to) {
+            if (underlying.get(offset) == a) continue = false else offset += 1
         }
-        if (continue) -1 else offset - ridx
+        if (continue) -1 else offset - from
+    }
+
+    private def bytesBefore1ignoreCase(a: Byte, from: Int, to: Int): Int = {
+        var offset: Int       = from
+        var continue: Boolean = true
+        while (continue && offset < to) {
+            if (ignoreCaseEqual(underlying.get(offset), a)) continue = false else offset += 1
+        }
+        if (continue) -1 else offset - from
     }
 
     override def bytesBeforeIn(set: Array[Byte]): Int = {
@@ -184,83 +197,153 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         if (continue) -1 else offset - ridx
     }
 
-    override def bytesBefore(needle1: Byte, needle2: Byte): Int = if (readableBytes >= 2) {
-        var offset: Int       = ridx
+    override def bytesBefore(needle1: Byte, needle2: Byte): Int = bytesBefore2(needle1, needle2, ridx, widx)
+
+    private def bytesBefore2(a1: Byte, a2: Byte, from: Int, to: Int): Int = if (readableBytes >= 2) {
+        var offset: Int       = from
         var continue: Boolean = true
         var b1: Byte          = 0
         var b2: Byte          = underlying.get(offset)
-        while (continue && offset < widx - 1) {
+        while (continue && offset < to - 1) {
             b1 = b2
             b2 = underlying.get(offset + 1)
-            if (b1 == needle1 && b2 == needle2) {
-                continue = false
-            } else offset += 1
+            if (b1 == a1 && b2 == a2) continue = false else offset += 1
         }
-        if (continue) -1 else offset - ridx
+        if (continue) -1 else offset - from
     } else -1
 
-    override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int = if (readableBytes >= 3) {
-        var offset: Int       = ridx
+    private def bytesBefore2ignoreCase(a1: Byte, a2: Byte, from: Int, to: Int): Int = if (readableBytes >= 2) {
+        var offset: Int       = from
+        var continue: Boolean = true
+        var b1: Byte          = 0
+        var b2: Byte          = underlying.get(offset)
+        while (continue && offset < to - 1) {
+            b1 = b2
+            b2 = underlying.get(offset + 1)
+            if (ignoreCaseEqual(b1, a1) && ignoreCaseEqual(b2, a2)) continue = false else offset += 1
+        }
+        if (continue) -1 else offset - from
+    } else -1
+
+    override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int =
+        bytesBefore3(needle1, needle2, needle3, ridx, widx)
+
+    private def bytesBefore3(a1: Byte, a2: Byte, a3: Byte, from: Int, to: Int): Int = if (readableBytes >= 3) {
+        var offset: Int       = from
         var continue: Boolean = true
         var b1: Byte          = 0
         var b2: Byte          = underlying.get(offset)
         var b3: Byte          = underlying.get(offset + 1)
-        while (continue && offset < widx - 2) {
-            b1 = b2
-            b2 = b3
+        while (continue && offset < to - 2) {
+            b1 = b2; b2 = b3
             b3 = underlying.get(offset + 2)
-            if (b1 == needle1 && b2 == needle2 && b3 == needle3) {
-                continue = false
-            } else offset += 1
+            if (b1 == a1 && b2 == a2 && b3 == a3) continue = false else offset += 1
         }
-        if (continue) -1 else offset - ridx
+        if (continue) -1 else offset - from
     } else -1
 
+    private def bytesBefore3ignoreCase(a1: Byte, a2: Byte, a3: Byte, from: Int, to: Int): Int =
+        if (readableBytes >= 3) {
+            var offset: Int       = from
+            var continue: Boolean = true
+            var b1: Byte          = 0
+            var b2: Byte          = underlying.get(offset)
+            var b3: Byte          = underlying.get(offset + 1)
+            while (continue && offset < to - 2) {
+                b1 = b2; b2 = b3
+                b3 = underlying.get(offset + 2)
+                if (ignoreCaseEqual(b1, a1) && ignoreCaseEqual(b2, a2) && ignoreCaseEqual(b3, a3)) continue = false
+                else offset += 1
+            }
+            if (continue) -1 else offset - from
+        } else -1
+
     override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte, needle4: Byte): Int =
+        bytesBefore4(needle1, needle2, needle3, needle4, ridx, widx)
+
+    private def bytesBefore4(a1: Byte, a2: Byte, a3: Byte, a4: Byte, from: Int, to: Int): Int =
         if (readableBytes >= 4) {
-            var offset: Int       = ridx
+            var offset: Int       = from
             var continue: Boolean = true
             var b1: Byte          = 0
             var b2: Byte          = underlying.get(offset)
             var b3: Byte          = underlying.get(offset + 1)
             var b4: Byte          = underlying.get(offset + 2)
-            while (continue && offset < widx - 3) {
-                b1 = b2
-                b2 = b3
-                b3 = b4
+            while (continue && offset < to - 3) {
+                b1 = b2; b2 = b3; b3 = b4
                 b4 = underlying.get(offset + 3)
-                if (b1 == needle1 && b2 == needle2 && b3 == needle3 && b4 == needle4) {
+                if (b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4) {
                     continue = false
                 } else offset += 1
             }
-            if (continue) -1 else offset - ridx
+            if (continue) -1 else offset - from
         } else -1
 
-    override def bytesBefore5(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte): Int =
+    private def bytesBefore4ignoreCase(a1: Byte, a2: Byte, a3: Byte, a4: Byte, from: Int, to: Int): Int =
+        if (readableBytes >= 4) {
+            var offset: Int       = from
+            var continue: Boolean = true
+            var b1: Byte          = 0
+            var b2: Byte          = underlying.get(offset)
+            var b3: Byte          = underlying.get(offset + 1)
+            var b4: Byte          = underlying.get(offset + 2)
+            while (continue && offset < to - 3) {
+                b1 = b2; b2 = b3; b3 = b4
+                b4 = underlying.get(offset + 3)
+                if (
+                  ignoreCaseEqual(b1, a1) && ignoreCaseEqual(b2, a2) && ignoreCaseEqual(b3, a3) &&
+                  ignoreCaseEqual(b4, a4)
+                ) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - from
+        } else -1
+
+    private def bytesBefore5(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, from: Int, to: Int): Int =
         if (readableBytes >= 5) {
-            var offset: Int       = ridx
+            var offset: Int       = from
             var continue: Boolean = true
             var a1: Byte          = 0
             var a2: Byte          = underlying.get(offset)
             var a3: Byte          = underlying.get(offset + 1)
             var a4: Byte          = underlying.get(offset + 2)
             var a5: Byte          = underlying.get(offset + 3)
-            while (continue && offset < widx - 4) {
-                a1 = a2
-                a2 = a3
-                a3 = a4
-                a4 = a5
+            while (continue && offset < to - 4) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5
                 a5 = underlying.get(offset + 4)
                 if (a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5) {
                     continue = false
                 } else offset += 1
             }
-            if (continue) -1 else offset - ridx
+            if (continue) -1 else offset - from
         } else -1
 
-    override def bytesBefore6(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte): Int =
+    private def bytesBefore5ignoreCase(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, from: Int, to: Int): Int =
+        if (readableBytes >= 5) {
+            var offset: Int       = from
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            while (continue && offset < to - 4) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5
+                a5 = underlying.get(offset + 4)
+                if (
+                  ignoreCaseEqual(a1, b1) && ignoreCaseEqual(a2, b2) && ignoreCaseEqual(a3, b3) &&
+                  ignoreCaseEqual(a4, b4) && ignoreCaseEqual(a5, b5)
+                ) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - from
+        } else -1
+
+    private def bytesBefore6(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, from: Int, to: Int): Int =
         if (readableBytes >= 6) {
-            var offset: Int       = ridx
+            var offset: Int       = from
             var continue: Boolean = true
             var a1: Byte          = 0
             var a2: Byte          = underlying.get(offset)
@@ -268,23 +351,46 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
             var a4: Byte          = underlying.get(offset + 2)
             var a5: Byte          = underlying.get(offset + 3)
             var a6: Byte          = underlying.get(offset + 4)
-            while (continue && offset < widx - 5) {
-                a1 = a2
-                a2 = a3
-                a3 = a4
-                a4 = a5
-                a5 = a6
+            while (continue && offset < to - 5) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6
                 a6 = underlying.get(offset + 5)
                 if (a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6) {
                     continue = false
                 } else offset += 1
             }
-            if (continue) -1 else offset - ridx
+            if (continue) -1 else offset - from
         } else -1
 
-    override def bytesBefore7(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Int =
+    // format: off
+    private def bytesBefore6ignoreCase(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte,
+                                       from: Int, to: Int): Int = // format: on
+        if (readableBytes >= 6) {
+            var offset: Int       = from
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            while (continue && offset < to - 5) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6
+                a6 = underlying.get(offset + 5)
+                if (
+                  ignoreCaseEqual(a1, b1) && ignoreCaseEqual(a2, b2) && ignoreCaseEqual(a3, b3) &&
+                  ignoreCaseEqual(a4, b4) && ignoreCaseEqual(a5, b5) && ignoreCaseEqual(a6, b6)
+                ) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - from
+        } else -1
+
+    // format: off
+    private def bytesBefore7(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte,
+                             from: Int, to: Int): Int = // format: on
         if (readableBytes >= 7) {
-            var offset: Int       = ridx
+            var offset: Int       = from
             var continue: Boolean = true
             var a1: Byte          = 0
             var a2: Byte          = underlying.get(offset)
@@ -293,24 +399,49 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
             var a5: Byte          = underlying.get(offset + 3)
             var a6: Byte          = underlying.get(offset + 4)
             var a7: Byte          = underlying.get(offset + 5)
-            while (continue && offset < widx - 6) {
-                a1 = a2
-                a2 = a3
-                a3 = a4
-                a4 = a5
-                a5 = a6
-                a6 = a7
+            while (continue && offset < to - 6) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7
                 a7 = underlying.get(offset + 6)
                 if (a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7) {
                     continue = false
                 } else offset += 1
             }
-            if (continue) -1 else offset - ridx
+            if (continue) -1 else offset - from
         } else -1
 
-    override def bytesBefore8(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte): Int =
+    // format: off
+    private def bytesBefore7ignoreCase(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte,
+                                       from: Int, to: Int): Int =
+    // format: on
+        if (readableBytes >= 7) {
+            var offset: Int       = from
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            var a7: Byte          = underlying.get(offset + 5)
+            while (continue && offset < to - 6) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7
+                a7 = underlying.get(offset + 6)
+                if (
+                  ignoreCaseEqual(a1, b1) && ignoreCaseEqual(a2, b2) && ignoreCaseEqual(a3, b3) &&
+                  ignoreCaseEqual(a4, b4) && ignoreCaseEqual(a5, b5) && ignoreCaseEqual(a6, b6) &&
+                  ignoreCaseEqual(a7, b7)
+                ) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - from
+        } else -1
+
+    // format: off
+    private def bytesBefore8(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                             from: Int, to: Int): Int = // format: on
         if (readableBytes >= 8) {
-            var offset: Int       = ridx
+            var offset: Int       = from
             var continue: Boolean = true
             var a1: Byte          = 0
             var a2: Byte          = underlying.get(offset)
@@ -320,25 +451,48 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
             var a6: Byte          = underlying.get(offset + 4)
             var a7: Byte          = underlying.get(offset + 5)
             var a8: Byte          = underlying.get(offset + 6)
-            while (continue && offset < widx - 7) {
-                a1 = a2
-                a2 = a3
-                a3 = a4
-                a4 = a5
-                a5 = a6
-                a6 = a7
-                a7 = a8
+            while (continue && offset < to - 7) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8
                 a8 = underlying.get(offset + 7)
                 if (a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8) {
                     continue = false
                 } else offset += 1
             }
-            if (continue) -1 else offset - ridx
+            if (continue) -1 else offset - from
         } else -1
 
-    override def bytesBefore9(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte, b9: Byte)
-        : Int = if (readableBytes >= 9) {
-        var offset: Int       = ridx
+    // format: off
+    private def bytesBefore8ignoreCase(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                             from: Int, to: Int): Int = // format: on
+        if (readableBytes >= 8) {
+            var offset: Int       = from
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            var a7: Byte          = underlying.get(offset + 5)
+            var a8: Byte          = underlying.get(offset + 6)
+            while (continue && offset < to - 7) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8
+                a8 = underlying.get(offset + 7)
+                if (
+                  ignoreCaseEqual(a1, b1) && ignoreCaseEqual(a2, b2) && ignoreCaseEqual(a3, b3) &&
+                  ignoreCaseEqual(a4, b4) && ignoreCaseEqual(a5, b5) && ignoreCaseEqual(a6, b6) &&
+                  ignoreCaseEqual(a7, b7) && ignoreCaseEqual(a8, b8)
+                ) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - from
+        } else -1
+
+    // format: off
+    private def bytesBefore9(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte, b9: Byte,
+                             from: Int, to: Int): Int = if (readableBytes >= 9) { // format: on
+        var offset: Int       = from
         var continue: Boolean = true
         var a1: Byte          = 0
         var a2: Byte          = underlying.get(offset)
@@ -349,15 +503,8 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         var a7: Byte          = underlying.get(offset + 5)
         var a8: Byte          = underlying.get(offset + 6)
         var a9: Byte          = underlying.get(offset + 7)
-        while (continue && offset < widx - 8) {
-            a1 = a2
-            a2 = a3
-            a3 = a4
-            a4 = a5
-            a5 = a6
-            a6 = a7
-            a7 = a8
-            a8 = a9
+        while (continue && offset < to - 8) {
+            a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9
             a9 = underlying.get(offset + 8)
             if (
               a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
@@ -366,14 +513,42 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
                 continue = false
             } else offset += 1
         }
-        if (continue) -1 else offset - ridx
+        if (continue) -1 else offset - from
     } else -1
 
     // format: off
-    override def bytesBefore10(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
-                               b9: Byte, b10: Byte): Int = if (readableBytes >= 10) {
+    private def bytesBefore9ignoreCase(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                                       b9: Byte, from: Int, to: Int): Int = if (readableBytes >= 9) { // format: on
+        var offset: Int       = from
+        var continue: Boolean = true
+        var a1: Byte          = 0
+        var a2: Byte          = underlying.get(offset)
+        var a3: Byte          = underlying.get(offset + 1)
+        var a4: Byte          = underlying.get(offset + 2)
+        var a5: Byte          = underlying.get(offset + 3)
+        var a6: Byte          = underlying.get(offset + 4)
+        var a7: Byte          = underlying.get(offset + 5)
+        var a8: Byte          = underlying.get(offset + 6)
+        var a9: Byte          = underlying.get(offset + 7)
+        while (continue && offset < to - 8) {
+            a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9
+            a9 = underlying.get(offset + 8)
+            if (
+              ignoreCaseEqual(a1, b1) && ignoreCaseEqual(a2, b2) && ignoreCaseEqual(a3, b3) &&
+              ignoreCaseEqual(a4, b4) && ignoreCaseEqual(a5, b5) && ignoreCaseEqual(a6, b6) &&
+              ignoreCaseEqual(a7, b7) && ignoreCaseEqual(a8, b8) && ignoreCaseEqual(a9, b9)
+            ) {
+                continue = false
+            } else offset += 1
+        }
+        if (continue) -1 else offset - from
+    } else -1
+
+    // format: off
+    private def bytesBefore10(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, from: Int, to: Int): Int = if (readableBytes >= 10) {
         // format: on
-        var offset: Int       = ridx
+        var offset: Int       = from
         var continue: Boolean = true
         var a1: Byte          = 0
         var a2: Byte          = underlying.get(offset)
@@ -385,32 +560,55 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         var a8: Byte          = underlying.get(offset + 6)
         var a9: Byte          = underlying.get(offset + 7)
         var a10: Byte         = underlying.get(offset + 8)
-        while (continue && offset < widx - 9) {
-            a1 = a2
-            a2 = a3
-            a3 = a4
-            a4 = a5
-            a5 = a6
-            a6 = a7
-            a7 = a8
-            a8 = a9
-            a9 = a10
+        while (continue && offset < to - 9) {
+            a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10
             a10 = underlying.get(offset + 9)
             if (
-              a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
-              a9 == b9 && a10 == b10
+              a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 &&
+              a8 == b8 && a9 == b9 && a10 == b10
             ) {
                 continue = false
             } else offset += 1
         }
-        if (continue) -1 else offset - ridx
+        if (continue) -1 else offset - from
     } else -1
 
     // format: off
-    override def bytesBefore11(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
-                               b9: Byte, b10: Byte, b11: Byte): Int = if (readableBytes >= 11) {
+    private def bytesBefore10ignoreCase(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                              b9: Byte, b10: Byte, from: Int, to: Int): Int = if (readableBytes >= 10) {
         // format: on
-        var offset: Int       = ridx
+        var offset: Int       = from
+        var continue: Boolean = true
+        var a1: Byte          = 0
+        var a2: Byte          = underlying.get(offset)
+        var a3: Byte          = underlying.get(offset + 1)
+        var a4: Byte          = underlying.get(offset + 2)
+        var a5: Byte          = underlying.get(offset + 3)
+        var a6: Byte          = underlying.get(offset + 4)
+        var a7: Byte          = underlying.get(offset + 5)
+        var a8: Byte          = underlying.get(offset + 6)
+        var a9: Byte          = underlying.get(offset + 7)
+        var a10: Byte         = underlying.get(offset + 8)
+        while (continue && offset < to - 9) {
+            a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10
+            a10 = underlying.get(offset + 9)
+            if (
+              ignoreCaseEqual(a1, b1) && ignoreCaseEqual(a2, b2) && ignoreCaseEqual(a3, b3) &&
+              ignoreCaseEqual(a4, b4) && ignoreCaseEqual(a5, b5) && ignoreCaseEqual(a6, b6) &&
+              ignoreCaseEqual(a7, b7) && ignoreCaseEqual(a8, b8) && ignoreCaseEqual(a9, b9) &&
+              ignoreCaseEqual(a10, b10)
+            ) {
+                continue = false
+            } else offset += 1
+        }
+        if (continue) -1 else offset - from
+    } else -1
+
+    // format: off
+    private def bytesBefore11(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, from: Int, to: Int): Int = if (readableBytes >= 11) {
+        // format: on
+        var offset: Int       = from
         var continue: Boolean = true
         var a1: Byte          = 0
         var a2: Byte          = underlying.get(offset)
@@ -423,17 +621,8 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         var a9: Byte          = underlying.get(offset + 7)
         var a10: Byte         = underlying.get(offset + 8)
         var a11: Byte         = underlying.get(offset + 9)
-        while (continue && offset < widx - 10) {
-            a1 = a2
-            a2 = a3
-            a3 = a4
-            a4 = a5
-            a5 = a6
-            a6 = a7
-            a7 = a8
-            a8 = a9
-            a9 = a10
-            a10 = a11
+        while (continue && offset < to - 10) {
+            a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11
             a11 = underlying.get(offset + 10)
             if (
               a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
@@ -442,14 +631,14 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
                 continue = false
             } else offset += 1
         }
-        if (continue) -1 else offset - ridx
+        if (continue) -1 else offset - from
     } else -1
 
     // format: off
-    override def bytesBefore12(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
-                               b9: Byte, b10: Byte, b11: Byte, b12: Byte): Int = if (readableBytes >= 12) {
+    private def bytesBefore11ignoreCase(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                              b9: Byte, b10: Byte, b11: Byte, from: Int, to: Int): Int = if (readableBytes >= 11) {
         // format: on
-        var offset: Int       = ridx
+        var offset: Int       = from
         var continue: Boolean = true
         var a1: Byte          = 0
         var a2: Byte          = underlying.get(offset)
@@ -462,79 +651,163 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         var a9: Byte          = underlying.get(offset + 7)
         var a10: Byte         = underlying.get(offset + 8)
         var a11: Byte         = underlying.get(offset + 9)
-        var a12: Byte         = underlying.get(offset + 10)
-        while (continue && offset < widx - 11) {
-            a1 = a2
-            a2 = a3
-            a3 = a4
-            a4 = a5
-            a5 = a6
-            a6 = a7
-            a7 = a8
-            a8 = a9
-            a9 = a10
-            a10 = a11
-            a11 = a12
-            a12 = underlying.get(offset + 11)
+        while (continue && offset < to - 10) {
+            a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11
+            a11 = underlying.get(offset + 10)
             if (
-              a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
-              a9 == b9 && a10 == b10 && a11 == b11 && a12 == b12
+              ignoreCaseEqual(a1, b1) && ignoreCaseEqual(a2, b2) && ignoreCaseEqual(a3, b3) &&
+              ignoreCaseEqual(a4, b4) && ignoreCaseEqual(a5, b5) && ignoreCaseEqual(a6, b6) &&
+              ignoreCaseEqual(a7, b7) && ignoreCaseEqual(a8, b8) && ignoreCaseEqual(a9, b9) &&
+              ignoreCaseEqual(a10, b10) && ignoreCaseEqual(a11, b11)
             ) {
                 continue = false
             } else offset += 1
         }
-        if (continue) -1 else offset - ridx
+        if (continue) -1 else offset - from
     } else -1
 
     // format: off
-    override def bytesBefore13(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
-                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte): Int = if (readableBytes >= 13) {
-        // format: on
-        var offset: Int       = ridx
-        var continue: Boolean = true
-        var a1: Byte          = 0
-        var a2: Byte          = underlying.get(offset)
-        var a3: Byte          = underlying.get(offset + 1)
-        var a4: Byte          = underlying.get(offset + 2)
-        var a5: Byte          = underlying.get(offset + 3)
-        var a6: Byte          = underlying.get(offset + 4)
-        var a7: Byte          = underlying.get(offset + 5)
-        var a8: Byte          = underlying.get(offset + 6)
-        var a9: Byte          = underlying.get(offset + 7)
-        var a10: Byte         = underlying.get(offset + 8)
-        var a11: Byte         = underlying.get(offset + 9)
-        var a12: Byte         = underlying.get(offset + 10)
-        var a13: Byte         = underlying.get(offset + 11)
-        while (continue && offset < widx - 12) {
-            a1 = a2
-            a2 = a3
-            a3 = a4
-            a4 = a5
-            a5 = a6
-            a6 = a7
-            a7 = a8
-            a8 = a9
-            a9 = a10
-            a10 = a11
-            a11 = a12
-            a12 = a13
-            a13 = underlying.get(offset + 12)
-            if (
-              a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
-              a9 == b9 && a10 == b10 && a11 == b11 && a12 == b12 && a13 == b13
-            ) {
-                continue = false
-            } else offset += 1
-        }
-        if (continue) -1 else offset - ridx
-    } else -1
+    private def bytesBefore12(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, from: Int, to: Int): Int = // format: on
+        if (readableBytes >= 12) {
+            var offset: Int       = from
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            var a7: Byte          = underlying.get(offset + 5)
+            var a8: Byte          = underlying.get(offset + 6)
+            var a9: Byte          = underlying.get(offset + 7)
+            var a10: Byte         = underlying.get(offset + 8)
+            var a11: Byte         = underlying.get(offset + 9)
+            var a12: Byte         = underlying.get(offset + 10)
+            while (continue && offset < to - 11) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11; a11 = a12
+                a12 = underlying.get(offset + 11)
+                if (
+                  a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
+                  a9 == b9 && a10 == b10 && a11 == b11 && a12 == b12
+                ) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - from
+        } else -1
 
     // format: off
-    override def bytesBefore14(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
-                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte): Int =
+    private def bytesBefore12ignoreCase(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                              b9: Byte, b10: Byte, b11: Byte, b12: Byte, from: Int, to: Int): Int = // format: on
+        if (readableBytes >= 12) {
+            var offset: Int       = from
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            var a7: Byte          = underlying.get(offset + 5)
+            var a8: Byte          = underlying.get(offset + 6)
+            var a9: Byte          = underlying.get(offset + 7)
+            var a10: Byte         = underlying.get(offset + 8)
+            var a11: Byte         = underlying.get(offset + 9)
+            var a12: Byte         = underlying.get(offset + 10)
+            while (continue && offset < to - 11) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11; a11 = a12
+                a12 = underlying.get(offset + 11)
+                if (
+                  ignoreCaseEqual(a1, b1) && ignoreCaseEqual(a2, b2) && ignoreCaseEqual(a3, b3) &&
+                  ignoreCaseEqual(a4, b4) && ignoreCaseEqual(a5, b5) && ignoreCaseEqual(a6, b6) &&
+                  ignoreCaseEqual(a7, b7) && ignoreCaseEqual(a8, b8) && ignoreCaseEqual(a9, b9) &&
+                  ignoreCaseEqual(a10, b10) && ignoreCaseEqual(a11, b11) && ignoreCaseEqual(a12, b12)
+                ) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - from
+        } else -1
+
+    // format: off
+    private def bytesBefore13(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, from: Int, to: Int): Int =
+    // format: on
+        if (readableBytes >= 13) {
+            var offset: Int       = from
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            var a7: Byte          = underlying.get(offset + 5)
+            var a8: Byte          = underlying.get(offset + 6)
+            var a9: Byte          = underlying.get(offset + 7)
+            var a10: Byte         = underlying.get(offset + 8)
+            var a11: Byte         = underlying.get(offset + 9)
+            var a12: Byte         = underlying.get(offset + 10)
+            var a13: Byte         = underlying.get(offset + 11)
+            while (continue && offset < to - 12) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11
+                a11 = a12; a12 = a13
+                a13 = underlying.get(offset + 12)
+                if (
+                  a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
+                  a9 == b9 && a10 == b10 && a11 == b11 && a12 == b12 && a13 == b13
+                ) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - from
+        } else -1
+
+    // format: off
+    private def bytesBefore13ignoreCase(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                              b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, from: Int, to: Int): Int =
+    // format: on
+        if (readableBytes >= 13) {
+            var offset: Int       = from
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            var a7: Byte          = underlying.get(offset + 5)
+            var a8: Byte          = underlying.get(offset + 6)
+            var a9: Byte          = underlying.get(offset + 7)
+            var a10: Byte         = underlying.get(offset + 8)
+            var a11: Byte         = underlying.get(offset + 9)
+            var a12: Byte         = underlying.get(offset + 10)
+            var a13: Byte         = underlying.get(offset + 11)
+            while (continue && offset < to - 12) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11
+                a11 = a12; a12 = a13
+                a13 = underlying.get(offset + 12)
+                if (
+                  ignoreCaseEqual(a1, b1) && ignoreCaseEqual(a2, b2) && ignoreCaseEqual(a3, b3) &&
+                  ignoreCaseEqual(a4, b4) && ignoreCaseEqual(a5, b5) && ignoreCaseEqual(a6, b6) &&
+                  ignoreCaseEqual(a7, b7) && ignoreCaseEqual(a8, b8) && ignoreCaseEqual(a9, b9) &&
+                  ignoreCaseEqual(a10, b10) && ignoreCaseEqual(a11, b11) && ignoreCaseEqual(a12, b12) &&
+                  ignoreCaseEqual(a13, b13)
+                ) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - from
+        } else -1
+        
+    // format: off
+    private def bytesBefore14(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte,
+                              from: Int, to: Int): Int =
     // format: on
         if (readableBytes >= 14) {
-            var offset: Int       = ridx
+            var offset: Int       = from
             var continue: Boolean = true
             var a1: Byte          = 0
             var a2: Byte          = underlying.get(offset)
@@ -550,20 +823,9 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
             var a12: Byte         = underlying.get(offset + 10)
             var a13: Byte         = underlying.get(offset + 11)
             var a14: Byte         = underlying.get(offset + 12)
-            while (continue && offset < widx - 13) {
-                a1 = a2
-                a2 = a3
-                a3 = a4
-                a4 = a5
-                a5 = a6
-                a6 = a7
-                a7 = a8
-                a8 = a9
-                a9 = a10
-                a10 = a11
-                a11 = a12
-                a12 = a13
-                a13 = a14
+            while (continue && offset < to - 13) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11
+                a11 = a12; a12 = a13; a13 = a14
                 a14 = underlying.get(offset + 13)
                 if (
                   a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
@@ -572,15 +834,55 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
                     continue = false
                 } else offset += 1
             }
-            if (continue) -1 else offset - ridx
+            if (continue) -1 else offset - from
         } else -1
 
     // format: off
-    override def bytesBefore15(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
-                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte): Int =
+    private def bytesBefore14ignoreCase(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                              b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte,
+                              from: Int, to: Int): Int =
+    // format: on
+        if (readableBytes >= 14) {
+            var offset: Int       = from
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            var a7: Byte          = underlying.get(offset + 5)
+            var a8: Byte          = underlying.get(offset + 6)
+            var a9: Byte          = underlying.get(offset + 7)
+            var a10: Byte         = underlying.get(offset + 8)
+            var a11: Byte         = underlying.get(offset + 9)
+            var a12: Byte         = underlying.get(offset + 10)
+            var a13: Byte         = underlying.get(offset + 11)
+            var a14: Byte         = underlying.get(offset + 12)
+            while (continue && offset < to - 13) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11
+                a11 = a12; a12 = a13; a13 = a14
+                a14 = underlying.get(offset + 13)
+                if (
+                  ignoreCaseEqual(a1, b1) && ignoreCaseEqual(a2, b2) && ignoreCaseEqual(a3, b3) &&
+                  ignoreCaseEqual(a4, b4) && ignoreCaseEqual(a5, b5) && ignoreCaseEqual(a6, b6) &&
+                  ignoreCaseEqual(a7, b7) && ignoreCaseEqual(a8, b8) && ignoreCaseEqual(a9, b9) &&
+                  ignoreCaseEqual(a10, b10) && ignoreCaseEqual(a11, b11) && ignoreCaseEqual(a12, b12) &&
+                  ignoreCaseEqual(a13, b13) && ignoreCaseEqual(a14, b14)
+                ) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - from
+        } else -1
+
+    // format: off
+    private def bytesBefore15(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte,
+                              from: Int, to: Int): Int =
     // format: on
         if (readableBytes >= 15) {
-            var offset: Int       = ridx
+            var offset: Int       = from
             var continue: Boolean = true
             var a1: Byte          = 0
             var a2: Byte          = underlying.get(offset)
@@ -597,21 +899,9 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
             var a13: Byte         = underlying.get(offset + 11)
             var a14: Byte         = underlying.get(offset + 12)
             var a15: Byte         = underlying.get(offset + 13)
-            while (continue && offset < widx - 14) {
-                a1 = a2
-                a2 = a3
-                a3 = a4
-                a4 = a5
-                a5 = a6
-                a6 = a7
-                a7 = a8
-                a8 = a9
-                a9 = a10
-                a10 = a11
-                a11 = a12
-                a12 = a13
-                a13 = a14
-                a14 = a15
+            while (continue && offset < to - 14) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11
+                a11 = a12; a12 = a13; a13 = a14; a14 = a15
                 a15 = underlying.get(offset + 14)
                 if (
                   a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
@@ -620,15 +910,56 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
                     continue = false
                 } else offset += 1
             }
-            if (continue) -1 else offset - ridx
+            if (continue) -1 else offset - from
         } else -1
 
     // format: off
-    override def bytesBefore16(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
-                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte, b16: Byte): Int =
+    private def bytesBefore15ignoreCase(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                              b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte,
+                              from: Int, to: Int): Int =
+    // format: on
+        if (readableBytes >= 15) {
+            var offset: Int       = from
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            var a7: Byte          = underlying.get(offset + 5)
+            var a8: Byte          = underlying.get(offset + 6)
+            var a9: Byte          = underlying.get(offset + 7)
+            var a10: Byte         = underlying.get(offset + 8)
+            var a11: Byte         = underlying.get(offset + 9)
+            var a12: Byte         = underlying.get(offset + 10)
+            var a13: Byte         = underlying.get(offset + 11)
+            var a14: Byte         = underlying.get(offset + 12)
+            var a15: Byte         = underlying.get(offset + 13)
+            while (continue && offset < to - 14) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11;
+                a11 = a12; a12 = a13; a13 = a14; a14 = a15
+                a15 = underlying.get(offset + 14)
+                if (
+                  ignoreCaseEqual(a1, b1) && ignoreCaseEqual(a2, b2) && ignoreCaseEqual(a3, b3) &&
+                  ignoreCaseEqual(a4, b4) && ignoreCaseEqual(a5, b5) && ignoreCaseEqual(a6, b6) &&
+                  ignoreCaseEqual(a7, b7) && ignoreCaseEqual(a8, b8) && ignoreCaseEqual(a9, b9) &&
+                  ignoreCaseEqual(a10, b10) && ignoreCaseEqual(a11, b11) && ignoreCaseEqual(a12, b12) &&
+                  ignoreCaseEqual(a13, b13) && ignoreCaseEqual(a14, b14) && ignoreCaseEqual(a15, b15)
+                ) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - from
+        } else -1
+
+    // format: off
+    private def bytesBefore16(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                               b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte, b16: Byte,
+                              from: Int, to: Int): Int =
     // format: on
         if (readableBytes >= 16) {
-            var offset: Int       = ridx
+            var offset: Int       = from
             var continue: Boolean = true
             var a1: Byte          = 0
             var a2: Byte          = underlying.get(offset)
@@ -646,22 +977,9 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
             var a14: Byte         = underlying.get(offset + 12)
             var a15: Byte         = underlying.get(offset + 13)
             var a16: Byte         = underlying.get(offset + 14)
-            while (continue && offset < widx - 15) {
-                a1 = a2
-                a2 = a3
-                a3 = a4
-                a4 = a5
-                a5 = a6
-                a6 = a7
-                a7 = a8
-                a8 = a9
-                a9 = a10
-                a10 = a11
-                a11 = a12
-                a12 = a13
-                a13 = a14
-                a14 = a15
-                a15 = a16
+            while (continue && offset < to - 15) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11
+                a11 = a12; a12 = a13; a13 = a14; a14 = a15; a15 = a16
                 a16 = underlying.get(offset + 15)
                 if (
                   a1 == b1 && a2 == b2 && a3 == b3 && a4 == b4 && a5 == b5 && a6 == b6 && a7 == b7 && a8 == b8 &&
@@ -670,64 +988,162 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
                     continue = false
                 } else offset += 1
             }
-            if (continue) -1 else offset - ridx
+            if (continue) -1 else offset - from
         } else -1
 
-    override def bytesBefore(needle: Array[Byte]): Int = if (readableBytes >= needle.length) {
-        needle.length match
-            case 5 => bytesBefore5(needle(0), needle(1), needle(2), needle(3), needle(4))
-            case 6 => bytesBefore6(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5))
-            case 7 => bytesBefore7(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6))
-            // format: off
-            case 8 => bytesBefore8(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7))
-            case 9 => bytesBefore9(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
-                needle(8))
-            case 10 => bytesBefore10(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
-                needle(8), needle(9))
-            case 11 => bytesBefore11(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
-                needle(8), needle(9), needle(10))
-            case 12 => bytesBefore12(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
-                needle(8), needle(9), needle(10), needle(11))
-            case 13 => bytesBefore13(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
-                needle(8), needle(9), needle(10), needle(11), needle(12))
-            case 14 => bytesBefore14(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
-                needle(8), needle(9), needle(10), needle(11), needle(12), needle(13))
-            case 15 => bytesBefore15(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
-                needle(8), needle(9), needle(10), needle(11), needle(12), needle(13), needle(14))
-            case 16 => bytesBefore16(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
-                needle(8), needle(9), needle(10), needle(11), needle(12), needle(13), needle(14), needle(15))
-            // format: on
-            case 1 => bytesBefore(needle(0))
-            case 2 => bytesBefore(needle(0), needle(1))
-            case 3 => bytesBefore(needle(0), needle(1), needle(2))
-            case 4 => bytesBefore(needle(0), needle(1), needle(2), needle(3))
-            case _ =>
-                val length            = needle.length
-                val first             = needle(0)
-                val second            = needle(1)
-                val copy              = new Array[Byte](length)
-                var offset: Int       = ridx
-                var continue: Boolean = true
-                while (continue && offset < widx - length) {
-                    if (underlying.get(offset) != first || underlying.get(offset + 1) != second) offset += 1
-                    else {
-                        this.copyInto(offset, copy, 0, length)
-                        if (copy sameElements needle) continue = false else offset += 1
-                    }
+    // format: off
+    private def bytesBefore16ignoreCase(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+                              b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte, b16: Byte,
+                              from: Int, to: Int): Int =
+    // format: on
+        if (readableBytes >= 16) {
+            var offset: Int       = from
+            var continue: Boolean = true
+            var a1: Byte          = 0
+            var a2: Byte          = underlying.get(offset)
+            var a3: Byte          = underlying.get(offset + 1)
+            var a4: Byte          = underlying.get(offset + 2)
+            var a5: Byte          = underlying.get(offset + 3)
+            var a6: Byte          = underlying.get(offset + 4)
+            var a7: Byte          = underlying.get(offset + 5)
+            var a8: Byte          = underlying.get(offset + 6)
+            var a9: Byte          = underlying.get(offset + 7)
+            var a10: Byte         = underlying.get(offset + 8)
+            var a11: Byte         = underlying.get(offset + 9)
+            var a12: Byte         = underlying.get(offset + 10)
+            var a13: Byte         = underlying.get(offset + 11)
+            var a14: Byte         = underlying.get(offset + 12)
+            var a15: Byte         = underlying.get(offset + 13)
+            var a16: Byte         = underlying.get(offset + 14)
+            while (continue && offset < to - 15) {
+                a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11
+                a11 = a12; a12 = a13; a13 = a14; a14 = a15; a15 = a16
+                a16 = underlying.get(offset + 15)
+                if (
+                  ignoreCaseEqual(a1, b1) && ignoreCaseEqual(a2, b2) && ignoreCaseEqual(a3, b3) &&
+                  ignoreCaseEqual(a4, b4) && ignoreCaseEqual(a5, b5) && ignoreCaseEqual(a6, b6) &&
+                  ignoreCaseEqual(a7, b7) && ignoreCaseEqual(a8, b8) && ignoreCaseEqual(a9, b9) &&
+                  ignoreCaseEqual(a10, b10) && ignoreCaseEqual(a11, b11) && ignoreCaseEqual(a12, b12) &&
+                  ignoreCaseEqual(a13, b13) && ignoreCaseEqual(a14, b14) && ignoreCaseEqual(a15, b15) &&
+                  ignoreCaseEqual(a16, b16)
+                ) {
+                    continue = false
+                } else offset += 1
+            }
+            if (continue) -1 else offset - from
+        } else -1
+
+    override def bytesBefore(needle: Array[Byte]): Int = bytesBefore(needle, ridx, widx)
+
+    private def bytesBeforeBytes(needle: Array[Byte], from: Int, to: Int): Int = {
+        val length            = needle.length
+        val first             = needle(0)
+        val second            = needle(1)
+        var offset: Int       = from
+        var continue: Boolean = true
+        while (continue && offset < to - length) {
+            if (underlying.get(offset) != first || underlying.get(offset + 1) != second) offset += 1
+            else {
+                var i    = 2
+                var same = true
+                while (same && i < needle.length) {
+                    val b = underlying.get(offset + i)
+                    val a = needle(i)
+                    same = same && a == b
+                    i += 1
                 }
-                if (continue) -1 else offset - ridx
-
-    } else -1
-
-    override def bytesBefore(needle: Array[Byte], from: Int, to: Int, ignoreCase: Boolean): Int = {
-        if (from < ridx)
-            throw new IndexOutOfBoundsException(s"from is less than readerOffset: form = $from, readerOffset = $ridx")
-
-        if (to > widx)
-            throw new IndexOutOfBoundsException(s"to is beyond the end of the buffer: to = $to, writerOffset = $widx")
-
-        ???
+                if (same) continue = false else offset += 1
+            }
+        }
+        if (continue) -1 else offset - from
     }
+
+    private def bytesBeforeBytesIgnoreCase(needle: Array[Byte], from: Int, to: Int): Int = {
+        val length            = needle.length
+        val first             = needle(0)
+        val second            = needle(1)
+        var offset: Int       = from
+        var continue: Boolean = true
+        while (continue && offset < to - length) {
+            if (underlying.get(offset) != first || underlying.get(offset + 1) != second) offset += 1
+            else {
+                var i    = 2
+                var same = true
+                while (same && i < needle.length) {
+                    val b = underlying.get(offset + i)
+                    val a = needle(i)
+                    same = same && ignoreCaseEqual(a, b)
+                    i += 1
+                }
+                if (same) continue = false else offset += 1
+            }
+        }
+        if (continue) -1 else offset - from
+    }
+
+    override def bytesBefore(needle: Array[Byte], from: Int, to: Int, ignoreCase: Boolean): Int =
+        if (to - from >= needle.length) {
+            checkFromTo(from, to)
+
+            if (ignoreCase) {
+                needle.length match
+                    case 1 => bytesBefore1ignoreCase(needle(0), from, to)
+                    case 2 => bytesBefore2ignoreCase(needle(0), needle(1), from, to)
+                    case 3 => bytesBefore3ignoreCase(needle(0), needle(1), needle(2), from, to)
+                    case 4 => bytesBefore4ignoreCase(needle(0), needle(1), needle(2), needle(3), from, to)
+                    case 5 => bytesBefore5ignoreCase(needle(0), needle(1), needle(2), needle(3), needle(4), from, to)
+                    // format: off
+                    case 6 => bytesBefore6ignoreCase(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), from, to)
+                    case 7 => bytesBefore7ignoreCase(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), from, to)
+                    case 8 => bytesBefore8ignoreCase(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7), from, to)
+                    case 9 => bytesBefore9ignoreCase(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7), needle(8), from, to)
+                    case 10 => bytesBefore10ignoreCase(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7), needle(8), needle(9), from, to)
+                    case 11 => bytesBefore11ignoreCase(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                        needle(8), needle(9), needle(10), from, to)
+                    case 12 => bytesBefore12ignoreCase(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                        needle(8), needle(9), needle(10), needle(11), from, to)
+                    case 13 => bytesBefore13ignoreCase(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                        needle(8), needle(9), needle(10), needle(11), needle(12),from, to)
+                    case 14 => bytesBefore14ignoreCase(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                        needle(8), needle(9), needle(10), needle(11), needle(12), needle(13), from, to)
+                    case 15 => bytesBefore15ignoreCase(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                        needle(8), needle(9), needle(10), needle(11), needle(12), needle(13), needle(14), from, to)
+                    case 16 => bytesBefore16ignoreCase(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                        needle(8), needle(9), needle(10), needle(11), needle(12), needle(13), needle(14), needle(15), from, to)
+                    // format: on
+                    case _ => bytesBeforeBytesIgnoreCase(needle, from, to)
+            } else {
+                needle.length match
+                    case 1 => bytesBefore1(needle(0), from, to)
+                    case 2 => bytesBefore2(needle(0), needle(1), from, to)
+                    case 3 => bytesBefore3(needle(0), needle(1), needle(2), from, to)
+                    case 4 => bytesBefore4(needle(0), needle(1), needle(2), needle(3), from, to)
+                    case 5 => bytesBefore5(needle(0), needle(1), needle(2), needle(3), needle(4), from, to)
+                    // format: off
+                    case 6 => bytesBefore6(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), from, to)
+                    case 7 => bytesBefore7(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), from, to)
+
+                    case 8 => bytesBefore8(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7), from, to)
+                    case 9 => bytesBefore9(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                        needle(8), from, to)
+                    case 10 => bytesBefore10(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                        needle(8), needle(9), from, to)
+                    case 11 => bytesBefore11(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                        needle(8), needle(9), needle(10), from, to)
+                    case 12 => bytesBefore12(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                        needle(8), needle(9), needle(10), needle(11), from, to)
+                    case 13 => bytesBefore13(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                        needle(8), needle(9), needle(10), needle(11), needle(12), from, to)
+                    case 14 => bytesBefore14(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                        needle(8), needle(9), needle(10), needle(11), needle(12), needle(13), from, to)
+                    case 15 => bytesBefore15(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                        needle(8), needle(9), needle(10), needle(11), needle(12), needle(13), needle(14), from, to)
+                    case 16 => bytesBefore16(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
+                        needle(8), needle(9), needle(10), needle(11), needle(12), needle(13), needle(14), needle(15), from, to)
+                    // format: on
+                    case _ => bytesBeforeBytes(needle, from, to)
+            }
+        } else -1
 
     override def openCursor(fromOffset: Int, length: Int): ByteCursor = {
         if (closed) throw new BufferClosedException()
@@ -1203,12 +1619,12 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         b >= lower && b <= upper
     }
 
-    override def skipIfNext(byte: Byte): Boolean = if (underlying.get(ridx) == byte) {
+    override def skipIfNextIs(byte: Byte): Boolean = if (underlying.get(ridx) == byte) {
         ridx += 1
         true
     } else false
 
-    override def skipIfNexts(bytes: Array[Byte]): Boolean = {
+    override def skipIfNextAre(bytes: Array[Byte]): Boolean = {
         var skip = true
         var i    = 0
         while (skip && i < bytes.length) {
@@ -1247,5 +1663,12 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         new IndexOutOfBoundsException(
           s"Access at index ${index} of size ${size} is out of bounds: [read 0 to ${widx}, write 0 to ${capacity}]."
         )
+
+    inline private def checkFromTo(from: Int, to: Int): Unit = {
+        if (from < ridx)
+            throw new IndexOutOfBoundsException(s"from is less than readerOffset: form = $from, readerOffset = $ridx")
+        if (to > widx)
+            throw new IndexOutOfBoundsException(s"to is beyond the end of the buffer: to = $to, writerOffset = $widx")
+    }
 
 }

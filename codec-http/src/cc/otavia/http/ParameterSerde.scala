@@ -52,8 +52,8 @@ object ParameterSerde {
             val len    = in.bytesBeforeIn(PARAM_SPLITS)
             val encode = in.readCharSequence(len, StandardCharsets.US_ASCII).toString
             val short  = URLDecoder.decode(encode, RouterMatcher.URL_CHARSET).toShort
-            in.skipIfNext('&')
-            in.skipIfNext(' ')
+            in.skipIfNextIs('&')
+            in.skipIfNextIs(' ')
             short
         }
 
@@ -68,8 +68,8 @@ object ParameterSerde {
             val len    = in.bytesBeforeIn(PARAM_SPLITS)
             val encode = in.readCharSequence(len, StandardCharsets.US_ASCII).toString
             val int    = URLDecoder.decode(encode, RouterMatcher.URL_CHARSET).toInt
-            in.skipIfNext('&')
-            in.skipIfNext(' ')
+            in.skipIfNextIs('&')
+            in.skipIfNextIs(' ')
             int
         }
 

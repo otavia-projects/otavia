@@ -34,9 +34,9 @@ object OKSerde extends AbstractResponseSerde[OK] {
     }
 
     final override def deserialize(in: Buffer): OK = {
-        if (in.skipIfNexts(OK_BYTES)) {
+        if (in.skipIfNextAre(OK_BYTES)) {
             OK()
-        } else if (in.skipIfNext('-')) {
+        } else if (in.skipIfNextIs('-')) {
             val errorMsg = deserializeSimpleError(in)
             throw new CommandException(errorMsg)
         } else throw new RedisProtocolException(s"except byte '-' or '+', but get '${in.getByte(in.readerOffset)}'")

@@ -39,4 +39,10 @@ object BytesUtil {
     final def bytes8Long(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Long =
         b0.toLong << 56 | b1.toLong << 48 | b2.toLong << 40 | b3.toLong << 32 | b4.toLong << 24 | b5.toLong << 16 | b6.toLong << 8 | b7
 
+    final def ignoreCaseEqual(b: Int, a: Int): Boolean = if (a == b) true
+    else {
+        val min = Math.min(a, b)
+        min > 64 && min < 91 && min + 32 == Math.max(a, b)
+    }
+
 }

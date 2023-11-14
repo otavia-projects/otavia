@@ -332,9 +332,46 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         if (continue) -1 else cursor - ridx
     }
 
-    override def bytesBeforeIn(set: Array[Byte]): Int = ???
+    override def bytesBeforeIn(set: Array[Byte]): Int = {
+        var cursor: Int       = ridx
+        var continue: Boolean = true
+        var idx               = 0
+        var idxStart          = ridx
+        while (continue && idx < size) {
+            val buffer     = apply(idx)
+            val len        = buffer.readableBytes
+            val byteBuffer = buffer.underlying
+            while (continue && cursor < idxStart + len)
+                if (set.contains(byteBuffer.get(buffer.readerOffset + cursor - idxStart))) continue = false
+                else cursor += 1
+            if (continue) { // buffer not find
+                idxStart += len
+                idx += 1
+            }
+        }
+        if (continue) -1 else cursor - ridx
+    }
 
-    override def bytesBeforeInRange(lower: Byte, upper: Byte): Int = ???
+    override def bytesBeforeInRange(lower: Byte, upper: Byte): Int = {
+        var cursor: Int       = ridx
+        var continue: Boolean = true
+        var idx               = 0
+        var idxStart          = ridx
+        while (continue && idx < size) {
+            val buffer     = apply(idx)
+            val len        = buffer.readableBytes
+            val byteBuffer = buffer.underlying
+            while (continue && cursor < idxStart + len) {
+                val b = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                if (b >= lower && b <= upper) continue = false else cursor += 1
+            }
+            if (continue) { // buffer not find
+                idxStart += len
+                idx += 1
+            }
+        }
+        if (continue) -1 else cursor - ridx
+    }
 
     override def bytesBefore(needle1: Byte, needle2: Byte): Int = if (readableBytes >= 2) {
         var cursor: Int       = ridx + 1
@@ -424,7 +461,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             if (continue) -1 else cursor - ridx - 3
         } else -1
 
-    override def bytesBefore5(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte): Int =
+    private def bytesBefore5(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte): Int =
         if (readableBytes >= 5) {
             var cursor: Int       = ridx
             var continue: Boolean = true
@@ -459,7 +496,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             if (continue) -1 else cursor - ridx - 4
         } else -1
 
-    override def bytesBefore6(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte): Int =
+    private def bytesBefore6(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte): Int =
         if (readableBytes >= 6) {
             var cursor: Int       = ridx
             var continue: Boolean = true
@@ -496,7 +533,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             if (continue) -1 else cursor - ridx - 5
         } else -1
 
-    override def bytesBefore7(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Int =
+    private def bytesBefore7(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Int =
         if (readableBytes > 6) {
             var cursor: Int       = ridx
             var continue: Boolean = true
@@ -537,7 +574,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             if (continue) -1 else cursor - ridx - 6
         } else -1
 
-    override def bytesBefore8(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte): Int =
+    private def bytesBefore8(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte): Int =
         if (readableBytes > 7) {
             var cursor: Int       = ridx
             var continue: Boolean = true
@@ -581,7 +618,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         } else -1
 
     // format: off
-    override def bytesBefore9(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+    private def bytesBefore9(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
                               b9: Byte): Int =
     // format: on
         if (readableBytes > 8) {
@@ -629,7 +666,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         } else -1
 
     // format: off
-    override def bytesBefore10(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+    private def bytesBefore10(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
                                b9: Byte, b10: Byte): Int =
     // format: on
         if (readableBytes > 9) {
@@ -679,7 +716,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         } else -1
 
     // format: off
-    override def bytesBefore11(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+    private def bytesBefore11(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
                                b9: Byte, b10: Byte, b11: Byte): Int =
     // format: on
         if (readableBytes > 10) {
@@ -731,7 +768,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         } else -1
 
     // format: off
-    override def bytesBefore12(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+    private def bytesBefore12(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
                                b9: Byte, b10: Byte, b11: Byte, b12: Byte): Int =
     // format: on
         if (readableBytes > 11) {
@@ -785,7 +822,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         } else -1
 
     // format: off
-    override def bytesBefore13(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+    private def bytesBefore13(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
                                b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte): Int =
     // format: on
         if (readableBytes > 12) {
@@ -842,7 +879,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         } else -1
 
     // format: off
-    override def bytesBefore14(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+    private def bytesBefore14(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
                                b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte): Int =
     // format: on
         if (readableBytes > 13) {
@@ -901,7 +938,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         } else -1
 
     // format: off
-    override def bytesBefore15(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+    private def bytesBefore15(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
                                b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte): Int =
     // format: on
         if (readableBytes > 14) {
@@ -962,7 +999,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         } else -1
 
     // format: off
-    override def bytesBefore16(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
+    private def bytesBefore16(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte, b8: Byte,
                                b9: Byte, b10: Byte, b11: Byte, b12: Byte, b13: Byte, b14: Byte, b15: Byte, b16: Byte): Int =
     // format: on
         if (readableBytes > 15) {
@@ -1082,7 +1119,15 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                 if (continue) -1 else cursor - ridx - length
     } else -1
 
-    override def bytesBefore(needle: Array[Byte], from: Int, to: Int, ignoreCase: Boolean): Int = ???
+    override def bytesBefore(needle: Array[Byte], from: Int, to: Int, ignoreCase: Boolean): Int = {
+        if (from < ridx)
+            throw new IndexOutOfBoundsException(s"from is less than readerOffset: form = $from, readerOffset = $ridx")
+
+        if (to > widx)
+            throw new IndexOutOfBoundsException(s"to is beyond the end of the buffer: to = $to, writerOffset = $widx")
+
+        ???
+    }
 
     override def openCursor(fromOffset: Int, length: Int): ByteCursor = {
         if (closed) throw new BufferClosedException()
@@ -2469,14 +2514,14 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         b >= lower && b <= upper
     }
 
-    override def skipIfNext(byte: Byte): Boolean = if (nonEmpty) {
-        val res = head.skipIfNext(byte)
+    override def skipIfNextIs(byte: Byte): Boolean = if (nonEmpty) {
+        val res = head.skipIfNextIs(byte)
         if (res) ridx += 1
         res
     } else false
 
-    override def skipIfNexts(bytes: Array[Byte]): Boolean = if (head.readableBytes >= bytes.length) {
-        val res = head.skipIfNexts(bytes)
+    override def skipIfNextAre(bytes: Array[Byte]): Boolean = if (head.readableBytes >= bytes.length) {
+        val res = head.skipIfNextAre(bytes)
         if (res) ridx += bytes.length
         res
     } else if (readableBytes >= bytes.length) {

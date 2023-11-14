@@ -116,27 +116,27 @@ class RouterMatcher(routers: Seq[Router]) {
     def choice(buffer: Buffer): Router = this.choice(buffer, HttpUtils.parseMethod(buffer))
 
     def choice(buffer: Buffer, method: HttpMethod): Router = {
-        while (buffer.skipIfNext(HttpConstants.SP)) {}
+        while (buffer.skipIfNextIs(HttpConstants.SP)) {}
 
         // skip schema
-        buffer.skipIfNexts(HttpConstants.HTTP_SCHEMA)
-        buffer.skipIfNexts(HttpConstants.HTTPS_SCHEMA)
+        buffer.skipIfNextAre(HttpConstants.HTTP_SCHEMA)
+        buffer.skipIfNextAre(HttpConstants.HTTPS_SCHEMA)
 
-        if (!buffer.skipIfNext('/')) { // skip host
+        if (!buffer.skipIfNextIs('/')) { // skip host
             val len = buffer.bytesBefore('/'.toByte) + 1
             buffer.skipWritableBytes(len)
         }
 
         var current = choiceTree(method)
 
-        if (buffer.skipIfNext(HttpConstants.SP)) {
+        if (buffer.skipIfNextIs(HttpConstants.SP)) {
             if (current.router != null) current.router else notFoundRouter
         } else {
             while (current != null && current.children != null) {
                 current.children.find { node =>
                     if (node.isVar) true
                     else {
-                        if (buffer.skipIfNexts(node.text)) true else false
+                        if (buffer.skipIfNextAre(node.text)) true else false
                     }
                 } match
                     case Some(node) => current = node
