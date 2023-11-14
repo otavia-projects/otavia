@@ -44,6 +44,7 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
     private val refSet         = mutable.HashSet.empty[Reference[?]]
 
     @volatile private var status: Int = ST_STARTING
+    private val lock: AnyRef          = new Object()
 
     private val direct = new DirectPooledPageAllocator(ActorSystem.PAGE_SIZE)
     private val heap   = new HeapPooledPageAllocator(ActorSystem.PAGE_SIZE)
@@ -108,23 +109,23 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
     }
 
     private[core] def notifyThread(): Unit = {
-        if (status == ST_WAITING) this.synchronized(this.notify())
+        if (status == ST_WAITING) lock.synchronized(lock.notify())
     }
 
     private[core] def putEvent(event: Event): Unit = {
         eventQueue.offer(event)
-        if (status == ST_WAITING) this.synchronized(this.notify())
+        if (status == ST_WAITING) lock.synchronized(lock.notify())
     }
 
     private[core] def putEvents(events: Seq[Event]): Unit = {
         events.foreach(event => eventQueue.offer(event))
-        if (status == ST_WAITING) this.synchronized(this.notify())
+        if (status == ST_WAITING) lock.synchronized(lock.notify())
     }
 
     override def run(): Unit = {
         status = ST_RUNNING
 
-        var spinStart: Long  = System.nanoTime()
+        var spinStart: Long  = System.currentTimeMillis()
         var emptyTimes: Long = 0
         var gc               = false
         while (true) {
@@ -141,17 +142,16 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
                 gc = false
             } else {
                 emptyTimes += 1
-                val currentNano = System.nanoTime()
-                if (emptyTimes == 100) spinStart = currentNano
-
-                if (emptyTimes >= 2000 && currentNano - spinStart > 200 * 1000) {
-                    if (manager.trySteal()) { emptyTimes = 0 }
-                }
-
-                if (emptyTimes > 6000 && currentNano - spinStart > 600 * 1000) {
+                if (emptyTimes == 1) spinStart = System.currentTimeMillis()
+                else if (emptyTimes < 20) Thread.`yield`()
+                else if (emptyTimes < 25) {
+                    if (manager.trySteal()) emptyTimes -= 1
+                } else if (emptyTimes < 50) {
+                    this.suspendThread(5)
+                } else {
                     this.suspendThread()
-                    status = ST_RUNNING
-                    if (currentNano - spinStart > 5000 * 1000 * 1000 && !gc) {
+                    if (emptyTimes % 100 == 0) if (manager.trySteal()) emptyTimes = 20
+                    if (!gc && System.currentTimeMillis() - spinStart > 2000) {
                         system.gc()
                         gc = true
                     }
@@ -161,9 +161,10 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
     }
 
     private def suspendThread(millis: Long = 50): Unit = {
-        this.synchronized {
+        lock.synchronized {
             status = ST_WAITING
-            this.wait(millis)
+            lock.wait(millis)
+            status = ST_RUNNING
         }
     }
 
