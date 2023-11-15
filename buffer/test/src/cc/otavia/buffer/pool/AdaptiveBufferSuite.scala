@@ -26,6 +26,8 @@ class AdaptiveBufferSuite extends AnyFunSuite {
     val allocator: PooledPageAllocator = new HeapPooledPageAllocator()
     val adaptiveBuffer: AdaptiveBuffer = AdaptiveBuffer(allocator)
 
+    def bufferSize: Int = allocator.fixedCapacity
+
     test("splitBefore one buffer") {
         val adaptive = AdaptiveBuffer(allocator)
 
@@ -101,46 +103,69 @@ class AdaptiveBufferSuite extends AnyFunSuite {
 
     test("bytesBefore 1") {
         val adaptive = AdaptiveBuffer(allocator)
-
         for (idx <- 0 until 1024) adaptive.writeByte(0)
-
         assert(adaptive.writerOffset == 1024)
-
         adaptive.writeByte('H')
-
         assert(adaptive.writerOffset == 1025)
-
         assert(adaptive.bytesBefore('H'.toByte) == 1024)
 
         for (idx <- 1025 until allocator.fixedCapacity - 1) adaptive.writeByte(0)
-
         adaptive.writeByte('T')
-
         assert(adaptive.bytesBefore('T'.toByte) == allocator.fixedCapacity - 1)
 
         for (idx <- 0 until 1024) adaptive.writeByte(0)
-
         adaptive.writeByte('P')
-
         assert(adaptive.bytesBefore('P'.toByte) == allocator.fixedCapacity + 1024)
 
         for (idx <- 1025 until allocator.fixedCapacity) adaptive.writeByte(0)
-
         adaptive.writeByte('S')
-
         assert(adaptive.bytesBefore('S'.toByte) == allocator.fixedCapacity * 2)
-
         adaptive.readerOffset(allocator.fixedCapacity + 56)
-
         assert(adaptive.bytesBefore('S'.toByte) == allocator.fixedCapacity - 56)
 
         val buffer = allocator.allocate()
-
         buffer.writeByte('A')
-
         adaptive.extend(buffer)
-
         assert(adaptive.bytesBefore('A'.toByte) == allocator.fixedCapacity - 56 + 1)
+    }
+
+    test("bytesBefore array with length 1") {
+        val adaptive = AdaptiveBuffer(allocator)
+        for (idx <- 0 until 1024) adaptive.writeByte(0)
+        assert(adaptive.writerOffset == 1024)
+        adaptive.writeByte('H') // at 1024
+        assert(adaptive.writerOffset == 1025)
+        assert(adaptive.bytesBefore(Array[Byte]('H'), 0, 1025) == 1024)
+        assert(adaptive.bytesBefore(Array[Byte]('H'), 0, 1024) == -1)
+        assert(adaptive.bytesBefore(Array[Byte]('h'), 0, 1025) == -1)
+        assert(adaptive.bytesBefore(Array[Byte]('h'), 0, 1025, true) == 1024)
+
+        assert(adaptive.bytesBefore(Array[Byte]('H'), 10, 1025) == 1014)
+        assert(adaptive.bytesBefore(Array[Byte]('h'), 10, 1025) == -1)
+        assert(adaptive.bytesBefore(Array[Byte]('h'), 10, 1025, true) == 1014)
+
+        for (idx <- 1025 until allocator.fixedCapacity - 1) adaptive.writeByte(0)
+        adaptive.writeByte('T') // at allocator.fixedCapacity
+        assert(adaptive.bytesBefore('T'.toByte) == allocator.fixedCapacity - 1)
+        assert(adaptive.bytesBefore(Array[Byte]('T'), 0, allocator.fixedCapacity) == allocator.fixedCapacity - 1)
+
+        for (idx <- 0 until 1024) adaptive.writeByte(0)
+        adaptive.writeByte('P') // at allocator.fixedCapacity + 1024
+        assert(adaptive.bytesBefore('P'.toByte) == allocator.fixedCapacity + 1024)
+        assert(adaptive.bytesBefore(Array[Byte]('P'), 0, adaptive.writerOffset) == allocator.fixedCapacity + 1024)
+        assert(adaptive.bytesBefore(Array[Byte]('P'), allocator.fixedCapacity, adaptive.writerOffset) == 1024)
+
+        assert(adaptive.bytesBefore(Array[Byte]('T'), 0, allocator.fixedCapacity) == allocator.fixedCapacity - 1)
+
+        for (idx <- 1025 until allocator.fixedCapacity - 1) adaptive.writeByte(0)
+        adaptive.writeByte('S') // at 2 * allocator.fixedCapacity - 1
+        adaptive.writeByte('Y') // at 2 * allocator.fixedCapacity
+
+        assert(adaptive.bytesBefore(Array[Byte]('S'), 0, adaptive.writerOffset) == 2 * allocator.fixedCapacity - 1)
+        assert(adaptive.bytesBefore(Array[Byte]('S'), bufferSize, adaptive.writerOffset) == allocator.fixedCapacity - 1)
+        assert(adaptive.bytesBefore(Array[Byte]('S'), bufferSize - 1, adaptive.writerOffset) == allocator.fixedCapacity)
+
+        assert(adaptive.bytesBefore(Array[Byte]('Y'), 0, adaptive.writerOffset) == 2 * allocator.fixedCapacity)
 
     }
 

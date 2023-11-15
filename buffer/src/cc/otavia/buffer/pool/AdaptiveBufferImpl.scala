@@ -18,6 +18,7 @@ package cc.otavia.buffer.pool
 
 import cc.otavia.buffer
 import cc.otavia.buffer.*
+import cc.otavia.buffer.BytesUtil.ignoreCaseEqual
 import cc.otavia.buffer.pool.{PooledPageAllocator, RecyclablePageBuffer}
 
 import java.lang.{Byte as JByte, Double as JDouble, Float as JFloat, Long as JLong, Short as JShort}
@@ -324,12 +325,49 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             val byteBuffer = buffer.underlying
             while (continue && cursor < idxStart + len)
                 if (byteBuffer.get(buffer.readerOffset + cursor - idxStart) == needle) continue = false else cursor += 1
-            if (continue) { // buffer not find
-                idxStart += len
-                idx += 1
-            }
+            // buffer not find
+            if (continue) { idxStart += len; idx += 1 }
         }
         if (continue) -1 else cursor - ridx
+    }
+
+    private def bytesBefore1(a: Byte, from: Int, to: Int): Int = {
+        val (start, offset) = offsetAtOffset(from)
+        val end         = if (to == widx) size else { val tp = offsetAtOffset(to); if (tp._2 > 0) tp._1 + 1 else tp._1 }
+        var cursor: Int = from
+        var continue: Boolean = true
+        var idx               = start
+        var idxStart          = from - offset
+        while (continue && idx < end) {
+            val buffer     = apply(idx)
+            val len        = buffer.readableBytes
+            val byteBuffer = buffer.underlying
+            while (continue && cursor < idxStart + len && cursor < to)
+                if (byteBuffer.get(buffer.readerOffset + cursor - idxStart) == a) continue = false else cursor += 1
+            // buffer not find
+            if (continue) { idxStart += len; idx += 1 }
+        }
+        if (continue) -1 else cursor - from
+    }
+
+    private def bytesBefore1ignoreCase(a: Byte, from: Int, to: Int): Int = {
+        val (start, offset) = offsetAtOffset(from)
+        val end         = if (to == widx) size else { val tp = offsetAtOffset(to); if (tp._2 > 0) tp._1 + 1 else tp._1 }
+        var cursor: Int = from
+        var continue: Boolean = true
+        var idx               = start
+        var idxStart          = from - offset
+        while (continue && idx < end) {
+            val buffer     = apply(idx)
+            val len        = buffer.readableBytes
+            val byteBuffer = buffer.underlying
+            while (continue && cursor < idxStart + len && cursor < to)
+                if (ignoreCaseEqual(byteBuffer.get(buffer.readerOffset + cursor - idxStart), a)) continue = false
+                else cursor += 1
+            // buffer not find
+            if (continue) { idxStart += len; idx += 1 }
+        }
+        if (continue) -1 else cursor - from
     }
 
     override def bytesBeforeIn(set: Array[Byte]): Int = {
@@ -399,23 +437,75 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         if (continue) -1 else cursor - ridx - 1
     } else -1
 
+    private def bytesBefore2(a1: Byte, a2: Byte, from: Int, to: Int): Int = {
+        val (start, offset) = offsetAtOffset(from)
+        val end         = if (to == widx) size else { val tp = offsetAtOffset(to); if (tp._2 > 0) tp._1 + 1 else tp._1 }
+        var cursor: Int = from
+        var continue: Boolean = true
+        var idx               = start
+        var idxStart          = from - offset
+
+        var b1: Byte = 0
+        var b2: Byte = 0
+        while (continue && idx < end) {
+            val buffer     = apply(idx)
+            val len        = buffer.readableBytes
+            val byteBuffer = buffer.underlying
+            while (continue && cursor < idxStart + len && cursor < to) {
+                b1 = b2
+                b2 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                if (cursor > from + 1 && b1 == a1 && b2 == a2) continue = false else cursor += 1
+            }
+            // buffer not find
+            if (continue) { idxStart += len; idx += 1 }
+        }
+        if (continue) -1 else cursor - from
+    }
+
+    private def bytesBefore2ignoreCase(a1: Byte, a2: Byte, from: Int, to: Int): Int = {
+        val (start, offset) = offsetAtOffset(from)
+        val end =
+            if (to == widx) size
+            else {
+                val tp = offsetAtOffset(to); if (tp._2 > 0) tp._1 + 1 else tp._1
+            }
+        var cursor: Int       = from
+        var continue: Boolean = true
+        var idx               = start
+        var idxStart          = from - offset
+
+        var b1: Byte = 0
+        var b2: Byte = 0
+        while (continue && idx < end) {
+            val buffer     = apply(idx)
+            val len        = buffer.readableBytes
+            val byteBuffer = buffer.underlying
+            while (continue && cursor < idxStart + len && cursor < to) {
+                b1 = b2
+                b2 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                if (cursor > from + 1 && ignoreCaseEqual(b1, a1) && ignoreCaseEqual(b2, a2)) continue = false
+                else cursor += 1
+            }
+            // buffer not find
+            if (continue) { idxStart += len; idx += 1 }
+        }
+        if (continue) -1 else cursor - from
+    }
+
     override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int = if (readableBytes >= 3) {
         var cursor: Int       = ridx
         var continue: Boolean = true
         var idx               = 0
         var idxStart          = ridx
 
-        var b1: Byte = 0
-        var b2: Byte = 0
-        var b3: Byte = 0
+        var b1: Byte = 0; var b2: Byte = 0; var b3: Byte = 0
         while (continue && idx < size) {
             val buffer     = apply(idx)
             val len        = buffer.readableBytes
             val byteBuffer = buffer.underlying
 
             while (continue && cursor < idxStart + len) {
-                b1 = b2
-                b2 = b3
+                b1 = b2; b2 = b3
                 b3 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
                 if (b1 == needle1 && b2 == needle2 && b3 == needle3 && cursor - ridx > 2) continue = false
                 else cursor += 1
@@ -428,6 +518,67 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         if (continue) -1 else cursor - ridx - 2
     } else -1
 
+    private def bytesBefore3(a1: Byte, a2: Byte, a3: Byte, from: Int, to: Int): Int = {
+        val (start, offset) = offsetAtOffset(from)
+        val end =
+            if (to == widx) size
+            else {
+                val tp = offsetAtOffset(to); if (tp._2 > 0) tp._1 + 1 else tp._1
+            }
+        var cursor: Int       = from
+        var continue: Boolean = true
+        var idx               = start
+        var idxStart          = from - offset
+
+        var b1: Byte = 0; var b2: Byte = 0; var b3: Byte = 0
+        while (continue && idx < end) {
+            val buffer     = apply(idx)
+            val len        = buffer.readableBytes
+            val byteBuffer = buffer.underlying
+            while (continue && cursor < idxStart + len && cursor < to) {
+                b1 = b2; b2 = b3
+                b3 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                if (cursor > from + 2 && b1 == a1 && b2 == a2 && b3 == a3) continue = false else cursor += 1
+            }
+            // buffer not find
+            if (continue) { idxStart += len; idx += 1 }
+        }
+        if (continue) -1 else cursor - from
+    }
+
+    private def bytesBefore3ignoreCase(a1: Byte, a2: Byte, a3: Byte, from: Int, to: Int): Int = {
+        val (start, offset) = offsetAtOffset(from)
+        val end =
+            if (to == widx) size
+            else {
+                val tp = offsetAtOffset(to);
+                if (tp._2 > 0) tp._1 + 1 else tp._1
+            }
+        var cursor: Int       = from
+        var continue: Boolean = true
+        var idx               = start
+        var idxStart          = from - offset
+
+        var b1: Byte = 0; var b2: Byte = 0; var b3: Byte = 0
+        while (continue && idx < end) {
+            val buffer     = apply(idx)
+            val len        = buffer.readableBytes
+            val byteBuffer = buffer.underlying
+            while (continue && cursor < idxStart + len && cursor < to) {
+                b1 = b2; b2 = b3
+                b3 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                if (cursor > from + 2 && ignoreCaseEqual(b1, a1) && ignoreCaseEqual(b2, a2) && ignoreCaseEqual(b3, a3))
+                    continue = false
+                else cursor += 1
+            }
+            // buffer not find
+            if (continue) {
+                idxStart += len; idx += 1
+            }
+        }
+        if (continue) -1 else cursor - from
+    }
+
     override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte, needle4: Byte): Int =
         if (readableBytes >= 4) {
             var cursor: Int       = ridx
@@ -435,19 +586,14 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             var idx               = 0
             var idxStart          = ridx
 
-            var b1: Byte = 0
-            var b2: Byte = 0
-            var b3: Byte = 0
-            var b4: Byte = 0
+            var b1: Byte = 0; var b2: Byte = 0; var b3: Byte = 0; var b4: Byte = 0
             while (continue && idx < size) {
                 val buffer     = apply(idx)
                 val len        = buffer.readableBytes
                 val byteBuffer = buffer.underlying
 
                 while (continue && cursor < idxStart + len) {
-                    b1 = b2
-                    b2 = b3
-                    b3 = b4
+                    b1 = b2; b2 = b3; b3 = b4
                     b4 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
                     if (b1 == needle1 && b2 == needle2 && b3 == needle3 && b4 == needle4 && cursor - ridx > 3)
                         continue = false
@@ -461,6 +607,68 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             if (continue) -1 else cursor - ridx - 3
         } else -1
 
+    private def bytesBefore4(a1: Byte, a2: Byte, a3: Byte, a4: Byte, from: Int, to: Int): Int = {
+        val (start, offset) = offsetAtOffset(from)
+        val end =
+            if (to == widx) size
+            else {
+                val tp = offsetAtOffset(to);
+                if (tp._2 > 0) tp._1 + 1 else tp._1
+            }
+        var cursor: Int       = from
+        var continue: Boolean = true
+        var idx               = start
+        var idxStart          = from - offset
+
+        var b1: Byte = 0; var b2: Byte = 0; var b3: Byte = 0; var b4: Byte = 0
+        while (continue && idx < end) {
+            val buffer     = apply(idx)
+            val len        = buffer.readableBytes
+            val byteBuffer = buffer.underlying
+            while (continue && cursor < idxStart + len && cursor < to) {
+                b1 = b2; b2 = b3; b3 = b4
+                b4 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                if (cursor > from + 3 && b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4) continue = false else cursor += 1
+            }
+            // buffer not find
+            if (continue) { idxStart += len; idx += 1 }
+        }
+        if (continue) -1 else cursor - from
+    }
+
+    private def bytesBefore4ignoreCase(a1: Byte, a2: Byte, a3: Byte, a4: Byte, from: Int, to: Int): Int = {
+        val (start, offset) = offsetAtOffset(from)
+        val end =
+            if (to == widx) size
+            else {
+                val tp = offsetAtOffset(to);
+                if (tp._2 > 0) tp._1 + 1 else tp._1
+            }
+        var cursor: Int       = from
+        var continue: Boolean = true
+        var idx               = start
+        var idxStart          = from - offset
+
+        var b1: Byte = 0; var b2: Byte = 0; var b3: Byte = 0; var b4: Byte = 0
+        while (continue && idx < end) {
+            val buffer     = apply(idx)
+            val len        = buffer.readableBytes
+            val byteBuffer = buffer.underlying
+            while (continue && cursor < idxStart + len && cursor < to) {
+                b1 = b2; b2 = b3; b3 = b4
+                b4 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
+                if (
+                  cursor > from + 3 && ignoreCaseEqual(b1, a1) && ignoreCaseEqual(b2, a2) && ignoreCaseEqual(b3, a3) &&
+                  ignoreCaseEqual(b4, a4)
+                ) continue = false
+                else cursor += 1
+            }
+            // buffer not find
+            if (continue) { idxStart += len; idx += 1 }
+        }
+        if (continue) -1 else cursor - from
+    }
+
     private def bytesBefore5(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte): Int =
         if (readableBytes >= 5) {
             var cursor: Int       = ridx
@@ -468,21 +676,14 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             var idx               = 0
             var idxStart          = ridx
 
-            var a1: Byte = 0
-            var a2: Byte = 0
-            var a3: Byte = 0
-            var a4: Byte = 0
-            var a5: Byte = 0
+            var a1: Byte = 0; var a2: Byte = 0; var a3: Byte = 0; var a4: Byte = 0; var a5: Byte = 0
             while (continue && idx < size) {
                 val buffer     = apply(idx)
                 val len        = buffer.readableBytes
                 val byteBuffer = buffer.underlying
 
                 while (continue && cursor < idxStart + len) {
-                    a1 = a2
-                    a2 = a3
-                    a3 = a4
-                    a4 = a5
+                    a1 = a2; a2 = a3; a3 = a4; a4 = a5
                     a5 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
                     if (b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && cursor - ridx > 4)
                         continue = false
@@ -503,23 +704,14 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             var idx               = 0
             var idxStart          = ridx
 
-            var a1: Byte = 0
-            var a2: Byte = 0
-            var a3: Byte = 0
-            var a4: Byte = 0
-            var a5: Byte = 0
-            var a6: Byte = 0
+            var a1: Byte = 0; var a2: Byte = 0; var a3: Byte = 0; var a4: Byte = 0; var a5: Byte = 0; var a6: Byte = 0
             while (continue && idx < size) {
                 val buffer     = apply(idx)
                 val len        = buffer.readableBytes
                 val byteBuffer = buffer.underlying
 
                 while (continue && cursor < idxStart + len) {
-                    a1 = a2
-                    a2 = a3
-                    a3 = a4
-                    a4 = a5
-                    a5 = a6
+                    a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6
                     a6 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
                     if (b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && cursor - ridx > 5)
                         continue = false
@@ -540,12 +732,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             var idx               = 0
             var idxStart          = ridx
 
-            var a1: Byte = 0
-            var a2: Byte = 0
-            var a3: Byte = 0
-            var a4: Byte = 0
-            var a5: Byte = 0
-            var a6: Byte = 0
+            var a1: Byte = 0; var a2: Byte = 0; var a3: Byte = 0; var a4: Byte = 0; var a5: Byte = 0; var a6: Byte = 0
             var a7: Byte = 0
             while (continue && idx < size) {
                 val buffer     = apply(idx)
@@ -553,12 +740,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                 val byteBuffer = buffer.underlying
 
                 while (continue && cursor < idxStart + len) {
-                    a1 = a2
-                    a2 = a3
-                    a3 = a4
-                    a4 = a5
-                    a5 = a6
-                    a6 = a7
+                    a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7
                     a7 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
                     if (
                       b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
@@ -581,27 +763,15 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             var idx               = 0
             var idxStart          = ridx
 
-            var a1: Byte = 0
-            var a2: Byte = 0
-            var a3: Byte = 0
-            var a4: Byte = 0
-            var a5: Byte = 0
-            var a6: Byte = 0
-            var a7: Byte = 0
-            var a8: Byte = 0
+            var a1: Byte = 0; var a2: Byte = 0; var a3: Byte = 0; var a4: Byte = 0; var a5: Byte = 0; var a6: Byte = 0
+            var a7: Byte = 0; var a8: Byte = 0
             while (continue && idx < size) {
                 val buffer     = apply(idx)
                 val len        = buffer.readableBytes
                 val byteBuffer = buffer.underlying
 
                 while (continue && cursor < idxStart + len) {
-                    a1 = a2
-                    a2 = a3
-                    a3 = a4
-                    a4 = a5
-                    a5 = a6
-                    a6 = a7
-                    a7 = a8
+                    a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8
                     a8 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
                     if (
                       b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
@@ -627,29 +797,15 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             var idx               = 0
             var idxStart          = ridx
 
-            var a1: Byte = 0
-            var a2: Byte = 0
-            var a3: Byte = 0
-            var a4: Byte = 0
-            var a5: Byte = 0
-            var a6: Byte = 0
-            var a7: Byte = 0
-            var a8: Byte = 0
-            var a9: Byte = 0
+            var a1: Byte = 0; var a2: Byte = 0; var a3: Byte = 0; var a4: Byte = 0; var a5: Byte = 0; var a6: Byte = 0
+            var a7: Byte = 0; var a8: Byte = 0; var a9: Byte = 0
             while (continue && idx < size) {
                 val buffer     = apply(idx)
                 val len        = buffer.readableBytes
                 val byteBuffer = buffer.underlying
 
                 while (continue && cursor < idxStart + len) {
-                    a1 = a2
-                    a2 = a3
-                    a3 = a4
-                    a4 = a5
-                    a5 = a6
-                    a6 = a7
-                    a7 = a8
-                    a8 = a9
+                    a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9
                     a9 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
                     if (
                       b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
@@ -675,31 +831,15 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             var idx               = 0
             var idxStart          = ridx
 
-            var a1: Byte  = 0
-            var a2: Byte  = 0
-            var a3: Byte  = 0
-            var a4: Byte  = 0
-            var a5: Byte  = 0
-            var a6: Byte  = 0
-            var a7: Byte  = 0
-            var a8: Byte  = 0
-            var a9: Byte  = 0
-            var a10: Byte = 0
+            var a1: Byte = 0; var a2: Byte = 0; var a3: Byte = 0; var a4: Byte  = 0; var a5: Byte = 0; var a6: Byte = 0
+            var a7: Byte = 0; var a8: Byte = 0; var a9: Byte = 0; var a10: Byte = 0
             while (continue && idx < size) {
                 val buffer     = apply(idx)
                 val len        = buffer.readableBytes
                 val byteBuffer = buffer.underlying
 
                 while (continue && cursor < idxStart + len) {
-                    a1 = a2
-                    a2 = a3
-                    a3 = a4
-                    a4 = a5
-                    a5 = a6
-                    a6 = a7
-                    a7 = a8
-                    a8 = a9
-                    a9 = a10
+                    a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10
                     a10 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
                     if (
                       b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
@@ -725,33 +865,15 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             var idx               = 0
             var idxStart          = ridx
 
-            var a1: Byte  = 0
-            var a2: Byte  = 0
-            var a3: Byte  = 0
-            var a4: Byte  = 0
-            var a5: Byte  = 0
-            var a6: Byte  = 0
-            var a7: Byte  = 0
-            var a8: Byte  = 0
-            var a9: Byte  = 0
-            var a10: Byte = 0
-            var a11: Byte = 0
+            var a1: Byte = 0; var a2: Byte = 0; var a3: Byte = 0; var a4: Byte  = 0; var a5: Byte  = 0; var a6: Byte = 0
+            var a7: Byte = 0; var a8: Byte = 0; var a9: Byte = 0; var a10: Byte = 0; var a11: Byte = 0
             while (continue && idx < size) {
                 val buffer     = apply(idx)
                 val len        = buffer.readableBytes
                 val byteBuffer = buffer.underlying
 
                 while (continue && cursor < idxStart + len) {
-                    a1 = a2
-                    a2 = a3
-                    a3 = a4
-                    a4 = a5
-                    a5 = a6
-                    a6 = a7
-                    a7 = a8
-                    a8 = a9
-                    a9 = a10
-                    a10 = a11
+                    a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11
                     a11 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
                     if (
                       b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
@@ -777,17 +899,8 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             var idx               = 0
             var idxStart          = ridx
 
-            var a1: Byte  = 0
-            var a2: Byte  = 0
-            var a3: Byte  = 0
-            var a4: Byte  = 0
-            var a5: Byte  = 0
-            var a6: Byte  = 0
-            var a7: Byte  = 0
-            var a8: Byte  = 0
-            var a9: Byte  = 0
-            var a10: Byte = 0
-            var a11: Byte = 0
+            var a1: Byte = 0; var a2: Byte = 0; var a3: Byte = 0; var a4: Byte  = 0; var a5: Byte  = 0; var a6: Byte = 0
+            var a7: Byte = 0; var a8: Byte = 0; var a9: Byte = 0; var a10: Byte = 0; var a11: Byte = 0;
             var a12: Byte = 0
             while (continue && idx < size) {
                 val buffer     = apply(idx)
@@ -795,16 +908,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                 val byteBuffer = buffer.underlying
 
                 while (continue && cursor < idxStart + len) {
-                    a1 = a2
-                    a2 = a3
-                    a3 = a4
-                    a4 = a5
-                    a5 = a6
-                    a6 = a7
-                    a7 = a8
-                    a8 = a9
-                    a9 = a10
-                    a10 = a11
+                    a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11
                     a11 = a12
                     a12 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
                     if (
@@ -831,37 +935,17 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             var idx               = 0
             var idxStart          = ridx
 
-            var a1: Byte  = 0
-            var a2: Byte  = 0
-            var a3: Byte  = 0
-            var a4: Byte  = 0
-            var a5: Byte  = 0
-            var a6: Byte  = 0
-            var a7: Byte  = 0
-            var a8: Byte  = 0
-            var a9: Byte  = 0
-            var a10: Byte = 0
-            var a11: Byte = 0
-            var a12: Byte = 0
-            var a13: Byte = 0
+            var a1: Byte = 0; var a2: Byte = 0; var a3: Byte = 0; var a4: Byte  = 0; var a5: Byte  = 0; var a6: Byte = 0
+            var a7: Byte = 0; var a8: Byte = 0; var a9: Byte = 0; var a10: Byte = 0; var a11: Byte = 0
+            var a12: Byte = 0; var a13: Byte = 0
             while (continue && idx < size) {
                 val buffer     = apply(idx)
                 val len        = buffer.readableBytes
                 val byteBuffer = buffer.underlying
 
                 while (continue && cursor < idxStart + len) {
-                    a1 = a2
-                    a2 = a3
-                    a3 = a4
-                    a4 = a5
-                    a5 = a6
-                    a6 = a7
-                    a7 = a8
-                    a8 = a9
-                    a9 = a10
-                    a10 = a11
-                    a11 = a12
-                    a12 = a13
+                    a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11
+                    a11 = a12; a12 = a13
                     a13 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
                     if (
                       b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
@@ -888,39 +972,17 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             var idx               = 0
             var idxStart          = ridx
 
-            var a1: Byte  = 0
-            var a2: Byte  = 0
-            var a3: Byte  = 0
-            var a4: Byte  = 0
-            var a5: Byte  = 0
-            var a6: Byte  = 0
-            var a7: Byte  = 0
-            var a8: Byte  = 0
-            var a9: Byte  = 0
-            var a10: Byte = 0
-            var a11: Byte = 0
-            var a12: Byte = 0
-            var a13: Byte = 0
-            var a14: Byte = 0
+            var a1: Byte = 0; var a2: Byte = 0; var a3: Byte = 0; var a4: Byte  = 0; var a5: Byte  = 0; var a6: Byte = 0
+            var a7: Byte = 0; var a8: Byte = 0; var a9: Byte = 0; var a10: Byte = 0; var a11: Byte = 0
+            var a12: Byte = 0; var a13: Byte = 0; var a14: Byte = 0
             while (continue && idx < size) {
                 val buffer     = apply(idx)
                 val len        = buffer.readableBytes
                 val byteBuffer = buffer.underlying
 
                 while (continue && cursor < idxStart + len) {
-                    a1 = a2
-                    a2 = a3
-                    a3 = a4
-                    a4 = a5
-                    a5 = a6
-                    a6 = a7
-                    a7 = a8
-                    a8 = a9
-                    a9 = a10
-                    a10 = a11
-                    a11 = a12
-                    a12 = a13
-                    a13 = a14
+                    a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11
+                    a11 = a12; a12 = a13; a13 = a14
                     a14 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
                     if (
                       b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
@@ -947,41 +1009,17 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             var idx               = 0
             var idxStart          = ridx
 
-            var a1: Byte  = 0
-            var a2: Byte  = 0
-            var a3: Byte  = 0
-            var a4: Byte  = 0
-            var a5: Byte  = 0
-            var a6: Byte  = 0
-            var a7: Byte  = 0
-            var a8: Byte  = 0
-            var a9: Byte  = 0
-            var a10: Byte = 0
-            var a11: Byte = 0
-            var a12: Byte = 0
-            var a13: Byte = 0
-            var a14: Byte = 0
-            var a15: Byte = 0
+            var a1: Byte = 0; var a2: Byte = 0; var a3: Byte = 0; var a4: Byte  = 0; var a5: Byte  = 0; var a6: Byte = 0
+            var a7: Byte = 0; var a8: Byte = 0; var a9: Byte = 0; var a10: Byte = 0; var a11: Byte = 0
+            var a12: Byte = 0; var a13: Byte = 0; var a14: Byte = 0; var a15: Byte = 0
             while (continue && idx < size) {
                 val buffer     = apply(idx)
                 val len        = buffer.readableBytes
                 val byteBuffer = buffer.underlying
 
                 while (continue && cursor < idxStart + len) {
-                    a1 = a2
-                    a2 = a3
-                    a3 = a4
-                    a4 = a5
-                    a5 = a6
-                    a6 = a7
-                    a7 = a8
-                    a8 = a9
-                    a9 = a10
-                    a10 = a11
-                    a11 = a12
-                    a12 = a13
-                    a13 = a14
-                    a14 = a15
+                    a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11
+                    a11 = a12; a12 = a13; a13 = a14; a14 = a15
                     a15 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
                     if (
                       b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
@@ -1008,43 +1046,17 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             var idx               = 0
             var idxStart          = ridx
 
-            var a1: Byte  = 0
-            var a2: Byte  = 0
-            var a3: Byte  = 0
-            var a4: Byte  = 0
-            var a5: Byte  = 0
-            var a6: Byte  = 0
-            var a7: Byte  = 0
-            var a8: Byte  = 0
-            var a9: Byte  = 0
-            var a10: Byte = 0
-            var a11: Byte = 0
-            var a12: Byte = 0
-            var a13: Byte = 0
-            var a14: Byte = 0
-            var a15: Byte = 0
-            var a16: Byte = 0
+            var a1: Byte = 0; var a2: Byte = 0; var a3: Byte = 0; var a4: Byte  = 0; var a5: Byte  = 0; var a6: Byte = 0
+            var a7: Byte = 0; var a8: Byte = 0; var a9: Byte = 0; var a10: Byte = 0; var a11: Byte = 0
+            var a12: Byte = 0; var a13: Byte = 0; var a14: Byte = 0; var a15: Byte = 0; var a16: Byte = 0
             while (continue && idx < size) {
                 val buffer     = apply(idx)
                 val len        = buffer.readableBytes
                 val byteBuffer = buffer.underlying
 
                 while (continue && cursor < idxStart + len) {
-                    a1 = a2
-                    a2 = a3
-                    a3 = a4
-                    a4 = a5
-                    a5 = a6
-                    a6 = a7
-                    a7 = a8
-                    a8 = a9
-                    a9 = a10
-                    a10 = a11
-                    a11 = a12
-                    a12 = a13
-                    a13 = a14
-                    a14 = a15
-                    a15 = a16
+                    a1 = a2; a2 = a3; a3 = a4; a4 = a5; a5 = a6; a6 = a7; a7 = a8; a8 = a9; a9 = a10; a10 = a11
+                    a11 = a12; a12 = a13; a13 = a14; a14 = a15; a15 = a16
                     a16 = byteBuffer.get(buffer.readerOffset + cursor - idxStart)
                     if (
                       b1 == a1 && b2 == a2 && b3 == a3 && b4 == a4 && b5 == a5 && b6 == a6 && b7 == a7 &&
@@ -1119,15 +1131,25 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                 if (continue) -1 else cursor - ridx - length
     } else -1
 
-    override def bytesBefore(needle: Array[Byte], from: Int, to: Int, ignoreCase: Boolean): Int = {
-        if (from < ridx)
-            throw new IndexOutOfBoundsException(s"from is less than readerOffset: form = $from, readerOffset = $ridx")
-
-        if (to > widx)
-            throw new IndexOutOfBoundsException(s"to is beyond the end of the buffer: to = $to, writerOffset = $widx")
-
-        ???
-    }
+    override def bytesBefore(needle: Array[Byte], from: Int, to: Int, ignoreCase: Boolean): Int =
+        if (readableBytes > needle.length) {
+            checkFromTo(from, to)
+            if (ignoreCase) {
+                needle.length match
+                    case 1 => bytesBefore1ignoreCase(needle(0), from, to)
+                    case 2 => bytesBefore2ignoreCase(needle(0), needle(1), from, to)
+                    case 3 => bytesBefore3ignoreCase(needle(0), needle(1), needle(2), from, to)
+                    case 4 => bytesBefore4ignoreCase(needle(0), needle(1), needle(2), needle(3), from, to)
+                    case _ => ???
+            } else {
+                needle.length match
+                    case 1 => bytesBefore1(needle(0), from, to)
+                    case 2 => bytesBefore2(needle(0), needle(1), from, to)
+                    case 3 => bytesBefore3(needle(0), needle(1), needle(2), from, to)
+                    case 4 => bytesBefore4(needle(0), needle(1), needle(2), needle(3), from, to)
+                    case _ => ???
+            }
+        } else -1
 
     override def openCursor(fromOffset: Int, length: Int): ByteCursor = {
         if (closed) throw new BufferClosedException()
@@ -2536,5 +2558,12 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     } else false
 
     override def skipIfNextIn(set: Array[Byte]): Boolean = if (nonEmpty) head.skipIfNextIn(set) else false
+
+    inline private def checkFromTo(from: Int, to: Int): Unit = {
+        if (from < ridx)
+            throw new IndexOutOfBoundsException(s"from is less than readerOffset: form = $from, readerOffset = $ridx")
+        if (to > widx)
+            throw new IndexOutOfBoundsException(s"to is beyond the end of the buffer: to = $to, writerOffset = $widx")
+    }
 
 }
