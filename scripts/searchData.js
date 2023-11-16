@@ -262,7 +262,7 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"cc/otavia/buffer/BytesUtil$.html#bytes6Long-724","e":false,"i":"","n":"bytes6Long","t":"bytes6Long(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte): Long","d":"cc.otavia.buffer.BytesUtil","k":"def","x":""},
 {"l":"cc/otavia/buffer/BytesUtil$.html#bytes7Long-bf4","e":false,"i":"","n":"bytes7Long","t":"bytes7Long(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte): Long","d":"cc.otavia.buffer.BytesUtil","k":"def","x":""},
 {"l":"cc/otavia/buffer/BytesUtil$.html#bytes8Long-cc4","e":false,"i":"","n":"bytes8Long","t":"bytes8Long(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Long","d":"cc.otavia.buffer.BytesUtil","k":"def","x":""},
-{"l":"cc/otavia/buffer/BytesUtil$.html#ignoreCaseEqual-780","e":false,"i":"","n":"ignoreCaseEqual","t":"ignoreCaseEqual(b: Int, a: Int): Boolean","d":"cc.otavia.buffer.BytesUtil","k":"def","x":""},
+{"l":"cc/otavia/buffer/BytesUtil$.html#ignoreCaseEqual-dc0","e":false,"i":"","n":"ignoreCaseEqual","t":"ignoreCaseEqual(b: Byte, a: Byte): Boolean","d":"cc.otavia.buffer.BytesUtil","k":"def","x":""},
 {"l":"cc/otavia/buffer/FixedCapacityAllocator.html#","e":false,"i":"","n":"FixedCapacityAllocator","t":"FixedCapacityAllocator extends BufferAllocator","d":"cc.otavia.buffer","k":"trait","x":""},
 {"l":"cc/otavia/buffer/FixedCapacityAllocator.html#fixedCapacity-0","e":false,"i":"","n":"fixedCapacity","t":"fixedCapacity: Int","d":"cc.otavia.buffer.FixedCapacityAllocator","k":"def","x":""},
 {"l":"cc/otavia/buffer/FixedCapacityAllocator$.html#","e":false,"i":"","n":"FixedCapacityAllocator","t":"FixedCapacityAllocator","d":"cc.otavia.buffer","k":"object","x":""},
