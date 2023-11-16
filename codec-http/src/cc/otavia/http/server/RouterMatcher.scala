@@ -49,9 +49,9 @@ class RouterMatcher(routers: Seq[Router]) {
             router match
                 case ControllerRouter(method, path, controller, headers, paramsSerde, contentSerde, responseSerde) =>
                     updateTree(method, path, router)
-                case StaticFilesRouter(path, dir)                 => updateTree(HttpMethod.GET, path.trim, router)
-                case router: NotFoundRouter                       => this.notFoundRouter = router
-                case PlainTextRouter(method, path, text, charset) => updateTree(method, path.trim, router)
+                case StaticFilesRouter(path, dir)          => updateTree(HttpMethod.GET, path.trim, router)
+                case router: NotFoundRouter                => this.notFoundRouter = router
+                case ConstantRouter(method, path, _, _, _) => updateTree(method, path.trim, router)
         }
         if (this.notFoundRouter == null) this.notFoundRouter = NotFoundRouter()
     }

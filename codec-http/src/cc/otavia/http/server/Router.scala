@@ -18,6 +18,7 @@ package cc.otavia.http.server
 
 import cc.otavia.core.address.Address
 import cc.otavia.http.*
+import cc.otavia.serde.Serde
 
 import java.nio.charset.{Charset, StandardCharsets}
 import java.nio.file.Path
@@ -39,12 +40,8 @@ enum Router {
 
     case NotFoundRouter(page: Option[Path] = None) extends Router
 
-    case PlainTextRouter(
-        method: HttpMethod,
-        path: String,
-        text: Array[Byte],
-        charset: Charset = StandardCharsets.UTF_8
-    ) extends Router
+    case ConstantRouter[T](method: HttpMethod, path: String, value: T, serde: Serde[T], mediaType: MediaType)
+        extends Router
 
 }
 
@@ -66,11 +63,7 @@ object Router {
 
     def `404`(page: Option[Path]): NotFoundRouter = NotFoundRouter(page)
 
-    def plain(
-        path: String,
-        text: Array[Byte],
-        method: HttpMethod = HttpMethod.GET,
-        charset: Charset = StandardCharsets.UTF_8
-    ): PlainTextRouter = PlainTextRouter(method, path, text, charset)
+    def constant[T](method: HttpMethod, path: String, value: T, serde: Serde[T], media: MediaType): ConstantRouter[T] =
+        ConstantRouter(method, path, value, serde, media)
 
 }

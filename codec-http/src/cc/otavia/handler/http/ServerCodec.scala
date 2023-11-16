@@ -27,6 +27,7 @@ import cc.otavia.handler.codec.ByteToMessageCodec
 import cc.otavia.http.server.*
 import cc.otavia.http.server.Router.*
 import cc.otavia.http.{HttpConstants, HttpHeader, HttpVersion, MediaType}
+import cc.otavia.serde.Serde
 
 import java.nio.charset.{Charset, StandardCharsets}
 import java.time.LocalDateTime
@@ -78,10 +79,10 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
                             ) =>
                         case StaticFilesRouter(path, root) =>
                         case NotFoundRouter(page)          =>
-                        case PlainTextRouter(method, path, text, charset) =>
+                        case ConstantRouter(method, path, value, serde, mediaType) =>
                             input.skipReadableBytes(headersLength + 4)
                             parseState = ST_PARSE_HEADLINE
-                            responsePlaintext(text, charset)
+                            responseConstant(value, serde, mediaType)
                 }
             }
 
@@ -103,26 +104,26 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
         parseState = ST_PARSE_HEADERS
     }
 
-    private def responsePlaintext(text: Array[Byte], charset: Charset): Unit = {
+    private def responseConstant(value: Any, serde: Serde[?], media: MediaType): Unit = {
         val buffer = ctx.outboundAdaptiveBuffer
         buffer.writeBytes(RESPONSE_NORMAL)
         buffer.writeBytes(HttpHeader.Key.CONTENT_TYPE)
         buffer.writeBytes(HttpConstants.HEADER_SPLITTER)
-        if (charset == StandardCharsets.UTF_8) buffer.writeBytes(MediaType.TEXT_PLAIN_UTF8.fullName)
-        else if (charset == StandardCharsets.US_ASCII) buffer.writeBytes(MediaType.TEXT_PLAIN.fullName)
-        else {
-            buffer.writeBytes(HttpHeader.Value.TEXT_PLAIN)
-            buffer.writeBytes(s"; charset=${charset.name()}".getBytes(StandardCharsets.US_ASCII))
-        }
+        buffer.writeBytes(media.fullName)
         buffer.writeBytes(HttpConstants.HEADER_LINE_END)
         buffer.writeBytes(dates.get())
         buffer.writeBytes(HttpHeader.Key.CONTENT_LENGTH)
         buffer.writeBytes(HttpConstants.HEADER_SPLITTER)
-        buffer.writeBytes(text.length.toString.getBytes(StandardCharsets.US_ASCII))
+        val lengthOffset = buffer.writerOffset
+        buffer.writeBytes("                   ".getBytes(StandardCharsets.US_ASCII))
 
         buffer.writeBytes(HttpConstants.HEADERS_END)
 
-        buffer.writeBytes(text)
+        val contentStart = buffer.writerOffset
+        serde.serializeAny(value, buffer)
+        val contentEnd = buffer.writerOffset
+
+        buffer.setCharSequence(lengthOffset, (contentEnd - contentStart).toString)
 
         ctx.writeAndFlush(buffer)
     }
