@@ -16,15 +16,20 @@
 
 package cc.otavia.buffer
 
+import cc.otavia.buffer.BytesUtil.bytes8Long
 import org.scalatest.funsuite.AnyFunSuiteLike
+
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
+import scala.language.unsafeNulls
 
 class BytesUtilSuite extends AnyFunSuiteLike {
 
     test("ignore case equal") {
 
-        'A'.toInt to 'Z'.toInt foreach { b =>
-            assert(BytesUtil.ignoreCaseEqual(b, b + 32))
-            assert(BytesUtil.ignoreCaseEqual(b, b))
+        ('A' to 'Z').zip('a' to 'z').foreach { case (u, l) =>
+            assert(BytesUtil.ignoreCaseEqual(u.toByte, u.toByte))
+            assert(BytesUtil.ignoreCaseEqual(u.toByte, l.toByte))
         }
 
         assert(!BytesUtil.ignoreCaseEqual('@', '`'))
@@ -33,4 +38,23 @@ class BytesUtilSuite extends AnyFunSuiteLike {
         assert(!BytesUtil.ignoreCaseEqual('A', '!'))
 
     }
+
+    test("four bytes to int") {
+        val arr        = "otavia".getBytes(StandardCharsets.US_ASCII)
+        val byteBuffer = ByteBuffer.wrap(arr)
+
+        assert(BytesUtil.bytes4Int(arr(0), arr(1), arr(2), arr(3)) == byteBuffer.getInt(0))
+    }
+
+    test("eight bytes to long") {
+        val arr        = "hello otavia-buffer".getBytes(StandardCharsets.US_ASCII)
+        val byteBuffer = ByteBuffer.wrap(arr)
+
+        val a1 = bytes8Long(arr(0), arr(1), arr(2), arr(3), arr(4), arr(5), arr(6), arr(7))
+        val a2 = bytes8Long(arr(8), arr(9), arr(10), arr(11), arr(12), arr(13), arr(14), arr(15))
+
+        assert(a1 == byteBuffer.getLong(0))
+        assert(a2 == byteBuffer.getLong(8))
+    }
+
 }

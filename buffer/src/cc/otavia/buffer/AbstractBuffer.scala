@@ -18,7 +18,7 @@
 
 package cc.otavia.buffer
 
-import cc.otavia.buffer.BytesUtil.ignoreCaseEqual
+import cc.otavia.buffer.BytesUtil.{bytes8Long, ignoreCaseEqual}
 
 import java.lang.{Byte as JByte, Double as JDouble, Float as JFloat, Long as JLong, Short as JShort}
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
@@ -1035,20 +1035,21 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
 
     override def bytesBefore(needle: Array[Byte]): Int = bytesBefore(needle, ridx, widx)
 
-    private def bytesBeforeBytes(needle: Array[Byte], from: Int, to: Int): Int = {
-        val length            = needle.length
-        val first             = needle(0)
-        val second            = needle(1)
+    private def bytesBeforeBytes(bts: Array[Byte], from: Int, to: Int): Int = {
+        val length            = bts.length
+        val a1                = bytes8Long(bts(0), bts(1), bts(2), bts(3), bts(4), bts(5), bts(6), bts(7))
+        val a2                = bytes8Long(bts(8), bts(9), bts(10), bts(11), bts(12), bts(13), bts(14), bts(15))
         var offset: Int       = from
         var continue: Boolean = true
         while (continue && offset < to - length) {
-            if (underlying.get(offset) != first || underlying.get(offset + 1) != second) offset += 1
+            if (underlying.getLong(offset) != a1 || underlying.getLong(offset + 8) != a2)
+                offset += 1 // 16 bytes prefix match
             else {
-                var i    = 2
+                var i    = 16
                 var same = true
-                while (same && i < needle.length) {
+                while (same && i < length) {
                     val b = underlying.get(offset + i)
-                    val a = needle(i)
+                    val a = bts(i)
                     same = same && a == b
                     i += 1
                 }
@@ -1058,20 +1059,20 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         if (continue) -1 else offset - from
     }
 
-    private def bytesBeforeBytesIgnoreCase(needle: Array[Byte], from: Int, to: Int): Int = {
-        val length            = needle.length
-        val first             = needle(0)
-        val second            = needle(1)
+    private def bytesBeforeBytesIgnoreCase(bts: Array[Byte], from: Int, to: Int): Int = {
+        val a1                = bytes8Long(bts(0), bts(1), bts(2), bts(3), bts(4), bts(5), bts(6), bts(7))
+        val a2                = bytes8Long(bts(8), bts(9), bts(10), bts(11), bts(12), bts(13), bts(14), bts(15))
         var offset: Int       = from
         var continue: Boolean = true
-        while (continue && offset < to - length) {
-            if (underlying.get(offset) != first || underlying.get(offset + 1) != second) offset += 1
+        while (continue && offset < to - bts.length) {
+            if (underlying.getLong(offset) != a1 || underlying.getLong(offset + 8) != a2)
+                offset += 1 // 16 bytes prefix match
             else {
-                var i    = 2
+                var i    = 16
                 var same = true
-                while (same && i < needle.length) {
+                while (same && i < bts.length) {
                     val b = underlying.get(offset + i)
-                    val a = needle(i)
+                    val a = bts(i)
                     same = same && ignoreCaseEqual(a, b)
                     i += 1
                 }

@@ -459,7 +459,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             // buffer not find
             if (continue) { idxStart += len; idx += 1 }
         }
-        if (continue) -1 else cursor - from
+        if (continue) -1 else cursor - 1 - from
     }
 
     private def bytesBefore2ignoreCase(a1: Byte, a2: Byte, from: Int, to: Int): Int = {
@@ -489,7 +489,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             // buffer not find
             if (continue) { idxStart += len; idx += 1 }
         }
-        if (continue) -1 else cursor - from
+        if (continue) -1 else cursor - 1 - from
     }
 
     override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte): Int = if (readableBytes >= 3) {
@@ -543,7 +543,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             // buffer not find
             if (continue) { idxStart += len; idx += 1 }
         }
-        if (continue) -1 else cursor - from
+        if (continue) -1 else cursor - 2 - from
     }
 
     private def bytesBefore3ignoreCase(a1: Byte, a2: Byte, a3: Byte, from: Int, to: Int): Int = {
@@ -576,7 +576,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                 idxStart += len; idx += 1
             }
         }
-        if (continue) -1 else cursor - from
+        if (continue) -1 else cursor - 2 - from
     }
 
     override def bytesBefore(needle1: Byte, needle2: Byte, needle3: Byte, needle4: Byte): Int =
@@ -633,7 +633,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             // buffer not find
             if (continue) { idxStart += len; idx += 1 }
         }
-        if (continue) -1 else cursor - from
+        if (continue) -1 else cursor - 3 - from
     }
 
     private def bytesBefore4ignoreCase(a1: Byte, a2: Byte, a3: Byte, a4: Byte, from: Int, to: Int): Int = {
@@ -666,7 +666,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             // buffer not find
             if (continue) { idxStart += len; idx += 1 }
         }
-        if (continue) -1 else cursor - from
+        if (continue) -1 else cursor - 3 - from
     }
 
     private def bytesBefore5(b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte): Int =
@@ -1101,38 +1101,96 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             case 16 => bytesBefore16(needle(0), needle(1), needle(2), needle(3), needle(4), needle(5), needle(6), needle(7),
                 needle(8), needle(9), needle(10), needle(11), needle(12), needle(13), needle(14), needle(15))
             // format: on
-            case _ =>
-                val length = needle.length
-                val first  = needle(0)
-
-                var cursor: Int       = ridx
-                var continue: Boolean = true
-                var idx               = 0
-                var idxStart          = ridx
-
-                val copy = new Array[Byte](length)
-
-                while (continue && idx < size) {
-                    val buffer     = apply(idx)
-                    val len        = buffer.readableBytes
-                    val byteBuffer = buffer.underlying
-                    while (continue && cursor < idxStart + len) {
-                        if (byteBuffer.get(buffer.readerOffset + cursor - idxStart) != first) cursor += 1
-                        else {
-                            this.copyInto(cursor, copy, 0, length)
-                            if (copy sameElements needle) continue = false else cursor += 1
-                        }
-                    }
-                    if (continue) { // buffer not find
-                        idxStart += len
-                        idx += 1
-                    }
-                }
-                if (continue) -1 else cursor - ridx - length
+            case _ => bytesBeforeBytes(needle, ridx, widx)
     } else -1
 
+    private def bytesBeforeBytes(bts: Array[Byte], from: Int, to: Int): Int = {
+        val length = bts.length
+        val a1     = bts(0)
+        val a      = BytesUtil.bytes4Int(a1, bts(1), bts(2), bts(3))
+
+        val (start, offset) = offsetAtOffset(from)
+        val end         = if (to == widx) size else { val tp = offsetAtOffset(to); if (tp._2 > 0) tp._1 + 1 else tp._1 }
+        var cursor: Int = from
+        var continue: Boolean = true
+        var idx               = start
+        var idxStart          = from - offset
+
+        var copy: Array[Byte] = null
+        while (continue && idx < end) {
+            val buffer = apply(idx)
+            val len    = buffer.readableBytes
+            val bb     = buffer.underlying
+            while (continue && cursor < idxStart + len && cursor < to - length) {
+                val base = buffer.readerOffset + cursor - idxStart
+                if (cursor + 4 < idxStart + len && (bb.getInt(base) != a)) cursor += 1 // four bytes prefix match
+                else if (bb.get(base) != a1) cursor += 1                               // one byte prefix match
+                else {
+                    if (copy == null) copy = new Array[Byte](length)
+                    this.copyInto(cursor, copy, 0, length)
+                    var same = true
+                    var i    = 1
+                    while (same && i < length) {
+                        same = same && (copy(i) == bts(i))
+                        i += 1
+                    }
+                    if (same) continue = false else cursor += 1
+                }
+            }
+            if (continue) { // buffer not find
+                idxStart += len
+                idx += 1
+            }
+        }
+        if (continue) -1 else cursor - from
+    }
+
+    private def bytesBeforeBytesIgnoreCase(bts: Array[Byte], from: Int, to: Int): Int = {
+        val length          = bts.length
+        val a1              = bts(0); val a2 = bts(1); val a3 = bts(2); val a4 = bts(3)
+        val (start, offset) = offsetAtOffset(from)
+        val end         = if (to == widx) size else { val tp = offsetAtOffset(to); if (tp._2 > 0) tp._1 + 1 else tp._1 }
+        var cursor: Int = from
+        var continue: Boolean = true
+        var idx               = start
+        var idxStart          = from - offset
+
+        var copy: Array[Byte] = null
+        while (continue && idx < end) {
+            val buffer = apply(idx)
+            val len    = buffer.readableBytes
+            val bb     = buffer.underlying
+            while (continue && cursor < idxStart + len && cursor < to - length) {
+                val base = buffer.readerOffset + cursor - idxStart
+                if (
+                  cursor + 4 < idxStart + len &&
+                  (!ignoreCaseEqual(a1, bb.get(base)) || !ignoreCaseEqual(a2, bb.get(base + 1)) ||
+                      !ignoreCaseEqual(a3, bb.get(base + 2)) || !ignoreCaseEqual(a4, bb.get(base + 3)))
+                ) cursor += 1                                            // four bytes prefix match
+                else if (!ignoreCaseEqual(bb.get(base), a1)) cursor += 1 // one byte prefix match
+                else {
+                    if (copy == null) copy = new Array[Byte](length)
+                    this.copyInto(cursor, copy, 0, length)
+                    var same = true
+                    var i    = 1
+                    while (same && i < length) {
+                        same = same && ignoreCaseEqual(copy(i), bts(i))
+                        i += 1
+                    }
+                    if (same) continue = false else cursor += 1
+                }
+            }
+            if (continue) { // buffer not find
+                idxStart += len
+                idx += 1
+            }
+        }
+        if (continue) -1 else cursor - from
+
+    }
+
     override def bytesBefore(needle: Array[Byte], from: Int, to: Int, ignoreCase: Boolean): Int =
-        if (readableBytes > needle.length) {
+        if (to - from > needle.length) {
             checkFromTo(from, to)
             if (ignoreCase) {
                 needle.length match
@@ -1140,14 +1198,14 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                     case 2 => bytesBefore2ignoreCase(needle(0), needle(1), from, to)
                     case 3 => bytesBefore3ignoreCase(needle(0), needle(1), needle(2), from, to)
                     case 4 => bytesBefore4ignoreCase(needle(0), needle(1), needle(2), needle(3), from, to)
-                    case _ => ???
+                    case _ => bytesBeforeBytesIgnoreCase(needle, from, to)
             } else {
                 needle.length match
                     case 1 => bytesBefore1(needle(0), from, to)
                     case 2 => bytesBefore2(needle(0), needle(1), from, to)
                     case 3 => bytesBefore3(needle(0), needle(1), needle(2), from, to)
                     case 4 => bytesBefore4(needle(0), needle(1), needle(2), needle(3), from, to)
-                    case _ => ???
+                    case _ => bytesBeforeBytes(needle, from, to)
             }
         } else -1
 
@@ -2383,7 +2441,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         var sourceRead           = 0
         while {
             val buffer = apply(cursor)
-            val write  = Math.min(remaining, buffer.writableBytes - off)
+            val write  = Math.min(remaining, buffer.writerOffset - off)
             buffer.byteBuffer.put(buffer.readerOffset + off, source, sourceRead, write)
             remaining -= write
             if (remaining > 0) {
