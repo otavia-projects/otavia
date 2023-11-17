@@ -97,6 +97,7 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"cc/otavia/buffer/Buffer.html#indexInRange-fffff539","e":false,"i":"","n":"indexInRange","t":"indexInRange(lower: Byte, upper: Byte, index: Int): Boolean","d":"cc.otavia.buffer.Buffer","k":"def","x":""},
 {"l":"cc/otavia/buffer/Buffer.html#indexIs-fffff469","e":false,"i":"","n":"indexIs","t":"indexIs(byte: Byte, index: Int): Boolean","d":"cc.otavia.buffer.Buffer","k":"def","x":""},
 {"l":"cc/otavia/buffer/Buffer.html#isDirect-0","e":false,"i":"","n":"isDirect","t":"isDirect: Boolean","d":"cc.otavia.buffer.Buffer","k":"def","x":""},
+{"l":"cc/otavia/buffer/Buffer.html#nextAre-6e","e":false,"i":"","n":"nextAre","t":"nextAre(bytes: Array[Byte]): Boolean","d":"cc.otavia.buffer.Buffer","k":"def","x":""},
 {"l":"cc/otavia/buffer/Buffer.html#nextIn-6e","e":false,"i":"","n":"nextIn","t":"nextIn(bytes: Array[Byte]): Boolean","d":"cc.otavia.buffer.Buffer","k":"def","x":""},
 {"l":"cc/otavia/buffer/Buffer.html#nextInRange-dc0","e":false,"i":"","n":"nextInRange","t":"nextInRange(lower: Byte, upper: Byte): Boolean","d":"cc.otavia.buffer.Buffer","k":"def","x":""},
 {"l":"cc/otavia/buffer/Buffer.html#nextIs-890","e":false,"i":"","n":"nextIs","t":"nextIs(byte: Byte): Boolean","d":"cc.otavia.buffer.Buffer","k":"def","x":""},
