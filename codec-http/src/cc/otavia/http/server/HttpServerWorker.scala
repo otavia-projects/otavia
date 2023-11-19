@@ -20,7 +20,7 @@ import cc.otavia.core.actor.AcceptedWorkerActor
 import cc.otavia.core.actor.AcceptorActor.AcceptedChannel
 import cc.otavia.core.cache.ActorThreadLocal
 import cc.otavia.core.channel.{Channel, ChannelAddress}
-import cc.otavia.core.stack.{AskStack, StackState}
+import cc.otavia.core.stack.{AskStack, ChannelStack, StackState}
 import cc.otavia.handler.http.ServerCodec
 
 class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Array[Byte]])
@@ -32,5 +32,10 @@ class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Arr
     override def resumeAsk(stack: AskStack[AcceptedChannel]): Option[StackState] = handleAccepted(stack)
 
     override protected def afterAccepted(channel: ChannelAddress): Unit = logger.debug("Accepted {}", channel)
+
+    override protected def resumeChannelStack(stack: ChannelStack[AnyRef]): Option[StackState] = {
+
+        ???
+    }
 
 }

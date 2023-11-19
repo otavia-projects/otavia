@@ -16,14 +16,13 @@
 
 package cc.otavia.http
 
-sealed trait HttpMessage
+import cc.otavia.buffer.Buffer
+import cc.otavia.serde.Serde
 
-case class HttpRequest[P, C](
-    method: HttpMethod,
-    path: String,
-    version: HttpVersion = HttpVersion.HTTP_1_1,
-    headers: Option[HttpHeaders] = None,
-    contentType: Option[String] = None,
-    params: Option[P] = None,
-    content: Option[C] = None
-) extends HttpMessage
+class HttpResponseSerde[C](val mediaType: MediaType = MediaType.TEXT_PLAIN_UTF8) extends Serde[C | HttpResponse[C]] {
+
+    override def deserialize(in: Buffer): C | HttpResponse[C] = ???
+
+    override def serialize(value: C | HttpResponse[C], out: Buffer): Unit = ???
+
+}

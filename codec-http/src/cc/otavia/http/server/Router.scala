@@ -16,8 +16,10 @@
 
 package cc.otavia.http.server
 
+import cc.otavia.buffer.Buffer
 import cc.otavia.core.address.Address
 import cc.otavia.http.*
+import cc.otavia.http.MediaType.*
 import cc.otavia.serde.Serde
 
 import java.nio.charset.{Charset, StandardCharsets}
@@ -30,10 +32,8 @@ enum Router {
         method: HttpMethod,
         path: String,
         controller: Address[?],
-        headers: Seq[String],
-        paramsSerde: Option[ParameterSerde[?]],
-        contentSerde: Option[ContentSerde[?]],
-        responseSerde: Option[HttpSerde[?]]
+        requestSerde: HttpRequestSerde[?, ?, ?],
+        responseSerde: HttpResponseSerde[?]
     ) extends Router
 
     case StaticFilesRouter(path: String, root: Path) extends Router
@@ -48,6 +48,12 @@ enum Router {
 object Router {
 
     private val EMPTY_STRING: Seq[String] = Seq.empty
+    private val bytesSerde = new Serde[Array[Byte]] {
+
+        override def deserialize(in: Buffer): Array[Byte]             = throw new UnsupportedOperationException()
+        override def serialize(value: Array[Byte], out: Buffer): Unit = out.writeBytes(value)
+
+    }
 
     def static(path: String, root: Path): StaticFilesRouter = StaticFilesRouter(path, root)
 
@@ -55,15 +61,27 @@ object Router {
         method: HttpMethod,
         path: String,
         controller: Address[?],
-        headers: Seq[String] = EMPTY_STRING,
-        paramsSerde: Option[ParameterSerde[?]] = None,
-        contentSerde: Option[ContentSerde[?]] = None,
-        responseSerde: Option[HttpSerde[?]] = None
-    ): ControllerRouter = ControllerRouter(method, path, controller, headers, paramsSerde, contentSerde, responseSerde)
+        requestSerde: HttpRequestSerde[?, ?, ?],
+        responseSerde: HttpResponseSerde[?]
+    ): ControllerRouter =
+        ControllerRouter(method, path, controller, requestSerde, responseSerde)
+
+    def get(
+        path: String,
+        controller: Address[?],
+        requestSerde: HttpRequestSerde[?, ?, ?],
+        responseSerde: HttpResponseSerde[?]
+    ): ControllerRouter = ControllerRouter(HttpMethod.GET, path, controller, requestSerde, responseSerde)
 
     def `404`(page: Option[Path]): NotFoundRouter = NotFoundRouter(page)
 
     def constant[T](method: HttpMethod, path: String, value: T, serde: Serde[T], media: MediaType): ConstantRouter[T] =
         ConstantRouter(method, path, value, serde, media)
+
+    def constant[T](path: String, value: T, serde: Serde[T], media: MediaType): ConstantRouter[T] =
+        constant(HttpMethod.GET, path, value, serde, media)
+
+    def plain(path: String, bytes: Array[Byte], mediaType: MediaType = TEXT_PLAIN_UTF8): ConstantRouter[Array[Byte]] =
+        constant[Array[Byte]](path, bytes, bytesSerde, mediaType)
 
 }

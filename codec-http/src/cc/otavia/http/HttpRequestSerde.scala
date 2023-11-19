@@ -17,83 +17,50 @@
 package cc.otavia.http
 
 import cc.otavia.buffer.Buffer
+import cc.otavia.core.message.Reply
 import cc.otavia.serde.Serde
 
 import java.nio.charset.StandardCharsets
+import scala.collection.mutable
 import scala.language.unsafeNulls
 
-class HttpRequestSerde[P, C] extends HttpSerde[HttpRequest[P, C]] {
+abstract class HttpRequestSerde[P, C, R <: Reply](
+    private val contentSerde: Option[Serde[C]] = None,
+    private val parameterSerde: Option[ParameterSerde[P]] = None,
+    val requireHeaders: Seq[String] = HttpRequestSerde.EMPTY_STRING
+) extends Serde[HttpRequest[P, C, R]] {
 
-    private var serde: Serde[C] = _
+    private[http] def setPathVars(vars: mutable.Map[String, String]): Unit = parameterSerde match
+        case Some(serde) => serde.setPathVars(vars)
+        case None        =>
 
-    def setContentSerde(serde: Serde[C]): this.type = {
-        this.serde = serde
-        this
-    }
+    private[http] def setParams(vars: mutable.Map[String, String]): Unit = parameterSerde match
+        case Some(serde) => serde.setParams(vars)
+        case None        =>
 
-    def requireHeaders(keys: String*): this.type = {
-        // TODO
-        this
-    }
-
-    override def deserialize(in: Buffer): HttpRequest[P, C] = ???
-
-    override def serialize(request: HttpRequest[P, C], out: Buffer): Unit = {
-        serializeHeadLine(request, out)
-        request.headers match
-            case Some(value) => for ((k, v) <- value) serializeHeader(k, v, out)
-            case None        =>
-
-        request.content match
-            case Some(value) =>
-                // TODO: Content-Type
-                // set after serialize content
-                val lengthOffset = out.writerOffset + HttpHeader.Key.CONTENT_LENGTH.length + 2
-                serializeHeader(HttpHeader.Key.CONTENT_LENGTH, HttpHeader.Value.CONTENT_LENGTH_PLACEHOLDER, out)
-                out.writeByte('\r')
-                out.writeByte('\n')
-
-                val contentStartOffset = out.writerOffset
-                serde.serialize(value, out)
-                val contentLength = out.writerOffset - contentStartOffset
-
-                out.setBytes(
-                  lengthOffset,
-                  contentLength.toString.getBytes(StandardCharsets.UTF_8)
-                ) // set Content-Length value
+    final override def deserialize(in: Buffer): HttpRequest[P, C, R] = {
+        val httpRequest = createHttpRequest()
+        // construct params object
+        parameterSerde match
+            case Some(serde) =>
+                httpRequest.setParam(serde.deserialize(in))
             case None =>
-                serializeHeader(HttpHeader.Key.CONTENT_LENGTH, HttpHeader.Value.ZERO, out)
-                out.writeByte('\r')
-                out.writeByte('\n')
+        contentSerde match
+            case Some(serde) =>
+                httpRequest.setContent(serde.deserialize(in))
+            case None =>
 
+        httpRequest
     }
 
-    private def serializeHeadLine(request: HttpRequest[P, C], out: Buffer): Unit = {
-        out.writeBytes(request.method.bytes)
-        out.writeByte(' ')
-        out.writeCharSequence(request.path, StandardCharsets.UTF_8)
-        out.writeByte(' ')
-        out.writeBytes(request.version.bytes)
-        out.writeByte('\r')
-        out.writeByte('\n')
-    }
+    override def serialize(request: HttpRequest[P, C, R], out: Buffer): Unit = ???
 
-    private def serializeHeader(key: Array[Byte], value: Array[Byte], out: Buffer): Unit = {
-        out.writeBytes(key)
-        out.writeByte(':')
-        out.writeByte(' ')
-        out.writeBytes(value)
-        out.writeByte('\r')
-        out.writeByte('\n')
-    }
+    final def hasParams: Boolean = parameterSerde.nonEmpty
 
-    private def serializeHeader(key: String, value: String, out: Buffer): Unit = {
-        out.writeCharSequence(key, StandardCharsets.US_ASCII)
-        out.writeByte(':')
-        out.writeByte(' ')
-        out.writeCharSequence(value, StandardCharsets.US_ASCII)
-        out.writeByte('\r')
-        out.writeByte('\n')
-    }
+    protected def createHttpRequest(): HttpRequest[P, C, R]
 
+}
+
+object HttpRequestSerde {
+    private val EMPTY_STRING: Seq[String] = Seq.empty
 }

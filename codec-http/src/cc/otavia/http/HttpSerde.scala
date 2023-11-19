@@ -22,4 +22,4 @@ import cc.otavia.serde.Serde
  *  @tparam A
  *    type of Http data model
  */
-trait HttpSerde[A <: HttpMessage] extends Serde[A]
+trait HttpSerde[A] extends Serde[A]

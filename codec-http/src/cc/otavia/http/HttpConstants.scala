@@ -48,6 +48,11 @@ object HttpConstants {
     /** Double quote '"' */
     val DOUBLE_QUOTE = '"'
 
+    val EQ: Byte = '='
+
+    val PARAM_START: Byte    = '?'
+    val PARAM_SPLITTER: Byte = '&'
+
     /** Default character set (UTF-8) */
     val DEFAULT_CHARSET: Charset = StandardCharsets.UTF_8
 
@@ -64,5 +69,12 @@ object HttpConstants {
     val HEADER_LINE_END: Array[Byte] = "\r\n".getBytes(StandardCharsets.US_ASCII)
 
     val HEADER_SPLITTER: Array[Byte] = ": ".getBytes(StandardCharsets.US_ASCII)
+
+    val NODE_END: Array[Byte] = "/? ".getBytes(StandardCharsets.US_ASCII)
+
+    val PATH_SPLITTER: Byte = '/'
+
+    val PATH_END: Array[Byte]   = "? ".getBytes(StandardCharsets.US_ASCII)
+    val PARAMS_END: Array[Byte] = "& ".getBytes(StandardCharsets.US_ASCII)
 
 }

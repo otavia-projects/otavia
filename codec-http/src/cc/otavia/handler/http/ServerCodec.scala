@@ -18,8 +18,9 @@ package cc.otavia.handler.http
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
-import cc.otavia.core.cache.ThreadLocal
-import cc.otavia.core.channel.ChannelHandlerContext
+import cc.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
+import cc.otavia.core.channel
+import cc.otavia.core.channel.{ChannelHandlerContext, DefaultFileRegion}
 import cc.otavia.core.slf4a.{Logger, LoggerFactory}
 import cc.otavia.core.stack.ChannelFuture
 import cc.otavia.core.timer.TimeoutTrigger
@@ -29,9 +30,12 @@ import cc.otavia.http.server.Router.*
 import cc.otavia.http.{HttpConstants, HttpHeader, HttpVersion, MediaType}
 import cc.otavia.serde.Serde
 
+import java.io.File
 import java.nio.charset.{Charset, StandardCharsets}
+import java.nio.file.Path
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
+import scala.collection.mutable
 import scala.language.unsafeNulls
 
 class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array[Byte]]) extends ByteToMessageCodec {
@@ -43,6 +47,12 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
 
     private var parseState: Int       = ST_PARSE_HEADLINE
     private var currentRouter: Router = _
+
+    private val staticFilesCache = new ActorThreadLocal[mutable.HashMap[String, DefaultFileRegion]] {
+        override protected def initialValue(): mutable.HashMap[String, DefaultFileRegion] = mutable.HashMap.empty
+    }
+
+    def staticCache: mutable.HashMap[String, DefaultFileRegion] = staticFilesCache.get()
 
     // decode http request
     override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = {
@@ -67,18 +77,27 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
             if (parseState == ST_PARSE_HEADERS) {
                 val headersLength = input.bytesBefore(HttpConstants.HEADERS_END)
                 if (headersLength != -1) {
+                    val reader = input.readerOffset
+                    val off    = input.bytesBefore(HttpHeader.Key.CONTENT_LENGTH, reader, reader + headersLength, true)
                     currentRouter match
-                        case ControllerRouter(
-                              method,
-                              path,
-                              controller,
-                              headers,
-                              paramsSerde,
-                              contentSerde,
-                              responseSerde
-                            ) =>
+                        case ControllerRouter(_, _, _, requestSerde, _) =>
+                            if (requestSerde.requireHeaders.nonEmpty) {}
                         case StaticFilesRouter(path, root) =>
-                        case NotFoundRouter(page)          =>
+                            input.skipReadableBytes(headersLength + 4)
+                            val routerContext = routerMatcher.context
+                            val rootFile      = root.toFile
+                            if (rootFile.isFile && routerContext.remaining == null) {
+                                responseFile(rootFile)
+                            } else if (rootFile.isDirectory && routerContext.remaining != null) {
+                                val file = new File(rootFile, routerContext.remaining)
+                                if (file.exists()) responseFile(file)
+                                else {
+                                    // 404
+                                }
+                            } else {
+                                // 404
+                            }
+                        case NotFoundRouter(page) =>
                         case ConstantRouter(method, path, value, serde, mediaType) =>
                             input.skipReadableBytes(headersLength + 4)
                             parseState = ST_PARSE_HEADLINE
@@ -87,6 +106,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
             }
 
             if (parseState == ST_PARSE_BODY) {
+
                 ???
             }
         }
@@ -115,7 +135,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
         buffer.writeBytes(HttpHeader.Key.CONTENT_LENGTH)
         buffer.writeBytes(HttpConstants.HEADER_SPLITTER)
         val lengthOffset = buffer.writerOffset
-        buffer.writeBytes("                   ".getBytes(StandardCharsets.US_ASCII))
+        buffer.writeBytes(ServerCodec.CONTENT_LENGTH_PLACEHOLDER)
 
         buffer.writeBytes(HttpConstants.HEADERS_END)
 
@@ -126,6 +146,33 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
         buffer.setCharSequence(lengthOffset, (contentEnd - contentStart).toString)
 
         ctx.writeAndFlush(buffer)
+    }
+
+    private def responseFile(file: File): Unit = {
+        val filePathName = file.getAbsolutePath
+        val region =
+            staticCache.getOrElseUpdate(filePathName, new DefaultFileRegion(file, 0, file.length()))
+
+        val buffer = ctx.outboundAdaptiveBuffer
+        buffer.writeBytes(RESPONSE_NORMAL)
+        buffer.writeBytes(dates.get())
+        buffer.writeBytes(HttpHeader.Key.CONTENT_LENGTH)
+        buffer.writeBytes(HttpConstants.HEADER_SPLITTER)
+        buffer.writeBytes(region.countBytes)
+        buffer.writeBytes(HttpConstants.HEADER_LINE_END)
+        writeStaticMediaHeader(buffer, filePathName)
+
+        buffer.writeBytes(HttpConstants.HEADERS_END)
+
+        ctx.write(buffer)
+        ctx.writeAndFlush(region)
+    }
+
+    private def writeStaticMediaHeader(buffer: Buffer, fileName: String): Unit = {
+        buffer.writeBytes(dates.get())
+        buffer.writeBytes(HttpHeader.Key.CONTENT_TYPE)
+        buffer.writeBytes(HttpConstants.HEADER_SPLITTER)
+        if (fileName.endsWith(".html")) buffer.writeBytes(MediaType.TEXT_HTML_UTF8.fullName)
     }
 
     override def handlerAdded(ctx: ChannelHandlerContext): Unit = {
@@ -160,6 +207,8 @@ object ServerCodec {
         """HTTP/1.1 200 OK
           |Server: otavia-http
           |""".stripMargin.getBytes(StandardCharsets.US_ASCII)
+
+    private val CONTENT_LENGTH_PLACEHOLDER = "                   ".getBytes(StandardCharsets.US_ASCII)
 
     private val ST_PARSE_HEADLINE: Int = 0
     private val ST_PARSE_HEADERS: Int  = 1

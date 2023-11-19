@@ -23,6 +23,8 @@ import cc.otavia.util.*
 
 import java.io.{File, IOException, RandomAccessFile}
 import java.nio.channels.{FileChannel, WritableByteChannel}
+import java.nio.charset.StandardCharsets
+import scala.language.unsafeNulls
 
 /** Default [[FileRegion]] implementation which transfer data from a [[FileChannel]] or [[File]]. Be aware that the
  *  [[FileChannel]] will be automatically closed once [[FileRegion.refCnt]] returns 0.
@@ -33,12 +35,13 @@ import java.nio.channels.{FileChannel, WritableByteChannel}
  *    the number of bytes to transfer
  */
 class DefaultFileRegion(override val position: Long, override val count: Long)
-    extends AbstractReferenceCounted
-    with FileRegion {
+    extends /* AbstractReferenceCounted with*/ FileRegion {
 
     private var _transferred: Long               = 0L
     private var fileChannel: Option[FileChannel] = None
     private var file: Option[File]               = None
+
+    private val cBytes: Array[Byte] = count.toString.getBytes(StandardCharsets.US_ASCII)
 
     /** Create a new instance
      *
@@ -71,19 +74,21 @@ class DefaultFileRegion(override val position: Long, override val count: Long)
     /** Returns true if the [[FileRegion]] has a open file-descriptor */
     override def isOpen: Boolean = fileChannel.nonEmpty
 
+    override def countBytes: Array[Byte] = cBytes
+
     /** Explicitly open the underlying file-descriptor if not done yet.
      *  @throws IOException
      */
     @throws[IOException]
     def open(): Unit =
-        if (!isOpen && refCnt > 0) this.fileChannel = Some(new RandomAccessFile(file.get, "r").getChannel.nn)
+        if (!isOpen /*&& refCnt > 0*/ ) this.fileChannel = Some(new RandomAccessFile(file.get, "r").getChannel.nn)
 
-    override def deallocate(): Unit = fileChannel match
-        case Some(value) =>
-            this.fileChannel = None
-            try { value.close() }
-            catch { case e: IOException => }
-        case None =>
+//    override def deallocate(): Unit = fileChannel match
+//        case Some(value) =>
+//            this.fileChannel = None
+//            try { value.close() }
+//            catch { case e: IOException => }
+//        case None =>
 
     /** Returns the bytes which was transferred already. */
     override def transferred: Long = _transferred
@@ -101,7 +106,7 @@ class DefaultFileRegion(override val position: Long, override val count: Long)
         if (count < 0 || position < 0)
             throw new IllegalArgumentException(s"$position (expected: 0 - ${this.count - 1})")
         if (count == 0) 0
-        else if (refCnt == 0) throw new IllegalReferenceCountException(0)
+        else if (false /*refCnt == 0*/ ) throw new IllegalReferenceCountException(0)
         else {
             // Call open to make sure fc is initialized. This is a no-oop if we called it before.
             open()

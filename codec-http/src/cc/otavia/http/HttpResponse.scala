@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package cc.otavia.handler.codec
+package cc.otavia.http
 
-import cc.otavia.core.message.{Ask, Reply}
+import cc.otavia.core.message.Reply
 
-final case class HttpRequest[C](headers: HttpHeaders, content: C) extends Ask[HttpResponse[?]]
+abstract class HttpResponse[C] extends Reply {
+
+}

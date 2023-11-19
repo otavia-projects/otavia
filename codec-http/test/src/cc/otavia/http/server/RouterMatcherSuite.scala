@@ -17,14 +17,21 @@
 package cc.otavia.http.server
 
 import cc.otavia.buffer.Buffer
+import cc.otavia.core.message.Reply
 import cc.otavia.http.server.Router.*
+import cc.otavia.http.{AbstractParameterSerde, HttpRequest, HttpRequestSerde}
+import cc.otavia.serde.Serde
 import org.scalatest.funsuite.AnyFunSuite
 
+import java.io.File
 import java.nio.charset.StandardCharsets
+import java.nio.charset.StandardCharsets.*
 import java.nio.file.Path
 import scala.language.unsafeNulls
 
 class RouterMatcherSuite extends AnyFunSuite {
+
+    import RouterMatcherSuite.*
 
     test("build matcher") {
         val routers = Seq(
@@ -33,7 +40,9 @@ class RouterMatcherSuite extends AnyFunSuite {
           static("/assets", Path.of("assets")),
           plain("/user/say/hello", "hello!".getBytes(StandardCharsets.UTF_8)),
           plain("/user/say/world", "world!".getBytes(StandardCharsets.UTF_8)),
-          plain("/user/say", "hello world!".getBytes(StandardCharsets.UTF_8))
+          plain("/user/say", "hello world!".getBytes(StandardCharsets.UTF_8)),
+          plain("/do/{what}", "hello".getBytes(StandardCharsets.UTF_8)),
+          get("/do/{what}/{go_home}", null, doRequestSerde, null)
         )
 
         val matcher = new RouterMatcher(routers)
@@ -46,16 +55,58 @@ class RouterMatcherSuite extends AnyFunSuite {
         val buf6 = Buffer.wrap("GET /user/say HTTP/1.1".getBytes(StandardCharsets.US_ASCII))
 
         val buf7 = Buffer.wrap("GET /admin HTTP/1.1".getBytes(StandardCharsets.US_ASCII))
+        val buf8 = Buffer.wrap("GET https://user@pass/ HTTP/1.1".getBytes(US_ASCII))
 
-        val r1 = matcher.choice(buf1)
-        val r2 = matcher.choice(buf2)
-        val r3 = matcher.choice(buf3)
-        val r4 = matcher.choice(buf4)
-        val r5 = matcher.choice(buf5)
-        val r6 = matcher.choice(buf6)
-        val r7 = matcher.choice(buf7)
+        val buf9  = Buffer.wrap("GET /assets/js/bootstrap.min.js HTTP/1.1".getBytes(US_ASCII))
+        val buf10 = Buffer.wrap("GET /do/biking HTTP/1.1".getBytes(US_ASCII))
+        val buf11 = Buffer.wrap("GET /do/biking/true HTTP/1.1".getBytes(US_ASCII))
+        val buf12 = Buffer.wrap("GET /do/biking/true?name=yk&age=30 HTTP/1.1".getBytes(US_ASCII))
+
+        val r1  = matcher.choice(buf1)
+        val r2  = matcher.choice(buf2)
+        val r3  = matcher.choice(buf3)
+        val r4  = matcher.choice(buf4)
+        val r5  = matcher.choice(buf5)
+        val r6  = matcher.choice(buf6)
+        val r7  = matcher.choice(buf7)
+        val r8  = matcher.choice(buf8)
+        val r9  = matcher.choice(buf9)
+        val r10 = matcher.choice(buf10)
+        val r11 = matcher.choice(buf11)
+        val r12 = matcher.choice(buf12)
 
         assert(true)
     }
+
+}
+
+object RouterMatcherSuite {
+
+    private val bytesSerde = new Serde[Array[Byte]] {
+
+        override def deserialize(in: Buffer): Array[Byte] = throw new UnsupportedOperationException()
+
+        override def serialize(value: Array[Byte], out: Buffer): Unit = out.writeBytes(value)
+
+    }
+
+    case class Do(what: String, goHome: Boolean, name: Option[String], age: Option[Int])
+    case class DoResult(success: Boolean) extends Reply
+
+    class DoRequest extends HttpRequest[Do, Nothing, DoResult]
+
+    val paramSerde: AbstractParameterSerde[Do] = new AbstractParameterSerde[Do] {
+
+        override def serialize(value: Do, out: Buffer): Unit = ???
+
+        override def deserialize(in: Buffer): Do =
+            Do(pathVars("what"), pathVars("go_home").toBoolean, params.get("name"), params.get("age").map(_.toInt))
+
+    }
+
+    val doRequestSerde: HttpRequestSerde[Do, Nothing, DoResult] =
+        new HttpRequestSerde[Do, Nothing, DoResult](parameterSerde = Some(paramSerde)) {
+            override protected def createHttpRequest(): HttpRequest[Do, Nothing, DoResult] = new DoRequest
+        }
 
 }
