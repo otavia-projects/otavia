@@ -7,12 +7,12 @@
 </div>
 <div class="main-signature mono-small-block">
  <div class="signature">
-  <span class="signature-short"><span class="modifiers"></span><span class="kind"><span t="k">class </span></span><a href="DefaultFileRegion.html" t="n" class="documentableName ">DefaultFileRegion</a>(<span t="k"></span><span t="k">val </span><span data-unresolved-link="" t="n">position</span>: <span data-unresolved-link="" t="t">Long</span>, <span t="k">val </span><span data-unresolved-link="" t="n">count</span>: <span data-unresolved-link="" t="t">Long</span>)<span t="k"> extends </span><span data-unresolved-link="" t="t">AbstractReferenceCounted</span><span t="k">, </span></span><span class="signature-long"><a href="FileRegion.html" t="t">FileRegion</a></span>
+  <span class="signature-short"><span class="modifiers"></span><span class="kind"><span t="k">class </span></span><a href="DefaultFileRegion.html" t="n" class="documentableName ">DefaultFileRegion</a>(<span t="k"></span><span t="k">val </span><span data-unresolved-link="" t="n">position</span>: <span data-unresolved-link="" t="t">Long</span>, <span t="k">val </span><span data-unresolved-link="" t="n">count</span>: <span data-unresolved-link="" t="t">Long</span>)<span t="k"> extends </span><a href="FileRegion.html" t="t">FileRegion</a></span><span class="signature-long"></span>
  </div>
 </div>
 <div class="cover">
  <div class="doc">
-  <p>Default <a href="FileRegion.html">FileRegion</a> implementation which transfer data from a <span data-unresolved-link="" title="Problem linking FileChannel: No DRI found for query">FileChannel</span> or <span data-unresolved-link="" title="Problem linking File: No DRI found for query">File</span>. Be aware that the <span data-unresolved-link="" title="Problem linking FileChannel: No DRI found for query">FileChannel</span> will be automatically closed once <a href="FileRegion.html#refCnt-0">FileRegion.refCnt</a> returns 0.</p> 
+  <p>Default <a href="FileRegion.html">FileRegion</a> implementation which transfer data from a <span data-unresolved-link="" title="Problem linking FileChannel: No DRI found for query">FileChannel</span> or <span data-unresolved-link="" title="Problem linking File: No DRI found for query">File</span>. Be aware that the <span data-unresolved-link="" title="Problem linking FileChannel: No DRI found for query">FileChannel</span> will be automatically closed once <span data-unresolved-link="" title="Problem linking FileRegion.refCnt: No DRI found for query">FileRegion.refCnt</span> returns 0.</p> 
  </div>
  <section id="attributes">
   <h2 class="h500">Value parameters</h2>
@@ -41,24 +41,18 @@
      <svg id="graph"></svg>
      <script type="text/dot" id="dot"> digraph g {
  node0 [id=node0, label="<span style=\"color: #FFFFFF;\">class <a href=\"DefaultFileRegion.html\" t=\"n\">DefaultFileRegion</a></span>", class="class vertex"];
-node1 [id=node1, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">AbstractReferenceCounted</span></span>", class="class vertex"];
-node2 [id=node2, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Object</span></span>", class="class vertex"];
-node3 [id=node3, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Any</span></span>", class="class vertex"];
-node4 [id=node4, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Matchable</span></span>", class="trait vertex"];
-node5 [id=node5, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">ReferenceCounted</span></span>", class="trait vertex"];
-node6 [id=node6, label="<span style=\"color: #FFFFFF;\">trait <a href=\"FileRegion.html\" t=\"n\">FileRegion</a></span>", class="trait vertex"];
+node1 [id=node1, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Object</span></span>", class="class vertex"];
+node2 [id=node2, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Any</span></span>", class="class vertex"];
+node3 [id=node3, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Matchable</span></span>", class="trait vertex"];
+node4 [id=node4, label="<span style=\"color: #FFFFFF;\">trait <a href=\"FileRegion.html\" t=\"n\">FileRegion</a></span>", class="trait vertex"];
 
 
  node0 -> node1;
 node1 -> node2;
-node2 -> node3;
-node2 -> node4;
-node4 -> node3;
-node1 -> node5;
-node5 -> node2;
-node0 -> node6;
-node6 -> node2;
-node6 -> node5;
+node1 -> node3;
+node3 -> node2;
+node0 -> node4;
+node4 -> node1;
 
 }
 </script>
@@ -73,12 +67,6 @@ node6 -> node5;
       trait <a href="FileRegion.html" t="n">FileRegion</a>
      </div>
      <div>
-      class <span data-unresolved-link="" t="n">AbstractReferenceCounted</span>
-     </div>
-     <div>
-      trait <span data-unresolved-link="" t="n">ReferenceCounted</span>
-     </div>
-     <div>
       class <span data-unresolved-link="" t="n">Object</span>
      </div>
      <div>
@@ -86,7 +74,7 @@ node6 -> node5;
      </div>
      <div>
       class <span data-unresolved-link="" t="n">Any</span>
-     </div><span class="show-all-code show-content text-button h100">Show all</span>
+     </div><span></span>
     </div>
    </dd>
   </dl>
@@ -218,12 +206,12 @@ node6 -> node5;
          <button class="icon-button show-content expand"></button>
          <h4 class="groupHeader h200">Concrete methods</h4>
         </div>
-        <div class="documentableElement" id="deallocate-94c" data-f-keywords="override">
+        <div class="documentableElement" id="countBytes-0" data-f-keywords="override">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DefaultFileRegion.html#deallocate-94c" t="n" class="documentableName ">deallocate</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Unit</span>
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DefaultFileRegion.html#countBytes-0" t="n" class="documentableName ">countBytes</a>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>]
            </div>
           </div>
          </div>
@@ -232,13 +220,8 @@ node6 -> node5;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
-            <div class="documentableBrief doc">
-             <p>Called once <a href="DefaultFileRegion.html#refCnt-0">refCnt</a> is equals 0.</p> 
-            </div>
             <div class="cover">
-             <div class="doc">
-              <p>Called once <a href="DefaultFileRegion.html#refCnt-0">refCnt</a> is equals 0.</p> 
-             </div>
+             <div class="doc"></div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -246,7 +229,7 @@ node6 -> node5;
               </dt>
               <dd class="body-medium">
                <div>
-                <span data-unresolved-link="">AbstractReferenceCounted</span>
+                <a href="FileRegion.html">FileRegion</a>
                </div>
               </dd>
              </dl>
@@ -411,250 +394,6 @@ node6 -> node5;
         </div>
        </div>
       </section>
-      <section id="Inherited-methods">
-       <div class="documentableList expand">
-        <div class="documentableList-expander">
-         <button class="icon-button show-content expand"></button>
-         <h4 class="groupHeader h200">Inherited methods</h4>
-        </div>
-        <div class="documentableElement" id="refCnt-0" data-f-keywords="override" data-f-inherited="AbstractReferenceCounted">
-         <div class="documentableElement-expander">
-          <button class="icon-button ar show-content"></button>
-          <div class="header monospace mono-medium">
-           <div class="signature">
-            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DefaultFileRegion.html#refCnt-0" t="n" class="documentableName ">refCnt</a>: <span data-unresolved-link="" t="t">Int</span>
-           </div>
-          </div>
-         </div>
-         <div class="docs">
-          <span class="modifiers"></span>
-          <div>
-           <div class="originInfo"></div>
-           <div class="memberDocumentation">
-            <div class="documentableBrief doc">
-             <p>Returns the reference count of this object. If 0, it means this object has been deallocated.</p> 
-            </div>
-            <div class="cover">
-             <div class="doc">
-              <p>Returns the reference count of this object. If 0, it means this object has been deallocated.</p> 
-             </div>
-             <h2 class="h200">Attributes</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Definition Classes
-              </dt>
-              <dd class="body-medium">
-               <div>
-                <span data-unresolved-link="">AbstractReferenceCounted</span> -&gt; <span data-unresolved-link="">ReferenceCounted</span>
-               </div>
-              </dd>
-              <dt class="body-small">
-               Inherited from:
-              </dt>
-              <dd class="body-medium">
-               <span data-unresolved-link="">AbstractReferenceCounted</span>
-              </dd>
-             </dl>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
-        <div class="documentableElement" id="release-ffffff99" data-f-keywords="override" data-f-inherited="AbstractReferenceCounted">
-         <div class="documentableElement-expander">
-          <button class="icon-button ar show-content"></button>
-          <div class="header monospace mono-medium">
-           <div class="signature">
-            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DefaultFileRegion.html#release-ffffff99" t="n" class="documentableName ">release</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">decrement</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Boolean</span>
-           </div>
-          </div>
-         </div>
-         <div class="docs">
-          <span class="modifiers"></span>
-          <div>
-           <div class="originInfo"></div>
-           <div class="memberDocumentation">
-            <div class="documentableBrief doc">
-             <p>Decreases the reference count by the specified decrement and deallocates this object if the reference count reaches at 0.</p> 
-            </div>
-            <div class="cover">
-             <div class="doc">
-              <p>Decreases the reference count by the specified decrement and deallocates this object if the reference count reaches at 0.</p> 
-             </div>
-             <h2 class="h200">Value parameters</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               decrement
-              </dt>
-              <dd class="body-medium">
-               <p>decrement reference count</p> 
-              </dd>
-             </dl>
-             <h2 class="h200">Attributes</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Returns
-              </dt>
-              <dd class="body-medium">
-               <p>true if and only if the reference count became 0 and this object has been deallocated</p> 
-              </dd>
-              <dt class="body-small">
-               Definition Classes
-              </dt>
-              <dd class="body-medium">
-               <div>
-                <span data-unresolved-link="">AbstractReferenceCounted</span> -&gt; <span data-unresolved-link="">ReferenceCounted</span>
-               </div>
-              </dd>
-              <dt class="body-small">
-               Inherited from:
-              </dt>
-              <dd class="body-medium">
-               <span data-unresolved-link="">AbstractReferenceCounted</span>
-              </dd>
-             </dl>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
-        <div class="documentableElement" id="release-0" data-f-keywords="override" data-f-inherited="AbstractReferenceCounted">
-         <div class="documentableElement-expander">
-          <button class="icon-button ar show-content"></button>
-          <div class="header monospace mono-medium">
-           <div class="signature">
-            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DefaultFileRegion.html#release-0" t="n" class="documentableName ">release</a>: <span data-unresolved-link="" t="t">Boolean</span>
-           </div>
-          </div>
-         </div>
-         <div class="docs">
-          <span class="modifiers"></span>
-          <div>
-           <div class="originInfo"></div>
-           <div class="memberDocumentation">
-            <div class="documentableBrief doc">
-             <p>Decreases the reference count by 1 and deallocates this object if the reference count reaches at 0.</p> 
-            </div>
-            <div class="cover">
-             <div class="doc">
-              <p>Decreases the reference count by 1 and deallocates this object if the reference count reaches at 0.</p> 
-             </div>
-             <h2 class="h200">Attributes</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Returns
-              </dt>
-              <dd class="body-medium">
-               <p>true if and only if the reference count became 0 and this object has been deallocated</p> 
-              </dd>
-              <dt class="body-small">
-               Definition Classes
-              </dt>
-              <dd class="body-medium">
-               <div>
-                <span data-unresolved-link="">AbstractReferenceCounted</span> -&gt; <span data-unresolved-link="">ReferenceCounted</span>
-               </div>
-              </dd>
-              <dt class="body-small">
-               Inherited from:
-              </dt>
-              <dd class="body-medium">
-               <span data-unresolved-link="">AbstractReferenceCounted</span>
-              </dd>
-             </dl>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
-        <div class="documentableElement" id="retain-f3c" data-f-keywords="override" data-f-inherited="AbstractReferenceCounted">
-         <div class="documentableElement-expander">
-          <button class="icon-button ar show-content"></button>
-          <div class="header monospace mono-medium">
-           <div class="signature">
-            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DefaultFileRegion.html#retain-f3c" t="n" class="documentableName ">retain</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">increment</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">AbstractReferenceCounted</span>.this.type
-           </div>
-          </div>
-         </div>
-         <div class="docs">
-          <span class="modifiers"></span>
-          <div>
-           <div class="originInfo"></div>
-           <div class="memberDocumentation">
-            <div class="documentableBrief doc">
-             <p>Increases the reference count by the specified increment.</p> 
-            </div>
-            <div class="cover">
-             <div class="doc">
-              <p>Increases the reference count by the specified increment.</p> 
-             </div>
-             <h2 class="h200">Attributes</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Definition Classes
-              </dt>
-              <dd class="body-medium">
-               <div>
-                <span data-unresolved-link="">AbstractReferenceCounted</span> -&gt; <span data-unresolved-link="">ReferenceCounted</span>
-               </div>
-              </dd>
-              <dt class="body-small">
-               Inherited from:
-              </dt>
-              <dd class="body-medium">
-               <span data-unresolved-link="">AbstractReferenceCounted</span>
-              </dd>
-             </dl>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
-        <div class="documentableElement" id="retain-0" data-f-keywords="override" data-f-inherited="AbstractReferenceCounted">
-         <div class="documentableElement-expander">
-          <button class="icon-button ar show-content"></button>
-          <div class="header monospace mono-medium">
-           <div class="signature">
-            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DefaultFileRegion.html#retain-0" t="n" class="documentableName ">retain</a>: <span data-unresolved-link="" t="t">AbstractReferenceCounted</span>.this.type
-           </div>
-          </div>
-         </div>
-         <div class="docs">
-          <span class="modifiers"></span>
-          <div>
-           <div class="originInfo"></div>
-           <div class="memberDocumentation">
-            <div class="documentableBrief doc">
-             <p>Increases the reference count by 1.</p> 
-            </div>
-            <div class="cover">
-             <div class="doc">
-              <p>Increases the reference count by 1.</p> 
-             </div>
-             <h2 class="h200">Attributes</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Definition Classes
-              </dt>
-              <dd class="body-medium">
-               <div>
-                <span data-unresolved-link="">AbstractReferenceCounted</span> -&gt; <span data-unresolved-link="">ReferenceCounted</span>
-               </div>
-              </dd>
-              <dt class="body-small">
-               Inherited from:
-              </dt>
-              <dd class="body-medium">
-               <span data-unresolved-link="">AbstractReferenceCounted</span>
-              </dd>
-             </dl>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
-       </div>
-      </section>
       <section id="Concrete-fields">
        <div class="documentableList expand">
         <div class="documentableList-expander">
@@ -724,4 +463,4 @@ node6 -> node5;
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Value parameters</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Constructors">Constructors</a></li><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li><li><a href="#Concrete-fields">Concrete fields</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Value parameters</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Constructors">Constructors</a></li><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Concrete-fields">Concrete fields</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
