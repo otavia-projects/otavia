@@ -106,10 +106,11 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
             }
 
             if (parseState == ST_PARSE_BODY) {
-
                 ???
             }
         }
+
+        if (ctx.outboundAdaptiveBuffer.readableBytes > 0) ctx.flush()
     }
 
     // encode http response
@@ -145,7 +146,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
 
         buffer.setCharSequence(lengthOffset, (contentEnd - contentStart).toString)
 
-        ctx.writeAndFlush(buffer)
+        ctx.write(buffer)
     }
 
     private def responseFile(file: File): Unit = {
@@ -165,7 +166,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
         buffer.writeBytes(HttpConstants.HEADERS_END)
 
         ctx.write(buffer)
-        ctx.writeAndFlush(region)
+        ctx.write(region)
     }
 
     private def writeStaticMediaHeader(buffer: Buffer, fileName: String): Unit = {
