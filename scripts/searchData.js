@@ -1884,6 +1884,8 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"cc/otavia/handler/timeout/IdleStateHandler.html#ticksInNanos-644","e":false,"i":"","n":"ticksInNanos","t":"ticksInNanos(): Long","d":"cc.otavia.handler.timeout.IdleStateHandler","k":"def","x":""},
 {"l":"cc/otavia/handler/timeout/IdleStateHandler$.html#","e":false,"i":"","n":"IdleStateHandler","t":"IdleStateHandler","d":"cc.otavia.handler.timeout","k":"object","x":""},
 {"l":"cc/otavia/serde.html#","e":false,"i":"","n":"cc.otavia.serde","t":"cc.otavia.serde","d":"","k":"package","x":""},
+{"l":"cc/otavia/serde/helper.html#","e":false,"i":"","n":"cc.otavia.serde.helper","t":"cc.otavia.serde.helper","d":"","k":"package","x":""},
+{"l":"cc/otavia/serde/helper/BytesSerde$.html#","e":false,"i":"","n":"BytesSerde","t":"BytesSerde extends Serde[Array[Byte]]","d":"cc.otavia.serde.helper","k":"object","x":""},
 {"l":"cc/otavia/serde/Serde.html#","e":false,"i":"","n":"Serde","t":"Serde[A]","d":"cc.otavia.serde","k":"trait","x":""},
 {"l":"cc/otavia/serde/Serde.html#checkDeserializable-fffff640","e":false,"i":"","n":"checkDeserializable","t":"checkDeserializable(in: Buffer): Boolean","d":"cc.otavia.serde.Serde","k":"def","x":""},
 {"l":"cc/otavia/serde/Serde.html#deserialize-fffffeb3","e":false,"i":"","n":"deserialize","t":"deserialize(in: Buffer): A","d":"cc.otavia.serde.Serde","k":"def","x":""},
