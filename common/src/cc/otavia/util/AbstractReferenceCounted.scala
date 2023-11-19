@@ -25,26 +25,32 @@ abstract class AbstractReferenceCounted extends ReferenceCounted {
     import AbstractReferenceCounted.*
 
     // Value might not equal "real" reference count, all access should be via the updater
-    @volatile private val cnt: Int = updater.initialValue
+    private var cnt: Int = 1
 
-    override def refCnt: Int = updater.refCnt(this)
+    override def refCnt: Int = this.synchronized(cnt)
 
     /** An unsafe operation intended for use by a subclass that sets the reference count of the buffer directly */
-    protected final def setRefCnt(refCnt: Int): Unit = updater.setRefCnt(this, refCnt)
+    protected final def setRefCnt(refCnt: Int): Unit = this.synchronized { cnt = refCnt }
 
     override def retain: this.type = {
-        updater.retain(this)
+        this.synchronized { cnt += 1 }
         this
     }
 
     override def retain(increment: Int): this.type = {
-        updater.retain(this, increment)
+        this.synchronized { cnt += increment }
         this
     }
 
-    override def release: Boolean = handleRelease(updater.release(this))
+    override def release: Boolean = this.synchronized {
+        cnt -= 1
+        handleRelease(cnt == 0)
+    }
 
-    override def release(decrement: Int): Boolean = handleRelease(updater.release(this, decrement))
+    override def release(decrement: Int): Boolean = this.synchronized {
+        cnt -= decrement
+        handleRelease(cnt == 0)
+    }
 
     private def handleRelease(result: Boolean): Boolean = {
         if (result) deallocate()
@@ -67,7 +73,7 @@ object AbstractReferenceCounted {
 
         override protected def updater: AtomicIntegerFieldUpdater[AbstractReferenceCounted] = AIF_UPDATER
 
-        override protected def unsafeOffset: Long = ???
+        override protected def unsafeOffset: Long = REFCNT_FIELD_OFFSET
 
     }
 

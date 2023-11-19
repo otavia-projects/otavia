@@ -46,7 +46,7 @@ import java.nio.channels.WritableByteChannel
  *
  *  <h3>Not all transports support it</h3>
  */
-trait FileRegion /* extends ReferenceCounted */ {
+trait FileRegion extends ReferenceCounted {
 
     /** Returns true if the [[FileRegion]] has a open file-descriptor */
     def isOpen: Boolean

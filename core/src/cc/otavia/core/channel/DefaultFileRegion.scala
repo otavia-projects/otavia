@@ -35,11 +35,12 @@ import scala.language.unsafeNulls
  *    the number of bytes to transfer
  */
 class DefaultFileRegion(override val position: Long, override val count: Long)
-    extends /* AbstractReferenceCounted with*/ FileRegion {
+    extends AbstractReferenceCounted
+    with FileRegion {
 
-    private var _transferred: Long               = 0L
-    private var fileChannel: Option[FileChannel] = None
-    private var file: Option[File]               = None
+    private var _transferred: Long       = 0L
+    private var fileChannel: FileChannel = _
+    private var file: File               = _
 
     private val cBytes: Array[Byte] = count.toString.getBytes(StandardCharsets.US_ASCII)
 
@@ -54,7 +55,7 @@ class DefaultFileRegion(override val position: Long, override val count: Long)
      */
     def this(fileChannel: FileChannel, position: Long, count: Long) = {
         this(position, count)
-        this.fileChannel = Some(fileChannel)
+        this.fileChannel = fileChannel
     }
 
     /** Create a new instance using the given [[File]]. The [[File]] will be opened lazily or explicitly via [[open()]].
@@ -68,11 +69,33 @@ class DefaultFileRegion(override val position: Long, override val count: Long)
      */
     def this(file: File, position: Long, count: Long) = {
         this(position, count)
-        this.file = Some(file)
+        this.file = file
+    }
+
+    /** Create a new instance using the given [[File]]. The [[File]] will be opened lazily or explicitly via [[open()]].
+     *  The [[position]] is 0 and [[count]] is the length of the file.
+     *
+     *  @param file
+     *    the [[File]] which should be transferred
+     */
+    def this(file: File) = {
+        this(0, file.length())
+        this.file = file
+    }
+
+    /** Create a new instance using the given [[File]]. The [[File]] will be opened lazily or explicitly via [[open()]].
+     *  The [[position]] is 0 and [[count]] is the size of the [[fileChannel]].
+     *
+     *  @param file
+     *    the [[File]] which should be transferred
+     */
+    def this(fileChannel: FileChannel) = {
+        this(0, fileChannel.size())
+        this.fileChannel = fileChannel
     }
 
     /** Returns true if the [[FileRegion]] has a open file-descriptor */
-    override def isOpen: Boolean = fileChannel.nonEmpty
+    override def isOpen: Boolean = this.synchronized(fileChannel != null)
 
     override def countBytes: Array[Byte] = cBytes
 
@@ -81,14 +104,14 @@ class DefaultFileRegion(override val position: Long, override val count: Long)
      */
     @throws[IOException]
     def open(): Unit =
-        if (!isOpen /*&& refCnt > 0*/ ) this.fileChannel = Some(new RandomAccessFile(file.get, "r").getChannel.nn)
+        if (!isOpen && refCnt > 0) this.synchronized { this.fileChannel = new RandomAccessFile(file, "r").getChannel }
 
-//    override def deallocate(): Unit = fileChannel match
-//        case Some(value) =>
-//            this.fileChannel = None
-//            try { value.close() }
-//            catch { case e: IOException => }
-//        case None =>
+    override protected def deallocate(): Unit = if (fileChannel != null) {
+        val fc = fileChannel
+        fileChannel = null
+        try { fc.close() }
+        catch { case e: IOException => }
+    }
 
     /** Returns the bytes which was transferred already. */
     override def transferred: Long = _transferred
@@ -106,11 +129,11 @@ class DefaultFileRegion(override val position: Long, override val count: Long)
         if (count < 0 || position < 0)
             throw new IllegalArgumentException(s"$position (expected: 0 - ${this.count - 1})")
         if (count == 0) 0
-        else if (false /*refCnt == 0*/ ) throw new IllegalReferenceCountException(0)
+        else if (refCnt == 0) throw new IllegalReferenceCountException(0)
         else {
             // Call open to make sure fc is initialized. This is a no-oop if we called it before.
             open()
-            val written = fileChannel.get.transferTo(this.position + position, count, target)
+            val written = fileChannel.transferTo(this.position + position, count, target)
             if (written > 0) _transferred += written else if (written == 0) validate(this, position)
             written
         }
@@ -125,7 +148,7 @@ private object DefaultFileRegion {
         // actual file itself as it may have been truncated on disk.
         //
         // See https://github.com/netty/netty/issues/8868
-        val size  = region.file.size
+        val size  = region.fileChannel.size()
         val count = region.count - position
         if (region.position + count + position > size)
             throw new IOException(s"Underlying file size $size smaller then requested count ${region.count}")

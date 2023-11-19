@@ -114,7 +114,9 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
                     }
                     buf.close()
                 }
-            case fileRegion: FileRegion => fileRegion.transferTo(ch, 0)
+            case fileRegion: FileRegion =>
+                fileRegion.transferTo(ch, 0)
+                fileRegion.release
     }
 
     override def isOpen: Boolean = this.synchronized { ch.isOpen }
