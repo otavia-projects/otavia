@@ -29,10 +29,13 @@ import java.io.IOException
 import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.{ClosedChannelException, SelectableChannel, SelectionKey, SocketChannel}
+import scala.collection.mutable
 import scala.language.unsafeNulls
 
 class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp: Int)
     extends AbstractNioUnsafeChannel[SocketChannel](channel, ch, readInterestOp) {
+
+    private var flushQueue: mutable.ArrayDeque[FileRegion | RecyclablePageBuffer] = _
 
     setReadPlanFactory((channel: Channel) => new NioSocketChannelReadPlan())
 
@@ -91,32 +94,73 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
     }
 
     override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit = {
-        var closed = false
-        payload match
-            case buffer: RecyclablePageBuffer =>
-                var cursor = buffer
-                while (cursor != null) {
-                    val buf = cursor
-                    cursor = cursor.next
-                    buf.next = null
-                    if (!closed) {
-                        val writable   = buf.readableBytes
-                        val byteBuffer = buf.byteBuffer
-                        byteBuffer.limit(buf.writerOffset)
-                        byteBuffer.position(buf.readerOffset)
-                        try {
-                            val write = ch.write(byteBuffer) // TODO: socket write buf busy
-                        } catch {
-                            case e: IOException =>
-                                unsafeClose(Some(e))
-                                closed = true
-                        }
-                    }
-                    buf.close()
+        if (flushQueue != null && flushQueue.nonEmpty) {
+            if (payload != null) flushQueue.addOne(payload)
+            val resize   = flushQueue.size > 64
+            var continue = true
+            while (continue && flushQueue.nonEmpty) {
+                flushQueue.removeHead() match
+                    case buffer: RecyclablePageBuffer =>
+                        continue = unsafeFlushBuffer(buffer)
+                    case fileRegion: FileRegion => unsafeFlushFileRegion(fileRegion)
+            }
+            if (_selectionKey != null && _selectionKey.isValid) { // Channel not be closed.
+                val interestOps = _selectionKey.interestOps()
+                if (flushQueue.nonEmpty) { // Did not write completely.
+                    if ((interestOps & SelectionKey.OP_WRITE) == 0)
+                        _selectionKey.interestOps(interestOps | SelectionKey.OP_WRITE)
+                } else { // Write completely.
+                    if ((interestOps & SelectionKey.OP_WRITE) != 0)
+                        _selectionKey.interestOps(interestOps & ~SelectionKey.OP_WRITE)
+
+                    if (resize) flushQueue.clearAndShrink()
                 }
-            case fileRegion: FileRegion =>
-                fileRegion.transferTo(ch, 0)
-                fileRegion.release
+            }
+        } else {
+            payload match
+                case buffer: RecyclablePageBuffer => unsafeFlushBuffer(buffer)
+                case fileRegion: FileRegion       => unsafeFlushFileRegion(fileRegion)
+        }
+    }
+
+    private def unsafeFlushBuffer(buffer: RecyclablePageBuffer): Boolean = {
+        var closed   = false
+        var cursor   = buffer
+        var continue = true
+        while (cursor != null && continue) {
+            val buf = cursor
+            cursor = cursor.next
+            buf.next = null
+            if (!closed) {
+                val writable   = buf.readableBytes
+                val byteBuffer = buf.byteBuffer
+                byteBuffer.limit(buf.writerOffset)
+                byteBuffer.position(buf.readerOffset)
+                try {
+                    val write = ch.write(byteBuffer)
+                    if (write != writable) {
+                        continue = false
+                        buf.skipReadableBytes(write)
+                        buf.next = cursor
+                        if (flushQueue == null) flushQueue = mutable.ArrayDeque.empty
+                        flushQueue.prepend(buf)
+                        val interestOps = _selectionKey.interestOps()
+                        if ((interestOps & SelectionKey.OP_WRITE) == 0)
+                            _selectionKey.interestOps(interestOps | SelectionKey.OP_WRITE)
+                    } else buf.close()
+                } catch {
+                    case e: IOException =>
+                        unsafeClose(Some(e))
+                        closed = true
+                }
+            } else buf.close()
+        }
+        continue
+    }
+
+    private def unsafeFlushFileRegion(fileRegion: FileRegion): Unit = {
+        fileRegion.transferTo(ch, 0)
+        fileRegion.release
     }
 
     override def isOpen: Boolean = this.synchronized { ch.isOpen }

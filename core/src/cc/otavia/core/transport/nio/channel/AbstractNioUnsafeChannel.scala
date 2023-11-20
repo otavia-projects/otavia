@@ -81,7 +81,7 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
             if ((readOps & SelectionKey.OP_WRITE) != 0) {
                 // Notice to call forceFlush which will also take care of clear the OP_WRITE once there is nothing left to
                 // write
-                executorAddress.inform(ReactorEvent.ChannelReadiness(channel, SelectionKey.OP_WRITE))
+                unsafeFlush(null)
             }
             // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead
             // to a spin loop
@@ -113,6 +113,7 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
 
     override def unsafeClose(cause: Option[Throwable]): Unit = {
         try {
+            _selectionKey = null
             ch.close()
             executorAddress.inform(ReactorEvent.ChannelClose(channel, cause))
         } catch {

@@ -31,6 +31,7 @@ import cc.otavia.core.stack.*
 import cc.otavia.core.system.{ActorSystem, ActorThread}
 
 import java.net.SocketAddress
+import java.nio.ByteBuffer
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import scala.collection.mutable
@@ -421,13 +422,26 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     final private[core] def writeTransport(msg: AnyRef): Unit = {
         msg match
-            case fileRegion: FileRegion => outboundQueue.addOne(fileRegion)
             case adaptiveBuffer: AdaptiveBuffer if adaptiveBuffer == channelOutboundAdaptiveBuffer =>
-                if (outboundQueue.nonEmpty && outboundQueue.last.isInstanceOf[AdaptiveBufferOffset]) {
-                    outboundQueue.last.asInstanceOf[AdaptiveBufferOffset].endIndex = adaptiveBuffer.writerOffset
-                } else outboundQueue.addOne(new AdaptiveBufferOffset(adaptiveBuffer.writerOffset))
-            case _ => throw new UnsupportedOperationException()
+                updateLastOutboundQueue()
+            case bytes: Array[Byte] =>
+                channelOutboundAdaptiveBuffer.writeBytes(bytes)
+                updateLastOutboundQueue()
+            case buffer: ByteBuffer =>
+                channelOutboundAdaptiveBuffer.writeBytes(buffer)
+                updateLastOutboundQueue()
+            case fileRegion: FileRegion => outboundQueue.addOne(fileRegion)
+            case _                      => throw new UnsupportedOperationException()
     }
+
+    private def updateLastOutboundQueue(): Unit =
+        if (outboundQueue.nonEmpty && outboundQueue.last.isInstanceOf[AdaptiveBufferOffset]) {
+            val last = outboundQueue.last.asInstanceOf[AdaptiveBufferOffset]
+            last.endIndex = channelOutboundAdaptiveBuffer.writerOffset
+        } else {
+            val offset = new AdaptiveBufferOffset(channelOutboundAdaptiveBuffer.writerOffset)
+            outboundQueue.addOne(offset)
+        }
 
     final private[core] def flushTransport(): Unit = {
         val resize = if (outboundQueue.size > 64) true else false
@@ -439,6 +453,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
                     val chain = channelOutboundAdaptiveBuffer.splitBefore(adaptiveBufferOffset.endIndex)
                     reactor.flush(this, chain)
         }
+        if (resize) outboundQueue.clearAndShrink()
     }
 
     private[core] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit
