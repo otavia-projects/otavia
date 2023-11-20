@@ -206,6 +206,14 @@ object `codec-http` extends OtaviaModule {
 
     }
 
+    object demo extends ScalaModule {
+
+        override def scalaVersion = ProjectInfo.scalaVersion
+
+        override def moduleDeps = Seq(`codec-http`)
+
+    }
+
 }
 
 object sql extends OtaviaModule {

@@ -78,12 +78,17 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
                 val headersLength = input.bytesBefore(HttpConstants.HEADERS_END)
                 if (headersLength != -1) {
                     val reader = input.readerOffset
-                    val off    = input.bytesBefore(HttpHeader.Key.CONTENT_LENGTH, reader, reader + headersLength, true)
+                    val contentLengthOffset =
+                        input.bytesBefore(HttpHeader.Key.CONTENT_LENGTH, reader, reader + headersLength, true)
+                    val contentLength: Int = if (contentLengthOffset != -1) {
+                        ???
+                    } else 0
                     currentRouter match
                         case ControllerRouter(_, _, _, requestSerde, _) =>
                             if (requestSerde.requireHeaders.nonEmpty) {}
                         case StaticFilesRouter(path, root) =>
-                            input.skipReadableBytes(headersLength + 4)
+                            input.skipReadableBytes(headersLength + 4 + contentLength)
+                            parseState = ST_PARSE_HEADLINE
                             val routerContext = routerMatcher.context
                             val rootFile      = root.toFile
                             if (rootFile.isFile && routerContext.remaining == null) {
@@ -99,7 +104,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
                             }
                         case NotFoundRouter(page) =>
                         case ConstantRouter(method, path, value, serde, mediaType) =>
-                            input.skipReadableBytes(headersLength + 4)
+                            input.skipReadableBytes(headersLength + 4 + contentLength)
                             parseState = ST_PARSE_HEADLINE
                             responseConstant(value, serde, mediaType)
                 }
@@ -152,7 +157,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
     private def responseFile(file: File): Unit = {
         val filePathName = file.getAbsolutePath
         val region =
-            staticCache.getOrElseUpdate(filePathName, new DefaultFileRegion(file, 0, file.length()))
+            staticCache.getOrElseUpdate(filePathName, new DefaultFileRegion(file, 0, file.length())).retain
 
         val buffer = ctx.outboundAdaptiveBuffer
         buffer.writeBytes(RESPONSE_NORMAL)
