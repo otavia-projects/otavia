@@ -21,7 +21,7 @@ License for the specific language governing permissions and limitations
 under the License.
 
 Also, please refer to each LICENSE.<component>.txt file, which is located in
-the 'copyright' directory of the distribution file, for the license terms of the
+the 'LICENSES' directory of the distribution file, for the license terms of the
 components that this product depends on.
 
 -------------------------------------------------------------------------------
