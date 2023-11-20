@@ -63,21 +63,25 @@ trait ChannelHandler {
 
     /** The [[Channel]] of the [[ChannelHandlerContext]] was registered with its [[cc.otavia.core.actor.ChannelsActor]]
      */
+    @Skip
     @throws[Exception]
     def channelRegistered(ctx: ChannelHandlerContext): Unit = ctx.fireChannelRegistered()
 
     /** The [[Channel]] of the [[ChannelHandlerContext]] was unregistered from its
      *  [[cc.otavia.core.actor.ChannelsActor]]
      */
+    @Skip
     @throws[Exception]
     def channelUnregistered(ctx: ChannelHandlerContext): Unit = ctx.fireChannelUnregistered()
 
     /** The [[Channel]] of the [[ChannelHandlerContext]] is now active */
+    @Skip
     @throws[Exception]
     def channelActive(ctx: ChannelHandlerContext): Unit = ctx.fireChannelActive()
 
     /** The [[Channel]] of the [[ChannelHandlerContext]] was registered is now inactive and reached its end of lifetime.
      */
+    @Skip
     @throws[Exception]
     def channelInactive(ctx: ChannelHandlerContext): Unit = ctx.fireChannelInactive()
 
@@ -90,15 +94,18 @@ trait ChannelHandler {
      *    the [[ChannelShutdownDirection]] of the completed shutdown.
      *  @throws Exception
      */
+    @Skip
     @throws[Exception]
     def channelShutdown(ctx: ChannelHandlerContext, direction: ChannelShutdownDirection): Unit =
         ctx.fireChannelShutdown(direction)
 
     /** Invoked when the current [[Channel]] has read a message from the peer. */
+    @Skip
     @throws[Exception]
     def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = ctx.fireChannelRead(msg)
 
     /** Invoked when the current [[Channel]] has read a message from the peer. */
+    @Skip
     @throws[Exception]
     def channelRead(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit = ctx.fireChannelRead(msg, msgId)
 
@@ -106,10 +113,12 @@ trait ChannelHandler {
      *  [[ChannelOption.AUTO_READ]] is off, no further attempt to read an inbound data from the current [[Channel]] will
      *  be made until [[ChannelOutboundInvoker.read(ReadBufferAllocator)]] is called.
      */
+    @Skip
     @throws[Exception]
     def channelReadComplete(ctx: ChannelHandlerContext): Unit = ctx.fireChannelReadComplete()
 
     /** Gets called if a custom inbound event happened. */
+    @Skip
     @throws[Exception]
     def channelInboundEvent(ctx: ChannelHandlerContext, evt: AnyRef): Unit = ctx.fireChannelInboundEvent(evt)
 
@@ -120,16 +129,19 @@ trait ChannelHandler {
      *    registered [[cc.otavia.core.timer.TimeoutTrigger]] id of this timeout event.
      *  @throws Exception
      */
+    @Skip
     @throws[Exception]
     def channelTimeoutEvent(ctx: ChannelHandlerContext, id: Long): Unit = ctx.fireChannelTimeoutEvent(id)
 
     /** Gets called once the writable state of a [[Channel]] changed. You can check the state with
      *  [[Channel.writableBytes]] or [[Channel.isWritable]] .
      */
+    @Skip
     @throws[Exception]
     def channelWritabilityChanged(ctx: ChannelHandlerContext): Unit = ctx.fireChannelWritabilityChanged()
 
     /** Gets called if a [[Throwable]] was thrown when handling inbound events. */
+    @Skip
     @throws[Exception]
     def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit =
         ctx.fireChannelExceptionCaught(cause)
@@ -141,6 +153,7 @@ trait ChannelHandler {
      *    the [[SocketAddress]] to which it should bound
      *  @throws Exception
      */
+    @Skip
     def bind(ctx: ChannelHandlerContext, local: SocketAddress, future: ChannelFuture): ChannelFuture =
         ctx.bind(local, future)
 
@@ -153,6 +166,7 @@ trait ChannelHandler {
      *    the option [[SocketAddress]] which is used as source on connect
      *  @throws Exception
      */
+    @Skip
     def connect(
         ctx: ChannelHandlerContext,
         remote: SocketAddress,
@@ -170,6 +184,7 @@ trait ChannelHandler {
      *  @param attrs
      *    An optional list of file attributes to set atomically when creating the file
      */
+    @Skip
     def open(
         ctx: ChannelHandlerContext,
         path: Path,
@@ -183,6 +198,7 @@ trait ChannelHandler {
      *    the [[ChannelHandlerContext]] for which the bind operation is made
      *  @throws Exception
      */
+    @Skip
     def disconnect(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = ctx.disconnect(future)
 
     /** Called once a close operation is made.
@@ -190,6 +206,7 @@ trait ChannelHandler {
      *    the [[ChannelHandlerContext]] for which the bind operation is made
      *  @throws Exception
      */
+    @Skip
     def close(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = ctx.close(future)
 
     /** Called once a shutdown operation was requested and should be executed.
@@ -199,6 +216,7 @@ trait ChannelHandler {
      *    the [[ChannelShutdownDirection]] that is used.
      *  @throws Exception
      */
+    @Skip
     def shutdown(
         ctx: ChannelHandlerContext,
         direction: ChannelShutdownDirection,
@@ -207,9 +225,11 @@ trait ChannelHandler {
         ctx.shutdown(direction, future)
 
     /** Called once a register operation is made to register for IO on the [[cc.otavia.core.actor.ChannelsActor]]. */
+    @Skip
     def register(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = ctx.register(future)
 
     /** Called once a deregister operation is made from the current registered [[cc.otavia.core.actor.ChannelsActor]] */
+    @Skip
     def deregister(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = ctx.deregister(future)
 
     /** Called once a read operation is made from the current registered [[cc.otavia.core.actor.ChannelsActor]]. If the
@@ -221,6 +241,7 @@ trait ChannelHandler {
      *  @param readPlan
      *    The [[ReadPlan]] that should be used to allocate a [[Buffer]] if needed (for reading the data).
      */
+    @Skip
     def read(ctx: ChannelHandlerContext, readPlan: ReadPlan): Unit = ctx.read(readPlan)
 
     /** Called once a write operation is made. The write operation will write the messages through the
@@ -232,6 +253,7 @@ trait ChannelHandler {
      *  @param msg
      *    the message to write
      */
+    @Skip
     def write(ctx: ChannelHandlerContext, msg: AnyRef): Unit = ctx.write(msg)
 
     /** Called once a write operation is made. The write operation will write the messages through the
@@ -245,11 +267,13 @@ trait ChannelHandler {
      *  @param msgId
      *    the id of the message
      */
+    @Skip
     def write(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit = ctx.write(msg, msgId)
 
     /** Called once a flush operation is made. The flush operation will try to flush out all previous written messages
      *  that are pending.
      */
+    @Skip
     def flush(ctx: ChannelHandlerContext): Unit = ctx.flush()
 
     /** Called once a custom defined outbound event was sent. This operation will pass the event through the
@@ -260,6 +284,7 @@ trait ChannelHandler {
      *  @param event
      *    the event.
      */
+    @Skip
     def sendOutboundEvent(ctx: ChannelHandlerContext, event: AnyRef): Unit = ctx.sendOutboundEvent(event)
 
     /** The number of the outbound bytes that are buffered / queued in this [[ChannelHandler]]. This number will affect

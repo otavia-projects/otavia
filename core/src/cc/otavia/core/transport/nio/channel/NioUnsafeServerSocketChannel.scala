@@ -81,16 +81,14 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, re
     override protected def doReadNow(): Boolean = {
         val socket = javaChannel.accept()
 
-        socket match
-            case null =>
-                processRead(0, 0, 0)
-            case _ =>
-                socket.configureBlocking(false)
-                val c = new NioSocketChannel(channel.system)
-                val u = new NioUnsafeSocketChannel(c, socket, SelectionKey.OP_READ)
-                c.setUnsafeChannel(u)
-                executorAddress.inform(ReactorEvent.AcceptedEvent(channel, c))
-                processRead(0, 0, 1)
+        if (socket != null) {
+            socket.configureBlocking(false)
+            val c = new NioSocketChannel(channel.system)
+            val u = new NioUnsafeSocketChannel(c, socket, SelectionKey.OP_READ)
+            c.setUnsafeChannel(u)
+            executorAddress.inform(ReactorEvent.AcceptedEvent(channel, c))
+            processRead(0, 0, 1)
+        } else processRead(0, 0, 0)
 
         false
     }
