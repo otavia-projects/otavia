@@ -255,8 +255,9 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     final private[core] def mount(channelsActor: ChannelsActor[?]): Unit = {
         assert(!mounted, s"The channel $this has been mounted already, you can't mount it twice!")
         actor = channelsActor
-        direct = ActorThread.currentThread().directAllocator
-        heap = ActorThread.currentThread().heapAllocator
+        val thread = ActorThread.currentThread()
+        direct = thread.directAllocator
+        heap = thread.heapAllocator
         channelId = executor.generateChannelId()
         pipe = newChannelPipeline()
         mounted = true

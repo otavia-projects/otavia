@@ -163,8 +163,6 @@ class ChannelPipelineImpl(override val channel: Channel) extends ChannelPipeline
     }
 
     override def addLast(name: Option[String], handler: ChannelHandler): ChannelPipeline = {
-        channel.assertExecutor() // check the method is called in ChannelsActor which it registered
-
         val newCtx = newContext(name, handler)
         if (handlers.isEmpty && newCtx.isBufferHandlerContext) setHeadAdaptiveBuffer(newCtx)
         if (handlers.nonEmpty && newCtx.isBufferHandlerContext && !handlers.last.isBufferHandlerContext)

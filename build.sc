@@ -210,7 +210,7 @@ object `codec-http` extends OtaviaModule {
 
         override def scalaVersion = ProjectInfo.scalaVersion
 
-        override def moduleDeps = Seq(`codec-http`)
+        override def moduleDeps = Seq(`codec-http`, log4a)
 
     }
 

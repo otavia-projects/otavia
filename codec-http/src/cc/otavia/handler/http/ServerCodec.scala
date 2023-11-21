@@ -52,7 +52,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
         override protected def initialValue(): mutable.HashMap[String, DefaultFileRegion] = mutable.HashMap.empty
     }
 
-    def staticCache: mutable.HashMap[String, DefaultFileRegion] = staticFilesCache.get()
+    private def staticCache: mutable.HashMap[String, DefaultFileRegion] = staticFilesCache.get()
 
     // decode http request
     override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = {
