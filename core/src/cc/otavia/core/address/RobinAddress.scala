@@ -17,8 +17,6 @@
 package cc.otavia.core.address
 
 import cc.otavia.core.actor.AbstractActor
-import cc.otavia.core.message.{Ask, Call, Notice, Reply}
-import cc.otavia.core.actor.AbstractActor
 import cc.otavia.core.message.*
 import cc.otavia.core.stack.MessageFuture
 
@@ -34,14 +32,19 @@ class RobinAddress[M <: Call](val underlying: Array[Address[M]]) extends ProxyAd
     }
 
     override def ask[A <: M & Ask[_ <: Reply]](ask: A, future: MessageFuture[ReplyOf[A]])(using
-                                                                                          sender: AbstractActor[? <: Call]
+        sender: AbstractActor[? <: Call]
     ): MessageFuture[ReplyOf[A]] = {
         val address = getAddress
         address.ask(ask, future)
     }
 
+    override def askUnsafe(ask: Ask[?], f: MessageFuture[?])(using sender: AbstractActor[?]): MessageFuture[?] = {
+        val addr = getAddress
+        addr.askUnsafe(ask, f)
+    }
+
     override def ask[A <: M & Ask[_ <: Reply]](ask: A, f: MessageFuture[ReplyOf[A]], timeout: Long)(using
-                                                                                                    sender: AbstractActor[? <: Call]
+        sender: AbstractActor[? <: Call]
     ): MessageFuture[ReplyOf[A]] = {
         val address = getAddress
         address.ask(ask, f, timeout)

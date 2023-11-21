@@ -23,6 +23,8 @@ import cc.otavia.core.slf4a.LoggerFactory
 import cc.otavia.core.stack.helper.FutureState
 import cc.otavia.core.stack.{NoticeStack, StackState}
 import cc.otavia.core.system.ActorSystem
+import cc.otavia.demo.controller.ScaleMessageController
+import cc.otavia.demo.controller.ScaleMessageController.*
 import cc.otavia.http.HttpMethod.*
 import cc.otavia.http.MediaType.*
 import cc.otavia.http.server.Router.*
@@ -39,9 +41,11 @@ private class ServerMain(val port: Int = 80) extends MainActor(Array.empty) {
 
     override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] = stack.state match
         case StackState.start =>
+            val controller = system.buildActor(() => ScaleMessageController(), system.actorWorkerSize)
             val routers = Seq(
               constant[Array[Byte]](GET, "/plaintext", "Hello, World!".getBytes(UTF_8), BytesSerde, TEXT_PLAIN_UTF8),
-              constant[HelloMessage](GET, "/json", HelloMessage("Hello, World!"), helloSerde, APP_JSON)
+              constant[HelloMessage](GET, "/json", HelloMessage("Hello, World!"), helloSerde, APP_JSON),
+              get("/scale_message/{length}", controller, messageRequestSerde, messageResponseSerde)
             )
             val server = system.buildActor(() => new HttpServer(system.actorWorkerSize, routers))
             val state  = FutureState[BindReply]()

@@ -51,6 +51,8 @@ trait Address[-M <: Call] extends EventableAddress {
     def ask[A <: M & Ask[? <: Reply]](ask: A, future: MessageFuture[ReplyOf[A]])(using sender: AbstractActor[?]): MessageFuture[ReplyOf[A]]
     // format: on
 
+    def askUnsafe(ask: Ask[?], f: MessageFuture[?])(using sender: AbstractActor[?]): MessageFuture[?]
+
     // format: off
      final def ask[A <: M & Ask[? <: Reply], R <: ReplyOf[A] : ClassTag](ask: A)(using sender: AbstractActor[?]): FutureState[R] = {
          // format: on
@@ -61,7 +63,7 @@ trait Address[-M <: Call] extends EventableAddress {
 
     /** send ask message to this address, and set [[timeout]] milliseconds to get the respect [[Reply]], otherwise the
      *  [[MessageFuture]] will set [[scala.concurrent.TimeoutException]].
- *
+     *
      *  @param ask
      *    ask message to send
      *  @param f

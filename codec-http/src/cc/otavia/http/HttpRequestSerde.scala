@@ -30,11 +30,11 @@ abstract class HttpRequestSerde[P, C, R <: Reply](
     val requireHeaders: Seq[String] = HttpRequestSerde.EMPTY_STRING
 ) extends Serde[HttpRequest[P, C, R]] {
 
-    private[http] def setPathVars(vars: mutable.Map[String, String]): Unit = parameterSerde match
+    private[otavia] def setPathVars(vars: mutable.Map[String, String]): Unit = parameterSerde match
         case Some(serde) => serde.setPathVars(vars)
         case None        =>
 
-    private[http] def setParams(vars: mutable.Map[String, String]): Unit = parameterSerde match
+    private[otavia] def setParams(vars: mutable.Map[String, String]): Unit = parameterSerde match
         case Some(serde) => serde.setParams(vars)
         case None        =>
 

@@ -17,22 +17,28 @@
 package cc.otavia.http.server
 
 import cc.otavia.core.cache.ActorThreadLocal
+import cc.otavia.http.HttpMethod
 
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
 class RouterContext {
 
+    var method: HttpMethod                        = _
     var remaining: String                         = _
     val requestPath: StringBuilder                = new StringBuilder()
     val pathVars: mutable.HashMap[String, String] = mutable.HashMap.empty
 
+    def setMethod(httpMethod: HttpMethod): Unit           = method = httpMethod
     def setRemaining(file: String): Unit                  = remaining = file
     def appendPath(part: String): Unit                    = requestPath.append(part)
     def putPathVariable(key: String, value: String): Unit = pathVars.put(key, value)
 
+    def path: String = requestPath.toString()
+
     def clear(): Unit = {
         remaining = null
+        method = null
         requestPath.clear()
         pathVars.clear()
     }

@@ -42,6 +42,13 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
         future
     }
 
+    override def askUnsafe(ask: Ask[?], f: MessageFuture[?])(using sender: AbstractActor[?]): MessageFuture[?] = {
+        ask.setAskContext(sender)
+        sender.attachStack(ask.askId, f)
+        house.putAsk(ask)
+        f
+    }
+
     // format: off
     override def ask[A <: M & Ask[? <: Reply]](ask: A, future: MessageFuture[ReplyOf[A]], timeout: Long)(using sender: AbstractActor[?]): MessageFuture[ReplyOf[A]] = {
         // format: on

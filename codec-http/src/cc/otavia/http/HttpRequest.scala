@@ -18,6 +18,7 @@ package cc.otavia.http
 
 import cc.otavia.core.address.Address
 import cc.otavia.core.message.{Ask, Reply}
+import cc.otavia.http.server.Router.ControllerRouter
 
 abstract class HttpRequest[P, C, R <: Reply] extends Ask[R] {
 
@@ -29,7 +30,7 @@ abstract class HttpRequest[P, C, R <: Reply] extends Ask[R] {
     private var p: Option[P]            = None
     private var c: Option[C]            = None
 
-    private var clr: Address[?] = _
+    private var router: ControllerRouter = _
 
     def setMethod(method: HttpMethod): Unit        = mth = method
     def setPath(path: String): Unit                = requestPath = path
@@ -40,7 +41,8 @@ abstract class HttpRequest[P, C, R <: Reply] extends Ask[R] {
     def setParam(param: P): Unit     = p = Option(param)
     def setContent(content: C): Unit = c = Option(content)
 
-    def setController(controller: Address[?]): Unit = clr = controller
+    private[otavia] def setRouter(r: ControllerRouter): Unit = router = r
+    private[otavia] def controllerRouter: ControllerRouter   = router
 
     def method: HttpMethod               = mth
     def path: String                     = requestPath
@@ -50,5 +52,7 @@ abstract class HttpRequest[P, C, R <: Reply] extends Ask[R] {
 
     def params: Option[P]  = p
     def content: Option[C] = c
+
+    override def toString: String = s"${mth} ${requestPath}"
 
 }

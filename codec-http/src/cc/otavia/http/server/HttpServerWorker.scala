@@ -20,8 +20,11 @@ import cc.otavia.core.actor.AcceptedWorkerActor
 import cc.otavia.core.actor.AcceptorActor.AcceptedChannel
 import cc.otavia.core.cache.ActorThreadLocal
 import cc.otavia.core.channel.{Channel, ChannelAddress}
+import cc.otavia.core.message.Reply
+import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState, StartState}
 import cc.otavia.core.stack.{AskStack, ChannelStack, StackState}
 import cc.otavia.handler.http.ServerCodec
+import cc.otavia.http.HttpRequest
 
 class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Array[Byte]])
     extends AcceptedWorkerActor[Nothing] {
@@ -34,8 +37,15 @@ class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Arr
     override protected def afterAccepted(channel: ChannelAddress): Unit = logger.debug("Accepted {}", channel)
 
     override protected def resumeChannelStack(stack: ChannelStack[AnyRef]): Option[StackState] = {
-
-        ???
+        stack.state match
+            case StackState.start =>
+                val request = stack.message.asInstanceOf[HttpRequest[?, ?, ?]]
+                val state   = FutureState[Reply]()
+                request.controllerRouter.controller.askUnsafe(request, state.future)
+                state.suspend()
+            case state: FutureState[?] =>
+                val response = state.future.getNow
+                stack.`return`(response)
     }
 
 }

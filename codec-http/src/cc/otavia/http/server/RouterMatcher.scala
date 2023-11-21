@@ -121,6 +121,8 @@ class RouterMatcher(routers: Seq[Router]) {
         val routerContext = context
         routerContext.clear()
 
+        routerContext.setMethod(method)
+
         // skip schema
         buffer.skipIfNextAre(HttpConstants.HTTP_SCHEMA)
         buffer.skipIfNextAre(HttpConstants.HTTPS_SCHEMA)

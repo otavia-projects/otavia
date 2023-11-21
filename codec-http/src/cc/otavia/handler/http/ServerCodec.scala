@@ -16,8 +16,8 @@
 
 package cc.otavia.handler.http
 
-import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
+import cc.otavia.buffer.{Buffer, BufferUtils}
 import cc.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import cc.otavia.core.channel
 import cc.otavia.core.channel.{ChannelHandlerContext, DefaultFileRegion}
@@ -25,9 +25,9 @@ import cc.otavia.core.slf4a.{Logger, LoggerFactory}
 import cc.otavia.core.stack.ChannelFuture
 import cc.otavia.core.timer.TimeoutTrigger
 import cc.otavia.handler.codec.ByteToMessageCodec
+import cc.otavia.http.*
 import cc.otavia.http.server.*
 import cc.otavia.http.server.Router.*
-import cc.otavia.http.{HttpConstants, HttpHeader, HttpVersion, MediaType}
 import cc.otavia.serde.Serde
 
 import java.io.File
@@ -47,6 +47,8 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
 
     private var parseState: Int       = ST_PARSE_HEADLINE
     private var currentRouter: Router = _
+
+    private var currentBodyLength: Int = 0
 
     private val staticFilesCache = new ActorThreadLocal[mutable.HashMap[String, DefaultFileRegion]] {
         override protected def initialValue(): mutable.HashMap[String, DefaultFileRegion] = mutable.HashMap.empty
@@ -77,15 +79,31 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
             if (parseState == ST_PARSE_HEADERS) {
                 val headersLength = input.bytesBefore(HttpConstants.HEADERS_END)
                 if (headersLength != -1) {
-                    val reader = input.readerOffset
+                    val headersStart = input.readerOffset
+                    val headersEnd   = headersStart + headersLength + 4
                     val contentLengthOffset =
-                        input.bytesBefore(HttpHeader.Key.CONTENT_LENGTH, reader, reader + headersLength, true)
+                        input.bytesBefore(HttpHeader.Key.CONTENT_LENGTH, headersStart, headersEnd, true)
                     val contentLength: Int = if (contentLengthOffset != -1) {
-                        ???
+                        val contentStart  = headersStart + contentLengthOffset + HttpHeader.Key.CONTENT_LENGTH.length
+                        val t             = input.getCharSequence(contentStart, 10, StandardCharsets.US_ASCII).toString
+                        val contentLength = input.bytesBefore(HttpConstants.HEADER_LINE_END, contentStart, headersEnd)
+                        input
+                            .getCharSequence(contentStart, contentLength, StandardCharsets.US_ASCII)
+                            .toString
+                            .replace(':', ' ')
+                            .trim
+                            .toInt
                     } else 0
                     currentRouter match
                         case ControllerRouter(_, _, _, requestSerde, _) =>
-                            if (requestSerde.requireHeaders.nonEmpty) {}
+                            if (requestSerde.requireHeaders.nonEmpty) {} else input.skipReadableBytes(headersLength + 4)
+                            if (contentLength == 0) {
+                                parseState = ST_PARSE_HEADLINE
+                                generateRequest(contentLength, requestSerde, input)
+                            } else {
+                                currentBodyLength = contentLength
+                                parseState = ST_PARSE_BODY
+                            }
                         case StaticFilesRouter(path, root) =>
                             input.skipReadableBytes(headersLength + 4 + contentLength)
                             parseState = ST_PARSE_HEADLINE
@@ -111,7 +129,11 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
             }
 
             if (parseState == ST_PARSE_BODY) {
-                ???
+                currentRouter match
+                    case ControllerRouter(method, path, controller, requestSerde, responseSerde) =>
+                        parseState = ST_PARSE_HEADLINE
+                        generateRequest(currentBodyLength, requestSerde, input)
+                    case _ =>
             }
         }
 
@@ -119,8 +141,10 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
     }
 
     // encode http response
-    override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit =
+    override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, id: Long): Unit = {
+        println("")
         ???
+    }
 
     private def parseHeadLine(buffer: Buffer, lineLength: Int): Unit = {
         val start = buffer.readerOffset
@@ -128,6 +152,18 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
         currentRouter = routerMatcher.choice(buffer)
         buffer.readerOffset(start + lineLength + 2)
         parseState = ST_PARSE_HEADERS
+    }
+
+    private def generateRequest(contentLength: Int, requestSerde: HttpRequestSerde[?, ?, ?], input: Buffer): Unit = {
+        requestSerde.setPathVars(routerMatcher.context.pathVars)
+        val endIdx  = input.readerOffset + contentLength
+        val request = requestSerde.deserialize(input)
+        request.setRouter(currentRouter.asInstanceOf[ControllerRouter])
+        val routerContext = routerMatcher.context
+        request.setMethod(routerContext.method)
+        request.setPath(routerContext.path)
+        input.readerOffset(endIdx)
+        ctx.fireChannelRead(request, ctx.channel.generateMessageId)
     }
 
     private def responseConstant(value: Any, serde: Serde[?], media: MediaType): Unit = {
