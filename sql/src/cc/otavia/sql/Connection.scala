@@ -16,7 +16,8 @@
 
 package cc.otavia.sql
 
-import cc.otavia.core.actor.SocketChannelsActor.{Connect, ConnectReply}
+import cc.otavia.core.actor.ChannelsActor.ChannelEstablished
+import cc.otavia.core.actor.SocketChannelsActor.Connect
 import cc.otavia.core.actor.{ChannelsActor, SocketChannelsActor}
 import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelInitializer, ChannelState}
 import cc.otavia.core.message.{Ask, ExceptionMessage, Reply}
@@ -66,7 +67,7 @@ class Connection(override val family: ProtocolFamily = StandardProtocolFamily.IN
                 channel.ask(stack.ask, authState.future)
                 authState.suspend()
             case state: ChannelFutureState => // return authenticate result
-                if (state.future.isSuccess) stack.`return`(ConnectReply(channel.id))
+                if (state.future.isSuccess) stack.`return`(ChannelEstablished(channel.id))
                 else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
     }
 

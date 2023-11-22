@@ -16,7 +16,8 @@
 
 package cc.otavia.core.actor
 
-import cc.otavia.core.actor.SocketChannelsActor.{Connect, ConnectReply}
+import cc.otavia.core.actor.ChannelsActor.ChannelEstablished
+import cc.otavia.core.actor.SocketChannelsActor.Connect
 import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.message.*
 import cc.otavia.core.reactor.Reactor
@@ -36,7 +37,7 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
      *  @param stack
      *    remote address to connect.
      *  @return
-     *    a [[ConnectReply]] which is registering to [[Reactor]].
+     *    a [[ChannelEstablished]] which is registering to [[Reactor]].
      */
     protected def connect(stack: AskStack[Connect]): Option[StackState] = {
         stack.state match
@@ -50,7 +51,7 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
             case connectState: ChannelFutureState =>
                 val ch = connectState.future.channel
                 afterConnected(ch)
-                stack.`return`(ConnectReply(ch.id))
+                stack.`return`(ChannelEstablished(ch.id))
     }
 
     final protected def connect(connect: Connect): Option[ChannelFutureState] = {
@@ -87,9 +88,7 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
 
 object SocketChannelsActor {
 
-    case class ConnectReply(channelId: Int) extends Reply
-
-    trait Connect extends Ask[ConnectReply] {
+    trait Connect extends Ask[ChannelEstablished] {
 
         def remote: SocketAddress
 
@@ -99,6 +98,6 @@ object SocketChannelsActor {
 
     case class ConnectChannel(remote: SocketAddress, local: Option[SocketAddress])
         extends Connect
-        with Ask[ConnectReply]
+        with Ask[ChannelEstablished]
 
 }

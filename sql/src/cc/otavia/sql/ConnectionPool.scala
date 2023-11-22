@@ -16,7 +16,7 @@
 
 package cc.otavia.sql
 
-import cc.otavia.core.actor.SocketChannelsActor.{Connect, ConnectReply}
+import cc.otavia.core.actor.SocketChannelsActor.Connect
 import cc.otavia.core.actor.{ChannelsActor, SocketChannelsActor}
 import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelInitializer, ChannelState}
 import cc.otavia.core.message.{Ask, ExceptionMessage, Reply}

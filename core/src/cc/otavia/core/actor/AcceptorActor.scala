@@ -17,7 +17,7 @@
 package cc.otavia.core.actor
 
 import cc.otavia.core.actor.AcceptorActor.*
-import cc.otavia.core.actor.ChannelsActor.{Bind, BindReply}
+import cc.otavia.core.actor.ChannelsActor.{Bind, ChannelEstablished}
 import cc.otavia.core.address.Address
 import cc.otavia.core.channel.*
 import cc.otavia.core.message.*
@@ -51,7 +51,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
                 if (bindState.future.isSuccess) {
                     val channel = bindState.future.channel
                     afterBind(channel)
-                    stack.`return`(BindReply(channel.id))
+                    stack.`return`(ChannelEstablished(channel.id))
                 } else {
                     stack.`throw`(ExceptionMessage(bindState.future.causeUnsafe))
                 }

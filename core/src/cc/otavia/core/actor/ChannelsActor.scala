@@ -195,7 +195,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
 object ChannelsActor {
 
-    case class Bind(local: SocketAddress) extends Ask[BindReply]
+    case class Bind(local: SocketAddress) extends Ask[ChannelEstablished]
 
     object Bind {
 
@@ -207,6 +207,6 @@ object ChannelsActor {
 
     }
 
-    case class BindReply(channelId: Int) extends Reply
+    case class ChannelEstablished(channelId: Int) extends Reply
 
 }

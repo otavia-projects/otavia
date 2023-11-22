@@ -16,13 +16,13 @@
 
 package cc.otavia.sql
 
-import cc.otavia.core.actor.SocketChannelsActor.*
+import cc.otavia.core.actor.ChannelsActor.ChannelEstablished
 import cc.otavia.core.message.Ask
 
 import java.net.SocketAddress
 
 case class Authentication(url: String, info: Map[String, String], driver: Option[String] = None)
-    extends Ask[ConnectReply]
+    extends Ask[ChannelEstablished]
 
 object Authentication {
     def apply(url: String, user: String, password: String): Authentication = {
