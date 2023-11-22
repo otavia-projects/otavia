@@ -17,7 +17,7 @@
 package cc.otavia.demo
 
 import cc.otavia.buffer.Buffer
-import cc.otavia.core.actor.ChannelsActor.{Bind, BindReply}
+import cc.otavia.core.actor.ChannelsActor.{Bind, ChannelEstablished}
 import cc.otavia.core.actor.MainActor
 import cc.otavia.core.slf4a.LoggerFactory
 import cc.otavia.core.stack.helper.FutureState
@@ -45,13 +45,14 @@ private class ServerMain(val port: Int = 80) extends MainActor(Array.empty) {
             val routers = Seq(
               constant[Array[Byte]](GET, "/plaintext", "Hello, World!".getBytes(UTF_8), BytesSerde, TEXT_PLAIN_UTF8),
               constant[HelloMessage](GET, "/json", HelloMessage("Hello, World!"), helloSerde, APP_JSON),
-              get("/scale_message/{length}", controller, messageRequestSerde, messageResponseSerde)
+              get("/scale_message/{length}", controller, messageRequestSerde, messageResponseSerde),
+              static("/media", Path.of("D:\\IdeaProjects\\audio\\data"))
             )
             val server = system.buildActor(() => new HttpServer(system.actorWorkerSize, routers))
-            val state  = FutureState[BindReply]()
+            val state  = FutureState[ChannelEstablished]()
             server.ask(Bind(port), state.future)
             state.suspend()
-        case state: FutureState[BindReply] =>
+        case state: FutureState[ChannelEstablished] =>
             if (state.future.isFailed) state.future.causeUnsafe.printStackTrace()
             logger.info(s"http server bind port $port success")
             stack.`return`()

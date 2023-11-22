@@ -24,23 +24,36 @@ import scala.language.unsafeNulls
 
 class RouterContext {
 
+    private var p: String = _
+    private var r: String = _
+
     var method: HttpMethod                        = _
-    var remaining: String                         = _
-    val requestPath: StringBuilder                = new StringBuilder()
     val pathVars: mutable.HashMap[String, String] = mutable.HashMap.empty
 
+    private val pathBuilder: StringBuilder = new StringBuilder()
+    private val remainingBuilder           = new StringBuilder()
+
     def setMethod(httpMethod: HttpMethod): Unit           = method = httpMethod
-    def setRemaining(file: String): Unit                  = remaining = file
-    def appendPath(part: String): Unit                    = requestPath.append(part)
+    def appendPath(part: String): Unit                    = pathBuilder.append(part)
+    def appendRemaining(part: String): Unit               = remainingBuilder.append(part)
     def putPathVariable(key: String, value: String): Unit = pathVars.put(key, value)
 
-    def path: String = requestPath.toString()
+    def path: String = {
+        if (p == null) p = pathBuilder.toString()
+        p
+    }
+    def remaining: String = {
+        if (r == null) r = remainingBuilder.toString()
+        r
+    }
 
     def clear(): Unit = {
-        remaining = null
+        p = null
+        r = null
         method = null
-        requestPath.clear()
         pathVars.clear()
+        pathBuilder.clear()
+        remainingBuilder.clear()
     }
 
 }

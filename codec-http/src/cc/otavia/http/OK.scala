@@ -14,12 +14,25 @@
  * limitations under the License.
  */
 
-package cc.otavia.handler.codec.annotation
+package cc.otavia.http
 
-import java.lang.annotation.{Documented, ElementType, Inherited, Retention, RetentionPolicy, Target, Annotation}
+import cc.otavia.buffer.Buffer
+import cc.otavia.core.message.Reply
+import cc.otavia.serde.Serde
 
+/** A http response with no body */
+case class OK() extends Reply
 
+object OK {
 
-@Target(Array(ElementType.TYPE))
-@Retention(RetentionPolicy.RUNTIME)
-trait Controller(route: String, number: Int = 1) extends Annotation
+    val serde: Serde[OK] = new Serde[OK] {
+
+        override def serialize(value: OK, out: Buffer): Unit = {}
+
+        override def deserialize(in: Buffer): OK = OK()
+
+    }
+
+    val responseSerde = new HttpResponseSerde[OK](serde)
+
+}

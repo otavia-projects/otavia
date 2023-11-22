@@ -37,7 +37,7 @@ object HttpConstants {
     val LF = 10
 
     /** Colon ':' */
-    val COLON = 58
+    val COLON: Byte = 58
 
     /** Semicolon ';' */
     val SEMICOLON = 59
@@ -70,11 +70,14 @@ object HttpConstants {
 
     val HEADER_SPLITTER: Array[Byte] = ": ".getBytes(StandardCharsets.US_ASCII)
 
-    val NODE_END: Array[Byte] = "/? ".getBytes(StandardCharsets.US_ASCII)
+    val NODE_END: Array[Byte]      = "/? ".getBytes(StandardCharsets.US_ASCII)
+    val NODE_SPLITTER: Array[Byte] = "/ ".getBytes(StandardCharsets.US_ASCII)
 
     val PATH_SPLITTER: Byte = '/'
 
     val PATH_END: Array[Byte]   = "? ".getBytes(StandardCharsets.US_ASCII)
     val PARAMS_END: Array[Byte] = "& ".getBytes(StandardCharsets.US_ASCII)
+
+    val STATUS_200_OK: Array[Byte] = " 200 OK\r\n".getBytes(StandardCharsets.US_ASCII)
 
 }

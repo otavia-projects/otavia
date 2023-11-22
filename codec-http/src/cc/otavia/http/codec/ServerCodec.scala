@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.otavia.handler.http
+package cc.otavia.http.codec
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.buffer.{Buffer, BufferUtils}
@@ -38,7 +38,8 @@ import java.util.concurrent.TimeUnit
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array[Byte]]) extends ByteToMessageCodec {
+class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array[Byte]], val serverName: Array[Byte])
+    extends ByteToMessageCodec {
 
     import ServerCodec.*
 
@@ -115,12 +116,15 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
                                 val file = new File(rootFile, routerContext.remaining)
                                 if (file.exists()) responseFile(file)
                                 else {
-                                    // 404
+                                    response404(routerMatcher.`404`)
                                 }
-                            } else {
-                                // 404
+                            } else { // 404
+                                response404(routerMatcher.`404`)
                             }
-                        case NotFoundRouter(page) =>
+                        case router: NotFoundRouter =>
+                            input.skipReadableBytes(headersLength + 4 + contentLength)
+                            parseState = ST_PARSE_HEADLINE
+                            response404(router)
                         case ConstantRouter(method, path, value, serde, mediaType) =>
                             input.skipReadableBytes(headersLength + 4 + contentLength)
                             parseState = ST_PARSE_HEADLINE
@@ -142,8 +146,26 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
 
     // encode http response
     override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, id: Long): Unit = {
-        println("")
-        ???
+        val request: HttpRequest[?, ?, ?] = ctx.channel.writingChannelStackRequest[HttpRequest[?, ?, ?]]
+        val router                        = request.controllerRouter
+        val responseSerde                 = router.responseSerde
+        msg match
+            case response: HttpResponse[?] =>
+            case body =>
+                writeResponseHeadLine(HttpStatus.OK, output)
+                writeServerHeader(output)
+                output.writeBytes(dates.get())
+                if (!body.isInstanceOf[OK]) {
+                    writeHeader(HttpHeader.Key.CONTENT_TYPE, responseSerde.mediaType.fullName, output)
+                    val lengthOffset = writeContentLengthPlaceholder(output) // reset content length later
+                    output.writeBytes(HttpConstants.HEADER_LINE_END) // headers end
+
+                    // serialize content
+                    val contentStart = output.writerOffset
+                    responseSerde.contentSerde.serializeAny(body, output)
+                    val contentEnd = output.writerOffset
+                    output.setCharSequence(lengthOffset, (contentEnd - contentStart).toString)
+                } else output.writeBytes(HttpConstants.HEADER_LINE_END)
     }
 
     private def parseHeadLine(buffer: Buffer, lineLength: Int): Unit = {
@@ -152,6 +174,25 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
         currentRouter = routerMatcher.choice(buffer)
         buffer.readerOffset(start + lineLength + 2)
         parseState = ST_PARSE_HEADERS
+    }
+
+    private def writeResponseHeadLine(status: HttpStatus, output: Buffer): Unit = {
+        output.writeBytes(HttpVersion.HTTP_1_1.bytes)
+        output.writeBytes(status.bytesCRCL)
+    }
+
+    private def writeHeader(key: Array[Byte], value: Array[Byte], output: Buffer): Unit = {
+        output.writeBytes(key)
+        output.writeBytes(HttpConstants.HEADER_SPLITTER)
+        output.writeBytes(value)
+        output.writeBytes(HttpConstants.HEADER_LINE_END)
+    }
+
+    private def writeServerHeader(output: Buffer): Unit = writeHeader(HttpHeader.Key.SERVER, serverName, output)
+
+    private def writeContentLengthPlaceholder(buffer: Buffer): Int = {
+        writeHeader(HttpHeader.Key.CONTENT_LENGTH, ServerCodec.CONTENT_LENGTH_PLACEHOLDER, buffer)
+        buffer.writerOffset - ServerCodec.CONTENT_LENGTH_PLACEHOLDER.length - 2
     }
 
     private def generateRequest(contentLength: Int, requestSerde: HttpRequestSerde[?, ?, ?], input: Buffer): Unit = {
@@ -168,18 +209,13 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
 
     private def responseConstant(value: Any, serde: Serde[?], media: MediaType): Unit = {
         val buffer = ctx.outboundAdaptiveBuffer
-        buffer.writeBytes(RESPONSE_NORMAL)
-        buffer.writeBytes(HttpHeader.Key.CONTENT_TYPE)
-        buffer.writeBytes(HttpConstants.HEADER_SPLITTER)
-        buffer.writeBytes(media.fullName)
-        buffer.writeBytes(HttpConstants.HEADER_LINE_END)
-        buffer.writeBytes(dates.get())
-        buffer.writeBytes(HttpHeader.Key.CONTENT_LENGTH)
-        buffer.writeBytes(HttpConstants.HEADER_SPLITTER)
-        val lengthOffset = buffer.writerOffset
-        buffer.writeBytes(ServerCodec.CONTENT_LENGTH_PLACEHOLDER)
+        writeResponseHeadLine(HttpStatus.OK, buffer)
+        writeServerHeader(buffer)
+        writeHeader(HttpHeader.Key.CONTENT_TYPE, media.fullName, buffer)
+        buffer.writeBytes(dates.get()) // Date: xxx
 
-        buffer.writeBytes(HttpConstants.HEADERS_END)
+        val lengthOffset = writeContentLengthPlaceholder(buffer)
+        buffer.writeBytes(HttpConstants.HEADER_LINE_END)
 
         val contentStart = buffer.writerOffset
         serde.serializeAny(value, buffer)
@@ -196,25 +232,49 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
             staticCache.getOrElseUpdate(filePathName, new DefaultFileRegion(file, 0, file.length())).retain
 
         val buffer = ctx.outboundAdaptiveBuffer
-        buffer.writeBytes(RESPONSE_NORMAL)
+        writeResponseHeadLine(HttpStatus.OK, buffer)
+        writeServerHeader(buffer)
         buffer.writeBytes(dates.get())
-        buffer.writeBytes(HttpHeader.Key.CONTENT_LENGTH)
-        buffer.writeBytes(HttpConstants.HEADER_SPLITTER)
-        buffer.writeBytes(region.countBytes)
-        buffer.writeBytes(HttpConstants.HEADER_LINE_END)
+        writeHeader(HttpHeader.Key.CONTENT_LENGTH, region.countBytes, buffer)
+
         writeStaticMediaHeader(buffer, filePathName)
 
-        buffer.writeBytes(HttpConstants.HEADERS_END)
+        buffer.writeBytes(HttpConstants.HEADER_LINE_END)
 
         ctx.write(buffer)
         ctx.write(region)
     }
 
-    private def writeStaticMediaHeader(buffer: Buffer, fileName: String): Unit = {
+    private def response404(router: NotFoundRouter): Unit = {
+        val buffer = ctx.outboundAdaptiveBuffer
+        writeResponseHeadLine(HttpStatus.NOT_FOUND, buffer)
+        writeServerHeader(buffer)
         buffer.writeBytes(dates.get())
+
+        router.page match
+            case Some(path) =>
+                val file         = path.toFile
+                val filePathName = path.toFile.getAbsolutePath
+                val region =
+                    staticCache.getOrElseUpdate(filePathName, new DefaultFileRegion(file, 0, file.length())).retain
+                writeHeader(HttpHeader.Key.CONTENT_LENGTH, region.countBytes, buffer)
+                writeStaticMediaHeader(buffer, filePathName)
+                buffer.writeBytes(HttpConstants.HEADER_LINE_END)
+                ctx.write(buffer)
+                ctx.write(region)
+            case None =>
+                writeHeader(HttpHeader.Key.CONTENT_LENGTH, NOT_FOUND_CONTENT_LENGTH, buffer)
+                writeHeader(HttpHeader.Key.CONTENT_TYPE, MediaType.TEXT_PLAIN.fullName, buffer)
+                buffer.writeBytes(HttpConstants.HEADER_LINE_END)
+                buffer.writeBytes(NOT_FOUND_CONTENT)
+                ctx.write(buffer)
+    }
+
+    private def writeStaticMediaHeader(buffer: Buffer, fileName: String): Unit = {
         buffer.writeBytes(HttpHeader.Key.CONTENT_TYPE)
         buffer.writeBytes(HttpConstants.HEADER_SPLITTER)
-        if (fileName.endsWith(".html")) buffer.writeBytes(MediaType.TEXT_HTML_UTF8.fullName)
+        val mediaType = MediaType.values.find(m => fileName.endsWith(m.extension)).getOrElse(MediaType.APP_OCTET_STREAM)
+        writeHeader(HttpHeader.Key.CONTENT_TYPE, mediaType.fullName, buffer)
     }
 
     override def handlerAdded(ctx: ChannelHandlerContext): Unit = {
@@ -250,7 +310,11 @@ object ServerCodec {
           |Server: otavia-http
           |""".stripMargin.getBytes(StandardCharsets.US_ASCII)
 
-    private val CONTENT_LENGTH_PLACEHOLDER = "                   ".getBytes(StandardCharsets.US_ASCII)
+    private val CONTENT_LENGTH_PLACEHOLDER = "        ".getBytes(StandardCharsets.US_ASCII)
+
+    private val NOT_FOUND_CONTENT: Array[Byte] = "404 Not Found!".getBytes(StandardCharsets.US_ASCII)
+    private val NOT_FOUND_CONTENT_LENGTH: Array[Byte] =
+        NOT_FOUND_CONTENT.length.toString.getBytes(StandardCharsets.US_ASCII)
 
     private val ST_PARSE_HEADLINE: Int = 0
     private val ST_PARSE_HEADERS: Int  = 1

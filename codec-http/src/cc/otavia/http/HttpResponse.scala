@@ -18,6 +18,4 @@ package cc.otavia.http
 
 import cc.otavia.core.message.Reply
 
-abstract class HttpResponse[C] extends Reply {
-
-}
+class HttpResponse[C](val content: C) extends Reply {}

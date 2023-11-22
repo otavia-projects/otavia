@@ -26,7 +26,8 @@ import java.time.{LocalDateTime, ZoneId}
 import java.util.Locale
 import scala.language.unsafeNulls
 
-class HttpServer(override val workerNumber: Int = 8, routers: Seq[Router]) extends AcceptorActor[HttpServerWorker] {
+class HttpServer(override val workerNumber: Int = 8, routers: Seq[Router], serverName: String = "otavia-http")
+    extends AcceptorActor[HttpServerWorker] {
 
     private val routerMatcher = new RouterMatcher(routers)
 
@@ -51,6 +52,6 @@ class HttpServer(override val workerNumber: Int = 8, routers: Seq[Router]) exten
     }
 
     override protected def workerFactory: AcceptorActor.WorkerFactory[HttpServerWorker] = () =>
-        new HttpServerWorker(routerMatcher.sync(), dates)
+        new HttpServerWorker(routerMatcher.sync(), dates, serverName)
 
 }

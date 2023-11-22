@@ -208,6 +208,8 @@ trait Channel extends ChannelAddress {
 
     def pendingStackSize: Int
 
+    def writingChannelStackRequest[T]: T
+
     /** generate a unique id for the channel message
      *
      *  @return

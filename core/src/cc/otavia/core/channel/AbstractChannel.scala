@@ -63,6 +63,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     // inbound stack to wait actor running
     private val pendingStacks: QueueMap[ChannelStack[?]] = new QueueMap[ChannelStack[?]]()
 
+    private var pipelineStackRequest: AnyRef = _
+
     private var channelMsgId: Long = ChannelInflight.INVALID_CHANNEL_MESSAGE_ID
 
     protected var ongoingChannelPromise: ChannelPromise = _
@@ -120,6 +122,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     override def generateMessageId: Long = { channelMsgId += 1; channelMsgId }
 
+    override def writingChannelStackRequest[T]: T = pipelineStackRequest.asInstanceOf[T]
+
     override private[core] def onInboundMessage(msg: AnyRef): Unit = {
         if (maxFutureInflight == 1 && inflightFutures.size == 1) {
             val promise = inflightFutures.pop()
@@ -148,12 +152,18 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         if (pendingFutures.nonEmpty) processPendingFutures()
     }
 
-    final private[core] def processCompletedChannelStacks(): Unit =
+    final private[core] def processCompletedChannelStacks(): Unit = {
         while (inflightStacks.nonEmpty && inflightStacks.first.isDone) {
             val stack = inflightStacks.pop()
-            if (stack.hasResult) this.writeAndFlush(stack.result, stack.messageId)
+            if (stack.hasResult) {
+                pipelineStackRequest = stack.message
+                this.write(stack.result, stack.messageId)
+                pipelineStackRequest = null
+            }
             actor.recycleStack(stack)
         }
+        this.flush()
+    }
 
     final private[core] def processPendingStacks(): Unit = if (pendingStacks.headIsBarrier) {
         if (inflightStacks.isEmpty) processPendingStack()

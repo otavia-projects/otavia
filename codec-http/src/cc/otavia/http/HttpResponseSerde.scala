@@ -19,10 +19,4 @@ package cc.otavia.http
 import cc.otavia.buffer.Buffer
 import cc.otavia.serde.Serde
 
-class HttpResponseSerde[C](val mediaType: MediaType = MediaType.TEXT_PLAIN_UTF8) extends Serde[C | HttpResponse[C]] {
-
-    override def deserialize(in: Buffer): C | HttpResponse[C] = ???
-
-    override def serialize(value: C | HttpResponse[C], out: Buffer): Unit = ???
-
-}
+case class HttpResponseSerde[C](contentSerde: Serde[C], mediaType: MediaType = MediaType.ANY)

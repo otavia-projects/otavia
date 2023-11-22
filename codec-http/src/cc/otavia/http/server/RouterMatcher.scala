@@ -66,6 +66,8 @@ class RouterMatcher(routers: Seq[Router]) {
         if (this.notFoundRouter == null) this.notFoundRouter = NotFoundRouter()
     }
 
+    def `404`: NotFoundRouter = notFoundRouter
+
     private def updateTree(method: HttpMethod, path: String, router: Router): Unit = {
         val tree    = choiceTree(method)
         val notRoot = path != "/"
@@ -174,15 +176,19 @@ class RouterMatcher(routers: Seq[Router]) {
                 matched = find
             }
 
-            if (!buffer.nextIn(HttpConstants.PATH_END)) {
-                val len       = buffer.bytesBeforeIn(HttpConstants.PATH_END)
-                val remaining = buffer.readCharSequence(len, StandardCharsets.US_ASCII).toString
-                routerContext.setRemaining(remaining)
-                routerContext.appendPath("/")
-                routerContext.appendPath(remaining)
-            }
-
-            val router = if (matched != null) matched.router else notFoundRouter
+            val router = if (matched != null && matched.router != null) {
+                while (!buffer.nextIn(HttpConstants.PATH_END)) {
+                    val len     = buffer.bytesBeforeIn(HttpConstants.NODE_SPLITTER)
+                    val encoded = buffer.readCharSequence(len, StandardCharsets.US_ASCII).toString
+                    val decoded = URLDecoder.decode(encoded, URL_CHARSET)
+                    routerContext.appendPath("/")
+                    routerContext.appendPath(decoded)
+                    routerContext.appendRemaining("/")
+                    routerContext.appendRemaining(decoded)
+                    buffer.skipIfNextIs(HttpConstants.PATH_SPLITTER)
+                }
+                matched.router
+            } else notFoundRouter
 
             router match // parse params
                 case ControllerRouter(_, _, _, requestSerde, _)

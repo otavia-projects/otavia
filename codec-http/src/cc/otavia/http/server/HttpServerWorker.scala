@@ -23,14 +23,19 @@ import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.message.Reply
 import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState, StartState}
 import cc.otavia.core.stack.{AskStack, ChannelStack, StackState}
-import cc.otavia.handler.http.ServerCodec
 import cc.otavia.http.HttpRequest
+import cc.otavia.http.codec.ServerCodec
 
-class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Array[Byte]])
+import java.nio.charset.StandardCharsets
+import scala.language.unsafeNulls
+
+class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Array[Byte]], serverName: String)
     extends AcceptedWorkerActor[Nothing] {
 
+    private val serverNameBytes: Array[Byte] = serverName.replaceAll("\r|\n", "").getBytes(StandardCharsets.US_ASCII)
+
     final override protected def initChannel(channel: Channel): Unit =
-        channel.pipeline.addLast(new ServerCodec(routerMatcher, dates))
+        channel.pipeline.addLast(new ServerCodec(routerMatcher, dates, serverNameBytes))
 
     override def resumeAsk(stack: AskStack[AcceptedChannel]): Option[StackState] = handleAccepted(stack)
 

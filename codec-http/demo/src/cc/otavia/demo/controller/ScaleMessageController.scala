@@ -92,12 +92,12 @@ object ScaleMessageController {
 
     }
 
-    val messageRequestSerde =
+    val messageRequestSerde: HttpRequestSerde[ScaleLength, ScaleMessage, ScaleMessage] =
         new HttpRequestSerde[ScaleLength, ScaleMessage, ScaleMessage](Some(messageSerde), Some(paramSerde)) {
             override protected def createHttpRequest(): HttpRequest[ScaleLength, ScaleMessage, ScaleMessage] =
                 new ScaleMessageRequest()
         }
 
-    val messageResponseSerde = new HttpResponseSerde[ScaleMessage](MediaType.APP_JSON)
+    val messageResponseSerde = new HttpResponseSerde[ScaleMessage](messageSerde, MediaType.APP_JSON)
 
 }
