@@ -14,6 +14,7 @@ layout: main
 [![GitHub Pages](https://github.com/otavia-projects/otavia/actions/workflows/gh-pages.yml/badge.svg)](https://otavia-projects.github.io/otavia/home.html)
 ![Static Badge](https://img.shields.io/badge/JDK-17%2B-blue)
 ![Static Badge](https://img.shields.io/badge/Scala-3.3-blue)
+![Maven Central](https://img.shields.io/maven-central/v/cc.otavia/otavia-runtime_3)
 ![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/cc.otavia/otavia-runtime_3?server=https%3A%2F%2Fs01.oss.sonatype.org)
 
 ## Introduction
