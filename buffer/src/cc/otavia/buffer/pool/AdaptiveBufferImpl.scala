@@ -45,7 +45,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         if (offset >= startIndex && offset < endIndex) {
             var len    = offset - ridx
             var cursor = 0
-            while (len > apply(cursor).readableBytes && cursor < size) {
+            while (cursor < size && len > apply(cursor).readableBytes) {
                 len -= apply(cursor).readableBytes
                 cursor += 1
             }
@@ -155,7 +155,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                 recycleHead()
                 cursor -= 1
             }
-            head.readerOffset(head.readerOffset + off)
+            if (head.readableBytes > off) head.readerOffset(head.readerOffset + off) else recycleHead()
             ridx = offset
         }
         this
@@ -235,7 +235,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                 val first  = apply(srcIndex)
                 var accPos = destPos
                 var len    = first.readableBytes - srcOff
-                first.copyInto(first.readerOffset + srcPos, dest, accPos, len)
+                first.copyInto(first.readerOffset + srcOff, dest, accPos, len)
                 accPos += len
 
                 var i = srcIndex + 1
@@ -282,7 +282,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                 val first  = apply(srcIndex)
                 var accPos = destPos
                 var len    = first.readableBytes - srcOff
-                first.copyInto(first.readerOffset + srcPos, dest, accPos, len)
+                first.copyInto(first.readerOffset + srcOff, dest, accPos, len)
                 accPos += len
 
                 var i = srcIndex + 1
@@ -2605,13 +2605,19 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
 
     override def skipIfNextIs(byte: Byte): Boolean = if (nonEmpty) {
         val res = head.skipIfNextIs(byte)
-        if (res) ridx += 1
+        if (res) {
+            ridx += 1
+            if (head.readableBytes == 0) recycleHead()
+        }
         res
     } else false
 
     override def skipIfNextAre(bytes: Array[Byte]): Boolean = if (head.readableBytes >= bytes.length) {
         val res = head.skipIfNextAre(bytes)
-        if (res) ridx += bytes.length
+        if (res) {
+            ridx += bytes.length
+            if (head.readableBytes == 0) recycleHead()
+        }
         res
     } else if (readableBytes >= bytes.length) {
         var skip = true
@@ -2624,7 +2630,14 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         skip
     } else false
 
-    override def skipIfNextIn(set: Array[Byte]): Boolean = if (nonEmpty) head.skipIfNextIn(set) else false
+    override def skipIfNextIn(set: Array[Byte]): Boolean = if (nonEmpty) {
+        val res = head.skipIfNextIn(set)
+        if (res) {
+            ridx += 1
+            if (head.readableBytes == 0) recycleHead()
+        }
+        res
+    } else false
 
     inline private def checkFromTo(from: Int, to: Int): Unit = {
         if (from < ridx)

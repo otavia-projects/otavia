@@ -22,6 +22,7 @@ import cc.otavia.buffer.pool.PooledPageAllocator
 import cc.otavia.buffer.{AbstractBuffer, Buffer}
 
 import java.nio.ByteBuffer
+import java.nio.channels.ReadableByteChannel
 import scala.language.unsafeNulls
 
 abstract class RecyclablePageBuffer(underlying: ByteBuffer) extends AbstractBuffer(underlying) {
@@ -52,6 +53,12 @@ abstract class RecyclablePageBuffer(underlying: ByteBuffer) extends AbstractBuff
     override def closed: Boolean = status == ST_PAGE_ALLOCATABLE
 
     private[otavia] def byteBuffer: ByteBuffer
+
+    override def transferFrom(channel: ReadableByteChannel, length: Int): Int = {
+        val read = channel.read(underlying)
+        if (read > 0) skipWritableBytes(read)
+        read
+    }
 
 }
 
