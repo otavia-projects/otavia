@@ -23,7 +23,7 @@ import cc.otavia.core.channel
 import cc.otavia.core.channel.{ChannelHandlerContext, DefaultFileRegion}
 import cc.otavia.core.slf4a.{Logger, LoggerFactory}
 import cc.otavia.core.stack.ChannelFuture
-import cc.otavia.core.timer.TimeoutTrigger
+import cc.otavia.core.timer.{TimeoutTrigger, Timer}
 import cc.otavia.handler.codec.ByteToMessageCodec
 import cc.otavia.http.*
 import cc.otavia.http.server.*
@@ -51,6 +51,8 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
 
     private var currentBodyLength: Int = 0
 
+    private var packetTimeoutId: Long = Timer.INVALID_TIMEOUT_REGISTER_ID
+
     private val staticFilesCache = new ActorThreadLocal[mutable.HashMap[String, DefaultFileRegion]] {
         override protected def initialValue(): mutable.HashMap[String, DefaultFileRegion] = mutable.HashMap.empty
     }
@@ -59,11 +61,16 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
 
     // decode http request
     override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = {
-        while (input.readableBytes > 0) {
+        if (packetTimeoutId != Timer.INVALID_TIMEOUT_REGISTER_ID) {
+            ctx.timer.cancelTimerTask(packetTimeoutId)
+            packetTimeoutId = Timer.INVALID_TIMEOUT_REGISTER_ID
+        }
+        var continue = true
+        while (continue && input.readableBytes > 0) {
             if (parseState == ST_PARSE_HEADLINE) {
                 if (input.readableBytes <= 4096) {
                     val lineLength = input.bytesBefore(HttpConstants.HEADER_LINE_END)
-                    if (lineLength != -1) parseHeadLine(input, lineLength)
+                    if (lineLength != -1) parseHeadLine(input, lineLength) else continue = false
                 } else {
                     val lineLength =
                         input.bytesBefore(HttpConstants.HEADER_LINE_END, input.readerOffset, input.readerOffset + 4096)
@@ -129,19 +136,25 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
                             input.skipReadableBytes(headersLength + 4 + contentLength)
                             parseState = ST_PARSE_HEADLINE
                             responseConstant(value, serde, mediaType)
-                }
+                } else continue = false
             }
 
             if (parseState == ST_PARSE_BODY) {
-                currentRouter match
-                    case ControllerRouter(method, path, controller, requestSerde, responseSerde) =>
-                        parseState = ST_PARSE_HEADLINE
-                        generateRequest(currentBodyLength, requestSerde, input)
-                    case _ =>
+                if (input.readableBytes >= currentBodyLength) {
+                    currentRouter match
+                        case ControllerRouter(method, path, controller, requestSerde, responseSerde) =>
+                            parseState = ST_PARSE_HEADLINE
+                            generateRequest(currentBodyLength, requestSerde, input)
+                        case _ =>
+                } else continue = false
             }
         }
 
         if (ctx.outboundAdaptiveBuffer.readableBytes > 0) ctx.flush()
+
+        if (!continue) { // handle unfinished http packet
+            packetTimeoutId = ctx.timer.registerChannelTimeout(TimeoutTrigger.DelayTime(1000), ctx.channel)
+        }
     }
 
     // encode http response
@@ -296,6 +309,12 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
             else HttpVersion.HTTP_1_0
         buffer.skipReadableBytes(buffer.bytesBefore(HttpConstants.HEADER_LINE_END) + 2)
         version
+    }
+
+    override def channelTimeoutEvent(ctx: ChannelHandlerContext, id: Long): Unit = if (id == packetTimeoutId) {
+        logger.error(s"Can't receive completed http packet after 1 second, close channel ${ctx.channel}")
+        packetTimeoutId = Timer.INVALID_TIMEOUT_REGISTER_ID
+        ctx.channel.close(ChannelFuture())
     }
 
 }
