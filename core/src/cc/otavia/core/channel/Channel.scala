@@ -224,3 +224,7 @@ trait Channel extends ChannelAddress {
     private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit
 
 }
+
+object Channel {
+    val FALSE_FUNC: AnyRef => Boolean = _ => false
+}

@@ -45,7 +45,7 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
             interestOps = _selectionKey.interestOps()
             _selectionKey.cancel()
         }
-        _selectionKey = ch.register(selector, interestOps, this)
+        _selectionKey = ch.register(selector, interestOps, this) // TODO: already closed
     }
 
     override def deregisterSelector(): Unit = if (_selectionKey != null) {
@@ -113,7 +113,7 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
 
     override def unsafeClose(cause: Option[Throwable]): Unit = {
         try {
-            _selectionKey = null
+            deregisterSelector()
             ch.close()
             executorAddress.inform(ReactorEvent.ChannelClose(channel, cause))
         } catch {

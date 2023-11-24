@@ -92,16 +92,14 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
      */
     private[core] def attachStack(askId: Long, future: Future[?]): Unit = {
         val promise = future.promise.asInstanceOf[AbstractPromise[?]]
+        assert(promise.notInChain, "The Future has been used, can't be use again!")
         promise.setStack(currentStack)
         promise.setId(askId)
         currentStack.addUncompletedPromise(promise)
         promise match
             case promise: MessagePromise[? <: Reply] =>
                 sendAsks += 1
-                assert(promise.notInChain, "The ReplyFuture has been used, can't be use again!")
                 this.push(promise)
-            case promise: ChannelPromise =>
-                assert(promise.notInChain, "The ChannelPromise has been used, can't be use again!")
             case _ =>
     }
 

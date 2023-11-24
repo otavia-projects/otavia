@@ -424,9 +424,12 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
             }
         }
 
-        val promise = this.ongoingChannelPromise
-        this.ongoingChannelPromise = null
-        promise.setSuccess(event)
+        if (this.ongoingChannelPromise != null) {
+            val promise = this.ongoingChannelPromise
+            this.ongoingChannelPromise = null
+            promise.setSuccess(event)
+        }
+
     }
 
     private final def readIfIsAutoRead(): Unit = if (autoRead) pipeline.read()

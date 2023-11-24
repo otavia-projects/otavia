@@ -53,6 +53,30 @@ class QueueMapSuite extends AnyFunSuiteLike {
 
     }
 
+    test("append pop") {
+        val queueMap = new QueueMap[TestQueueMapEntity]()
+        0 until 10 foreach { idx =>
+            val entity = new TestQueueMapEntity()
+            entity.setId(idx)
+            queueMap.append(entity)
+        }
+        assert(queueMap.pop().entityId == 0)
+        assert(queueMap.size == 9)
+        assert(!queueMap.contains(0))
+
+        assert(queueMap.pop().entityId == 1)
+        assert(queueMap.size == 8)
+        assert(!queueMap.contains(1))
+
+        assert(queueMap.pop().entityId == 2)
+        assert(queueMap.size == 7)
+        assert(!queueMap.contains(2))
+
+        assert(queueMap.pop().entityId == 3)
+        assert(queueMap.size == 6)
+        assert(!queueMap.contains(3))
+    }
+
     test("headIsBarrier") {
         val entity = new TestQueueMapEntity()
         entity.setId(0)

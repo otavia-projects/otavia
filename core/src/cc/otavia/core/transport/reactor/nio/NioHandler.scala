@@ -224,7 +224,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         catch { case e: InterruptedException => } // Ignore.
     }
 
-    private def processSelectedKeys(): Int = if (selectedKeys ne null)
+    private def processSelectedKeys(): Int = if (selectedKeys != null && selectedKeys.size() > 0)
         processSelectedKeysOptimized()
     else
         processSelectedKeysPlain()
@@ -421,7 +421,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
                     val timeoutMillis =
                         if (blocks > 10) {
                             if (!wakenUp.get()) wakenUp.set(true)
-                            200 * blocks
+                            20
                         } else 0
                     val selectedKeys = if (timeoutMillis != 0) selector.select(timeoutMillis) else selector.selectNow()
                     selectCnt += 1

@@ -38,6 +38,12 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
         workers = system.buildActor(workerFactory, workerNumber)
     }
 
+    override protected def initChannel(channel: Channel): Unit = {
+        channel.setOption(ChannelOption.CHANNEL_STACK_BARRIER, Channel.FALSE_FUNC)
+        channel.setOption(ChannelOption.CHANNEL_MAX_STACK_INFLIGHT, Int.MaxValue)
+        channel.setOption(ChannelOption.CHANNEL_STACK_HEAD_OF_LINE, false)
+    }
+
     final override protected def newChannel(): Channel = system.channelFactory.openServerSocketChannel(family)
 
     final protected def bind(stack: AskStack[Bind]): Option[StackState] = {

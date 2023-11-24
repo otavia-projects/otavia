@@ -163,6 +163,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
             actor.recycleStack(stack)
         }
         this.flush()
+
+        if (pendingStacks.nonEmpty) processPendingStacks()
     }
 
     final private[core] def processPendingStacks(): Unit = if (pendingStacks.headIsBarrier) {

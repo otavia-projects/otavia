@@ -62,7 +62,7 @@ class NioReactorWorker(
         startThread()
     }
 
-    private def startThread(): Unit = if (get() == ST_NOT_STARTED && compareAndSet(ST_NOT_STARTED, ST_STARTED)) {
+    private def startThread(): Unit = if (get() == ST_NOT_STARTED && compareAndSet(ST_NOT_STARTED, ST_STARTING)) {
         var success = false
         try {
             doStartThread()
@@ -88,6 +88,7 @@ class NioReactorWorker(
     }
 
     private def run(): Unit = {
+        set(ST_STARTED)
         while (!confirmShutdown()) {
             runIO()
             runCommands(maxTasksPerRun)
@@ -131,9 +132,10 @@ class NioReactorWorker(
 object NioReactorWorker {
 
     private val ST_NOT_STARTED   = 1
-    private val ST_STARTED       = 2
-    private val ST_SHUTTING_DOWN = 3
-    private val ST_SHUTDOWN      = 4
-    private val ST_TERMINATED    = 5
+    private val ST_STARTING      = 2
+    private val ST_STARTED       = 3
+    private val ST_SHUTTING_DOWN = 4
+    private val ST_SHUTDOWN      = 5
+    private val ST_TERMINATED    = 6
 
 }
