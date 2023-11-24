@@ -62,9 +62,7 @@ object NOPLogger extends Logger {
     override def warn(format: String, arg: Any): Unit = {}
 
     override def warn(format: String, arg1: Any, arg2: Any): Unit = {}
-
-    override def warn(format: String, args: Any*): Unit = {}
-
+    
     override def warn(msg: String, e: Throwable): Unit = {}
 
     override def isErrorEnabled: Boolean = false
