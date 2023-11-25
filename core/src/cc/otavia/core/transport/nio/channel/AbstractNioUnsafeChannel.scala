@@ -24,7 +24,7 @@ import cc.otavia.core.message.ReactorEvent
 
 import java.io.IOException
 import java.net.{PortUnreachableException, SocketAddress}
-import java.nio.channels.{CancelledKeyException, SelectableChannel, SelectionKey, Selector}
+import java.nio.channels.*
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
@@ -45,7 +45,7 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
             interestOps = _selectionKey.interestOps()
             _selectionKey.cancel()
         }
-        _selectionKey = ch.register(selector, interestOps, this) // TODO: already closed
+        if (ch.isOpen) _selectionKey = ch.register(selector, interestOps, this) else throw new ClosedChannelException()
     }
 
     override def deregisterSelector(): Unit = if (_selectionKey != null) {
@@ -113,7 +113,7 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
 
     override def unsafeClose(cause: Option[Throwable]): Unit = {
         try {
-            deregisterSelector()
+            if (_selectionKey != null) deregisterSelector()
             ch.close()
             executorAddress.inform(ReactorEvent.ChannelClose(channel, cause))
         } catch {

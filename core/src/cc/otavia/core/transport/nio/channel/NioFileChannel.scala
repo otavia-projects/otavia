@@ -34,7 +34,5 @@ import scala.language.unsafeNulls
 class NioFileChannel(system: ActorSystem) extends AbstractFileChannel(system) {
 
     override def unsafeChannel: NioUnsafeFileChannel = super.unsafeChannel.asInstanceOf[NioUnsafeFileChannel]
-
-    override private[core] def closeAfterCreate(): Unit = ???
-
+    
 }

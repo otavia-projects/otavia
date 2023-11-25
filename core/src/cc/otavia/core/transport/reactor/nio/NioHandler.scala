@@ -33,7 +33,7 @@ import cc.otavia.internal.{Platform, ReflectionUtil}
 import java.io.{IOException, UncheckedIOException}
 import java.net.SocketAddress
 import java.nio.channels.spi.SelectorProvider
-import java.nio.channels.{CancelledKeyException, SelectionKey, Selector}
+import java.nio.channels.{CancelledKeyException, ClosedChannelException, SelectionKey, Selector}
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import java.util
@@ -322,6 +322,9 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
                         selectNow()
                         selected = true
                     } else channel.executorAddress.inform(ReactorEvent.RegisterReply(channel, cause = Some(e)))
+                case e: ClosedChannelException =>
+                    channel.executorAddress.inform(ReactorEvent.RegisterReply(channel, cause = Some(e)))
+                    success = true
             }
         }
     }

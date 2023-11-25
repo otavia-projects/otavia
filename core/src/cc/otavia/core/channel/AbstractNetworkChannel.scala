@@ -180,6 +180,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
     override private[core] def bindTransport(local: SocketAddress, promise: ChannelPromise): Unit = {
         if (!mounted)
             invokeLater(() => promise.setFailure(new IllegalStateException(s"channel $this is not mounted to actor!")))
+        else if (closed || closing) invokeLater(() => promise.setFailure(new ClosedChannelException()))
         else if (!registered) { // if not register
             if (registering)
                 invokeLater(() =>

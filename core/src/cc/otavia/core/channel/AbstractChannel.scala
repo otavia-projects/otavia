@@ -373,7 +373,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     override def writableBytes: Long = ???
 
-    override private[core] def closeAfterCreate(): Unit = ???
+    override private[core] def closeAfterCreate(): Unit = closeTransport(newPromise())
 
     // end impl Channel
 

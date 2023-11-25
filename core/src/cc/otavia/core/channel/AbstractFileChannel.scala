@@ -25,6 +25,7 @@ import cc.otavia.core.stack.{ChannelFuture, ChannelPromise}
 import cc.otavia.core.system.ActorSystem
 
 import java.net.SocketAddress
+import java.nio.channels.ClosedChannelException
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
@@ -74,9 +75,11 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
         attrs: Seq[FileAttribute[?]],
         promise: ChannelPromise
     ): Unit = {
-        if (!mounted) promise.setFailure(new IllegalStateException(s"channel $this is not mounted to actor!"))
-        else if (opening) promise.setFailure(new IllegalStateException("Channel is opening!"))
-        else if (opened) promise.setFailure(new IllegalStateException("Open already!"))
+        if (!mounted)
+            invokeLater(() => promise.setFailure(new IllegalStateException(s"channel $this is not mounted to actor!")))
+        else if (opening) invokeLater(() => promise.setFailure(new IllegalStateException("Channel is opening!")))
+        else if (closed || closing) invokeLater(() => promise.setFailure(new ClosedChannelException()))
+        else if (opened) invokeLater(() => promise.setFailure(new IllegalStateException("Open already!")))
         else {
             opening = true
             this.ongoingChannelPromise = promise
