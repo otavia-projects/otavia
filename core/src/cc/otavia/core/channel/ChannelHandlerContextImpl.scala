@@ -165,9 +165,10 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeChannelRegistered(): Unit = try {
         handler.channelRegistered(this)
+        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
-    } finally updatePendingBytesIfNeeded()
+    }
 
     override def fireChannelUnregistered(): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_UNREGISTERED)
@@ -177,9 +178,10 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeChannelUnregistered(): Unit = try {
         handler.channelUnregistered(this)
+        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
-    } finally updatePendingBytesIfNeeded()
+    }
 
     override def fireChannelActive(): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_ACTIVE)
@@ -189,9 +191,10 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeChannelActive(): Unit = try {
         handler.channelActive(this)
+        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
-    } finally updatePendingBytesIfNeeded()
+    }
 
     override def fireChannelInactive(): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_INACTIVE)
@@ -201,9 +204,10 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeChannelInactive(): Unit = try {
         handler.channelInactive(this)
+        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
-    } finally updatePendingBytesIfNeeded()
+    }
 
     override def fireChannelShutdown(direction: ChannelShutdownDirection): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_SHUTDOWN)
@@ -213,9 +217,10 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeChannelShutdown(direction: ChannelShutdownDirection): Unit = try {
         handler.channelShutdown(this, direction)
+        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
-    } finally updatePendingBytesIfNeeded()
+    }
 
     override def fireChannelExceptionCaught(cause: Throwable): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_EXCEPTION_CAUGHT)
@@ -227,6 +232,7 @@ final class ChannelHandlerContextImpl(
         try {
             cause.printStackTrace() // TODO: delete
             handler.channelExceptionCaught(this, cause)
+            updatePendingBytesIfNeeded()
         } catch {
             case error: Throwable =>
                 logger.debug(
@@ -240,7 +246,7 @@ final class ChannelHandlerContextImpl(
                       + "method while handling the following exception:",
                   cause
                 )
-        } finally updatePendingBytesIfNeeded()
+        }
     }
 
     override def fireChannelInboundEvent(evt: AnyRef): this.type = {
@@ -251,9 +257,10 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeChannelInboundEvent(event: AnyRef): Unit = try {
         handler.channelInboundEvent(this, event)
+        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
-    } finally updatePendingBytesIfNeeded()
+    }
 
     override def fireChannelTimeoutEvent(id: Long): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_TIMEOUT_EVENT)
@@ -275,10 +282,12 @@ final class ChannelHandlerContextImpl(
     }
 
     private[core] def invokeChannelRead(msg: AnyRef): Unit = {
-        try handler.channelRead(this, msg)
-        catch {
+        try {
+            handler.channelRead(this, msg)
+            updatePendingBytesIfNeeded()
+        } catch {
             case t: Throwable => invokeChannelExceptionCaught(t)
-        } finally updatePendingBytesIfNeeded()
+        }
     }
 
     override def fireChannelRead(msg: AnyRef, msgId: Long): this.type = {
@@ -288,9 +297,10 @@ final class ChannelHandlerContextImpl(
     }
 
     private[core] def invokeChannelRead(msg: AnyRef, id: Long): Unit = {
-        try handler.channelRead(this, msg, id)
-        catch { case t: Throwable => invokeChannelExceptionCaught(t) }
-        finally updatePendingBytesIfNeeded()
+        try {
+            handler.channelRead(this, msg, id)
+            updatePendingBytesIfNeeded()
+        } catch { case t: Throwable => invokeChannelExceptionCaught(t) }
     }
 
     override def fireChannelReadComplete(): this.type = {
@@ -301,9 +311,10 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeChannelReadComplete(): Unit = try {
         handler.channelReadComplete(this)
+        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
-    } finally updatePendingBytesIfNeeded()
+    }
 
     override def fireChannelWritabilityChanged(): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_WRITABILITY_CHANGED)
@@ -313,9 +324,10 @@ final class ChannelHandlerContextImpl(
 
     def invokeChannelWritabilityChanged(): Unit = try {
         handler.channelWritabilityChanged(this)
+        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
-    } finally updatePendingBytesIfNeeded()
+    }
 
     override def read(readPlan: ReadPlan): this.type = {
         val ctx = findContextOutbound(ChannelHandlerMask.MASK_READ)
@@ -325,9 +337,10 @@ final class ChannelHandlerContextImpl(
 
     private def invokeRead(readPlan: ReadPlan): Unit = try {
         handler.read(this, readPlan)
+        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => handleOutboundHandlerException(t, false)
-    } finally updatePendingBytesIfNeeded()
+    }
 
     override def read(): this.type = {
         val ctx  = findContextOutbound(ChannelHandlerMask.MASK_READ)
@@ -344,9 +357,10 @@ final class ChannelHandlerContextImpl(
 
     private def invokeFlush(): Unit = try {
         handler.flush(this)
+        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => handleOutboundHandlerException(t, false)
-    } finally updatePendingBytesIfNeeded()
+    }
 
     override def bind(local: SocketAddress, future: ChannelFuture): ChannelFuture = {
         val nextCtx = findContextOutbound(ChannelHandlerMask.MASK_BIND)
@@ -421,7 +435,7 @@ final class ChannelHandlerContextImpl(
         handler.close(this, future)
         updatePendingBytesIfNeeded()
     } catch {
-        case t: Throwable => future.promise.setFailure(handleOutboundHandlerException(t, false))
+        case t: Throwable => future.promise.setFailure(handleOutboundHandlerException(t, true))
     }
 
     override def shutdown(direction: ChannelShutdownDirection, future: ChannelFuture): ChannelFuture = {
@@ -434,7 +448,7 @@ final class ChannelHandlerContextImpl(
         handler.shutdown(this, direction, future)
         updatePendingBytesIfNeeded()
     } catch {
-        case t: Throwable => future.promise.setFailure(handleOutboundHandlerException(t, false))
+        case t: Throwable => future.promise.setFailure(handleOutboundHandlerException(t, true))
     }
 
     override def register(future: ChannelFuture): ChannelFuture = {
