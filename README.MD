@@ -32,7 +32,7 @@ You can get a quick overview of the basic usage and core design of `otavia` in t
 - [Quick Start](./docs/_docs/quick_start.md)
 - [Core Concepts and Design](./docs/_docs/core_concept.md)
 
-More document can be found at [website](https://otavia-projects.github.io/otavia/home.html)
+More document can be found at [website](https://otavia.cc/home.html)
 
 ## Features
 

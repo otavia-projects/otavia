@@ -31,7 +31,7 @@ Language: [English](./README.md)
 - [快速入门](./docs/_docs/zh/quick_start.md)
 - [核心概念与设计](./docs/_docs/zh/core_concept.md)
 
-更多文档可以在项目 [网站](https://otavia-projects.github.io/otavia/home.html) 查看。
+更多文档可以在项目 [网站](https://otavia.cc/home.html) 查看。
 
 ## 特性
 
