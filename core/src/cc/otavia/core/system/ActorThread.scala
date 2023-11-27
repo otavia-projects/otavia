@@ -25,7 +25,7 @@ import cc.otavia.core.system.ActorThread.{GC_PEER_ROUND, ST_RUNNING, ST_STARTING
 import cc.otavia.core.system.monitor.ActorThreadMonitor
 
 import java.lang.ref.*
-import java.util.concurrent.{ConcurrentLinkedQueue, CopyOnWriteArraySet}
+import java.util.concurrent.ConcurrentLinkedQueue
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
@@ -49,8 +49,9 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
     private val direct = new DirectPooledPageAllocator(ActorSystem.PAGE_SIZE)
     private val heap   = new HeapPooledPageAllocator(ActorSystem.PAGE_SIZE)
 
-    private val mutableBuffer: mutable.ArrayBuffer[AnyRef] = mutable.ArrayBuffer.empty
-    private val mutableSet: mutable.HashSet[AnyRef]        = mutable.HashSet.empty
+    private val mutableBuffer: mutable.ArrayBuffer[AnyRef]  = mutable.ArrayBuffer.empty
+    private val mutableSet: mutable.HashSet[AnyRef]         = mutable.HashSet.empty
+    private val mutableMap: mutable.HashMap[AnyRef, AnyRef] = mutable.HashMap.empty
 
     setName(s"otavia-actor-worker-$index")
 
@@ -219,5 +220,9 @@ object ActorThread {
     final def threadSet[T]: mutable.HashSet[T] = Thread.currentThread() match
         case thread: ActorThread => thread.mutableSet.asInstanceOf[mutable.HashSet[T]]
         case _                   => mutable.HashSet.empty[T]
+
+    final def threadMap[K, V]: mutable.HashMap[K, V] = Thread.currentThread() match
+        case thread: ActorThread => thread.mutableMap.asInstanceOf[mutable.HashMap[K, V]]
+        case _                   => mutable.HashMap.empty
 
 }
