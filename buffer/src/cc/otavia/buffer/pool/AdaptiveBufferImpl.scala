@@ -146,9 +146,9 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def readerOffset(offset: Int): Buffer = {
-        checkReadBounds(offset)
         if (offset == widx) recycleAll()
         else {
+            checkReadBounds(offset)
             val (index, off) = offsetAtOffset(offset)
             var cursor       = index
             while (cursor > 0) {
@@ -2612,7 +2612,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         res
     } else false
 
-    override def skipIfNextAre(bytes: Array[Byte]): Boolean = if (head.readableBytes >= bytes.length) {
+    override def skipIfNextAre(bytes: Array[Byte]): Boolean = if (nonEmpty && head.readableBytes >= bytes.length) {
         val res = head.skipIfNextAre(bytes)
         if (res) {
             ridx += bytes.length
