@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.otavia.http
+package cc.otavia.http.server
 
 import cc.otavia.core.message.Reply
 

@@ -14,24 +14,10 @@
  * limitations under the License.
  */
 
-package cc.otavia.http
+package cc.otavia.http.server
 
 import cc.otavia.buffer.Buffer
+import cc.otavia.http.MediaType
+import cc.otavia.serde.Serde
 
-import scala.collection.mutable
-import scala.language.unsafeNulls
-
-abstract class AbstractParameterSerde[P] extends ParameterSerde[P] {
-
-    private var pvrs: mutable.Map[String, String] = _
-    private var pmvrs: mutable.Map[String, String] = _
-
-    override def setPathVars(vars: mutable.Map[String, String]): Unit = pvrs = vars
-
-    override def setParams(p: mutable.Map[String, String]): Unit = pmvrs = p
-
-    override def pathVars: mutable.Map[String, String] = pvrs
-
-    override def params: mutable.Map[String, String] = pmvrs
-
-}
+case class HttpResponseSerde[C](contentSerde: Serde[C], mediaType: MediaType = MediaType.ANY)

@@ -19,7 +19,7 @@ package cc.otavia.http.server
 import cc.otavia.buffer.Buffer
 import cc.otavia.core.message.Reply
 import cc.otavia.http.server.Router.*
-import cc.otavia.http.{AbstractParameterSerde, HttpRequest, HttpRequestSerde}
+import cc.otavia.http.AbstractParameterSerde
 import cc.otavia.serde.Serde
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -104,8 +104,8 @@ object RouterMatcherSuite {
 
     }
 
-    val doRequestSerde: HttpRequestSerde[Do, Nothing, DoResult] =
-        new HttpRequestSerde[Do, Nothing, DoResult](parameterSerde = Some(paramSerde)) {
+    val doRequestSerde: HttpRequestFactory[Do, Nothing, DoResult] =
+        new HttpRequestFactory[Do, Nothing, DoResult](parameterSerde = Some(paramSerde)) {
             override protected def createHttpRequest(): HttpRequest[Do, Nothing, DoResult] = new DoRequest
         }
 

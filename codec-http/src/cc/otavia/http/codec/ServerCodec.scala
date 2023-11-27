@@ -51,6 +51,8 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
 
     private var currentBodyLength: Int = 0
 
+    private var currentRequest: HttpRequest[?, ?, ?] = _
+
     private var packetTimeoutId: Long = Timer.INVALID_TIMEOUT_REGISTER_ID
 
     private val staticFilesCache = new ActorThreadLocal[mutable.HashMap[String, DefaultFileRegion]] {
@@ -93,59 +95,73 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
                         input.bytesBefore(HttpHeader.Key.CONTENT_LENGTH, headersStart, headersEnd, true)
                     val contentLength: Int = if (contentLengthOffset != -1) {
                         val contentStart  = headersStart + contentLengthOffset + HttpHeader.Key.CONTENT_LENGTH.length
-                        val t             = input.getCharSequence(contentStart, 10, StandardCharsets.US_ASCII).toString
                         val contentLength = input.bytesBefore(HttpConstants.HEADER_LINE_END, contentStart, headersEnd)
                         input
                             .getCharSequence(contentStart, contentLength, StandardCharsets.US_ASCII)
                             .toString
-                            .replace(':', ' ')
-                            .trim
+                            .replaceAll(":|\\s", "")
                             .toInt
                     } else 0
                     currentRouter match
-                        case ControllerRouter(_, _, _, requestSerde, _) =>
-                            if (requestSerde.requireHeaders.nonEmpty) {} else input.skipReadableBytes(headersLength + 4)
+                        case ControllerRouter(_, _, _, requestFactory, _) =>
+                            if (requestFactory.requireHeaders.nonEmpty) {
+                                // TODO: parse http headers which is required by user
+                            } else input.skipReadableBytes(headersLength + 4)
                             if (contentLength == 0) {
                                 parseState = ST_PARSE_HEADLINE
-                                generateRequest(contentLength, requestSerde, input)
+                                if (requestFactory.contentSerde.nonEmpty) {
+                                    // TODO
+                                } else {
+                                    val request = currentRequest
+                                    currentRequest = null
+                                    currentRouter = null
+                                    ctx.fireChannelRead(request, ctx.channel.generateMessageId)
+                                }
                             } else {
                                 currentBodyLength = contentLength
                                 parseState = ST_PARSE_BODY
                             }
-                        case StaticFilesRouter(path, root) =>
+                        case _ =>
                             input.skipReadableBytes(headersLength + 4 + contentLength)
                             parseState = ST_PARSE_HEADLINE
-                            val routerContext = routerMatcher.context
-                            val rootFile      = root.toFile
-                            if (rootFile.isFile && routerContext.remaining == null) {
-                                responseFile(rootFile)
-                            } else if (rootFile.isDirectory && routerContext.remaining != null) {
-                                val file = new File(rootFile, routerContext.remaining)
-                                if (file.exists()) responseFile(file)
-                                else {
-                                    response404(routerMatcher.`404`)
-                                }
-                            } else { // 404
-                                response404(routerMatcher.`404`)
+                            if (ctx.channel.inflightStackSize + ctx.channel.pendingStackSize == 0) {
+                                // response directly
+                                currentRouter match
+                                    case StaticFilesRouter(path, root) =>
+                                        val remaining =
+                                            if (currentRequest != null)
+                                                currentRequest.asInstanceOf[InternalHttpRequest].subPath
+                                            else
+                                                routerMatcher.context.remaining
+                                        responseStatic(root, remaining)
+                                    case router: NotFoundRouter => response404(router)
+                                    case ConstantRouter(method, path, value, serde, mediaType) =>
+                                        responseConstant(value, serde, mediaType)
+                                    case _ => // can't reach this branch
+                            } else {
+                                // send to channel inflight wait the others head requests response completed
+                                // because http 1.1 is head of line
+                                setInternalRequest()
+                                ctx.fireChannelRead(currentRequest, ctx.channel.generateMessageId)
                             }
-                        case router: NotFoundRouter =>
-                            input.skipReadableBytes(headersLength + 4 + contentLength)
-                            parseState = ST_PARSE_HEADLINE
-                            response404(router)
-                        case ConstantRouter(method, path, value, serde, mediaType) =>
-                            input.skipReadableBytes(headersLength + 4 + contentLength)
-                            parseState = ST_PARSE_HEADLINE
-                            responseConstant(value, serde, mediaType)
-                } else continue = false
+                            currentRequest = null
+                            currentRouter = null
+                } else { // headers data not received completed, save the parse head line context
+                    continue = false
+                    // save current http request router context
+                    setInternalRequest()
+                }
             }
 
             if (parseState == ST_PARSE_BODY) {
                 if (input.readableBytes >= currentBodyLength) {
                     currentRouter match
                         case ControllerRouter(method, path, controller, requestSerde, responseSerde) =>
-                            parseState = ST_PARSE_HEADLINE
-                            generateRequest(currentBodyLength, requestSerde, input)
+                            parseBody(currentBodyLength, requestSerde, input)
                         case _ =>
+                    parseState = ST_PARSE_HEADLINE
+                    currentRequest = null
+                    currentRouter = null
                 } else continue = false
             }
         }
@@ -160,33 +176,69 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
     // encode http response
     override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, id: Long): Unit = {
         val request: HttpRequest[?, ?, ?] = ctx.channel.writingChannelStackRequest[HttpRequest[?, ?, ?]]
-        val router                        = request.controllerRouter
-        val responseSerde                 = router.responseSerde
-        msg match
-            case response: HttpResponse[?] =>
-            case body =>
-                writeResponseHeadLine(HttpStatus.OK, output)
-                writeServerHeader(output)
-                output.writeBytes(dates.get())
-                if (!body.isInstanceOf[OK]) {
-                    writeHeader(HttpHeader.Key.CONTENT_TYPE, responseSerde.mediaType.fullName, output)
-                    val lengthOffset = writeContentLengthPlaceholder(output) // reset content length later
-                    output.writeBytes(HttpConstants.HEADER_LINE_END) // headers end
+        val router                        = request.router
+        router match
+            case ControllerRouter(method, path, controller, requestFactory, responseSerde) =>
+                msg match
+                    case response: HttpResponse[?] =>
+                    case body =>
+                        writeResponseHeadLine(HttpStatus.OK, output)
+                        writeServerHeader(output)
+                        output.writeBytes(dates.get())
+                        if (!body.isInstanceOf[OK]) {
+                            writeHeader(HttpHeader.Key.CONTENT_TYPE, responseSerde.mediaType.fullName, output)
+                            val lengthOffset = writeContentLengthPlaceholder(output) // reset content length later
+                            output.writeBytes(HttpConstants.HEADER_LINE_END) // headers end
 
-                    // serialize content
-                    val contentStart = output.writerOffset
-                    responseSerde.contentSerde.serializeAny(body, output)
-                    val contentEnd = output.writerOffset
-                    output.setCharSequence(lengthOffset, (contentEnd - contentStart).toString)
-                } else output.writeBytes(HttpConstants.HEADER_LINE_END)
+                            // serialize content
+                            val contentStart = output.writerOffset
+                            responseSerde.contentSerde.serializeAny(body, output)
+                            val contentEnd = output.writerOffset
+                            output.setCharSequence(lengthOffset, (contentEnd - contentStart).toString)
+                        } else output.writeBytes(HttpConstants.HEADER_LINE_END)
+            case StaticFilesRouter(path, root) =>
+                val remaining = request.asInstanceOf[InternalHttpRequest].subPath
+                responseStatic(root, remaining)
+            case router: NotFoundRouter =>
+                response404(router)
+            case ConstantRouter(method, path, value, serde, mediaType) =>
+                responseConstant(value, serde, mediaType)
     }
 
     private def parseHeadLine(buffer: Buffer, lineLength: Int): Unit = {
         val start = buffer.readerOffset
         while (buffer.skipIfNextIs(HttpConstants.SP)) {}
         currentRouter = routerMatcher.choice(buffer)
+        val routerContext = routerMatcher.context
+
+        currentRouter match
+            case controllerRouter: ControllerRouter =>
+                val requestFactory = controllerRouter.requestFactory
+                val request        = requestFactory.createHttpRequest()
+                currentRequest = request
+                request.setRouter(controllerRouter)
+                request.setMethod(routerContext.method)
+                request.setPath(routerContext.path)
+                if (requestFactory.hasParams) request.setParam(requestFactory.parameterSerde.get.deserialize(buffer))
+                if (routerContext.pathVars.nonEmpty) {
+                    val variables = mutable.HashMap.empty[String, String]
+                    variables.addAll(routerContext.pathVars)
+                    request.setPathVariables(variables)
+                }
+            case _ =>
+
         buffer.readerOffset(start + lineLength + 2)
         parseState = ST_PARSE_HEADERS
+    }
+
+    private def setInternalRequest(): Unit = if (currentRequest == null) {
+        val routerContext = routerMatcher.context
+        val request       = new InternalHttpRequest()
+        currentRequest = request
+        request.setMethod(routerContext.method)
+        request.setRouter(currentRouter)
+        request.setPath(routerContext.path)
+        request.setRemaining(routerContext.remaining)
     }
 
     private def writeResponseHeadLine(status: HttpStatus, output: Buffer): Unit = {
@@ -208,14 +260,14 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
         buffer.writerOffset - ServerCodec.CONTENT_LENGTH_PLACEHOLDER.length - 2
     }
 
-    private def generateRequest(contentLength: Int, requestSerde: HttpRequestSerde[?, ?, ?], input: Buffer): Unit = {
-        requestSerde.setPathVars(routerMatcher.context.pathVars)
+    private def parseBody(contentLength: Int, factory: HttpRequestFactory[?, ?, ?], input: Buffer): Unit = {
+        val request = currentRequest
         val endIdx  = input.readerOffset + contentLength
-        val request = requestSerde.deserialize(input)
-        request.setRouter(currentRouter.asInstanceOf[ControllerRouter])
-        val routerContext = routerMatcher.context
-        request.setMethod(routerContext.method)
-        request.setPath(routerContext.path)
+
+        factory.contentSerde match
+            case Some(serde) => request.setContent(serde.deserialize(input))
+            case None        =>
+
         input.readerOffset(endIdx)
         ctx.fireChannelRead(request, ctx.channel.generateMessageId)
     }
@@ -237,6 +289,21 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
         buffer.setCharSequence(lengthOffset, (contentEnd - contentStart).toString)
 
         ctx.write(buffer)
+    }
+
+    private def responseStatic(root: Path, remaining: String): Unit = {
+        val rootFile = root.toFile
+        if (rootFile.isFile && remaining == null) {
+            responseFile(rootFile)
+        } else if (rootFile.isDirectory && remaining != null) {
+            val file = new File(rootFile, remaining)
+            if (file.exists()) responseFile(file)
+            else {
+                response404(routerMatcher.`404`)
+            }
+        } else { // 404
+            response404(routerMatcher.`404`)
+        }
     }
 
     private def responseFile(file: File): Unit = {

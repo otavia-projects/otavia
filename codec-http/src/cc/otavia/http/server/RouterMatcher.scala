@@ -190,31 +190,6 @@ class RouterMatcher(routers: Seq[Router]) {
                 matched.router
             } else notFoundRouter
 
-            router match // parse params
-                case ControllerRouter(_, _, _, requestSerde, _)
-                    if requestSerde.hasParams && buffer.skipIfNextIs(HttpConstants.PARAM_START) =>
-                    while (!buffer.nextIs(HttpConstants.SP)) {
-                        val key = URLDecoder.decode(
-                          buffer
-                              .readCharSequence(buffer.bytesBefore(HttpConstants.EQ), StandardCharsets.US_ASCII)
-                              .toString,
-                          URL_CHARSET
-                        )
-                        buffer.skipReadableBytes(1) // skip '='
-                        val value = URLDecoder.decode(
-                          buffer
-                              .readCharSequence(
-                                buffer.bytesBeforeIn(HttpConstants.PARAMS_END),
-                                StandardCharsets.US_ASCII
-                              )
-                              .toString,
-                          URL_CHARSET
-                        )
-                        buffer.skipIfNextIs(HttpConstants.PARAM_SPLITTER)
-                        routerContext.putPathVariable(key, value)
-                    }
-                case _ =>
-
             router
         }
     }

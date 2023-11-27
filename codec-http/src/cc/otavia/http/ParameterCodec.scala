@@ -16,10 +16,12 @@
 
 package cc.otavia.http
 
-import cc.otavia.serde.Serde
+import scala.collection.mutable
 
-/** Interface for Http serialization/deserialization
- *  @tparam A
- *    type of Http data model
- */
-trait HttpSerde[A] extends Serde[A]
+trait ParameterCodec[P] {
+
+    def encode(parameter: P, params: mutable.HashMap[String, String]): Unit
+
+    def decode(pathVariables: mutable.HashMap[String, String], paramVariables: mutable.HashMap[String, String]): P
+
+}

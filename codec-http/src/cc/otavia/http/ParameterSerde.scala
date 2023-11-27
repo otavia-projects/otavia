@@ -17,7 +17,9 @@
 package cc.otavia.http
 
 import cc.otavia.buffer.Buffer
+import cc.otavia.core.system.ActorThread
 import cc.otavia.http.server.RouterMatcher
+import cc.otavia.http.server.RouterMatcher.URL_CHARSET
 import cc.otavia.serde.Serde
 
 import java.net.{URLDecoder, URLEncoder}
@@ -25,75 +27,62 @@ import java.nio.charset.StandardCharsets
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-/** [[Serde]] for [[MediaType.APP_X_WWW_FORM_URLENCODED]] or variable in url */
+/** [[Serde]] for [[MediaType.APP_X_WWW_FORM_URLENCODED]] or parameters in url */
 trait ParameterSerde[P] extends Serde[P] {
 
-    /** Only use in [[deserialize]] */
-    def setPathVars(vars: mutable.Map[String, String]): Unit
+    final override def deserialize(in: Buffer): P = {
+        val params = ActorThread.threadMap[String, String]
+        ParameterSerde.parse(in, params)
+        val obj = construct(params)
+        params.clear()
+        obj
+    }
 
-    /** Only use in [[deserialize]] */
-    def setParams(p: mutable.Map[String, String]): Unit
+    final protected def serializeParamsStart(out: Buffer): this.type = {
+        out.writeByte(HttpConstants.PARAM_START)
+        this
+    }
 
-    /** Only use in [[deserialize]] */
-    def pathVars: mutable.Map[String, String]
+    final protected def serializeParam(name: String, value: String, out: Buffer): this.type = {
+        out.writeCharSequence(URLEncoder.encode(name, URL_CHARSET), StandardCharsets.US_ASCII)
+        out.writeByte(HttpConstants.EQ)
+        out.writeCharSequence(URLEncoder.encode(value, URL_CHARSET), StandardCharsets.US_ASCII)
+        this
+    }
 
-    /** Only use in [[deserialize]] */
-    def params: mutable.Map[String, String]
+    final protected def serializeParamSplitter(out: Buffer): this.type = {
+        out.writeByte(HttpConstants.PARAM_SPLITTER)
+        this
+    }
+
+    final protected def serializeParamsEnd(out: Buffer): this.type = {
+        out.writeByte(HttpConstants.SP)
+        this
+    }
+
+    protected def construct(params: mutable.HashMap[String, String]): P
 
 }
 
 object ParameterSerde {
 
-    private val PARAM_SPLITS: Array[Byte] = "& ".getBytes(StandardCharsets.US_ASCII)
+    import StandardCharsets.US_ASCII
 
-    given shortSerde: ParameterSerde[Short] = new AbstractParameterSerde[Short] {
+    private val PARAM_SPLITS: Array[Byte] = "& ".getBytes(US_ASCII)
 
-        override def deserialize(in: Buffer): Short = {
-            val len    = in.bytesBeforeIn(PARAM_SPLITS)
-            val encode = in.readCharSequence(len, StandardCharsets.US_ASCII).toString
-            val short  = URLDecoder.decode(encode, RouterMatcher.URL_CHARSET).toShort
-            in.skipIfNextIs('&')
-            in.skipIfNextIs(' ')
-            short
+    def parse(in: Buffer, params: mutable.HashMap[String, String]): Unit = {
+        assert(in.skipIfNextIs(HttpConstants.PARAM_START), "http params not start with '?'")
+        while (in.readableBytes > 0 && !in.skipIfNextIs(HttpConstants.SP)) {
+            val key =
+                URLDecoder.decode(in.readCharSequence(in.bytesBefore(HttpConstants.EQ), US_ASCII).toString, URL_CHARSET)
+            in.skipReadableBytes(1) // skip '='
+            val value = URLDecoder.decode(
+              in.readCharSequence(in.bytesBeforeIn(HttpConstants.PARAMS_END), US_ASCII).toString,
+              URL_CHARSET
+            )
+            in.skipIfNextIs(HttpConstants.PARAM_SPLITTER)
+            params.put(key, value)
         }
-
-        override def serialize(value: Short, out: Buffer): Unit =
-            out.writeBytes(value.toString.getBytes(StandardCharsets.US_ASCII))
-
-    }
-
-    given intSerde: ParameterSerde[Int] = new AbstractParameterSerde[Int] {
-
-        override def deserialize(in: Buffer): Int = {
-            val len    = in.bytesBeforeIn(PARAM_SPLITS)
-            val encode = in.readCharSequence(len, StandardCharsets.US_ASCII).toString
-            val int    = URLDecoder.decode(encode, RouterMatcher.URL_CHARSET).toInt
-            in.skipIfNextIs('&')
-            in.skipIfNextIs(' ')
-            int
-        }
-
-        override def serialize(value: Int, out: Buffer): Unit =
-            out.writeBytes(value.toString.getBytes(StandardCharsets.US_ASCII))
-
-    }
-
-    given longSerde: ParameterSerde[Long] = new AbstractParameterSerde[Long] {
-
-        override def deserialize(in: Buffer): Long = throw new UnsupportedOperationException()
-
-        override def serialize(value: Long, out: Buffer): Unit =
-            out.writeBytes(value.toString.getBytes(StandardCharsets.US_ASCII))
-
-    }
-
-    given stringSerde: ParameterSerde[String] = new AbstractParameterSerde[String] {
-
-        override def deserialize(in: Buffer): String = throw new UnsupportedOperationException()
-
-        override def serialize(value: String, out: Buffer): Unit =
-            out.writeBytes(URLEncoder.encode(value, RouterMatcher.URL_CHARSET).getBytes(StandardCharsets.US_ASCII))
-
     }
 
 }

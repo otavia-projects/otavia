@@ -45,7 +45,7 @@ private class ServerMain(val port: Int = 80) extends MainActor(Array.empty) {
             val routers = Seq(
               constant[Array[Byte]](GET, "/plaintext", "Hello, World!".getBytes(UTF_8), BytesSerde, TEXT_PLAIN_UTF8),
               constant[HelloMessage](GET, "/json", HelloMessage("Hello, World!"), helloSerde, APP_JSON),
-              get("/scale_message/{length}", controller, messageRequestSerde, messageResponseSerde),
+              get("/scale_message", controller, messageRequestSerde, messageResponseSerde),
               static("/media", Path.of("D:\\IdeaProjects\\audio\\data"))
             )
             val server = system.buildActor(() => new HttpServer(system.actorWorkerSize, routers))

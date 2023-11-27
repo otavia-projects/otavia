@@ -19,12 +19,13 @@ package cc.otavia.http.server
 import cc.otavia.core.actor.AcceptedWorkerActor
 import cc.otavia.core.actor.AcceptorActor.AcceptedChannel
 import cc.otavia.core.cache.ActorThreadLocal
-import cc.otavia.core.channel.{Channel, ChannelAddress}
+import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelOption}
 import cc.otavia.core.message.Reply
 import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState, StartState}
 import cc.otavia.core.stack.{AskStack, ChannelStack, StackState}
-import cc.otavia.http.HttpRequest
 import cc.otavia.http.codec.ServerCodec
+import cc.otavia.http.server.Router.ControllerRouter
+import cc.otavia.http.{HttpMethod, OK}
 
 import java.nio.charset.StandardCharsets
 import scala.language.unsafeNulls
@@ -34,8 +35,12 @@ class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Arr
 
     private val serverNameBytes: Array[Byte] = serverName.replaceAll("\r|\n", "").getBytes(StandardCharsets.US_ASCII)
 
-    final override protected def initChannel(channel: Channel): Unit =
+    final override protected def initChannel(channel: Channel): Unit = {
+        channel.setOption(ChannelOption.CHANNEL_STACK_BARRIER, HttpServerWorker.BARRIER_FUNC)
+        channel.setOption(ChannelOption.CHANNEL_STACK_HEAD_OF_LINE, true)
+        channel.setOption(ChannelOption.CHANNEL_MAX_STACK_INFLIGHT, 10240)
         channel.pipeline.addLast(new ServerCodec(routerMatcher, dates, serverNameBytes))
+    }
 
     override def resumeAsk(stack: AskStack[AcceptedChannel]): Option[StackState] = handleAccepted(stack)
 
@@ -45,12 +50,22 @@ class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Arr
         stack.state match
             case StackState.start =>
                 val request = stack.message.asInstanceOf[HttpRequest[?, ?, ?]]
-                val state   = FutureState[Reply]()
-                request.controllerRouter.controller.askUnsafe(request, state.future)
-                state.suspend()
+                request match
+                    case request: InternalHttpRequest => stack.`return`(OK())
+                    case _ =>
+                        val state = FutureState[Reply]()
+                        request.router.asInstanceOf[ControllerRouter].controller.askUnsafe(request, state.future)
+                        state.suspend()
             case state: FutureState[?] =>
                 val response = state.future.getNow
                 stack.`return`(response)
     }
 
+}
+
+object HttpServerWorker {
+    private val BARRIER_FUNC: AnyRef => Boolean = request => {
+        val method = request.asInstanceOf[HttpRequest[?, ?, ?]].method
+        !(method == HttpMethod.GET || method == HttpMethod.HEAD)
+    }
 }

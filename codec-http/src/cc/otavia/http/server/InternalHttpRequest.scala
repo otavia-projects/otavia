@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-package cc.otavia.http
+package cc.otavia.http.server
 
-import cc.otavia.buffer.Buffer
-import cc.otavia.serde.Serde
+private[http] class InternalHttpRequest extends HttpRequest[Nothing, Nothing, Nothing] {
 
-case class HttpResponseSerde[C](contentSerde: Serde[C], mediaType: MediaType = MediaType.ANY)
+    private var remaining: String = _
+
+    def setRemaining(r: String): Unit = remaining = r
+
+    def subPath: String = remaining
+
+}

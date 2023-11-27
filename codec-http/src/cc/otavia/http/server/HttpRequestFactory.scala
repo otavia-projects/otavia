@@ -14,26 +14,31 @@
  * limitations under the License.
  */
 
-package cc.otavia.http
+package cc.otavia.http.server
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.core.message.Reply
-import cc.otavia.http.server.HttpResponseSerde
+import cc.otavia.http.ParameterSerde
 import cc.otavia.serde.Serde
 
-/** A http response with no body */
-case class OK() extends Reply
+import java.nio.charset.StandardCharsets
+import scala.collection.mutable
+import scala.language.unsafeNulls
 
-object OK {
+abstract class HttpRequestFactory[P, C, R <: Reply](
+    val contentSerde: Option[Serde[C]] = None,
+    val parameterSerde: Option[ParameterSerde[P]] = None,
+    val requireHeaders: Seq[String] = HttpRequestFactory.EMPTY_STRING
+) {
 
-    val serde: Serde[OK] = new Serde[OK] {
+    final def hasContent: Boolean = contentSerde.nonEmpty
 
-        override def serialize(value: OK, out: Buffer): Unit = {}
+    final def hasParams: Boolean = parameterSerde.nonEmpty
 
-        override def deserialize(in: Buffer): OK = OK()
+    def createHttpRequest(): HttpRequest[P, C, R]
 
-    }
+}
 
-    val responseSerde = new HttpResponseSerde[OK](serde)
-
+object HttpRequestFactory {
+    private val EMPTY_STRING: Seq[String] = Seq.empty
 }
