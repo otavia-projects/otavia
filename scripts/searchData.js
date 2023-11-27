@@ -1478,6 +1478,7 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"cc/otavia/core/system/ActorThread$.html#currentThreadIndex-0","e":false,"i":"","n":"currentThreadIndex","t":"currentThreadIndex: Int","d":"cc.otavia.core.system.ActorThread","k":"def","x":""},
 {"l":"cc/otavia/core/system/ActorThread$.html#currentThreadIsActorThread-0","e":false,"i":"","n":"currentThreadIsActorThread","t":"currentThreadIsActorThread: Boolean","d":"cc.otavia.core.system.ActorThread","k":"def","x":""},
 {"l":"cc/otavia/core/system/ActorThread$.html#threadBuffer-71a","e":false,"i":"","n":"threadBuffer","t":"threadBuffer[T]: ArrayBuffer[T]","d":"cc.otavia.core.system.ActorThread","k":"def","x":""},
+{"l":"cc/otavia/core/system/ActorThread$.html#threadMap-fffff910","e":false,"i":"","n":"threadMap","t":"threadMap[K, V]: HashMap[K, V]","d":"cc.otavia.core.system.ActorThread","k":"def","x":""},
 {"l":"cc/otavia/core/system/ActorThread$.html#threadSet-415","e":false,"i":"","n":"threadSet","t":"threadSet[T]: HashSet[T]","d":"cc.otavia.core.system.ActorThread","k":"def","x":""},
 {"l":"cc/otavia/core/system/ActorThreadFactory.html#","e":false,"i":"","n":"ActorThreadFactory","t":"ActorThreadFactory","d":"cc.otavia.core.system","k":"class","x":""},
 {"l":"cc/otavia/core/system/ActorThreadFactory.html#newThread-e81","e":false,"i":"","n":"newThread","t":"newThread(): ActorThread","d":"cc.otavia.core.system.ActorThreadFactory","k":"def","x":""},
