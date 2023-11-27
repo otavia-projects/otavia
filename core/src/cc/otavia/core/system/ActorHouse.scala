@@ -207,6 +207,7 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable {
                 if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
             } else {
                 status.compareAndSet(RUNNING, WAITING)
+                if (nonEmpty) waiting2ready()
             }
         }
     }
