@@ -36,6 +36,7 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
     extends AbstractNioUnsafeChannel[SocketChannel](channel, ch, readInterestOp) {
 
     private var flushQueue: mutable.ArrayDeque[FileRegion | RecyclablePageBuffer] = _
+    private var lastReadTime: Long                                                = System.currentTimeMillis()
 
     setReadPlanFactory((channel: Channel) => new NioSocketChannelReadPlan())
 
@@ -176,7 +177,19 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
         }
     }
 
-    override protected def doReadNow(): Boolean = {
+    override protected def doReadNow(): Boolean =
+        if (
+          directAllocator.cacheSize == 0 && directAllocator.totalAllocated > 1000 &&
+          System.currentTimeMillis() - lastReadTime < 1
+        ) { // control single channel read data too fast
+            processRead(0, 0, 0)
+            false
+        } else {
+            doReadNow0()
+        }
+
+    private def doReadNow0(): Boolean = {
+        lastReadTime = System.currentTimeMillis()
         val page      = directAllocator.allocate()
         val attempted = page.writableBytes
         var read: Int = 0
@@ -205,15 +218,18 @@ object NioUnsafeSocketChannel {
     class NioSocketChannelReadPlan extends ReadPlan {
 
         private var continue: Boolean = true
+        private var times: Int        = 0
 
         override def estimatedNextSize: Int = 0
 
         override def lastRead(attemptedBytesRead: Int, actualBytesRead: Int, numMessagesRead: Int): Boolean = {
-            continue = attemptedBytesRead == actualBytesRead && actualBytesRead > 0
+            times += 1
+            continue = attemptedBytesRead == actualBytesRead && actualBytesRead > 0 && times < 10
             continue
         }
 
         override def readComplete(): Unit = {
+            times = 0
             continue = true
         }
 
