@@ -7,7 +7,7 @@
 </div>
 <div class="main-signature mono-small-block">
  <div class="signature">
-  <span class="signature-short"><span class="modifiers"><span t="k">abstract </span></span><span class="kind"><span t="k">class </span></span><a href="AbstractPooledPageAllocator.html" t="n" class="documentableName ">AbstractPooledPageAllocator</a>(<span t="k"></span><span t="k">val </span><span data-unresolved-link="" t="n">fixedCapacity</span>: <span data-unresolved-link="" t="t">Int</span>)<span t="k"> extends </span><a href="PooledPageAllocator.html" t="t">PooledPageAllocator</a></span><span class="signature-long"></span>
+  <span class="signature-short"><span class="modifiers"><span t="k">abstract </span></span><span class="kind"><span t="k">class </span></span><a href="AbstractPooledPageAllocator.html" t="n" class="documentableName ">AbstractPooledPageAllocator</a>(<span t="k"></span><span t="k">val </span><span data-unresolved-link="" t="n">fixedCapacity</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k">val </span><span data-unresolved-link="" t="n">minCache</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k">val </span><span data-unresolved-link="" t="n">maxCache</span>: <span data-unresolved-link="" t="t">Int</span>)<span t="k"> extends </span><a href="PooledPageAllocator.html" t="t">PooledPageAllocator</a></span><span class="signature-long"></span>
  </div>
 </div>
 <div class="cover">
@@ -168,6 +168,38 @@ node9 -> node0;
           </div>
          </div>
         </div>
+        <div class="documentableElement" id="cacheSize-0" data-f-keywords="override">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractPooledPageAllocator.html#cacheSize-0" t="n" class="documentableName ">cacheSize</a>: <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="PooledPageAllocator.html">PooledPageAllocator</a>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
         <div class="documentableElement" id="isPooling-0" data-f-keywords="override">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -211,24 +243,6 @@ node9 -> node0;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="pop-fffff32d" data-f-visibility="protected">
-         <div class="documentableElement-expander">
-          <div class="header monospace mono-medium">
-           <div class="signature">
-            <span class="modifiers"><span t="k">protected </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractPooledPageAllocator.html#pop-fffff32d" t="n" class="documentableName ">pop</a>(<span t="k"></span>): <a href="RecyclablePageBuffer.html" t="t">RecyclablePageBuffer</a><span t="k"> | </span><span data-unresolved-link="" t="t">Null</span>
-           </div>
-          </div>
-         </div>
-        </div>
-        <div class="documentableElement" id="push-fffff839" data-f-visibility="protected">
-         <div class="documentableElement-expander">
-          <div class="header monospace mono-medium">
-           <div class="signature">
-            <span class="modifiers"><span t="k">protected </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractPooledPageAllocator.html#push-fffff839" t="n" class="documentableName ">push</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">pageBuffer</span>: <a href="RecyclablePageBuffer.html" t="t">RecyclablePageBuffer</a>): <span data-unresolved-link="" t="t">Unit</span>
-           </div>
-          </div>
-         </div>
-        </div>
         <div class="documentableElement" id="recycle-66c" data-f-keywords="override">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -266,11 +280,117 @@ node9 -> node0;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="size-0">
+        <div class="documentableElement" id="releasable-0">
          <div class="documentableElement-expander">
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AbstractPooledPageAllocator.html#size-0" t="n" class="documentableName ">size</a>: <span data-unresolved-link="" t="t">Int</span>
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AbstractPooledPageAllocator.html#releasable-0" t="n" class="documentableName ">releasable</a>: <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="release-94c" data-f-keywords="override">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractPooledPageAllocator.html#release-94c" t="n" class="documentableName ">release</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Release the allocated cache buffer to <a href="AbstractPooledPageAllocator.html#minCache-0">minCache</a> size.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Release the allocated cache buffer to <a href="AbstractPooledPageAllocator.html#minCache-0">minCache</a> size.</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="PooledPageAllocator.html">PooledPageAllocator</a>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="releaseAll-94c" data-f-keywords="override">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractPooledPageAllocator.html#releaseAll-94c" t="n" class="documentableName ">releaseAll</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Release all the allocated cache buffers.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Release all the allocated cache buffers.</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="PooledPageAllocator.html">PooledPageAllocator</a>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="totalAllocated-0" data-f-keywords="override">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractPooledPageAllocator.html#totalAllocated-0" t="n" class="documentableName ">totalAllocated</a>: <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="PooledPageAllocator.html">PooledPageAllocator</a>
+               </div>
+              </dd>
+             </dl>
+            </div>
            </div>
           </div>
          </div>
@@ -429,6 +549,24 @@ node9 -> node0;
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"></span><span class="kind"><span t="k">val </span></span><a href="AbstractPooledPageAllocator.html#fixedCapacity-0" t="n" class="documentableName ">fixedCapacity</a>: <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="maxCache-0">
+         <div class="documentableElement-expander">
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">val </span></span><a href="AbstractPooledPageAllocator.html#maxCache-0" t="n" class="documentableName ">maxCache</a>: <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="minCache-0">
+         <div class="documentableElement-expander">
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">val </span></span><a href="AbstractPooledPageAllocator.html#minCache-0" t="n" class="documentableName ">minCache</a>: <span data-unresolved-link="" t="t">Int</span>
            </div>
           </div>
          </div>
