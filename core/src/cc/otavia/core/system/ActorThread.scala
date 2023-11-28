@@ -46,8 +46,17 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
     @volatile private var status: Int = ST_STARTING
     private val lock: AnyRef          = new Object()
 
-    private val direct = new DirectPooledPageAllocator(ActorSystem.PAGE_SIZE)
-    private val heap   = new HeapPooledPageAllocator(ActorSystem.PAGE_SIZE)
+    private val direct = new DirectPooledPageAllocator(
+      ActorSystem.PAGE_SIZE,
+      ActorSystem.ALLOCATOR_MIN_CACHE_SIZE,
+      ActorSystem.ALLOCATOR_MAX_CACHE_SIZE
+    )
+
+    private val heap = new HeapPooledPageAllocator(
+      ActorSystem.PAGE_SIZE,
+      ActorSystem.ALLOCATOR_MIN_CACHE_SIZE,
+      ActorSystem.ALLOCATOR_MAX_CACHE_SIZE
+    )
 
     private val mutableBuffer: mutable.ArrayBuffer[AnyRef]  = mutable.ArrayBuffer.empty
     private val mutableSet: mutable.HashSet[AnyRef]         = mutable.HashSet.empty
@@ -57,8 +66,13 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
 
     // prepare allocate buffer
     private[core] def prepared(): Unit = {
-        if (direct.size == 0) direct.allocate().close()
-        if (heap.size == 0) heap.allocate().close()
+        prepared0(direct)
+        prepared0(heap)
+    }
+
+    private def prepared0(allocator: AbstractPooledPageAllocator): Unit = if (allocator.cacheSize == 0) {
+        val buffers = 0 until allocator.minCache map (_ => allocator.allocate())
+        buffers.foreach(_.close())
     }
 
     /** A [[BufferAllocator]] which allocate heap memory. */
@@ -152,9 +166,13 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
                 } else {
                     this.suspendThread()
                     if (emptyTimes % 100 == 0) if (manager.trySteal()) emptyTimes = 20
-                    if (!gc && System.currentTimeMillis() - spinStart > 2000) {
-                        system.gc()
-                        gc = true
+                    if (System.currentTimeMillis() - spinStart > 2000) {
+                        if (ActorSystem.AGGRESSIVE_GC && !gc) {
+                            system.gc()
+                            gc = true
+                        }
+                        if (directAllocator.releasable) directAllocator.release()
+                        if (heapAllocator.releasable) heapAllocator.release()
                     }
                 }
             }

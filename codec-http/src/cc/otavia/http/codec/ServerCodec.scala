@@ -166,11 +166,14 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
             }
         }
 
-        if (ctx.outboundAdaptiveBuffer.readableBytes > 0) ctx.flush()
+        if (ctx.outboundAdaptiveBuffer.readableBytes > 0) {
+            ctx.flush()
+            ctx.outboundAdaptiveBuffer.compact()
+        }
 
         if (!continue) { // handle unfinished http packet
             packetTimeoutId = ctx.timer.registerChannelTimeout(TimeoutTrigger.DelayTime(1000), ctx.channel)
-        }
+        } else input.compact()
     }
 
     // encode http response

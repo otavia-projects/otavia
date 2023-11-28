@@ -34,7 +34,12 @@ trait Message2ByteEncoder extends ChannelHandler {
         case fileRegion: FileRegion => ctx.write(fileRegion)
         case _ =>
             encode(ctx, ctx.outboundAdaptiveBuffer, msg, msgId)
-            if (ctx.outboundAdaptiveBuffer.readableBytes > 0) ctx.write(ctx.outboundAdaptiveBuffer)
+            if (ctx.outboundAdaptiveBuffer.readableBytes > 0) {
+                ctx.write(ctx.outboundAdaptiveBuffer)
+                if (ctx.outboundAdaptiveBuffer.readableBytes == 0) {
+                    ctx.outboundAdaptiveBuffer.compact()
+                }
+            }
 
     protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit
 

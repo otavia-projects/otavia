@@ -159,6 +159,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
                 pipelineStackRequest = stack.message
                 this.write(stack.result, stack.messageId)
                 pipelineStackRequest = null
+                if (channelOutboundAdaptiveBuffer.readableBytes > ActorSystem.PAGE_SIZE * 4) this.flush()
             }
             actor.recycleStack(stack)
         }

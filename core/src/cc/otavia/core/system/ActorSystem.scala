@@ -143,7 +143,7 @@ object ActorSystem {
     val PRINT_BANNER: Boolean = SystemPropertyUtil.getBoolean("cc.otavia.system.banner", DEFAULT_PRINT_BANNER)
 
     // buffer setting
-    private val DEFAULT_PAGE_SIZE: Int        = 4
+    private val DEFAULT_PAGE_SIZE: Int        = 2
     private val ENABLE_PAGE_SIZES: Array[Int] = Array(1, 2, 4, 8, 16)
     private val K: Int                        = 1024
 
@@ -159,6 +159,31 @@ object ActorSystem {
             DEFAULT_PAGE_SIZE * K
         }
     }
+
+    private val DEFAULT_ALLOCATOR_MIN_CACHE_SIZE: Int = 8
+    val ALLOCATOR_MIN_CACHE_SIZE: Int = {
+        val size = SystemPropertyUtil.getInt("cc.otavia.buffer.allocator.cache.min", DEFAULT_ALLOCATOR_MIN_CACHE_SIZE)
+        if (size < 1) {
+            Report.report(
+              s"cc.otavia.buffer.allocator.cache.min can't set $size, it must large than 1, set $DEFAULT_ALLOCATOR_MIN_CACHE_SIZE default"
+            )
+            DEFAULT_ALLOCATOR_MIN_CACHE_SIZE
+        } else size
+    }
+
+    private val DEFAULT_ALLOCATOR_MAX_CACHE_SIZE: Int = 10240
+    val ALLOCATOR_MAX_CACHE_SIZE: Int = {
+        val size = SystemPropertyUtil.getInt("cc.otavia.buffer.allocator.cache.max", DEFAULT_ALLOCATOR_MAX_CACHE_SIZE)
+        if (size < ALLOCATOR_MIN_CACHE_SIZE) {
+            Report.report(
+              s"cc.otavia.buffer.allocator.cache.max can't set $size, it must large than [cc.otavia.buffer.allocator.cache.min = $ALLOCATOR_MIN_CACHE_SIZE], set $ALLOCATOR_MIN_CACHE_SIZE default"
+            )
+            DEFAULT_ALLOCATOR_MAX_CACHE_SIZE
+        } else size
+    }
+
+    private val DEFAULT_AGGRESSIVE_GC: Boolean = true
+    val AGGRESSIVE_GC: Boolean = SystemPropertyUtil.getBoolean("cc.otavia.system.gc.aggressive", DEFAULT_AGGRESSIVE_GC)
 
     /** Create an [[ActorSystem]] instance with default name [[DEFAULT_SYSTEM_NAME]].
      *  @return
