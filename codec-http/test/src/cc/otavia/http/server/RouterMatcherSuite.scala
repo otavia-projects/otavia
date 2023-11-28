@@ -18,8 +18,8 @@ package cc.otavia.http.server
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.core.message.Reply
+import cc.otavia.http.ParameterSerde
 import cc.otavia.http.server.Router.*
-import cc.otavia.http.AbstractParameterSerde
 import cc.otavia.serde.Serde
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -27,6 +27,7 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.charset.StandardCharsets.*
 import java.nio.file.Path
+import scala.collection.mutable
 import scala.language.unsafeNulls
 
 class RouterMatcherSuite extends AnyFunSuite {
@@ -95,18 +96,33 @@ object RouterMatcherSuite {
 
     class DoRequest extends HttpRequest[Do, Nothing, DoResult]
 
-    val paramSerde: AbstractParameterSerde[Do] = new AbstractParameterSerde[Do] {
+    val paramSerde: ParameterSerde[Do] = new ParameterSerde[Do] {
 
-        override def serialize(value: Do, out: Buffer): Unit = ???
+        override def serialize(value: Do, out: Buffer): Unit = {
+            serializeParamsStart(out)
+            serializeParam("what", value.what, out)
+            serializeParamSplitter(out)
+            serializeParam("go_home", value.goHome.toString, out)
+            value.name match
+                case Some(name) =>
+                    serializeParamSplitter(out)
+                    serializeParam("name", name, out)
+                case None =>
+            value.age match
+                case Some(age) =>
+                    serializeParamSplitter(out)
+                    serializeParam("age", age.toString, out)
+                case None =>
+            serializeParamsEnd(out)
+        }
 
-        override def deserialize(in: Buffer): Do =
-            Do(pathVars("what"), pathVars("go_home").toBoolean, params.get("name"), params.get("age").map(_.toInt))
+        override protected def construct(params: mutable.HashMap[String, String]): Do = ???
 
     }
 
     val doRequestSerde: HttpRequestFactory[Do, Nothing, DoResult] =
         new HttpRequestFactory[Do, Nothing, DoResult](parameterSerde = Some(paramSerde)) {
-            override protected def createHttpRequest(): HttpRequest[Do, Nothing, DoResult] = new DoRequest
+            override def createHttpRequest(): HttpRequest[Do, Nothing, DoResult] = new DoRequest
         }
 
 }
