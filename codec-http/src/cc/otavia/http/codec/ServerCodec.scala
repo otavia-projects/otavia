@@ -81,7 +81,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
                     else { // illegal http packet
                         input.skipReadableBytes(input.readableBytes)
                         logger.error(s"Illegal http packet, head line is large than 4096, close channel ${ctx.channel}")
-                        ctx.channel.close(ChannelFuture())
+                        ctx.channel.pipeline.close(ChannelFuture())
                     }
                 }
             }
@@ -384,7 +384,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
     override def channelTimeoutEvent(ctx: ChannelHandlerContext, id: Long): Unit = if (id == packetTimeoutId) {
         logger.error(s"Can't receive completed http packet after 1 second, close channel ${ctx.channel}")
         packetTimeoutId = Timer.INVALID_TIMEOUT_REGISTER_ID
-        ctx.channel.close(ChannelFuture())
+        ctx.channel.pipeline.close(ChannelFuture())
     }
 
 }

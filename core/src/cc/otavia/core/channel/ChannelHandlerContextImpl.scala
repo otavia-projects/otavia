@@ -76,7 +76,7 @@ final class ChannelHandlerContextImpl(
     private def handleOutboundHandlerException(cause: Throwable, closeDidThrow: Boolean): IllegalStateException = {
         val msg = s"$handler threw an exception while handling an outbound event. This is most likely a bug"
         logger.warn(s"$msg. This is most likely a bug, closing the channel.", cause)
-        if (closeDidThrow) close(ChannelFuture()) else channel.close(ChannelFuture()) // ignore close future
+        if (closeDidThrow) close(ChannelFuture()) else channel.pipeline.close(ChannelFuture()) // ignore close future
         new IllegalStateException(msg, cause)
     }
 
