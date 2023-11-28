@@ -16,8 +16,8 @@
 
 package cc.otavia.buffer.pool
 
-import cc.otavia.buffer.{BufferAllocator, FixedCapacityAllocator}
 import cc.otavia.buffer.pool.RecyclablePageBuffer
+import cc.otavia.buffer.{BufferAllocator, FixedCapacityAllocator}
 
 trait PooledPageAllocator extends RecyclableAllocator with FixedCapacityAllocator {
 
@@ -28,5 +28,19 @@ trait PooledPageAllocator extends RecyclableAllocator with FixedCapacityAllocato
     def allocate(): RecyclablePageBuffer
 
     protected def newBuffer(): RecyclablePageBuffer
+
+    def minCache: Int
+
+    def maxCache: Int
+
+    def cacheSize: Int
+
+    def totalAllocated: Int
+
+    /** Release the allocated cache buffer to [[minCache]] size. */
+    def release(): Unit
+
+    /** Release all the allocated cache buffers. */
+    def releaseAll(): Unit
 
 }

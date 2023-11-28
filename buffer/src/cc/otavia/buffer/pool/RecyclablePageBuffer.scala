@@ -29,18 +29,22 @@ abstract class RecyclablePageBuffer(underlying: ByteBuffer) extends AbstractBuff
 
     import RecyclablePageBuffer.*
 
-    private var parent: PooledPageAllocator = _
-    private var nxt: RecyclablePageBuffer   = _
-    private var status: Int                 = ST_PAGE_ALLOCATABLE
+    private var parent: PooledPageAllocator         = _
+    @volatile private var nxt: RecyclablePageBuffer = _
+    @volatile private var status: Int               = ST_PAGE_ALLOCATABLE
 
     def setAllocator(allocator: PooledPageAllocator): Unit = parent = allocator
 
     def allocator: PooledPageAllocator = parent
 
-    def next_=(pageBuffer: RecyclablePageBuffer): Unit = nxt = pageBuffer
+    def next_=(pageBuffer: RecyclablePageBuffer): Unit = this.synchronized { nxt = pageBuffer }
 
-    private[buffer] def setAllocated(): Unit = status = ST_PAGE_ALLOCATED
-    private[buffer] def allocated: Boolean   = status == ST_PAGE_ALLOCATED
+    private[buffer] def setAllocated(): Unit = {
+        nxt = null
+        status = ST_PAGE_ALLOCATED
+    }
+    
+    private[buffer] def allocated: Boolean = status == ST_PAGE_ALLOCATED
 
     def next: RecyclablePageBuffer = nxt
 

@@ -24,7 +24,8 @@ import cc.otavia.buffer.pool.RecyclablePageBuffer
 import java.nio.ByteBuffer
 import scala.language.unsafeNulls
 
-class DirectPooledPageAllocator(fixedCapacity: Int) extends AbstractPooledPageAllocator(fixedCapacity) {
+class DirectPooledPageAllocator(fixedCapacity: Int, minCache: Int = 8, maxCache: Int = 10240)
+    extends AbstractPooledPageAllocator(fixedCapacity, minCache, maxCache) {
 
     def this() = this(FixedCapacityAllocator.DEFAULT_PAGE_SIZE)
 

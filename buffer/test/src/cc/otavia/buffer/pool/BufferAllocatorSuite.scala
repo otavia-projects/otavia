@@ -18,6 +18,7 @@
 
 package cc.otavia.buffer.pool
 
+import cc.otavia.buffer.FixedCapacityAllocator
 import cc.otavia.buffer.pool.{DirectPooledPageAllocator, HeapPooledPageAllocator}
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -79,6 +80,32 @@ class BufferAllocatorSuite extends AnyFunSuite {
         val bt = buffer.getByte(10)
 
         assert(bt == 'a')
+    }
+
+    test("release") {
+        val allocator = new DirectPooledPageAllocator(FixedCapacityAllocator.DEFAULT_PAGE_SIZE, 2, 1024)
+
+        val buffers = 0 until 100 map (_ => allocator.allocate())
+
+        for (elem <- buffers) elem.close()
+        assert(allocator.cacheSize == 100)
+
+        allocator.release()
+        assert(allocator.cacheSize == 2)
+
+        allocator.releaseAll()
+        assert(allocator.cacheSize == 0)
+
+    }
+
+    test("maxCache") {
+        val allocator = new DirectPooledPageAllocator(FixedCapacityAllocator.DEFAULT_PAGE_SIZE, 2, 4)
+
+        val buffers = 0 until 100 map (_ => allocator.allocate())
+
+        for (elem <- buffers) elem.close()
+        assert(allocator.cacheSize == 4)
+
     }
 
 }

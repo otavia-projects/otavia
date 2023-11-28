@@ -22,11 +22,15 @@ import cc.otavia.buffer.pool.{PooledPageAllocator, RecyclablePageBuffer}
 import cc.otavia.buffer.{Buffer, FixedCapacityAllocator}
 
 import java.nio.ByteBuffer
+import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
 
-abstract class AbstractPooledPageAllocator(val fixedCapacity: Int) extends PooledPageAllocator {
+abstract class AbstractPooledPageAllocator(val fixedCapacity: Int, val minCache: Int = 8, val maxCache: Int = 10240)
+    extends PooledPageAllocator {
 
-    private var count: Int                 = 0
+    private var count: Int                  = 0
+    private val allocateSize: AtomicInteger = new AtomicInteger(0)
+
     private var head: RecyclablePageBuffer = _
     private var tail: RecyclablePageBuffer = _
 
@@ -36,11 +40,12 @@ abstract class AbstractPooledPageAllocator(val fixedCapacity: Int) extends Poole
         if (count == 0) {
             head = pageBuffer
             tail = pageBuffer
-        } else {
+            count += 1
+        } else if (count < maxCache) {
             pageBuffer.next = head
             head = pageBuffer
+            count += 1
         }
-        count += 1
     }
 
     protected def pop(): RecyclablePageBuffer | Null = this.synchronized {
@@ -68,17 +73,44 @@ abstract class AbstractPooledPageAllocator(val fixedCapacity: Int) extends Poole
     }
 
     override def allocate(): RecyclablePageBuffer = {
-        val buffer = pop() match
-            case null =>
+        val buf = pop()
+        val buffer =
+            if (buf != null) buf.asInstanceOf[RecyclablePageBuffer]
+            else {
                 val page = newBuffer()
+                allocateSize.incrementAndGet()
                 page.setAllocator(this)
                 page
-            case buffer: RecyclablePageBuffer => buffer
-
+            }
         buffer.setAllocated()
         buffer
     }
 
-    def size: Int = count
+    override def cacheSize: Int = this.synchronized(count)
+
+    override def totalAllocated: Int = allocateSize.get()
+
+    override def release(): Unit = this.synchronized {
+        if (count > minCache) {
+            tail = head
+            var i = 1
+            while (i < minCache) {
+                tail = tail.next
+                i += 1
+            }
+            tail.next = null
+            count = minCache
+        }
+    }
+
+    override def releaseAll(): Unit = this.synchronized {
+        if (count > 0) {
+            tail = null
+            head = null
+            count = 0
+        }
+    }
+
+    def releasable: Boolean = cacheSize > minCache
 
 }
