@@ -27,8 +27,12 @@ abstract class AbstractModule extends Module {
 
     private val listeners = new ConcurrentLinkedQueue[ModuleListener]()
 
-    @volatile private var ld: Boolean         = false
-    @volatile private var system: ActorSystem = _
+    @volatile private var ld: Boolean      = false
+    @volatile private var sys: ActorSystem = _
+
+    final override protected def system: ActorSystem = sys
+
+    override private[core] def setSystem(sys: ActorSystem): Unit = this.sys = sys
 
     override def loaded: Boolean = ld
 
@@ -38,7 +42,6 @@ abstract class AbstractModule extends Module {
     }
 
     override private[core] def onLoaded(system: ActorSystem): Unit = {
-        this.system = system
         ld = true
         while (!listeners.isEmpty) {
             val listener = listeners.poll()

@@ -23,9 +23,12 @@ import cc.otavia.core.stack.{AskStack, NoticeStack, StackState}
 abstract class MainActor(val args: Array[String] = Array.empty) extends StateActor[Args] {
 
     final override def afterMount(): Unit = {
+        afterMount0()
         self.notice(Args(args))
         logger.info(s"Send main args ${args.mkString("[", ", ", "]")} to main actor [${getClass.getName}]")
     }
+
+    protected def afterMount0(): Unit = {}
 
     final override def resumeNotice(stack: NoticeStack[Args]): Option[StackState] = main0(stack)
 

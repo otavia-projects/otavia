@@ -139,6 +139,8 @@ trait Actor[+M <: Call] {
      */
     private[core] def receiveBatchAsk(asks: Seq[Ask[?]]): Unit
 
+    protected def isBarrierCall(call: Call): Boolean = false
+
 }
 
 object Actor {

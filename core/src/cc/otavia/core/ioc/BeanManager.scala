@@ -65,7 +65,9 @@ private[core] class BeanManager(val system: ActorSystem) {
 
     def getBean(clz: Class[?]): Address[?] = {
         val spName = clz.getName
-        if (superTypes.containsKey(spName)) {
+        if (beans.containsKey(spName)) {
+            beans.get(spName).address
+        } else if (superTypes.containsKey(spName)) {
             val seq = superTypes.get(spName)
             if (seq.length == 1) {
                 val bean = beans.get(seq.head)

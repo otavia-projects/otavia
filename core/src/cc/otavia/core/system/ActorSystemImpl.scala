@@ -199,6 +199,7 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
             earlyModules.add(module)
         } else {
             logger.debug(s"Loading module $module")
+            module.setSystem(this)
             val unmount = new ArrayBuffer[Address[?]](module.definitions.length)
             module.definitions.foreach { definition =>
                 val (address, clz) = createActor(definition.factory, definition.num)
@@ -214,6 +215,7 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
             }
 
             module.onLoaded(this)
+            logger.debug(s"Module $module load success!")
         }
     } catch {
         case t: Throwable => logger.error(s"Load module $module occur error with ", t)

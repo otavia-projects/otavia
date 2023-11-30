@@ -17,7 +17,7 @@
 package cc.otavia.core.actor
 
 import cc.otavia.core.actor.Actor.{ASK_TYPE, MessageType, NOTICE_TYPE, REPLY_TYPE}
-import cc.otavia.core.address.{ActorAddress, Address}
+import cc.otavia.core.address.{ActorAddress, Address, PhysicalAddress}
 import cc.otavia.core.cache.Poolable
 import cc.otavia.core.message.*
 import cc.otavia.core.reactor.*
@@ -41,6 +41,8 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
 
     // current received msg
     private[core] var currentReceived: Call | Reply | Seq[Call] | AnyRef = _
+
+    private[core] var inBarrier: Boolean = false
 
     /** current stack frame for running ask or notice message */
     private[core] var currentStack: Stack = _
@@ -83,6 +85,9 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         case t: Throwable => logger.error("afterMount error with", t)
     }
 
+    protected final def noticeSelfHead(call: Notice & M): Unit =
+        ctx.address.asInstanceOf[PhysicalAddress[M]].house.putCallToHead(call)
+
     /** When this actor send ask message to other actor, a [[Future]] will attach to current stack
      *
      *  @param askId
@@ -111,6 +116,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
 
     final override private[core] def receiveNotice(notice: Notice): Unit = {
         currentReceived = notice
+        inBarrier = isBarrierCall(notice)
         val stack = NoticeStack[M & Notice](this) // generate a NoticeStack instance from object pool.
         stack.setNotice(notice)
         dispatchNoticeStack(stack)
@@ -128,6 +134,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     final override private[core] def receiveAsk(ask: Ask[? <: Reply]): Unit = {
         revAsks += 1
         currentReceived = ask
+        inBarrier = isBarrierCall(ask)
         val stack = AskStack[M & Ask[? <: Reply]](this) // generate a AskStack instance from object pool.
         stack.setAsk(ask)
         dispatchAskStack(stack)
@@ -278,6 +285,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     final private[core] def recycleStack(stack: Stack): Unit = {
         if (stack.hasUncompletedPromise) recycleUncompletedPromise(stack.uncompletedPromises())
         stack.recycle()
+        if (inBarrier) inBarrier = false
     }
 
     /** Exception handler when this actor received notice message or resume notice stack frame

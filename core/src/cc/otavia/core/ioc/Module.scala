@@ -23,6 +23,10 @@ import scala.language.unsafeNulls
 
 trait Module {
 
+    protected def system: ActorSystem
+
+    private[core] def setSystem(sys: ActorSystem): Unit
+
     def definitions: Seq[BeanDefinition]
 
     def loaded: Boolean

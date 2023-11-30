@@ -34,7 +34,7 @@ import scala.language.unsafeNulls
  *  @tparam M
  *    the message type of the mounted actor instance can handle
  */
-private[core] class ActorHouse(val manager: HouseManager) extends Runnable {
+final private[core] class ActorHouse(val manager: HouseManager) {
 
     private var dweller: AbstractActor[? <: Call] = _
     private var atp: Int                          = 0
@@ -105,6 +105,9 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable {
     def nonEmpty: Boolean =
         askMailbox.nonEmpty || noticeMailbox.nonEmpty || replyMailbox.nonEmpty || eventMailbox.nonEmpty
 
+    /** True if this house has received some [[Reply]] or [[Event]] */
+    private def barrierNonEmpty: Boolean = replyMailbox.nonEmpty || eventMailbox.nonEmpty
+
     /** Call this method to async mount actor when created actor instance. */
     def mount(): Unit = if (status.compareAndSet(CREATED, MOUNTING)) manager.mount(this)
 
@@ -132,49 +135,28 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable {
 
     def putEvent(event: Event): Unit = put(event, eventMailbox)
 
-    private final def put(msg: Nextable, mailBox: MailBox): Unit = {
+    private def put(msg: Nextable, mailBox: MailBox): Unit = {
         mailBox.put(msg)
         if (status.get() == WAITING) waiting2ready()
+    }
+
+    private[core] def putCallToHead(msg: Nextable): Unit = {
+        msg match
+            case _: Notice => noticeMailbox.putHead(msg)
+            case _         =>
     }
 
     private def waiting2ready(): Unit = if (status.compareAndSet(WAITING, READY)) manager.ready(this)
 
     def schedule(): Unit = if (status.compareAndSet(READY, SCHEDULED)) {}
 
-    override def run(): Unit = {
+    def run(): Unit = {
         if (status.compareAndSet(SCHEDULED, RUNNING)) {
             if (replyMailbox.size() > dweller.niceReply * 2) dispatchReplies(dweller.niceReply * 2)
             else {
                 if (replyMailbox.nonEmpty) { dispatchReplies(dweller.niceReply) }
                 if (eventMailbox.nonEmpty) { dispatchEvents(dweller.niceEvent) }
-                if (askMailbox.nonEmpty) {
-                    if (dweller.batchable) {
-                        var cursor = askMailbox.getChain(dweller.maxBatchSize)
-                        val buf    = ActorThread.threadBuffer[Ask[?]]
-                        while (cursor != null) {
-                            val ask = cursor.asInstanceOf[Ask[?]]
-                            cursor = ask.next
-                            ask.dechain()
-                            if (dweller.batchAskFilter(ask)) buf.addOne(ask)
-                            else {
-                                if (buf.nonEmpty) handleBatchAsk(buf)
-                                dweller.receiveAsk(ask)
-                                runLaterTasks()
-                            }
-                        }
-                        if (buf.nonEmpty) handleBatchAsk(buf)
-                    } else {
-                        var cursor = askMailbox.getChain(dweller.niceAsk)
-                        while (cursor != null) {
-                            val msg = cursor
-                            cursor = msg.next
-                            msg.dechain()
-                            dweller.receiveAsk(msg.asInstanceOf[Ask[? <: Reply]])
-                            runLaterTasks()
-                        }
-                    }
-                }
-                if (noticeMailbox.nonEmpty) {
+                if (!dweller.inBarrier && noticeMailbox.nonEmpty) {
                     if (dweller.batchable) {
                         var cursor = noticeMailbox.getChain(dweller.maxBatchSize)
                         val buf    = ActorThread.threadBuffer[Notice]
@@ -201,13 +183,51 @@ private[core] class ActorHouse(val manager: HouseManager) extends Runnable {
                         }
                     }
                 }
+                if (!dweller.inBarrier && askMailbox.nonEmpty) {
+                    if (dweller.batchable) {
+                        var cursor = askMailbox.getChain(dweller.maxBatchSize)
+                        val buf    = ActorThread.threadBuffer[Ask[?]]
+                        while (cursor != null) {
+                            val ask = cursor.asInstanceOf[Ask[?]]
+                            cursor = ask.next
+                            ask.dechain()
+                            if (dweller.batchAskFilter(ask)) buf.addOne(ask)
+                            else {
+                                if (buf.nonEmpty) handleBatchAsk(buf)
+                                dweller.receiveAsk(ask)
+                                runLaterTasks()
+                            }
+                        }
+                        if (buf.nonEmpty) handleBatchAsk(buf)
+                    } else {
+                        var cursor = askMailbox.getChain(dweller.niceAsk)
+                        while (cursor != null) {
+                            val msg = cursor
+                            cursor = msg.next
+                            msg.dechain()
+                            dweller.receiveAsk(msg.asInstanceOf[Ask[? <: Reply]])
+                            runLaterTasks()
+                        }
+                    }
+                }
             }
 
+            completeRunning()
+        }
+    }
+
+    private def completeRunning(): Unit = {
+        if (!dweller.inBarrier) {
             if (nonEmpty) {
                 if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
             } else {
-                status.compareAndSet(RUNNING, WAITING)
-                if (nonEmpty) waiting2ready()
+                if (status.compareAndSet(RUNNING, WAITING) && nonEmpty) waiting2ready()
+            }
+        } else {
+            if (barrierNonEmpty) {
+                if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
+            } else {
+                if (status.compareAndSet(RUNNING, WAITING) && barrierNonEmpty) waiting2ready()
             }
         }
     }

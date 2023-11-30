@@ -44,6 +44,13 @@ class MailBox(val house: ActorHouse) { // extends SpinLock
         // unlock()
     }
 
+    def putHead(obj: Nextable): Unit = this.synchronized {
+        val old = head
+        head = obj
+        obj.next = old
+        count += 1
+    }
+
     def get[T <: Nextable](): T = this.synchronized {
         var obj: Nextable = null
         // lock()
