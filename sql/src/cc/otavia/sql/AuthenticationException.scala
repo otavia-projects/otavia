@@ -1,6 +1,8 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
+ * This file fork from netty.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,18 +18,14 @@
 
 package cc.otavia.sql
 
-import cc.otavia.core.actor.ChannelsActor.ChannelEstablished
-import cc.otavia.core.message.{Ask, Notice}
+/** Exception for authenticate failed */
+class AuthenticationException(message: String | Null, cause: Throwable | Null)
+    extends RuntimeException(message, cause) {
 
-import java.net.SocketAddress
+    def this() = this(null, null)
 
-case class Authentication(url: String, info: Map[String, String], driver: Option[String] = None)
-    extends Ask[ChannelEstablished]
-    with Notice
+    def this(message: String) = this(message, null)
 
-object Authentication {
-    def apply(url: String, user: String, password: String): Authentication = {
-        val info = Map("user" -> user, "password" -> password)
-        new Authentication(url, info, None)
-    }
+    def this(cause: Throwable) = this(null, cause)
+
 }

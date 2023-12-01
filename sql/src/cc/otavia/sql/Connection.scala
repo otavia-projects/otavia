@@ -20,28 +20,44 @@ import cc.otavia.core.actor.ChannelsActor.ChannelEstablished
 import cc.otavia.core.actor.SocketChannelsActor.Connect
 import cc.otavia.core.actor.{ChannelsActor, SocketChannelsActor}
 import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelInitializer, ChannelState}
-import cc.otavia.core.message.{Ask, ExceptionMessage, Reply}
+import cc.otavia.core.message.*
 import cc.otavia.core.stack.StackState.*
 import cc.otavia.core.stack.helper.*
-import cc.otavia.core.stack.{AskStack, ChannelFuture, StackState}
+import cc.otavia.core.stack.{AskStack, ChannelFuture, NoticeStack, StackState}
 import cc.otavia.sql.Authentication
 import cc.otavia.sql.Statement.*
 
 import java.net.{ProtocolFamily, StandardProtocolFamily}
+import scala.language.unsafeNulls
 
-class Connection(override val family: ProtocolFamily = StandardProtocolFamily.INET)
-    extends SocketChannelsActor[Connection.MSG] {
+class Connection(
+    url: String,
+    info: Map[String, String],
+    driverName: Option[String] = None,
+    override val family: ProtocolFamily = StandardProtocolFamily.INET
+) extends SocketChannelsActor[Connection.MSG] {
 
-    private var channel: ChannelAddress = _
-    private var driver: Driver          = _
+    private var channel: ChannelAddress        = _
+    private var driver: Driver                 = _
+    private var connectOptions: ConnectOptions = _
 
-    override def handler: Option[ChannelInitializer[? <: Channel]] = Some(
-      new ChannelInitializer[Channel] {
-          override protected def initChannel(ch: Channel): Unit = ch.pipeline.addLast(driver)
-      }
-    )
+    private var authenticated: Boolean                           = false
+    private var authenticationException: AuthenticationException = _
 
-    override def resumeAsk(stack: AskStack[Connection.MSG]): Option[StackState] = {
+    def this() = this(null, null)
+
+    def this(url: String, user: String, password: String) = this(url, Map("user" -> user, "password" -> password))
+
+    override protected def initChannel(channel: Channel): Unit = {
+        driver.setChannelOptions(channel)
+        channel.pipeline.addLast(driver)
+    }
+
+    override protected def isBarrierCall(call: Call): Boolean = call.isInstanceOf[Authentication]
+
+    override protected def afterMount(): Unit = if (url != null) this.noticeSelfHead(Authentication(url, info))
+
+    override protected def resumeAsk(stack: AskStack[Connection.MSG]): Option[StackState] = {
         stack match
             case stack: AskStack[?] if stack.ask.isInstanceOf[Authentication] =>
                 handleAuthentication(stack.asInstanceOf[AskStack[Authentication]])
@@ -51,28 +67,65 @@ class Connection(override val family: ProtocolFamily = StandardProtocolFamily.IN
                 handleExecuteQuery(stack.asInstanceOf[AskStack[ExecuteQuery[?]]])
     }
 
-    private def handleAuthentication(stack: AskStack[Authentication]): Option[StackState] = {
+    override protected def resumeNotice(stack: NoticeStack[Connection.MSG & Notice]): Option[StackState] =
+        stack.state match
+            case StackState.start =>
+                val auth = stack.notice.asInstanceOf[Authentication]
+                createDriver(auth.driver, auth.url, auth.info)
+                connect(connectOptions.socketAddress, None)
+            case state: ChannelFutureState if state.id == 0 => // waiting to authentication
+                channel = state.future.channel
+                val authState = ChannelFutureState(1)
+                channel.ask(stack.notice.asInstanceOf[Authentication], authState.future)
+                authState.suspend()
+            case state: ChannelFutureState => // return authenticate result
+                if (state.future.isSuccess) {
+                    authenticated = true
+                    stack.`return`()
+                } else {
+                    authenticationException = new AuthenticationException(state.future.causeUnsafe)
+                    logger.error(s"Database[$url] authenticate failed! ", authenticationException)
+                    stack.`return`()
+                }
+
+    private def handleAuthentication(stack: AskStack[Authentication]): Option[StackState] =
         stack.state match
             case StackState.start => // waiting for socket connected
                 val auth = stack.ask
-                val driverFactory = auth.driver match
-                    case Some(name) => DriverManager.getDriverFactory(name)
-                    case None       => DriverManager.defaultDriver(auth.url)
-                val options = driverFactory.parseOptions(auth.url, auth.info)
-                driver = driverFactory.newDriver(options)
-                connect(options.socketAddress, None)
-            case state: ChannelFutureState => // waiting to authentication
+                createDriver(auth.driver, auth.url, auth.info)
+                connect(connectOptions.socketAddress, None)
+            case state: ChannelFutureState if state.id == 0 => // waiting to authentication
                 channel = state.future.channel
-                val authState = ChannelFutureState()
+                val authState = ChannelFutureState(1)
                 channel.ask(stack.ask, authState.future)
                 authState.suspend()
             case state: ChannelFutureState => // return authenticate result
-                if (state.future.isSuccess) stack.`return`(ChannelEstablished(channel.id))
-                else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
+                if (state.future.isSuccess) {
+                    authenticated = true
+                    stack.`return`(ChannelEstablished(channel.id))
+                } else {
+                    authenticationException = new AuthenticationException(state.future.causeUnsafe)
+                    stack.`throw`(ExceptionMessage(authenticationException))
+                }
+
+    private def createDriver(driverName: Option[String], url: String, info: Map[String, String]): Unit = {
+        val factory = driverName match
+            case Some(name) => DriverManager.getDriverFactory(name)
+            case None       => DriverManager.defaultDriver(url)
+        connectOptions = factory.parseOptions(url, info)
+        driver = factory.newDriver(connectOptions)
     }
 
     private def handleExecuteUpdate(stack: AskStack[ExecuteUpdate]): Option[StackState] = {
-        ???
+        stack.state match
+            case state: StartState =>
+                val stat         = stack.ask
+                val channelState = ChannelFutureState()
+                channel.ask(stat, channelState.future)
+                channelState.suspend()
+            case state: ChannelFutureState =>
+                if (state.future.isSuccess) stack.`return`(state.future.getNow.asInstanceOf[ModifyRows])
+                else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
     }
 
     private def handleExecuteQuery(stack: AskStack[ExecuteQuery[?]]): Option[StackState] = {

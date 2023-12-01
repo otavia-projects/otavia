@@ -41,7 +41,7 @@ case class ScramAuthentication(username: String, password: String) {
      */
     def initialSaslMsg(buffer: Buffer): ScramClientInitialMessage = {
         val mechanisms = mutable.ArrayBuffer.empty[String]
-        while (0 != buffer.getByte(buffer.readerOffset)) mechanisms.append(BufferUtils.readCString(buffer))
+        while (0 != buffer.getByte(buffer.readerOffset)) mechanisms.append(PgBufferUtils.readCString(buffer))
         buffer.readByte
         if (mechanisms.isEmpty)
             throw new UnsupportedOperationException("SASL Authentication : the server returned no mechanism")
@@ -79,10 +79,13 @@ case class ScramAuthentication(username: String, password: String) {
     }
 
     /** Finally, when the authentication exchange is completed successfully, the server sends an AuthenticationSASLFinal
-     *  message, followed immediately by an AuthenticationOk message. The AuthenticationSASLFinal contains additional
-     *  server-to-client data, whose content is particular to the selected authentication mechanism. If the
-     *  authentication mechanism doesn't use additional data that's sent at completion, the AuthenticationSASLFinal
-     *  message is not sent
+     *  message, followed immediately by an AuthenticationOk message.
+     *
+     *  The AuthenticationSASLFinal contains additional server-to-client data, whose content is particular to the
+     *  selected authentication mechanism.
+     *
+     *  If the authentication mechanism doesn't use additional data that's sent at completion, the
+     *  AuthenticationSASLFinal message is not sent
      */
     def checkServerFinalMsg(buffer: Buffer, length: Int): Unit = {
         val serverFinalMsg = buffer.readCharSequence(length, StandardCharsets.UTF_8).toString

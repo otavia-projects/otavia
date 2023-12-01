@@ -21,7 +21,7 @@ import cc.otavia.buffer.Buffer
 import java.nio.charset.{Charset, StandardCharsets}
 import scala.language.unsafeNulls
 
-object BufferUtils {
+object PgBufferUtils {
 
     private val ZERO: Byte                = 0
     private val FIRST_HALF_BYTE_MASK: Int = 0x0f

@@ -16,14 +16,14 @@
 
 package cc.otavia.postgres
 
-import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
-import cc.otavia.core.channel.{ChannelHandlerContext, ChannelInflight}
+import cc.otavia.buffer.{Buffer, BufferUtils}
+import cc.otavia.core.channel.{Channel, ChannelHandlerContext, ChannelInflight}
 import cc.otavia.core.slf4a.{Logger, LoggerFactory}
 import cc.otavia.postgres.protocol.Constants
 import cc.otavia.postgres.utils.ScramAuthentication.ScramClientInitialMessage
-import cc.otavia.postgres.utils.{BufferUtils, MD5Authentication, ScramAuthentication}
-import cc.otavia.sql.Statement.ExecuteUpdate
+import cc.otavia.postgres.utils.{MD5Authentication, PgBufferUtils, ScramAuthentication}
+import cc.otavia.sql.Statement.{ExecuteUpdate, ModifyRows}
 import cc.otavia.sql.{Authentication, Driver}
 
 import java.nio.charset.StandardCharsets
@@ -41,7 +41,17 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
     private var scramAuthentication: ScramAuthentication = _
     private var encoding: String                         = _
 
-    private var authMsgId = ChannelInflight.INVALID_CHANNEL_MESSAGE_ID
+    private var currentOutboundMessageId = ChannelInflight.INVALID_CHANNEL_MESSAGE_ID
+
+    private var metadata: PostgresDatabaseMetadata = _
+    private var processId: Int                     = 0
+    private var secretKey: Int                     = 0
+
+    private val response: Response = new Response
+
+    override def setChannelOptions(channel: Channel): Unit = {
+        // TODO:
+    }
 
     final override protected def checkDecodePacket(buffer: Buffer): Boolean =
         if (buffer.readableBytes >= 5) {
@@ -50,19 +60,20 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
             if (buffer.readableBytes >= packetLength) true else false
         } else false
 
-    override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit =
+    override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, mid: Long): Unit = {
+        currentOutboundMessageId = mid
         msg match
             case _: Authentication =>
                 if (status == ST_CONNECTING) {
-                    authMsgId = msgId
                     sendStartupMessage()
                     status = ST_AUTHENTICATING
                 }
             case executeUpdate: ExecuteUpdate =>
-                if (status == ST_AUTHENTICATED) sendQuery(executeUpdate.sql)
+                encodeQuery(executeUpdate.sql, output)
             case _ => ???
+    }
 
-    override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit =
+    override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = {
         while (checkDecodePacket(input)) {
             val packetStart = input.readerOffset
 
@@ -72,28 +83,30 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
             id match
                 case Constants.MSG_TYPE_READY_FOR_QUERY  => decodeReadyForQuery(input)
                 case Constants.MSG_TYPE_DATA_ROW         => decodeDataRow(input)
-                case Constants.MSG_TYPE_COMMAND_COMPLETE => decodeCommandComplete(input)
+                case Constants.MSG_TYPE_COMMAND_COMPLETE => decodeCommandComplete(input, length)
                 case Constants.MSG_TYPE_BIND_COMPLETE    => decodeBindComplete()
-                case _                                   => decodeMessage(id, input)
+                case _                                   => decodeMessage(id, input, length)
 
             // skip remaining data
             if (input.readerOffset - packetStart < length + 1) input.readerOffset(packetStart + length + 1)
         }
+        if (input.readableBytes == 0) input.compact()
+    }
 
-    private def decodeMessage(id: Byte, payload: Buffer): Unit = {
+    private def decodeMessage(id: Byte, payload: Buffer, payloadLength: Int): Unit = {
         id match
             case Constants.MSG_TYPE_ROW_DESCRIPTION       => ???
-            case Constants.MSG_TYPE_ERROR_RESPONSE        => ???
+            case Constants.MSG_TYPE_ERROR_RESPONSE        => decodeErrorResponse(payload, payloadLength)
             case Constants.MSG_TYPE_NOTICE_RESPONSE       => ???
-            case Constants.MSG_TYPE_AUTHENTICATION        => decodeAuthentication(payload)
+            case Constants.MSG_TYPE_AUTHENTICATION        => decodeAuthentication(payload, payloadLength)
             case Constants.MSG_TYPE_EMPTY_QUERY_RESPONSE  => ???
             case Constants.MSG_TYPE_PARSE_COMPLETE        => ???
             case Constants.MSG_TYPE_CLOSE_COMPLETE        => ???
             case Constants.MSG_TYPE_NO_DATA               => ???
             case Constants.MSG_TYPE_PORTAL_SUSPENDED      => ???
             case Constants.MSG_TYPE_PARAMETER_DESCRIPTION => ???
-            case Constants.MSG_TYPE_PARAMETER_STATUS      => ???
-            case Constants.MSG_TYPE_BACKEND_KEY_DATA      => ???
+            case Constants.MSG_TYPE_PARAMETER_STATUS      => decodeParameterStatus(payload)
+            case Constants.MSG_TYPE_BACKEND_KEY_DATA      => decodeBackendKeyData(payload)
             case Constants.MSG_TYPE_NOTIFICATION_RESPONSE => ???
             case _                                        =>
     }
@@ -108,50 +121,69 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
         packet.writeShort(3)
         packet.writeShort(0)
 
-        BufferUtils.writeCString(packet, USER)
-        BufferUtils.writeCString(packet, options.user, StandardCharsets.UTF_8)
+        PgBufferUtils.writeCString(packet, USER)
+        PgBufferUtils.writeCString(packet, options.user, StandardCharsets.UTF_8)
 
-        BufferUtils.writeCString(packet, DATABASE)
-        BufferUtils.writeCString(packet, options.database, StandardCharsets.UTF_8)
+        PgBufferUtils.writeCString(packet, DATABASE)
+        PgBufferUtils.writeCString(packet, options.database, StandardCharsets.UTF_8)
 
         for ((key, value) <- options.properties) {
-            BufferUtils.writeCString(packet, key, StandardCharsets.UTF_8)
-            BufferUtils.writeCString(packet, value, StandardCharsets.UTF_8)
+            PgBufferUtils.writeCString(packet, key, StandardCharsets.UTF_8)
+            PgBufferUtils.writeCString(packet, value, StandardCharsets.UTF_8)
         }
 
         packet.writeByte(0)
 
         packet.setInt(startIdx, packet.writerOffset - startIdx)
 
-        ctx.writeAndFlush(packet)
     }
 
-    private def sendQuery(sql: String): Unit = {
-        val packet = ctx.outboundAdaptiveBuffer
+    private def encodeQuery(sql: String, output: Buffer): Unit = {
+        val packet = output
         packet.writeByte(QUERY)
         val pos = packet.writerOffset
         packet.writeInt(0)
-        BufferUtils.writeCString(packet, sql, StandardCharsets.UTF_8)
+        PgBufferUtils.writeCString(packet, sql, StandardCharsets.UTF_8)
         packet.setInt(pos, packet.writerOffset - pos)
     }
 
     private def decodeReadyForQuery(payload: Buffer): Unit = {
-        ???
+        val id = payload.readByte
+        if (id == I) {
+            // IDLE
+        } else if (id == T) {
+            // ACTIVE
+        } else {
+            // FAILED
+            ctx.fireChannelRead(new TransactionFailed, currentOutboundMessageId)
+        }
+        // fire ?
     }
 
     private def decodeDataRow(payload: Buffer): Unit = {
         ???
     }
 
-    private def decodeCommandComplete(payload: Buffer): Unit = {
-        ???
+    private def decodeCommandComplete(payload: Buffer, length: Int): Unit = {
+        if (payload.skipIfNextAre(CMD_COMPLETED_UPDATE)) {
+            ctx.fireChannelRead(
+              ModifyRows(BufferUtils.readStringAsInt(payload, length - 5 - CMD_COMPLETED_UPDATE.length))
+            )
+        } else if (payload.skipIfNextAre(CMD_COMPLETED_DELETE))
+            ctx.fireChannelRead(
+              ModifyRows(BufferUtils.readStringAsInt(payload, length - 5 - CMD_COMPLETED_DELETE.length))
+            )
+        else if (payload.skipIfNextAre(CMD_COMPLETED_INSERT))
+            ctx.fireChannelRead(
+              ModifyRows(BufferUtils.readStringAsInt(payload, length - 5 - CMD_COMPLETED_INSERT.length))
+            )
     }
 
     private def decodeBindComplete(): Unit = {
         ???
     }
 
-    private def decodeAuthentication(payload: Buffer): Unit = {
+    private def decodeAuthentication(payload: Buffer, length: Int): Unit = {
         val typ = payload.readInt
         typ match
             case Constants.AUTH_TYPE_OK => successAuthAndResponse()
@@ -169,16 +201,15 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                 logger.debug("sasl continue send")
             case Constants.AUTH_TYPE_SASL_FINAL =>
                 try {
-                    scramAuthentication.checkServerFinalMsg(payload, payload.readableBytes)
+                    scramAuthentication.checkServerFinalMsg(payload, length - 8)
                     logger.debug("sasl final")
                 } catch {
-                    case e: UnsupportedOperationException => ???
+                    case e: UnsupportedOperationException => ctx.fireChannelRead(e, currentOutboundMessageId)
                 }
             case _ =>
                 val error = new UnsupportedOperationException(
                   s"Authentication type $typ is not supported in the client"
                 )
-
     }
 
     private def sendPasswordMessage(salt: Array[Byte] | Null): Unit = {
@@ -188,7 +219,7 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
         packet.writeInt(0)
         val hash =
             if (salt != null) MD5Authentication.encode(options.user, options.password, salt) else options.password
-        BufferUtils.writeCString(packet, hash, StandardCharsets.UTF_8)
+        PgBufferUtils.writeCString(packet, hash, StandardCharsets.UTF_8)
         packet.setInt(pos, packet.writerOffset - pos)
 
         ctx.writeAndFlush(packet)
@@ -199,7 +230,7 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
         packet.writeByte(PASSWORD_MESSAGE)
         val pos = packet.writerOffset
         packet.writeInt(0)
-        BufferUtils.writeCString(packet, msg.mechanism, StandardCharsets.UTF_8)
+        PgBufferUtils.writeCString(packet, msg.mechanism, StandardCharsets.UTF_8)
 
         val msgPos = packet.writerOffset
         packet.writeInt(0)
@@ -224,15 +255,63 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
         ctx.writeAndFlush(packet)
     }
 
+    private def successAuthAndResponse(): Unit = {
+        status = ST_AUTHENTICATED
+        if (ChannelInflight.isValidChannelMessageId(currentOutboundMessageId))
+            ctx.fireChannelRead(None, currentOutboundMessageId)
+    }
+
+    private def decodeParameterStatus(payload: Buffer): Unit = {
+        val key   = PgBufferUtils.readCString(payload)
+        val value = PgBufferUtils.readCString(payload)
+        if (key == "client_encoding") encoding = value
+        if (key == "server_version") metadata = PostgresDatabaseMetadata.parse(value)
+    }
+
+    private def decodeBackendKeyData(payload: Buffer): Unit = {
+        processId = payload.readInt
+        secretKey = payload.readInt
+    }
+
+    private def decodeErrorResponse(payload: Buffer, length: Int): Unit = {
+        decodeResponse(payload, length)
+        val exception = response.toExecption()
+        ctx.fireChannelRead(exception, currentOutboundMessageId)
+    }
+
+    private def decodeResponse(payload: Buffer, length: Int): Unit = {
+        var tpe: Byte = payload.readByte
+        while (tpe != 0) {
+            tpe match
+                case Constants.ERR_OR_NOTICE_SEVERITY => response.setSeverity(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_CODE     => response.setCode(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_MESSAGE  => response.setMessage(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_DETAIL   => response.setDetail(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_HINT     => response.setHint(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_INTERNAL_POSITION =>
+                    response.setInternalPosition(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_INTERNAL_QUERY =>
+                    response.setInternalQuery(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_POSITION   => response.setPosition(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_WHERE      => response.setWhere(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_FILE       => response.setFile(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_LINE       => response.setLine(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_ROUTINE    => response.setRoutine(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_SCHEMA     => response.setSchema(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_TABLE      => response.setTable(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_COLUMN     => response.setColumn(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_DATA_TYPE  => response.setDataType(PgBufferUtils.readCString(payload))
+                case Constants.ERR_OR_NOTICE_CONSTRAINT => response.setConstraint(PgBufferUtils.readCString(payload))
+                case _                                  => payload.skipReadableBytes(payload.bytesBefore(0.toByte) + 1)
+
+            tpe = payload.readByte
+        }
+    }
+
     override def handlerAdded(ctx: ChannelHandlerContext): Unit = {
         super.handlerAdded(ctx)
         this.ctx = ctx
         logger = LoggerFactory.getLogger(getClass, ctx.system)
-    }
-
-    private def successAuthAndResponse(): Unit = {
-        status = ST_AUTHENTICATED
-        if (ChannelInflight.isValidChannelMessageId(authMsgId)) ctx.fireChannelRead(None, authMsgId)
     }
 
 }
@@ -258,5 +337,16 @@ object PostgresDriver {
     private val EXECUTE: Byte          = 'E'
     private val CLOSE: Byte            = 'C'
     private val SYNC: Byte             = 'S'
+
+    private val I: Byte = 'I'
+    private val T: Byte = 'T'
+
+    private val CMD_COMPLETED_INSERT: Array[Byte] = "INSERT 0 ".getBytes(StandardCharsets.US_ASCII)
+    private val CMD_COMPLETED_DELETE: Array[Byte] = "DELETE ".getBytes(StandardCharsets.US_ASCII)
+    private val CMD_COMPLETED_UPDATE: Array[Byte] = "UPDATE ".getBytes(StandardCharsets.US_ASCII)
+    private val CMD_COMPLETED_SELECT: Array[Byte] = "SELECT ".getBytes(StandardCharsets.US_ASCII)
+    private val CMD_COMPLETED_MOVE: Array[Byte]   = "MOVE ".getBytes(StandardCharsets.US_ASCII)
+    private val CMD_COMPLETED_FETCH: Array[Byte]  = "FETCH ".getBytes(StandardCharsets.US_ASCII)
+    private val CMD_COMPLETED_COPY: Array[Byte]   = "COPY ".getBytes(StandardCharsets.US_ASCII)
 
 }
