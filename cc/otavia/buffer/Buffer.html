@@ -1579,6 +1579,127 @@ node10 -> node5;
           </div>
          </div>
         </div>
+        <div class="documentableElement" id="getStringAsDouble-579">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Buffer.html#getStringAsDouble-579" t="n" class="documentableName ">getStringAsDouble</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">length</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Double</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Parses the string content stored in the buffer as a signed <span data-unresolved-link="">Double</span>.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Parses the string content stored in the buffer as a signed <span data-unresolved-link="">Double</span>.</p> 
+              <p>An exception of type <span data-unresolved-link="">NumberFormatException</span> is thrown if any of the following situations occurs:</p> 
+              <p>this method fork form JDK <span data-unresolved-link="" title="Problem linking JFloat.parseFloat: No DRI found for query">JFloat.parseFloat</span> and <span data-unresolved-link="" title="Problem linking JDouble.parseDouble: No DRI found for query">JDouble.parseDouble</span></p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               index
+              </dt>
+              <dd class="body-medium">
+               <p>The read offset, an absolute offset into this buffer, to read from.</p> 
+              </dd>
+              <dt class="body-small">
+               length
+              </dt>
+              <dd class="body-medium">
+               <p>string number content length.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>the float represented by the string content.</p> 
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="getStringAsLong-fffff8cb">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Buffer.html#getStringAsLong-fffff8cb" t="n" class="documentableName ">getStringAsLong</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">length</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">radix</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Long</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Parses the string content stored in the buffer as a signed integer in the radix specified by the third argument. The characters in the string must all be digits of the specified radix (as determined by whether Character.digit(char, int) returns a nonnegative value), except that the first character may be an ASCII minus sign '-' ('\u002D') to indicate a negative value or an ASCII plus sign '+' ('\u002B') to indicate a positive value. The resulting integer value is returned.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Parses the string content stored in the buffer as a signed integer in the radix specified by the third argument. The characters in the string must all be digits of the specified radix (as determined by whether Character.digit(char, int) returns a nonnegative value), except that the first character may be an ASCII minus sign '-' ('\u002D') to indicate a negative value or an ASCII plus sign '+' ('\u002B') to indicate a positive value. The resulting integer value is returned.</p> 
+              <p>An exception of type <span data-unresolved-link="">NumberFormatException</span> is thrown if any of the following situations occurs:</p> 
+              <p>this method fork form JDK <span data-unresolved-link="" title="Problem linking Integer.parseInt: No DRI found for query">Integer.parseInt</span></p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               index
+              </dt>
+              <dd class="body-medium">
+               <p>The read offset, an absolute offset into this buffer, to read from.</p> 
+              </dd>
+              <dt class="body-small">
+               length
+              </dt>
+              <dd class="body-medium">
+               <p>string number content length.</p> 
+              </dd>
+              <dt class="body-small">
+               radix
+              </dt>
+              <dd class="body-medium">
+               <p>the radix to be used while parsing the string.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>the integer represented by the string content in the specified radix.</p> 
+              </dd>
+              <dt class="body-small">
+               Throws
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <div>
+                 <span data-unresolved-link="">NumberFormatException</span> 
+                 <p>if the string content does not contain a parsable int.</p> 
+                </div>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
         <div class="documentableElement" id="getUnsignedByte-fffffbe0">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -2842,6 +2963,115 @@ node10 -> node5;
                 <div>
                  <span data-unresolved-link="">IndexOutOfBoundsException</span> 
                  <p>If <a href="Buffer.html#readableBytes-0">readableBytes</a> is less than <span data-unresolved-link="">java.lang.Short.BYTES</span>.</p> 
+                </div>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="readStringAsDouble-640">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Buffer.html#readStringAsDouble-640" t="n" class="documentableName ">readStringAsDouble</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">length</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Double</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Parses the string content stored in the buffer as a signed <span data-unresolved-link="">Double</span>.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Parses the string content stored in the buffer as a signed <span data-unresolved-link="">Double</span>.</p> 
+              <p>An exception of type <span data-unresolved-link="">NumberFormatException</span> is thrown if any of the following situations occurs:</p> 
+              <p>this method fork form JDK <span data-unresolved-link="" title="Problem linking JFloat.parseFloat: No DRI found for query">JFloat.parseFloat</span> and <span data-unresolved-link="" title="Problem linking JDouble.parseDouble: No DRI found for query">JDouble.parseDouble</span></p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               length
+              </dt>
+              <dd class="body-medium">
+               <p>string number content length.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>the float represented by the string content.</p> 
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="readStringAsLong-a24">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Buffer.html#readStringAsLong-a24" t="n" class="documentableName ">readStringAsLong</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">length</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">radix</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Long</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Parses the string content stored in the buffer as a signed integer in the radix specified by the second argument. The characters in the string must all be digits of the specified radix (as determined by whether Character.digit(char, int) returns a non-negative value), except that the first character may be an ASCII minus sign '-' ('\u002D') to indicate a negative value or an ASCII plus sign '+' ('\u002B') to indicate a positive value. The resulting integer value is returned.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Parses the string content stored in the buffer as a signed integer in the radix specified by the second argument. The characters in the string must all be digits of the specified radix (as determined by whether Character.digit(char, int) returns a non-negative value), except that the first character may be an ASCII minus sign '-' ('\u002D') to indicate a negative value or an ASCII plus sign '+' ('\u002B') to indicate a positive value. The resulting integer value is returned.</p> 
+              <p>An exception of type <span data-unresolved-link="">NumberFormatException</span> is thrown if any of the following situations occurs:</p> 
+              <p>this method fork form JDK <span data-unresolved-link="" title="Problem linking Integer.parseInt: No DRI found for query">Integer.parseInt</span></p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               length
+              </dt>
+              <dd class="body-medium">
+               <p>string number content length.</p> 
+              </dd>
+              <dt class="body-small">
+               radix
+              </dt>
+              <dd class="body-medium">
+               <p>the radix to be used while parsing the string.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>the integer represented by the string content in the specified radix.</p> 
+              </dd>
+              <dt class="body-small">
+               Throws
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <div>
+                 <span data-unresolved-link="">NumberFormatException</span> 
+                 <p>if the string content does not contain a parsable int.</p> 
                 </div>
                </div>
               </dd>
