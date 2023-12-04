@@ -413,6 +413,80 @@ trait Buffer {
         new String(array, charset)
     }
 
+    /** Parses the string content stored in the buffer as a signed integer in the radix specified by the second
+     *  argument. The characters in the string must all be digits of the specified radix (as determined by whether
+     *  Character.digit(char, int) returns a non-negative value), except that the first character may be an ASCII minus
+     *  sign '-' ('\u002D') to indicate a negative value or an ASCII plus sign '+' ('\u002B') to indicate a positive
+     *  value. The resulting integer value is returned.
+     *
+     *  An exception of type [[NumberFormatException]] is thrown if any of the following situations occurs:
+     *
+     *  this method fork form JDK [[Integer.parseInt]]
+     *
+     *  @param length
+     *    string number content length.
+     *  @param radix
+     *    the radix to be used while parsing the string.
+     *  @throws NumberFormatException
+     *    if the string content does not contain a parsable int.
+     *  @return
+     *    the integer represented by the string content in the specified radix.
+     */
+    @throws[NumberFormatException]
+    def readStringAsLong(length: Int, radix: Int = 10): Long
+
+    /** Parses the string content stored in the buffer as a signed integer in the radix specified by the third argument.
+     *  The characters in the string must all be digits of the specified radix (as determined by whether
+     *  Character.digit(char, int) returns a nonnegative value), except that the first character may be an ASCII minus
+     *  sign '-' ('\u002D') to indicate a negative value or an ASCII plus sign '+' ('\u002B') to indicate a positive
+     *  value. The resulting integer value is returned.
+     *
+     *  An exception of type [[NumberFormatException]] is thrown if any of the following situations occurs:
+     *
+     *  this method fork form JDK [[Integer.parseInt]]
+     *
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @param length
+     *    string number content length.
+     *  @param radix
+     *    the radix to be used while parsing the string.
+     *  @throws NumberFormatException
+     *    if the string content does not contain a parsable int.
+     *  @return
+     *    the integer represented by the string content in the specified radix.
+     */
+    @throws[NumberFormatException]
+    def getStringAsLong(index: Int, length: Int, radix: Int = 10): Long
+
+    /** Parses the string content stored in the buffer as a signed [[Double]].
+     *
+     *  An exception of type [[NumberFormatException]] is thrown if any of the following situations occurs:
+     *
+     *  this method fork form JDK [[JFloat.parseFloat]] and [[JDouble.parseDouble]]
+     *
+     *  @param length
+     *    string number content length.
+     *  @return
+     *    the float represented by the string content.
+     */
+    def readStringAsDouble(length: Int): Double
+
+    /** Parses the string content stored in the buffer as a signed [[Double]].
+     *
+     *  An exception of type [[NumberFormatException]] is thrown if any of the following situations occurs:
+     *
+     *  this method fork form JDK [[JFloat.parseFloat]] and [[JDouble.parseDouble]]
+     *
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @param length
+     *    string number content length.
+     *  @return
+     *    the float represented by the string content.
+     */
+    def getStringAsDouble(index: Int, length: Int): Double
+
     /** Writes into this buffer, all the readable bytes from the given buffer. This updates the [[writerOffset]] of this
      *  buffer, and the [[readerOffset]] of the given buffer.
      *

@@ -2339,6 +2339,48 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         new String(array, 0, length, charset)
     }
 
+    override def readStringAsLong(length: Int, radix: Int): Long = if (length > 0) {
+        checkReadBounds(ridx + length)
+        if (head.readableBytes >= length) {
+            val value = head.readStringAsLong(length, radix)
+            if (head.readableBytes == 0) recycleHead()
+            widx += length
+            value
+        } else {
+            val str = readCharSequence(length).toString
+            str.toLong
+        }
+    } else throw new NumberFormatException(s"string length must be positive: length = $length")
+
+    override def getStringAsLong(index: Int, length: Int, radix: Int): Long = {
+        checkReadBounds(index + length)
+        val (idx, off) = offsetAtOffset(index)
+        val buffer     = apply(idx)
+        if (buffer.readableBytes - off >= length) buffer.getStringAsLong(buffer.readerOffset + off, length, radix)
+        else {
+            val str = getCharSequence(index, length).toString
+            str.toLong
+        }
+    }
+
+    override def readStringAsDouble(length: Int): Double = if (length > 0) {
+        checkReadBounds(ridx + length)
+        val v = head.readStringAsDouble(length)
+        if (head.readableBytes == 0) recycleHead()
+        v
+    } else throw new NumberFormatException(s"string length must be positive: length = $length")
+
+    override def getStringAsDouble(index: Int, length: Int): Double = {
+        checkReadBounds(index + length)
+        val (idx, off) = offsetAtOffset(index)
+        val buffer     = apply(idx)
+        if (buffer.readableBytes - off >= length) buffer.getStringAsDouble(buffer.readerOffset + off, length)
+        else {
+            val str = getCharSequence(index, length).toString
+            str.toDouble
+        }
+    }
+
     override def writeBytes(source: Buffer, length: Int): Buffer = {
         if (closed) throw new BufferClosedException()
         if (source.readableBytes < length)

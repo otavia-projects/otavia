@@ -78,6 +78,127 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         new String(array, 0, length, charset)
     }
 
+    override def readStringAsLong(length: Int, radix: Int): Long = {
+        if (radix < Character.MIN_RADIX)
+            throw new NumberFormatException(s"radix $radix less than Character.MIN_RADIX")
+
+        if (radix > Character.MAX_RADIX)
+            throw new NumberFormatException(s"radix $radix greater than Character.MAX_RADIX")
+
+        checkRead(ridx, length)
+
+        var negative = false
+        var i        = 0
+        var limit    = -Integer.MAX_VALUE
+
+        if (length > 0) {
+            val firstByte = underlying.get(ridx)
+            if (firstByte < '0') { // Possible leading "+" or "-"
+                if (firstByte == '-') {
+                    negative = true
+                    limit = Integer.MIN_VALUE
+                } else if (firstByte != '+') {
+                    throw new NumberFormatException(
+                      s"For input string: \"${readCharSequence(length)}\" under radix $radix"
+                    )
+                }
+
+                if (length == 1)
+                    throw new NumberFormatException(s"For input string \"$readByte\" under radix $radix")
+
+                i += 1
+            }
+            val multmin = limit / radix
+            var result  = 0
+            while (i < length) {
+                val digit = Character.digit(underlying.get(ridx + i), radix)
+                i += 1
+                if (digit < 0 || result < multmin) {
+                    throw new NumberFormatException(
+                      s"For input string: \"${readCharSequence(length)}\" under radix $radix"
+                    )
+                }
+                result *= radix
+                if (result < limit + digit)
+                    throw new NumberFormatException(
+                      s"For input string: \"${readCharSequence(length)}\" under radix $radix"
+                    )
+
+                result -= digit
+            }
+
+            skipReadableBytes(length)
+
+            if (negative) result else -result
+
+        } else throw new NumberFormatException(s"string length must be positive: length = $length")
+    }
+
+    override def getStringAsLong(index: Int, length: Int, radix: Int): Long = {
+        if (radix < Character.MIN_RADIX)
+            throw new NumberFormatException(s"radix $radix less than Character.MIN_RADIX")
+
+        if (radix > Character.MAX_RADIX)
+            throw new NumberFormatException(s"radix $radix greater than Character.MAX_RADIX")
+
+        checkRead(index, length)
+
+        var negative = false
+        var i        = 0
+        var limit    = -Integer.MAX_VALUE
+
+        if (length > 0) {
+            val firstByte = underlying.get(index)
+            if (firstByte < '0') { // Possible leading "+" or "-"
+                if (firstByte == '-') {
+                    negative = true
+                    limit = Integer.MIN_VALUE
+                } else if (firstByte != '+') {
+                    throw new NumberFormatException(
+                      s"For input string: \"${getCharSequence(index, length)}\" under radix $radix"
+                    )
+                }
+
+                if (length == 1)
+                    throw new NumberFormatException(s"For input string \"${getByte(index)}\" under radix $radix")
+
+                i += 1
+            }
+            val multmin = limit / radix
+            var result  = 0
+            while (i < length) {
+                val digit = Character.digit(underlying.get(index + i), radix)
+                i += 1
+                if (digit < 0 || result < multmin) {
+                    throw new NumberFormatException(
+                      s"For input string: \"${getCharSequence(index, length)}\" under radix $radix"
+                    )
+                }
+                result *= radix
+                if (result < limit + digit)
+                    throw new NumberFormatException(
+                      s"For input string: \"${getCharSequence(index, length)}\" under radix $radix"
+                    )
+
+                result -= digit
+            }
+
+            if (negative) result else -result
+
+        } else throw new NumberFormatException(s"string length must be positive: length = $length")
+    }
+
+    override def readStringAsDouble(length: Int): Double = {
+        val value = getStringAsDouble(ridx, length)
+        ridx += length
+        value
+    }
+
+    override def getStringAsDouble(index: Int, length: Int): Double = { // TODO: optimum
+        val str = getCharSequence(index, length).toString
+        str.toDouble
+    }
+
     override def writeBytes(source: Buffer, length: Int): Buffer = {
         underlying.position(widx)
         source.readBytes(underlying, length)
