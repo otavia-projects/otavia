@@ -1707,7 +1707,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
 
     override def nextIs(byte: Byte): Boolean = underlying.get(ridx) == byte
 
-    override def nextAre(bytes: Array[Byte]): Boolean = if (readableBytes > bytes.length) {
+    override def nextAre(bytes: Array[Byte]): Boolean = if (readableBytes >= bytes.length) {
         var same: Boolean = true
         var i             = 0
         while (same && i < bytes.length) {
@@ -1718,6 +1718,16 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
     } else false
 
     override def indexIs(byte: Byte, index: Int): Boolean = underlying.get(index) == byte
+
+    override def indexAre(bytes: Array[Byte], index: Int): Boolean = if (widx - index >= bytes.length) {
+        var same: Boolean = true
+        var i             = 0
+        while (same && i < bytes.length) {
+            same = same && underlying.get(index + i) == bytes(i)
+            i += 1
+        }
+        same
+    } else false
 
     override def nextIn(bytes: Array[Byte]): Boolean = {
         var notIn = true

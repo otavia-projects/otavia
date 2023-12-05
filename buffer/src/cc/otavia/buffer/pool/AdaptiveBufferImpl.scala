@@ -2613,7 +2613,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
 
     override def nextIs(byte: Byte): Boolean = if (nonEmpty) head.nextIs(byte) else false
 
-    override def nextAre(bytes: Array[Byte]): Boolean = if (readableBytes > bytes.length) {
+    override def nextAre(bytes: Array[Byte]): Boolean = if (readableBytes >= bytes.length) {
         if (head.readableBytes > bytes.length) head.nextAre(bytes)
         else {
             val copy = new Array[Byte](bytes.length)
@@ -2623,6 +2623,16 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     } else false
 
     override def indexIs(byte: Byte, index: Int): Boolean = this.getByte(index) == byte
+
+    override def indexAre(bytes: Array[Byte], index: Int): Boolean = if (widx - index >= bytes.length) {
+        val (idx, off) = offsetAtOffset(index)
+        if (head.readableBytes - off >= bytes.length) head.indexAre(bytes, head.readerOffset + off)
+        else {
+            val copy = new Array[Byte](bytes.length)
+            this.copyInto(index, copy, 0, bytes.length)
+            copy sameElements bytes
+        }
+    } else false
 
     override def nextIn(bytes: Array[Byte]): Boolean = if (nonEmpty) head.nextIn(bytes) else false
 

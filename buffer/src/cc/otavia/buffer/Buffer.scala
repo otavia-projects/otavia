@@ -2179,6 +2179,9 @@ trait Buffer {
     /** Check the byte at [[index]] is the gaven byte */
     def indexIs(byte: Byte, index: Int): Boolean
 
+    /** Check the bytes at [[index]] is the gaven bytes. */
+    def indexAre(bytes: Array[Byte], index: Int): Boolean
+
     /** Check the next readable byte is in the gaven bytes */
     def nextIn(bytes: Array[Byte]): Boolean
 
