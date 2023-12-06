@@ -1602,8 +1602,8 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
     }
 
     override def writeLong(value: Long): Buffer = {
-        underlying.putLong(ridx, value)
-        ridx += JLong.BYTES
+        underlying.putLong(widx, value)
+        widx += JLong.BYTES
         this
     }
 

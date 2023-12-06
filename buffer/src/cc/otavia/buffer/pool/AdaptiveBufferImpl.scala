@@ -168,7 +168,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             throw new IndexOutOfBoundsException(s"Set writerOffset $index is little than readerOffset $ridx")
     }
 
-    override def writerOffset(offset: Int): Buffer = {
+    override def writerOffset(offset: Int): Buffer = { // FIXME:
         checkWriteBound(offset)
         if (offset > widx) {
             if (offset > endIndex) {
