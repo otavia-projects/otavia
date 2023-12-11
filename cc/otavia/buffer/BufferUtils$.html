@@ -88,12 +88,12 @@ node3 -> node2;
          <button class="icon-button show-content expand"></button>
          <h4 class="groupHeader h200">Concrete methods</h4>
         </div>
-        <div class="documentableElement" id="readStringAsInt-fffff627" data-f-keywords="final">
+        <div class="documentableElement" id="isNonEscapedAscii-502" data-f-keywords="final">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="BufferUtils$.html#readStringAsInt-fffff627" t="n" class="documentableName ">readStringAsInt</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">buffer</span>: <a href="Buffer.html" t="t">Buffer</a>, <span t="k"></span><span data-unresolved-link="" t="n">len</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">radix</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Int</span>
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="BufferUtils$.html#isNonEscapedAscii-502" t="n" class="documentableName ">isNonEscapedAscii</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">ch</span>: <span data-unresolved-link="" t="t">Char</span>): <span data-unresolved-link="" t="t">Boolean</span>
            </div>
           </div>
          </div>
@@ -103,33 +103,19 @@ node3 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Parses the string content stored in the buffer as a signed integer in the radix specified by the third argument. The characters in the string must all be digits of the specified radix (as determined by whether Character.digit(char, int) returns a nonnegative value), except that the first character may be an ASCII minus sign '-' ('\u002D') to indicate a negative value or an ASCII plus sign '+' ('\u002B') to indicate a positive value. The resulting integer value is returned.</p> 
+             <p>Checks if a character does not require JSON escaping or encoding.</p> 
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Parses the string content stored in the buffer as a signed integer in the radix specified by the third argument. The characters in the string must all be digits of the specified radix (as determined by whether Character.digit(char, int) returns a nonnegative value), except that the first character may be an ASCII minus sign '-' ('\u002D') to indicate a negative value or an ASCII plus sign '+' ('\u002B') to indicate a positive value. The resulting integer value is returned.</p> 
-              <p>An exception of type <span data-unresolved-link="">NumberFormatException</span> is thrown if any of the following situations occurs:</p> 
-              <p>this method fork form JDK <span data-unresolved-link="" title="Problem linking Integer.parseInt: No DRI found for query">Integer.parseInt</span></p> 
+              <p>Checks if a character does not require JSON escaping or encoding.</p> 
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
-               buffer
+               ch
               </dt>
               <dd class="body-medium">
-               <p>string number which stored in the <a href="Buffer.html">Buffer</a>.</p> 
-              </dd>
-              <dt class="body-small">
-               len
-              </dt>
-              <dd class="body-medium">
-               <p>string number content length.</p> 
-              </dd>
-              <dt class="body-small">
-               radix
-              </dt>
-              <dd class="body-medium">
-               <p>the radix to be used while parsing the string.</p> 
+               <p>the character to check</p> 
               </dd>
              </dl>
              <h2 class="h200">Attributes</h2>
@@ -138,18 +124,7 @@ node3 -> node2;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>the integer represented by the string content in the specified radix.</p> 
-              </dd>
-              <dt class="body-small">
-               Throws
-              </dt>
-              <dd class="body-medium">
-               <div>
-                <div>
-                 <span data-unresolved-link="">NumberFormatException</span> 
-                 <p>if the string content does not contain a parsable int.</p> 
-                </div>
-               </div>
+               <p><code>true</code> if the character is a basic ASCII character (code point less than <code>0x80</code>) that does not need JSON escaping</p> 
               </dd>
              </dl>
             </div>
@@ -157,47 +132,167 @@ node3 -> node2;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="readStringAsLong-fffff78b" data-f-keywords="final">
+        <div class="documentableElement" id="readEscapedString-66c">
          <div class="documentableElement-expander">
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="BufferUtils$.html#readStringAsLong-fffff78b" t="n" class="documentableName ">readStringAsLong</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">buffer</span>: <a href="Buffer.html" t="t">Buffer</a>, <span t="k"></span><span data-unresolved-link="" t="n">len</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Long</span>
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="BufferUtils$.html#readEscapedString-66c" t="n" class="documentableName ">readEscapedString</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">buffer</span>: <a href="Buffer.html" t="t">Buffer</a>, <span t="k"></span><span data-unresolved-link="" t="n">len</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">String</span>
            </div>
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="readStringAsShort-54d" data-f-keywords="final">
+        <div class="documentableElement" id="writeEscapedString-291">
          <div class="documentableElement-expander">
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="BufferUtils$.html#readStringAsShort-54d" t="n" class="documentableName ">readStringAsShort</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">buffer</span>: <a href="Buffer.html" t="t">Buffer</a>, <span t="k"></span><span data-unresolved-link="" t="n">len</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Short</span>
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="BufferUtils$.html#writeEscapedString-291" t="n" class="documentableName ">writeEscapedString</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">buffer</span>: <a href="Buffer.html" t="t">Buffer</a>, <span t="k"></span><span data-unresolved-link="" t="n">str</span>: <span data-unresolved-link="" t="t">String</span>): <span data-unresolved-link="" t="t">Unit</span>
            </div>
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="writeIntAsString-825" data-f-keywords="final">
+       </div>
+      </section>
+      <section id="Concrete-fields">
+       <div class="documentableList expand">
+        <div class="documentableList-expander">
+         <button class="icon-button show-content expand"></button>
+         <h4 class="groupHeader h200">Concrete fields</h4>
+        </div>
+        <div class="documentableElement" id="bigDecimalDigitsLimit-0" data-f-keywords="final">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="BufferUtils$.html#writeIntAsString-825" t="n" class="documentableName ">writeIntAsString</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">int</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">buffer</span>: <a href="Buffer.html" t="t">Buffer</a>): <span data-unresolved-link="" t="t">Unit</span>
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">val </span></span><a href="BufferUtils$.html#bigDecimalDigitsLimit-0" t="n" class="documentableName ">bigDecimalDigitsLimit</a>: <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>The default limit for number of decimal digits in mantissa of parsed <code>BigDecimal</code> values.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>The default limit for number of decimal digits in mantissa of parsed <code>BigDecimal</code> values.</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
            </div>
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="writeLongAsString-fffff8a8" data-f-keywords="final">
+        <div class="documentableElement" id="bigDecimalMathContext-0" data-f-keywords="final">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="BufferUtils$.html#writeLongAsString-fffff8a8" t="n" class="documentableName ">writeLongAsString</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">long</span>: <span data-unresolved-link="" t="t">Long</span>, <span t="k"></span><span data-unresolved-link="" t="n">buffer</span>: <a href="Buffer.html" t="t">Buffer</a>): <span data-unresolved-link="" t="t">Unit</span>
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">val </span></span><a href="BufferUtils$.html#bigDecimalMathContext-0" t="n" class="documentableName ">bigDecimalMathContext</a>: <span data-unresolved-link="" t="t">MathContext</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>The default math context used for rounding of <code>BigDecimal</code> values when parsing.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>The default math context used for rounding of <code>BigDecimal</code> values when parsing.</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
            </div>
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="writeShortAsString-f38" data-f-keywords="final">
+        <div class="documentableElement" id="bigDecimalScaleLimit-0" data-f-keywords="final">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">val </span></span><a href="BufferUtils$.html#bigDecimalScaleLimit-0" t="n" class="documentableName ">bigDecimalScaleLimit</a>: <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>The default limit for scale of parsed <code>BigDecimal</code> values.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>The default limit for scale of parsed <code>BigDecimal</code> values.</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="bigIntDigitsLimit-0" data-f-keywords="final">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">val </span></span><a href="BufferUtils$.html#bigIntDigitsLimit-0" t="n" class="documentableName ">bigIntDigitsLimit</a>: <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>The maximum number of digits in <code>BigInt</code> values.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>The maximum number of digits in <code>BigInt</code> values.</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="escapedChars-0" data-f-keywords="final">
          <div class="documentableElement-expander">
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="BufferUtils$.html#writeShortAsString-f38" t="n" class="documentableName ">writeShortAsString</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">short</span>: <span data-unresolved-link="" t="t">Short</span>, <span t="k"></span><span data-unresolved-link="" t="n">buffer</span>: <a href="Buffer.html" t="t">Buffer</a>): <span data-unresolved-link="" t="t">Unit</span>
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">val </span></span><a href="BufferUtils$.html#escapedChars-0" t="n" class="documentableName ">escapedChars</a>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>]
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="lowerCaseHexDigits-0" data-f-keywords="final">
+         <div class="documentableElement-expander">
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">val </span></span><a href="BufferUtils$.html#lowerCaseHexDigits-0" t="n" class="documentableName ">lowerCaseHexDigits</a>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Short</span>]
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="nibbles-0" data-f-keywords="final">
+         <div class="documentableElement-expander">
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">val </span></span><a href="BufferUtils$.html#nibbles-0" t="n" class="documentableName ">nibbles</a>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>]
            </div>
           </div>
          </div>
@@ -209,4 +304,4 @@ node3 -> node2;
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Concrete-fields">Concrete fields</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

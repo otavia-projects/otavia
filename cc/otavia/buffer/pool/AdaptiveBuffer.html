@@ -2475,6 +2475,56 @@ node4 -> node1;
           </div>
          </div>
         </div>
+        <div class="documentableElement" id="getStringAsUUID-fffff042" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AdaptiveBuffer.html#getStringAsUUID-fffff042" t="n" class="documentableName ">getStringAsUUID</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">UUID</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Parses the string content stored in the buffer as a <span data-unresolved-link="" title="Problem linking UUID: No DRI found for query">UUID</span>.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Parses the string content stored in the buffer as a <span data-unresolved-link="" title="Problem linking UUID: No DRI found for query">UUID</span>.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               index
+              </dt>
+              <dd class="body-medium">
+               <p>The read offset, an absolute offset into this buffer, to read from.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>The UUID represented by the string content.</p> 
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../Buffer.html#getStringAsUUID-fffff042">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
         <div class="documentableElement" id="getUnsignedByte-fffffbe0" data-f-inherited="Buffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -4891,6 +4941,47 @@ node4 -> node1;
           </div>
          </div>
         </div>
+        <div class="documentableElement" id="readStringAsUUID-15b" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AdaptiveBuffer.html#readStringAsUUID-15b" t="n" class="documentableName ">readStringAsUUID</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">UUID</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Parses the string content stored in the buffer as a <span data-unresolved-link="" title="Problem linking UUID: No DRI found for query">UUID</span>.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Parses the string content stored in the buffer as a <span data-unresolved-link="" title="Problem linking UUID: No DRI found for query">UUID</span>.</p> 
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>The UUID represented by the string content.</p> 
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../Buffer.html#readStringAsUUID-15b">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
         <div class="documentableElement" id="readUnsignedByte-0" data-f-inherited="Buffer">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -6760,6 +6851,56 @@ node4 -> node1;
               </dt>
               <dd class="body-medium">
                <a href="../Buffer.html#setShortLE-fffff253">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="setUUIDAsString-f0e" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AdaptiveBuffer.html#setUUIDAsString-f0e" t="n" class="documentableName ">setUUIDAsString</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">index</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">uuid</span>: <span data-unresolved-link="" t="t">UUID</span>): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Writes into this buffer, all the bytes from the given <span data-unresolved-link="" title="Problem linking uuid: No DRI found for query">uuid</span> string. This not updates the <a href="../Buffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Writes into this buffer, all the bytes from the given <span data-unresolved-link="" title="Problem linking uuid: No DRI found for query">uuid</span> string. This not updates the <a href="../Buffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               index
+              </dt>
+              <dd class="body-medium">
+               <p>The write offset, an absolute offset into this buffer to write to.</p> 
+              </dd>
+              <dt class="body-small">
+               uuid
+              </dt>
+              <dd class="body-medium">
+               <p>uuid value.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../Buffer.html#setUUIDAsString-f0e">Buffer</a>
               </dd>
              </dl>
             </div>
@@ -9178,6 +9319,50 @@ node4 -> node1;
               </dt>
               <dd class="body-medium">
                <a href="../Buffer.html#writeShortLE-cec">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="writeUUIDAsString-fffff4e7" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AdaptiveBuffer.html#writeUUIDAsString-fffff4e7" t="n" class="documentableName ">writeUUIDAsString</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">uuid</span>: <span data-unresolved-link="" t="t">UUID</span>): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Writes into this buffer, all the bytes from the given <span data-unresolved-link="" title="Problem linking uuid: No DRI found for query">uuid</span> string. This updates the <a href="../Buffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer.</p> 
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Writes into this buffer, all the bytes from the given <span data-unresolved-link="" title="Problem linking uuid: No DRI found for query">uuid</span> string. This updates the <a href="../Buffer.html#writerOffset-fffffa19">writerOffset</a> of this buffer.</p> 
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               uuid
+              </dt>
+              <dd class="body-medium">
+               <p>uuid value.</p> 
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../Buffer.html#writeUUIDAsString-fffff4e7">Buffer</a>
               </dd>
              </dl>
             </div>
