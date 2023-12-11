@@ -16,7 +16,6 @@
 
 package cc.otavia.buffer.pool
 
-import cc.otavia.buffer
 import cc.otavia.buffer.*
 import cc.otavia.buffer.BytesUtil.ignoreCaseEqual
 import cc.otavia.buffer.pool.{PooledPageAllocator, RecyclablePageBuffer}
@@ -25,6 +24,7 @@ import java.lang.{Byte as JByte, Double as JDouble, Float as JFloat, Long as JLo
 import java.nio.ByteBuffer
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
 import java.nio.charset.Charset
+import java.util.UUID
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
@@ -2378,6 +2378,45 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         else {
             val str = getCharSequence(index, length).toString
             str.toDouble
+        }
+    }
+
+    override def writeUUIDAsString(uuid: UUID): Unit = {
+        if (realWritableBytes < 36) this.extendBuffer()
+        last.writeUUIDAsString(uuid)
+        widx += 36
+    }
+
+    override def setUUIDAsString(index: Int, uuid: UUID): Unit = {
+        val (idx, off) = offsetAtOffset(index)
+        val buffer     = apply(idx)
+        if (buffer.readableBytes - off >= 36) buffer.setUUIDAsString(buffer.readerOffset + off, uuid)
+        else {
+            val str = uuid.toString
+            this.setCharSequence(index, str)
+        }
+    }
+
+    override def readStringAsUUID(): UUID = {
+        checkReadBounds(ridx + 36)
+        val uuid =
+            if (head.readableBytes >= 36) head.readStringAsUUID()
+            else {
+                val str = this.getCharSequence(ridx, 36).toString
+                UUID.fromString(str)
+            }
+        if (head.readableBytes == 0) recycleHead()
+        ridx += 36
+        uuid
+    }
+
+    override def getStringAsUUID(index: Int): UUID = {
+        val (idx, off) = offsetAtOffset(index)
+        val buffer     = apply(idx)
+        if (buffer.readableBytes - off >= 36) buffer.getStringAsUUID(buffer.readerOffset + off)
+        else {
+            val str = this.getCharSequence(index, 36).toString
+            UUID.fromString(str)
         }
     }
 

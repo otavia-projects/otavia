@@ -25,6 +25,7 @@ import java.lang.{Double as JDouble, Float as JFloat, Long as JLong, Short as JS
 import java.nio.ByteBuffer
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
 import java.nio.charset.{Charset, StandardCharsets}
+import java.util.UUID
 import scala.language.unsafeNulls
 
 /** A wrapper of [[java.nio.ByteBuffer]], with separate reader and writer offsets.
@@ -486,6 +487,38 @@ trait Buffer {
      *    the float represented by the string content.
      */
     def getStringAsDouble(index: Int, length: Int): Double
+
+    /** Writes into this buffer, all the bytes from the given [[uuid]] string. This updates the [[writerOffset]] of this
+     *  buffer.
+     *
+     *  @param uuid
+     *    uuid value.
+     */
+    def writeUUIDAsString(uuid: UUID): Unit
+
+    /** Writes into this buffer, all the bytes from the given [[uuid]] string. This not updates the [[writerOffset]] of
+     *  this buffer.
+     *
+     *  @param index
+     *    The write offset, an absolute offset into this buffer to write to.
+     *  @param uuid
+     *    uuid value.
+     */
+    def setUUIDAsString(index: Int, uuid: UUID): Unit
+
+    /** Parses the string content stored in the buffer as a [[UUID]].
+     *  @return
+     *    The UUID represented by the string content.
+     */
+    def readStringAsUUID(): UUID
+
+    /** Parses the string content stored in the buffer as a [[UUID]].
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @return
+     *    The UUID represented by the string content.
+     */
+    def getStringAsUUID(index: Int): UUID
 
     /** Writes into this buffer, all the readable bytes from the given buffer. This updates the [[writerOffset]] of this
      *  buffer, and the [[readerOffset]] of the given buffer.

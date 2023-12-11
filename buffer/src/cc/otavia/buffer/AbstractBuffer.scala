@@ -24,6 +24,8 @@ import java.lang.{Byte as JByte, Double as JDouble, Float as JFloat, Long as JLo
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
 import java.nio.charset.{Charset, StandardCharsets}
 import java.nio.{ByteBuffer, ByteOrder}
+import java.util
+import java.util.UUID
 import scala.language.unsafeNulls
 
 abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
@@ -53,6 +55,8 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
     }
 
     override def compact(): Buffer = {
+        "hello".translateEscapes()
+        "hello".charAt(1)
         if (readableBytes == 0) {
             ridx = 0
             widx = 0
@@ -197,6 +201,105 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
     override def getStringAsDouble(index: Int, length: Int): Double = { // TODO: optimum
         val str = getCharSequence(index, length).toString
         str.toDouble
+    }
+
+    override def writeUUIDAsString(uuid: UUID): Unit = {
+        setUUIDAsString(widx, uuid)
+        widx += 36
+    }
+
+    override def setUUIDAsString(index: Int, uuid: UUID): Unit = {
+        val mostSigBits  = uuid.getMostSignificantBits
+        val leastSigBits = uuid.getLeastSignificantBits
+        val ds           = BufferUtils.lowerCaseHexDigits
+
+        val mostSigBits1 = (mostSigBits >> 32).toInt
+        val d1           = ds(mostSigBits1 >>> 24)
+        val d2           = ds(mostSigBits1 >> 16 & 0xff).toLong << 16
+        val d3           = ds(mostSigBits1 >> 8 & 0xff).toLong << 32
+        val d4           = ds(mostSigBits1 & 0xff)
+        this.setLongLE(index, d1 | d2 | d3 | d4.toLong << 48)
+
+        val mostSigBits2 = mostSigBits.toInt
+        val d5           = ds(mostSigBits2 >>> 24) << 8
+        val d6           = ds(mostSigBits2 >> 16 & 0xff).toLong << 24
+        val d7           = ds(mostSigBits2 >> 8 & 0xff)
+        this.setLongLE(index + 8, d5 | d6 | d7.toLong << 48 | 0x2d000000002dL)
+
+        val d8            = ds(mostSigBits2 & 0xff)
+        val leastSigBits1 = (leastSigBits >> 32).toInt
+        val d9            = ds(leastSigBits1 >>> 24).toLong << 24
+        val d10           = ds(leastSigBits1 >> 16 & 0xff).toLong << 40
+        this.setLongLE(index + 16, d8 | d9 | d10 | 0x2d000000002d0000L)
+
+        val d11           = ds(leastSigBits1 >> 8 & 0xff)
+        val d12           = ds(leastSigBits1 & 0xff).toLong << 16
+        val leastSigBits2 = leastSigBits.toInt
+        val d13           = ds(leastSigBits2 >>> 24).toLong << 32
+        val d14           = ds(leastSigBits2 >> 16 & 0xff)
+        this.setLongLE(index + 24, d11 | d12 | d13 | d14.toLong << 48)
+
+        val d15 = ds(leastSigBits2 >> 8 & 0xff)
+        val d16 = ds(leastSigBits2 & 0xff).toInt << 16
+        this.setIntLE(index + 32, d15 | d16)
+    }
+
+    override def readStringAsUUID(): UUID = {
+        val uuid = getStringAsUUID(ridx)
+        ridx += 36
+        uuid
+    }
+
+    override def getStringAsUUID(index: Int): UUID = {
+        val ns = BufferUtils.nibbles
+        val msb1 = ns(underlying.get(index) & 0xff).toLong << 28 | (
+          ns(underlying.get(index + 1) & 0xff) << 24 |
+              ns(underlying.get(index + 2) & 0xff) << 20 |
+              ns(underlying.get(index + 3) & 0xff) << 16 |
+              ns(underlying.get(index + 4) & 0xff) << 12 |
+              ns(underlying.get(index + 5) & 0xff) << 8 |
+              ns(underlying.get(index + 6) & 0xff) << 4 |
+              ns(underlying.get(index + 7) & 0xff)
+        )
+        if (msb1 < 0) throw new RuntimeException()
+        if (underlying.get(index + 8) != '-') throw new RuntimeException()
+
+        val msb2 = ns(underlying.get(index + 9) & 0xff) << 12 |
+            ns(underlying.get(index + 10) & 0xff) << 8 |
+            ns(underlying.get(index + 11) & 0xff) << 4 |
+            ns(underlying.get(index + 12) & 0xff)
+        if (msb2 < 0) throw new RuntimeException()
+        if (underlying.get(index + 13) != '-') throw new RuntimeException()
+
+        val msb3 = ns(underlying.get(index + 14) & 0xff) << 12 |
+            ns(underlying.get(index + 15) & 0xff) << 8 |
+            ns(underlying.get(index + 16) & 0xff) << 4 |
+            ns(underlying.get(index + 17) & 0xff)
+        if (msb3 < 0) throw new RuntimeException()
+        if (underlying.get(index + 18) != '-') throw new RuntimeException()
+
+        val lsb1 = ns(underlying.get(index + 19) & 0xff) << 12 |
+            ns(underlying.get(index + 20) & 0xff) << 8 |
+            ns(underlying.get(index + 21) & 0xff) << 4 |
+            ns(underlying.get(index + 22) & 0xff)
+        if (lsb1 < 0) throw new RuntimeException()
+        if (underlying.get(index + 23) != '-') throw new RuntimeException()
+
+        val lsb2 = (ns(underlying.get(index + 24) & 0xff) << 16 |
+            ns(underlying.get(index + 25) & 0xff) << 12 |
+            ns(underlying.get(index + 26) & 0xff) << 8 |
+            ns(underlying.get(index + 27) & 0xff) << 4 |
+            ns(underlying.get(index + 28) & 0xff)).toLong << 28 |
+            (ns(underlying.get(index + 29) & 0xff) << 24 |
+                ns(underlying.get(index + 30) & 0xff) << 20 |
+                ns(underlying.get(index + 31) & 0xff) << 16 |
+                ns(underlying.get(index + 32) & 0xff) << 12 |
+                ns(underlying.get(index + 33) & 0xff) << 8 |
+                ns(underlying.get(index + 34) & 0xff) << 4 |
+                ns(underlying.get(index + 35) & 0xff))
+        if (lsb2 < 0) throw new RuntimeException()
+
+        new UUID(msb1 << 32 | msb2.toLong << 16 | msb3, lsb1.toLong << 48 | lsb2)
     }
 
     override def writeBytes(source: Buffer, length: Int): Buffer = {
