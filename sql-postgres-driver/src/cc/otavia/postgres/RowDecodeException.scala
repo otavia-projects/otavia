@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package cc.otavia.http
+package cc.otavia.postgres
 
-import scala.collection.mutable
+class RowDecodeException(message: String | Null, cause: Throwable | Null) extends RuntimeException(message, cause) {
 
-trait ParameterCodec[P] {
+    def this() = this(null, null)
 
-    def encode(parameter: P, params: mutable.HashMap[String, String]): Unit
+    def this(message: String) = this(message, null)
 
-    def decode(pathVariables: mutable.HashMap[String, String], paramVariables: mutable.HashMap[String, String]): P
+    def this(cause: Throwable) = this(null, cause)
 
 }

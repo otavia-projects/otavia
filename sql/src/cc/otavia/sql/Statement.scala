@@ -16,7 +16,6 @@
 
 package cc.otavia.sql
 
-import cc.otavia.sql.serde.RowSerde
 import cc.otavia.core.message.{Ask, Notice, Reply}
 
 trait Statement {}
@@ -27,21 +26,17 @@ object Statement {
 
     case class ExecuteUpdate(sql: String) extends Ask[ModifyRows]
 
-    class ExecuteQuery[R <: Row](val sql: String, val serde: RowSerde[R]) extends Ask[R]
+    class ExecuteQuery[R <: Row](val sql: String, val decoder: RowDecoder[R]) extends Ask[R]
 
     object ExecuteQuery {
-        def apply[R <: Row](sql: String)(using serde: RowSerde[R]): ExecuteQuery[R] =
-            new ExecuteQuery(sql, serde)
+        def apply[R <: Row](sql: String)(using decoder: RowDecoder[R]): ExecuteQuery[R] =
+            new ExecuteQuery(sql, decoder)
     }
 
-    class ExecuteQueries[R <: Row](sql: String, serde: RowSerde[R]) extends Ask[RowSet[R]]
-    object ExecuteQueries {
-        def apply[R <: Row](sql: String)(using serde: RowSerde[R]): ExecuteQueries[R] =
-            new ExecuteQueries(sql, serde)
-    }
+    case class ExecuteQueries[R <: Row](sql: String, decoder: RowDecoder[R]) extends Ask[RowSet[R]]
 
-    case class Cursor(id: Int)                                     extends Reply
-    class ExecuteCursor[R <: Row](sql: String, serde: RowSerde[R]) extends Ask[Cursor]
+    case class Cursor(id: Int)                                         extends Reply
+    class ExecuteCursor[R <: Row](sql: String, decoder: RowDecoder[R]) extends Ask[Cursor]
 
     case class CursorRow[R <: Row](row: R, cursorId: Int) extends Notice
     case class CursorEnd(cursorId: Int)                   extends Notice

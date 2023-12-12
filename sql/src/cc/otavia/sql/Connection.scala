@@ -64,7 +64,9 @@ class Connection(
             case stack: AskStack[?] if stack.ask.isInstanceOf[ExecuteUpdate] =>
                 handleExecuteUpdate(stack.asInstanceOf[AskStack[ExecuteUpdate]])
             case stack: AskStack[?] if stack.ask.isInstanceOf[ExecuteQuery[?]] =>
-                handleExecuteQuery(stack.asInstanceOf[AskStack[ExecuteQuery[?]]])
+                handleExecuteQuery(stack.asInstanceOf[AskStack[ExecuteQuery[Row]]])
+            case stack: AskStack[?] if stack.ask.isInstanceOf[ExecuteQueries[?]] =>
+                handleExecuteQueries(stack.asInstanceOf[AskStack[ExecuteQueries[Row]]])
     }
 
     override protected def resumeNotice(stack: NoticeStack[Connection.MSG & Notice]): Option[StackState] =
@@ -128,12 +130,28 @@ class Connection(
                 else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
     }
 
-    private def handleExecuteQuery(stack: AskStack[ExecuteQuery[?]]): Option[StackState] = {
-        ???
+    private def handleExecuteQuery(stack: AskStack[ExecuteQuery[Row]]): Option[StackState] = {
+        stack.state match
+            case state: StartState =>
+                val stat         = stack.ask
+                val channelState = ChannelFutureState()
+                channel.ask(stat, channelState.future)
+                channelState.suspend()
+            case state: ChannelFutureState =>
+                if (state.future.isSuccess) stack.`return`(state.future.getNow.asInstanceOf[Row])
+                else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
     }
 
-    private def handleExecuteQueries(stack: AskStack[ExecuteQueries[?]]): Option[StackState] = {
-        ???
+    private def handleExecuteQueries(stack: AskStack[ExecuteQueries[Row]]): Option[StackState] = {
+        stack.state match
+            case state: StartState =>
+                val stat         = stack.ask
+                val channelState = ChannelFutureState()
+                channel.ask(stat, channelState.future)
+                channelState.suspend()
+            case state: ChannelFutureState =>
+                if (state.future.isSuccess) stack.`return`(state.future.getNow.asInstanceOf[RowSet[Row]])
+                else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
     }
 
     private def handleCursor(stack: AskStack[ExecuteCursor[?]]): Option[StackState] = {
@@ -144,5 +162,5 @@ class Connection(
 }
 
 object Connection {
-    type MSG = Authentication | ExecuteUpdate | ExecuteQuery[? <: Row]
+    type MSG = Authentication | ExecuteUpdate | ExecuteQuery[? <: Row] | ExecuteQueries[? <: Row]
 }

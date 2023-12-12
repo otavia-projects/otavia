@@ -16,17 +16,19 @@
 
 package cc.otavia.postgres
 
+import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
-import cc.otavia.buffer.{Buffer, BufferUtils}
 import cc.otavia.core.channel.{Channel, ChannelHandlerContext, ChannelInflight}
 import cc.otavia.core.slf4a.{Logger, LoggerFactory}
-import cc.otavia.postgres.protocol.Constants
+import cc.otavia.postgres.impl.*
+import cc.otavia.postgres.protocol.{Constants, DataFormat, DataType}
 import cc.otavia.postgres.utils.ScramAuthentication.ScramClientInitialMessage
 import cc.otavia.postgres.utils.{MD5Authentication, PgBufferUtils, ScramAuthentication}
-import cc.otavia.sql.Statement.{ExecuteUpdate, ModifyRows}
-import cc.otavia.sql.{Authentication, Driver}
+import cc.otavia.sql.Statement.{ExecuteQueries, ExecuteQuery, ExecuteUpdate, ModifyRows}
+import cc.otavia.sql.{Authentication, Driver, Row, RowDecoder}
 
 import java.nio.charset.StandardCharsets
+import scala.collection.mutable
 import scala.language.unsafeNulls
 
 class PostgresDriver(override val options: PostgresConnectOptions) extends Driver(options) {
@@ -49,6 +51,15 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
 
     private val response: Response = new Response
 
+    private val rowDesc: RowDesc                           = new RowDesc()
+    private var continueParseRow: Boolean                  = false
+    private var currentRowDecoder: RowDecoder[Row]         = _
+    private var isSingleRow: Boolean                       = true
+    private val rowBuffer: mutable.ArrayBuffer[Row]        = mutable.ArrayBuffer.empty
+    private val rowOffsets: mutable.ArrayBuffer[RowOffset] = mutable.ArrayBuffer.empty
+
+    private val rowParser: PostgresRowParser = new PostgresRowParser()
+
     override def setChannelOptions(channel: Channel): Unit = {
         // TODO:
     }
@@ -70,6 +81,14 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                 }
             case executeUpdate: ExecuteUpdate =>
                 encodeQuery(executeUpdate.sql, output)
+            case executeQuery: ExecuteQuery[?] =>
+                currentRowDecoder = executeQuery.decoder
+                isSingleRow = true
+                encodeQuery(executeQuery.sql, output)
+            case executeQueries: ExecuteQueries[?] =>
+                currentRowDecoder = executeQueries.decoder
+                isSingleRow = false
+                encodeQuery(executeQueries.sql, output)
             case _ => ???
     }
 
@@ -81,34 +100,29 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
             val length = input.readInt
 
             id match
-                case Constants.MSG_TYPE_READY_FOR_QUERY  => decodeReadyForQuery(input)
-                case Constants.MSG_TYPE_DATA_ROW         => decodeDataRow(input)
-                case Constants.MSG_TYPE_COMMAND_COMPLETE => decodeCommandComplete(input, length)
-                case Constants.MSG_TYPE_BIND_COMPLETE    => decodeBindComplete()
-                case _                                   => decodeMessage(id, input, length)
+                case Constants.MSG_TYPE_READY_FOR_QUERY       => decodeReadyForQuery(input)
+                case Constants.MSG_TYPE_DATA_ROW              => decodeDataRow(input, length)
+                case Constants.MSG_TYPE_COMMAND_COMPLETE      => decodeCommandComplete(input, length)
+                case Constants.MSG_TYPE_BIND_COMPLETE         => decodeBindComplete()
+                case Constants.MSG_TYPE_ROW_DESCRIPTION       => decodeRowDescription(input)
+                case Constants.MSG_TYPE_ERROR_RESPONSE        => decodeErrorResponse(input, length)
+                case Constants.MSG_TYPE_NOTICE_RESPONSE       => ???
+                case Constants.MSG_TYPE_AUTHENTICATION        => decodeAuthentication(input, length)
+                case Constants.MSG_TYPE_EMPTY_QUERY_RESPONSE  => ???
+                case Constants.MSG_TYPE_PARSE_COMPLETE        => ???
+                case Constants.MSG_TYPE_CLOSE_COMPLETE        => ???
+                case Constants.MSG_TYPE_NO_DATA               => ???
+                case Constants.MSG_TYPE_PORTAL_SUSPENDED      => ???
+                case Constants.MSG_TYPE_PARAMETER_DESCRIPTION => ???
+                case Constants.MSG_TYPE_PARAMETER_STATUS      => decodeParameterStatus(input)
+                case Constants.MSG_TYPE_BACKEND_KEY_DATA      => decodeBackendKeyData(input)
+                case Constants.MSG_TYPE_NOTIFICATION_RESPONSE => ???
+                case _                                        =>
 
             // skip remaining data
             if (input.readerOffset - packetStart < length + 1) input.readerOffset(packetStart + length + 1)
         }
         if (input.readableBytes == 0) input.compact()
-    }
-
-    private def decodeMessage(id: Byte, payload: Buffer, payloadLength: Int): Unit = {
-        id match
-            case Constants.MSG_TYPE_ROW_DESCRIPTION       => ???
-            case Constants.MSG_TYPE_ERROR_RESPONSE        => decodeErrorResponse(payload, payloadLength)
-            case Constants.MSG_TYPE_NOTICE_RESPONSE       => ???
-            case Constants.MSG_TYPE_AUTHENTICATION        => decodeAuthentication(payload, payloadLength)
-            case Constants.MSG_TYPE_EMPTY_QUERY_RESPONSE  => ???
-            case Constants.MSG_TYPE_PARSE_COMPLETE        => ???
-            case Constants.MSG_TYPE_CLOSE_COMPLETE        => ???
-            case Constants.MSG_TYPE_NO_DATA               => ???
-            case Constants.MSG_TYPE_PORTAL_SUSPENDED      => ???
-            case Constants.MSG_TYPE_PARAMETER_DESCRIPTION => ???
-            case Constants.MSG_TYPE_PARAMETER_STATUS      => decodeParameterStatus(payload)
-            case Constants.MSG_TYPE_BACKEND_KEY_DATA      => decodeBackendKeyData(payload)
-            case Constants.MSG_TYPE_NOTIFICATION_RESPONSE => ???
-            case _                                        =>
     }
 
     private def sendStartupMessage(): Unit = {
@@ -160,23 +174,53 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
         // fire ?
     }
 
-    private def decodeDataRow(payload: Buffer): Unit = {
-        ???
+    private def decodeDataRow(payload: Buffer, payloadLength: Int): Unit =
+        if (continueParseRow) {
+            rowOffsets.clear()
+            val len    = payload.readUnsignedShort
+            var i      = 0
+            var offset = 0
+            while (i < len) {
+                val length = payload.getInt(payload.readerOffset + offset)
+                rowOffsets.addOne(RowOffset(offset, length))
+                if (length > 0) offset += 4 + length else offset += 4
+                i += 1
+            }
+            rowParser.setPayload(payload)
+            rowParser.setRowOffsets(rowOffsets)
+            val row = currentRowDecoder.decode(rowParser)
+            println(row)
+        }
+
+    private def decodeRowDescription(payload: Buffer): Unit = {
+        val columnLength = payload.readUnsignedShort
+        this.rowDesc.setLength(columnLength)
+        var i = 0
+        while (i < columnLength) {
+            val columnDesc = this.rowDesc(i)
+            columnDesc.name = PgBufferUtils.readCString(payload)
+            columnDesc.relationId = payload.readInt
+            columnDesc.relationAttributeNo = payload.readShort
+            columnDesc.dataType = DataType.fromOid(payload.readInt)
+            columnDesc.length = payload.readShort
+            columnDesc.typeModifier = payload.readInt
+            columnDesc.dataFormat = DataFormat.fromOrdinal(payload.readUnsignedShort)
+            i += 1
+        }
+        rowParser.setRowDesc(rowDesc)
+        continueParseRow = true
     }
 
     private def decodeCommandComplete(payload: Buffer, length: Int): Unit = {
         if (payload.skipIfNextAre(CMD_COMPLETED_UPDATE)) {
-            ctx.fireChannelRead(
-              ModifyRows(BufferUtils.readStringAsInt(payload, length - 5 - CMD_COMPLETED_UPDATE.length))
-            )
+            val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_UPDATE.length).toInt
+            ctx.fireChannelRead(ModifyRows(rows))
         } else if (payload.skipIfNextAre(CMD_COMPLETED_DELETE))
-            ctx.fireChannelRead(
-              ModifyRows(BufferUtils.readStringAsInt(payload, length - 5 - CMD_COMPLETED_DELETE.length))
-            )
+            val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_DELETE.length).toInt
+            ctx.fireChannelRead(ModifyRows(rows))
         else if (payload.skipIfNextAre(CMD_COMPLETED_INSERT))
-            ctx.fireChannelRead(
-              ModifyRows(BufferUtils.readStringAsInt(payload, length - 5 - CMD_COMPLETED_INSERT.length))
-            )
+            val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_INSERT.length).toInt
+            ctx.fireChannelRead(ModifyRows(rows))
     }
 
     private def decodeBindComplete(): Unit = {
@@ -312,6 +356,9 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
         super.handlerAdded(ctx)
         this.ctx = ctx
         logger = LoggerFactory.getLogger(getClass, ctx.system)
+
+        rowParser.setRowDesc(rowDesc)
+        rowParser.setRowOffsets(rowOffsets)
     }
 
 }

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-package cc.otavia.http
+package cc.otavia.sql
 
-import cc.otavia.serde.Serde
-
-trait URLEncodedSerde[T] extends Serde[T]
+trait RowDecoder[+R <: Row] {
+    def decode(parser: RowParser): R
+}
