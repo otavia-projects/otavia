@@ -20,13 +20,90 @@ package cc.otavia.buffer
 
 import java.math.MathContext
 import java.util.UUID
+import scala.annotation.switch
 import scala.language.unsafeNulls
 
 object BufferUtils {
 
+    def readEscapedChar(buffer: Buffer): Char = {
+        val b1 = buffer.readByte
+        if (b1 >= 0) {
+            if (b1 != '\\') {
+                b1.toChar
+            } else {
+                val b2 = buffer.readByte
+                if (b2 != 'u') {
+                    (b2: @switch) match
+                        case 'b'  => '\b'
+                        case 'f'  => '\f'
+                        case 'n'  => '\n'
+                        case 'r'  => '\r'
+                        case 't'  => '\t'
+                        case '"'  => '"'
+                        case '/'  => '/'
+                        case '\\' => '\\'
+                } else {
+                    val ns = nibbles
+                    val x = ns(buffer.readByte & 0xff) << 12 |
+                        ns(buffer.readByte & 0xff) << 8 |
+                        ns(buffer.readByte & 0xff) << 4 |
+                        ns(buffer.readByte & 0xff)
+                    x.toChar
+                }
+            }
+        } else if ((b1 >> 5) == -2) { // 110bbbbb 10aaaaaa (UTF-8 bytes) -> 00000bbbbbaaaaaa (UTF-16 char)
+            val b2 = buffer.readByte
+            (b1 << 6 ^ b2 ^ 0xf80).toChar // 0xF80 == 0xC0.toByte << 6 ^ 0x80.toByte
+        } else if ((b1 >> 4) == -2) {     // 1110cccc 10bbbbbb 10aaaaaa (UTF-8 bytes) -> ccccbbbbbbaaaaaa (UTF-16 char)
+            val b2 = buffer.readByte
+            val b3 = buffer.readByte
+            val ch =
+                (b1 << 12 ^ b2 << 6 ^ b3 ^ 0xfffe1f80).toChar // 0xFFFE1F80 == 0xE0.toByte << 12 ^ 0x80.toByte << 6 ^ 0x80.toByte
+            ch
+        } else throw new IllegalStateException("illegal surrogate character")
+    }
+
+    def writeEscapedChar(buffer: Buffer, ch: Char): Unit = {
+        if (ch < 0x80) {
+            val ecs = escapedChars(ch)
+            if (ecs == 0) { // 00000000 0aaaaaaa (UTF-16 char) -> 0aaaaaaa (UTF-8 byte)
+                buffer.writeByte(ch.toByte)
+            } else if (ecs > 0) {
+                buffer.writeShortLE((ecs << 8 | 0x5c).toShort)
+            } else {
+                val ds = lowerCaseHexDigits
+                buffer.writeLongLE(ds(ch).toLong << 32 | 0x00003030755cL)
+                buffer.writerOffset(buffer.writerOffset - 2)
+            }
+        } else if (ch < 0x800) { // 00000bbb bbaaaaaa (UTF-16 char) -> 110bbbbb 10aaaaaa (UTF-8 bytes)
+            buffer.writeShortLE((ch >> 6 | (ch << 8 & 0x3f00) | 0x80c0).toShort)
+        } else if (ch < 0xd800 || ch > 0xdfff) { // ccccbbbbbbaaaaaa (UTF-16 char) -> 1110cccc 10bbbbbb 10aaaaaa (UTF-8 bytes)
+            buffer.writeMediumLE(ch >> 12 | (ch << 2 & 0x3f00) | (ch << 16 & 0x3f0000) | 0x8080e0)
+        }
+    }
+
+    def writeEscapedCharWithQuote(buffer: Buffer, ch: Char): Unit = {
+        if (ch < 0x80) { // 00000000 0aaaaaaa (UTF-16 char) -> 0aaaaaaa (UTF-8 byte)
+            val ecs = escapedChars(ch)
+            if (ecs == 0) {
+                buffer.writeMediumLE(ch << 8 | 0x220022) // 0x220022 == " "
+            } else if (ecs > 0) {
+                buffer.writeIntLE(ecs << 16 | 0x22005c22) // 0x22005C22 == "\ "
+            } else {
+                val ds = lowerCaseHexDigits
+                buffer.writeLongLE(ds(ch).toLong << 40 | 0x2200003030755c22L)
+            }
+        } else if (ch < 0x800) { // 00000bbb bbaaaaaa (UTF-16 char) -> 110bbbbb 10aaaaaa (UTF-8 bytes)
+            buffer.writeIntLE((ch & 0x3f) << 16 | (ch & 0xfc0) << 2 | 0x2280c022)
+        } else if (ch < 0xd800 || ch > 0xdfff) { // ccccbbbbbbaaaaaa (UTF-16 char) -> 1110cccc 10bbbbbb 10aaaaaa (UTF-8 bytes)
+            buffer.writeLongLE(((ch & 0x3f) << 24 | (ch & 0xfc0) << 10 | (ch & 0xf000) >> 4) | 0x228080e022L)
+            buffer.writerOffset(buffer.writerOffset - 3)
+        }
+    }
+
     def readEscapedString(buffer: Buffer, len: Int): String = {
-      val cs = buffer.readCharSequence(len).toString()
-      cs.translateEscapes()
+        val cs = buffer.readCharSequence(len).toString()
+        cs.translateEscapes()
     }
 
     def writeEscapedString(buffer: Buffer, str: String): Unit = {

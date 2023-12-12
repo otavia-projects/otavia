@@ -41,16 +41,16 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
 
     private def endIndex: Int = widx + last.writableBytes
 
-    private def offsetAtOffset(offset: Int): (Int, Int) = if (nonEmpty) {
-        if (offset >= startIndex && offset < endIndex) {
-            var len    = offset - ridx
-            var cursor = 0
-            while (cursor < size && len > apply(cursor).readableBytes) {
-                len -= apply(cursor).readableBytes
-                cursor += 1
-            }
-            (cursor, len)
-        } else (-1, 0)
+    inline private def offsetAtOffset(offset: Int): (Int, Int) = if (nonEmpty && offset - ridx <= head.readableBytes) {
+        (0, offset - ridx)
+    } else if (nonEmpty && offset >= startIndex && offset < endIndex) {
+        var len    = offset - ridx
+        var cursor = 0
+        while (cursor < size && len > apply(cursor).readableBytes) {
+            len -= apply(cursor).readableBytes
+            cursor += 1
+        }
+        (cursor, len)
     } else (-1, 0)
 
     private def recycleHead(compact: Boolean = false): Unit = {

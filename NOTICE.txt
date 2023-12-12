@@ -63,3 +63,10 @@ This product contains a modified version of vertx-sql-client , which can be obta
   * HOMEPAGE:
     * https://vertx.io/docs/#databases
     * https://github.com/eclipse-vertx/vertx-sql-client
+
+This product contains a modified version of jsoniter-scala , which can be obtained at:
+
+  * LICENSE:
+    * LICENSES/LICENSE.jsoniter-scala.txt (MIT License)
+  * HOMEPAGE:
+    * https://github.com/plokhotnyuk/jsoniter-scala
