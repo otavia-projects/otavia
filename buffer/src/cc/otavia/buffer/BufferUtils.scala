@@ -19,6 +19,7 @@
 package cc.otavia.buffer
 
 import java.math.MathContext
+import java.nio.charset.StandardCharsets
 import java.util.UUID
 import scala.annotation.switch
 import scala.language.unsafeNulls
@@ -143,6 +144,93 @@ object BufferUtils {
      *    escaping
      */
     final def isNonEscapedAscii(ch: Char): Boolean = ch < 0x80 && escapedChars(ch) == 0
+
+    def readStringAsShort(buffer: Buffer): Short = {
+        val isNeg = buffer.skipIfNextIs('-')
+        if (isNeg && !buffer.nextInRange('0', '9'))
+            throw new NumberFormatException(s"except number at '-', but got ${buffer.getByte(buffer.readerOffset)}")
+        var x: Int = 0
+        while (buffer.readableBytes > 0 && buffer.nextInRange('0', '9')) {
+            x = x * 10 + (buffer.readByte - '0')
+            if (x >= 32768) throw new NumberFormatException(s"short value overflow error")
+        }
+        if (isNeg) x = -x
+        x.toShort
+    }
+
+    def writeShortAsString(buffer: Buffer, short: Short): Unit = {
+        val ds = digits
+        val q0: Int =
+            if (short >= 0) short
+            else {
+                buffer.writeByte('-')
+                -short
+            }
+        if (q0 < 10) {
+            buffer.writeByte((q0 + '0').toByte)
+        } else if (q0 < 100) {
+            buffer.writeShortLE(ds(q0))
+        } else if (q0 < 10000) {
+            val q1 = q0 * 5243 >> 19 // divide a small positive int by 100
+            val d2 = ds(q0 - q1 * 100)
+            if (q0 < 1000) buffer.writeMediumLE(q1 + '0' | d2 << 8) else buffer.writeIntLE(ds(q1) | d2 << 16)
+        } else {
+            // Based on James Anhalt's algorithm for 5 digits: https://jk-jeon.github.io/posts/2022/02/jeaiii-algorithm/
+            val y1 = q0 * 429497L
+            val y2 = (y1 & 0xffffffffL) * 100
+            val y3 = (y2 & 0xffffffffL) * 100
+            val d1 = (y1 >> 32).toInt + '0'
+            val d2 = ds((y2 >> 32).toInt) << 8
+            val d3 = ds((y3 >> 32).toInt).toLong << 24
+            buffer.writeLongLE(d1 | d2 | d3)
+            buffer.writerOffset(buffer.writerOffset - 3)
+        }
+    }
+
+    def readStringAsInt(buffer: Buffer): Int = {
+        val isNeg   = buffer.skipIfNextIs('-')
+        var x: Long = 0
+        while (buffer.readableBytes > 0 && buffer.nextInRange('0', '9')) {
+            x = x * 10 + (buffer.readByte - '0')
+        }
+        val ret = if (isNeg) -x else x
+        if (ret > Int.MaxValue || ret < Int.MinValue)
+            throw new NumberFormatException(s"int value overflow error, got $ret")
+        ret.toInt
+    }
+
+    def writeIntAsString(buffer: Buffer, int: Int): Unit = if (int != Int.MinValue) {
+        val ds = digits
+        val q0 =
+            if (int >= 0) int
+            else {
+                buffer.writeByte('-')
+                -int
+            }
+        buffer.writerOffset(buffer.writerOffset + digitCount(q0))
+        writePositiveIntDigits(q0, buffer.writerOffset, buffer, ds)
+    } else buffer.writeBytes(MIN_INT_BYTES)
+
+    private def writePositiveIntDigits(q: Int, p: Int, buffer: Buffer, ds: Array[Short]): Unit = {
+        var q0  = q
+        var pos = p
+        while ({
+            pos -= 2
+            q0 >= 100
+        }) {
+            val q1 = (q0 * 1374389535L >> 37).toInt // divide a positive int by 100
+            buffer.setShortLE(pos, ds(q0 - q1 * 100))
+            q0 = q1
+        }
+        if (q0 < 10) buffer.setByte(pos + 1, (q0 + '0').toByte) else buffer.setShortLE(pos, ds(q0))
+    }
+
+    // Adoption of a nice trick from Daniel Lemire's blog that works for numbers up to 10^18:
+    // https://lemire.me/blog/2021/06/03/computing-the-number-of-digits-of-an-integer-even-faster/
+    private def digitCount(q0: Long): Int = (offsets(java.lang.Long.numberOfLeadingZeros(q0)) + q0 >> 58).toInt
+
+    private val MAX_INT_BYTES: Array[Byte] = Int.MaxValue.toString.getBytes(StandardCharsets.US_ASCII)
+    private val MIN_INT_BYTES: Array[Byte] = Int.MinValue.toString.getBytes(StandardCharsets.US_ASCII)
 
     private val INTEGER_TRIM: Array[Byte] = Array(' ', '+')
 

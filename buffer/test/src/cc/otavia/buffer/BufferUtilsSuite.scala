@@ -88,4 +88,149 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
     }
 
+    test("short") {
+        val buffer = allocator.allocate()
+
+        BufferUtils.writeShortAsString(buffer, 0)
+        assert(buffer.nextIs('0'))
+        assert(BufferUtils.readStringAsShort(buffer) == 0)
+
+        BufferUtils.writeShortAsString(buffer, 5)
+        assert(buffer.nextIs('5'))
+        assert(BufferUtils.readStringAsShort(buffer) == 5)
+
+        BufferUtils.writeShortAsString(buffer, 10)
+        assert(buffer.nextAre("10".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == 10)
+
+        BufferUtils.writeShortAsString(buffer, 88)
+        assert(buffer.nextAre("88".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == 88)
+
+        BufferUtils.writeShortAsString(buffer, 100)
+        assert(buffer.nextAre("100".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == 100)
+
+        BufferUtils.writeShortAsString(buffer, 456)
+        assert(buffer.nextAre("456".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == 456)
+
+        BufferUtils.writeShortAsString(buffer, 1000)
+        assert(buffer.nextAre("1000".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == 1000)
+
+        BufferUtils.writeShortAsString(buffer, 4567)
+        assert(buffer.nextAre("4567".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == 4567)
+
+        BufferUtils.writeShortAsString(buffer, 10000)
+        assert(buffer.nextAre("10000".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == 10000)
+
+        BufferUtils.writeShortAsString(buffer, 32765)
+        assert(buffer.nextAre("32765".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == 32765)
+
+        BufferUtils.writeShortAsString(buffer, -5)
+        assert(buffer.nextAre("-5".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == -5)
+
+        BufferUtils.writeShortAsString(buffer, -10)
+        assert(buffer.nextAre("-10".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == -10)
+
+        BufferUtils.writeShortAsString(buffer, -88)
+        assert(buffer.nextAre("-88".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == -88)
+
+        BufferUtils.writeShortAsString(buffer, -100)
+        assert(buffer.nextAre("-100".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == -100)
+
+        BufferUtils.writeShortAsString(buffer, -456)
+        assert(buffer.nextAre("-456".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == -456)
+
+        BufferUtils.writeShortAsString(buffer, -1000)
+        assert(buffer.nextAre("-1000".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == -1000)
+
+        BufferUtils.writeShortAsString(buffer, -4567)
+        assert(buffer.nextAre("-4567".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == -4567)
+
+        BufferUtils.writeShortAsString(buffer, -10000)
+        assert(buffer.nextAre("-10000".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == -10000)
+
+        BufferUtils.writeShortAsString(buffer, -32765)
+        assert(buffer.nextAre("-32765".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsShort(buffer) == -32765)
+
+    }
+
+    test("int") {
+        val buffer = allocator.allocate()
+
+        BufferUtils.writeIntAsString(buffer, 0)
+        assert(buffer.nextIs('0'))
+        assert(BufferUtils.readStringAsInt(buffer) == 0)
+
+        BufferUtils.writeIntAsString(buffer, 5)
+        assert(buffer.nextIs('5'))
+        assert(BufferUtils.readStringAsInt(buffer) == 5)
+
+        BufferUtils.writeIntAsString(buffer, 10)
+        assert(buffer.nextAre("10".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsInt(buffer) == 10)
+
+        BufferUtils.writeIntAsString(buffer, 88)
+        assert(buffer.nextAre("88".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsInt(buffer) == 88)
+
+        BufferUtils.writeIntAsString(buffer, 5566)
+        assert(buffer.nextAre("5566".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsInt(buffer) == 5566)
+
+        BufferUtils.writeIntAsString(buffer, 556677)
+        assert(buffer.nextAre("556677".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsInt(buffer) == 556677)
+
+        BufferUtils.writeIntAsString(buffer, 556677)
+        assert(buffer.nextAre("556677".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsInt(buffer) == 556677)
+
+        BufferUtils.writeIntAsString(buffer, Int.MaxValue)
+        assert(buffer.nextAre(Int.MaxValue.toString.getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsInt(buffer) == Int.MaxValue)
+
+        BufferUtils.writeIntAsString(buffer, -5)
+        assert(buffer.nextAre("-5".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsInt(buffer) == -5)
+
+        BufferUtils.writeIntAsString(buffer, -10)
+        assert(buffer.nextAre("-10".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsInt(buffer) == -10)
+
+        BufferUtils.writeIntAsString(buffer, -88)
+        assert(buffer.nextAre("-88".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsInt(buffer) == -88)
+
+        BufferUtils.writeIntAsString(buffer, -5566)
+        assert(buffer.nextAre("-5566".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsInt(buffer) == -5566)
+
+        BufferUtils.writeIntAsString(buffer, -556677)
+        assert(buffer.nextAre("-556677".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsInt(buffer) == -556677)
+
+        BufferUtils.writeIntAsString(buffer, -556677)
+        assert(buffer.nextAre("-556677".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsInt(buffer) == -556677)
+
+        BufferUtils.writeIntAsString(buffer, Int.MinValue)
+        assert(buffer.nextAre(Int.MinValue.toString.getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsInt(buffer) == Int.MinValue)
+    }
+
 }
