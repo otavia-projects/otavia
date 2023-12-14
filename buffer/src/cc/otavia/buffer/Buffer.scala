@@ -157,7 +157,7 @@ trait Buffer {
     }
 
     /** Returns the number of readable bytes which is equal to [[writerOffset]] - [[readerOffset]]. */
-    def readableBytes: Int = writerOffset - readerOffset
+    def readableBytes: Int
 
     /** Returns the number of writable bytes which is equal to [[capacity]] - [[writerOffset]] . */
     def writableBytes: Int = capacity - writerOffset

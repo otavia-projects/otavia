@@ -28,7 +28,7 @@ import java.util.UUID
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
+final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     extends mutable.ArrayDeque[RecyclablePageBuffer]
     with AdaptiveBuffer {
 
@@ -41,7 +41,7 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
 
     private def endIndex: Int = widx + last.writableBytes
 
-    inline private def offsetAtOffset(offset: Int): (Int, Int) = if (nonEmpty && offset - ridx <= head.readableBytes) {
+    private def offsetAtOffset(offset: Int): (Int, Int) = if (nonEmpty && offset - ridx <= head.readableBytes) {
         (0, offset - ridx)
     } else if (nonEmpty && offset >= startIndex && offset < endIndex) {
         var len    = offset - ridx
@@ -1903,35 +1903,39 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def getInt(index: Int): Int = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
-        if (len >= Integer.BYTES) {
-            buffer.getInt(buffer.readerOffset + off)
-        } else if (len == 3) {
-            val b1   = buffer.getByte(buffer.readerOffset + off)
-            val b2   = buffer.getByte(buffer.readerOffset + off + 1)
-            val b3   = buffer.getByte(buffer.readerOffset + off + 2)
-            val next = apply(idx + 1)
-            val b4   = next.getByte(next.readerOffset)
-            b1 << 24 | (b2 & 0xff) << 16 | (b3 & 0xff) << 8 | b4 & 0xff
-        } else if (len == 2) {
-            val b1   = buffer.getByte(buffer.readerOffset + off)
-            val b2   = buffer.getByte(buffer.readerOffset + off + 1)
-            val next = apply(idx + 1)
-            val b3   = next.getByte(next.readerOffset)
-            val b4   = next.getByte(next.readerOffset + 1)
-            b1 << 24 | (b2 & 0xff) << 16 | (b3 & 0xff) << 8 | b4 & 0xff
-        } else if (len == 1) {
-            val b1   = buffer.getByte(buffer.readerOffset + off)
-            val next = apply(idx + 1)
-            val b2   = next.getByte(next.readerOffset)
-            val b3   = next.getByte(next.readerOffset + 1)
-            val b4   = next.getByte(next.readerOffset + 2)
-            b1 << 24 | (b2 & 0xff) << 16 | (b3 & 0xff) << 8 | b4 & 0xff
-        } else {
-            val next = apply(idx + 1)
-            next.getInt(next.readerOffset)
+        val startOff = index - ridx
+        if (startOff + Integer.BYTES <= head.readableBytes) head.getInt(head.readerOffset + startOff)
+        else {
+            val (idx, off) = offsetAtOffset(index)
+            val buffer     = apply(idx)
+            val len        = buffer.readableBytes - off
+            if (len >= Integer.BYTES) {
+                buffer.getInt(buffer.readerOffset + off)
+            } else if (len == 3) {
+                val b1   = buffer.getByte(buffer.readerOffset + off)
+                val b2   = buffer.getByte(buffer.readerOffset + off + 1)
+                val b3   = buffer.getByte(buffer.readerOffset + off + 2)
+                val next = apply(idx + 1)
+                val b4   = next.getByte(next.readerOffset)
+                b1 << 24 | (b2 & 0xff) << 16 | (b3 & 0xff) << 8 | b4 & 0xff
+            } else if (len == 2) {
+                val b1   = buffer.getByte(buffer.readerOffset + off)
+                val b2   = buffer.getByte(buffer.readerOffset + off + 1)
+                val next = apply(idx + 1)
+                val b3   = next.getByte(next.readerOffset)
+                val b4   = next.getByte(next.readerOffset + 1)
+                b1 << 24 | (b2 & 0xff) << 16 | (b3 & 0xff) << 8 | b4 & 0xff
+            } else if (len == 1) {
+                val b1   = buffer.getByte(buffer.readerOffset + off)
+                val next = apply(idx + 1)
+                val b2   = next.getByte(next.readerOffset)
+                val b3   = next.getByte(next.readerOffset + 1)
+                val b4   = next.getByte(next.readerOffset + 2)
+                b1 << 24 | (b2 & 0xff) << 16 | (b3 & 0xff) << 8 | b4 & 0xff
+            } else {
+                val next = apply(idx + 1)
+                next.getInt(next.readerOffset)
+            }
         }
     }
 
@@ -2320,6 +2324,8 @@ private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def toString(): String = s"AdaptiveBuffer[ridx:$ridx, widx:$widx, cap:$capacity, count:$size]"
+
+    override def readableBytes: Int = widx - ridx
 
     override def writableBytes: Int = capacity - widx
 

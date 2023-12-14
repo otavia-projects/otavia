@@ -20,6 +20,7 @@ package cc.otavia.buffer
 
 import java.math.MathContext
 import java.nio.charset.StandardCharsets
+import java.time.*
 import java.util.UUID
 import scala.annotation.switch
 import scala.language.unsafeNulls
@@ -33,17 +34,8 @@ object BufferUtils {
                 b1.toChar
             } else {
                 val b2 = buffer.readByte
-                if (b2 != 'u') {
-                    (b2: @switch) match
-                        case 'b'  => '\b'
-                        case 'f'  => '\f'
-                        case 'n'  => '\n'
-                        case 'r'  => '\r'
-                        case 't'  => '\t'
-                        case '"'  => '"'
-                        case '/'  => '/'
-                        case '\\' => '\\'
-                } else {
+                if (b2 != 'u') byteToChar(b2)
+                else {
                     val ns = nibbles
                     val x = ns(buffer.readByte & 0xff) << 12 |
                         ns(buffer.readByte & 0xff) << 8 |
@@ -63,6 +55,45 @@ object BufferUtils {
             ch
         } else throw new IllegalStateException("illegal surrogate character")
     }
+
+    def getEscapedChar(index: Int, buffer: Buffer): Char = {
+        val b1 = buffer.getByte(index)
+        if (b1 >= 0) {
+            if (b1 != '\\') {
+                b1.toChar
+            } else {
+                val b2 = buffer.getByte(index + 1)
+                if (b2 != 'u') byteToChar(b2)
+                else {
+                    val ns = nibbles
+                    val x = ns(buffer.getByte(index + 2) & 0xff) << 12 |
+                        ns(buffer.getByte(index + 3) & 0xff) << 8 |
+                        ns(buffer.getByte(index + 4) & 0xff) << 4 |
+                        ns(buffer.getByte(index + 5) & 0xff)
+                    x.toChar
+                }
+            }
+        } else if ((b1 >> 5) == -2) { // 110bbbbb 10aaaaaa (UTF-8 bytes) -> 00000bbbbbaaaaaa (UTF-16 char)
+            val b2 = buffer.getByte(index + 1)
+            (b1 << 6 ^ b2 ^ 0xf80).toChar // 0xF80 == 0xC0.toByte << 6 ^ 0x80.toByte
+        } else if ((b1 >> 4) == -2) {     // 1110cccc 10bbbbbb 10aaaaaa (UTF-8 bytes) -> ccccbbbbbbaaaaaa (UTF-16 char)
+            val b2 = buffer.getByte(index + 1)
+            val b3 = buffer.getByte(index + 2)
+            val ch =
+                (b1 << 12 ^ b2 << 6 ^ b3 ^ 0xfffe1f80).toChar // 0xFFFE1F80 == 0xE0.toByte << 12 ^ 0x80.toByte << 6 ^ 0x80.toByte
+            ch
+        } else throw new IllegalStateException("illegal surrogate character")
+    }
+
+    private def byteToChar(b2: Byte): Char = (b2: @switch) match
+        case 'b'  => '\b'
+        case 'f'  => '\f'
+        case 'n'  => '\n'
+        case 'r'  => '\r'
+        case 't'  => '\t'
+        case '"'  => '"'
+        case '/'  => '/'
+        case '\\' => '\\'
 
     def writeEscapedChar(buffer: Buffer, ch: Char): Unit = {
         if (ch < 0x80) {
@@ -228,6 +259,113 @@ object BufferUtils {
     // Adoption of a nice trick from Daniel Lemire's blog that works for numbers up to 10^18:
     // https://lemire.me/blog/2021/06/03/computing-the-number-of-digits-of-an-integer-even-faster/
     private def digitCount(q0: Long): Int = (offsets(java.lang.Long.numberOfLeadingZeros(q0)) + q0 >> 58).toInt
+
+    def writeYearAsString(buffer: Buffer, year: Year): Unit = writeYearAsString(buffer, year.getValue)
+
+    def writeYearAsString(buffer: Buffer, year: Int): Unit = {
+        val ds = digits
+        if (year >= 0 && year < 10000) write4Digits(buffer, year, ds) else writeYearWithSign(buffer, year, ds)
+    }
+
+    private def writeYearWithSign(buffer: Buffer, year: Int, ds: Array[Short]): Unit = {
+        var q0 = year
+
+        var b: Byte = '+'
+        if (q0 < 0) {
+            q0 = -q0
+            b = '-'
+        }
+        buffer.writeByte(b)
+        if (q0 < 10000) write4Digits(buffer, q0, ds)
+        else {
+            buffer.writerOffset(buffer.writerOffset + digitCount(q0))
+            writePositiveIntDigits(q0, buffer.writerOffset, buffer, ds)
+        }
+    }
+
+    def writeYearMonthAsString(buffer: Buffer, ym: YearMonth): Unit = {
+        val ds = digits
+        writeYearAsString(buffer, ym.getYear)
+        buffer.writeMediumLE(ds(ym.getMonthValue) << 8 | 0x00002d)
+    }
+
+    def writeLocalDateAsString(buffer: Buffer, localDate: LocalDate): Unit = {
+        val ds = digits
+        writeYearAsString(buffer, localDate.getYear)
+        val d1 = ds(localDate.getMonthValue) << 8
+        val d2 = ds(localDate.getDayOfMonth).toLong << 32
+        buffer.writeLongLE(d1 | d2 | 0x00002d00002dL)
+        buffer.writerOffset(buffer.writerOffset - 2)
+    }
+
+    def writeLocalTimeAsString(buffer: Buffer, localTime: LocalTime): Unit = {
+        val ds     = digits
+        val second = localTime.getSecond
+        val nano   = localTime.getNano
+        val d1     = ds(localTime.getHour) | 0x3a00003a0000L
+        val d2     = ds(localTime.getMinute).toLong << 24
+        if ((second | nano) == 0) {
+            buffer.writeLongLE(d1 | d2)
+            buffer.writerOffset(buffer.writerOffset - 3)
+        } else {
+            val d3 = ds(second).toLong << 48
+            buffer.writeLongLE(d1 | d2 | d3)
+            if (nano != 0) writeNanos(buffer, nano, ds)
+        }
+    }
+
+    private def writeNanos(buffer: Buffer, q0: Long, ds: Array[Short]): Unit = {
+        val y1 =
+            q0 * 1441151881 // Based on James Anhalt's algorithm for 9 digits: https://jk-jeon.github.io/posts/2022/02/jeaiii-algorithm/
+        val y2 = (y1 & 0x1ffffffffffffffL) * 100
+        var m  = y1 >>> 57 << 8 | ds((y2 >>> 57).toInt) << 16 | 0x302e
+        if ((y2 & 0x1fffff800000000L) == 0) {
+            buffer.writeIntLE(m.toInt)
+        } else {
+            val y3 = (y2 & 0x1ffffffffffffffL) * 100
+            val y4 = (y3 & 0x1ffffffffffffffL) * 100
+            m |= ds((y3 >>> 57).toInt).toLong << 32
+            val d = ds((y4 >>> 57).toInt)
+            buffer.writeLongLE(m | d.toLong << 48)
+            if ((y4 & 0x1ff000000000000L) == 0 && d <= 0x3039) buffer.writerOffset(buffer.writerOffset - 1)
+            else
+                buffer.writeShortLE(ds(((y4 & 0x1ffffffffffffffL) * 100 >>> 57).toInt))
+        }
+    }
+
+    def writeLocalDateTimeAsString(buffer: Buffer, localDateTime: LocalDateTime): Unit = {
+        writeLocalDateAsString(buffer, localDateTime.toLocalDate)
+        buffer.writeByte('T')
+        writeLocalTimeAsString(buffer, localDateTime.toLocalTime)
+    }
+
+    private def write2Digits(buffer: Buffer, q0: Int, ds: Array[Short]): Unit =
+        buffer.writeShortLE(ds(q0))
+
+    private def write3Digits(buffer: Buffer, q0: Int, ds: Array[Short]): Unit = {
+        val q1 = q0 * 1311 >> 17 // divide a small positive int by 100
+        buffer.writeMediumLE(ds(q0 - q1 * 100) << 8 | q1 + '0')
+    }
+
+    private def write4Digits(buffer: Buffer, q0: Int, ds: Array[Short]): Unit = {
+        val q1 = q0 * 5243 >> 19 // divide a small positive int by 100
+        val d1 = ds(q0 - q1 * 100) << 16
+        val d2 = ds(q1)
+        buffer.writeIntLE(d1 | d2)
+    }
+
+    private def write8Digits(buffer: Buffer, q0: Long, ds: Array[Short]): Unit = {
+        val y1 =
+            q0 * 140737489 // Based on James Anhalt's algorithm for 8 digits: https://jk-jeon.github.io/posts/2022/02/jeaiii-algorithm/
+        val y2 = (y1 & 0x7fffffffffffL) * 100
+        val y3 = (y2 & 0x7fffffffffffL) * 100
+        val y4 = (y3 & 0x7fffffffffffL) * 100
+        val d1 = ds((y1 >> 47).toInt)
+        val d2 = ds((y2 >> 47).toInt) << 16
+        val d3 = ds((y3 >> 47).toInt).toLong << 32
+        val d4 = ds((y4 >> 47).toInt).toLong << 48
+        buffer.writeLongLE(d1 | d2 | d3 | d4)
+    }
 
     private val MAX_INT_BYTES: Array[Byte] = Int.MaxValue.toString.getBytes(StandardCharsets.US_ASCII)
     private val MIN_INT_BYTES: Array[Byte] = Int.MinValue.toString.getBytes(StandardCharsets.US_ASCII)

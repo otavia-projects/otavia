@@ -38,6 +38,7 @@ object BenchAnalysis {
             case "bytesBefore6" => bytesBefore6(isHeap)
             case "bytesBefore7" => bytesBefore7(isHeap)
             case "bytesBefore8" => bytesBefore8(isHeap)
+            case "getVsRead"    => getVsRead(isHeap)
     }
 
     private def bytesBefore2(heap: Boolean = false): Unit = {
@@ -276,6 +277,42 @@ object BenchAnalysis {
         val end = System.currentTimeMillis()
 
         println(s"[bytesBefore 8, heap = ${heap}] ${end - start}")
+    }
+
+    private def getVsRead(heap: Boolean): Unit = {
+        val allocator              = if (heap) heapPooledPageAllocator else directPooledPageAllocator
+        val adaptiveBuffer: Buffer = AdaptiveBuffer(allocator)
+
+        var total = 0
+
+        for (idx <- 0 until 5024) adaptiveBuffer.writeByte('-')
+
+        val start = System.currentTimeMillis()
+        for (idx <- 0 until 1_000_000) {
+            var i = 0
+            while (i < 1000) {
+                total += adaptiveBuffer.readInt
+                i += 1
+            }
+            adaptiveBuffer.readerOffset(0)
+        }
+        val end = System.currentTimeMillis()
+        println(end - start)
+
+        val start2 = System.currentTimeMillis()
+        for (idx <- 0 until 1_000_000) {
+            var i = 0
+            while (i < 1000) {
+                val step = i * 4
+                total += adaptiveBuffer.getInt(step)
+                i += 1
+            }
+            adaptiveBuffer.readerOffset(0)
+        }
+        val end2 = System.currentTimeMillis()
+
+        println(end2 - start2)
+
     }
 
 }
