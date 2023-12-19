@@ -20,9 +20,10 @@ package cc.otavia.buffer
 
 import java.math.MathContext
 import java.nio.charset.StandardCharsets
-import java.time.*
+import java.time.{Duration as JDuration, *}
 import java.util.UUID
 import scala.annotation.switch
+import scala.concurrent.duration.Duration
 import scala.language.unsafeNulls
 
 object BufferUtils {
@@ -338,6 +339,79 @@ object BufferUtils {
         buffer.writeByte('T')
         writeLocalTimeAsString(buffer, localDateTime.toLocalTime)
     }
+
+    def writeMonthDayAsString(buffer: Buffer, monthDay: MonthDay): Unit = { // "--01-01"
+        val ds = digits
+        val d1 = ds(monthDay.getMonthValue) << 16
+        val d2 = ds(monthDay.getDayOfMonth).toLong << 40
+        buffer.writeLongLE(d1 | d2 | 0x00002d00002d2dL)
+        buffer.writerOffset(buffer.writerOffset - 1)
+    }
+
+    def writeOffsetDateTimeAsString(buffer: Buffer, offsetDateTime: OffsetDateTime): Unit = {
+        val ds = digits
+        writeLocalDateTimeAsString(buffer, offsetDateTime.toLocalDateTime)
+        writeOffset(buffer, offsetDateTime.getOffset)
+    }
+
+    def writeOffsetTimeAsString(buffer: Buffer, offsetTime: OffsetTime): Unit = {
+        val ds = digits
+        writeLocalTimeAsString(buffer, offsetTime.toLocalTime)
+        writeOffset(buffer, offsetTime.getOffset)
+    }
+
+    private def writeOffset(buffer: Buffer, zoneOffset: ZoneOffset): Unit = {
+        val ds = digits
+        var y  = zoneOffset.getTotalSeconds
+        if (y == 0) {
+            buffer.writeShortLE(0x225a)
+        } else {
+            var m = 0x2230303a00002bL
+            if (y < 0) {
+                y = -y
+                m = 0x2230303a00002dL
+            }
+            y *= 37283 // Based on James Anhalt's algorithm: https://jk-jeon.github.io/posts/2022/02/jeaiii-algorithm/
+            m |= ds(y >>> 27) << 8
+            if ((y & 0x7ff8000) == 0) {
+                buffer.writeLongLE(m)
+                buffer.writerOffset(buffer.writerOffset - 1)
+            } else {
+                y = (y & 0x7ffffff) * 15
+                buffer.writeLongLE(ds(y >> 25).toLong << 32 | m)
+                if ((y & 0x1f80000) == 0)
+                    buffer.writerOffset(buffer.writerOffset - 1) // check if totalSeconds is divisible by 60
+                else {
+                    buffer.writerOffset(buffer.writerOffset - 2)
+                    buffer.writeIntLE(ds((y & 0x1ffffff) * 15 >> 23) << 8 | 0x2200003a)
+                }
+            }
+        }
+    }
+
+    def writePeriodAsString(buffer: Buffer, period: Period): Unit = {
+        val years  = period.getYears
+        val months = period.getMonths
+        val days   = period.getDays
+        if ((years | months | days) == 0) buffer.writeMediumLE(0x443050)
+        else {
+            val ds = digits
+            buffer.writeByte('P')
+            if (years != 0) {
+                writeIntAsString(buffer, years)
+                buffer.writeByte('Y')
+            }
+            if (months != 0) {
+                writeIntAsString(buffer, months)
+                buffer.writeByte('M')
+            }
+            if (days != 0) {
+                writeIntAsString(buffer, days)
+                buffer.writeByte('D')
+            }
+        }
+    }
+
 
     private def write2Digits(buffer: Buffer, q0: Int, ds: Array[Short]): Unit =
         buffer.writeShortLE(ds(q0))
