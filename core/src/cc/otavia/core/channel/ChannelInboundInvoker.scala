@@ -60,6 +60,12 @@ trait ChannelInboundInvoker {
      */
     def fireChannelExceptionCaught(cause: Throwable): this.type
 
+    /** A [[Channel]] received an [[Throwable]] in one of its inbound operations. This will result in having the
+     *  [[ChannelHandler.channelExceptionCaught(ChannelHandlerContext, Throwable)]] method called of the next
+     *  [[ChannelHandler]] contained in the [[ChannelPipeline]] of the [[Channel]].
+     */
+    def fireChannelExceptionCaught(cause: Throwable, id: Long): this.type
+
     /** A [[Channel]] received a custom defined inbound event. This will result in having the
      *  [[ChannelHandler.channelInboundEvent(ChannelHandlerContext, Object)]] method called of the next
      *  [[ChannelHandler]] contained in the [[ChannelPipeline]] of the [[Channel]].

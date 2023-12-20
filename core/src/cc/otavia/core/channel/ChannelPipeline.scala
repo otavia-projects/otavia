@@ -20,7 +20,9 @@ package cc.otavia.core.channel
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.*
+import cc.otavia.core.channel.inflight.QueueMap
 import cc.otavia.core.channel.message.ReadPlan
+import cc.otavia.core.stack.{ChannelPromise, ChannelStack}
 
 trait ChannelPipeline extends ChannelInboundInvoker with ChannelOutboundInvoker {
 
@@ -375,5 +377,9 @@ trait ChannelPipeline extends ChannelInboundInvoker with ChannelOutboundInvoker 
     private[core] def closeInboundAdaptiveBuffers(): Unit = ???
 
     private[core] def closeOutboundAdaptiveBuffers(): Unit = ???
+
+    def inflightFutures: QueueMap[ChannelPromise]
+
+    def inflightStacks[T <: AnyRef]: QueueMap[ChannelStack[T]]
 
 }

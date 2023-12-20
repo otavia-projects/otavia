@@ -166,15 +166,29 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         }
     }
 
-    private def receiveReply0(reply: Reply, promise: MessagePromise[?]): Unit = {
+    private def receiveReply0(reply: Reply, promise: MessagePromise[?], exception: Boolean = false): Unit = {
         currentReceived = reply
-        reply match
-            case message: ExceptionMessage => promise.setFailure(message)
-            case _                         => promise.setSuccess(reply)
+        if (exception) promise.setFailure(reply.asInstanceOf[ExceptionMessage]) else promise.setSuccess(reply)
         val stack = promise.actorStack
         handlePromiseCompleted(stack, promise)
         currentReceived = null
     }
+
+    override private[core] def receiveExceptionReply(exceptionMessage: ExceptionMessage): Unit =
+        if (!exceptionMessage.isBatch) {
+            // reply future maybe has been recycled cause by time-out, or it stack has been throw an error.
+            if (this.contains(exceptionMessage.replyId)) {
+                val promise = this.pop(exceptionMessage.replyId)
+                if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
+                receiveReply0(exceptionMessage, promise, true)
+            }    // drop reply otherwise
+        } else { // reply is batch
+            for ((senderId, rid) <- exceptionMessage.replyIds if senderId == actorId && contains(rid)) {
+                val promise = pop(rid)
+                if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
+                receiveReply0(exceptionMessage, promise, true)
+            }
+        }
 
     final override private[core] def receiveEvent(event: Event): Unit = event match {
         case event: AskTimeoutEvent     => dispatchAskTimeoutEvent(event)

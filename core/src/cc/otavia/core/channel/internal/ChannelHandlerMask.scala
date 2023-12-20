@@ -60,15 +60,16 @@ object ChannelHandlerMask {
 
     private[core] val MASK_CHANNEL_TIMEOUT_EVENT = 1 << 22
 
-    private[core] val MASK_CHANNEL_READ_ID = 1 << 23
-    private[core] val MASK_WRITE_ID        = 1 << 24
-    private[core] val MASK_OPEN            = 1 << 25
+    private[core] val MASK_CHANNEL_READ_ID             = 1 << 23
+    private[core] val MASK_WRITE_ID                    = 1 << 24
+    private[core] val MASK_OPEN                        = 1 << 25
+    private[core] val MASK_CHANNEL_EXCEPTION_CAUGHT_ID = 1 << 26
 
     private val MASK_ALL_INBOUND =
         MASK_CHANNEL_EXCEPTION_CAUGHT | MASK_CHANNEL_REGISTERED | MASK_CHANNEL_UNREGISTERED | MASK_CHANNEL_ACTIVE |
             MASK_CHANNEL_INACTIVE | MASK_CHANNEL_SHUTDOWN | MASK_CHANNEL_READ | MASK_CHANNEL_READ_COMPLETE |
             MASK_CHANNEL_WRITABILITY_CHANGED | MASK_CHANNEL_INBOUND_EVENT | MASK_CHANNEL_TIMEOUT_EVENT |
-            MASK_CHANNEL_READ_ID
+            MASK_CHANNEL_READ_ID | MASK_CHANNEL_EXCEPTION_CAUGHT_ID
     private val MASK_ALL_OUTBOUND =
         MASK_BIND | MASK_CONNECT | MASK_DISCONNECT | MASK_CLOSE | MASK_SHUTDOWN | MASK_REGISTER | MASK_DEREGISTER |
             MASK_READ | MASK_WRITE | MASK_FLUSH | MASK_SEND_OUTBOUND_EVENT | MASK_PENDING_OUTBOUND_BYTES |
@@ -96,6 +97,16 @@ object ChannelHandlerMask {
 
         if (isSkip(handlerType, "channelExceptionCaught", classOf[ChannelHandlerContext], classOf[Throwable]))
             mask &= ~MASK_CHANNEL_EXCEPTION_CAUGHT
+        if (
+          isSkip(
+            handlerType,
+            "channelExceptionCaught",
+            classOf[ChannelHandlerContext],
+            classOf[Throwable],
+            classOf[Long]
+          )
+        )
+            mask &= ~MASK_CHANNEL_EXCEPTION_CAUGHT_ID
         if (isSkip(handlerType, "channelRegistered", classOf[ChannelHandlerContext])) mask &= ~MASK_CHANNEL_REGISTERED
         if (isSkip(handlerType, "channelUnregistered", classOf[ChannelHandlerContext]))
             mask &= ~MASK_CHANNEL_UNREGISTERED

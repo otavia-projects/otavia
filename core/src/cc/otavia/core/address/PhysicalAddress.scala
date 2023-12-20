@@ -65,6 +65,9 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
 
     override private[core] def reply(reply: Reply, sender: AbstractActor[?]): Unit = house.putReply(reply)
 
+    override private[core] def `throw`(exceptionMessage: ExceptionMessage, sender: AbstractActor[?]): Unit =
+        house.putException(exceptionMessage)
+
     override private[core] def inform(event: Event): Unit = house.putEvent(event)
 
 }

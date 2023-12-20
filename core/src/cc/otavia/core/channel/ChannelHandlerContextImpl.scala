@@ -22,11 +22,12 @@ import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.common.ThrowableUtil
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.ChannelHandlerContextImpl.*
+import cc.otavia.core.channel.inflight.QueueMap
 import cc.otavia.core.channel.internal.ChannelHandlerMask
 import cc.otavia.core.channel.internal.ChannelHandlerMask.*
 import cc.otavia.core.channel.message.{AutoReadPlan, ReadPlan}
 import cc.otavia.core.slf4a.Logger
-import cc.otavia.core.stack.ChannelFuture
+import cc.otavia.core.stack.{ChannelFuture, ChannelPromise, ChannelStack}
 import cc.otavia.util.Resource
 
 import java.net.SocketAddress
@@ -79,6 +80,10 @@ final class ChannelHandlerContextImpl(
         if (closeDidThrow) close(ChannelFuture()) else channel.pipeline.close(ChannelFuture()) // ignore close future
         new IllegalStateException(msg, cause)
     }
+
+    override def inflightFutures: QueueMap[ChannelPromise] = pipeline.inflightFutures
+
+    override def inflightStacks[T <: AnyRef]: QueueMap[ChannelStack[T]] = pipeline.inflightStacks
 
     private def findContextInbound(mask: Int): ChannelHandlerContextImpl = if (!removed) {
         var ctx = this
@@ -225,6 +230,28 @@ final class ChannelHandlerContextImpl(
     override def fireChannelExceptionCaught(cause: Throwable): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_EXCEPTION_CAUGHT)
         ctx.invokeChannelExceptionCaught(cause)
+        this
+    }
+
+    override def fireChannelExceptionCaught(cause: Throwable, id: Long): this.type = {
+        val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_EXCEPTION_CAUGHT_ID)
+        try {
+            handler.channelExceptionCaught(this, cause, id)
+            updatePendingBytesIfNeeded()
+        } catch {
+            case error: Throwable =>
+                logger.debug(
+                  s"An exception ${ThrowableUtil.stackTraceToString(error)} was thrown by a user handler's " +
+                      "exceptionCaught() method while handling the following exception:",
+                  cause
+                )
+                logger.warn(
+                  s"An exception '$error' [enable DEBUG level for full stacktrace] "
+                      + "was thrown by a user handler's exceptionCaught() "
+                      + "method while handling the following exception:",
+                  cause
+                )
+        }
         this
     }
 

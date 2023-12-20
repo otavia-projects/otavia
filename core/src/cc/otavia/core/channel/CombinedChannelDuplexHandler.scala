@@ -159,6 +159,10 @@ class CombinedChannelDuplexHandler[I <: ChannelHandler, O <: ChannelHandler] ext
     else
         inboundCtx.fireChannelExceptionCaught(cause)
 
+    override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable, id: Long): Unit =
+        if (!inboundCtx.removed) inbound.channelExceptionCaught(inboundCtx, cause, id)
+        else inboundCtx.fireChannelExceptionCaught(cause, id)
+
     override def channelInboundEvent(ctx: ChannelHandlerContext, evt: AnyRef): Unit = if (!inboundCtx.removed)
         inbound.channelInboundEvent(inboundCtx, evt)
     else

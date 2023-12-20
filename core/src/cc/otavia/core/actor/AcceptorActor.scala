@@ -84,7 +84,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
             case state: FutureState[?] if state.id == 0 =>
                 if (state.future.isSuccess) stack.`return`()
                 else
-                    stack.`return`(state.future.causeUnsafe)
+                    stack.`throw`(state.future.causeUnsafe)
     }
 
 }

@@ -71,7 +71,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         } catch {
             case cause: Throwable =>
                 cause.printStackTrace()
-                stack.`return`(cause) // completed stack with Exception
+                stack.`throw`(cause) // completed stack with Exception
                 stack.internalChannel.processCompletedChannelStacks()
         } finally currentStack = null
     }

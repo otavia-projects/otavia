@@ -126,8 +126,8 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
         msg match
             case _: Authentication =>
                 if (status == ST_AUTHENTICATED) ctx.fireChannelRead(None, mid)
-                else if (status == ST_AUTHENTICATE_FAILED) ctx.fireChannelRead(authenticationFailed, mid)
-                else if (status == ST_CLOSING) ctx.fireChannelRead(ClosedChannelException(), mid)
+                else if (status == ST_AUTHENTICATE_FAILED) ctx.fireChannelExceptionCaught(authenticationFailed, mid)
+                else if (status == ST_CLOSING) ctx.fireChannelExceptionCaught(ClosedChannelException(), mid)
                 else authMsgId = mid
             case executeUpdate: ExecuteUpdate =>
                 currentCmd = executeUpdate
@@ -162,7 +162,7 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
 
     private def handleErrorPacketPayload(payload: Buffer): Unit = {
         val exception = decodeErrorPacketPayload(payload)
-        ctx.fireChannelRead(exception, currentMessageId)
+        ctx.fireChannelExceptionCaught(exception, currentMessageId)
     }
 
     private def decodeErrorPacketPayload(payload: Buffer): MySQLException = {
@@ -449,7 +449,7 @@ class MySQLDriver(override val options: MySQLConnectOptions) extends Driver(opti
 
     private def failAuthAndResponse(cause: Throwable): Unit = {
         status = ST_AUTHENTICATE_FAILED
-        if (ChannelInflight.isValidChannelMessageId(authMsgId)) ctx.fireChannelRead(cause, authMsgId)
+        if (ChannelInflight.isValidChannelMessageId(authMsgId)) ctx.fireChannelExceptionCaught(cause, authMsgId)
         else authenticationFailed = cause
     }
 

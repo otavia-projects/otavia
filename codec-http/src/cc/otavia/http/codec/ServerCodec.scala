@@ -178,7 +178,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
 
     // encode http response
     override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, id: Long): Unit = {
-        val request: HttpRequest[?, ?, ?] = ctx.channel.writingChannelStackRequest[HttpRequest[?, ?, ?]]
+        val request = ctx.inflightStacks[HttpRequest[?, ?, ?]].unsafeBorrow(id).message
         val router                        = request.router
         router match
             case ControllerRouter(method, path, controller, requestFactory, responseSerde) =>

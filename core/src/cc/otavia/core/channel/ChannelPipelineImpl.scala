@@ -23,10 +23,11 @@ import cc.otavia.common.ClassUtils
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import cc.otavia.core.channel.ChannelPipelineImpl.*
+import cc.otavia.core.channel.inflight.QueueMap
 import cc.otavia.core.channel.message.FixedReadPlanFactory.FixedReadPlan
 import cc.otavia.core.channel.message.{FixedReadPlanFactory, ReadPlan}
 import cc.otavia.core.slf4a.Logger
-import cc.otavia.core.stack.{ChannelFuture, ChannelPromise}
+import cc.otavia.core.stack.{ChannelFuture, ChannelPromise, ChannelStack}
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.util.Resource
 
@@ -36,7 +37,7 @@ import java.nio.file.{OpenOption, Path}
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-class ChannelPipelineImpl(override val channel: Channel) extends ChannelPipeline {
+class ChannelPipelineImpl(override val channel: AbstractChannel) extends ChannelPipeline {
 
     protected val logger: Logger = Logger.getLogger(getClass, channel.system)
 
@@ -74,6 +75,11 @@ class ChannelPipelineImpl(override val channel: Channel) extends ChannelPipeline
         channelOutboundAdaptiveBuffer.close()
         for { ctx <- handlers if ctx.hasOutboundAdaptive } ctx.outboundAdaptiveBuffer.close()
     }
+
+    override def inflightFutures: QueueMap[ChannelPromise] = channel.inflightFutures
+
+    override def inflightStacks[T <: AnyRef]: QueueMap[ChannelStack[T]] =
+        channel.inflightStacks.asInstanceOf[QueueMap[ChannelStack[T]]]
 
     final def touch(msg: AnyRef, next: ChannelHandlerContextImpl): AnyRef = {
         if (touch) Resource.touch(msg, next)
@@ -581,6 +587,8 @@ class ChannelPipelineImpl(override val channel: Channel) extends ChannelPipeline
         this
     }
 
+    override def fireChannelExceptionCaught(cause: Throwable, id: Long): ChannelPipelineImpl.this.type = ???
+
     override def fireChannelInboundEvent(event: AnyRef): this.type = {
         head.invokeChannelInboundEvent(event)
         this
@@ -897,13 +905,17 @@ object ChannelPipelineImpl {
         override def channelTimeoutEvent(ctx: ChannelHandlerContext, id: Long): Unit = {} // Just swallow event
 
         override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit =
-            ctx.pipeline.asInstanceOf[ChannelPipelineImpl].onUnhandledInboundException(cause)
+            ctx.channel.onInboundMessage(cause, true)
+
+        override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable, id: Long): Unit =
+            ctx.channel.onInboundMessage(cause, true, id)
 
         override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit =
-            ctx.pipeline.channel.onInboundMessage(msg)
+            ctx.channel.onInboundMessage(msg, false)
 
         override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit =
-            ctx.pipeline.channel.onInboundMessage(msg, msgId)
+            ctx.channel.onInboundMessage(msg, false, msgId)
+
         override def channelReadComplete(ctx: ChannelHandlerContext): Unit = {} // Just swallow event
 
     }

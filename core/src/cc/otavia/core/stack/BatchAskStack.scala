@@ -55,8 +55,10 @@ final class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
     private def end(ret: Reply): None.type = {
         ret.setReplyId(asks.map(ask => (ask.senderId, ask.askId)))
         val set = ActorThread.threadSet[Address[Call]]
-        for (elem   <- asks) set.addOne(elem.sender)
-        for (sender <- set) sender.reply(reply, runtimeActor)
+        for (elem <- asks) set.addOne(elem.sender)
+        if (isFailed) for (sender <- set) sender.`throw`(reply.asInstanceOf[ExceptionMessage], runtimeActor)
+        else
+            for (sender <- set) sender.reply(reply, runtimeActor)
         set.clear()
         None
     }

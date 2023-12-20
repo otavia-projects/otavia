@@ -146,6 +146,12 @@ trait ChannelHandler {
     def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit =
         ctx.fireChannelExceptionCaught(cause)
 
+    /** Gets called if a [[Throwable]] was thrown when handling inbound events. */
+    @Skip
+    @throws[Exception]
+    def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable, id: Long): Unit =
+        ctx.fireChannelExceptionCaught(cause, id)
+
     /** Called once a bind operation is made.
      *  @param ctx
      *    the [[ChannelHandlerContext]] for which the bind operation is made

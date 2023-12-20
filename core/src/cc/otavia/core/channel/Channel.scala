@@ -207,9 +207,7 @@ trait Channel extends ChannelAddress {
     def inflightStackSize: Int
 
     def pendingStackSize: Int
-
-    def writingChannelStackRequest[T]: T
-
+    
     /** generate a unique id for the channel message
      *
      *  @return
@@ -218,10 +216,10 @@ trait Channel extends ChannelAddress {
     def generateMessageId: Long
 
     /** Message from tail handler from pipeline. */
-    private[core] def onInboundMessage(msg: AnyRef): Unit
+    private[core] def onInboundMessage(msg: AnyRef, exception: Boolean): Unit
 
     /** Message from tail handler from pipeline. */
-    private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit
+    private[core] def onInboundMessage(msg: AnyRef, exception: Boolean, id: Long): Unit
 
 }
 

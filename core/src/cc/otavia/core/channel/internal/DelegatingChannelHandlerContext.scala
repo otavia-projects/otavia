@@ -21,8 +21,9 @@ package cc.otavia.core.channel.internal
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.*
+import cc.otavia.core.channel.inflight.QueueMap
 import cc.otavia.core.channel.message.ReadPlan
-import cc.otavia.core.stack.ChannelFuture
+import cc.otavia.core.stack.{ChannelFuture, ChannelPromise, ChannelStack}
 
 import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
@@ -69,6 +70,11 @@ abstract class DelegatingChannelHandlerContext(private val ctx: ChannelHandlerCo
 
     override def fireChannelExceptionCaught(cause: Throwable): this.type = {
         ctx.fireChannelExceptionCaught(cause)
+        this
+    }
+
+    override def fireChannelExceptionCaught(cause: Throwable, id: Long): DelegatingChannelHandlerContext.this.type = {
+        ctx.fireChannelExceptionCaught(cause, id)
         this
     }
 
@@ -155,5 +161,9 @@ abstract class DelegatingChannelHandlerContext(private val ctx: ChannelHandlerCo
     override def inboundAdaptiveBuffer: AdaptiveBuffer = ctx.inboundAdaptiveBuffer
 
     override def outboundAdaptiveBuffer: AdaptiveBuffer = ctx.outboundAdaptiveBuffer
+
+    override def inflightFutures: QueueMap[ChannelPromise] = ctx.inflightFutures
+
+    override def inflightStacks[T <: AnyRef]: QueueMap[ChannelStack[T]] = ctx.inflightStacks
 
 }

@@ -169,7 +169,7 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
             // ACTIVE
         } else {
             // FAILED
-            ctx.fireChannelRead(new TransactionFailed, currentOutboundMessageId)
+            ctx.fireChannelExceptionCaught(new TransactionFailed, currentOutboundMessageId)
         }
         // fire ?
     }
@@ -248,7 +248,7 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                     scramAuthentication.checkServerFinalMsg(payload, length - 8)
                     logger.debug("sasl final")
                 } catch {
-                    case e: UnsupportedOperationException => ctx.fireChannelRead(e, currentOutboundMessageId)
+                    case e: UnsupportedOperationException => ctx.fireChannelExceptionCaught(e, currentOutboundMessageId)
                 }
             case _ =>
                 val error = new UnsupportedOperationException(
@@ -320,7 +320,7 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
     private def decodeErrorResponse(payload: Buffer, length: Int): Unit = {
         decodeResponse(payload, length)
         val exception = response.toExecption()
-        ctx.fireChannelRead(exception, currentOutboundMessageId)
+        ctx.fireChannelExceptionCaught(exception, currentOutboundMessageId)
     }
 
     private def decodeResponse(payload: Buffer, length: Int): Unit = {

@@ -42,7 +42,7 @@ class QueueMap[V <: QueueMapEntity] {
 
     def nonEmpty: Boolean = contentSize != 0
 
-    def append(v: V): Unit = {
+    final private[core] def append(v: V): Unit = {
         if (contentSize == 0) {
             head = v
             tail = v
@@ -56,7 +56,7 @@ class QueueMap[V <: QueueMapEntity] {
         contentSize += 1
     }
 
-    def pop(): V = if (contentSize == 1) {
+    final private[core] def pop(): V = if (contentSize == 1) {
         val entity = head
         head = null
         tail = null
@@ -71,7 +71,7 @@ class QueueMap[V <: QueueMapEntity] {
         entity.asInstanceOf[V]
     }
 
-    def remove(id: Long): V = {
+    final private[core] def remove(id: Long): V = {
         val entity = remove0(id)
 
         val pre  = entity.queueEarlier
@@ -94,6 +94,13 @@ class QueueMap[V <: QueueMapEntity] {
 
         entity.asInstanceOf[V]
     }
+
+    def borrow(id: Long): Option[V] = {
+        val node = findNode(id)
+        if (node != null) Some(node.asInstanceOf[V]) else None
+    }
+
+    def unsafeBorrow(id: Long): V = findNode(id).asInstanceOf[V]
 
     def contains(id: Long): Boolean = findNode(id) != null
 
@@ -170,5 +177,5 @@ class QueueMap[V <: QueueMapEntity] {
 }
 
 object QueueMap {
-    def tableSizeFor(capacity: Int): Int = (Integer.highestOneBit((capacity - 1).max(4)) * 2).min(1 << 30)
+    private def tableSizeFor(capacity: Int): Int = (Integer.highestOneBit((capacity - 1).max(4)) * 2).min(1 << 30)
 }

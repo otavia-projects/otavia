@@ -55,15 +55,13 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     private var maxFutureInflight: Int           = 1
 
     // outbound futures which is write to channel and wait channel reply
-    private val inflightFutures: QueueMap[ChannelPromise] = new QueueMap[ChannelPromise]()
+    private[core] val inflightFutures: QueueMap[ChannelPromise] = new QueueMap[ChannelPromise]()
     // outbound futures which is waiting channel to send
     private val pendingFutures: QueueMap[ChannelPromise] = new QueueMap[ChannelPromise]()
     // inbound stack which is running by actor
-    private val inflightStacks: QueueMap[ChannelStack[?]] = new QueueMap[ChannelStack[?]]()
+    private[core] val inflightStacks: QueueMap[ChannelStack[?]] = new QueueMap[ChannelStack[?]]()
     // inbound stack to wait actor running
     private val pendingStacks: QueueMap[ChannelStack[?]] = new QueueMap[ChannelStack[?]]()
-
-    private var pipelineStackRequest: AnyRef = _
 
     private var channelMsgId: Long = ChannelInflight.INVALID_CHANNEL_MESSAGE_ID
 
@@ -122,13 +120,10 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     override def generateMessageId: Long = { channelMsgId += 1; channelMsgId }
 
-    override def writingChannelStackRequest[T]: T = pipelineStackRequest.asInstanceOf[T]
-
-    override private[core] def onInboundMessage(msg: AnyRef): Unit = {
+    override private[core] def onInboundMessage(msg: AnyRef, exception: Boolean): Unit = {
         if (maxFutureInflight == 1 && inflightFutures.size == 1) {
             val promise = inflightFutures.pop()
-            if (!msg.isInstanceOf[Throwable]) promise.setSuccess(msg)
-            else promise.setFailure(msg.asInstanceOf[Throwable])
+            if (!exception) promise.setSuccess(msg) else promise.setFailure(msg.asInstanceOf[Throwable])
         } else {
             val stack = ChannelStack(this, msg, msgId = generateMessageId)
             stack.setBarrier(stackBarrier(msg))
@@ -138,11 +133,10 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         if (pendingFutures.nonEmpty) processPendingFutures()
     }
 
-    override private[core] def onInboundMessage(msg: AnyRef, id: Long): Unit = {
+    override private[core] def onInboundMessage(msg: AnyRef, exception: Boolean, id: Long): Unit = {
         if (inflightFutures.contains(id)) {
             val promise = inflightFutures.remove(id)
-            if (!msg.isInstanceOf[Throwable]) promise.setSuccess(msg)
-            else promise.setFailure(msg.asInstanceOf[Throwable])
+            if (!exception) promise.setSuccess(msg) else promise.setFailure(msg.asInstanceOf[Throwable])
         } else {
             val stack = ChannelStack(this, msg, id)
             stack.setBarrier(stackBarrier(msg))
@@ -154,14 +148,12 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     final private[core] def processCompletedChannelStacks(): Unit = {
         while (inflightStacks.nonEmpty && inflightStacks.first.isDone) {
-            val stack = inflightStacks.pop()
+            val stack = inflightStacks.first
             if (stack.hasResult) {
-                pipelineStackRequest = stack.message
                 this.write(stack.result, stack.messageId)
-                pipelineStackRequest = null
                 if (channelOutboundAdaptiveBuffer.readableBytes > ActorSystem.PAGE_SIZE * 4) this.flush()
             }
-            actor.recycleStack(stack)
+            actor.recycleStack(inflightStacks.pop())
         }
         this.flush()
 

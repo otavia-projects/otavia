@@ -17,12 +17,14 @@
 package cc.otavia.postgres.impl
 
 import cc.otavia.buffer.Buffer
+import cc.otavia.postgres.protocol.DataType.UUID
 
 import java.nio.charset.StandardCharsets
 import java.time.*
 import java.time.format.DateTimeFormatter.{ISO_LOCAL_DATE, ISO_LOCAL_TIME}
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 import scala.language.unsafeNulls
 
 object RowValueCodec {
@@ -119,6 +121,11 @@ object RowValueCodec {
 
         ???
     }
+
+    def textDecodeUUID(index: Int, len: Int, buffer: Buffer): UUID = buffer.getStringAsUUID(index)
+
+    def binaryDecodeUUID(index: Int, len: Int, buffer: Buffer): UUID =
+        new UUID(buffer.getLong(index), buffer.getLong(index + 8))
 
     def textDecodeTIMESTAMPTZ(index: Int, len: Int, buffer: Buffer): OffsetDateTime = {
         val cs = buffer.getCharSequence(index, len).toString

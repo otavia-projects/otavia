@@ -74,6 +74,13 @@ class ChannelStack[+T <: AnyRef] private () extends Stack with QueueMapEntity {
         None
     }
 
+    def `throw`(cause: Throwable): None.type = {
+        this.ret = cause
+        done = true
+        setFailed()
+        None
+    }
+
     private[core] def hasResult: Boolean = ret != null
 
     private[core] def result: AnyRef = ret

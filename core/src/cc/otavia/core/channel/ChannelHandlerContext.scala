@@ -18,7 +18,9 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.buffer.pool.{AdaptiveBuffer, RecyclablePageBuffer, PooledPageAllocator}
+import cc.otavia.buffer.pool.{AdaptiveBuffer, PooledPageAllocator, RecyclablePageBuffer}
+import cc.otavia.core.channel.inflight.QueueMap
+import cc.otavia.core.stack.{ChannelPromise, ChannelStack}
 import cc.otavia.core.timer.Timer
 
 trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundInvoker {
@@ -45,7 +47,8 @@ trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundIn
      */
     def isRemoved: Boolean
 
-    /** Return the assigned [[PooledPageAllocator]] which will be used to allocate off-heap [[RecyclablePageBuffer]]s. */
+    /** Return the assigned [[PooledPageAllocator]] which will be used to allocate off-heap [[RecyclablePageBuffer]]s.
+     */
     final def directAllocator(): PooledPageAllocator = channel.directAllocator
 
     /** Return the assigned [[PooledPageAllocator]] which will be used to allocate heap [[RecyclablePageBuffer]]s. */
@@ -58,11 +61,15 @@ trait ChannelHandlerContext extends ChannelOutboundInvoker with ChannelInboundIn
 
     /** Write data by upstream. */
     def outboundAdaptiveBuffer: AdaptiveBuffer
-    
+
     /** If the handler has inbound [[AdaptiveBuffer]] */
     final def hasInboundAdaptive: Boolean = handler.hasInboundAdaptive
 
     /** If the handler has outbound [[AdaptiveBuffer]] */
     final def hasOutboundAdaptive: Boolean = handler.hasOutboundAdaptive
+
+    def inflightFutures: QueueMap[ChannelPromise]
+
+    def inflightStacks[T <: AnyRef]: QueueMap[ChannelStack[T]]
 
 }

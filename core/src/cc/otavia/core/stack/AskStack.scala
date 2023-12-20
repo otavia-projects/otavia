@@ -44,7 +44,7 @@ final class AskStack[A <: Ask[? <: Reply]] private () extends Stack {
         cause.setReplyId(ask.askId)
         reply = cause
         this.setFailed()
-        ask.sender.reply(reply, runtimeActor)
+        ask.sender.`throw`(cause, runtimeActor)
         None
     }
 

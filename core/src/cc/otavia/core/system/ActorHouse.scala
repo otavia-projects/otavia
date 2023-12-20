@@ -99,14 +99,15 @@ final private[core] class ActorHouse(val manager: HouseManager) {
     def actorType: Int = atp
 
     /** True if this house has not received [[Message]] or [[Event]] */
-    def isEmpty: Boolean = askMailbox.isEmpty && noticeMailbox.isEmpty && replyMailbox.isEmpty && eventMailbox.isEmpty
+    def isEmpty: Boolean = askMailbox.isEmpty && noticeMailbox.isEmpty && replyMailbox.isEmpty &&
+        eventMailbox.isEmpty && exceptionMailbox.nonEmpty
 
     /** True if this house has received some [[Message]] or [[Event]] */
     def nonEmpty: Boolean =
-        askMailbox.nonEmpty || noticeMailbox.nonEmpty || replyMailbox.nonEmpty || eventMailbox.nonEmpty
+        askMailbox.nonEmpty || noticeMailbox.nonEmpty || replyMailbox.nonEmpty || eventMailbox.nonEmpty || exceptionMailbox.nonEmpty
 
     /** True if this house has received some [[Reply]] or [[Event]] */
-    private def barrierNonEmpty: Boolean = replyMailbox.nonEmpty || eventMailbox.nonEmpty
+    private def barrierNonEmpty: Boolean = replyMailbox.nonEmpty || eventMailbox.nonEmpty || exceptionMailbox.nonEmpty
 
     /** Call this method to async mount actor when created actor instance. */
     def mount(): Unit = if (status.compareAndSet(CREATED, MOUNTING)) manager.mount(this)
@@ -155,6 +156,7 @@ final private[core] class ActorHouse(val manager: HouseManager) {
             if (replyMailbox.size() > dweller.niceReply * 2) dispatchReplies(dweller.niceReply * 2)
             else {
                 if (replyMailbox.nonEmpty) { dispatchReplies(dweller.niceReply) }
+                if (exceptionMailbox.nonEmpty) { dispatchExceptions(dweller.niceReply) }
                 if (eventMailbox.nonEmpty) { dispatchEvents(dweller.niceEvent) }
                 if (!dweller.inBarrier && noticeMailbox.nonEmpty) {
                     if (dweller.batchable) {
@@ -239,6 +241,17 @@ final private[core] class ActorHouse(val manager: HouseManager) {
             cursor = msg.next
             msg.dechain()
             dweller.receiveReply(msg.asInstanceOf[Reply])
+            runLaterTasks()
+        }
+    }
+
+    private def dispatchExceptions(size: Int): Unit = {
+        var cursor = exceptionMailbox.getChain(size)
+        while (cursor != null) {
+            val msg = cursor
+            cursor = msg.next
+            msg.dechain()
+            dweller.receiveExceptionReply(msg.asInstanceOf[ExceptionMessage])
             runLaterTasks()
         }
     }

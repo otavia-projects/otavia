@@ -113,6 +113,13 @@ trait Actor[+M <: Call] {
      */
     private[core] def receiveReply(reply: Reply): Unit
 
+    /** receive exception reply message by this method, the method will be call when this actor instance receive reply
+     *  message
+     *  @param exceptionMessage
+     *    exception reply message receive by this actor instance
+     */
+    private[core] def receiveExceptionReply(exceptionMessage: ExceptionMessage): Unit
+
     /** Receive IO event from [[Reactor]] or timeout event from [[Timer]]
      *  @param event
      *    IO/timeout event

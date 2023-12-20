@@ -57,6 +57,9 @@ class RobinAddress[M <: Call](val underlying: Array[Address[M]]) extends ProxyAd
     }
 
     override private[core] def reply(reply: Reply, sender: AbstractActor[? <: Call]): Unit =
-        throw new UnsupportedOperationException("")
+        throw new UnsupportedOperationException()
+
+    override private[core] def `throw`(cause: ExceptionMessage, sender: AbstractActor[_]): Unit =
+        throw new UnsupportedOperationException()
 
 }
