@@ -26,7 +26,7 @@ enum MediaType(val tp: String, val subType: String, val parameter: Option[String
 
     val fullType: Array[Byte] = s"$tp/$subType".getBytes(StandardCharsets.US_ASCII)
 
-    val fullName: Array[Byte] = s"$tp/$subType${parameter.getOrElse("")} ".getBytes(StandardCharsets.US_ASCII)
+    val fullName: Array[Byte] = s"$tp/$subType${parameter.getOrElse("")}".getBytes(StandardCharsets.US_ASCII)
 
     case AUDIO_AAC        extends MediaType("audio", "aac", extension = ".aac")
     case APP_X_ABIWORD    extends MediaType("application", "x-abiword", extension = ".abw")
@@ -52,7 +52,7 @@ enum MediaType(val tp: String, val subType: String, val parameter: Option[String
     case IMAGE_GIF      extends MediaType("image", "gif", extension = ".gif")
     case TEXT_HTM       extends MediaType("text", "html", extension = ".htm")
     case TEXT_HTML      extends MediaType("text", "html", extension = ".html")
-    case TEXT_HTML_UTF8 extends MediaType("text", "html", Some(";charset=utf-8"), extension = ".html")
+    case TEXT_HTML_UTF8 extends MediaType("text", "html", Some("; charset=utf-8"), extension = ".html")
     case IMAGE_ICO      extends MediaType("image", "vnd.microsoft.icon", extension = ".ico")
     case TEXT_ICS       extends MediaType("text", "calendar", extension = ".ics")
     case APP_JAR        extends MediaType("application", "java-archive", extension = ".jar")
@@ -95,7 +95,7 @@ enum MediaType(val tp: String, val subType: String, val parameter: Option[String
     case IMAGE_TIFF      extends MediaType("image", "tiff", extension = ".tiff")
     case FONT_TTF        extends MediaType("font", "ttf", extension = ".ttf")
     case TEXT_PLAIN      extends MediaType("text", "plain", extension = ".txt")
-    case TEXT_PLAIN_UTF8 extends MediaType("text", "plain", Some(";charset=utf-8"), extension = ".txt")
+    case TEXT_PLAIN_UTF8 extends MediaType("text", "plain", Some("; charset=utf-8"), extension = ".txt")
     case APP_VSD         extends MediaType("application", "vnd.visio", extension = ".vsd")
     case AUDIO_WAV       extends MediaType("audio", "wav", extension = ".wav")
     case AUDIO_WEBA      extends MediaType("audio", "webm", extension = ".weba")
@@ -103,16 +103,16 @@ enum MediaType(val tp: String, val subType: String, val parameter: Option[String
     case FONT_WOFF       extends MediaType("font", "woff", extension = ".woff")
     case FONT_WOFF2      extends MediaType("font", "woff2", extension = ".woff2")
     case APP_XHTML       extends MediaType("application", "xhtml+xml", extension = ".xhtml")
-    case APP_XHTML_UTF8  extends MediaType("application", "xhtml+xml", Some(";charset=utf-8"), extension = ".xhtml")
+    case APP_XHTML_UTF8  extends MediaType("application", "xhtml+xml", Some("; charset=utf-8"), extension = ".xhtml")
     case APP_XLS         extends MediaType("application", "vnd.ms-excel", extension = ".xls")
     case APP_XLSX
         extends MediaType("application", "vnd.openxmlformats-officedocument.spreadsheetml.sheet", extension = ".xlsx")
 
     case TEXT_XML      extends MediaType("text", "xml", extension = ".xml")
-    case TEXT_XML_UTF8 extends MediaType("text", "xml", Some(";charset=utf-8"), extension = ".xml")
+    case TEXT_XML_UTF8 extends MediaType("text", "xml", Some("; charset=utf-8"), extension = ".xml")
 
     case APP_XML      extends MediaType("application", "xml", extension = ".xml")
-    case APP_XML_UTF8 extends MediaType("application", "xml", Some(";charset=utf-8"), extension = ".xml")
+    case APP_XML_UTF8 extends MediaType("application", "xml", Some("; charset=utf-8"), extension = ".xml")
 
     case APP_XUL extends MediaType("application", "vnd.mozilla.xul+xml", extension = ".xul")
     case APP_ZIP extends MediaType("application", "zip", extension = ".zip")
