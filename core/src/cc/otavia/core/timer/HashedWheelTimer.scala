@@ -22,7 +22,7 @@ import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.HashedWheelTimer.*
 import cc.otavia.core.timer.HashedWheelTimer.HashedWheelBucket.LONG_DEADLINE
-import cc.otavia.core.util.{Chainable, Nextable, SpinLockQueue}
+import cc.otavia.core.util.{Chainable, Nextable, SpinLockQueue, SyncQueue}
 import cc.otavia.internal.Platform
 
 import java.util.concurrent.*
@@ -289,8 +289,8 @@ class HashedWheelTimer(
         } else d
     }
 
-    private[timer] val timeouts          = new SpinLockQueue[HashedWheelTimeout]()
-    private[timer] val cancelledTimeouts = new SpinLockQueue[HashedWheelTimeout]()
+    private[timer] val timeouts          = new SyncQueue[HashedWheelTimeout]()
+    private[timer] val cancelledTimeouts = new SyncQueue[HashedWheelTimeout]()
 
     private val pendingTimeouts = new AtomicLong(0)
 
