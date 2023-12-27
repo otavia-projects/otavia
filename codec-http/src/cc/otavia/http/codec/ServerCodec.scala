@@ -18,6 +18,7 @@ package cc.otavia.http.codec
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.buffer.{Buffer, BufferUtils}
+import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import cc.otavia.core.channel
 import cc.otavia.core.channel.{ChannelHandlerContext, DefaultFileRegion}
@@ -171,7 +172,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
             ctx.outboundAdaptiveBuffer.compact()
         }
 
-        if (!continue) { // handle unfinished http packet
+        if (HALF_PACKET_TIMEOUT_ENABLE && !continue) { // handle unfinished http packet
             packetTimeoutId = ctx.timer.registerChannelTimeout(TimeoutTrigger.DelayTime(1000), ctx.channel)
         } else input.compact()
     }
@@ -179,7 +180,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
     // encode http response
     override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, id: Long): Unit = {
         val request = ctx.inflightStacks[HttpRequest[?, ?, ?]].unsafeBorrow(id).message
-        val router                        = request.router
+        val router  = request.router
         router match
             case ControllerRouter(method, path, controller, requestFactory, responseSerde) =>
                 msg match
@@ -408,5 +409,9 @@ object ServerCodec {
     private val ST_PARSE_HEADLINE: Int = 0
     private val ST_PARSE_HEADERS: Int  = 1
     private val ST_PARSE_BODY: Int     = 2
+
+    private val DEFAULT_HALF_PACKET_TIMEOUT_ENABLE: Boolean = true
+    private val HALF_PACKET_TIMEOUT_ENABLE: Boolean =
+        SystemPropertyUtil.getBoolean("cc.otavia.http.half.packet.timout.enable", DEFAULT_HALF_PACKET_TIMEOUT_ENABLE)
 
 }
