@@ -289,8 +289,8 @@ class HashedWheelTimer(
         } else d
     }
 
-    private[timer] val timeouts          = new SyncQueue[HashedWheelTimeout]()
-    private[timer] val cancelledTimeouts = new SyncQueue[HashedWheelTimeout]()
+    private[timer] val timeouts          = new SpinLockQueue[HashedWheelTimeout]()
+    private[timer] val cancelledTimeouts = new SpinLockQueue[HashedWheelTimeout]()
 
     private val pendingTimeouts = new AtomicLong(0)
 
@@ -417,7 +417,7 @@ object HashedWheelTimer {
             while (i < 100000 && timer.timeouts.nonEmpty) {
                 val timeout: HashedWheelTimeout = timer.timeouts.dequeue()
 
-                if (timeout.state != HashedWheelTimeout.ST_CANCELLED) {
+                if (!timeout.isCancelled) {
                     val deadline = timeout.createTime - startTime + timeout.delay
                     putBucket(timeout, deadline)
                 }
@@ -562,9 +562,9 @@ object HashedWheelTimer {
 
     private object HashedWheelTimeout {
 
-        val ST_INIT      = 0
-        val ST_CANCELLED = 1
-        val ST_EXPIRED   = 2
+        private val ST_INIT      = 0
+        private val ST_CANCELLED = 1
+        private val ST_EXPIRED   = 2
 
     }
 
@@ -590,7 +590,7 @@ object HashedWheelTimer {
                     head = timeout
                     tail = timeout
                 } else {
-                    tail.next = timeout
+                    tail.nextNode = timeout
                     timeout.prevNode = tail
                     tail = timeout
                 }
@@ -600,7 +600,7 @@ object HashedWheelTimer {
                     longHead = timeout
                     longTail = timeout
                 } else {
-                    longTail.next = timeout
+                    longTail.nextNode = timeout
                     timeout.prevNode = longTail
                     longTail = timeout
                 }
@@ -669,9 +669,9 @@ object HashedWheelTimer {
         }
 
         def remove(timeout: HashedWheelTimeout): HashedWheelTimeout = {
-            val next = timeout.next.asInstanceOf[HashedWheelTimeout | Null]
+            val next = timeout.nextNode
             // remove timeout that was either processed or cancelled by updating the linked-list
-            if (timeout.prevNode != null) timeout.prevNode.next = next
+            if (timeout.prevNode != null) timeout.prevNode.nextNode = next
             if (timeout.nextNode != null) timeout.nextNode.prevNode = timeout.prevNode
 
             if (timeout == head) {
@@ -692,9 +692,9 @@ object HashedWheelTimer {
         }
 
         def removeLong(timeout: HashedWheelTimeout): HashedWheelTimeout = {
-            val next = timeout.next.asInstanceOf[HashedWheelTimeout | Null]
+            val next = timeout.nextNode
             // remove timeout that was either processed or cancelled by updating the linked-list
-            if (timeout.prevNode != null) timeout.prevNode.next = next
+            if (timeout.prevNode != null) timeout.prevNode.nextNode = next
             if (timeout.nextNode != null) timeout.nextNode.prevNode = timeout.prevNode
 
             if (timeout == longHead) {
