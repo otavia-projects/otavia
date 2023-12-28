@@ -16,9 +16,9 @@
 
 package cc.otavia.core.util
 
-import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.funsuite.AnyFunSuiteLike
 
-class SpinLockSuite extends AnyFunSuite {
+class SpinLockSuite extends AnyFunSuiteLike {
 
     test("system call time spend") {
         val start = System.nanoTime()
