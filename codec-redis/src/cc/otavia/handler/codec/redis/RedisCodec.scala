@@ -47,7 +47,7 @@ class RedisCodec extends ByteToMessageCodec {
                 val response = serde.deserialize(input)
                 ctx.fireChannelRead(response.asInstanceOf[AnyRef], msgId)
             } catch {
-                case e: Throwable => ctx.fireChannelRead(e, msgId)
+                case e: Throwable => ctx.fireChannelExceptionCaught(e, msgId)
             }
 
         }
