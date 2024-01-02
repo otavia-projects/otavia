@@ -20,4 +20,4 @@ import cc.otavia.core.message.Reply
 
 import scala.collection.mutable
 
-case class RowSet[R <: Row](rows: mutable.ArrayBuffer[R]) extends Reply
+case class RowSet[R <: Row](rows: Seq[R]) extends Reply

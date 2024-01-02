@@ -18,14 +18,14 @@ package cc.otavia.postgres
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
-import cc.otavia.core.channel.{Channel, ChannelHandlerContext, ChannelInflight}
+import cc.otavia.core.channel.{Channel, ChannelHandlerContext, ChannelInflight, ChannelOption}
 import cc.otavia.core.slf4a.{Logger, LoggerFactory}
 import cc.otavia.postgres.impl.*
 import cc.otavia.postgres.protocol.{Constants, DataFormat, DataType}
 import cc.otavia.postgres.utils.ScramAuthentication.ScramClientInitialMessage
 import cc.otavia.postgres.utils.{MD5Authentication, PgBufferUtils, ScramAuthentication}
+import cc.otavia.sql.*
 import cc.otavia.sql.Statement.{ExecuteQueries, ExecuteQuery, ExecuteUpdate, ModifyRows}
-import cc.otavia.sql.{Authentication, Driver, Row, RowDecoder}
 
 import java.nio.charset.StandardCharsets
 import scala.collection.mutable
@@ -51,16 +51,16 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
 
     private val response: Response = new Response
 
-    private val rowDesc: RowDesc                           = new RowDesc()
-    private var continueParseRow: Boolean                  = false
-    private var currentRowDecoder: RowDecoder[Row]         = _
-    private var isSingleRow: Boolean                       = true
+    private val rowDesc: RowDesc          = new RowDesc()
+    private var continueParseRow: Boolean = false
+
     private val rowBuffer: mutable.ArrayBuffer[Row]        = mutable.ArrayBuffer.empty
     private val rowOffsets: mutable.ArrayBuffer[RowOffset] = mutable.ArrayBuffer.empty
 
     private val rowParser: PostgresRowParser = new PostgresRowParser()
 
     override def setChannelOptions(channel: Channel): Unit = {
+        channel.setOption(ChannelOption.CHANNEL_MAX_FUTURE_INFLIGHT, options.pipeliningLimit)
         // TODO:
     }
 
@@ -82,12 +82,8 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
             case executeUpdate: ExecuteUpdate =>
                 encodeQuery(executeUpdate.sql, output)
             case executeQuery: ExecuteQuery[?] =>
-                currentRowDecoder = executeQuery.decoder
-                isSingleRow = true
                 encodeQuery(executeQuery.sql, output)
             case executeQueries: ExecuteQueries[?] =>
-                currentRowDecoder = executeQueries.decoder
-                isSingleRow = false
                 encodeQuery(executeQueries.sql, output)
             case _ => ???
     }
@@ -188,8 +184,19 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
             }
             rowParser.setPayload(payload)
             rowParser.setRowOffsets(rowOffsets)
-            val row = currentRowDecoder.decode(rowParser)
-            println(row)
+
+            val future = ctx.inflightFutures.first
+            val cmd    = future.getAsk()
+
+            cmd match
+                case executeQuery: ExecuteQuery[?] =>
+                    val row = executeQuery.decoder.decode(rowParser)
+                    continueParseRow = false
+                    ctx.fireChannelRead(row, future.messageId)
+                case executeQueries: ExecuteQueries[?] =>
+                    val decoder = executeQueries.decoder
+                    val row     = decoder.decode(rowParser)
+                    rowBuffer.addOne(row)
         }
 
     private def decodeRowDescription(payload: Buffer): Unit = {
@@ -215,12 +222,20 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
         if (payload.skipIfNextAre(CMD_COMPLETED_UPDATE)) {
             val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_UPDATE.length).toInt
             ctx.fireChannelRead(ModifyRows(rows))
-        } else if (payload.skipIfNextAre(CMD_COMPLETED_DELETE))
+        } else if (payload.skipIfNextAre(CMD_COMPLETED_DELETE)) {
             val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_DELETE.length).toInt
             ctx.fireChannelRead(ModifyRows(rows))
-        else if (payload.skipIfNextAre(CMD_COMPLETED_INSERT))
+        } else if (payload.skipIfNextAre(CMD_COMPLETED_INSERT)) {
             val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_INSERT.length).toInt
             ctx.fireChannelRead(ModifyRows(rows))
+        } else if (payload.skipIfNextAre(CMD_COMPLETED_SELECT)) {
+            val future = ctx.inflightFutures.first
+            if (future.getAsk().isInstanceOf[ExecuteQueries[?]]) {
+                val rowSet = RowSet(rowBuffer.toSeq)
+                rowBuffer.clear()
+                ctx.fireChannelRead(rowSet, future.messageId)
+            }
+        }
     }
 
     private def decodeBindComplete(): Unit = {
