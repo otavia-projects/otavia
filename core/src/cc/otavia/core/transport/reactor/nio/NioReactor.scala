@@ -66,11 +66,16 @@ class NioReactor(
 
 object NioReactor {
 
-    private val DEFAULT_NIO_REACTOR_WORKERS = 2
-    val NIO_REACTOR_WORKERS: Int =
-        SystemPropertyUtil.getInt("cc.otavia.reactor.nio.workers", DEFAULT_NIO_REACTOR_WORKERS)
+    private val DEFAULT_NIO_REACTOR_WORKERS = Runtime.getRuntime.availableProcessors()
+    val NIO_REACTOR_WORKERS: Int = {
+        if (SystemPropertyUtil.get("cc.otavia.nio.worker.size").nonEmpty)
+            SystemPropertyUtil.getInt("cc.otavia.nio.worker.size", DEFAULT_NIO_REACTOR_WORKERS)
+        else if (SystemPropertyUtil.get("cc.otavia.nio.worker.ratio").nonEmpty)
+            (SystemPropertyUtil.getFloat("cc.otavia.nio.worker.ratio", 1.0) * DEFAULT_NIO_REACTOR_WORKERS).toInt
+        else Runtime.getRuntime.availableProcessors()
+    }
 
-    final class NioThreadFactory extends ThreadFactory {
+    final private class NioThreadFactory extends ThreadFactory {
 
         private val tid: AtomicInteger = new AtomicInteger(0)
 

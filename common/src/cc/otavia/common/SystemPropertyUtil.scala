@@ -64,6 +64,10 @@ object SystemPropertyUtil {
 
     def getLong(key: String, default: Long): Long = get(key).map(_.toLong).getOrElse(default)
 
+    def getFloat(key: String, default: Float): Float = get(key).map(_.toFloat).getOrElse(default)
+
+    def getDouble(key: String, default: Double): Double = get(key).map(_.toDouble).getOrElse(default)
+
     def readStringFromClassPath(path: String): String = {
         val stream = getClass.getResourceAsStream(path)
         new String(stream.readAllBytes())

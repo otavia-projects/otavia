@@ -117,8 +117,13 @@ object ActorSystem {
         SystemPropertyUtil.getInt("cc.otavia.pool.holder.maxSize", 256)
 
     private val DEFAULT_ACTOR_THREAD_POOL_SIZE: Int = Runtime.getRuntime.availableProcessors()
-    val ACTOR_THREAD_POOL_SIZE: Int =
-        SystemPropertyUtil.getInt("cc.otavia.actor.thread.pool.size", ActorSystem.DEFAULT_ACTOR_THREAD_POOL_SIZE)
+    val ACTOR_THREAD_POOL_SIZE: Int = {
+        if (SystemPropertyUtil.get("cc.otavia.actor.worker.size").nonEmpty)
+            SystemPropertyUtil.getInt("cc.otavia.actor.worker.size", ActorSystem.DEFAULT_ACTOR_THREAD_POOL_SIZE)
+        else if (SystemPropertyUtil.get("cc.otavia.actor.worker.ratio").nonEmpty)
+            (SystemPropertyUtil.getFloat("cc.otavia.actor.worker.ratio", 1.0) * DEFAULT_ACTOR_THREAD_POOL_SIZE).toInt
+        else DEFAULT_ACTOR_THREAD_POOL_SIZE
+    }
 
     private val DEFAULT_MEMORY_MONITOR: Boolean = true
     val MEMORY_MONITOR: Boolean =
