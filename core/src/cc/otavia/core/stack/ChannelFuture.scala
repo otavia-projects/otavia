@@ -62,7 +62,6 @@ final private[core] class ChannelPromise extends AbstractPromise[AnyRef] with Ch
 
     def getAsk(): AnyRef = {
         val v = ask
-        this.ask = null
         v
     }
 

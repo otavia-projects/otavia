@@ -106,7 +106,11 @@ class QueueMap[V <: QueueMapEntity] {
 
     def isHead(value: V): Boolean = head == value
 
+    def isTail(value: V): Boolean = tail == value
+
     def first: V = head.asInstanceOf[V]
+
+    def last: V = tail.asInstanceOf[V]
 
     def headIsBarrier: Boolean = if (head != null && head.isBarrier) true else false
 
