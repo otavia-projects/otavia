@@ -27,7 +27,7 @@ import os.Path
 
 object ProjectInfo {
 
-    def description: String     = "A super fast IO & Actor programming model!"
+    def description: String     = "Your shiny new IO & Actor programming model!"
     def organization: String    = "cc.otavia"
     def organizationUrl: String = "https://github.com/otavia-projects"
     def projectUrl: String      = "https://github.com/otavia-projects/otavia"
@@ -35,7 +35,7 @@ object ProjectInfo {
     def repository              = github.browsableRepository.get
     def licenses                = Seq(License.`Apache-2.0`)
     def author                  = Seq("Yan Kun <yan_kun_1992@foxmail.com>")
-    def version                 = "0.3.5"
+    def version                 = "0.3.6-SNAPSHOT"
     def scalaVersion            = "3.3.1"
     def scoverageVersion        = "1.4.0"
     def buildTool               = "mill"
@@ -45,8 +45,6 @@ object ProjectInfo {
 
     def netty5codec = ivy"io.netty:netty5-codec:5.0.0.Alpha5"
     def xml         = ivy"org.scala-lang.modules::scala-xml:2.1.0"
-    def proto       = ivy"io.github.zero-deps::proto:2.1.2"
-    def jedis       = ivy"redis.clients:jedis:4.4.3"
     def scram       = ivy"com.ongres.scram:client:2.1"
 
     val settings = PomSettings(
@@ -230,7 +228,7 @@ object `codec-redis` extends OtaviaModule {
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
-        override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.jedis)
+        override def ivyDeps = Agg(ProjectInfo.testDep)
 
     }
 
@@ -326,7 +324,7 @@ object `serde-proto` extends OtaviaModule {
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
-        override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.proto)
+        override def ivyDeps = Agg(ProjectInfo.testDep)
 
     }
 

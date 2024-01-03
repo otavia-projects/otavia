@@ -82,7 +82,9 @@ abstract class Stack extends Poolable {
                     case null =>
                         preNode.cleanNext()
                         uncompletedTail = preNode.asInstanceOf[AbstractPromise[?]]
-                    case nextNode: Chainable => preNode.next = nextNode
+                    case nextNode: Chainable =>
+                        preNode.next = nextNode
+                        nextNode.pre = preNode
 
         // step 2: add completed to completed chain
         if (completedHead == null) {

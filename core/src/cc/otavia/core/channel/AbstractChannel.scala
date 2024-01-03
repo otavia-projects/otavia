@@ -160,14 +160,11 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         if (pendingStacks.nonEmpty) processPendingStacks()
     }
 
-    final private[core] def processPendingStacks(): Unit = if (pendingStacks.headIsBarrier) {
+    final private[core] def processPendingStacks(): Unit = if (pendingStacks.headIsBarrier)
         if (inflightStacks.isEmpty) processPendingStack()
-    } else if (!inflightStacks.headIsBarrier) {
-        while (
-          pendingStacks.nonEmpty &&
-          inflightStacks.size < maxStackInflight &&
-          !pendingStacks.headIsBarrier
-        ) processPendingStack()
+    else if (!inflightStacks.headIsBarrier) {
+        while (pendingStacks.nonEmpty && inflightStacks.size < maxStackInflight && !pendingStacks.headIsBarrier)
+            processPendingStack()
         processCompletedChannelStacks()
     }
 
@@ -196,8 +193,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
           !pendingFutures.headIsBarrier
         ) {
             val promise = pendingFutures.pop()
-            this.write(promise.getAsk(), promise.messageId)
             inflightFutures.append(promise)
+            this.write(promise.getAsk(), promise.messageId)
         }
         this.flush()
     }
@@ -230,7 +227,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     override def ask(value: AnyRef, future: ChannelFuture): ChannelFuture = {
         val promise = future.promise
         promise.setMessageId(generateMessageId)
-        promise.setBarrier(stackBarrier(value))
+        promise.setBarrier(futureBarrier(value))
         promise.setAsk(value)
         promise.setChannel(this)
         actor.attachStack(actor.generateSendMessageId(), future)
