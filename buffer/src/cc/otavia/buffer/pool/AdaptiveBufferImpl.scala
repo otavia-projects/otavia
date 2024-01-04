@@ -2350,7 +2350,7 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         if (head.readableBytes >= length) {
             val value = head.readStringAsLong(length, radix)
             if (head.readableBytes == 0) recycleHead()
-            widx += length
+            ridx += length
             value
         } else {
             val str = readCharSequence(length).toString
