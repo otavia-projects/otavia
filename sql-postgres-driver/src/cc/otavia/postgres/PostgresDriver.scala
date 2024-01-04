@@ -220,14 +220,17 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
 
     private def decodeCommandComplete(payload: Buffer, length: Int): Unit = {
         if (payload.skipIfNextAre(CMD_COMPLETED_UPDATE)) {
-            val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_UPDATE.length).toInt
-            ctx.fireChannelRead(ModifyRows(rows))
+            val rows   = payload.readStringAsLong(length - 5 - CMD_COMPLETED_UPDATE.length).toInt
+            val future = ctx.inflightFutures.first
+            ctx.fireChannelRead(ModifyRows(rows), future.messageId)
         } else if (payload.skipIfNextAre(CMD_COMPLETED_DELETE)) {
-            val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_DELETE.length).toInt
-            ctx.fireChannelRead(ModifyRows(rows))
+            val rows   = payload.readStringAsLong(length - 5 - CMD_COMPLETED_DELETE.length).toInt
+            val future = ctx.inflightFutures.first
+            ctx.fireChannelRead(ModifyRows(rows), future.messageId)
         } else if (payload.skipIfNextAre(CMD_COMPLETED_INSERT)) {
-            val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_INSERT.length).toInt
-            ctx.fireChannelRead(ModifyRows(rows))
+            val rows   = payload.readStringAsLong(length - 5 - CMD_COMPLETED_INSERT.length).toInt
+            val future = ctx.inflightFutures.first
+            ctx.fireChannelRead(ModifyRows(rows), future.messageId)
         } else if (payload.skipIfNextAre(CMD_COMPLETED_SELECT)) {
             val future = ctx.inflightFutures.first
             if (future.getAsk().isInstanceOf[ExecuteQueries[?]]) {
