@@ -185,6 +185,21 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
             case ControllerRouter(method, path, controller, requestFactory, responseSerde) =>
                 msg match
                     case response: HttpResponse[?] =>
+                        writeResponseHeadLine(HttpStatus.OK, output)
+                        writeServerHeader(output)
+                        output.writeBytes(dates.get())
+                        val body = response.content
+                        if (!body.isInstanceOf[OK]) {
+                            writeHeader(HttpHeader.Key.CONTENT_TYPE, responseSerde.mediaType.fullName, output)
+                            val lengthOffset = writeContentLengthPlaceholder(output) // reset content length later
+                            output.writeBytes(HttpConstants.HEADER_LINE_END) // headers end
+
+                            // serialize content
+                            val contentStart = output.writerOffset
+                            responseSerde.contentSerde.serializeAny(body, output)
+                            val contentEnd = output.writerOffset
+                            output.setCharSequence(lengthOffset, (contentEnd - contentStart).toString)
+                        } else output.writeBytes(HttpConstants.HEADER_LINE_END)
                     case body =>
                         writeResponseHeadLine(HttpStatus.OK, output)
                         writeServerHeader(output)
