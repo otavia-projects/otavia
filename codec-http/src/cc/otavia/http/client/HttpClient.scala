@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-package cc.otavia.http
+package cc.otavia.http.client
 
-import cc.otavia.serde.Serde
+class HttpClient {
 
-trait ContentSerde[C] extends Serde[C]
+}

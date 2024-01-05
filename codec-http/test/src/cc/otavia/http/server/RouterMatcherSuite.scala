@@ -94,35 +94,11 @@ object RouterMatcherSuite {
     case class Do(what: String, goHome: Boolean, name: Option[String], age: Option[Int])
     case class DoResult(success: Boolean) extends Reply
 
-    class DoRequest extends HttpRequest[Do, Nothing, DoResult]
+    class DoRequest extends HttpRequest[Nothing, DoResult]
 
-    val paramSerde: ParameterSerde[Do] = new ParameterSerde[Do] {
-
-        override def serialize(value: Do, out: Buffer): Unit = {
-            serializeParamsStart(out)
-            serializeParam("what", value.what, out)
-            serializeParamSplitter(out)
-            serializeParam("go_home", value.goHome.toString, out)
-            value.name match
-                case Some(name) =>
-                    serializeParamSplitter(out)
-                    serializeParam("name", name, out)
-                case None =>
-            value.age match
-                case Some(age) =>
-                    serializeParamSplitter(out)
-                    serializeParam("age", age.toString, out)
-                case None =>
-            serializeParamsEnd(out)
-        }
-
-        override protected def construct(params: mutable.HashMap[String, String]): Do = ???
-
-    }
-
-    val doRequestSerde: HttpRequestFactory[Do, Nothing, DoResult] =
-        new HttpRequestFactory[Do, Nothing, DoResult](parameterSerde = Some(paramSerde)) {
-            override def createHttpRequest(): HttpRequest[Do, Nothing, DoResult] = new DoRequest
+    val doRequestSerde: HttpRequestFactory[Nothing, DoResult] =
+        new HttpRequestFactory[Nothing, DoResult]() {
+            override def createHttpRequest(): HttpRequest[Nothing, DoResult] = new DoRequest
         }
 
 }

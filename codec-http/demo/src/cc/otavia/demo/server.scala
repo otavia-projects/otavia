@@ -35,7 +35,7 @@ import cc.otavia.serde.helper.BytesSerde
 import java.nio.charset.StandardCharsets.*
 import java.nio.file.Path
 
-private class ServerMain(val port: Int = 80) extends MainActor(Array.empty) {
+private class ServerMain(val port: Int = 8080) extends MainActor(Array.empty) {
 
     import ServerMain.*
 
@@ -45,7 +45,7 @@ private class ServerMain(val port: Int = 80) extends MainActor(Array.empty) {
             val routers = Seq(
               constant[Array[Byte]](GET, "/plaintext", "Hello, World!".getBytes(UTF_8), BytesSerde, TEXT_PLAIN_UTF8),
               constant[HelloMessage](GET, "/json", HelloMessage("Hello, World!"), helloSerde, APP_JSON),
-              get("/scale_message", controller, messageRequestSerde, messageResponseSerde),
+              get("/scale_message", controller, messageRequestFactory, messageResponseSerde),
               static("/media", Path.of("D:\\IdeaProjects\\audio\\data"))
             )
             val server = system.buildActor(() => new HttpServer(system.actorWorkerSize, routers))
@@ -77,8 +77,8 @@ object ServerMain {
 
 }
 
-@main def server(): Unit =
+@main def server(port: Int = 8080): Unit =
     val system = ActorSystem()
     val logger = LoggerFactory.getLogger("server", system)
     logger.info("starting http server")
-    system.buildActor(() => new ServerMain())
+    system.buildActor(() => new ServerMain(port))

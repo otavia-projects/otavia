@@ -23,18 +23,20 @@ import cc.otavia.http.{HttpHeaders, HttpMethod, HttpVersion, MediaType}
 
 import scala.collection.mutable
 
-abstract class HttpRequest[P, C, R <: Reply] extends Ask[R] {
-
-    private var mth: HttpMethod                        = _
-    private var requestPath: String                    = _
-    private var vs: HttpVersion                        = HttpVersion.HTTP_1_1
-    private var hs: Option[HttpHeaders]                = None
-    private var media: MediaType                       = _
-    private var p: Option[P]                           = None
-    private var c: Option[C]                           = None
-    private var pvars: mutable.HashMap[String, String] = _
+abstract class HttpRequest[C, R <: Reply] extends Ask[R] {
 
     private var rt: Router = _
+
+    private var mth: HttpMethod         = _
+    private var requestPath: String     = _
+    private var vs: HttpVersion         = HttpVersion.HTTP_1_1
+    private var hs: Option[HttpHeaders] = None
+    private var media: MediaType        = _
+
+    private var c: Option[C] = None
+
+    private var pas: Map[String, String]   = HttpRequest.empty
+    private var pvars: Map[String, String] = HttpRequest.empty
 
     def setMethod(method: HttpMethod): Unit        = mth = method
     def setPath(path: String): Unit                = requestPath = path
@@ -42,9 +44,9 @@ abstract class HttpRequest[P, C, R <: Reply] extends Ask[R] {
     def setHttpHeaders(headers: HttpHeaders): Unit = hs = Option(headers)
     def setMediaType(mediaType: MediaType): Unit   = media = mediaType
 
-    def setPathVariables(variables: mutable.HashMap[String, String]): Unit = pvars = variables
-    def setParam(param: P): Unit                                           = p = Option(param)
-    def setContent(content: Any): Unit                                     = c = Option(content.asInstanceOf[C])
+    def setPathVariables(variables: Map[String, String]): Unit = pvars = variables
+    def setParam(params: Map[String, String]): Unit            = pas = params
+    def setContent(content: Any): Unit                         = c = Some(content.asInstanceOf[C])
 
     private[otavia] def setRouter(r: Router): Unit = rt = r
     private[otavia] def router: Router             = rt
@@ -55,9 +57,14 @@ abstract class HttpRequest[P, C, R <: Reply] extends Ask[R] {
     def httpHeaders: Option[HttpHeaders] = hs
     def mediaType: MediaType             = media
 
-    def params: Option[P]  = p
-    def content: Option[C] = c
+    def pathVariables: Map[String, String] = pvars
+    def params: Map[String, String]        = pas
+    def content: Option[C]                 = c
 
     override def toString: String = s"${mth} ${requestPath}"
 
+}
+
+object HttpRequest {
+    private val empty: Map[String, String] = Map.empty
 }

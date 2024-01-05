@@ -25,17 +25,14 @@ import java.nio.charset.StandardCharsets
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-abstract class HttpRequestFactory[P, C, R <: Reply](
+abstract class HttpRequestFactory[C, R <: Reply](
     val contentSerde: Option[Serde[C]] = None,
-    val parameterSerde: Option[ParameterSerde[P]] = None,
     val requireHeaders: Seq[String] = HttpRequestFactory.EMPTY_STRING
 ) {
 
     final def hasContent: Boolean = contentSerde.nonEmpty
-
-    final def hasParams: Boolean = parameterSerde.nonEmpty
-
-    def createHttpRequest(): HttpRequest[P, C, R]
+    
+    def createHttpRequest(): HttpRequest[C, R]
 
 }
 

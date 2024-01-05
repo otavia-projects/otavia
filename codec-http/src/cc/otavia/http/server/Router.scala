@@ -32,7 +32,7 @@ enum Router {
         method: HttpMethod,
         path: String,
         controller: Address[?],
-        requestFactory: HttpRequestFactory[?, ?, ?],
+        requestFactory: HttpRequestFactory[?, ?],
         responseSerde: HttpResponseSerde[?]
     ) extends Router
 
@@ -61,17 +61,17 @@ object Router {
         method: HttpMethod,
         path: String,
         controller: Address[?],
-        requestSerde: HttpRequestFactory[?, ?, ?],
+        requestFactory: HttpRequestFactory[?, ?],
         responseSerde: HttpResponseSerde[?]
     ): ControllerRouter =
-        ControllerRouter(method, path, controller, requestSerde, responseSerde)
+        ControllerRouter(method, path, controller, requestFactory, responseSerde)
 
     def get(
         path: String,
         controller: Address[?],
-        requestSerde: HttpRequestFactory[?, ?, ?],
+        requestFactory: HttpRequestFactory[?, ?],
         responseSerde: HttpResponseSerde[?]
-    ): ControllerRouter = ControllerRouter(HttpMethod.GET, path, controller, requestSerde, responseSerde)
+    ): ControllerRouter = ControllerRouter(HttpMethod.GET, path, controller, requestFactory, responseSerde)
 
     def `404`(page: Option[Path]): NotFoundRouter = NotFoundRouter(page)
 

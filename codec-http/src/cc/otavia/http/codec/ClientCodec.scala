@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-package cc.otavia.http.server
+package cc.otavia.http.codec
 
-private[http] class InternalHttpRequest extends HttpRequest[Nothing, Nothing] {
+import cc.otavia.buffer.pool.AdaptiveBuffer
+import cc.otavia.core.channel.ChannelHandlerContext
+import cc.otavia.handler.codec.ByteToMessageCodec
 
-    private var remaining: String = _
+class ClientCodec extends ByteToMessageCodec {
 
-    def setRemaining(r: String): Unit = remaining = r
+    override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = ???
 
-    def subPath: String = remaining
+    override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, msgId: Long): Unit =
+        ???
 
 }

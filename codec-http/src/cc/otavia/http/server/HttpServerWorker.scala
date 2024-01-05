@@ -49,7 +49,7 @@ class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Arr
     override protected def resumeChannelStack(stack: ChannelStack[AnyRef]): Option[StackState] = {
         stack.state match
             case StackState.start =>
-                val request = stack.message.asInstanceOf[HttpRequest[?, ?, ?]]
+                val request = stack.message.asInstanceOf[HttpRequest[?, ?]]
                 request match
                     case request: InternalHttpRequest => stack.`return`(OK())
                     case _ =>
@@ -65,7 +65,7 @@ class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Arr
 
 object HttpServerWorker {
     private val BARRIER_FUNC: AnyRef => Boolean = request => {
-        val method = request.asInstanceOf[HttpRequest[?, ?, ?]].method
+        val method = request.asInstanceOf[HttpRequest[?, ?]].method
         !(method == HttpMethod.GET || method == HttpMethod.HEAD)
     }
 }

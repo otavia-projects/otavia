@@ -24,6 +24,7 @@ import cc.otavia.core.channel
 import cc.otavia.core.channel.{ChannelHandlerContext, DefaultFileRegion}
 import cc.otavia.core.slf4a.{Logger, LoggerFactory}
 import cc.otavia.core.stack.ChannelFuture
+import cc.otavia.core.system.ActorThread
 import cc.otavia.core.timer.{TimeoutTrigger, Timer}
 import cc.otavia.handler.codec.ByteToMessageCodec
 import cc.otavia.http.*
@@ -52,7 +53,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
 
     private var currentBodyLength: Int = 0
 
-    private var currentRequest: HttpRequest[?, ?, ?] = _
+    private var currentRequest: HttpRequest[?, ?] = _
 
     private var packetTimeoutId: Long = Timer.INVALID_TIMEOUT_REGISTER_ID
 
@@ -179,7 +180,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
 
     // encode http response
     override protected def encode(ctx: ChannelHandlerContext, output: AdaptiveBuffer, msg: AnyRef, id: Long): Unit = {
-        val request = ctx.inflightStacks[HttpRequest[?, ?, ?]].unsafeBorrow(id).message
+        val request = ctx.inflightStacks[HttpRequest[?, ?]].unsafeBorrow(id).message
         val router  = request.router
         router match
             case ControllerRouter(method, path, controller, requestFactory, responseSerde) =>
@@ -238,11 +239,12 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
                 request.setRouter(controllerRouter)
                 request.setMethod(routerContext.method)
                 request.setPath(routerContext.path)
-                if (requestFactory.hasParams) request.setParam(requestFactory.parameterSerde.get.deserialize(buffer))
-                if (routerContext.pathVars.nonEmpty) {
-                    val variables = mutable.HashMap.empty[String, String]
-                    variables.addAll(routerContext.pathVars)
-                    request.setPathVariables(variables)
+                if (routerContext.pathVars.nonEmpty) request.setPathVariables(routerContext.pathVars.toMap)
+                if (buffer.readableBytes > 0 && buffer.nextIs(HttpConstants.PARAM_START)) {
+                    val params = ActorThread.threadMap[String, String]
+                    ParameterSerde.parse(buffer, params)
+                    request.setParam(params.toMap)
+                    params.clear()
                 }
             case _ =>
 
@@ -279,7 +281,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
         buffer.writerOffset - ServerCodec.CONTENT_LENGTH_PLACEHOLDER.length - 2
     }
 
-    private def parseBody(contentLength: Int, factory: HttpRequestFactory[?, ?, ?], input: Buffer): Unit = {
+    private def parseBody(contentLength: Int, factory: HttpRequestFactory[?, ?], input: Buffer): Unit = {
         val request = currentRequest
         val endIdx  = input.readerOffset + contentLength
 
