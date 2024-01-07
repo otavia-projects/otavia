@@ -30,11 +30,16 @@ class QueueMap[V <: QueueMapEntity] {
     private var threshold: Int   = newThreshold(tableSizeFor(initialCapacity))
     private var contentSize: Int = 0
 
+    private var barrier: Boolean = false
+
     private final def loadFactor: Double   = 2.0
     private final def initialCapacity: Int = 16
     private def newThreshold(size: Int)    = (size.toDouble * loadFactor).toInt
 
     private def index(id: Long): Int = (id & mask).toInt
+
+    def isBarrierMode: Boolean              = barrier
+    def setBarrierMode(mode: Boolean): Unit = barrier = mode
 
     def size: Int = contentSize
 
