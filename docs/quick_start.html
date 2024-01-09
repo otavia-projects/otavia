@@ -607,11 +607,11 @@
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
- <p>For <code>Actor</code>s that rely on <code>QueryService</code>, you can extend <code>Injectable</code>, and then you can use the <code>autowire</code> method to look up the <code>Address</code> of an available <code>QueryService</code> in the <code>ActorSystem</code>.</p> 
+ <p>For <code>Actor</code>s that rely on <code>QueryService</code>, you can use the <code>autowire</code> method to look up the <code>Address</code> of an available <code>QueryService</code> in the <code>ActorSystem</code>.</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>case class Start() extends Notice
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
-</span><span line-number="3" class=""><span class="tooltip-container"></span>final class TestActor extends StateActor[Start] with Injectable {
+</span><span line-number="3" class=""><span class="tooltip-container"></span>final class TestActor extends StateActor[Start] {
 </span><span line-number="4" class=""><span class="tooltip-container"></span>
 </span><span line-number="5" class=""><span class="tooltip-container"></span>  private var queryService: Address[MessageOf[QueryService]] = _
 </span><span line-number="6" class=""><span class="tooltip-container"></span>
