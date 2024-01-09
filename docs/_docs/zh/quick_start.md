@@ -739,13 +739,13 @@ final class QueryServiceCase2() extends SocketChannelsActor with QueryService {
 }
 ```
 
-对于依赖 `QueryService` 的 `Actor`，可以扩展 `Injectable`, 然后就可以使用 `autowire` 方法在 `ActorSystem` 中查找
+对于依赖 `QueryService` 的 `Actor`，可以使用 `autowire` 方法在 `ActorSystem` 中查找
 可用的 `QueryService` 的 `Address`。
 
 ```scala
 case class Start() extends Notice
 
-final class TestActor extends StateActor[Start] with Injectable {
+final class TestActor extends StateActor[Start] {
 
   private var queryService: Address[MessageOf[QueryService]] = _
 

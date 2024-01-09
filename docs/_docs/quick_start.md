@@ -794,13 +794,13 @@ final class QueryServiceCase2() extends SocketChannelsActor with QueryService {
 }
 ```
 
-For `Actor`s that rely on `QueryService`, you can extend `Injectable`, and then you can use the `autowire` method to
+For `Actor`s that rely on `QueryService`, you can use the `autowire` method to
 look up the `Address` of an available `QueryService` in the `ActorSystem`.
 
 ```scala
 case class Start() extends Notice
 
-final class TestActor extends StateActor[Start] with Injectable {
+final class TestActor extends StateActor[Start] {
 
   private var queryService: Address[MessageOf[QueryService]] = _
 
