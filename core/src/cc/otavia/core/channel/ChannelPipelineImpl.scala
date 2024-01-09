@@ -587,7 +587,10 @@ class ChannelPipelineImpl(override val channel: AbstractChannel) extends Channel
         this
     }
 
-    override def fireChannelExceptionCaught(cause: Throwable, id: Long): ChannelPipelineImpl.this.type = ???
+    override def fireChannelExceptionCaught(cause: Throwable, id: Long): ChannelPipelineImpl.this.type = {
+        head.invokeChannelExceptionCaught(cause, id)
+        this
+    }
 
     override def fireChannelInboundEvent(event: AnyRef): this.type = {
         head.invokeChannelInboundEvent(event)
@@ -905,7 +908,7 @@ object ChannelPipelineImpl {
         override def channelTimeoutEvent(ctx: ChannelHandlerContext, id: Long): Unit = {} // Just swallow event
 
         override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit =
-            ctx.channel.onInboundMessage(cause, true)
+            cause.printStackTrace()
 
         override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable, id: Long): Unit =
             ctx.channel.onInboundMessage(cause, true, id)

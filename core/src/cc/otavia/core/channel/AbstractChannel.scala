@@ -186,11 +186,12 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
             // write message to pipeline, and send data by socket
             this.writeAndFlush(promise.getAsk(), promise.messageId)
         }
-    } else if (!inflightFutures.headIsBarrier) {
+    } else if (!inflightFutures.headIsBarrier && !inflightFutures.isBarrierMode) {
         while (
           pendingFutures.nonEmpty &&
           inflightFutures.size < maxFutureInflight &&
-          !pendingFutures.headIsBarrier
+          !pendingFutures.headIsBarrier &&
+          !inflightFutures.isBarrierMode
         ) {
             val promise = pendingFutures.pop()
             inflightFutures.append(promise)
