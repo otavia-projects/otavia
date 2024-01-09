@@ -37,6 +37,8 @@ private[postgres] class RowOffset extends Poolable {
         len = -1
     }
 
+    override def toString: String = s"RowOffset(off=${off}, len=${len})"
+
 }
 
 object RowOffset {

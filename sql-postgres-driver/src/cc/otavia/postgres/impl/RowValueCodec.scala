@@ -17,6 +17,7 @@
 package cc.otavia.postgres.impl
 
 import cc.otavia.buffer.Buffer
+import cc.otavia.postgres.protocol.DataType
 import cc.otavia.postgres.protocol.DataType.UUID
 
 import java.nio.charset.StandardCharsets
@@ -28,6 +29,13 @@ import java.util.UUID
 import scala.language.unsafeNulls
 
 object RowValueCodec {
+
+    def encodeBinary(datatype: DataType, param: Any, output: Buffer): Unit = {
+        datatype match
+            case DataType.BOOL => ???
+            case DataType.INT4 => output.writeInt(param.asInstanceOf[Int])
+            case _             => ???
+    }
 
     def textDecodeBOOL(index: Int, len: Int, buffer: Buffer): Boolean = buffer.indexIs('t', index)
 

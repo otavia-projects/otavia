@@ -41,4 +41,46 @@ object Statement {
     case class CursorRow[R <: Row](row: R, cursorId: Int) extends Notice
     case class CursorEnd(cursorId: Int)                   extends Notice
 
+    trait PrepareQuery[T <: Reply] extends Ask[T] {
+
+        def sql: String
+        def bind: Product | Seq[Product]
+        def isBatch: Boolean
+
+    }
+
+    type BIND = Product | Seq[Product]
+
+    object PrepareQuery {
+
+        def fetchOne[R <: Row](sql: String, bind: BIND)(using decoder: RowDecoder[R]): PrepareFetchOneQuery[R] =
+            new PrepareFetchOneQuery(sql, bind, decoder)
+        def fetchAll[R <: Row](sql: String, bind: BIND)(using decoder: RowDecoder[R]) =
+            new PrepareFetchAllQuery[R](sql, bind, decoder)
+        def update(sql: String, bind: BIND) = new PrepareUpdate(sql, bind)
+        def insert(sql: String, bind: BIND) = new PrepareUpdate(sql, bind)
+
+    }
+
+    class PrepareFetchOneQuery[R <: Row](
+        override val sql: String,
+        override val bind: Product | Seq[Product],
+        val decoder: RowDecoder[R]
+    ) extends PrepareQuery[R] {
+        override def isBatch: Boolean = bind.isInstanceOf[Seq[?]]
+    }
+
+    class PrepareFetchAllQuery[R <: Row](
+        override val sql: String,
+        override val bind: Product | Seq[Product],
+        val decoder: RowDecoder[R]
+    ) extends PrepareQuery[R] {
+        override def isBatch: Boolean = bind.isInstanceOf[Seq[?]]
+    }
+
+    class PrepareUpdate(override val sql: String, override val bind: Product | Seq[Product])
+        extends PrepareQuery[ModifyRows] {
+        override def isBatch: Boolean = bind.isInstanceOf[Seq[?]]
+    }
+
 }

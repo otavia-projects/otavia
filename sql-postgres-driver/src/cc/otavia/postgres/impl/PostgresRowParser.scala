@@ -29,7 +29,7 @@ import java.time.temporal.ChronoUnit
 import java.time.{Duration as JDuration, *}
 import java.util.{Currency, Locale, UUID}
 import scala.collection.mutable
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{DAYS, Duration}
 import scala.language.unsafeNulls
 
 final class PostgresRowParser extends RowParser {
@@ -75,9 +75,15 @@ final class PostgresRowParser extends RowParser {
     override def parseShort(columnIndex: Int): Short = ???
 
     override def parseInt(columnIndex: Int): Int = {
-        val rowOffset = offsets(columnIndex)
-        val value     = buffer.getStringAsLong(buffer.readerOffset + rowOffset.offset + 4, rowOffset.length)
-        value.toInt
+        val columnDesc = desc(columnIndex)
+        val rowOffset  = offsets(columnIndex)
+        if (columnDesc.dataFormat == DataFormat.TEXT) {
+            val value = buffer.getStringAsLong(buffer.readerOffset + rowOffset.offset + 4, rowOffset.length)
+            value.toInt
+        } else {
+            val value = buffer.getInt(buffer.readerOffset + rowOffset.offset + 4)
+            value
+        }
     }
 
     override def parseLong(columnIndex: Int): Long = {

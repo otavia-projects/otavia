@@ -67,6 +67,8 @@ class Connection(
                 handleExecuteQuery(stack.asInstanceOf[AskStack[ExecuteQuery[Row]]])
             case stack: AskStack[?] if stack.ask.isInstanceOf[ExecuteQueries[?]] =>
                 handleExecuteQueries(stack.asInstanceOf[AskStack[ExecuteQueries[Row]]])
+            case stack: AskStack[?] if stack.ask.isInstanceOf[PrepareQuery[?]] =>
+                handlePrepareQuery(stack.asInstanceOf[AskStack[PrepareQuery[Reply]]])
     }
 
     override protected def resumeNotice(stack: NoticeStack[Connection.MSG & Notice]): Option[StackState] =
@@ -154,6 +156,19 @@ class Connection(
                 else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
     }
 
+    private def handlePrepareQuery(stack: AskStack[PrepareQuery[Reply]]): Option[StackState] = {
+        stack.state match
+            case StackState.start =>
+                val stat         = stack.ask
+                val channelState = ChannelFutureState()
+                channel.ask(stat, channelState.future)
+                channelState.suspend()
+            case state: ChannelFutureState =>
+                if (state.future.isSuccess) stack.`return`(state.future.getNow.asInstanceOf[Reply])
+                else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
+
+    }
+
     private def handleCursor(stack: AskStack[ExecuteCursor[?]]): Option[StackState] = {
 
         ???
@@ -162,5 +177,6 @@ class Connection(
 }
 
 object Connection {
-    type MSG = Authentication | ExecuteUpdate | ExecuteQuery[? <: Row] | ExecuteQueries[? <: Row]
+    type MSG = Authentication | ExecuteUpdate | ExecuteQuery[? <: Row] | ExecuteQueries[? <: Row] |
+        PrepareQuery[? <: Reply]
 }

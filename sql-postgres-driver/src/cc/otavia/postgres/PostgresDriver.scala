@@ -25,7 +25,8 @@ import cc.otavia.postgres.protocol.{Constants, DataFormat, DataType}
 import cc.otavia.postgres.utils.ScramAuthentication.ScramClientInitialMessage
 import cc.otavia.postgres.utils.{MD5Authentication, PgBufferUtils, ScramAuthentication}
 import cc.otavia.sql.*
-import cc.otavia.sql.Statement.{ExecuteQueries, ExecuteQuery, ExecuteUpdate, ModifyRows}
+import cc.otavia.sql.Statement.*
+import cc.otavia.sql.impl.HexSequence
 
 import java.nio.charset.StandardCharsets
 import scala.collection.mutable
@@ -59,6 +60,12 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
 
     private val rowParser: PostgresRowParser = new PostgresRowParser()
 
+    private val prepareStatements: mutable.HashMap[String, PreparedStatement] = mutable.HashMap.empty
+    private val psSeq          = new HexSequence() // used for generating named prepared statement name
+    private var bound: Boolean = true              // whether the current prepared query bound
+
+    private var modifyRows: Int = 0
+
     override def setChannelOptions(channel: Channel): Unit = {
         channel.setOption(ChannelOption.CHANNEL_MAX_FUTURE_INFLIGHT, options.pipeliningLimit)
         // TODO:
@@ -85,6 +92,8 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                 encodeQuery(executeQuery.sql, output)
             case executeQueries: ExecuteQueries[?] =>
                 encodeQuery(executeQueries.sql, output)
+            case prepareQuery: PrepareQuery[?] =>
+                encodePrepareQuery(prepareQuery, output)
             case _ => ???
     }
 
@@ -105,11 +114,11 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                 case Constants.MSG_TYPE_NOTICE_RESPONSE       => ???
                 case Constants.MSG_TYPE_AUTHENTICATION        => decodeAuthentication(input, length)
                 case Constants.MSG_TYPE_EMPTY_QUERY_RESPONSE  => ???
-                case Constants.MSG_TYPE_PARSE_COMPLETE        => ???
+                case Constants.MSG_TYPE_PARSE_COMPLETE        =>
                 case Constants.MSG_TYPE_CLOSE_COMPLETE        => ???
-                case Constants.MSG_TYPE_NO_DATA               => ???
+                case Constants.MSG_TYPE_NO_DATA               =>
                 case Constants.MSG_TYPE_PORTAL_SUSPENDED      => ???
-                case Constants.MSG_TYPE_PARAMETER_DESCRIPTION => ???
+                case Constants.MSG_TYPE_PARAMETER_DESCRIPTION => decodeParameterDescription(input, length)
                 case Constants.MSG_TYPE_PARAMETER_STATUS      => decodeParameterStatus(input)
                 case Constants.MSG_TYPE_BACKEND_KEY_DATA      => decodeBackendKeyData(input)
                 case Constants.MSG_TYPE_NOTIFICATION_RESPONSE => ???
@@ -168,6 +177,19 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
             ctx.fireChannelExceptionCaught(new TransactionFailed, currentOutboundMessageId)
         }
         // fire ?
+        if (!bound) {
+            val promise = ctx.inflightFutures.first
+            val query   = promise.getAsk().asInstanceOf[PrepareQuery[?]]
+            this.write(ctx, query, promise.messageId)
+            this.flush(ctx)
+            ctx.inflightFutures.setBarrierMode(false)
+        }
+        if (modifyRows > 0) {
+            val future = ctx.inflightFutures.first
+            val rows   = modifyRows
+            modifyRows = 0
+            ctx.fireChannelRead(ModifyRows(rows), future.messageId)
+        }
     }
 
     private def decodeDataRow(payload: Buffer, payloadLength: Int): Unit =
@@ -197,40 +219,70 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                     val decoder = executeQueries.decoder
                     val row     = decoder.decode(rowParser)
                     rowBuffer.addOne(row)
+                case prepareQuery: PrepareFetchOneQuery[?] =>
+                    val ps      = prepareStatements(prepareQuery.sql)
+                    val decoder = prepareQuery.decoder
+                    rowParser.setRowDesc(ps.rowDesc)
+                    val row = decoder.decode(rowParser)
+                    continueParseRow = false
+                    ctx.fireChannelRead(row, future.messageId)
+                case prepareQuery: PrepareFetchAllQuery[?] =>
+                    val ps      = prepareStatements(prepareQuery.sql)
+                    val decoder = prepareQuery.decoder
+                    rowParser.setRowDesc(ps.rowDesc)
+                    val row = decoder.decode(rowParser)
+                    rowBuffer.addOne(row)
+
         }
 
     private def decodeRowDescription(payload: Buffer): Unit = {
-        val columnLength = payload.readUnsignedShort
-        this.rowDesc.setLength(columnLength)
-        var i = 0
-        while (i < columnLength) {
-            val columnDesc = this.rowDesc(i)
-            columnDesc.name = PgBufferUtils.readCString(payload)
-            columnDesc.relationId = payload.readInt
-            columnDesc.relationAttributeNo = payload.readShort
-            columnDesc.dataType = DataType.fromOid(payload.readInt)
-            columnDesc.length = payload.readShort
-            columnDesc.typeModifier = payload.readInt
-            columnDesc.dataFormat = DataFormat.fromOrdinal(payload.readUnsignedShort)
-            i += 1
-        }
-        rowParser.setRowDesc(rowDesc)
-        continueParseRow = true
+        ctx.inflightFutures.first.getAsk() match
+            case value: PrepareQuery[?] =>
+                val ps           = prepareStatements(value.sql)
+                val columnLength = payload.readUnsignedShort
+                ps.rowDesc.setLength(columnLength)
+                var i = 0
+                while (i < columnLength) {
+                    val columnDesc = ps.rowDesc(i)
+                    decodeColumnDescription(payload, columnDesc)
+                    if (columnDesc.dataFormat == DataFormat.TEXT && columnDesc.dataType.supportsBinary)
+                        columnDesc.dataFormat = DataFormat.BINARY
+                    i += 1
+                }
+            case _ =>
+                val columnLength = payload.readUnsignedShort
+                this.rowDesc.setLength(columnLength)
+                var i = 0
+                while (i < columnLength) {
+                    val columnDesc = this.rowDesc(i)
+                    decodeColumnDescription(payload, columnDesc)
+                    i += 1
+                }
+                rowParser.setRowDesc(rowDesc)
+                continueParseRow = true
+    }
+
+    private def decodeColumnDescription(payload: Buffer, columnDesc: ColumnDesc): Unit = {
+        columnDesc.name = PgBufferUtils.readCString(payload)
+        columnDesc.relationId = payload.readInt
+        columnDesc.relationAttributeNo = payload.readShort
+        columnDesc.dataType = DataType.fromOid(payload.readInt)
+        columnDesc.length = payload.readShort
+        columnDesc.typeModifier = payload.readInt
+        val df = payload.readUnsignedShort
+        columnDesc.dataFormat = DataFormat.fromOrdinal(df)
     }
 
     private def decodeCommandComplete(payload: Buffer, length: Int): Unit = {
         if (payload.skipIfNextAre(CMD_COMPLETED_UPDATE)) {
-            val rows   = payload.readStringAsLong(length - 5 - CMD_COMPLETED_UPDATE.length).toInt
-            val future = ctx.inflightFutures.first
-            ctx.fireChannelRead(ModifyRows(rows), future.messageId)
+            val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_UPDATE.length).toInt
+            modifyRows += rows
         } else if (payload.skipIfNextAre(CMD_COMPLETED_DELETE)) {
-            val rows   = payload.readStringAsLong(length - 5 - CMD_COMPLETED_DELETE.length).toInt
-            val future = ctx.inflightFutures.first
-            ctx.fireChannelRead(ModifyRows(rows), future.messageId)
+            val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_DELETE.length).toInt
+            modifyRows += rows
         } else if (payload.skipIfNextAre(CMD_COMPLETED_INSERT)) {
-            val rows   = payload.readStringAsLong(length - 5 - CMD_COMPLETED_INSERT.length).toInt
-            val future = ctx.inflightFutures.first
-            ctx.fireChannelRead(ModifyRows(rows), future.messageId)
+            val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_INSERT.length).toInt
+            modifyRows += rows
         } else if (payload.skipIfNextAre(CMD_COMPLETED_SELECT)) {
             val future = ctx.inflightFutures.first
             if (future.getAsk().isInstanceOf[ExecuteQueries[?]]) {
@@ -238,12 +290,16 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                 rowBuffer.clear()
                 ctx.fireChannelRead(rowSet, future.messageId)
             }
+        } else if (payload.skipIfNextAre(CMD_COMPLETED_FETCH)) {
+            //
+        } else if (payload.skipIfNextAre(CMD_COMPLETED_COPY)) {
+            //
+        } else if (payload.skipIfNextAre(CMD_COMPLETED_MOVE)) {
+            //
         }
     }
 
-    private def decodeBindComplete(): Unit = {
-        ???
-    }
+    private def decodeBindComplete(): Unit = continueParseRow = true
 
     private def decodeAuthentication(payload: Buffer, length: Int): Unit = {
         val typ = payload.readInt
@@ -368,6 +424,129 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
 
             tpe = payload.readByte
         }
+    }
+
+    private def encodePrepareQuery(query: PrepareQuery[?], output: Buffer): Unit = {
+        prepareStatements.get(query.sql) match
+            case Some(ps) =>
+                bound = true
+                val bind = query.bind
+                bind match
+                    case products: Seq[?] =>
+                        products.foreach { case product: Product =>
+                            encodeBind(ps, product, output)
+                            encodeExecute(0, output)
+                        }
+                    case product: Product =>
+                        encodeBind(ps, product, output)
+                        encodeExecute(0, output)
+                encodeSync(output)
+            case None =>
+                ctx.inflightFutures.setBarrierMode(true)
+                bound = false
+                sendPrepareStatement(query.sql, output)
+    }
+
+    private def sendPrepareStatement(sql: String, output: Buffer): Unit = {
+        val statement = nextStatementName()
+        val ps        = new PreparedStatement()
+        ps.sql = sql
+        ps.statement = statement
+        prepareStatements.put(ps.sql, ps)
+        encodeParse(sql, statement, output)
+        encodeDescribe(statement, output)
+        encodeSync(output)
+        ctx.writeAndFlush(output)
+    }
+
+    private def nextStatementName(): Array[Byte] = psSeq.next()
+
+    private def encodeParse(sql: String, statement: Array[Byte], output: Buffer): Unit = {
+        output.writeByte(PARSE)
+        val pos = output.writerOffset
+        output.writeInt(0)
+        output.writeBytes(statement)
+        PgBufferUtils.writeCString(output, sql)
+        // Let pg figure out the parameter types
+        output.writeShort(0)
+        output.setInt(pos, output.writerOffset - pos) // set packet payload length
+    }
+
+    private def encodeDescribe(statement: Array[Byte], output: Buffer): Unit = {
+        output.writeByte(DESCRIBE)
+        val pos = output.writerOffset
+        output.writeInt(0)
+        if (statement.length > 1) {
+            output.writeByte('S')
+            output.writeBytes(statement)
+        } else {
+            output.writeByte('S')
+            output.writeByte(0)
+        }
+        output.setInt(pos, output.writerOffset - pos)
+    }
+
+    private def encodeBind(ps: PreparedStatement, params: Product, output: Buffer): Unit = {
+        output.writeByte(BIND)
+        val pos = output.writerOffset
+        output.writeInt(0)
+        output.writeByte(0)
+        output.writeBytes(ps.statement)
+        output.writeShort(params.productArity.toShort)
+        for (paramDesc <- ps.paramDesc) output.writeShort(if (paramDesc.supportsBinary) 1 else 0)
+        output.writeShort(ps.paramDesc.length.toShort)
+        var i = 0
+        while (i < params.productArity) {
+            val param = params.productElement(i)
+            if (param == null || param == None) { // NULL value
+                output.writeInt(-1)
+            } else {
+                val datatype = ps.paramDesc(i)
+                if (datatype.supportsBinary) {
+                    val pos = output.writerOffset
+                    output.writeInt(0)
+                    RowValueCodec.encodeBinary(datatype, param, output)
+                    output.setInt(pos, output.writerOffset - pos - 4)
+                } else ???
+            }
+            i += 1
+        }
+
+        // MAKE resultColumsn non null to avoid null check
+        // Result columns are all in Binary format
+        if (ps.rowDesc.length > 0) {
+            output.writeShort(ps.rowDesc.length.toShort)
+            for (rowDesc <- ps.rowDesc.columns) output.writeShort(if (rowDesc.dataType.supportsBinary) 1 else 0)
+        } else {
+            output.writeShort(1)
+            output.writeShort(1)
+        }
+        output.setInt(pos, output.writerOffset - pos)
+    }
+
+    private def encodeExecute(fetch: Int, output: Buffer): Unit = {
+        output.writeByte(EXECUTE)
+        val pos = output.writerOffset
+        output.writeInt(0)
+        output.writeByte(0)
+        output.writeInt(fetch)                        // Zero denotes "no limit" maybe for ReadStream<Row>
+        output.setInt(pos, output.writerOffset - pos) // set packet length
+    }
+
+    private def encodeSync(output: Buffer): Unit = {
+        output.writeByte(SYNC)
+        output.writeInt(4)
+    }
+
+    private def decodeParameterDescription(payload: Buffer, length: Int): Unit = {
+        val paramDataTypes = new Array[DataType](payload.readUnsignedShort)
+        for (idx <- paramDataTypes.indices) {
+            paramDataTypes(idx) = DataType.fromOid(payload.readInt)
+        }
+        val prepare = ctx.inflightFutures.first.getAsk().asInstanceOf[PrepareQuery[?]]
+        val ps      = prepareStatements(prepare.sql)
+        ps.paramDesc = paramDataTypes
+        ps.parsed = true
     }
 
     override def handlerAdded(ctx: ChannelHandlerContext): Unit = {
