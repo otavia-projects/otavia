@@ -148,6 +148,14 @@ trait Actor[+M <: Call] {
 
     protected def isBarrierCall(call: Call): Boolean = false
 
+    final def autowire[A <: Actor[?]: ClassTag](
+        qualifier: Option[String] = None,
+        remote: Option[String] = None
+    ): Address[MessageOf[A]] =
+        system.getAddress(classTag[A].runtimeClass.asInstanceOf[Class[? <: Actor[?]]], qualifier, remote)
+
+    final def autowire[A <: Actor[?]: ClassTag](qualifier: String): Address[MessageOf[A]] = autowire(Some(qualifier))
+
 }
 
 object Actor {

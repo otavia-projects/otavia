@@ -79,7 +79,7 @@ trait ActorSystem {
 
     def runMain[M <: MainActor](factory: ActorFactory[M], modules: Seq[Module] = Seq.empty): Unit
 
-    /** IOC methods, developer can ues it by [[cc.otavia.core.ioc.Injectable]] */
+    /** IOC methods, developer can ues it by [[cc.otavia.core.actor.Actor]] */
     // format: off
     private[otavia] def getAddress[M <: Call](clz: Class[? <: Actor[?]], qualifier: Option[String] = None, 
                                               remote: Option[String] = None): Address[M]
