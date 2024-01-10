@@ -23,15 +23,13 @@ If you use sbt, add the dependency with
 version ![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/cc.otavia/otavia-runtime_3?server=https%3A%2F%2Fs01.oss.sonatype.org)
 
 ```scala
-libraryDependencies += "cc.otavia" %% "otavia-runtime" % "{version}"
-libraryDependencies += "cc.otavia" %% "otavia-codec" % "{version}"
+libraryDependencies += "cc.otavia" %% "otavia-all" % "{version}"
 ```
 
 If you use mill:
 
 ```scala
-ivy"cc.otavia::otavia-runtime:{version}"
-ivy"cc.otavia::otavia-codec:{version}"
+ivy"cc.otavia::otavia-all:{version}"
 ```
 
 if maven:
@@ -39,12 +37,7 @@ if maven:
 ```text
 <dependency>
     <groupId>cc.otavia</groupId>
-    <artifactId>otavia-runtime</artifactId>
-    <version>{version}</version>
-</dependency>
-<dependency>
-    <groupId>cc.otavia</groupId>
-    <artifactId>otavia-codec</artifactId>
+    <artifactId>otavia-all_3</artifactId>
     <version>{version}</version>
 </dependency>
 ```

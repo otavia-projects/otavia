@@ -466,3 +466,31 @@ object docs extends SiteModule {
     override def projectUrl: String = ProjectInfo.projectUrl
 
 }
+
+object all extends OtaviaModule {
+
+    override def artifactName = "otavia-all"
+
+    override def moduleDeps = Seq(
+      `sql-postgres-driver`,
+      `sql-mysql-driver`,
+      `serde-proto`,
+      `serde-json`,
+      log4a,
+      `codec-dns`,
+      `codec-kafka`,
+      `codec-mqtt`,
+      `codec-smtp`,
+      `codec-http`,
+      `codec-haproxy`,
+      `codec-memcache`,
+      `codec-redis`,
+      `codec-socks`,
+      handler,
+      core,
+      buffer,
+      serde,
+      sql
+    )
+
+}

@@ -14,7 +14,7 @@
 ![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/cc.otavia/otavia-runtime_3?server=https%3A%2F%2Fs01.oss.sonatype.org)
 
 
-> This project is under incubating, the API is not stable now, don't use it in production.
+> This project is not yet stable, please don't use it in a production environment!
 
 <hr>
 
