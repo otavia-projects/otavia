@@ -420,7 +420,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         pipeline.closeOutboundAdaptiveBuffers()
     }
 
-    final protected def newPromise(): ChannelPromise = new ChannelPromise()
+    final protected def newPromise(): ChannelPromise = ChannelPromise()
 
     // unsafe transport
 

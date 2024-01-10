@@ -78,7 +78,7 @@ final private[core] class ChannelPromise extends AbstractPromise[AnyRef] with Ch
         if (stack ne null) {
             val actor = stack.runtimeActor
             actor.receiveFuture(this)
-        }
+        } else recycle()
     }
 
     override def setSuccess(result: AnyRef): Unit = {
