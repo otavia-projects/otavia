@@ -13,15 +13,13 @@
  <h2 class="h500"><a href="#add-dependencies-1" class="anchor"></a>Add dependencies</h2> 
  <p>If you use sbt, add the dependency with version <img src="https://img.shields.io/nexus/s/cc.otavia/otavia-runtime_3?server=https%3A%2F%2Fs01.oss.sonatype.org" alt="Sonatype Nexus (Snapshots)"></p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
-  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>libraryDependencies += "cc.otavia" %% "otavia-runtime" % "{version}"
-</span><span line-number="2" class=""><span class="tooltip-container"></span>libraryDependencies += "cc.otavia" %% "otavia-codec" % "{version}"
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>libraryDependencies += "cc.otavia" %% "otavia-all" % "{version}"
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
  <p>If you use mill:</p> 
  <div class="snippet mono-small-block" scala-snippet=""> 
-  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>ivy"cc.otavia::otavia-runtime:{version}"
-</span><span line-number="2" class=""><span class="tooltip-container"></span>ivy"cc.otavia::otavia-codec:{version}"
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>ivy"cc.otavia::otavia-all:{version}"
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
@@ -29,14 +27,9 @@
  <div class="snippet mono-small-block"> 
   <pre><code class="language-text"><span line-number="1" class=""><span class="tooltip-container"></span>&lt;dependency&gt;
 </span><span line-number="2" class=""><span class="tooltip-container"></span>    &lt;groupId&gt;cc.otavia&lt;/groupId&gt;
-</span><span line-number="3" class=""><span class="tooltip-container"></span>    &lt;artifactId&gt;otavia-runtime&lt;/artifactId&gt;
+</span><span line-number="3" class=""><span class="tooltip-container"></span>    &lt;artifactId&gt;otavia-all_3&lt;/artifactId&gt;
 </span><span line-number="4" class=""><span class="tooltip-container"></span>    &lt;version&gt;{version}&lt;/version&gt;
 </span><span line-number="5" class=""><span class="tooltip-container"></span>&lt;/dependency&gt;
-</span><span line-number="6" class=""><span class="tooltip-container"></span>&lt;dependency&gt;
-</span><span line-number="7" class=""><span class="tooltip-container"></span>    &lt;groupId&gt;cc.otavia&lt;/groupId&gt;
-</span><span line-number="8" class=""><span class="tooltip-container"></span>    &lt;artifactId&gt;otavia-codec&lt;/artifactId&gt;
-</span><span line-number="9" class=""><span class="tooltip-container"></span>    &lt;version&gt;{version}&lt;/version&gt;
-</span><span line-number="10" class=""><span class="tooltip-container"></span>&lt;/dependency&gt;
 </span></code></pre> 
   <div class="buttons"></div> 
  </div> 
