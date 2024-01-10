@@ -86,15 +86,9 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                     sendStartupMessage()
                     status = ST_AUTHENTICATING
                 }
-            case executeUpdate: ExecuteUpdate =>
-                encodeQuery(executeUpdate.sql, output)
-            case executeQuery: ExecuteQuery[?] =>
-                encodeQuery(executeQuery.sql, output)
-            case executeQueries: ExecuteQueries[?] =>
-                encodeQuery(executeQueries.sql, output)
-            case prepareQuery: PrepareQuery[?] =>
-                encodePrepareQuery(prepareQuery, output)
-            case _ => ???
+            case simpleQuery: SimpleQuery[?]   => encodeSimpleQuery(simpleQuery, output)
+            case prepareQuery: PrepareQuery[?] => encodePrepareQuery(prepareQuery, output)
+            case _                             => ???
     }
 
     override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = {
@@ -158,6 +152,16 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
     }
 
     private def encodeQuery(sql: String, output: Buffer): Unit = {
+        val packet = output
+        packet.writeByte(QUERY)
+        val pos = packet.writerOffset
+        packet.writeInt(0)
+        PgBufferUtils.writeCString(packet, sql, StandardCharsets.UTF_8)
+        packet.setInt(pos, packet.writerOffset - pos)
+    }
+
+    private def encodeSimpleQuery(query: SimpleQuery[?], output: Buffer): Unit = {
+        val sql    = query.sql
         val packet = output
         packet.writeByte(QUERY)
         val pos = packet.writerOffset
@@ -285,7 +289,8 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
             modifyRows += rows
         } else if (payload.skipIfNextAre(CMD_COMPLETED_SELECT)) {
             val future = ctx.inflightFutures.first
-            if (future.getAsk().isInstanceOf[ExecuteQueries[?]]) {
+            val cmd    = future.getAsk()
+            if (cmd.isInstanceOf[ExecuteQueries[?]] || cmd.isInstanceOf[PrepareFetchAllQuery[?]]) {
                 val rowSet = RowSet(rowBuffer.toSeq)
                 rowBuffer.clear()
                 ctx.fireChannelRead(rowSet, future.messageId)
@@ -432,8 +437,8 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                 bound = true
                 val bind = query.bind
                 bind match
-                    case products: Seq[?] =>
-                        products.foreach { case product: Product =>
+                    case products: Seq[Product] =>
+                        products.foreach { product =>
                             encodeBind(ps, product, output)
                             encodeExecute(0, output)
                         }

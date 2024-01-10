@@ -17,7 +17,7 @@
 package cc.otavia.postgres.impl
 
 import cc.otavia.buffer.Buffer
-import cc.otavia.postgres.protocol.DataFormat
+import cc.otavia.postgres.protocol.{DataFormat, DataType}
 import cc.otavia.sql.RowParser
 
 import java.lang
@@ -56,7 +56,7 @@ final class PostgresRowParser extends RowParser {
         val rowOffset = offsets(columnIndex)
         val rowDesc   = desc(columnIndex)
         val offset    = buffer.readerOffset + rowOffset.offset + 4
-        if (rowDesc.dataFormat == DataFormat.TEXT) {} else {}
+
         buffer.getCharSequence(offset, rowOffset.length).toString
     }
 

@@ -17,6 +17,7 @@
 package cc.otavia.sql
 
 import cc.otavia.core.message.{Ask, Notice, Reply}
+import cc.otavia.sql.Statement.ExecuteUpdate
 
 trait Statement {}
 
@@ -24,16 +25,13 @@ object Statement {
 
     case class ModifyRows(rows: Int) extends Reply
 
-    case class ExecuteUpdate(sql: String) extends Ask[ModifyRows]
+    private[otavia] class ExecuteUpdate(override val sql: String) extends SimpleQuery[ModifyRows]
 
-    class ExecuteQuery[R <: Row](val sql: String, val decoder: RowDecoder[R]) extends Ask[R]
+    private[otavia] class ExecuteQuery[R <: Row](override val sql: String, val decoder: RowDecoder[R])
+        extends SimpleQuery[R]
 
-    object ExecuteQuery {
-        def apply[R <: Row](sql: String)(using decoder: RowDecoder[R]): ExecuteQuery[R] =
-            new ExecuteQuery(sql, decoder)
-    }
-
-    case class ExecuteQueries[R <: Row](sql: String, decoder: RowDecoder[R]) extends Ask[RowSet[R]]
+    private[otavia] class ExecuteQueries[R <: Row](override val sql: String, val decoder: RowDecoder[R])
+        extends SimpleQuery[RowSet[R]]
 
     case class Cursor(id: Int)                                         extends Reply
     class ExecuteCursor[R <: Row](sql: String, decoder: RowDecoder[R]) extends Ask[Cursor]
@@ -41,46 +39,58 @@ object Statement {
     case class CursorRow[R <: Row](row: R, cursorId: Int) extends Notice
     case class CursorEnd(cursorId: Int)                   extends Notice
 
-    trait PrepareQuery[T <: Reply] extends Ask[T] {
+    sealed trait SimpleQuery[T <: Reply] extends Ask[T] {
+        def sql: String
+    }
+
+    object SimpleQuery {
+
+        def fetchOne[R <: Row](sql: String)(using decoder: RowDecoder[R]): ExecuteQuery[R] =
+            new ExecuteQuery(sql, decoder)
+        def fetchAll[R <: Row](sql: String)(using decoder: RowDecoder[R]): ExecuteQueries[R] =
+            new ExecuteQueries[R](sql, decoder)
+        def update(sql: String): SimpleQuery[ModifyRows] = new ExecuteUpdate(sql)
+        def delete(sql: String): SimpleQuery[ModifyRows] = new ExecuteUpdate(sql)
+        def insert(sql: String): SimpleQuery[ModifyRows] = new ExecuteUpdate(sql)
+
+    }
+
+    sealed trait PrepareQuery[T <: Reply] extends Ask[T] {
 
         def sql: String
         def bind: Product | Seq[Product]
-        def isBatch: Boolean
+        final def isBatch: Boolean = bind.isInstanceOf[Seq[?]]
 
     }
-
-    type BIND = Product | Seq[Product]
 
     object PrepareQuery {
 
-        def fetchOne[R <: Row](sql: String, bind: BIND)(using decoder: RowDecoder[R]): PrepareFetchOneQuery[R] =
+        def fetchOne[R <: Row](sql: String, bind: Product = EmptyTuple)(using decoder: RowDecoder[R]): PrepareQuery[R] =
             new PrepareFetchOneQuery(sql, bind, decoder)
-        def fetchAll[R <: Row](sql: String, bind: BIND)(using decoder: RowDecoder[R]) =
-            new PrepareFetchAllQuery[R](sql, bind, decoder)
-        def update(sql: String, bind: BIND) = new PrepareUpdate(sql, bind)
-        def insert(sql: String, bind: BIND) = new PrepareUpdate(sql, bind)
+        def fetchAll[R <: Row](sql: String, bind: Product = EmptyTuple)(using
+            decoder: RowDecoder[R]
+        ): PrepareQuery[RowSet[R]] =
+            new PrepareFetchAllQuery(sql, bind, decoder)
+        def update(sql: String, bind: Product | Seq[Product]): PrepareQuery[ModifyRows] = new PrepareUpdate(sql, bind)
+        def insert(sql: String, bind: Product | Seq[Product]): PrepareQuery[ModifyRows] = new PrepareUpdate(sql, bind)
+        def delete(sql: String, bind: Product | Seq[Product] = EmptyTuple): PrepareQuery[ModifyRows] =
+            new PrepareUpdate(sql, bind)
 
     }
 
-    class PrepareFetchOneQuery[R <: Row](
+    private[otavia] class PrepareFetchOneQuery[R <: Row](
         override val sql: String,
         override val bind: Product | Seq[Product],
         val decoder: RowDecoder[R]
-    ) extends PrepareQuery[R] {
-        override def isBatch: Boolean = bind.isInstanceOf[Seq[?]]
-    }
+    ) extends PrepareQuery[R]
 
-    class PrepareFetchAllQuery[R <: Row](
+    private[otavia] class PrepareFetchAllQuery[R <: Row](
         override val sql: String,
         override val bind: Product | Seq[Product],
         val decoder: RowDecoder[R]
-    ) extends PrepareQuery[R] {
-        override def isBatch: Boolean = bind.isInstanceOf[Seq[?]]
-    }
+    ) extends PrepareQuery[RowSet[R]]
 
-    class PrepareUpdate(override val sql: String, override val bind: Product | Seq[Product])
-        extends PrepareQuery[ModifyRows] {
-        override def isBatch: Boolean = bind.isInstanceOf[Seq[?]]
-    }
+    private[otavia] class PrepareUpdate(override val sql: String, override val bind: Product | Seq[Product])
+        extends PrepareQuery[ModifyRows]
 
 }
