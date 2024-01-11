@@ -61,15 +61,22 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
     private val rowParser: PostgresRowParser = new PostgresRowParser()
 
     private val prepareStatements: mutable.HashMap[String, PreparedStatement] = mutable.HashMap.empty
-    private val psSeq          = new HexSequence() // used for generating named prepared statement name
-    private var bound: Boolean = true              // whether the current prepared query bound
+    private val psSeq             = new HexSequence() // used for generating named prepared statement name
+    private var compiled: Boolean = false             // whether the current prepared query compiled
 
     private var modifyRows: Int = 0
 
+    private var error: Throwable = _
+
     override def setChannelOptions(channel: Channel): Unit = {
         channel.setOption(ChannelOption.CHANNEL_MAX_FUTURE_INFLIGHT, options.pipeliningLimit)
+        channel.setOption(ChannelOption.CHANNEL_FUTURE_BARRIER, this.futureBarrier)
         // TODO:
     }
+
+    private def futureBarrier(msg: AnyRef): Boolean = msg match
+        case prepareQuery: PrepareQuery[?] => !prepareStatements.contains(prepareQuery.sql)
+        case _                             => false
 
     final override protected def checkDecodePacket(buffer: Buffer): Boolean =
         if (buffer.readableBytes >= 5) {
@@ -88,7 +95,6 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                 }
             case simpleQuery: SimpleQuery[?]   => encodeSimpleQuery(simpleQuery, output)
             case prepareQuery: PrepareQuery[?] => encodePrepareQuery(prepareQuery, output)
-            case _                             => ???
     }
 
     override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit = {
@@ -178,22 +184,36 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
             // ACTIVE
         } else {
             // FAILED
-            ctx.fireChannelExceptionCaught(new TransactionFailed, currentOutboundMessageId)
+            error = new TransactionFailed
         }
-        // fire ?
-        if (!bound) {
-            val promise = ctx.inflightFutures.first
-            val query   = promise.getAsk().asInstanceOf[PrepareQuery[?]]
-            this.write(ctx, query, promise.messageId)
-            this.flush(ctx)
-            ctx.inflightFutures.setBarrierMode(false)
+
+        val promise = ctx.inflightFutures.first
+        val query   = promise.getAsk()
+        if (error != null) ctx.fireChannelExceptionCaught(error, promise.messageId)
+        else {
+            query match
+                case query: PrepareQuery[?] if !compiled =>
+                    encodePrepareQuery(query, ctx.outboundAdaptiveBuffer)
+                case _ =>
+                    query match
+                        case authentication: Authentication =>
+                            if (status == ST_AUTHENTICATED) ctx.fireChannelRead(None, promise.messageId)
+                            else ctx.fireChannelExceptionCaught(new UnknownError(), promise.messageId)
+                        case update: (ExecuteUpdate | PrepareUpdate) =>
+                            ctx.fireChannelRead(ModifyRows(modifyRows), promise.messageId)
+                            modifyRows = 0
+                        case query: (ExecuteQuery[?] | PrepareFetchOneQuery[?]) =>
+                            if (rowBuffer.nonEmpty) ctx.fireChannelRead(rowBuffer.head, promise.messageId)
+                            else ctx.fireChannelExceptionCaught(new Error("No data fetch"), promise.messageId)
+                            rowBuffer.clear()
+                        case queries: (ExecuteQueries[?] | PrepareFetchAllQuery[?]) =>
+                            if (rowBuffer.nonEmpty) {
+                                val rowSet = RowSet(rowBuffer.toSeq)
+                                ctx.fireChannelRead(rowSet, promise.messageId)
+                            } else ctx.fireChannelExceptionCaught(new Error("No data fetch"), promise.messageId)
+                            rowBuffer.clear()
         }
-        if (modifyRows > 0) {
-            val future = ctx.inflightFutures.first
-            val rows   = modifyRows
-            modifyRows = 0
-            ctx.fireChannelRead(ModifyRows(rows), future.messageId)
-        }
+
     }
 
     private def decodeDataRow(payload: Buffer, payloadLength: Int): Unit =
@@ -218,7 +238,7 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                 case executeQuery: ExecuteQuery[?] =>
                     val row = executeQuery.decoder.decode(rowParser)
                     continueParseRow = false
-                    ctx.fireChannelRead(row, future.messageId)
+                    rowBuffer.addOne(row)
                 case executeQueries: ExecuteQueries[?] =>
                     val decoder = executeQueries.decoder
                     val row     = decoder.decode(rowParser)
@@ -229,14 +249,13 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                     rowParser.setRowDesc(ps.rowDesc)
                     val row = decoder.decode(rowParser)
                     continueParseRow = false
-                    ctx.fireChannelRead(row, future.messageId)
+                    rowBuffer.addOne(row)
                 case prepareQuery: PrepareFetchAllQuery[?] =>
                     val ps      = prepareStatements(prepareQuery.sql)
                     val decoder = prepareQuery.decoder
                     rowParser.setRowDesc(ps.rowDesc)
                     val row = decoder.decode(rowParser)
                     rowBuffer.addOne(row)
-
         }
 
     private def decodeRowDescription(payload: Buffer): Unit = {
@@ -288,13 +307,7 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
             val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_INSERT.length).toInt
             modifyRows += rows
         } else if (payload.skipIfNextAre(CMD_COMPLETED_SELECT)) {
-            val future = ctx.inflightFutures.first
-            val cmd    = future.getAsk()
-            if (cmd.isInstanceOf[ExecuteQueries[?]] || cmd.isInstanceOf[PrepareFetchAllQuery[?]]) {
-                val rowSet = RowSet(rowBuffer.toSeq)
-                rowBuffer.clear()
-                ctx.fireChannelRead(rowSet, future.messageId)
-            }
+            //
         } else if (payload.skipIfNextAre(CMD_COMPLETED_FETCH)) {
             //
         } else if (payload.skipIfNextAre(CMD_COMPLETED_COPY)) {
@@ -309,7 +322,7 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
     private def decodeAuthentication(payload: Buffer, length: Int): Unit = {
         val typ = payload.readInt
         typ match
-            case Constants.AUTH_TYPE_OK => successAuthAndResponse()
+            case Constants.AUTH_TYPE_OK => successAuth()
             case Constants.AUTH_TYPE_MD5_PASSWORD =>
                 val salt = new Array[Byte](4)
                 payload.readBytes(salt)
@@ -327,7 +340,7 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                     scramAuthentication.checkServerFinalMsg(payload, length - 8)
                     logger.debug("sasl final")
                 } catch {
-                    case e: UnsupportedOperationException => ctx.fireChannelExceptionCaught(e, currentOutboundMessageId)
+                    case e: UnsupportedOperationException => error = e
                 }
             case _ =>
                 val error = new UnsupportedOperationException(
@@ -378,10 +391,8 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
         ctx.writeAndFlush(packet)
     }
 
-    private def successAuthAndResponse(): Unit = {
+    private def successAuth(): Unit = {
         status = ST_AUTHENTICATED
-        if (ChannelInflight.isValidChannelMessageId(currentOutboundMessageId))
-            ctx.fireChannelRead(None, currentOutboundMessageId)
     }
 
     private def decodeParameterStatus(payload: Buffer): Unit = {
@@ -399,7 +410,7 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
     private def decodeErrorResponse(payload: Buffer, length: Int): Unit = {
         decodeResponse(payload, length)
         val exception = response.toExecption()
-        ctx.fireChannelExceptionCaught(exception, currentOutboundMessageId)
+        error = exception
     }
 
     private def decodeResponse(payload: Buffer, length: Int): Unit = {
@@ -433,8 +444,8 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
 
     private def encodePrepareQuery(query: PrepareQuery[?], output: Buffer): Unit = {
         prepareStatements.get(query.sql) match
-            case Some(ps) =>
-                bound = true
+            case Some(ps) if ps.parsed =>
+                compiled = true
                 val bind = query.bind
                 bind match
                     case products: Seq[Product] =>
@@ -446,10 +457,13 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                         encodeBind(ps, product, output)
                         encodeExecute(0, output)
                 encodeSync(output)
+                ctx.writeAndFlush(output)
+                ctx.inflightFutures.setBarrierMode(false)
             case None =>
                 ctx.inflightFutures.setBarrierMode(true)
-                bound = false
+                compiled = false
                 sendPrepareStatement(query.sql, output)
+            case _ =>
     }
 
     private def sendPrepareStatement(sql: String, output: Buffer): Unit = {

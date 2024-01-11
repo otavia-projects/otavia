@@ -40,7 +40,11 @@ object Statement {
     case class CursorEnd(cursorId: Int)                   extends Notice
 
     sealed trait SimpleQuery[T <: Reply] extends Ask[T] {
+
         def sql: String
+
+        override def toString: String = sql
+
     }
 
     object SimpleQuery {
@@ -59,7 +63,8 @@ object Statement {
 
         def sql: String
         def bind: Product | Seq[Product]
-        final def isBatch: Boolean = bind.isInstanceOf[Seq[?]]
+        final def isBatch: Boolean    = bind.isInstanceOf[Seq[?]]
+        override def toString: String = sql
 
     }
 
