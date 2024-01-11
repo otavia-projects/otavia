@@ -49,8 +49,7 @@ final private[core] class ChannelPromise extends AbstractPromise[AnyRef] with Ch
     private var ask: AnyRef                      = _
     private var callback: ChannelPromise => Unit = _
 
-    private var msgId: Long      = -1
-    private var barrier: Boolean = false
+    private var msgId: Long = -1
 
     def setMessageId(id: Long): Unit = this.msgId = id
 
@@ -64,10 +63,6 @@ final private[core] class ChannelPromise extends AbstractPromise[AnyRef] with Ch
         val v = ask
         v
     }
-
-    def setBarrier(barrier: Boolean): Unit = this.barrier = barrier
-
-    def isBarrier: Boolean = barrier
 
     private[core] def setChannel(channel: Channel): Unit = ch = channel
 
@@ -100,12 +95,13 @@ final private[core] class ChannelPromise extends AbstractPromise[AnyRef] with Ch
         ask = null
         callback = null
         msgId = -1
-        barrier = false
         super.cleanInstance()
     }
 
     private def execute(task: ChannelPromise => Unit): Unit = task(this)
 
     def onCompleted(task: ChannelPromise => Unit): Unit = if (isDone) execute(task) else callback = task
+
+    override def toString: String = s"ChannelFuture(ask = $ask)"
 
 }

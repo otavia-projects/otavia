@@ -88,7 +88,8 @@ class QueueMap[V <: QueueMapEntity] {
             pre.queueLater = next
             next.queueEarlier = pre
         } else if (pre == null && next == null) {
-            // do nothing
+            head = null
+            tail = null
         } else if (pre == null) {
             head = next
             head.queueEarlier = null
@@ -116,8 +117,6 @@ class QueueMap[V <: QueueMapEntity] {
     def first: V = head.asInstanceOf[V]
 
     def last: V = tail.asInstanceOf[V]
-
-    def headIsBarrier: Boolean = if (head != null && head.isBarrier) true else false
 
     private def findNode(id: Long): QueueMapEntity = {
         if (tail != null && tail.entityId == id) tail

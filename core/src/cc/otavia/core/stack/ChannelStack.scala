@@ -27,8 +27,6 @@ class ChannelStack[+T <: AnyRef] private () extends Stack with QueueMapEntity {
     private var belong: AbstractChannel = _
     private var msgId: Long             = -1
 
-    private var barrier: Boolean = false
-
     private var done: Boolean = false
 
     private var ret: AnyRef        = _
@@ -44,16 +42,12 @@ class ChannelStack[+T <: AnyRef] private () extends Stack with QueueMapEntity {
     def setMessageId(id: Long): Unit = msgId = id
     override def entityId: Long      = msgId
 
-    override def isBarrier: Boolean  = barrier
-    def setBarrier(b: Boolean): Unit = barrier = b
-
     override def recycle(): Unit = ChannelStack.stackPool.recycle(this)
 
     override protected def cleanInstance(): Unit = {
         msg = null
         belong = null
         msgId = -1
-        barrier = false
         done = false
         ret = null
         noticeRet = false

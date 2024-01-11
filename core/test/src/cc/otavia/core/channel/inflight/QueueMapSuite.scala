@@ -18,6 +18,8 @@ package cc.otavia.core.channel.inflight
 
 import org.scalatest.funsuite.AnyFunSuiteLike
 
+import scala.language.unsafeNulls
+
 class QueueMapSuite extends AnyFunSuiteLike {
 
     import QueueMapSuite.*
@@ -49,7 +51,18 @@ class QueueMapSuite extends AnyFunSuiteLike {
 
         assert(queueMap.size == 8)
 
-        assert(!queueMap.headIsBarrier)
+    }
+
+    test("remove one") {
+        val queueMap = new QueueMap[TestQueueMapEntity]()
+        val entity   = new TestQueueMapEntity()
+        entity.setId(1)
+        queueMap.append(entity)
+
+        queueMap.remove(1)
+
+        assert(queueMap.isEmpty)
+        assert(queueMap.first == null)
 
     }
 
@@ -77,32 +90,15 @@ class QueueMapSuite extends AnyFunSuiteLike {
         assert(!queueMap.contains(3))
     }
 
-    test("headIsBarrier") {
-        val entity = new TestQueueMapEntity()
-        entity.setId(0)
-        entity.setBarrier(true)
-
-        val queueMap = new QueueMap[TestQueueMapEntity]()
-
-        queueMap.append(entity)
-
-        assert(queueMap.headIsBarrier)
-    }
-
 }
 
 object QueueMapSuite {
     class TestQueueMapEntity() extends QueueMapEntity {
 
-        private var id: Int          = 0
-        private var barrier: Boolean = false
-        override def entityId: Long  = id
-
-        override def isBarrier: Boolean = barrier
+        private var id: Int         = 0
+        override def entityId: Long = id
 
         def setId(i: Int): Unit = id = i
-
-        def setBarrier(b: Boolean): Unit = barrier = b
 
     }
 }

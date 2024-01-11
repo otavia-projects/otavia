@@ -126,7 +126,6 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
             if (!exception) promise.setSuccess(msg) else promise.setFailure(msg.asInstanceOf[Throwable])
         } else {
             val stack = ChannelStack(this, msg, msgId = generateMessageId)
-            stack.setBarrier(stackBarrier(msg))
             pendingStacks.append(stack)
             processPendingStacks()
         }
@@ -139,7 +138,6 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
             if (!exception) promise.setSuccess(msg) else promise.setFailure(msg.asInstanceOf[Throwable])
         } else {
             val stack = ChannelStack(this, msg, id)
-            stack.setBarrier(stackBarrier(msg))
             pendingStacks.append(stack)
             processPendingStacks()
         }
@@ -160,13 +158,17 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         if (pendingStacks.nonEmpty) processPendingStacks()
     }
 
-    final private[core] def processPendingStacks(): Unit = if (pendingStacks.headIsBarrier)
-        if (inflightStacks.isEmpty) processPendingStack()
-    else if (!inflightStacks.headIsBarrier) {
-        while (pendingStacks.nonEmpty && inflightStacks.size < maxStackInflight && !pendingStacks.headIsBarrier)
-            processPendingStack()
-        processCompletedChannelStacks()
-    }
+    final private[core] def processPendingStacks(): Unit =
+        if (pendingStacks.nonEmpty && stackBarrier(pendingStacks.first.message)) {
+            if (inflightStacks.isEmpty) processPendingStack()
+        } else if (pendingStacks.nonEmpty && !stackBarrier(pendingStacks.first.message)) {
+            while (
+              pendingStacks.nonEmpty &&
+              inflightStacks.size < maxStackInflight &&
+              !stackBarrier(pendingStacks.first.message)
+            ) processPendingStack()
+            processCompletedChannelStacks()
+        }
 
     private def processPendingStack(): Unit = {
         val stack = pendingStacks.pop()
@@ -179,26 +181,27 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         }
     }
 
-    final private[core] def processPendingFutures(): Unit = if (pendingFutures.headIsBarrier) {
-        if (inflightFutures.isEmpty) {
-            val promise = pendingFutures.pop()
-            inflightFutures.append(promise)
-            // write message to pipeline, and send data by socket
-            this.writeAndFlush(promise.getAsk(), promise.messageId)
+    final private[core] def processPendingFutures(): Unit =
+        if (pendingFutures.nonEmpty && futureBarrier(pendingFutures.first.getAsk())) {
+            if (inflightFutures.isEmpty) {
+                val promise = pendingFutures.pop()
+                inflightFutures.append(promise)
+                // write message to pipeline, and send data by socket
+                this.writeAndFlush(promise.getAsk(), promise.messageId)
+            }
+        } else {
+            while (
+              pendingFutures.nonEmpty &&
+              inflightFutures.size < maxFutureInflight &&
+              !futureBarrier(pendingFutures.first.getAsk()) &&
+              !inflightFutures.isBarrierMode
+            ) {
+                val promise = pendingFutures.pop()
+                inflightFutures.append(promise)
+                this.write(promise.getAsk(), promise.messageId)
+            }
+            this.flush()
         }
-    } else if (!inflightFutures.headIsBarrier && !inflightFutures.isBarrierMode) {
-        while (
-          pendingFutures.nonEmpty &&
-          inflightFutures.size < maxFutureInflight &&
-          !pendingFutures.headIsBarrier &&
-          !inflightFutures.isBarrierMode
-        ) {
-            val promise = pendingFutures.pop()
-            inflightFutures.append(promise)
-            this.write(promise.getAsk(), promise.messageId)
-        }
-        this.flush()
-    }
 
     final protected def failedFutures(cause: Throwable): Unit = {
         while (inflightFutures.nonEmpty) {
@@ -228,7 +231,6 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     override def ask(value: AnyRef, future: ChannelFuture): ChannelFuture = {
         val promise = future.promise
         promise.setMessageId(generateMessageId)
-        promise.setBarrier(futureBarrier(value))
         promise.setAsk(value)
         promise.setChannel(this)
         actor.attachStack(actor.generateSendMessageId(), future)
