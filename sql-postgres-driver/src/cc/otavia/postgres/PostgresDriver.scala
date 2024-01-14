@@ -187,13 +187,19 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
             error = new TransactionFailed
         }
 
-        val promise = ctx.inflightFutures.first
-        val query   = promise.getAsk()
-        if (error != null) ctx.fireChannelExceptionCaught(error, promise.messageId)
-        else {
+        val inflight = ctx.inflightFutures
+        val promise  = inflight.first
+        val query    = promise.getAsk()
+        if (error != null) {
+            val cause = error
+            error = null
+            ctx.fireChannelExceptionCaught(cause, promise.messageId)
+        } else {
             query match
                 case query: PrepareQuery[?] if !compiled =>
-                    encodePrepareQuery(query, ctx.outboundAdaptiveBuffer)
+                    encodePrepareQuery(query, ctx.outboundAdaptiveBuffer) // stage 2: execute prepared statement
+                    compiled = true
+                    ctx.inflightFutures.setBarrierMode(false)
                 case _ =>
                     query match
                         case authentication: Authentication =>
@@ -445,11 +451,10 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
     private def encodePrepareQuery(query: PrepareQuery[?], output: Buffer): Unit = {
         prepareStatements.get(query.sql) match
             case Some(ps) if ps.parsed =>
-                compiled = true
                 val bind = query.bind
                 bind match
                     case products: Seq[Product] =>
-                        products.foreach { product =>
+                        for (product <- products) {
                             encodeBind(ps, product, output)
                             encodeExecute(0, output)
                         }
@@ -458,7 +463,7 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                         encodeExecute(0, output)
                 encodeSync(output)
                 ctx.writeAndFlush(output)
-                ctx.inflightFutures.setBarrierMode(false)
+                output.compact()
             case None =>
                 ctx.inflightFutures.setBarrierMode(true)
                 compiled = false
