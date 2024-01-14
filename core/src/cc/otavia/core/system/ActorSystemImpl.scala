@@ -127,7 +127,7 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
 
     override def defaultMaxFetchPerRunning: Int = ???
 
-    override def defaultMaxBatchSize: Int = ???
+    override def defaultMaxBatchSize: Int = 16
 
     // format: off
     override def buildActor[A <: Actor[? <: Call]](factory: ActorFactory[A], num: Int = 1,

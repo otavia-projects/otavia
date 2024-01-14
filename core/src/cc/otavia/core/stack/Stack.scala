@@ -26,7 +26,6 @@ import scala.language.unsafeNulls
 abstract class Stack extends Poolable {
 
     private var stackState: StackState = StackState.start
-    private var error: Boolean         = false
 
     // completed promise
     private var completedHead: AbstractPromise[?] = _
@@ -50,15 +49,11 @@ abstract class Stack extends Poolable {
         this.stackState = stackState
     }
 
-    private[core] def setFailed(): Unit = error = true
-    private[core] def isFailed: Boolean = error
-
     def isDone: Boolean
 
     override protected def cleanInstance(): Unit = {
         recycleCompletedPromises()
         stackState = StackState.start
-        error = false
         actor = null
     }
 

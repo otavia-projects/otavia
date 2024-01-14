@@ -25,41 +25,43 @@ import scala.language.unsafeNulls
 
 final class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
 
-    private var messages: Seq[Ask[?]] = _
-    private var reply: Reply          = _
-    private var done: Boolean         = false
+    private var envelopes: Seq[Envelope[Ask[?]]] = _
+    private var done: Boolean                    = false
 
-    private[core] def setAsks(asks: Seq[Ask[?]]): Unit = this.messages = asks
+    private[core] def setAsks(envelopes: Seq[Envelope[Ask[?]]]): Unit = this.envelopes = envelopes
 
-    def asks: Seq[A] = messages.asInstanceOf[Seq[A]]
+    def asks: Seq[Envelope[A]] = envelopes.asInstanceOf[Seq[Envelope[A]]]
 
     def `return`(ret: ReplyOf[A]): None.type = {
-        reply = ret
         val none = end(ret)
         done = true
         none
     }
 
-    def `return`(rets: Seq[ReplyOf[A]]): None.type = {
-        ???
+    def `return`(rets: Seq[(Envelope[A], ReplyOf[A])]): None.type = {
+        done = true
+        for ((envelope, ret) <- rets) envelope.sender.reply(ret, envelope.messageId, runtimeActor)
+        None
     }
 
     def `throw`(cause: ExceptionMessage): None.type = {
-        reply = cause
-        this.setFailed()
-        val none = end(cause)
+        val none = end(cause, true)
         done = true
         none
     }
 
-    private def end(ret: Reply): None.type = {
-        ret.setReplyId(asks.map(ask => (ask.senderId, ask.askId)))
-        val set = ActorThread.threadSet[Address[Call]]
-        for (elem <- asks) set.addOne(elem.sender)
-        if (isFailed) for (sender <- set) sender.`throw`(reply.asInstanceOf[ExceptionMessage], runtimeActor)
-        else
-            for (sender <- set) sender.reply(reply, runtimeActor)
-        set.clear()
+    private def end(ret: Reply, exception: Boolean = false): None.type = {
+        for ((sender, envs) <- envelopes.groupBy(_.sender)) {
+            if (envs.length > 1) {
+                val replyIds = envs.map(_.messageId).toArray
+                if (exception) sender.`throw`(ret.asInstanceOf[ExceptionMessage], replyIds, runtimeActor)
+                else sender.reply(ret, replyIds, runtimeActor)
+            } else {
+                val replyId = envs.head.messageId
+                if (exception) sender.`throw`(ret.asInstanceOf[ExceptionMessage], replyId, runtimeActor)
+                else sender.reply(ret, replyId, runtimeActor)
+            }
+        }
         None
     }
 
@@ -68,8 +70,7 @@ final class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
     override def recycle(): Unit = BatchAskStack.pool.recycle(this)
 
     override protected def cleanInstance(): Unit = {
-        messages = null
-        reply = null
+        envelopes = null
         done = false
         super.cleanInstance()
     }

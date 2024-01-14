@@ -22,7 +22,7 @@ import cc.otavia.core.stack.Stack
 import cc.otavia.core.util.Nextable
 
 /** Message is base unit for actor community */
-sealed trait Message extends Nextable with Serializable
+sealed trait Message extends Serializable
 
 /** Message which will generate [[Stack]] when a [[Actor]] received. */
 sealed trait Call extends Message
@@ -31,50 +31,12 @@ sealed trait Call extends Message
 trait Notice extends Call
 
 /** message which need reply */
-trait Ask[R <: Reply] extends Call {
-
-    private var address: Address[Call] = _
-    private var sid: Long              = 0
-    private var mid: Long              = 0
-
-    def sender: Address[Call] = address
-
-    def senderId: Long = sid
-
-    def askId: Long = mid
-
-    private[core] def setAskContext(sender: AbstractActor[?]): Unit = {
-        // TODO: support AOP when sender is AopActor
-        this.address = sender.self.asInstanceOf[Address[Call]]
-        this.sid = sender.actorId
-        this.mid = sender.generateSendMessageId()
-    }
-
-}
+trait Ask[R <: Reply] extends Call
 
 type ReplyOf[A <: Ask[? <: Reply]] <: Reply = A match
     case Ask[r] => r
 
 /** reply message, it reply at least one ask message */
-trait Reply extends Message {
-
-    private var sid: Long = -1L
-    private var rid: Long = -1L
-
-    private var rids: Seq[(Long, Long)] = _
-    private var batch: Boolean          = false
-    private var bound: Boolean          = false
-
-    def setReplyId(id: Long): Unit = { this.rid = id; batch = false; bound = true }
-
-    def setReplyId(ids: Seq[(Long, Long)]): Unit = { this.rids = ids; batch = true; bound = true }
-
-    def replyId: Long = if (batch) throw new RuntimeException("") else this.rid
-
-    def replyIds: Seq[(Long, Long)] = { assert(batch, ""); this.rids }
-
-    def isBatch: Boolean = batch
-
-}
+trait Reply extends Message
 
 case class TimeoutReply() extends Reply

@@ -80,13 +80,18 @@ trait Address[-M <: Call] extends EventableAddress {
     // format: on
 
     /** send a reply message to this address, this method can not be use by user, use [[AskStack.`return`]] instead.
+     *
      *  @param reply
      *    reply message to send
      *  @param sender
      *    who send this reply message
      */
-    private[core] def reply(reply: Reply, sender: AbstractActor[?]): Unit
+    private[core] def reply(reply: Reply, replyId: Long, sender: AbstractActor[?]): Unit
 
-    private[core] def `throw`(cause: ExceptionMessage, sender: AbstractActor[?]): Unit
+    private[core] def reply(reply: Reply, replyIds: Array[Long], sender: AbstractActor[?]): Unit
+
+    private[core] def `throw`(cause: ExceptionMessage, replyId: Long, sender: AbstractActor[?]): Unit
+
+    private[core] def `throw`(cause: ExceptionMessage, replyIds: Array[Long], sender: AbstractActor[?]): Unit
 
 }

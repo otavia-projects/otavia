@@ -97,28 +97,28 @@ trait Actor[+M <: Call] {
      *  @param notice
      *    notice message receive by this actor instance
      */
-    private[core] def receiveNotice(notice: Notice): Unit
+    private[core] def receiveNotice(envelope: Envelope[?]): Unit
 
     /** receive ask message by this method, the method will be call when this actor instance receive ask message
      *
      *  @param ask
      *    ask message received by this actor instance
      */
-    private[core] def receiveAsk(ask: Ask[? <: Reply]): Unit
+    private[core] def receiveAsk(envelope: Envelope[?]): Unit
 
     /** receive reply message by this method, the method will be call when this actor instance receive reply message
      *
      *  @param reply
      *    reply message receive by this actor instance
      */
-    private[core] def receiveReply(reply: Reply): Unit
+    private[core] def receiveReply(envelope: Envelope[?]): Unit
 
     /** receive exception reply message by this method, the method will be call when this actor instance receive reply
      *  message
      *  @param exceptionMessage
      *    exception reply message receive by this actor instance
      */
-    private[core] def receiveExceptionReply(exceptionMessage: ExceptionMessage): Unit
+    private[core] def receiveExceptionReply(envelope: Envelope[?]): Unit
 
     /** Receive IO event from [[Reactor]] or timeout event from [[Timer]]
      *  @param event
@@ -144,7 +144,7 @@ trait Actor[+M <: Call] {
      *  @param asks
      *    batch ask messages.
      */
-    private[core] def receiveBatchAsk(asks: Seq[Ask[?]]): Unit
+    private[core] def receiveBatchAsk(asks: Seq[Envelope[Ask[?]]]): Unit
 
     protected def isBarrierCall(call: Call): Boolean = false
 

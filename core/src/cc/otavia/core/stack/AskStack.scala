@@ -17,6 +17,7 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.actor.{AbstractActor, Actor}
+import cc.otavia.core.address.Address
 import cc.otavia.core.cache.{AbstractThreadIsolatedObjectPool, ActorThreadLocal, Poolable, ThreadLocalTimer}
 import cc.otavia.core.message.*
 import cc.otavia.core.timer.Timer
@@ -29,22 +30,26 @@ final class AskStack[A <: Ask[? <: Reply]] private () extends Stack {
     private var call: Call   = _
     private var reply: Reply = _
 
-    private[core] def setAsk(c: Call): Unit = call = c
+    private var sender: Address[Call] = _
+    private var askId: Long           = 0 // ask message id
+
+    private[core] def setAsk(envelope: Envelope[?]): Unit = {
+        sender = envelope.sender
+        askId = envelope.messageId
+        call = envelope.message.asInstanceOf[Call]
+    }
 
     def ask: A = call.asInstanceOf[A]
 
-    def `return`(ret: ReplyOf[A]): None.type = {
-        ret.setReplyId(ask.askId)
-        reply = ret
-        ask.sender.reply(reply, runtimeActor)
+    def `return`(value: ReplyOf[A]): None.type = {
+        reply = value
+        sender.reply(reply, askId, runtimeActor)
         None
     }
 
     def `throw`(cause: ExceptionMessage): None.type = {
-        cause.setReplyId(ask.askId)
         reply = cause
-        this.setFailed()
-        ask.sender.`throw`(cause, runtimeActor)
+        sender.`throw`(cause, askId, runtimeActor)
         None
     }
 
@@ -57,6 +62,8 @@ final class AskStack[A <: Ask[? <: Reply]] private () extends Stack {
     override protected def cleanInstance(): Unit = {
         call = null
         reply = null
+        sender = null
+        askId = 0
         super.cleanInstance()
     }
 

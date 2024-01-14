@@ -33,40 +33,71 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
 
     private[core] val house: ActorHouse
 
-    // format: off
-    override def ask[A <: M & Ask[? <: Reply]](ask: A, future: MessageFuture[ReplyOf[A]])(using sender: AbstractActor[?]): MessageFuture[ReplyOf[A]] = {
-        // format: on
-        ask.setAskContext(sender)
-        sender.attachStack(ask.askId, future)
-        house.putAsk(ask)
+    private def doEnvelope[T <: Message](message: T, sender: AbstractActor[?]): Envelope[T] = {
+        val envelope = Envelope[T]()
+        envelope.setSender(sender.self.asInstanceOf[Address[Call]])
+        envelope.setMessageId(sender.generateSendMessageId())
+        envelope.setContent(message)
+        envelope
+    }
+
+    override def ask[A <: M & Ask[? <: Reply]](ask: A, future: MessageFuture[ReplyOf[A]])(using
+        sender: AbstractActor[?]
+    ): MessageFuture[ReplyOf[A]] = {
+        val envelope = doEnvelope(ask, sender)
+        sender.attachStack(envelope.messageId, future)
+        house.putAsk(envelope)
         future
     }
 
-    override def askUnsafe(ask: Ask[?], f: MessageFuture[?])(using sender: AbstractActor[?]): MessageFuture[?] = {
-        ask.setAskContext(sender)
-        sender.attachStack(ask.askId, f)
-        house.putAsk(ask)
-        f
+    override def askUnsafe(ask: Ask[?], future: MessageFuture[?])(using sender: AbstractActor[?]): MessageFuture[?] = {
+        val envelope = doEnvelope(ask, sender)
+        sender.attachStack(envelope.messageId, future)
+        house.putAsk(envelope)
+        future
     }
 
-    // format: off
-    override def ask[A <: M & Ask[? <: Reply]](ask: A, future: MessageFuture[ReplyOf[A]], timeout: Long)(using sender: AbstractActor[?]): MessageFuture[ReplyOf[A]] = {
-        // format: on
+    override def ask[A <: M & Ask[? <: Reply]](ask: A, future: MessageFuture[ReplyOf[A]], timeout: Long)(using
+        sender: AbstractActor[?]
+    ): MessageFuture[ReplyOf[A]] = {
         this.ask(ask, future)
         val promise = future.promise
 
-        val id = sender.timer.registerAskTimeout(TimeoutTrigger.DelayTime(timeout), sender.self, ask.askId)
+        val id = sender.timer.registerAskTimeout(TimeoutTrigger.DelayTime(timeout), sender.self, promise.id)
 
         promise.setTimeoutId(id)
         future
     }
 
-    override def notice(notice: M & Notice): Unit = house.putNotice(notice)
+    override def notice(notice: M & Notice): Unit = {
+        val envelope = Envelope[Notice]()
+        envelope.setContent(notice)
+        house.putNotice(envelope)
+    }
 
-    override private[core] def reply(reply: Reply, sender: AbstractActor[?]): Unit = house.putReply(reply)
+    override private[core] def reply(reply: Reply, replyId: Long, sender: AbstractActor[?]): Unit = {
+        val envelope = doEnvelope(reply, sender)
+        envelope.setReplyId(replyId)
+        house.putReply(envelope)
+    }
 
-    override private[core] def `throw`(exceptionMessage: ExceptionMessage, sender: AbstractActor[?]): Unit =
-        house.putException(exceptionMessage)
+    override private[core] def reply(reply: Reply, replyIds: Array[Long], sender: AbstractActor[?]): Unit = {
+        val envelope = doEnvelope(reply, sender)
+        envelope.setReplyIds(replyIds)
+        house.putReply(envelope)
+    }
+
+    override private[core] def `throw`(cause: ExceptionMessage, replyId: Long, sender: AbstractActor[?]): Unit = {
+        val envelope = doEnvelope(cause, sender)
+        envelope.setReplyId(replyId)
+        house.putException(envelope)
+    }
+
+    override private[core] def `throw`(cause: ExceptionMessage, ids: Array[Long], sender: AbstractActor[?]): Unit = {
+        val envelope = doEnvelope(cause, sender)
+        envelope.setReplyIds(ids)
+        house.putException(envelope)
+    }
 
     override private[core] def inform(event: Event): Unit = house.putEvent(event)
 

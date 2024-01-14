@@ -255,23 +255,7 @@ final class ChannelHandlerContextImpl(
 
     override def fireChannelExceptionCaught(cause: Throwable, id: Long): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_EXCEPTION_CAUGHT_ID)
-        try {
-            handler.channelExceptionCaught(this, cause, id)
-            updatePendingBytesIfNeeded()
-        } catch {
-            case error: Throwable =>
-                logger.debug(
-                  s"An exception ${ThrowableUtil.stackTraceToString(error)} was thrown by a user handler's " +
-                      "exceptionCaught() method while handling the following exception:",
-                  cause
-                )
-                logger.warn(
-                  s"An exception '$error' [enable DEBUG level for full stacktrace] "
-                      + "was thrown by a user handler's exceptionCaught() "
-                      + "method while handling the following exception:",
-                  cause
-                )
-        }
+        ctx.invokeChannelExceptionCaught(cause, id)
         this
     }
 
