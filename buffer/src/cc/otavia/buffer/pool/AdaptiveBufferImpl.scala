@@ -2479,7 +2479,7 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         if (allocatedWritableBytes == 0) extendBuffer()
         while {
             val write = Math.min(remaining, last.writableBytes)
-            last.writeBytes(source, srcPos, write)
+            last.writeBytes(source, srcPos + (length - remaining), write)
             remaining -= write
             if (remaining > 0) this.extendBuffer()
             remaining > 0
