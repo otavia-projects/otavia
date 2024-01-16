@@ -48,6 +48,8 @@ trait Channel extends ChannelAddress {
      */
     private[core] def mount(channelsActor: ChannelsActor[?]): Unit
 
+    def mountThreadId: Int
+
     /** Address of executor [[ChannelsActor]] of this [[Channel]] belong to. */
     final def executorAddress: ActorAddress[?] = executor.self
 
@@ -207,7 +209,7 @@ trait Channel extends ChannelAddress {
     def inflightStackSize: Int
 
     def pendingStackSize: Int
-    
+
     /** generate a unique id for the channel message
      *
      *  @return

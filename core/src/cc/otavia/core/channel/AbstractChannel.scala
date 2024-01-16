@@ -71,6 +71,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     private var direct: AbstractPooledPageAllocator = _
     private var heap: AbstractPooledPageAllocator   = _
+    private var threadId: Int                       = -1
 
     // initial channel state on constructing
     created = true
@@ -261,12 +262,15 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         assert(!mounted, s"The channel $this has been mounted already, you can't mount it twice!")
         actor = channelsActor
         val thread = ActorThread.currentThread()
+        threadId = thread.index
         direct = thread.directAllocator
         heap = thread.heapAllocator
         channelId = executor.generateChannelId()
         pipe = newChannelPipeline()
         mounted = true
     }
+
+    final override def mountThreadId: Int = threadId
 
     override def directAllocator: AbstractPooledPageAllocator = direct
 

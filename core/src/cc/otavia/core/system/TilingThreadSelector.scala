@@ -32,18 +32,30 @@ class TilingThreadSelector(private val threads: Array[ActorThread]) extends Thre
         val mod = num % threads.length
         val fac = num / threads.length
 
-        var current = selector.get()
-        while (!selector.compareAndSet(current, (current + mod) % threads.length)) current = selector.get()
-        val parts = for (idx <- current until current + mod) yield threads(idx % threads.length)
-        if (fac > 0) {
-            (0 until fac)
-                .map { _ =>
-                    val part = new Array[ActorThread](threads.length)
-                    System.arraycopy(threads, 0, part, 0, threads.length)
-                    part
-                }
-                .reduce(_ ++ _) ++ parts
-        } else parts
+        if (mod == 0) {
+            val arr     = new Array[ActorThread](fac * threads.length)
+            var destPos = 0
+            while (destPos < arr.length) {
+                System.arraycopy(threads, 0, arr, destPos, threads.length)
+                destPos += threads.length
+            }
+            arr
+        } else if (fac == 0) {
+            var current = selector.get()
+            while (!selector.compareAndSet(current, (current + mod) % threads.length)) current = selector.get()
+            for (idx <- current until current + mod) yield threads(idx % threads.length)
+        } else if (fac > 0) {
+            val arr     = new Array[ActorThread](num)
+            var destPos = 0
+            while (destPos < fac * threads.length) {
+                System.arraycopy(threads, 0, arr, destPos, threads.length)
+                destPos += threads.length
+            }
+            var current = selector.get()
+            while (!selector.compareAndSet(current, (current + mod) % threads.length)) current = selector.get()
+            for (idx <- current until current + mod) arr(destPos + idx - current) = threads(idx % threads.length)
+            arr
+        } else throw new IllegalArgumentException()
 
     }
 

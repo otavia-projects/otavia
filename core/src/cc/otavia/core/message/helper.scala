@@ -19,7 +19,14 @@ package cc.otavia.core.message
 /** Some notices classes that may be used frequently */
 object helper {
 
-    final case class UnitReply() extends Reply
+    sealed trait UnitReply private () extends Reply
+
+    object UnitReply {
+
+        private val default: UnitReply = new UnitReply {}
+        def apply(): UnitReply         = default
+
+    }
 
     final case class IntNotice(value: Int) extends Notice
 

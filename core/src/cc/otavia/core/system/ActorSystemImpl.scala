@@ -180,11 +180,13 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
             val address = range.map { index =>
                 val actor  = actors(index)
                 val thread = threads(index)
+                actor.instances = range.length
+                actor.instanceIndex = index
                 setActorContext(actor, thread)
             }
             logger.debug(s"Created actors ${actors.mkString("Array(", ", ", ")")}")
 
-            (new RobinAddress[Call](address.asInstanceOf[Array[Address[Call]]]), actors.head.getClass)
+            (new RobinAddress[Call](address.asInstanceOf[Array[ActorAddress[Call]]]), actors.head.getClass)
         } else throw new IllegalArgumentException("num must large than 0")
     }
 

@@ -21,7 +21,7 @@ import cc.otavia.core.message.*
 import cc.otavia.core.stack.MessageFuture
 import cc.otavia.core.system.{ActorSystem, ActorThread}
 
-class RobinAddress[M <: Call](val underlying: Array[Address[M]]) extends ProxyAddress[M] {
+class RobinAddress[M <: Call](val underlying: Array[ActorAddress[M]]) extends ProxyAddress[M] {
 
     private var noticeCursor: Int = 0
     private var askCursor: Int    = 0
@@ -51,12 +51,14 @@ class RobinAddress[M <: Call](val underlying: Array[Address[M]]) extends ProxyAd
         address.ask(ask, f, timeout)
     }
 
-    final private def getAddress: Address[M] = if (underlying.length == ActorSystem.global.actorWorkerSize) {
-        underlying(ActorThread.currentThread().index)
-    } else {
-        val index = askCursor % underlying.length
-        askCursor += 1
-        underlying(index)
+    final private def getAddress(using sender: AbstractActor[? <: Call]): Address[M] = {
+        if (sender.instances == underlying.length) {
+            underlying(sender.instanceIndex)
+        } else {
+            val index = askCursor % underlying.length
+            askCursor += 1
+            underlying(index)
+        }
     }
 
     override private[core] def reply(reply: Reply, replyId: Long, sender: AbstractActor[?]): Unit =
