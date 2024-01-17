@@ -61,7 +61,7 @@ class MailBox(val house: ActorHouse) { // extends SpinLock
         } else {
             obj = head
             head = obj.next
-            obj.dechain()
+            obj.deChain()
         }
         count -= 1
         // unlock()

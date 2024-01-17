@@ -21,12 +21,17 @@ private[core] trait Nextable {
     @volatile private var n: Nextable | Null = _
 
     /** Set the next object of this object. */
-    def next_=(nextable: Nextable): Unit = n = nextable
+    def next_=(next: Nextable): Unit = n = next
 
     def next: Nextable | Null = n
 
+    def cleanNext(): Unit = n = null
+
     def isTail: Boolean = n == null
 
-    def dechain(): Unit = n = null
+    /** true if and only if this object is not in any chain */
+    def notInChain: Boolean = n == null
+
+    def deChain(): Unit = n = null
 
 }

@@ -17,7 +17,7 @@
 package cc.otavia.core.cache
 
 import cc.otavia.core.system.ActorSystem
-import cc.otavia.core.util.Chainable
+import cc.otavia.core.util.Nextable
 
 import scala.language.unsafeNulls
 
@@ -25,8 +25,8 @@ final class SingleThreadPoolableHolder[T <: Poolable](val maxSize: Int = ActorSy
     extends PoolableHolder[T] {
 
     private var count: Int      = 0
-    private var head: Chainable = _
-    private var tail: Chainable = _
+    private var head: Nextable = _
+    private var tail: Nextable = _
 
     override def size: Int = count
 

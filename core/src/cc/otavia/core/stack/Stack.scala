@@ -19,7 +19,7 @@ package cc.otavia.core.stack
 import cc.otavia.core.actor.{AbstractActor, Actor}
 import cc.otavia.core.cache.Poolable
 import cc.otavia.core.message.Call
-import cc.otavia.core.util.Chainable
+import cc.otavia.core.util.Nextable
 
 import scala.language.unsafeNulls
 
@@ -75,15 +75,15 @@ abstract class Stack extends Poolable {
                     case null =>
                         uncompletedHead = null
                         uncompletedTail = null
-                    case nextNode: Chainable =>
+                    case nextNode: AbstractPromise[?] =>
                         nextNode.cleanPre()
-                        uncompletedHead = nextNode.asInstanceOf[AbstractPromise[?]]
-            case preNode: Chainable =>
+                        uncompletedHead = nextNode
+            case preNode: AbstractPromise[?] =>
                 next match
                     case null =>
                         preNode.cleanNext()
-                        uncompletedTail = preNode.asInstanceOf[AbstractPromise[?]]
-                    case nextNode: Chainable =>
+                        uncompletedTail = preNode
+                    case nextNode: AbstractPromise[?] =>
                         preNode.next = nextNode
                         nextNode.pre = preNode
 
@@ -127,8 +127,8 @@ abstract class Stack extends Poolable {
     private[core] def hasCompletedPromise: Boolean = completedHead != null
 
     private[core] def completedPromiseCount: Int = {
-        var cursor: Chainable = completedHead
-        var count             = 0
+        var cursor: Nextable = completedHead
+        var count            = 0
         while (cursor != null) {
             cursor = cursor.next
             count += 1
@@ -137,8 +137,8 @@ abstract class Stack extends Poolable {
     }
 
     private[core] def uncompletedPromiseCount: Int = {
-        var cursor: Chainable = uncompletedHead
-        var count             = 0
+        var cursor: Nextable = uncompletedHead
+        var count            = 0
         while (cursor != null) {
             cursor = cursor.next
             count += 1

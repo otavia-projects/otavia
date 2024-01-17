@@ -50,7 +50,7 @@ class Queue[T <: Nextable] {
     } else {
         val value = head
         head = value.next.asInstanceOf[T]
-        value.dechain()
+        value.deChain()
         size -= 1
         value
     }

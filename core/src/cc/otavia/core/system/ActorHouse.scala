@@ -163,7 +163,7 @@ final private[core] class ActorHouse(val manager: HouseManager) {
                         while (cursor != null) {
                             val envelope = cursor.asInstanceOf[Envelope[?]]
                             cursor = envelope.next
-                            envelope.dechain()
+                            envelope.deChain()
                             val notice = envelope.message.asInstanceOf[Notice]
                             if (dweller.batchNoticeFilter(notice)) {
                                 buf.addOne(notice)
@@ -180,7 +180,7 @@ final private[core] class ActorHouse(val manager: HouseManager) {
                         while (cursor != null) {
                             val msg = cursor
                             cursor = msg.next
-                            msg.dechain()
+                            msg.deChain()
                             dweller.receiveNotice(msg.asInstanceOf[Envelope[?]])
                             runLaterTasks()
                         }
@@ -193,7 +193,7 @@ final private[core] class ActorHouse(val manager: HouseManager) {
                         while (cursor != null) {
                             val envelope = cursor.asInstanceOf[Envelope[Ask[?]]]
                             cursor = envelope.next
-                            envelope.dechain()
+                            envelope.deChain()
                             val ask = envelope.message
                             if (dweller.batchAskFilter(ask)) buf.addOne(envelope)
                             else {
@@ -208,7 +208,7 @@ final private[core] class ActorHouse(val manager: HouseManager) {
                         while (cursor != null) {
                             val msg = cursor
                             cursor = msg.next
-                            msg.dechain()
+                            msg.deChain()
                             dweller.receiveAsk(msg.asInstanceOf[Envelope[Ask[?]]])
                             runLaterTasks()
                         }
@@ -241,7 +241,7 @@ final private[core] class ActorHouse(val manager: HouseManager) {
         while (cursor != null) {
             val msg = cursor
             cursor = msg.next
-            msg.dechain()
+            msg.deChain()
             dweller.receiveReply(msg.asInstanceOf[Envelope[?]])
             runLaterTasks()
         }
@@ -252,7 +252,7 @@ final private[core] class ActorHouse(val manager: HouseManager) {
         while (cursor != null) {
             val msg = cursor
             cursor = msg.next
-            msg.dechain()
+            msg.deChain()
             dweller.receiveExceptionReply(msg.asInstanceOf[Envelope[?]])
             runLaterTasks()
         }
@@ -263,7 +263,7 @@ final private[core] class ActorHouse(val manager: HouseManager) {
         while (cursor != null) {
             val msg = cursor.asInstanceOf[Event]
             cursor = msg.next
-            msg.dechain()
+            msg.deChain()
             dweller.receiveEvent(msg)
             runLaterTasks()
         }

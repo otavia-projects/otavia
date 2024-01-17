@@ -33,6 +33,8 @@ abstract class AbstractPromise[V] extends Promise[V] with Future[V] with Poolabl
     protected var result: AnyRef   = _
     protected var error: Throwable = _
 
+    private var p: AbstractPromise[?] = _
+
     def setTimeoutId(id: Long): Unit = tid = id
 
     def timeoutId: Long = tid
@@ -68,6 +70,15 @@ abstract class AbstractPromise[V] extends Promise[V] with Future[V] with Poolabl
         tid = Timer.INVALID_TIMEOUT_REGISTER_ID
         result = null
         error = null
+        p = null
     }
+
+    /** Set the pre object of this object. */
+    final private[core] def pre_=(promise: AbstractPromise[?]): Unit = p = promise
+
+    final private[core] def cleanPre(): Unit = p = null
+
+    /** Get the pre object of this object. */
+    final private[core] def pre: AbstractPromise[?] = p
 
 }

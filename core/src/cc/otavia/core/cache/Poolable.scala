@@ -17,12 +17,12 @@
 package cc.otavia.core.cache
 
 import cc.otavia.core.system.{ActorSystem, ActorThreadPool}
-import cc.otavia.core.util.Chainable
+import cc.otavia.core.util.Nextable
 
 import scala.language.unsafeNulls
 
 /** An object which can be pooled */
-trait Poolable extends Chainable {
+trait Poolable extends Nextable {
 
     private var thread: Thread = _
 

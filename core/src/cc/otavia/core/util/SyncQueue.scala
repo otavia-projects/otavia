@@ -52,7 +52,7 @@ final class SyncQueue[T <: Nextable] {
         } else if (size > 1) {
             value = head
             head = value.next.asInstanceOf[T]
-            value.dechain()
+            value.deChain()
             size -= 1
         }
         value

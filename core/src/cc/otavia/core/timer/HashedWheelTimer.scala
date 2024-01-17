@@ -22,7 +22,7 @@ import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.HashedWheelTimer.*
 import cc.otavia.core.timer.HashedWheelTimer.HashedWheelBucket.LONG_DEADLINE
-import cc.otavia.core.util.{Chainable, Nextable, SpinLockQueue, SyncQueue}
+import cc.otavia.core.util.{Nextable, SpinLockQueue, SyncQueue}
 import cc.otavia.internal.Platform
 
 import java.util.concurrent.*

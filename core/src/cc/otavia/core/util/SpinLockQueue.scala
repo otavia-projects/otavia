@@ -86,7 +86,7 @@ class SpinLockQueue[T <: Nextable] {
         head = value.next.asInstanceOf[T]
         size.decrementAndGet()
         readLock.unlock()
-        value.dechain()
+        value.deChain()
         value.asInstanceOf[T]
     }
 
