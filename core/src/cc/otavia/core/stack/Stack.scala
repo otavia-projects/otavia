@@ -38,6 +38,8 @@ abstract class Stack extends Poolable {
     // context
     private var actor: AbstractActor[?] = _
 
+    private var att: AnyRef = _
+
     private[core] def runtimeActor: AbstractActor[?] = actor
 
     private[core] def setRuntimeActor(a: AbstractActor[?]): Unit = actor = a
@@ -48,6 +50,10 @@ abstract class Stack extends Poolable {
         recycleCompletedPromises()
         this.stackState = stackState
     }
+
+    def attach[T]: T = att.asInstanceOf[T]
+
+    def attach(att: AnyRef): Unit = this.att = att
 
     def isDone: Boolean
 
