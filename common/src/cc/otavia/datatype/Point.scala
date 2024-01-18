@@ -14,19 +14,7 @@
  * limitations under the License.
  */
 
-package cc.otavia.sql.datatype
+package cc.otavia.datatype
 
-import scala.beans.BeanProperty
-
-class Point(@BeanProperty var x: Double = 0, @BeanProperty var y: Double = 0) extends Geometry() {
-    override def toString: String = s"Point($x, $y)"
-    
-}
-
-object Point {
-    def copy(point: Point): Point = {
-        val p = Point(point.x, point.y)
-        p.setSRID(point.getSRID)
-        p
-    }
-}
+/** A Point is a geometry that represents a single location in coordinate space. */
+case class Point(x: Double = 0, y: Double = 0) extends Geometry

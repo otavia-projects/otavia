@@ -14,20 +14,9 @@
  * limitations under the License.
  */
 
-package cc.otavia.sql.datatype
+package cc.otavia.datatype
 
-import scala.beans.BeanProperty
-
-/** A LineString is a Curve with linear interpolation between points, it may represents a Line or a LinearRing.
- *
- *  @param points
+/** A MultiPoint is a geometry collection composed of Point elements. The points are not connected or ordered in any
+ *  way.
  */
-class LineString(@BeanProperty var points: List[Point]) extends Geometry()
-
-object LineString {
-    def copy(lineString: LineString): LineString = {
-        val l = LineString(lineString.points)
-        l.setSRID(lineString.getSRID)
-        l
-    }
-}
+case class MultiPoint(points: Seq[Point]) extends Geometry

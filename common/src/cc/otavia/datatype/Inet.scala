@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package cc.otavia.sql.datatype
+package cc.otavia.datatype
 
-import scala.beans.BeanProperty
+import java.net.InetAddress
 
-/** A MultiPoint is a geometry collection composed of Point elements. The points are not connected or ordered in any
- *  way.
- *
- *  @param points
+/** Inet network address
+ *  @param address
+ *    the inet address
+ *  @param netmask
+ *    the optional netmask
  */
-class MultiPoint(@BeanProperty var points: List[Point]) extends Geometry()
+class Inet private (val address: InetAddress, val netmask: Int)
 
-object MultiPoint {
-    def copy(multiPoint: MultiPoint): MultiPoint = {
-        val mp = MultiPoint(multiPoint.points)
-        mp.setSRID(multiPoint.getSRID)
-        mp
+object Inet {
+    def apply(address: InetAddress, netmask: Int): Inet = {
+        if (netmask < 0 || netmask > 255) throw new IllegalArgumentException("Invalid netmask: " + netmask)
+        new Inet(address, netmask)
     }
 }

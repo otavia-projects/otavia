@@ -14,21 +14,14 @@
  * limitations under the License.
  */
 
-package cc.otavia.sql.datatype
+package cc.otavia.datatype
 
-import scala.beans.BeanProperty
-
-/** A Polygon is a planar Surface representing a multisided geometry. It is defined by a single exterior boundary and
- *  zero or more interior boundaries, where each interior boundary defines a hole in the Polygon.
- *
- *  @param lineStrings
+/** Path data type in Postgres represented by lists of connected points. Paths can be open, where the first and last
+ *  points in the list are considered not connected, or closed, where the first and last points are considered
+ *  connected.
+ *  @param isOpen
+ *    the first and last points in the list are considered not connected
+ *  @param points
+ *    lists of connected points
  */
-class Polygon(@BeanProperty var lineStrings: List[LineString]) extends Geometry()
-
-object Polygon {
-    def copy(polygon: Polygon): Polygon = {
-        val p = Polygon(polygon.lineStrings)
-        p.setSRID(polygon.getSRID)
-        p
-    }
-}
+case class Path(points: Seq[Point], isOpen: Boolean = true) extends Geometry

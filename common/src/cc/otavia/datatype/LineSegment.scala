@@ -14,20 +14,7 @@
  * limitations under the License.
  */
 
-package cc.otavia.sql.datatype
+package cc.otavia.datatype
 
-import scala.beans.BeanProperty
-
-/** A MultiPolygon is a MultiSurface object composed of Polygon elements.
- *
- *  @param polygons
- */
-class MultiPolygon(@BeanProperty var polygons: List[Polygon]) extends Geometry()
-
-object MultiPolygon {
-    def copy(multiPolygon: MultiPolygon): MultiPolygon = {
-        val mp = MultiPolygon(multiPolygon.polygons)
-        mp.setSRID(multiPolygon.getSRID)
-        mp
-    }
-}
+/** Finite line segment data type in Postgres represented by pairs of Points that are the endpoints of the segment. */
+case class LineSegment(p1: Point, p2: Point) extends Geometry

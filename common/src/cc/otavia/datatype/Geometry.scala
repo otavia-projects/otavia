@@ -14,16 +14,7 @@
  * limitations under the License.
  */
 
-package cc.otavia.sql.datatype
+package cc.otavia.datatype
 
-import scala.beans.BeanProperty
-
-class MultiLineString(@BeanProperty var lineStrings: List[LineString]) extends Geometry()
-
-object MultiLineString {
-    def copy(multiLineString: MultiLineString): MultiLineString = {
-        val ml = MultiLineString(multiLineString.lineStrings)
-        ml.setSRID(multiLineString.getSRID)
-        ml
-    }
-}
+/** Geometry is an abstract class which represents the base of geometry data type. */
+trait Geometry {}

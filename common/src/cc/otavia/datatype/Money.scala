@@ -31,7 +31,7 @@ import scala.math.ScalaNumber
  *  @param decimalPart
  *    decimal part
  */
-case class Money private (integerPart: Long, decimalPart: Int) {
+class Money private (val integerPart: Long, val decimalPart: Int) {
 
     /** @return the monetary amount as a big decimal without loss of information */
     def bigDecimalValue: BigDecimal = {
