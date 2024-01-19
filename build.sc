@@ -443,6 +443,7 @@ trait SiteModule extends ScalaModule {
             for (child <- os.walk(javadocDir / "docs") if child.toNIO.toString.endsWith(".html")) replace(child)
 
             os.copy.over(docs / "home.html", javadocDir / "home.html")
+            os.copy.over(docs / "CNAME", javadocDir / "CNAME")
             // os.remove.all.apply(docs)
             Result.Success(PathRef(javadocDir))
         } else {
