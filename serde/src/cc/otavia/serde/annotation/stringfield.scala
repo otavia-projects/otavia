@@ -14,23 +14,9 @@
  * limitations under the License.
  */
 
-package cc.otavia.sql.datatype
+package cc.otavia.serde.annotation
 
-/** Geometry is an abstract class which represents the base of geometry data type.
- *
- *  @param srid
- */
-abstract class Geometry(protected var srid: Long) {
+import scala.annotation.StaticAnnotation
+import scala.annotation.meta.field
 
-    def this(other: Geometry) = this(other.srid)
-
-    def this() = this(0)
-
-    def getSRID: Long = srid
-
-    def setSRID(srid: Long): this.type = {
-        this.srid = srid
-        this
-    }
-
-}
+@field class stringfield extends StaticAnnotation
