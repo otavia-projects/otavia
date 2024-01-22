@@ -22,7 +22,7 @@ import cc.otavia.core.stack.{MessageFuture, StackState, StackStatePool}
 
 import scala.language.unsafeNulls
 
-class SeqFuturesState[R <: Reply] private () extends StackState with Poolable {
+class FuturesState[R <: Reply] private() extends StackState with Poolable {
 
     private var stateId: Int               = 0
     private var fus: Seq[MessageFuture[R]] = _
@@ -31,7 +31,7 @@ class SeqFuturesState[R <: Reply] private () extends StackState with Poolable {
 
     override def id: Int = stateId
 
-    override def recycle(): Unit = SeqFuturesState.pool.recycle(this)
+    override def recycle(): Unit = FuturesState.pool.recycle(this)
 
     override protected def cleanInstance(): Unit = {
         fus = null
@@ -40,10 +40,10 @@ class SeqFuturesState[R <: Reply] private () extends StackState with Poolable {
 
 }
 
-object SeqFuturesState {
+object FuturesState {
 
-    def apply[R <: Reply](length: Int, stateId: Int = 0): SeqFuturesState[R] = {
-        val state = pool.get().asInstanceOf[SeqFuturesState[R]]
+    def apply[R <: Reply](length: Int, stateId: Int = 0): FuturesState[R] = {
+        val state = pool.get().asInstanceOf[FuturesState[R]]
         state.stateId = stateId
 
         state.fus = (0 until length).map { i => MessageFuture() }
@@ -51,9 +51,9 @@ object SeqFuturesState {
         state
     }
 
-    private val pool = new StackStatePool[SeqFuturesState[?]] {
+    private val pool = new StackStatePool[FuturesState[?]] {
 
-        override protected def newObject(): SeqFuturesState[?] = new SeqFuturesState()
+        override protected def newObject(): FuturesState[?] = new FuturesState()
 
     }
 
