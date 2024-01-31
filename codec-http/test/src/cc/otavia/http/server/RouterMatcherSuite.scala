@@ -96,9 +96,8 @@ object RouterMatcherSuite {
 
     class DoRequest extends HttpRequest[Nothing, DoResult]
 
-    val doRequestSerde: HttpRequestFactory[Nothing, DoResult] =
-        new HttpRequestFactory[Nothing, DoResult]() {
-            override def createHttpRequest(): HttpRequest[Nothing, DoResult] = new DoRequest
-        }
+    val doRequestSerde: HttpRequestFactory = new HttpRequestFactory() {
+        override def createHttpRequest(): HttpRequest[?, ?] = new DoRequest
+    }
 
 }

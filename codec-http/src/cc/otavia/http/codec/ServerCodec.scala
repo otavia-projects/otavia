@@ -281,7 +281,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
         buffer.writerOffset - ServerCodec.CONTENT_LENGTH_PLACEHOLDER.length - 2
     }
 
-    private def parseBody(contentLength: Int, factory: HttpRequestFactory[?, ?], input: Buffer): Unit = {
+    private def parseBody(contentLength: Int, factory: HttpRequestFactory, input: Buffer): Unit = {
         val request = currentRequest
         val endIdx  = input.readerOffset + contentLength
 
