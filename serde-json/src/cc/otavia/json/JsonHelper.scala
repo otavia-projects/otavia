@@ -71,6 +71,10 @@ private[json] object JsonHelper {
         out.writeByte(JsonConstants.TOKEN_COLON)
     }
 
+    final def serializeNull(out: Buffer): Unit = out.writeBytes(JsonConstants.TOKEN_NULL)
+
+    
+
     final def serializeByte(byte: Byte, out: Buffer): Unit = serializeInt(byte, out)
 
     final def serializeBoolean(boolean: Boolean, out: Buffer): Unit = if (boolean)
@@ -94,9 +98,9 @@ private[json] object JsonHelper {
 
     final def serializeDouble(double: Double, out: Buffer): Unit = out.writeCharSequence(double.toString)
 
-    final def serializeString(string: String, out: Buffer, charsets: Charset = StandardCharsets.UTF_8): Unit = {
+    final def serializeString(string: String, out: Buffer): Unit = {
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
-        out.writeCharSequence(string, charsets) // TODO: escape char
+        out.writeCharSequence(string, StandardCharsets.UTF_8) // TODO: escape char
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
     }
 
@@ -187,11 +191,11 @@ private[json] object JsonHelper {
         if (minus) -(intPart + floatPart) else intPart + floatPart
     }
 
-    final def deserializeString(in: Buffer, charsets: Charset = StandardCharsets.UTF_8): String = {
+    final def deserializeString(in: Buffer): String = {
         skipBlanks(in)
         assert(in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE), s"except \" but get ${in.readByte}")
         val len = in.bytesBefore(JsonConstants.TOKEN_DOUBLE_QUOTE) // TODO: escape
-        val str = in.readCharSequence(len, charsets).toString
+        val str = in.readCharSequence(len, StandardCharsets.UTF_8).toString
         in.readByte
         str
     }

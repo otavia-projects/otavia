@@ -26,17 +26,10 @@ import scala.language.unsafeNulls
  *  @param charsets
  *    [[Charset]] to serialize [[String]].
  */
-class StringJsonSerde(override val charsets: Charset = StandardCharsets.UTF_8) extends JsonSerde[String] {
+object StringJsonSerde extends JsonSerde[String] {
 
     override def deserialize(in: Buffer): String = deserializeString(in)
 
     override def serialize(value: String, out: Buffer): Unit = serializeString(value, out)
-
-}
-
-object StringJsonSerde {
-
-    /** Default UTF-8 [[JsonSerde]] for [[String]]. */
-    val UTF8StringJsonSerde = new StringJsonSerde()
 
 }

@@ -19,6 +19,7 @@ package cc.otavia.json
 import cc.otavia.buffer.Buffer
 import cc.otavia.datatype.Money
 import cc.otavia.json.types.*
+import cc.otavia.serde.helper.StringSerde
 import cc.otavia.serde.{Serde, SerdeOps}
 
 import java.math.{BigInteger, BigDecimal as JBigDecimal}
@@ -32,8 +33,6 @@ import scala.deriving.Mirror
 import scala.language.unsafeNulls
 
 trait JsonSerde[A] extends Serde[A] with SerdeOps {
-
-    def charsets: Charset = StandardCharsets.UTF_8
 
     final protected def skipBlanks(in: Buffer): Unit = JsonHelper.skipBlanks(in)
 
@@ -108,7 +107,7 @@ trait JsonSerde[A] extends Serde[A] with SerdeOps {
     }
 
     override final protected def serializeString(string: String, out: Buffer): this.type = {
-        JsonHelper.serializeString(string, out, charsets)
+        JsonHelper.serializeString(string, out)
         this
     }
 
@@ -128,7 +127,7 @@ trait JsonSerde[A] extends Serde[A] with SerdeOps {
 
     override final protected def deserializeDouble(in: Buffer): Double = JsonHelper.deserializeDouble(in)
 
-    override final protected def deserializeString(in: Buffer): String = JsonHelper.deserializeString(in, charsets)
+    override final protected def deserializeString(in: Buffer): String = JsonHelper.deserializeString(in)
 
     // math type
 
@@ -342,28 +341,18 @@ object JsonSerde {
     given JsonSerde[Locale]         = LocaleJsonSerde
     given JsonSerde[Currency]       = CurrencyJsonSerde
     given JsonSerde[Money]          = MoneyJsonSerde
-
-    given stringSerde(using charset: Charset): JsonSerde[String] with {
-
-        private val serde =
-            if (charset == StandardCharsets.UTF_8) StringJsonSerde.UTF8StringJsonSerde
-            else new StringJsonSerde(charset)
-
-        override def deserialize(in: Buffer): String = serde.deserialize(in)
-
-        override def serialize(value: String, out: Buffer): Unit = serde.serialize(value, out)
-
-    }
+    given JsonSerde[String]         = StringJsonSerde
 
     given seqSerde[T](using se: JsonSerde[T]): JsonSerde[Seq[T]] with {
 
         override def deserialize(in: Buffer): Seq[T] = {
-            val seq = mutable.Seq.empty[T]
+            val seq = mutable.ArrayBuffer.empty[T]
             skipBlanks(in)
             assert(in.skipIfNextIs(JsonConstants.TOKEN_ARRAY_START), "")
             while (!in.skipIfNextIs(JsonConstants.TOKEN_ARRAY_END)) {
                 skipBlanks(in)
-                seq.appended(se.deserialize(in))
+                val v = se.deserialize(in)
+                seq.addOne(v)
                 skipBlanks(in)
                 in.skipIfNextIs(JsonConstants.TOKEN_COMMA)
             }
