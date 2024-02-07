@@ -219,6 +219,12 @@ object sql extends OtaviaModule {
     override def artifactName                   = "otavia-sql"
     override def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, serde)
 
+    object test extends ScalaTests with TestModule.ScalaTest {
+
+        override def ivyDeps = Agg(ProjectInfo.testDep)
+
+    }
+
 }
 
 object `codec-redis` extends OtaviaModule {
