@@ -16,19 +16,12 @@
 
 package cc.otavia.sql
 
-trait RowDecoder[+R <: Row] {
-    def decode(parser: RowParser): R
-}
+import org.scalatest.funsuite.AnyFunSuiteLike
 
-object RowDecoder {
+class MacroSuite extends AnyFunSuiteLike {
 
-    /** Derives a [[RowDecoder]] for database values for the specified type [[T]].
-     *
-     *  @tparam T
-     *    a type that should be encoded and decoded by the derived serde
-     *  @return
-     *    an instance of the derived serde
-     */
-    inline def derived[T <: Row]: RowDecoder[T] = ${ RowMacro.derivedMacro[T] }
+    test("derived") {
+        val decoder = summon[RowDecoder[World]]
+    }
 
 }

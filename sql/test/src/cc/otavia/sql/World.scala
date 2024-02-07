@@ -16,19 +16,4 @@
 
 package cc.otavia.sql
 
-trait RowDecoder[+R <: Row] {
-    def decode(parser: RowParser): R
-}
-
-object RowDecoder {
-
-    /** Derives a [[RowDecoder]] for database values for the specified type [[T]].
-     *
-     *  @tparam T
-     *    a type that should be encoded and decoded by the derived serde
-     *  @return
-     *    an instance of the derived serde
-     */
-    inline def derived[T <: Row]: RowDecoder[T] = ${ RowMacro.derivedMacro[T] }
-
-}
+case class World(id: Int, message: String, age: Option[Double]) extends Row derives RowDecoder
