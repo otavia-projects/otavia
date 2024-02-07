@@ -35,6 +35,16 @@ private[json] object JsonHelper {
 
     final def skipBlanks(in: Buffer): Unit = while (in.skipIfNextIn(JsonConstants.TOKEN_BLANKS)) {}
 
+    final def isNextToken(in: Buffer, token: Byte): Boolean = {
+        skipBlanks(in)
+        in.skipIfNextIs(token)
+    }
+
+    final def isNextToken(in: Buffer, token: Array[Byte]): Boolean = {
+        skipBlanks(in)
+        in.skipIfNextAre(token)
+    }
+
     final def serializeObjectStart(out: Buffer): Unit = out.writeByte(JsonConstants.TOKEN_OBJECT_START)
 
     // TODO: replace to exceptXXX, if false throws error
@@ -64,16 +74,14 @@ private[json] object JsonHelper {
         in.skipIfNextIs(JsonConstants.TOKEN_ARRAY_END)
     }
 
-    final def serializeKey(key: String, out: Buffer, charsets: Charset = StandardCharsets.UTF_8): Unit = {
+    final def serializeKey(key: String, out: Buffer): Unit = {
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
-        out.writeCharSequence(key, charsets)
+        out.writeCharSequence(key)
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
         out.writeByte(JsonConstants.TOKEN_COLON)
     }
 
     final def serializeNull(out: Buffer): Unit = out.writeBytes(JsonConstants.TOKEN_NULL)
-
-    
 
     final def serializeByte(byte: Byte, out: Buffer): Unit = serializeInt(byte, out)
 

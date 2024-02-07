@@ -28,7 +28,7 @@ class JsonSuite extends AnyFunSuite {
 
     test("byte json") {
         val b: Byte = 'c'
-        val serde   = summon[JsonSerde[Byte]]
+        val serde   = JsonSerde.derived[Byte]
         val buffer  = Buffer.wrap(new Array[Byte](1024)).clean()
         serde.serialize(b, buffer)
         val bytes = b.toInt.toString.getBytes(StandardCharsets.US_ASCII)

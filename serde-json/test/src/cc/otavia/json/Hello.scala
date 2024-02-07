@@ -14,16 +14,8 @@
  * limitations under the License.
  */
 
-package cc.otavia.json.types
+package cc.otavia.json
 
-import cc.otavia.buffer.Buffer
-import cc.otavia.json.JsonSerde
+import cc.otavia.serde.annotation.{rename, stringfield}
 
-/** [[JsonSerde]] for [[Float]]. */
-object FloatJsonSerde extends JsonSerde[Float] {
-
-    override def deserialize(in: Buffer): Float = deserializeFloat(in)
-
-    override def serialize(value: Float, out: Buffer): Unit = serializeFloat(value, out)
-
-}
+case class Hello(id: Int, hello: String) derives JsonSerde

@@ -18,8 +18,8 @@ package cc.otavia.json
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.datatype.Money
+import cc.otavia.json.JsonMacro.derivedMacro
 import cc.otavia.json.types.*
-import cc.otavia.serde.helper.StringSerde
 import cc.otavia.serde.{Serde, SerdeOps}
 
 import java.math.{BigInteger, BigDecimal as JBigDecimal}
@@ -309,16 +309,6 @@ trait JsonSerde[A] extends Serde[A] with SerdeOps {
 
 object JsonSerde {
 
-    private given Charset = StandardCharsets.UTF_8
-
-    given JsonSerde[Boolean]        = BooleanJsonSerde
-    given JsonSerde[Byte]           = ByteJsonSerde
-    given JsonSerde[Char]           = CharJsonSerde
-    given JsonSerde[Double]         = DoubleJsonSerde
-    given JsonSerde[Float]          = FloatJsonSerde
-    given JsonSerde[Int]            = IntJsonSerde
-    given JsonSerde[Long]           = LongJsonSerde
-    given JsonSerde[Short]          = ShortJsonSerde
     given JsonSerde[BigInt]         = BigIntJsonSerde
     given JsonSerde[BigDecimal]     = BigDecimalJsonSerde
     given JsonSerde[BigInteger]     = BigIntegerJsonSerde
@@ -343,80 +333,13 @@ object JsonSerde {
     given JsonSerde[Money]          = MoneyJsonSerde
     given JsonSerde[String]         = StringJsonSerde
 
-    given seqSerde[T](using se: JsonSerde[T]): JsonSerde[Seq[T]] with {
-
-        override def deserialize(in: Buffer): Seq[T] = {
-            val seq = mutable.ArrayBuffer.empty[T]
-            skipBlanks(in)
-            assert(in.skipIfNextIs(JsonConstants.TOKEN_ARRAY_START), "")
-            while (!in.skipIfNextIs(JsonConstants.TOKEN_ARRAY_END)) {
-                skipBlanks(in)
-                val v = se.deserialize(in)
-                seq.addOne(v)
-                skipBlanks(in)
-                in.skipIfNextIs(JsonConstants.TOKEN_COMMA)
-            }
-            seq.toSeq
-        }
-
-        override def serialize(value: Seq[T], out: Buffer): Unit = {
-            if (value.isEmpty) {
-                serializeArrayStart(out)
-                serializeArrayEnd(out)
-            } else {
-                serializeArrayStart(out)
-                for (elem <- value) {
-                    se.serialize(elem, out)
-                    out.writeByte(JsonConstants.TOKEN_COMMA)
-                }
-                out.writerOffset(out.writerOffset - 1)
-                serializeArrayEnd(out)
-            }
-        }
-
-    }
-
-    given mutableSeqSerde[T](using se: JsonSerde[T]): JsonSerde[mutable.Seq[T]] with {
-
-        override def deserialize(in: Buffer): mutable.Seq[T] = {
-            val seq = mutable.Seq.empty[T]
-            skipBlanks(in)
-            assert(in.skipIfNextIs(JsonConstants.TOKEN_ARRAY_START), "")
-            while (!in.skipIfNextIs(JsonConstants.TOKEN_ARRAY_END)) {
-                skipBlanks(in)
-                seq.appended(se.deserialize(in))
-                skipBlanks(in)
-                in.skipIfNextIs(JsonConstants.TOKEN_COMMA)
-            }
-            seq
-        }
-
-        override def serialize(value: mutable.Seq[T], out: Buffer): Unit = if (value.isEmpty) {
-            serializeArrayStart(out)
-            serializeArrayEnd(out)
-        } else {
-            serializeArrayStart(out)
-            for (elem <- value) {
-                se.serialize(elem, out)
-                out.writeByte(JsonConstants.TOKEN_COMMA)
-            }
-            out.writerOffset(out.writerOffset - 1)
-            serializeArrayEnd(out)
-        }
-
-    }
-
-    given optionSerde[T](using se: JsonSerde[T]): JsonSerde[Option[T]] with {
-
-        override def deserialize(in: Buffer): Option[T] = {
-            skipBlanks(in)
-            if (in.skipIfNextAre(JsonConstants.TOKEN_NULL)) None else Some(se.deserialize(in))
-        }
-
-        override def serialize(value: Option[T], out: Buffer): Unit = value match
-            case None        => out.writeBytes(JsonConstants.TOKEN_NULL)
-            case Some(value) => se.serialize(value, out)
-
-    }
+    /** Derives a [[JsonSerde]] for JSON values for the specified type [[T]].
+     *
+     *  @tparam T
+     *    a type that should be encoded and decoded by the derived serde
+     *  @return
+     *    an instance of the derived serde
+     */
+    inline def derived[T]: JsonSerde[T] = ${ derivedMacro[T] }
 
 }
