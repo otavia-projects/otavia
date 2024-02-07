@@ -31,7 +31,6 @@ import cc.otavia.buffer.Buffer
 import cc.otavia.json.types.StringJsonSerde
 import java.math.BigInteger
 import java.util.Currency
-import org.w3c.dom.css.Counter
 import scala.concurrent.duration.Duration
 import java.time.Instant
 import java.time.LocalDate
