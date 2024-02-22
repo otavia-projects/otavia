@@ -2136,5 +2136,5 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"docs/zh/module/index.html#","e":false,"i":"","n":"Modules","t":"Modules","d":"","k":"static","x":""},
 {"l":"docs/zh/module/buffer.html#","e":false,"i":"","n":"Buffer","t":"Buffer","d":"","k":"static","x":""},
 {"l":"docs/blog/index.html#","e":false,"i":"","n":"Blog","t":"Blog","d":"","k":"static","x":""},
-{"l":"docs/blog/2023/05/19/hello-world-blog.html#","e":false,"i":"","n":"hello world blog","t":"hello world blog","d":"","k":"static","x":""},
-{"l":"docs/blog/2023/05/19/hello-world-blog.zh-cn.html#","e":false,"i":"","n":"你好世界","t":"你好世界","d":"","k":"static","x":""}];
+{"l":"docs/blog/2023/05/19/hello-world-blog.zh-cn.html#","e":false,"i":"","n":"你好世界","t":"你好世界","d":"","k":"static","x":""},
+{"l":"docs/blog/2023/05/19/hello-world-blog.html#","e":false,"i":"","n":"hello world blog","t":"hello world blog","d":"","k":"static","x":""}];
