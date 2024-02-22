@@ -17,7 +17,7 @@
 package cc.otavia.redis
 
 import cc.otavia.core
-import cc.otavia.core.actor.SocketChannelsActor.{Connect}
+import cc.otavia.core.actor.SocketChannelsActor.Connect
 import cc.otavia.core.actor.{ChannelsActor, SocketChannelsActor}
 import cc.otavia.core.channel.*
 import cc.otavia.core.message.*
@@ -37,15 +37,11 @@ class Client extends SocketChannelsActor[Command[? <: CommandResponse] | Connect
 
     private var channel: ChannelAddress = _
 
-    override def handler: Option[ChannelInitializer[? <: Channel]] = Some(
-      new ChannelInitializer[Channel] {
-          override protected def initChannel(ch: Channel): Unit = {
-              ch.pipeline.addFirst(new RedisCodec())
-              ch.setOption(ChannelOption.CHANNEL_STACK_BARRIER, _ => false)
-              ch.setOption(ChannelOption.CHANNEL_MAX_FUTURE_INFLIGHT, 512)
-          }
-      }
-    )
+    final override protected def initChannel(channel: Channel): Unit = {
+        channel.pipeline.addFirst(new RedisCodec())
+        channel.setOption(ChannelOption.CHANNEL_STACK_BARRIER, _ => false)
+        channel.setOption(ChannelOption.CHANNEL_MAX_FUTURE_INFLIGHT, 512)
+    }
 
     override def resumeAsk(stack: AskStack[Command[? <: CommandResponse] | Connect]): Option[StackState] = {
         stack match

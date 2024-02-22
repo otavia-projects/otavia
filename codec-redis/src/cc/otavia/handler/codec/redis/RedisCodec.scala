@@ -37,7 +37,6 @@ class RedisCodec extends ByteToMessageCodec {
             case auth: Auth =>
                 AuthSerde.serialize(auth, output)
                 responseSerdeQueue.addOne(mid, OKSerde)
-
     }
 
     override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): Unit =
@@ -49,7 +48,6 @@ class RedisCodec extends ByteToMessageCodec {
             } catch {
                 case e: Throwable => ctx.fireChannelExceptionCaught(e, msgId)
             }
-
         }
 
 }
