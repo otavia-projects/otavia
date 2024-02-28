@@ -741,60 +741,60 @@ object JsonMacro {
                                     if ($in.skipIfNextAre(JsonConstants.TOKEN_NULL)) None
                                     else Some(${ genReadCode[t1](tpe1, in, isString) })
                                 }.asExprOf[T]
-                    } else if (isTuple(tpe)) withDecoderFor(methodKey, in) { in =>
-                        val indexedTypes = typeArgs(tpe)
-                        var i            = 0
-                        val valDefs = indexedTypes.map { te =>
-                            i += 1
-                            te.asType match
-                                case '[t] =>
-                                    val sym = symbol("_r" + i, te)
-                                    val rhs =
-                                        if (i == 1) genReadCode[t](te, in)
-                                        else
-                                            '{
-                                                assert(
-                                                  JsonHelper.isNextToken($in, JsonConstants.TOKEN_COMMA),
-                                                  "decode error, except ','"
-                                                )
-                                                ${ genReadCode[t](te, in) }
-                                            }
-                                    ValDef(sym, Some(rhs.asTerm.changeOwner(sym)))
-                        }
-                        val readCreateBlock = Block(
-                          valDefs,
-                          '{
-                              assert(
-                                JsonHelper.isNextToken($in, JsonConstants.TOKEN_ARRAY_END),
-                                "decode error, except ']'"
-                              )
-                              ${
-                                  Apply(
-                                    TypeApply(
-                                      Select.unique(New(Inferred(tpe)), "<init>"),
-                                      indexedTypes.map(x => Inferred(x))
-                                    ),
-                                    valDefs.map(x => Ref(x.symbol))
-                                  ).asExpr
-                              }
-                          }.asTerm
-                        )
-                        '{
-                            assert(
-                              JsonHelper.isNextToken($in, JsonConstants.TOKEN_ARRAY_START),
-                              "decode error, except '['"
+                    } else if (isTuple(tpe))
+                        withDecoderFor(methodKey, in) { in =>
+                            val indexedTypes = typeArgs(tpe)
+                            var i            = 0
+                            val valDefs = indexedTypes.map { te =>
+                                i += 1
+                                te.asType match
+                                    case '[t] =>
+                                        val sym = symbol("_r" + i, te)
+                                        val rhs =
+                                            if (i == 1) genReadCode[t](te, in)
+                                            else
+                                                '{
+                                                    assert(
+                                                      JsonHelper.isNextToken($in, JsonConstants.TOKEN_COMMA),
+                                                      "decode error, except ','"
+                                                    )
+                                                    ${ genReadCode[t](te, in) }
+                                                }
+                                        ValDef(sym, Some(rhs.asTerm.changeOwner(sym)))
+                            }
+                            val readCreateBlock = Block(
+                              valDefs,
+                              '{
+                                  assert(
+                                    JsonHelper.isNextToken($in, JsonConstants.TOKEN_ARRAY_END),
+                                    "decode error, except ']'"
+                                  )
+                                  ${
+                                      Apply(
+                                        TypeApply(
+                                          Select.unique(New(Inferred(tpe)), "<init>"),
+                                          indexedTypes.map(x => Inferred(x))
+                                        ),
+                                        valDefs.map(x => Ref(x.symbol))
+                                      ).asExpr
+                                  }
+                              }.asTerm
                             )
-                            ${ readCreateBlock.asExprOf[T] }
+                            '{
+                                assert(
+                                  JsonHelper.isNextToken($in, JsonConstants.TOKEN_ARRAY_START),
+                                  "decode error, except '['"
+                                )
+                                ${ readCreateBlock.asExprOf[T] }
+                            }
                         }
-                    }
                     else if (tpe <:< TypeRepr.of[AnyVal]) {
                         val te = valueClassValueType(tpe)
                         te.asType match
-                            case '[t] => 
+                            case '[t] =>
                                 val readVal = genReadCode[t](te, in, isString)
                                 getClassInfo(tpe).genNew(readVal.asTerm).asExprOf[T]
-                    }
-                    else '{ ??? }
+                    } else '{ ??? }
         }
 
         def genWriteCode[T: Type](tpe: TypeRepr, value: Expr[T], out: Expr[Buffer], isString: Boolean = false)(using
@@ -947,6 +947,48 @@ object JsonMacro {
                                         JsonHelper.serializeArrayEnd($out)
                                     }
                         }
+                    else if (tpe <:< TypeRepr.of[List[?]]) withEncoderFor(methodKey, value, out) { (x, out) =>
+                        val tpe1 = typeArg1(tpe)
+                        tpe1.asType match
+                            case '[t1] =>
+                                val tx = x.asExprOf[List[t1]]
+                                '{
+                                    JsonHelper.serializeObjectStart($out)
+                                    var l = $tx
+                                    while (l ne Nil) {
+                                        ${ genWriteCode[t1](tpe1, '{ l.head }, out) }
+                                        l = l.tail
+                                        if (l ne Nil) $out.writeByte(JsonConstants.TOKEN_COMMA)
+                                    }
+                                    JsonHelper.serializeObjectEnd($out)
+                                }
+                    }
+                    else if (tpe <:< TypeRepr.of[IndexedSeq[?]]) withEncoderFor(methodKey, value, out) { (x, out) =>
+                        val tpe1 = typeArg1(tpe)
+                        tpe1.asType match
+                            case '[t1] =>
+                                val tx = x.asExprOf[IndexedSeq[t1]]
+                                '{
+                                    JsonHelper.serializeObjectStart($out)
+                                    val l = $tx.length
+                                    if (l <= 32) {
+                                        var i = 0
+                                        while (i < l) {
+                                            ${ genWriteCode[t1](tpe1, '{ $tx(i) }, out) }
+                                            i += 1
+                                            if (i != l) $out.writeByte(JsonConstants.TOKEN_COMMA)
+                                        }
+                                    } else {
+                                        var i = 0
+                                        while (i < $tx.length) {
+                                            ${ genWriteCode(tpe1, '{ $tx.apply(i) }, out) }
+                                            i += 1
+                                            if (i != $tx.length) $out.writeByte(JsonConstants.TOKEN_COMMA)
+                                        }
+                                    }
+                                    JsonHelper.serializeObjectEnd($out)
+                                }
+                    }
                     else if (tpe <:< TypeRepr.of[scala.collection.Seq[?]]) withEncoderFor(methodKey, value, out) {
                         (x, out) =>
                             val tpe1 = typeArg1(tpe)
