@@ -36,15 +36,15 @@ object ProjectInfo {
     def licenses                = Seq(License.`Apache-2.0`)
     def author                  = Seq("Yan Kun <yan_kun_1992@foxmail.com>")
     def version                 = "0.3.8-SNAPSHOT" //
-    def scalaVersion            = "3.3.1"
+    def scalaVersion            = "3.3.2"
     def scoverageVersion        = "1.4.0"
     def buildTool               = "mill"
     def buildToolVersion        = main.BuildInfo.millVersion
 
-    def testDep = ivy"org.scalatest::scalatest:3.2.17"
+    def testDep = ivy"org.scalatest::scalatest:3.2.18"
 
     def netty5codec = ivy"io.netty:netty5-codec:5.0.0.Alpha5"
-    def xml         = ivy"org.scala-lang.modules::scala-xml:2.1.0"
+    def xml         = ivy"org.scala-lang.modules::scala-xml:2.2.0"
     def scram       = ivy"com.ongres.scram:client:2.1"
 
     val settings = PomSettings(
