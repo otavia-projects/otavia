@@ -223,12 +223,6 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
         case t: Throwable => logger.error(s"Load module $module occur error with ", t)
     }
 
-    override def runMain[M <: MainActor](factory: ActorFactory[M], modules: Seq[Module] = Seq.empty): Unit = {
-        modules.foreach(m => loadModule(m))
-        val address = this.buildActor(factory)
-        mainActor = address
-    }
-
     override def getAddress[M <: Call](
         clz: Class[? <: Actor[?]],
         qualifier: Option[String],

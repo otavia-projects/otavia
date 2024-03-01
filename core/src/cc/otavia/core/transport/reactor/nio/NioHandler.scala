@@ -422,8 +422,9 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
                 } else {
                     val currentTimeMillis = System.currentTimeMillis()
                     val timeoutMillis =
-                        if (blocks > 10) {
-                            if (!wakenUp.get()) wakenUp.set(true)
+                        if (blocks > 10 && runner.canBlock) {
+                            /*if (!wakenUp.get())*/
+                            wakenUp.set(true)
                             10
                         } else 0
                     val selectedKeys = if (timeoutMillis != 0) selector.select(timeoutMillis) else selector.selectNow()

@@ -28,7 +28,6 @@ class ActorSystemSuite extends AnyFunSuite {
 
     test("SPI load log4a") {
         val system = ActorSystem()
-        system.runMain(() => new Main(Array.empty))
         Thread.sleep(1000 * 5)
         assert(true)
     }
