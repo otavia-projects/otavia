@@ -12,30 +12,30 @@
 </div>
 <div class="cover">
  <div class="doc">
-  <p>A region of a file that is sent via a <a href="Channel.html">Channel</a> which supports <a href="https://en.wikipedia.org/wiki/Zero-copy">zero-copy file transfer</a>.</p> 
-  <p>=== Upgrade your JDK / JRE ===</p> 
-  <p><span data-unresolved-link="">java.nio.channels.FileChannel.transferTo</span> has at least four known bugs in the old versions of Sun JDK and perhaps its derived ones. Please upgrade your JDK to 1.6.0_18 or later version if you are going to use zero-copy file transfer.</p> 
-  <ul> 
-   <li><a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=5103988">5103988</a> 
-    <ul> 
-     <li>FileChannel.transferTo() should return -1 for EAGAIN instead throws IOException</li> 
-    </ul> </li> 
-   <li><a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6253145">6253145</a> 
-    <ul> 
-     <li>FileChannel.transferTo() on Linux fails when going beyond 2GB boundary</li> 
-    </ul> </li> 
-   <li><a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6427312">6427312</a> 
-    <ul> 
-     <li>FileChannel.transferTo() throws IOException "system call interrupted"</li> 
-    </ul> </li> 
-   <li><a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6524172">6470086</a> 
-    <ul> 
-     <li>FileChannel.transferTo(2147483647, 1, channel) causes "Value too large" exception</li> 
-    </ul> </li> 
-  </ul> 
-  <p>=== Check your operating system and JDK / JRE ===</p> 
-  <p>If your operating system (or JDK / JRE) does not support zero-copy file transfer, sending a file with <a href="FileRegion.html">FileRegion</a> might fail or yield worse performance. For example, sending a large file doesn't work well in Windows.</p> 
-  <p>=== Not all transports support it ===</p> 
+  <p>A region of a file that is sent via a <a href="Channel.html">Channel</a> which supports <a href="https://en.wikipedia.org/wiki/Zero-copy">zero-copy file transfer</a>.</p>
+  <p>=== Upgrade your JDK / JRE ===</p>
+  <p><span data-unresolved-link="">java.nio.channels.FileChannel.transferTo</span> has at least four known bugs in the old versions of Sun JDK and perhaps its derived ones. Please upgrade your JDK to 1.6.0_18 or later version if you are going to use zero-copy file transfer.</p>
+  <ul>
+   <li><a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=5103988">5103988</a>
+    <ul>
+     <li>FileChannel.transferTo() should return -1 for EAGAIN instead throws IOException</li>
+    </ul></li>
+   <li><a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6253145">6253145</a>
+    <ul>
+     <li>FileChannel.transferTo() on Linux fails when going beyond 2GB boundary</li>
+    </ul></li>
+   <li><a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6427312">6427312</a>
+    <ul>
+     <li>FileChannel.transferTo() throws IOException "system call interrupted"</li>
+    </ul></li>
+   <li><a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6524172">6470086</a>
+    <ul>
+     <li>FileChannel.transferTo(2147483647, 1, channel) causes "Value too large" exception</li>
+    </ul></li>
+  </ul>
+  <p>=== Check your operating system and JDK / JRE ===</p>
+  <p>If your operating system (or JDK / JRE) does not support zero-copy file transfer, sending a file with <a href="FileRegion.html">FileRegion</a> might fail or yield worse performance. For example, sending a large file doesn't work well in Windows.</p>
+  <p>=== Not all transports support it ===</p>
  </div>
  <section id="attributes">
   <h2 class="h500">Attributes</h2>
@@ -103,8 +103,7 @@ node5 -> node0;
 <section id="members-list">
  <h2 class="h500">Members list</h2>
  <div class="documentableFilter">
-  <div class="filtersContainer"></div>
-  <input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
+  <div class="filtersContainer"></div><input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
  </div>
  <div class="membersList expand">
   <div class="tabs">
@@ -135,11 +134,11 @@ node5 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Returns the number of bytes to transfer.</p> 
+             <p>Returns the number of bytes to transfer.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Returns the number of bytes to transfer.</p> 
+              <p>Returns the number of bytes to transfer.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small"></dl>
@@ -172,11 +171,11 @@ node5 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Returns true if the <a href="FileRegion.html">FileRegion</a> has a open file-descriptor</p> 
+             <p>Returns true if the <a href="FileRegion.html">FileRegion</a> has a open file-descriptor</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Returns true if the <a href="FileRegion.html">FileRegion</a> has a open file-descriptor</p> 
+              <p>Returns true if the <a href="FileRegion.html">FileRegion</a> has a open file-descriptor</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small"></dl>
@@ -200,11 +199,11 @@ node5 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Returns the offset in the file where the transfer began.</p> 
+             <p>Returns the offset in the file where the transfer began.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Returns the offset in the file where the transfer began.</p> 
+              <p>Returns the offset in the file where the transfer began.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small"></dl>
@@ -228,11 +227,11 @@ node5 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Transfers the content of this file region to the specified channel.</p> 
+             <p>Transfers the content of this file region to the specified channel.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Transfers the content of this file region to the specified channel.</p> 
+              <p>Transfers the content of this file region to the specified channel.</p>
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
@@ -240,13 +239,13 @@ node5 -> node0;
                position
               </dt>
               <dd class="body-medium">
-               <p>the relative offset of the file where the transfer begins from. For example, <tt>0</tt> will make the transfer start from <a href="FileRegion.html#position-0">position</a>th byte and <tt><a href="FileRegion.html#count-0">count</a> - 1</tt> will make the last byte of the region transferred.</p> 
+               <p>the relative offset of the file where the transfer begins from. For example, <tt>0</tt> will make the transfer start from <a href="FileRegion.html#position-0">position</a>th byte and <tt><a href="FileRegion.html#count-0">count</a> - 1</tt> will make the last byte of the region transferred.</p>
               </dd>
               <dt class="body-small">
                target
               </dt>
               <dd class="body-medium">
-               <p>the destination of the transfer</p> 
+               <p>the destination of the transfer</p>
               </dd>
              </dl>
              <h2 class="h200">Attributes</h2>
@@ -271,11 +270,11 @@ node5 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Returns the bytes which was transferred already.</p> 
+             <p>Returns the bytes which was transferred already.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Returns the bytes which was transferred already.</p> 
+              <p>Returns the bytes which was transferred already.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small"></dl>
@@ -307,11 +306,11 @@ node5 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Returns the reference count of this object. If 0, it means this object has been deallocated.</p> 
+             <p>Returns the reference count of this object. If 0, it means this object has been deallocated.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Returns the reference count of this object. If 0, it means this object has been deallocated.</p> 
+              <p>Returns the reference count of this object. If 0, it means this object has been deallocated.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -342,11 +341,11 @@ node5 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Decreases the reference count by the specified decrement and deallocates this object if the reference count reaches at 0.</p> 
+             <p>Decreases the reference count by the specified decrement and deallocates this object if the reference count reaches at 0.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Decreases the reference count by the specified decrement and deallocates this object if the reference count reaches at 0.</p> 
+              <p>Decreases the reference count by the specified decrement and deallocates this object if the reference count reaches at 0.</p>
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
@@ -354,7 +353,7 @@ node5 -> node0;
                decrement
               </dt>
               <dd class="body-medium">
-               <p>decrement reference count</p> 
+               <p>decrement reference count</p>
               </dd>
              </dl>
              <h2 class="h200">Attributes</h2>
@@ -363,7 +362,7 @@ node5 -> node0;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>true if and only if the reference count became 0 and this object has been deallocated</p> 
+               <p>true if and only if the reference count became 0 and this object has been deallocated</p>
               </dd>
               <dt class="body-small">
                Inherited from:
@@ -392,11 +391,11 @@ node5 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Decreases the reference count by 1 and deallocates this object if the reference count reaches at 0.</p> 
+             <p>Decreases the reference count by 1 and deallocates this object if the reference count reaches at 0.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Decreases the reference count by 1 and deallocates this object if the reference count reaches at 0.</p> 
+              <p>Decreases the reference count by 1 and deallocates this object if the reference count reaches at 0.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -404,7 +403,7 @@ node5 -> node0;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>true if and only if the reference count became 0 and this object has been deallocated</p> 
+               <p>true if and only if the reference count became 0 and this object has been deallocated</p>
               </dd>
               <dt class="body-small">
                Inherited from:
@@ -423,7 +422,7 @@ node5 -> node0;
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="FileRegion.html#retain-fffff5fa" t="n" class="documentableName ">retain</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">increment</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">ReferenceCounted</span>.this.type
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="FileRegion.html#retain-fffff5fa" t="n" class="documentableName ">retain</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">increment</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">ReferenceCounted</span>.<span t="k">this</span>.<span t="k">type</span>
            </div>
           </div>
          </div>
@@ -433,11 +432,11 @@ node5 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Increases the reference count by the specified increment.</p> 
+             <p>Increases the reference count by the specified increment.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Increases the reference count by the specified increment.</p> 
+              <p>Increases the reference count by the specified increment.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -458,7 +457,7 @@ node5 -> node0;
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="FileRegion.html#retain-0" t="n" class="documentableName ">retain</a>: <span data-unresolved-link="" t="t">ReferenceCounted</span>.this.type
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="FileRegion.html#retain-0" t="n" class="documentableName ">retain</a>: <span data-unresolved-link="" t="t">ReferenceCounted</span>.<span t="k">this</span>.<span t="k">type</span>
            </div>
           </div>
          </div>
@@ -468,11 +467,11 @@ node5 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Increases the reference count by 1.</p> 
+             <p>Increases the reference count by 1.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Increases the reference count by 1.</p> 
+              <p>Increases the reference count by 1.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -495,4 +494,4 @@ node5 -> node0;
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Abstract-methods">Abstract methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Abstract-methods">Abstract methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

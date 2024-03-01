@@ -13,8 +13,7 @@
 <section id="members-list">
  <h2 class="h500">Members list</h2>
  <div class="documentableFilter">
-  <div class="filtersContainer"></div>
-  <input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
+  <div class="filtersContainer"></div><input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
  </div>
  <div class="membersList expand">
   <div class="tabs">
@@ -174,11 +173,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p><a href="slf4a/ILoggerFactory.html">ILoggerFactory</a> instances manufacture <a href="slf4a/Logger.html">Logger</a> instances by name. Most users retrieve <a href="slf4a/Logger.html">Logger</a> instances through the <a href="slf4a/LoggerFactory$.html#getLogger-fffff044">ActorSystem)</a> method. An instance of of this interface is bound internally with <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> class at compile time.</p> 
+             <p><a href="slf4a/ILoggerFactory.html">ILoggerFactory</a> instances manufacture <a href="slf4a/Logger.html">Logger</a> instances by name. Most users retrieve <a href="slf4a/Logger.html">Logger</a> instances through the <a href="slf4a/LoggerFactory$.html#getLogger-fffff044">ActorSystem)</a> method. An instance of of this interface is bound internally with <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> class at compile time.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p><a href="slf4a/ILoggerFactory.html">ILoggerFactory</a> instances manufacture <a href="slf4a/Logger.html">Logger</a> instances by name. Most users retrieve <a href="slf4a/Logger.html">Logger</a> instances through the <a href="slf4a/LoggerFactory$.html#getLogger-fffff044">ActorSystem)</a> method. An instance of of this interface is bound internally with <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> class at compile time.</p> 
+              <p><a href="slf4a/ILoggerFactory.html">ILoggerFactory</a> instances manufacture <a href="slf4a/Logger.html">Logger</a> instances by name. Most users retrieve <a href="slf4a/Logger.html">Logger</a> instances through the <a href="slf4a/LoggerFactory$.html#getLogger-fffff044">ActorSystem)</a> method. An instance of of this interface is bound internally with <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> class at compile time.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -232,11 +231,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Log level for actor.</p> 
+             <p>Log level for actor.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Log level for actor.</p> 
+              <p>Log level for actor.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -295,12 +294,12 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>The <a href="slf4a/Logger.html">Logger</a> interface is the main user entry point of SLF4A API. It is expected that logging takes place through concrete implementations of this interface.</p> 
+             <p>The <a href="slf4a/Logger.html">Logger</a> interface is the main user entry point of SLF4A API. It is expected that logging takes place through concrete implementations of this interface.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>The <a href="slf4a/Logger.html">Logger</a> interface is the main user entry point of SLF4A API. It is expected that logging takes place through concrete implementations of this interface.</p> 
-              <p>=== Example ===</p> 
+              <p>The <a href="slf4a/Logger.html">Logger</a> interface is the main user entry point of SLF4A API. It is expected that logging takes place through concrete implementations of this interface.</p>
+              <p>=== Example ===</p>
               <div class="snippet mono-small-block">
                <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span><span class="hideable">    </span>@main def run(): Unit = {
 </span><span line-number="2" class=""><span class="tooltip-container"></span><span class="hideable">    </span>    val system = ActorSystem()
@@ -309,7 +308,7 @@
 </span><span line-number="5" class=""><span class="tooltip-container"></span><span class="hideable">    </span>}
 </span></code></pre>
                <div class="buttons"></div>
-              </div> 
+              </div>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -341,7 +340,7 @@
               <dd class="body-medium">
                <div class="mono-small-block subtypes">
                 <div>
-                 object <a href="slf4a/nop/NOPLogger$.html" t="n">NOPLogger</a>.type
+                 object <a href="slf4a/nop/NOPLogger$.html" t="n">NOPLogger</a>
                 </div>
                 <div>
                  class <a href="slf4a/AbstractLogger.html" t="n">AbstractLogger</a>
@@ -401,7 +400,7 @@
                <div class="mono-small-block supertypes">
                 <span></span>
                 <div>
-                 <a href="slf4a/Logger$.html" t="n">Logger</a>.type
+                 <a href="slf4a/Logger$.html" t="n">Logger</a>.<span t="k">type</span>
                 </div>
                </div>
               </dd>
@@ -426,11 +425,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>The <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> is a utility class producing Loggers for various logging APIs, most notably for slf4a-simple, and others. <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> is essentially a wrapper around an <a href="slf4a/ILoggerFactory.html">ILoggerFactory</a> instance bound with <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> at compile time.</p> 
+             <p>The <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> is a utility class producing Loggers for various logging APIs, most notably for slf4a-simple, and others. <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> is essentially a wrapper around an <a href="slf4a/ILoggerFactory.html">ILoggerFactory</a> instance bound with <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> at compile time.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>The <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> is a utility class producing Loggers for various logging APIs, most notably for slf4a-simple, and others. <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> is essentially a wrapper around an <a href="slf4a/ILoggerFactory.html">ILoggerFactory</a> instance bound with <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> at compile time.</p> 
+              <p>The <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> is a utility class producing Loggers for various logging APIs, most notably for slf4a-simple, and others. <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> is essentially a wrapper around an <a href="slf4a/ILoggerFactory.html">ILoggerFactory</a> instance bound with <a href="slf4a/LoggerFactory$.html">LoggerFactory</a> at compile time.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -457,7 +456,7 @@
                <div class="mono-small-block supertypes">
                 <span></span>
                 <div>
-                 <a href="slf4a/LoggerFactory$.html" t="n">LoggerFactory</a>.type
+                 <a href="slf4a/LoggerFactory$.html" t="n">LoggerFactory</a>.<span t="k">type</span>
                 </div>
                </div>
               </dd>
@@ -474,4 +473,4 @@
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#members-list">Members list</a><ul><li><a href="#Packages">Packages</a></li><li><a href="#Type-members">Type members</a><ul><li><a href="#Classlikes">Classlikes</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#members-list">Members list</a><ul><li><a href="#Packages">Packages</a></li><li><a href="#Type-members">Type members</a><ul><li><a href="#Classlikes">Classlikes</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

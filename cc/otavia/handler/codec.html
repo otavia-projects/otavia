@@ -13,8 +13,7 @@
 <section id="members-list">
  <h2 class="h500">Members list</h2>
  <div class="documentableFilter">
-  <div class="filtersContainer"></div>
-  <input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
+  <div class="filtersContainer"></div><input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
  </div>
  <div class="membersList expand">
   <div class="tabs">
@@ -384,11 +383,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>An <span data-unresolved-link="">Exception</span> which is thrown by a codec.</p> 
+             <p>An <span data-unresolved-link="">Exception</span> which is thrown by a codec.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>An <span data-unresolved-link="">Exception</span> which is thrown by a codec.</p> 
+              <p>An <span data-unresolved-link="">Exception</span> which is thrown by a codec.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -472,11 +471,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>An <a href="codec/DecoderException.html">DecoderException</a> which is thrown when the received frame data could not be decoded by an inbound handler.</p> 
+             <p>An <a href="codec/DecoderException.html">DecoderException</a> which is thrown when the received frame data could not be decoded by an inbound handler.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>An <a href="codec/DecoderException.html">DecoderException</a> which is thrown when the received frame data could not be decoded by an inbound handler.</p> 
+              <p>An <a href="codec/DecoderException.html">DecoderException</a> which is thrown when the received frame data could not be decoded by an inbound handler.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -535,11 +534,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>An <a href="codec/CodecException.html">CodecException</a> which is thrown by a decoder.</p> 
+             <p>An <a href="codec/CodecException.html">CodecException</a> which is thrown by a decoder.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>An <a href="codec/CodecException.html">CodecException</a> which is thrown by a decoder.</p> 
+              <p>An <a href="codec/CodecException.html">CodecException</a> which is thrown by a decoder.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -611,11 +610,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>An <a href="codec/CodecException.html">CodecException</a> which is thrown by an encoder.</p> 
+             <p>An <a href="codec/CodecException.html">CodecException</a> which is thrown by an encoder.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>An <a href="codec/CodecException.html">CodecException</a> which is thrown by an encoder.</p> 
+              <p>An <a href="codec/CodecException.html">CodecException</a> which is thrown by an encoder.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -681,20 +680,20 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>A decoder that splits the received <span data-unresolved-link="" title="Problem linking Buffer: No DRI found for query">Buffer</span>s by the fixed number of bytes. For example, if you received the following four fragmented packets:</p> 
+             <p>A decoder that splits the received <span data-unresolved-link="" title="Problem linking Buffer: No DRI found for query">Buffer</span>s by the fixed number of bytes. For example, if you received the following four fragmented packets:</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>A decoder that splits the received <span data-unresolved-link="" title="Problem linking Buffer: No DRI found for query">Buffer</span>s by the fixed number of bytes. For example, if you received the following four fragmented packets:</p> 
+              <p>A decoder that splits the received <span data-unresolved-link="" title="Problem linking Buffer: No DRI found for query">Buffer</span>s by the fixed number of bytes. For example, if you received the following four fragmented packets:</p>
               <pre>+---+----+------+----+\
 | A | BC | DEFG | HI |\
 +---+----+------+----+\
-</pre> 
-              <p>A <a href="codec/FixedLengthFrameDecoder.html">FixedLengthFrameDecoder</a>(3) will decode them into the following three packets with the fixed length:</p> 
+</pre>
+              <p>A <a href="codec/FixedLengthFrameDecoder.html">FixedLengthFrameDecoder</a>(3) will decode them into the following three packets with the fixed length:</p>
               <pre>+-----+-----+-----+\
 | ABC | DEF | GHI |\
 +-----+-----+-----+\
-</pre> 
+</pre>
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
@@ -702,7 +701,7 @@
                frameLength
               </dt>
               <dd class="body-medium">
-               <p>the length of the frame</p> 
+               <p>the length of the frame</p>
               </dd>
              </dl>
              <h2 class="h200">Attributes</h2>
@@ -756,11 +755,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p><span data-unresolved-link="" title="Problem linking ChannelHandler: No DRI found for query">ChannelHandler</span> which encodes message in a stream-like fashion from one message to a <span data-unresolved-link="" title="Problem linking Buffer: No DRI found for query">Buffer</span>. Example implementation which encodes <span data-unresolved-link="" title="Problem linking Integer: No DRI found for query">Integer</span>s to a <span data-unresolved-link="" title="Problem linking Buffer: No DRI found for query">Buffer</span>.</p> 
+             <p><span data-unresolved-link="" title="Problem linking ChannelHandler: No DRI found for query">ChannelHandler</span> which encodes message in a stream-like fashion from one message to a <span data-unresolved-link="" title="Problem linking Buffer: No DRI found for query">Buffer</span>. Example implementation which encodes <span data-unresolved-link="" title="Problem linking Integer: No DRI found for query">Integer</span>s to a <span data-unresolved-link="" title="Problem linking Buffer: No DRI found for query">Buffer</span>.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p><span data-unresolved-link="" title="Problem linking ChannelHandler: No DRI found for query">ChannelHandler</span> which encodes message in a stream-like fashion from one message to a <span data-unresolved-link="" title="Problem linking Buffer: No DRI found for query">Buffer</span>. Example implementation which encodes <span data-unresolved-link="" title="Problem linking Integer: No DRI found for query">Integer</span>s to a <span data-unresolved-link="" title="Problem linking Buffer: No DRI found for query">Buffer</span>.</p> 
+              <p><span data-unresolved-link="" title="Problem linking ChannelHandler: No DRI found for query">ChannelHandler</span> which encodes message in a stream-like fashion from one message to a <span data-unresolved-link="" title="Problem linking Buffer: No DRI found for query">Buffer</span>. Example implementation which encodes <span data-unresolved-link="" title="Problem linking Integer: No DRI found for query">Integer</span>s to a <span data-unresolved-link="" title="Problem linking Buffer: No DRI found for query">Buffer</span>.</p>
               <div class="snippet mono-small-block">
                <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span><span class="hideable">     </span>class IntegerEncoder extends MessageToByteEncoder[Integer]() {
 </span><span line-number="2" class=""><span class="tooltip-container"></span><span class="hideable">     </span>      override protected def encode(ctx: ChannelHandlerContext, msg: Integer, out: Buffer): Unit = {
@@ -769,7 +768,7 @@
 </span><span line-number="5" class=""><span class="tooltip-container"></span><span class="hideable">     </span>}
 </span></code></pre>
                <div class="buttons"></div>
-              </div> 
+              </div>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -835,11 +834,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>A <a href="codec/CodecException.html">CodecException</a> which is thrown when a <span data-unresolved-link="" title="Problem linking Channel: No DRI found for query">Channel</span> is closed unexpectedly before the codec finishes handling the current message, such as missing response while waiting for a request.</p> 
+             <p>A <a href="codec/CodecException.html">CodecException</a> which is thrown when a <span data-unresolved-link="" title="Problem linking Channel: No DRI found for query">Channel</span> is closed unexpectedly before the codec finishes handling the current message, such as missing response while waiting for a request.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>A <a href="codec/CodecException.html">CodecException</a> which is thrown when a <span data-unresolved-link="" title="Problem linking Channel: No DRI found for query">Channel</span> is closed unexpectedly before the codec finishes handling the current message, such as missing response while waiting for a request.</p> 
+              <p>A <a href="codec/CodecException.html">CodecException</a> which is thrown when a <span data-unresolved-link="" title="Problem linking Channel: No DRI found for query">Channel</span> is closed unexpectedly before the codec finishes handling the current message, such as missing response while waiting for a request.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -895,11 +894,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>An <a href="codec/DecoderException.html">DecoderException</a> which is thrown when the length of the frame decoded is greater than the allowed maximum.</p> 
+             <p>An <a href="codec/DecoderException.html">DecoderException</a> which is thrown when the length of the frame decoded is greater than the allowed maximum.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>An <a href="codec/DecoderException.html">DecoderException</a> which is thrown when the length of the frame decoded is greater than the allowed maximum.</p> 
+              <p>An <a href="codec/DecoderException.html">DecoderException</a> which is thrown when the length of the frame decoded is greater than the allowed maximum.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -958,11 +957,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Thrown if an unsupported message is received by a codec.</p> 
+             <p>Thrown if an unsupported message is received by a codec.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Thrown if an unsupported message is received by a codec.</p> 
+              <p>Thrown if an unsupported message is received by a codec.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -1056,7 +1055,7 @@
                <div class="mono-small-block supertypes">
                 <span></span>
                 <div>
-                 <a href="codec/UnsupportedMessageTypeException$.html" t="n">UnsupportedMessageTypeException</a>.type
+                 <a href="codec/UnsupportedMessageTypeException$.html" t="n">UnsupportedMessageTypeException</a>.<span t="k">type</span>
                 </div>
                </div>
               </dd>
@@ -1073,4 +1072,4 @@
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#members-list">Members list</a><ul><li><a href="#Packages">Packages</a></li><li><a href="#Type-members">Type members</a><ul><li><a href="#Classlikes">Classlikes</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#members-list">Members list</a><ul><li><a href="#Packages">Packages</a></li><li><a href="#Type-members">Type members</a><ul><li><a href="#Classlikes">Classlikes</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

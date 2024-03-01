@@ -25,13 +25,13 @@
      <script type="text/dot" id="dot"> digraph g {
  node0 [id=node0, label="<span style=\"color: #FFFFFF;\">class <a href=\"SelectedSelectionKeySet.html\" t=\"n\">SelectedSelectionKeySet</a></span>", class="class vertex"];
 node1 [id=node1, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">AbstractSet</span>[<span data-unresolved-link=\"\" t=\"t\">SelectionKey</span>]</span>", class="class vertex"];
-node2 [id=node2, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">AbstractCollection</span>[<span t=\"t\">E</span>]</span>", class="class vertex"];
+node2 [id=node2, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">AbstractCollection</span>[<span data-unresolved-link=\"\" t=\"t\">SelectionKey</span>]</span>", class="class vertex"];
 node3 [id=node3, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Object</span></span>", class="class vertex"];
 node4 [id=node4, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Any</span></span>", class="class vertex"];
 node5 [id=node5, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Matchable</span></span>", class="trait vertex"];
-node6 [id=node6, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Collection</span>[<span t=\"t\">E</span>]</span>", class="class vertex"];
-node7 [id=node7, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Iterable</span>[<span t=\"t\">E</span>]</span>", class="class vertex"];
-node8 [id=node8, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Set</span>[<span t=\"t\">E</span>]</span>", class="class vertex"];
+node6 [id=node6, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Collection</span>[<span data-unresolved-link=\"\" t=\"t\">SelectionKey</span>]</span>", class="class vertex"];
+node7 [id=node7, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Iterable</span>[<span data-unresolved-link=\"\" t=\"t\">SelectionKey</span>]</span>", class="class vertex"];
+node8 [id=node8, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Set</span>[<span data-unresolved-link=\"\" t=\"t\">SelectionKey</span>]</span>", class="class vertex"];
 
 
  node0 -> node1;
@@ -89,8 +89,7 @@ node8 -> node6;
 <section id="members-list">
  <h2 class="h500">Members list</h2>
  <div class="documentableFilter">
-  <div class="filtersContainer"></div>
-  <input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
+  <div class="filtersContainer"></div><input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
  </div>
  <div class="membersList expand">
   <div class="tabs">
@@ -397,18 +396,18 @@ node8 -> node6;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Compares the receiver object (<code>this</code>) with the argument object (<code>that</code>) for equivalence.</p> 
+             <p>Compares the receiver object (<code>this</code>) with the argument object (<code>that</code>) for equivalence.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Compares the receiver object (<code>this</code>) with the argument object (<code>that</code>) for equivalence.</p> 
-              <p>Any implementation of this method should be an <a href="https://en.wikipedia.org/wiki/Equivalence_relation">equivalence relation</a>:</p> 
-              <ul> 
-               <li>It is reflexive: for any instance <code>x</code> of type <code>Any</code>, <code>x.equals(x)</code> should return <code>true</code>.</li> 
-               <li>It is symmetric: for any instances <code>x</code> and <code>y</code> of type <code>Any</code>, <code>x.equals(y)</code> should return <code>true</code> if and only if <code>y.equals(x)</code> returns <code>true</code>.</li> 
-               <li>It is transitive: for any instances <code>x</code>, <code>y</code>, and <code>z</code> of type <code>Any</code> if <code>x.equals(y)</code> returns <code>true</code> and <code>y.equals(z)</code> returns <code>true</code>, then <code>x.equals(z)</code> should return <code>true</code>.</li> 
-              </ul> 
-              <p>If you override this method, you should verify that your implementation remains an equivalence relation. Additionally, when overriding this method it is usually necessary to override <code>hashCode</code> to ensure that objects which are "equal" (<code>o1.equals(o2)</code> returns <code>true</code>) hash to the same <span data-unresolved-link="">scala.Int</span>. (<code>o1.hashCode.equals(o2.hashCode)</code>).</p> 
+              <p>Compares the receiver object (<code>this</code>) with the argument object (<code>that</code>) for equivalence.</p>
+              <p>Any implementation of this method should be an <a href="https://en.wikipedia.org/wiki/Equivalence_relation">equivalence relation</a>:</p>
+              <ul>
+               <li>It is reflexive: for any instance <code>x</code> of type <code>Any</code>, <code>x.equals(x)</code> should return <code>true</code>.</li>
+               <li>It is symmetric: for any instances <code>x</code> and <code>y</code> of type <code>Any</code>, <code>x.equals(y)</code> should return <code>true</code> if and only if <code>y.equals(x)</code> returns <code>true</code>.</li>
+               <li>It is transitive: for any instances <code>x</code>, <code>y</code>, and <code>z</code> of type <code>Any</code> if <code>x.equals(y)</code> returns <code>true</code> and <code>y.equals(z)</code> returns <code>true</code>, then <code>x.equals(z)</code> should return <code>true</code>.</li>
+              </ul>
+              <p>If you override this method, you should verify that your implementation remains an equivalence relation. Additionally, when overriding this method it is usually necessary to override <code>hashCode</code> to ensure that objects which are "equal" (<code>o1.equals(o2)</code> returns <code>true</code>) hash to the same <span data-unresolved-link="">scala.Int</span>. (<code>o1.hashCode.equals(o2.hashCode)</code>).</p>
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
@@ -416,7 +415,7 @@ node8 -> node6;
                that
               </dt>
               <dd class="body-medium">
-               <p>the object to compare against this object for equality.</p> 
+               <p>the object to compare against this object for equality.</p>
               </dd>
              </dl>
              <h2 class="h200">Attributes</h2>
@@ -425,7 +424,7 @@ node8 -> node6;
                Returns
               </dt>
               <dd class="body-medium">
-               <p><code>true</code> if the receiver object is equivalent to the argument; <code>false</code> otherwise.</p> 
+               <p><code>true</code> if the receiver object is equivalent to the argument; <code>false</code> otherwise.</p>
               </dd>
               <dt class="body-small">
                Inherited from:
@@ -484,13 +483,13 @@ node8 -> node6;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Calculate a hash code value for the object.</p> 
+             <p>Calculate a hash code value for the object.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Calculate a hash code value for the object.</p> 
-              <p>The default hashing algorithm is platform dependent.</p> 
-              <p>Note that it is allowed for two objects to have identical hash codes (<code>o1.hashCode.equals(o2.hashCode)</code>) yet not be equal (<code>o1.equals(o2)</code> returns <code>false</code>). A degenerate implementation could always return <code>0</code>. However, it is required that if two objects are equal (<code>o1.equals(o2)</code> returns <code>true</code>) that they have identical hash codes (<code>o1.hashCode.equals(o2.hashCode)</code>). Therefore, when overriding this method, be sure to verify that the behavior is consistent with the <code>equals</code> method.</p> 
+              <p>Calculate a hash code value for the object.</p>
+              <p>The default hashing algorithm is platform dependent.</p>
+              <p>Note that it is allowed for two objects to have identical hash codes (<code>o1.hashCode.equals(o2.hashCode)</code>) yet not be equal (<code>o1.equals(o2)</code> returns <code>false</code>). A degenerate implementation could always return <code>0</code>. However, it is required that if two objects are equal (<code>o1.equals(o2)</code> returns <code>true</code>) that they have identical hash codes (<code>o1.hashCode.equals(o2.hashCode)</code>). Therefore, when overriding this method, be sure to verify that the behavior is consistent with the <code>equals</code> method.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -498,7 +497,7 @@ node8 -> node6;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>the hash code value for this object.</p> 
+               <p>the hash code value for this object.</p>
               </dd>
               <dt class="body-small">
                Inherited from:
@@ -547,7 +546,7 @@ node8 -> node6;
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="SelectedSelectionKeySet.html#parallelStream-2e" t="n" class="documentableName ">parallelStream</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Stream</span>[<span t="t">E</span>]
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="SelectedSelectionKeySet.html#parallelStream-2e" t="n" class="documentableName ">parallelStream</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Stream</span>[<span data-unresolved-link="" t="t">SelectionKey</span>]
            </div>
           </div>
          </div>
@@ -667,7 +666,7 @@ node8 -> node6;
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="SelectedSelectionKeySet.html#spliterator-55d" t="n" class="documentableName ">spliterator</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Spliterator</span>[<span t="t">E</span>]
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="SelectedSelectionKeySet.html#spliterator-55d" t="n" class="documentableName ">spliterator</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Spliterator</span>[<span data-unresolved-link="" t="t">SelectionKey</span>]
            </div>
           </div>
          </div>
@@ -697,7 +696,7 @@ node8 -> node6;
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="SelectedSelectionKeySet.html#stream-2e" t="n" class="documentableName ">stream</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Stream</span>[<span t="t">E</span>]
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="SelectedSelectionKeySet.html#stream-2e" t="n" class="documentableName ">stream</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Stream</span>[<span data-unresolved-link="" t="t">SelectionKey</span>]
            </div>
           </div>
          </div>
@@ -827,12 +826,12 @@ node8 -> node6;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Returns a string representation of the object.</p> 
+             <p>Returns a string representation of the object.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Returns a string representation of the object.</p> 
-              <p>The default representation is platform dependent.</p> 
+              <p>Returns a string representation of the object.</p>
+              <p>The default representation is platform dependent.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -840,7 +839,7 @@ node8 -> node6;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>a string representation of the object.</p> 
+               <p>a string representation of the object.</p>
               </dd>
               <dt class="body-small">
                Inherited from:
@@ -861,4 +860,4 @@ node8 -> node6;
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

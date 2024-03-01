@@ -32,7 +32,7 @@
      <button type="button" class="label-only-button" onclick="zoomOut()">Reset zoom</button><button type="button" class="label-only-button" onclick="hideGraph()">Hide graph</button><button type="button" class="label-only-button" onclick="showGraph()">Show graph</button>
      <svg id="graph"></svg>
      <script type="text/dot" id="dot"> digraph g {
- node0 [id=node0, label="<span style=\"color: #FFFFFF;\">object <a href=\"Buffer$.html\" t=\"n\">Buffer</a>.type</span>", class="object vertex"];
+ node0 [id=node0, label="<span style=\"color: #FFFFFF;\">object <a href=\"Buffer$.html\" t=\"n\">Buffer</a></span>", class="object vertex"];
 node1 [id=node1, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Object</span></span>", class="class vertex"];
 node2 [id=node2, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Any</span></span>", class="class vertex"];
 node3 [id=node3, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Matchable</span></span>", class="trait vertex"];
@@ -70,7 +70,7 @@ node3 -> node2;
     <div class="mono-small-block supertypes">
      <span></span>
      <div>
-      <a href="Buffer$.html" t="n">Buffer</a>.type
+      <a href="Buffer$.html" t="n">Buffer</a>.<span t="k">type</span>
      </div>
     </div>
    </dd>
@@ -80,8 +80,7 @@ node3 -> node2;
 <section id="members-list">
  <h2 class="h500">Members list</h2>
  <div class="documentableFilter">
-  <div class="filtersContainer"></div>
-  <input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
+  <div class="filtersContainer"></div><input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
  </div>
  <div class="membersList expand">
   <div class="tabs">
@@ -112,13 +111,13 @@ node3 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Wraps a <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> into a <a href="Buffer.html">Buffer</a>.</p> 
+             <p>Wraps a <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> into a <a href="Buffer.html">Buffer</a>.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Wraps a <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> into a <a href="Buffer.html">Buffer</a>.</p> 
-              <p>The new buffer will be backed by the given <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span>; that is, modifications to the buffer will cause the <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> to be modified and vice versa. The new buffer's capacity will be <span data-unresolved-link="" title="Problem linking ByteBuffer#capacity: No DRI found for query">ByteBuffer#capacity</span>, its readerOffset is set to position of <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> and writerOffset is set to limit of <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span>, and its byte order will be</p> 
-              <p><span data-unresolved-link="" title="Problem linking ByteOrder#BIG_ENDIAN: No DRI found for query">ByteOrder#BIG_ENDIAN</span>.</p> 
+              <p>Wraps a <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> into a <a href="Buffer.html">Buffer</a>.</p>
+              <p>The new buffer will be backed by the given <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span>; that is, modifications to the buffer will cause the <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> to be modified and vice versa. The new buffer's capacity will be <span data-unresolved-link="" title="Problem linking ByteBuffer#capacity: No DRI found for query">ByteBuffer#capacity</span>, its readerOffset is set to position of <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> and writerOffset is set to limit of <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span>, and its byte order will be</p>
+              <p><span data-unresolved-link="" title="Problem linking ByteOrder#BIG_ENDIAN: No DRI found for query">ByteOrder#BIG_ENDIAN</span>.</p>
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
@@ -126,7 +125,7 @@ node3 -> node2;
                byteBuffer
               </dt>
               <dd class="body-medium">
-               <p>The <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> that will back this buffer</p> 
+               <p>The <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span> that will back this buffer</p>
               </dd>
              </dl>
              <h2 class="h200">Attributes</h2>
@@ -135,7 +134,7 @@ node3 -> node2;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>The new byte buffer</p> 
+               <p>The new byte buffer</p>
               </dd>
              </dl>
             </div>
@@ -158,13 +157,13 @@ node3 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Wraps a byte array into a <a href="Buffer.html">Buffer</a>.</p> 
+             <p>Wraps a byte array into a <a href="Buffer.html">Buffer</a>.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Wraps a byte array into a <a href="Buffer.html">Buffer</a>.</p> 
-              <p>The new buffer will be backed by the given byte array; that is, modifications to the buffer will cause the array to be modified and vice versa. The new buffer's capacity will be <span data-unresolved-link="" title="Problem linking array.length: No DRI found for query">array.length</span>, its readerOffset and writerOffset will be zero, and its byte order will be</p> 
-              <p><span data-unresolved-link="" title="Problem linking ByteOrder#: Unable to parse query: expected start of identifier at char 10 in query: ByteOrder#">BIG_ENDIAN</span>.</p> 
+              <p>Wraps a byte array into a <a href="Buffer.html">Buffer</a>.</p>
+              <p>The new buffer will be backed by the given byte array; that is, modifications to the buffer will cause the array to be modified and vice versa. The new buffer's capacity will be <span data-unresolved-link="" title="Problem linking array.length: No DRI found for query">array.length</span>, its readerOffset and writerOffset will be zero, and its byte order will be</p>
+              <p><span data-unresolved-link="" title="Problem linking ByteOrder#: Unable to parse query: expected start of identifier at char 10 in query: ByteOrder#">BIG_ENDIAN</span>.</p>
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
@@ -172,7 +171,7 @@ node3 -> node2;
                array
               </dt>
               <dd class="body-medium">
-               <p>The array that will back this buffer</p> 
+               <p>The array that will back this buffer</p>
               </dd>
              </dl>
              <h2 class="h200">Attributes</h2>
@@ -181,7 +180,7 @@ node3 -> node2;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>The new byte buffer</p> 
+               <p>The new byte buffer</p>
               </dd>
              </dl>
             </div>
@@ -196,4 +195,4 @@ node3 -> node2;
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

@@ -25,7 +25,7 @@
      <script type="text/dot" id="dot"> digraph g {
  node0 [id=node0, label="<span style=\"color: #FFFFFF;\">class <a href=\"AbstractThreadIsolatedObjectPool$$ObjectPoolThreadLocal.html\" t=\"n\">ObjectPoolThreadLocal</a>[<span t=\"t\">T</span>]</span>", class="class vertex"];
 node1 [id=node1, label="<span style=\"color: #FFFFFF;\">class <a href=\"ActorThreadLocal.html\" t=\"n\">ActorThreadLocal</a>[<a href=\"SingleThreadPoolableHolder.html\" t=\"t\">SingleThreadPoolableHolder</a>[<span t=\"t\">T</span>]]</span>", class="class vertex"];
-node2 [id=node2, label="<span style=\"color: #FFFFFF;\">class <a href=\"ThreadLocal.html\" t=\"n\">ThreadLocal</a>[<span t=\"t\">V</span>]</span>", class="class vertex"];
+node2 [id=node2, label="<span style=\"color: #FFFFFF;\">class <a href=\"ThreadLocal.html\" t=\"n\">ThreadLocal</a>[<a href=\"SingleThreadPoolableHolder.html\" t=\"t\">SingleThreadPoolableHolder</a>[<span t=\"t\">T</span>]]</span>", class="class vertex"];
 node3 [id=node3, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Object</span></span>", class="class vertex"];
 node4 [id=node4, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Any</span></span>", class="class vertex"];
 node5 [id=node5, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Matchable</span></span>", class="trait vertex"];
@@ -70,8 +70,7 @@ node5 -> node4;
 <section id="members-list">
  <h2 class="h500">Members list</h2>
  <div class="documentableFilter">
-  <div class="filtersContainer"></div>
-  <input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
+  <div class="filtersContainer"></div><input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
  </div>
  <div class="membersList expand">
   <div class="tabs">
@@ -102,11 +101,11 @@ node5 -> node4;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Handle <span data-unresolved-link="" title="Problem linking TimeoutEvent: No DRI found for query">TimeoutEvent</span> for this <span data-unresolved-link="">TimeoutResource</span></p> 
+             <p>Handle <span data-unresolved-link="" title="Problem linking TimeoutEvent: No DRI found for query">TimeoutEvent</span> for this <span data-unresolved-link="">TimeoutResource</span></p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Handle <span data-unresolved-link="" title="Problem linking TimeoutEvent: No DRI found for query">TimeoutEvent</span> for this <span data-unresolved-link="">TimeoutResource</span></p> 
+              <p>Handle <span data-unresolved-link="" title="Problem linking TimeoutEvent: No DRI found for query">TimeoutEvent</span> for this <span data-unresolved-link="">TimeoutResource</span></p>
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
@@ -114,13 +113,13 @@ node5 -> node4;
                registerId
               </dt>
               <dd class="body-medium">
-               <p>timer task register id in <span data-unresolved-link="" title="Problem linking Timer: No DRI found for query">Timer</span>.</p> 
+               <p>timer task register id in <span data-unresolved-link="" title="Problem linking Timer: No DRI found for query">Timer</span>.</p>
               </dd>
               <dt class="body-small">
                resourceTimer
               </dt>
               <dd class="body-medium">
-               <p>current time-out <a href="ResourceTimer.html">ResourceTimer</a></p> 
+               <p>current time-out <a href="ResourceTimer.html">ResourceTimer</a></p>
               </dd>
              </dl>
              <h2 class="h200">Attributes</h2>
@@ -162,11 +161,11 @@ node5 -> node4;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Cancel the local variable timer task.</p> 
+             <p>Cancel the local variable timer task.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Cancel the local variable timer task.</p> 
+              <p>Cancel the local variable timer task.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -187,7 +186,7 @@ node5 -> node4;
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">final override </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractThreadIsolatedObjectPool$$ObjectPoolThreadLocal.html#get-993" t="n" class="documentableName ">get</a>(<span t="k"></span>): <span t="t">V</span>
+            <span class="modifiers"><span t="k">final override </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractThreadIsolatedObjectPool$$ObjectPoolThreadLocal.html#get-993" t="n" class="documentableName ">get</a>(<span t="k"></span>): <a href="SingleThreadPoolableHolder.html" t="t">SingleThreadPoolableHolder</a>[<span t="t">T</span>]
            </div>
           </div>
          </div>
@@ -197,11 +196,11 @@ node5 -> node4;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Returns the current value for the current thread</p> 
+             <p>Returns the current value for the current thread</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Returns the current value for the current thread</p> 
+              <p>Returns the current value for the current thread</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -230,7 +229,7 @@ node5 -> node4;
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractThreadIsolatedObjectPool$$ObjectPoolThreadLocal.html#getIfExists-0" t="n" class="documentableName ">getIfExists</a>: <span t="t">V</span><span t="k"> | </span><span data-unresolved-link="" t="t">Null</span>
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractThreadIsolatedObjectPool$$ObjectPoolThreadLocal.html#getIfExists-0" t="n" class="documentableName ">getIfExists</a>: <a href="SingleThreadPoolableHolder.html" t="t">SingleThreadPoolableHolder</a>[<span t="t">T</span>]<span t="k"> | </span><span data-unresolved-link="" t="t">Null</span>
            </div>
           </div>
          </div>
@@ -240,11 +239,11 @@ node5 -> node4;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Returns the current value for the current thread if it exists, null otherwise.</p> 
+             <p>Returns the current value for the current thread if it exists, null otherwise.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Returns the current value for the current thread if it exists, null otherwise.</p> 
+              <p>Returns the current value for the current thread if it exists, null otherwise.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -283,11 +282,11 @@ node5 -> node4;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Returns true if the thread local variable has been initial, otherwise false.</p> 
+             <p>Returns true if the thread local variable has been initial, otherwise false.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Returns true if the thread local variable has been initial, otherwise false.</p> 
+              <p>Returns true if the thread local variable has been initial, otherwise false.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -318,11 +317,11 @@ node5 -> node4;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Returns true if and only if this thread-local variable is set.</p> 
+             <p>Returns true if and only if this thread-local variable is set.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Returns true if and only if this thread-local variable is set.</p> 
+              <p>Returns true if and only if this thread-local variable is set.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -361,11 +360,11 @@ node5 -> node4;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Sets the value to uninitialized for the specified thread local map. After this, any subsequent call to get() will trigger a new call to initialValue().</p> 
+             <p>Sets the value to uninitialized for the specified thread local map. After this, any subsequent call to get() will trigger a new call to initialValue().</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Sets the value to uninitialized for the specified thread local map. After this, any subsequent call to get() will trigger a new call to initialValue().</p> 
+              <p>Sets the value to uninitialized for the specified thread local map. After this, any subsequent call to get() will trigger a new call to initialValue().</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -404,11 +403,11 @@ node5 -> node4;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Set the value for the current thread.</p> 
+             <p>Set the value for the current thread.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Set the value for the current thread.</p> 
+              <p>Set the value for the current thread.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -456,4 +455,4 @@ node5 -> node4;
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li><li><a href="#Concrete-fields">Concrete fields</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li><li><a href="#Concrete-fields">Concrete fields</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

@@ -37,7 +37,7 @@ node1 [id=node1, label="<span style=\"color: #FFFFFF;\">class <a href=\"Channels
 node2 [id=node2, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Object</span></span>", class="class vertex"];
 node3 [id=node3, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Any</span></span>", class="class vertex"];
 node4 [id=node4, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Matchable</span></span>", class="trait vertex"];
-node5 [id=node5, label="<span style=\"color: #FFFFFF;\">trait <a href=\"Actor.html\" t=\"n\">Actor</a>[<span t=\"t\">M</span>]</span>", class="trait vertex"];
+node5 [id=node5, label="<span style=\"color: #FFFFFF;\">trait <a href=\"Actor.html\" t=\"n\">Actor</a>[<a href=\"ChannelsActor$$Bind.html\" t=\"t\">Bind</a>]</span>", class="trait vertex"];
 
 
  node0 -> node1;
@@ -80,8 +80,7 @@ node5 -> node2;
 <section id="members-list">
  <h2 class="h500">Members list</h2>
  <div class="documentableFilter">
-  <div class="filtersContainer"></div>
-  <input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
+  <div class="filtersContainer"></div><input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
  </div>
  <div class="membersList expand">
   <div class="tabs">
@@ -112,11 +111,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>When a actor instance is mounted to actor system, this method will call by actor system</p> 
+             <p>When a actor instance is mounted to actor system, this method will call by actor system</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>When a actor instance is mounted to actor system, this method will call by actor system</p> 
+              <p>When a actor instance is mounted to actor system, this method will call by actor system</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -149,11 +148,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>implement this method to handle ask message and resume when received reply message for this notice message</p> 
+             <p>implement this method to handle ask message and resume when received reply message for this notice message</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>implement this method to handle ask message and resume when received reply message for this notice message</p> 
+              <p>implement this method to handle ask message and resume when received reply message for this notice message</p>
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
@@ -161,7 +160,7 @@ node5 -> node2;
                stack
               </dt>
               <dd class="body-medium">
-               <p>ask message received by this actor instance, or resume frame .</p> 
+               <p>ask message received by this actor instance, or resume frame .</p>
               </dd>
              </dl>
              <h2 class="h200">Attributes</h2>
@@ -170,7 +169,7 @@ node5 -> node2;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>an option value containing the resumable <span data-unresolved-link="" title="Problem linking StackState: No DRI found for query">StackState</span> waited for some reply message, or <code>None</code> if the stack frame has finished.</p> 
+               <p>an option value containing the resumable <span data-unresolved-link="" title="Problem linking StackState: No DRI found for query">StackState</span> waited for some reply message, or <code>None</code> if the stack frame has finished.</p>
               </dd>
               <dt class="body-small">
                Definition Classes
@@ -241,11 +240,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>The unique id of this actor distributed by <span data-unresolved-link="" title="Problem linking ActorSystem: No DRI found for query">ActorSystem</span>, when a actor instance is mounted to a <span data-unresolved-link="" title="Problem linking ActorSystem: No DRI found for query">ActorSystem</span>, the actor system will distribute a unique id to the instance.</p> 
+             <p>The unique id of this actor distributed by <span data-unresolved-link="" title="Problem linking ActorSystem: No DRI found for query">ActorSystem</span>, when a actor instance is mounted to a <span data-unresolved-link="" title="Problem linking ActorSystem: No DRI found for query">ActorSystem</span>, the actor system will distribute a unique id to the instance.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>The unique id of this actor distributed by <span data-unresolved-link="" title="Problem linking ActorSystem: No DRI found for query">ActorSystem</span>, when a actor instance is mounted to a <span data-unresolved-link="" title="Problem linking ActorSystem: No DRI found for query">ActorSystem</span>, the actor system will distribute a unique id to the instance.</p> 
+              <p>The unique id of this actor distributed by <span data-unresolved-link="" title="Problem linking ActorSystem: No DRI found for query">ActorSystem</span>, when a actor instance is mounted to a <span data-unresolved-link="" title="Problem linking ActorSystem: No DRI found for query">ActorSystem</span>, the actor system will distribute a unique id to the instance.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -253,7 +252,7 @@ node5 -> node2;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>id number</p> 
+               <p>id number</p>
               </dd>
               <dt class="body-small">
                Inherited from:
@@ -272,7 +271,7 @@ node5 -> node2;
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AcceptorActor.html#address-0" t="n" class="documentableName ">address</a>: <a href="../address/ActorAddress.html" t="t">ActorAddress</a>[<span t="t">M</span>]
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AcceptorActor.html#address-0" t="n" class="documentableName ">address</a>: <a href="../address/ActorAddress.html" t="t">ActorAddress</a>[<a href="ChannelsActor$$Bind.html" t="t">Bind</a>]
            </div>
           </div>
          </div>
@@ -372,11 +371,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to receiveBatchXXX method</p> 
+             <p>whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to receiveBatchXXX method</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to receiveBatchXXX method</p> 
+              <p>whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to receiveBatchXXX method</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -407,11 +406,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Context of this actor. This method can only used after actor instance mount to actor system</p> 
+             <p>Context of this actor. This method can only used after actor instance mount to actor system</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Context of this actor. This method can only used after actor instance mount to actor system</p> 
+              <p>Context of this actor. This method can only used after actor instance mount to actor system</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -510,11 +509,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>max size message for each batch, usage for schedule system</p> 
+             <p>max size message for each batch, usage for schedule system</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>max size message for each batch, usage for schedule system</p> 
+              <p>max size message for each batch, usage for schedule system</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -745,7 +744,7 @@ node5 -> node2;
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="AcceptorActor.html#self-0" t="n" class="documentableName ">self</a>: <a href="../address/ActorAddress.html" t="t">ActorAddress</a>[<span t="t">M</span>]
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="AcceptorActor.html#self-0" t="n" class="documentableName ">self</a>: <a href="../address/ActorAddress.html" t="t">ActorAddress</a>[<a href="ChannelsActor$$Bind.html" t="t">Bind</a>]
            </div>
           </div>
          </div>
@@ -755,11 +754,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>self address of this actor instance</p> 
+             <p>self address of this actor instance</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>self address of this actor instance</p> 
+              <p>self address of this actor instance</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -798,11 +797,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>The ActorSystem of this actor instance is running</p> 
+             <p>The ActorSystem of this actor instance is running</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>The ActorSystem of this actor instance is running</p> 
+              <p>The ActorSystem of this actor instance is running</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -810,7 +809,7 @@ node5 -> node2;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>ActorSystem</p> 
+               <p>ActorSystem</p>
               </dd>
               <dt class="body-small">
                Inherited from:
@@ -867,7 +866,7 @@ node5 -> node2;
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">val </span></span><a href="AcceptorActor.html#batchAskFilter-0" t="n" class="documentableName ">batchAskFilter</a>: <a href="../message/Ask.html" t="t">Ask</a>[<span t="k">_</span>]<span t="k"> =&gt; </span><span data-unresolved-link="" t="t">Boolean</span>
+            <span class="modifiers"></span><span class="kind"><span t="k">val </span></span><a href="AcceptorActor.html#batchAskFilter-0" t="n" class="documentableName ">batchAskFilter</a>: (<a href="../message/Ask.html" t="t">Ask</a>[<span t="k">_</span>])<span t="k"> =&gt; </span><span data-unresolved-link="" t="t">Boolean</span>
            </div>
           </div>
          </div>
@@ -929,4 +928,4 @@ node5 -> node2;
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li><li><a href="#Inherited-fields">Inherited fields</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li><li><a href="#Inherited-fields">Inherited fields</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

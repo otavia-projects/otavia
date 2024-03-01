@@ -93,8 +93,7 @@ node8 -> node6;
 <section id="members-list">
  <h2 class="h500">Members list</h2>
  <div class="documentableFilter">
-  <div class="filtersContainer"></div>
-  <input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
+  <div class="filtersContainer"></div><input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
  </div>
  <div class="membersList expand">
   <div class="tabs">
@@ -125,11 +124,11 @@ node8 -> node6;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Determine if this allocator is pooling and reusing its allocated memory.</p> 
+             <p>Determine if this allocator is pooling and reusing its allocated memory.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Determine if this allocator is pooling and reusing its allocated memory.</p> 
+              <p>Determine if this allocator is pooling and reusing its allocated memory.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -137,7 +136,7 @@ node8 -> node6;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>true if this allocator is pooling and reusing its memory, false otherwise.</p> 
+               <p>true if this allocator is pooling and reusing its memory, false otherwise.</p>
               </dd>
              </dl>
             </div>
@@ -160,11 +159,11 @@ node8 -> node6;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Recycle the <a href="../Buffer.html">Buffer</a></p> 
+             <p>Recycle the <a href="../Buffer.html">Buffer</a></p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Recycle the <a href="../Buffer.html">Buffer</a></p> 
+              <p>Recycle the <a href="../Buffer.html">Buffer</a></p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small"></dl>
@@ -196,13 +195,13 @@ node8 -> node6;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Allocate a <a href="../Buffer.html">Buffer</a> of the given size in bytes. This method may throw an <span data-unresolved-link="" title="Problem linking OutOfMemoryError: No DRI found for query">OutOfMemoryError</span> if there is not enough free memory available to allocate a <a href="../Buffer.html">Buffer</a> of the requested size.</p> 
+             <p>Allocate a <a href="../Buffer.html">Buffer</a> of the given size in bytes. This method may throw an <span data-unresolved-link="" title="Problem linking OutOfMemoryError: No DRI found for query">OutOfMemoryError</span> if there is not enough free memory available to allocate a <a href="../Buffer.html">Buffer</a> of the requested size.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Allocate a <a href="../Buffer.html">Buffer</a> of the given size in bytes. This method may throw an <span data-unresolved-link="" title="Problem linking OutOfMemoryError: No DRI found for query">OutOfMemoryError</span> if there is not enough free memory available to allocate a <a href="../Buffer.html">Buffer</a> of the requested size.</p> 
-              <p>The buffer will use big endian byte order.</p> 
-              <p><strong>Note:</strong> unlike the JDK <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span>s, Netty <a href="../Buffer.html">Buffer</a>s are not guaranteed to be zeroed when allocated. In other words, the memory of a newly allocated buffer may contain garbage data from prior allocations, and the memory is likewise not guaranteed to be erased when the buffer is closed. If the data is sensitive and needs to be overwritten when the buffer is closed, then the buffer should be allocated with the <span data-unresolved-link="" title="Problem linking SensitiveBufferAllocator: No DRI found for query">SensitiveBufferAllocator</span>.</p> 
+              <p>Allocate a <a href="../Buffer.html">Buffer</a> of the given size in bytes. This method may throw an <span data-unresolved-link="" title="Problem linking OutOfMemoryError: No DRI found for query">OutOfMemoryError</span> if there is not enough free memory available to allocate a <a href="../Buffer.html">Buffer</a> of the requested size.</p>
+              <p>The buffer will use big endian byte order.</p>
+              <p><strong>Note:</strong> unlike the JDK <span data-unresolved-link="" title="Problem linking ByteBuffer: No DRI found for query">ByteBuffer</span>s, Netty <a href="../Buffer.html">Buffer</a>s are not guaranteed to be zeroed when allocated. In other words, the memory of a newly allocated buffer may contain garbage data from prior allocations, and the memory is likewise not guaranteed to be erased when the buffer is closed. If the data is sensitive and needs to be overwritten when the buffer is closed, then the buffer should be allocated with the <span data-unresolved-link="" title="Problem linking SensitiveBufferAllocator: No DRI found for query">SensitiveBufferAllocator</span>.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -210,7 +209,7 @@ node8 -> node6;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>The newly allocated <a href="../Buffer.html">Buffer</a>.</p> 
+               <p>The newly allocated <a href="../Buffer.html">Buffer</a>.</p>
               </dd>
               <dt class="body-small">
                Throws
@@ -218,8 +217,8 @@ node8 -> node6;
               <dd class="body-medium">
                <div>
                 <div>
-                 <span data-unresolved-link="" title="Problem linking IllegalStateException: No DRI found for query">IllegalStateException</span> 
-                 <p>if this allocator has been closed.</p> 
+                 <span data-unresolved-link="" title="Problem linking IllegalStateException: No DRI found for query">IllegalStateException</span>
+                 <p>if this allocator has been closed.</p>
                 </div>
                </div>
               </dd>
@@ -250,11 +249,11 @@ node8 -> node6;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Determine if this allocator is allocate direct memory or heap memory.</p> 
+             <p>Determine if this allocator is allocate direct memory or heap memory.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Determine if this allocator is allocate direct memory or heap memory.</p> 
+              <p>Determine if this allocator is allocate direct memory or heap memory.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -262,7 +261,7 @@ node8 -> node6;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>true if this allocator is direct, false otherwise.</p> 
+               <p>true if this allocator is direct, false otherwise.</p>
               </dd>
               <dt class="body-small">
                Inherited from:
@@ -283,4 +282,4 @@ node8 -> node6;
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Abstract-methods">Abstract methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Abstract-methods">Abstract methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

@@ -12,7 +12,7 @@
 </div>
 <div class="cover">
  <div class="doc">
-  <p>The message container that is used for <a href="DatagramChannel.html">DatagramChannel</a> to communicate with the remote peer.</p> 
+  <p>The message container that is used for <a href="DatagramChannel.html">DatagramChannel</a> to communicate with the remote peer.</p>
  </div>
  <section id="attributes">
   <h2 class="h500">Attributes</h2>
@@ -27,11 +27,11 @@
      <script type="text/dot" id="dot"> digraph g {
  node0 [id=node0, label="<span style=\"color: #FFFFFF;\">class <a href=\"DatagramPacket.html\" t=\"n\">DatagramPacket</a></span>", class="class vertex"];
 node1 [id=node1, label="<span style=\"color: #FFFFFF;\">class <a href=\"../udp/BufferAddressedEnvelope.html\" t=\"n\">BufferAddressedEnvelope</a>[<span data-unresolved-link=\"\" t=\"t\">SocketAddress</span>, <a href=\"DatagramPacket.html\" t=\"t\">DatagramPacket</a>]</span>", class="class vertex"];
-node2 [id=node2, label="<span style=\"color: #FFFFFF;\">class <a href=\"../udp/DefaultAddressedEnvelope.html\" t=\"n\">DefaultAddressedEnvelope</a>[<a href=\"../../../buffer/Buffer.html\" t=\"t\">Buffer</a>, <span t=\"t\">A</span>]</span>", class="class vertex"];
+node2 [id=node2, label="<span style=\"color: #FFFFFF;\">class <a href=\"../udp/DefaultAddressedEnvelope.html\" t=\"n\">DefaultAddressedEnvelope</a>[<a href=\"../../../buffer/Buffer.html\" t=\"t\">Buffer</a>, <span data-unresolved-link=\"\" t=\"t\">SocketAddress</span>]</span>", class="class vertex"];
 node3 [id=node3, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Object</span></span>", class="class vertex"];
 node4 [id=node4, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Any</span></span>", class="class vertex"];
 node5 [id=node5, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Matchable</span></span>", class="trait vertex"];
-node6 [id=node6, label="<span style=\"color: #FFFFFF;\">trait <a href=\"../udp/AddressedEnvelope.html\" t=\"n\">AddressedEnvelope</a>[<span t=\"t\">M</span>, <span t=\"t\">A</span>]</span>", class="trait vertex"];
+node6 [id=node6, label="<span style=\"color: #FFFFFF;\">trait <a href=\"../udp/AddressedEnvelope.html\" t=\"n\">AddressedEnvelope</a>[<a href=\"../../../buffer/Buffer.html\" t=\"t\">Buffer</a>, <span data-unresolved-link=\"\" t=\"t\">SocketAddress</span>]</span>", class="trait vertex"];
 
 
  node0 -> node1;
@@ -78,8 +78,7 @@ node6 -> node3;
 <section id="members-list">
  <h2 class="h500">Members list</h2>
  <div class="documentableFilter">
-  <div class="filtersContainer"></div>
-  <input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
+  <div class="filtersContainer"></div><input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
  </div>
  <div class="membersList expand">
   <div class="tabs">
@@ -110,11 +109,11 @@ node6 -> node3;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Create a new addressed envelope instance, that has the same recipient and sender as this one, but the given content.</p> 
+             <p>Create a new addressed envelope instance, that has the same recipient and sender as this one, but the given content.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Create a new addressed envelope instance, that has the same recipient and sender as this one, but the given content.</p> 
+              <p>Create a new addressed envelope instance, that has the same recipient and sender as this one, but the given content.</p>
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
@@ -122,7 +121,7 @@ node6 -> node3;
                content
               </dt>
               <dd class="body-medium">
-               <p>The contents of the returned addressed envelope instance.</p> 
+               <p>The contents of the returned addressed envelope instance.</p>
               </dd>
              </dl>
              <h2 class="h200">Attributes</h2>
@@ -131,7 +130,7 @@ node6 -> node3;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>An addressed envelope instance that has the same recipient and sender as this one, but the given content.</p> 
+               <p>An addressed envelope instance that has the same recipient and sender as this one, but the given content.</p>
               </dd>
               <dt class="body-small">
                Definition Classes
@@ -169,7 +168,7 @@ node6 -> node3;
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DatagramPacket.html#content-0" t="n" class="documentableName ">content</a>: <span t="t">M</span>
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="DatagramPacket.html#content-0" t="n" class="documentableName ">content</a>: <a href="../../../buffer/Buffer.html" t="t">Buffer</a>
            </div>
           </div>
          </div>
@@ -179,11 +178,11 @@ node6 -> node3;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Returns the message wrapped by this envelope message.</p> 
+             <p>Returns the message wrapped by this envelope message.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Returns the message wrapped by this envelope message.</p> 
+              <p>Returns the message wrapped by this envelope message.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -222,12 +221,12 @@ node6 -> node3;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Returns a string representation of the object.</p> 
+             <p>Returns a string representation of the object.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Returns a string representation of the object.</p> 
-              <p>The default representation is platform dependent.</p> 
+              <p>Returns a string representation of the object.</p>
+              <p>The default representation is platform dependent.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -235,7 +234,7 @@ node6 -> node3;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>a string representation of the object.</p> 
+               <p>a string representation of the object.</p>
               </dd>
               <dt class="body-small">
                Definition Classes
@@ -264,4 +263,4 @@ node6 -> node3;
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

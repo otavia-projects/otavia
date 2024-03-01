@@ -13,8 +13,7 @@
 <section id="members-list">
  <h2 class="h500">Members list</h2>
  <div class="documentableFilter">
-  <div class="filtersContainer"></div>
-  <input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
+  <div class="filtersContainer"></div><input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
  </div>
  <div class="membersList expand">
   <div class="tabs">
@@ -138,37 +137,37 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>A wrapper of <span data-unresolved-link="">java.nio.ByteBuffer</span>, with separate reader and writer offsets.</p> 
+             <p>A wrapper of <span data-unresolved-link="">java.nio.ByteBuffer</span>, with separate reader and writer offsets.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>A wrapper of <span data-unresolved-link="">java.nio.ByteBuffer</span>, with separate reader and writer offsets.</p> 
-              <p>A buffer is a logically sequential stretch of memory with a certain capacity, an offset for writing, and an offset for reading. Buffers may be composed of multiple components, where each component is a guaranteed contiguous chunk of memory.</p> 
-              <p>=== Creating a buffer === Buffers are created by allocators, and their allocate family of methods. A number of standard allocators exist, and are available through static methods on the BufferAllocator interface.</p> 
-              <p>=== Buffer life cycle === The buffer has a life cycle, where it is allocated, used, and deallocated. When the buffer is initially allocated, a pairing close() call will deallocate it.</p> 
-              <p>=== Thread-safety === Buffer are not thread-safe.</p> 
-              <p>=== Accessing data === Data access methods fall into two classes:</p> 
-              <ol> 
+              <p>A wrapper of <span data-unresolved-link="">java.nio.ByteBuffer</span>, with separate reader and writer offsets.</p>
+              <p>A buffer is a logically sequential stretch of memory with a certain capacity, an offset for writing, and an offset for reading. Buffers may be composed of multiple components, where each component is a guaranteed contiguous chunk of memory.</p>
+              <p>=== Creating a buffer === Buffers are created by allocators, and their allocate family of methods. A number of standard allocators exist, and are available through static methods on the BufferAllocator interface.</p>
+              <p>=== Buffer life cycle === The buffer has a life cycle, where it is allocated, used, and deallocated. When the buffer is initially allocated, a pairing close() call will deallocate it.</p>
+              <p>=== Thread-safety === Buffer are not thread-safe.</p>
+              <p>=== Accessing data === Data access methods fall into two classes:</p>
+              <ol>
                <li>Access that are based on, and updates, the read or write offset positions. 
-                <ul> 
-                 <li>These accessor methods are typically called readX or writeX.</li> 
-                </ul> </li> 
+                <ul>
+                 <li>These accessor methods are typically called readX or writeX.</li>
+                </ul></li>
                <li>Access that take offsets as arguments, and do not update read or write offset positions. 
-                <ul> 
-                 <li>These accessor methods are typically called getX or setX.</li> 
-                </ul> </li> 
-              </ol> 
-              <p>A buffer contains two mutable offset positions: one for reading and one for writing. These positions use zero-based indexing , such that the first byte of data in the buffer is placed at offset 0, and the last byte in the buffer is at offset capacity - 1. The readerOffset() is the offset into the buffer from which the next read will take place, and is initially zero. The reader offset must always be less than or equal to the writerOffset(). The writerOffset() is likewise the offset into the buffer where the next write will take place. The writer offset is also initially zero, and must be less than or equal to the capacity.</p> 
-              <p>This carves the buffer into three regions, as demonstrated by this diagram:</p> 
+                <ul>
+                 <li>These accessor methods are typically called getX or setX.</li>
+                </ul></li>
+              </ol>
+              <p>A buffer contains two mutable offset positions: one for reading and one for writing. These positions use zero-based indexing , such that the first byte of data in the buffer is placed at offset 0, and the last byte in the buffer is at offset capacity - 1. The readerOffset() is the offset into the buffer from which the next read will take place, and is initially zero. The reader offset must always be less than or equal to the writerOffset(). The writerOffset() is likewise the offset into the buffer where the next write will take place. The writer offset is also initially zero, and must be less than or equal to the capacity.</p>
+              <p>This carves the buffer into three regions, as demonstrated by this diagram:</p>
               <pre>| discardable bytes | readable bytes | writable bytes |
 |:------------------|:--------------:|:--------------:|
 |                   |   (CONTENT)    |                |
 |                   |                |                |
 0 &lt;= readerOffset &lt;= writerOffset &lt;= capacity 
-</pre> 
-              <p>=== Byte Order === Buffers are always big endian, and this cannot be changed. Usages that need to get, set, read, or write, little-endian values will have to flip the byte order of the values they read and write.</p> 
-              <p>=== Splitting buffers === The split() method is not support.</p> 
-              <p>=== Buffers as constants === Constants buffer is not support, use Array[Byte] directly.</p> 
+</pre>
+              <p>=== Byte Order === Buffers are always big endian, and this cannot be changed. Usages that need to get, set, read, or write, little-endian values will have to flip the byte order of the values they read and write.</p>
+              <p>=== Splitting buffers === The split() method is not support.</p>
+              <p>=== Buffers as constants === Constants buffer is not support, use Array[Byte] directly.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -275,7 +274,7 @@
                <div class="mono-small-block supertypes">
                 <span></span>
                 <div>
-                 <a href="buffer/Buffer$.html" t="n">Buffer</a>.type
+                 <a href="buffer/Buffer$.html" t="n">Buffer</a>.<span t="k">type</span>
                 </div>
                </div>
               </dd>
@@ -300,11 +299,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Interface for allocating <a href="buffer/Buffer.html">Buffer</a>s.</p> 
+             <p>Interface for allocating <a href="buffer/Buffer.html">Buffer</a>s.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Interface for allocating <a href="buffer/Buffer.html">Buffer</a>s.</p> 
+              <p>Interface for allocating <a href="buffer/Buffer.html">Buffer</a>s.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -414,7 +413,7 @@
                <div class="mono-small-block supertypes">
                 <span></span>
                 <div>
-                 <a href="buffer/BufferAllocator$.html" t="n">BufferAllocator</a>.type
+                 <a href="buffer/BufferAllocator$.html" t="n">BufferAllocator</a>.<span t="k">type</span>
                 </div>
                </div>
               </dd>
@@ -439,11 +438,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>An exception thrown when an operation is attempted on a <a href="buffer/Buffer.html">Buffer</a> when it has been closed.</p> 
+             <p>An exception thrown when an operation is attempted on a <a href="buffer/Buffer.html">Buffer</a> when it has been closed.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>An exception thrown when an operation is attempted on a <a href="buffer/Buffer.html">Buffer</a> when it has been closed.</p> 
+              <p>An exception thrown when an operation is attempted on a <a href="buffer/Buffer.html">Buffer</a> when it has been closed.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -525,7 +524,7 @@
                <div class="mono-small-block supertypes">
                 <span></span>
                 <div>
-                 <a href="buffer/BufferUtils$.html" t="n">BufferUtils</a>.type
+                 <a href="buffer/BufferUtils$.html" t="n">BufferUtils</a>.<span t="k">type</span>
                 </div>
                </div>
               </dd>
@@ -550,11 +549,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>The <a href="buffer/ByteCursor.html">ByteCursor</a> scans through a sequence of bytes. This is similar to <a href="buffer/ByteProcessor.html">ByteProcessor</a>, but for external iteration rather than internal iteration. The external iteration allows the callers to control the pace of the iteration.</p> 
+             <p>The <a href="buffer/ByteCursor.html">ByteCursor</a> scans through a sequence of bytes. This is similar to <a href="buffer/ByteProcessor.html">ByteProcessor</a>, but for external iteration rather than internal iteration. The external iteration allows the callers to control the pace of the iteration.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>The <a href="buffer/ByteCursor.html">ByteCursor</a> scans through a sequence of bytes. This is similar to <a href="buffer/ByteProcessor.html">ByteProcessor</a>, but for external iteration rather than internal iteration. The external iteration allows the callers to control the pace of the iteration.</p> 
+              <p>The <a href="buffer/ByteCursor.html">ByteCursor</a> scans through a sequence of bytes. This is similar to <a href="buffer/ByteProcessor.html">ByteProcessor</a>, but for external iteration rather than internal iteration. The external iteration allows the callers to control the pace of the iteration.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -595,11 +594,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Provides a mechanism to iterate over a collection of bytes.</p> 
+             <p>Provides a mechanism to iterate over a collection of bytes.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Provides a mechanism to iterate over a collection of bytes.</p> 
+              <p>Provides a mechanism to iterate over a collection of bytes.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -694,7 +693,7 @@
                <div class="mono-small-block supertypes">
                 <span></span>
                 <div>
-                 <a href="buffer/ByteProcessor$.html" t="n">ByteProcessor</a>.type
+                 <a href="buffer/ByteProcessor$.html" t="n">ByteProcessor</a>.<span t="k">type</span>
                 </div>
                </div>
               </dd>
@@ -745,7 +744,7 @@
                <div class="mono-small-block supertypes">
                 <span></span>
                 <div>
-                 <a href="buffer/BytesUtil$.html" t="n">BytesUtil</a>.type
+                 <a href="buffer/BytesUtil$.html" t="n">BytesUtil</a>.<span t="k">type</span>
                 </div>
                </div>
               </dd>
@@ -870,7 +869,7 @@
                <div class="mono-small-block supertypes">
                 <span></span>
                 <div>
-                 <a href="buffer/FixedCapacityAllocator$.html" t="n">FixedCapacityAllocator</a>.type
+                 <a href="buffer/FixedCapacityAllocator$.html" t="n">FixedCapacityAllocator</a>.<span t="k">type</span>
                 </div>
                </div>
               </dd>
@@ -921,7 +920,7 @@
                <div class="mono-small-block supertypes">
                 <span></span>
                 <div>
-                 <a href="buffer/Util$.html" t="n">Util</a>.type
+                 <a href="buffer/Util$.html" t="n">Util</a>.<span t="k">type</span>
                 </div>
                </div>
               </dd>
@@ -938,4 +937,4 @@
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#members-list">Members list</a><ul><li><a href="#Packages">Packages</a></li><li><a href="#Type-members">Type members</a><ul><li><a href="#Classlikes">Classlikes</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/lampepfl/dotty"><button class="icon-button gh"></button></a><a href="https://twitter.com/scala_lang"><button class="icon-button twitter"></button></a><a href="https://discord.com/invite/scala"><button class="icon-button discord"></button></a><a href="https://gitter.im/scala/scala"><button class="icon-button gitter"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#members-list">Members list</a><ul><li><a href="#Packages">Packages</a></li><li><a href="#Type-members">Type members</a><ul><li><a href="#Classlikes">Classlikes</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
