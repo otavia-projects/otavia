@@ -16,6 +16,8 @@
 
 package cc.otavia.json
 
+import cc.otavia.util.ASCII
+
 import java.nio.charset.StandardCharsets
 import scala.language.unsafeNulls
 
@@ -28,22 +30,23 @@ object JsonConstants {
 
     val TOKEN_NULL: Array[Byte] = "null".getBytes(StandardCharsets.US_ASCII)
 
-    val TOKEN_COMMA: Byte        = ','
-    val TOKEN_COLON: Byte        = ':'
-    val TOKEN_DOUBLE_QUOTE: Byte = '"'
+    val TOKEN_COMMA: Byte        = ASCII.COMMA
+    val TOKEN_COLON: Byte        = ASCII.COLON
+    val TOKEN_DOUBLE_QUOTE: Byte = ASCII.DOUBLE_QUOTE
 
-    val TOKEN_OBJECT_START: Byte = '{'
-    val TOKEN_OBJECT_END: Byte   = '}'
+    val TOKEN_OBJECT_START: Byte = ASCII.BRACE_LEFT
+    val TOKEN_OBJECT_END: Byte   = ASCII.BRACE_RIGHT
 
-    val TOKEN_ARRAY_START: Byte = '['
-    val TOKEN_ARRAY_END: Byte   = ']'
+    val TOKEN_ARRAY_START: Byte = ASCII.BRACKET_LEFT
+    val TOKEN_ARRAY_END: Byte   = ASCII.BRACKET_RIGHT
+
+    val TOKEN_POINT: Byte = ASCII.DOT
+    val TOKEN_PLUS: Byte  = ASCII.PLUS
+    val TOKEN_MINUS: Byte = ASCII.MINUS_SIGN
+    val TOKEN_ZERO: Byte  = ASCII.ZERO
+    val TOKEN_NINE: Byte  = ASCII.NINE
 
     val TOKEN_NUMBERS: Array[Byte] = "1234567890".getBytes(StandardCharsets.US_ASCII)
     val TOKEN_FLOATS: Array[Byte]  = "1234567890.".getBytes(StandardCharsets.US_ASCII)
-    val TOKEN_POINT: Byte          = '.'
-    val TOKEN_PLUS: Byte           = '+'
-    val TOKEN_MINUS: Byte          = '-'
-    val TOKEN_ZERO: Byte           = '0'
-    val TOKEN_NINE: Byte           = '9'
 
 }
