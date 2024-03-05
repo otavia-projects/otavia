@@ -26,12 +26,6 @@ class ActorSystemSuite extends AnyFunSuite {
 
     import ActorSystemSuite.*
 
-    test("SPI load log4a") {
-        val system = ActorSystem()
-        Thread.sleep(1000 * 5)
-        assert(true)
-    }
-
 }
 
 object ActorSystemSuite {

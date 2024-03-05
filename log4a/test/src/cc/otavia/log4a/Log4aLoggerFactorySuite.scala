@@ -18,12 +18,4 @@ package cc.otavia.log4a
 
 import org.scalatest.funsuite.AnyFunSuite
 
-class Log4aLoggerFactorySuite extends AnyFunSuite {
-
-    test("Load xml") {
-        val factory = new Log4aLoggerFactory()
-
-
-    }
-
-}
+class Log4aLoggerFactorySuite extends AnyFunSuite {}
