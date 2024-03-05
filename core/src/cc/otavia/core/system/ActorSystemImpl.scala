@@ -212,7 +212,7 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
                 case address: ActorAddress[?] => address.house.mount()
                 case robinAddress: RobinAddress[?] =>
                     robinAddress.underlying.foreach { addr =>
-                        addr.asInstanceOf[ActorAddress[?]].house.mount()
+                        addr.house.mount()
                     }
             }
 
