@@ -17,5 +17,24 @@
 package cc.otavia.http.server
 
 import cc.otavia.core.message.Reply
+import cc.otavia.http.HttpHeaders
 
 class HttpResponse[C](val content: C) extends Reply {}
+
+object HttpResponse {
+
+    def apply[C](content: C): HttpResponse[C] = new HttpResponse(content)
+
+    def builder[C]: Builder[C] = new Builder[C]
+
+    class Builder[C] {
+
+        def setContent(content: C): this.type = this
+
+        def setHeaders(headers: HttpHeaders): this.type = this
+
+        def build(): HttpResponse[C] = ???
+
+    }
+
+}
