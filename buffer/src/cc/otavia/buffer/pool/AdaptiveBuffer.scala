@@ -22,6 +22,7 @@ import cc.otavia.buffer.pool.{PooledPageAllocator, RecyclablePageBuffer}
 import java.nio.ByteBuffer
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
 import java.nio.charset.Charset
+import javax.net.ssl.{SSLEngine, SSLEngineResult}
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
@@ -52,6 +53,10 @@ trait AdaptiveBuffer extends Buffer {
      *    [[RecyclablePageBuffer]] allocated by this [[allocator]]
      */
     private[otavia] def extend(buffer: RecyclablePageBuffer): Unit
+
+    def sslunwarp(engine: SSLEngine, target: AdaptiveBuffer): SSLEngineResult
+
+    def sslwarp(engine: SSLEngine, target: AdaptiveBuffer): SSLEngineResult
 
 }
 

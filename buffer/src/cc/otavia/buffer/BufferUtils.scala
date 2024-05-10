@@ -366,16 +366,16 @@ object BufferUtils {
         if (y == 0) {
             buffer.writeShortLE(0x225a)
         } else {
-            var m = 0x2230303a00002bL
+            var m = 0x30303a00002bL
             if (y < 0) {
                 y = -y
-                m = 0x2230303a00002dL
+                m = 0x30303a00002dL
             }
             y *= 37283 // Based on James Anhalt's algorithm: https://jk-jeon.github.io/posts/2022/02/jeaiii-algorithm/
             m |= ds(y >>> 27) << 8
             if ((y & 0x7ff8000) == 0) {
                 buffer.writeLongLE(m)
-                buffer.writerOffset(buffer.writerOffset - 1)
+                buffer.writerOffset(buffer.writerOffset - 2)
             } else {
                 y = (y & 0x7ffffff) * 15
                 buffer.writeLongLE(ds(y >> 25).toLong << 32 | m)
@@ -383,7 +383,7 @@ object BufferUtils {
                     buffer.writerOffset(buffer.writerOffset - 1) // check if totalSeconds is divisible by 60
                 else {
                     buffer.writerOffset(buffer.writerOffset - 2)
-                    buffer.writeIntLE(ds((y & 0x1ffffff) * 15 >> 23) << 8 | 0x2200003a)
+                    buffer.writeMediumLE(ds((y & 0x1ffffff) * 15 >> 23) << 8 | 0x00003a)
                 }
             }
         }
@@ -412,6 +412,11 @@ object BufferUtils {
         }
     }
 
+    def writeJDurationAsString(buffer: Buffer, duration: JDuration): Unit = {
+        duration.getSeconds
+    }
+
+    def writeDurationAsString(buffer: Buffer, duration: Duration): Unit = {}
 
     private def write2Digits(buffer: Buffer, q0: Int, ds: Array[Short]): Unit =
         buffer.writeShortLE(ds(q0))

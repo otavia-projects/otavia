@@ -25,6 +25,7 @@ import java.nio.ByteBuffer
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
 import java.nio.charset.Charset
 import java.util.UUID
+import javax.net.ssl.{SSLEngine, SSLEngineResult}
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
@@ -2743,4 +2744,7 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             throw new IndexOutOfBoundsException(s"to is beyond the end of the buffer: to = $to, writerOffset = $widx")
     }
 
+    override def sslunwarp(engine: SSLEngine, target: AdaptiveBuffer): SSLEngineResult = ???
+
+    override def sslwarp(engine: SSLEngine, target: AdaptiveBuffer): SSLEngineResult = ???
 }
