@@ -1501,7 +1501,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
     }
 
     override def getShort(index: Int): Short = {
-        underlying.getShort(ridx)
+        underlying.getShort(index)
     }
 
     override def readUnsignedShort: Int = {
@@ -1510,7 +1510,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         underlying.getShort(idx) & 0xffff
     }
 
-    override def getUnsignedShort(index: Int): Int = underlying.getShort(ridx) & 0xffff
+    override def getUnsignedShort(index: Int): Int = underlying.getShort(index) & 0xffff
 
     override def writeShort(value: Short): Buffer = {
         underlying.putShort(widx, value)
