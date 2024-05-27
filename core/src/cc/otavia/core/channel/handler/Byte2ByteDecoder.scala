@@ -30,11 +30,11 @@ trait Byte2ByteDecoder extends ChannelHandler {
     override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
         msg match
             case buffer: AdaptiveBuffer =>
-                val readable1 = ctx.outboundAdaptiveBuffer.readableBytes
-                decode(ctx, buffer, ctx.outboundAdaptiveBuffer)
-                val readable2 = ctx.outboundAdaptiveBuffer.readableBytes
+                val readable1 = ctx.inboundAdaptiveBuffer.readableBytes
+                decode(ctx, buffer, ctx.inboundAdaptiveBuffer)
+                val readable2 = ctx.inboundAdaptiveBuffer.readableBytes
                 if (readable2 - readable1 > 0)
-                    ctx.fireChannelRead(ctx.outboundAdaptiveBuffer) // transfer generated data to next handler
+                    ctx.fireChannelRead(ctx.inboundAdaptiveBuffer) // transfer generated data to next handler
             case _ => ctx.fireChannelRead(msg)
     }
 

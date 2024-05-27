@@ -51,7 +51,7 @@ private class ServerMain(val port: Int = 8080) extends MainActor(Array.empty) {
             val server = system.buildActor(() => new HttpServer(system.actorWorkerSize, routers))
             val state  = FutureState[ChannelEstablished]()
             server.ask(Bind(port), state.future)
-            state.suspend()
+            stack.suspend(state)
         case state: FutureState[ChannelEstablished] =>
             if (state.future.isFailed) state.future.causeUnsafe.printStackTrace()
             logger.info(s"http server bind port $port success")

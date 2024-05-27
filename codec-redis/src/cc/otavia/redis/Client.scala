@@ -55,7 +55,7 @@ class Client extends SocketChannelsActor[Command[? <: CommandResponse] | Connect
             case StackState.start =>
                 val state = ChannelFutureState()
                 channel.ask(stack.ask, state.future)
-                state.suspend()
+                stack.suspend(state)
             case state: ChannelFutureState =>
                 if (state.future.isSuccess)
                     stack.`return`(state.future.getNow.asInstanceOf[ReplyOf[Command[? <: CommandResponse]]])

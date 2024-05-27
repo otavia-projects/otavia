@@ -146,7 +146,7 @@ object ActorSystem {
     val PRINT_BANNER: Boolean = SystemPropertyUtil.getBoolean("cc.otavia.system.banner", DEFAULT_PRINT_BANNER)
 
     // buffer setting
-    private val DEFAULT_PAGE_SIZE: Int        = 2
+    private val DEFAULT_PAGE_SIZE: Int        = 4
     private val ENABLE_PAGE_SIZES: Array[Int] = Array(1, 2, 4, 8, 16)
     private val K: Int                        = 1024
 

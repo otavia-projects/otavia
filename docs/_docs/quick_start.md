@@ -110,7 +110,7 @@ final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start]
       println("PingActor send Ping Message")
       val state = FutureState[Pong]()
       pongActorAddress.ask(Ping(stack.notice.sid), state.future)
-      state.suspend()
+      stack.suspend(state)  
     case state: FutureState[Pong] =>
       val future = state.future
       if (future.isSuccess) {
@@ -335,7 +335,7 @@ final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start]
       val state = PongTimeoutState()
       pongActorAddress.ask(Ping(stack.notice.sid), state.pongFuture)
       timer.sleepStack(state.timeoutFuture, 2 * 1000)
-      state.suspend()
+      stack.suspend(state)  
     case state: PongTimeoutState =>
       val future = state.pongFuture
       if (future.isSuccess) {
@@ -382,7 +382,7 @@ final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start]
       println("PingActor send Ping Message")
       val state = FutureState()
       pongActorAddress.ask(Ping(stack.notice.sid), state.future, 2 * 1000)
-      state.suspend()
+      stack.suspend(state)  
     case state: FutureState[Pong] =>
       val future = state.future
       if (future.isSuccess) {
@@ -520,11 +520,11 @@ final class ReadLinesActor(file: File, charset: Charset = StandardCharsets.UTF_8
   override def resumeAsk(stack: AskStack[ReadLines]): Option[StackState] = {
     stack.state match {
       case StackState.start =>
-        openFileChannelAndSuspend(file, Seq(StandardOpenOption.READ), attrs = Seq.empty)
+        stack.suspend(openFile(file, Seq(StandardOpenOption.READ), attrs = Seq.empty))  
       case openState: ChannelFutureState if openState.id == 0 =>
         val linesState = ChannelFutureState(1)
         openState.future.channel.ask(FileReadPlan(-1, -1), linesState.future)
-        linesState.suspend()
+        stack.suspend(linesState)
       case linesState: ChannelFutureState if linesState.id == 1 =>
         stack.`return`(LinesReply(linesState.future.getNow.asInstanceOf[Seq[String]]))
     }
@@ -532,17 +532,19 @@ final class ReadLinesActor(file: File, charset: Charset = StandardCharsets.UTF_8
 }
 ```
 
-First we use the `openFileChannelAndSuspend` method to open the file and return a `StackState`, which will be ready to
+First we use the `openFile` method to open the file and return a `StackState`, which will be ready to
 run when the file is opened. This method is a shortcut provided by the `ChannelsActor`, and we can see from the source
 code that it is implemented as:
 
 ```scala
 // source code from ChannelsActor
-val channel = createFileChannelAndInit()
-val state = ChannelFutureState()
-val future: ChannelFuture = state.future
-channel.open(path, opts, attrs, future)
-state.suspend().asInstanceOf[Option[ChannelFutureState]]
+final protected def openFile(path: Path, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): StackState = {
+  val channel               = createFileChannelAndInit()
+  val state                 = ChannelFutureState()
+  val future: ChannelFuture = state.future
+  channel.open(path, opts, attrs, future)
+  state
+}
 ```
 
 Nothing special, it's pretty much the same as the `Stack` we talked about before, except that here the `StackState`
@@ -640,7 +642,7 @@ Now let's start our program to read a text file!
       case _: StartState =>
         val state = FutureState[LinesReply]()
         readLinesActor.ask(ReadLines(), state.future)
-        state.suspend()
+        stack.suspend(state)  
       case state: FutureState[LinesReply] =>
         for (line <- state.future.getNow.lines) print(line)
         stack.`return`()
@@ -729,7 +731,7 @@ Now that everything is ready, let's start our echo server!
         val acceptor = system.buildActor(() => new EchoAcceptor())
         val state = FutureState[BindReply]()
         acceptor.ask(Bind(8080), state.future)
-        state.suspend()
+        stack.suspend(state)  
       case state: FutureState[BindReply] =>
         println("echo server bind port 8080 success")
         stack.`return`()
@@ -803,7 +805,7 @@ final class TestActor extends StateActor[Start] {
     case StackState.start =>
       val state = FutureState[Result1]()
       queryService.ask(Query1(), state.future)
-      state.suspend()
+      stack.suspend(state)
     case state: FutureState[?] =>
       val pong = state.future.asInstanceOf[MessageFuture[Result1]].getNow
       stack.`return`()

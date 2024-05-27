@@ -41,7 +41,7 @@ abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | Accepted
                     initChannel(channel)
                     val state = ChannelFutureState()
                     channel.register(state.future)
-                    res = state.suspend()
+                    res = stack.suspend(state)
                 } catch {
                     case cause: Throwable =>
                         channel.close(ChannelFuture()) // ignore close result.

@@ -72,12 +72,12 @@ class Connection(
             case StackState.start =>
                 val auth = stack.notice.asInstanceOf[Authentication]
                 createDriver(auth.driver, auth.url, auth.info)
-                connect(connectOptions.socketAddress, None)
+                stack.suspend(connect(connectOptions.socketAddress, None))
             case state: ChannelFutureState if state.id == 0 => // waiting to authentication
                 channel = state.future.channel
                 val authState = ChannelFutureState(1)
                 channel.ask(stack.notice.asInstanceOf[Authentication], authState.future)
-                authState.suspend()
+                stack.suspend(authState)
             case state: ChannelFutureState => // return authenticate result
                 if (state.future.isSuccess) {
                     authenticated = true
@@ -93,12 +93,12 @@ class Connection(
             case StackState.start => // waiting for socket connected
                 val auth = stack.ask
                 createDriver(auth.driver, auth.url, auth.info)
-                connect(connectOptions.socketAddress, None)
+                stack.suspend(connect(connectOptions.socketAddress, None))
             case state: ChannelFutureState if state.id == 0 => // waiting to authentication
                 channel = state.future.channel
                 val authState = ChannelFutureState(1)
                 channel.ask(stack.ask, authState.future)
-                authState.suspend()
+                stack.suspend(authState)
             case state: ChannelFutureState => // return authenticate result
                 if (state.future.isSuccess) {
                     authenticated = true
@@ -122,7 +122,7 @@ class Connection(
                 val query        = stack.ask
                 val channelState = ChannelFutureState()
                 channel.ask(query, channelState.future)
-                channelState.suspend()
+                stack.suspend(channelState)
             case state: ChannelFutureState =>
                 if (state.future.isSuccess) stack.`return`(state.future.getNow.asInstanceOf[Reply])
                 else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
@@ -134,7 +134,7 @@ class Connection(
                 val query        = stack.ask
                 val channelState = ChannelFutureState()
                 channel.ask(query, channelState.future)
-                channelState.suspend()
+                stack.suspend(channelState)
             case state: ChannelFutureState =>
                 if (state.future.isSuccess) stack.`return`(state.future.getNow.asInstanceOf[Reply])
                 else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))

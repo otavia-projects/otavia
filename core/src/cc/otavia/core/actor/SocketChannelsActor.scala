@@ -27,6 +27,7 @@ import cc.otavia.core.stack.helper.ChannelFutureState
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 
+// TODO: auto release channel when the actor gc
 abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
 
     /** Request to connect to the given [[SocketAddress]]. This method return a channel which is not connected to the
@@ -47,18 +48,18 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
                 val channel = createChannelAndInit()
                 val state   = ChannelFutureState()
                 channel.connect(remote, stack.ask.local, state.future)
-                state.suspend()
+                stack.suspend(state)
             case connectState: ChannelFutureState =>
                 val ch = connectState.future.channel
                 afterConnected(ch)
                 stack.`return`(ChannelEstablished(ch.id))
     }
 
-    final protected def connect(connect: Connect): Option[ChannelFutureState] = {
+    final protected def connect(connect: Connect): ChannelFutureState = {
         val channel = createChannelAndInit()
         val state   = ChannelFutureState()
         channel.connect(connect.remote, connect.local, state.future)
-        state.suspend().asInstanceOf[Option[ChannelFutureState]]
+        state
     }
 
     final protected def connect(connect: Connect, future: ChannelFuture): ChannelFuture = {
@@ -67,11 +68,11 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
         future
     }
 
-    final protected def connect(remote: SocketAddress, local: Option[SocketAddress]): Option[ChannelFutureState] = {
+    final protected def connect(remote: SocketAddress, local: Option[SocketAddress]): ChannelFutureState = {
         val channel = createChannelAndInit()
         val state   = ChannelFutureState()
         channel.connect(remote, local, state.future)
-        state.suspend().asInstanceOf[Option[ChannelFutureState]]
+        state
     }
 
     final protected def connect(remote: SocketAddress, l: Option[SocketAddress], fu: ChannelFuture): ChannelFuture = {
@@ -88,7 +89,7 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
 
 object SocketChannelsActor {
 
-    trait Connect extends Ask[ChannelEstablished] {
+    trait Connect extends Ask[ChannelEstablished] with Notice {
 
         def remote: SocketAddress
 
@@ -96,8 +97,6 @@ object SocketChannelsActor {
 
     }
 
-    case class ConnectChannel(remote: SocketAddress, local: Option[SocketAddress])
-        extends Connect
-        with Ask[ChannelEstablished]
+    case class ConnectChannel(remote: SocketAddress, local: Option[SocketAddress] = None) extends Connect
 
 }

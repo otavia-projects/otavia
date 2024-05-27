@@ -57,6 +57,8 @@ abstract class Stack extends Poolable {
 
     def isDone: Boolean
 
+    final def suspend(state: StackState): Option[StackState] = state.option
+
     override protected def cleanInstance(): Unit = {
         recycleCompletedPromises()
         stackState = StackState.start

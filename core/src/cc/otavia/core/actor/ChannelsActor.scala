@@ -135,31 +135,25 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         }
     }
 
-    // format: off
-    final protected def openFileChannelAndSuspend(path: Path, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Option[ChannelFutureState] = {
-        // format: on
+    final protected def openFile(path: Path, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): StackState = {
         val channel               = createFileChannelAndInit()
         val state                 = ChannelFutureState()
         val future: ChannelFuture = state.future
         channel.open(path, opts, attrs, future)
-        state.suspend().asInstanceOf[Option[ChannelFutureState]]
+        state
     }
 
-    // format: off
-    final protected def openFileChannelAndSuspend(file: File, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Option[ChannelFutureState] = {
-        // format: on
-        val channel               = createFileChannelAndInit()
+    final protected def openFile(file: File, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): StackState = {
         val state                 = ChannelFutureState()
         val future: ChannelFuture = state.future
+        val channel               = createFileChannelAndInit()
         channel.open(file, opts, attrs, future)
-        state.suspend().asInstanceOf[Option[ChannelFutureState]]
+        state
     }
 
-    final def inExecutor(): Boolean = {
-        Thread.currentThread() match
-            case thread: ActorThread => thread.currentRunningActor() == this
-            case _                   => false
-    }
+    final def inExecutor(): Boolean = Thread.currentThread() match
+        case thread: ActorThread => thread.currentRunningActor() == this
+        case _                   => false
 
     //// =================== USER API ====================
 

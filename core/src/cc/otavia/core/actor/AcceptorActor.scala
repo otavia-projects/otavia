@@ -52,7 +52,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
                 val channel = createChannelAndInit()
                 val state   = ChannelFutureState()
                 channel.bind(stack.ask.local, state.future)
-                state.suspend()
+                stack.suspend(state)
             case bindState: ChannelFutureState =>
                 if (bindState.future.isSuccess) {
                     val channel = bindState.future.channel
@@ -80,7 +80,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
             case StackState.start =>
                 val state = FutureState[UnitReply]()
                 workers.ask(AcceptedChannel(stack.message), state.future)
-                state.suspend()
+                stack.suspend(state)
             case state: FutureState[?] if state.id == 0 =>
                 if (state.future.isSuccess) stack.`return`()
                 else
