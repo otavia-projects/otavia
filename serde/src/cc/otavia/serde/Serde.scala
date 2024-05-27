@@ -65,3 +65,13 @@ trait Serde[A] {
     final def serializeAny(value: Any, out: Buffer): Unit = serialize(value.asInstanceOf[A], out)
 
 }
+
+object Serde {
+    given nothing: Serde[Nothing] = new Serde[Nothing] {
+
+        override def serialize(value: Nothing, out: Buffer): Unit = {}
+
+        override def deserialize(in: Buffer): Nothing = None
+
+    }
+}
