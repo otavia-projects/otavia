@@ -17,7 +17,9 @@
 package cc.otavia.http.server
 
 import cc.otavia.core.message.Reply
-import cc.otavia.http.HttpHeaders
+import cc.otavia.http.{HttpHeaderKey, HttpHeaderValue}
+
+import scala.collection.mutable
 
 class HttpResponse[C](val content: C) extends Reply {}
 
@@ -31,7 +33,7 @@ object HttpResponse {
 
         def setContent(content: C): this.type = this
 
-        def setHeaders(headers: HttpHeaders): this.type = this
+        def setHeaders(headers: mutable.Map[HttpHeaderKey, HttpHeaderValue]): this.type = this
 
         def build(): HttpResponse[C] = ???
 

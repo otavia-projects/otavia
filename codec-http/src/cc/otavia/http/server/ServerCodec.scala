@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.otavia.http.codec
+package cc.otavia.http.server
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.buffer.{Buffer, BufferUtils}
@@ -94,9 +94,9 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
                     val headersStart = input.readerOffset
                     val headersEnd   = headersStart + headersLength + 4
                     val contentLengthOffset =
-                        input.bytesBefore(HttpHeader.Key.CONTENT_LENGTH, headersStart, headersEnd, true)
+                        input.bytesBefore(HttpHeaderKey.CONTENT_LENGTH.getBytes, headersStart, headersEnd, true)
                     val contentLength: Int = if (contentLengthOffset != -1) {
-                        val contentStart  = headersStart + contentLengthOffset + HttpHeader.Key.CONTENT_LENGTH.length
+                        val contentStart  = headersStart + contentLengthOffset + HttpHeaderKey.CONTENT_LENGTH.length
                         val contentLength = input.bytesBefore(HttpConstants.HEADER_LINE_END, contentStart, headersEnd)
                         input
                             .getCharSequence(contentStart, contentLength, StandardCharsets.US_ASCII)
@@ -191,7 +191,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
                         output.writeBytes(dates.get())
                         val body = response.content
                         if (!body.isInstanceOf[OK]) {
-                            writeHeader(HttpHeader.Key.CONTENT_TYPE, responseSerde.mediaType.fullName, output)
+                            writeHeader(HttpHeaderKey.CONTENT_TYPE.getBytes, responseSerde.mediaType.fullName, output)
                             val lengthOffset = writeContentLengthPlaceholder(output) // reset content length later
                             output.writeBytes(HttpConstants.HEADER_LINE_END) // headers end
 
@@ -206,7 +206,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
                         writeServerHeader(output)
                         output.writeBytes(dates.get())
                         if (!body.isInstanceOf[OK]) {
-                            writeHeader(HttpHeader.Key.CONTENT_TYPE, responseSerde.mediaType.fullName, output)
+                            writeHeader(HttpHeaderKey.CONTENT_TYPE.getBytes, responseSerde.mediaType.fullName, output)
                             val lengthOffset = writeContentLengthPlaceholder(output) // reset content length later
                             output.writeBytes(HttpConstants.HEADER_LINE_END) // headers end
 
@@ -274,10 +274,10 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
         output.writeBytes(HttpConstants.HEADER_LINE_END)
     }
 
-    private def writeServerHeader(output: Buffer): Unit = writeHeader(HttpHeader.Key.SERVER, serverName, output)
+    private def writeServerHeader(output: Buffer): Unit = writeHeader(HttpHeaderKey.SERVER.getBytes, serverName, output)
 
     private def writeContentLengthPlaceholder(buffer: Buffer): Int = {
-        writeHeader(HttpHeader.Key.CONTENT_LENGTH, ServerCodec.CONTENT_LENGTH_PLACEHOLDER, buffer)
+        writeHeader(HttpHeaderKey.CONTENT_LENGTH.getBytes, ServerCodec.CONTENT_LENGTH_PLACEHOLDER, buffer)
         buffer.writerOffset - ServerCodec.CONTENT_LENGTH_PLACEHOLDER.length - 2
     }
 
@@ -297,7 +297,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
         val buffer = ctx.outboundAdaptiveBuffer
         writeResponseHeadLine(HttpStatus.OK, buffer)
         writeServerHeader(buffer)
-        writeHeader(HttpHeader.Key.CONTENT_TYPE, media.fullName, buffer)
+        writeHeader(HttpHeaderKey.CONTENT_TYPE.getBytes, media.fullName, buffer)
         buffer.writeBytes(dates.get()) // Date: xxx
 
         val lengthOffset = writeContentLengthPlaceholder(buffer)
@@ -336,7 +336,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
         writeResponseHeadLine(HttpStatus.OK, buffer)
         writeServerHeader(buffer)
         buffer.writeBytes(dates.get())
-        writeHeader(HttpHeader.Key.CONTENT_LENGTH, region.countBytes, buffer)
+        writeHeader(HttpHeaderKey.CONTENT_LENGTH.getBytes, region.countBytes, buffer)
 
         writeStaticMediaHeader(buffer, filePathName)
 
@@ -358,24 +358,24 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
                 val filePathName = path.toFile.getAbsolutePath
                 val region =
                     staticCache.getOrElseUpdate(filePathName, new DefaultFileRegion(file, 0, file.length())).retain
-                writeHeader(HttpHeader.Key.CONTENT_LENGTH, region.countBytes, buffer)
+                writeHeader(HttpHeaderKey.CONTENT_LENGTH.getBytes, region.countBytes, buffer)
                 writeStaticMediaHeader(buffer, filePathName)
                 buffer.writeBytes(HttpConstants.HEADER_LINE_END)
                 ctx.write(buffer)
                 ctx.write(region)
             case None =>
-                writeHeader(HttpHeader.Key.CONTENT_LENGTH, NOT_FOUND_CONTENT_LENGTH, buffer)
-                writeHeader(HttpHeader.Key.CONTENT_TYPE, MediaType.TEXT_PLAIN.fullName, buffer)
+                writeHeader(HttpHeaderKey.CONTENT_LENGTH.getBytes, NOT_FOUND_CONTENT_LENGTH, buffer)
+                writeHeader(HttpHeaderKey.CONTENT_TYPE.getBytes, MediaType.TEXT_PLAIN.fullName, buffer)
                 buffer.writeBytes(HttpConstants.HEADER_LINE_END)
                 buffer.writeBytes(NOT_FOUND_CONTENT)
                 ctx.write(buffer)
     }
 
     private def writeStaticMediaHeader(buffer: Buffer, fileName: String): Unit = {
-        buffer.writeBytes(HttpHeader.Key.CONTENT_TYPE)
+        buffer.writeBytes(HttpHeaderKey.CONTENT_TYPE.getBytes)
         buffer.writeBytes(HttpConstants.HEADER_SPLITTER)
         val mediaType = MediaType.values.find(m => fileName.endsWith(m.extension)).getOrElse(MediaType.APP_OCTET_STREAM)
-        writeHeader(HttpHeader.Key.CONTENT_TYPE, mediaType.fullName, buffer)
+        writeHeader(HttpHeaderKey.CONTENT_TYPE.getBytes, mediaType.fullName, buffer)
     }
 
     override def handlerAdded(ctx: ChannelHandlerContext): Unit = {

@@ -18,8 +18,9 @@ package cc.otavia.http.server
 
 import cc.otavia.core.address.Address
 import cc.otavia.core.message.{Ask, Reply}
+import cc.otavia.http.*
+import cc.otavia.http.server.HttpRequest.{empty, emptyHeaders}
 import cc.otavia.http.server.Router
-import cc.otavia.http.{HttpHeaders, HttpMethod, HttpVersion, MediaType}
 
 import scala.collection.mutable
 
@@ -27,22 +28,35 @@ abstract class HttpRequest[C, R <: Reply] extends Ask[R] {
 
     private var rt: Router = _
 
-    private var mth: HttpMethod         = _
-    private var requestPath: String     = _
-    private var vs: HttpVersion         = HttpVersion.HTTP_1_1
-    private var hs: Option[HttpHeaders] = None
-    private var media: MediaType        = _
+    private var mth: HttpMethod                                      = _
+    private var requestPath: String                                  = _
+    private var vs: HttpVersion                                      = HttpVersion.HTTP_1_1
+    private var headers: mutable.Map[HttpHeaderKey, HttpHeaderValue] = emptyHeaders
+    private var media: MediaType                                     = _
 
     private var c: Option[C] = None
 
     private var pas: Map[String, String]   = HttpRequest.empty
     private var pvars: Map[String, String] = HttpRequest.empty
 
-    def setMethod(method: HttpMethod): Unit        = mth = method
-    def setPath(path: String): Unit                = requestPath = path
+    def setMethod(method: HttpMethod): Unit = mth = method
+
+    def setPath(path: String): Unit = requestPath = path
+
     def setHttpVersion(version: HttpVersion): Unit = vs = version
-    def setHttpHeaders(headers: HttpHeaders): Unit = hs = Option(headers)
-    def setMediaType(mediaType: MediaType): Unit   = media = mediaType
+
+    def setHttpHeaders(headers: mutable.Map[HttpHeaderKey, HttpHeaderValue]): Unit = {
+        if (this.headers == emptyHeaders) this.headers = headers
+        else this.headers.addAll(headers)
+    }
+
+    def addHeader(key: HttpHeaderKey, value: HttpHeaderValue): this.type = {
+        if (this.headers == emptyHeaders) this.headers = mutable.Map.empty
+        this.headers.put(key, value)
+        this
+    }
+
+    def setMediaType(mediaType: MediaType): Unit = media = mediaType
 
     def setPathVariables(variables: Map[String, String]): Unit = pvars = variables
     def setParam(params: Map[String, String]): Unit            = pas = params
@@ -51,11 +65,11 @@ abstract class HttpRequest[C, R <: Reply] extends Ask[R] {
     private[otavia] def setRouter(r: Router): Unit = rt = r
     private[otavia] def router: Router             = rt
 
-    def method: HttpMethod               = mth
-    def path: String                     = requestPath
-    def httpVersion: HttpVersion         = vs
-    def httpHeaders: Option[HttpHeaders] = hs
-    def mediaType: MediaType             = media
+    def method: HttpMethod                                       = mth
+    def path: String                                             = requestPath
+    def httpVersion: HttpVersion                                 = vs
+    def httpHeaders: mutable.Map[HttpHeaderKey, HttpHeaderValue] = headers
+    def mediaType: MediaType                                     = media
 
     def pathVariables: Map[String, String] = pvars
     def params: Map[String, String]        = pas
@@ -66,5 +80,9 @@ abstract class HttpRequest[C, R <: Reply] extends Ask[R] {
 }
 
 object HttpRequest {
+
     private val empty: Map[String, String] = Map.empty
+
+    private val emptyHeaders: mutable.Map[HttpHeaderKey, HttpHeaderValue] = mutable.Map.empty
+
 }

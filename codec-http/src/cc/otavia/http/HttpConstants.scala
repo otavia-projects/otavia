@@ -80,4 +80,6 @@ object HttpConstants {
 
     val STATUS_200_OK: Array[Byte] = " 200 OK\r\n".getBytes(StandardCharsets.US_ASCII)
 
+    val CONTENT_LENGTH_PLACEHOLDER: Array[Byte] = "        ".getBytes(StandardCharsets.US_ASCII)
+
 }

@@ -23,8 +23,7 @@ import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelOption}
 import cc.otavia.core.message.Reply
 import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState, StartState}
 import cc.otavia.core.stack.{AskStack, ChannelStack, StackState}
-import cc.otavia.http.codec.ServerCodec
-import cc.otavia.http.server.Router.ControllerRouter
+import cc.otavia.http.server.Router.{ControllerRouter, static}
 import cc.otavia.http.{HttpMethod, OK}
 
 import java.nio.charset.StandardCharsets
@@ -55,7 +54,7 @@ class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Arr
                     case _ =>
                         val state = FutureState[Reply]()
                         request.router.asInstanceOf[ControllerRouter].controller.askUnsafe(request, state.future)
-                        state.suspend()
+                        stack.suspend(state)
             case state: FutureState[?] =>
                 val response = state.future.getNow
                 stack.`return`(response)
