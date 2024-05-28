@@ -18,6 +18,8 @@ package cc.otavia.serde
 
 import cc.otavia.buffer.Buffer
 
+import scala.runtime.Nothing$
+
 /** A type class to serialize/deserialize instance of type [[A]].
  *  @tparam A
  *    The type to serialize/deserialize.
@@ -64,14 +66,4 @@ trait Serde[A] {
      */
     final def serializeAny(value: Any, out: Buffer): Unit = serialize(value.asInstanceOf[A], out)
 
-}
-
-object Serde {
-    given nothing: Serde[Nothing] = new Serde[Nothing] {
-
-        override def serialize(value: Nothing, out: Buffer): Unit = {}
-
-        override def deserialize(in: Buffer): Nothing = None
-
-    }
 }
