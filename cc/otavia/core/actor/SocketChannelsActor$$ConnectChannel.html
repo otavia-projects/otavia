@@ -7,7 +7,7 @@
 </div>
 <div class="main-signature mono-small-block">
  <div class="signature">
-  <span class="signature-short"><span class="modifiers"><span t="k">case </span></span><span class="kind"><span t="k">class </span></span><a href="SocketChannelsActor$$ConnectChannel.html" t="n" class="documentableName ">ConnectChannel</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">remote</span>: <span data-unresolved-link="" t="t">SocketAddress</span>, <span t="k"></span><span data-unresolved-link="" t="n">local</span>: <span data-unresolved-link="" t="t">Option</span>[<span data-unresolved-link="" t="t">SocketAddress</span>])<span t="k"> extends </span><a href="SocketChannelsActor$$Connect.html" t="t">Connect</a><span t="k">, </span></span><span class="signature-long"><a href="../message/Ask.html" t="t">Ask</a>[<a href="ChannelsActor$$ChannelEstablished.html" t="t">ChannelEstablished</a>]</span>
+  <span class="signature-short"><span class="modifiers"><span t="k">case </span></span><span class="kind"><span t="k">class </span></span><a href="SocketChannelsActor$$ConnectChannel.html" t="n" class="documentableName ">ConnectChannel</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">remote</span>: <span data-unresolved-link="" t="t">SocketAddress</span>, <span t="k"></span><span data-unresolved-link="" t="n">local</span>: <span data-unresolved-link="" t="t">Option</span>[<span data-unresolved-link="" t="t">SocketAddress</span>])<span t="k"> extends </span><a href="SocketChannelsActor$$Connect.html" t="t">Connect</a></span><span class="signature-long"></span>
  </div>
 </div>
 <div class="cover">
@@ -32,8 +32,9 @@ node5 [id=node5, label="<span style=\"color: #FFFFFF;\">trait <a href=\"../messa
 node6 [id=node6, label="<span style=\"color: #FFFFFF;\">sealed trait <a href=\"../message/Call.html\" t=\"n\">Call</a></span>", class="trait vertex"];
 node7 [id=node7, label="<span style=\"color: #FFFFFF;\">sealed trait <a href=\"../message/Message.html\" t=\"n\">Message</a></span>", class="trait vertex"];
 node8 [id=node8, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Serializable</span></span>", class="class vertex"];
-node9 [id=node9, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Product</span></span>", class="trait vertex"];
-node10 [id=node10, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Equals</span></span>", class="trait vertex"];
+node9 [id=node9, label="<span style=\"color: #FFFFFF;\">trait <a href=\"../message/Notice.html\" t=\"n\">Notice</a></span>", class="trait vertex"];
+node10 [id=node10, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Product</span></span>", class="trait vertex"];
+node11 [id=node11, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Equals</span></span>", class="trait vertex"];
 
 
  node0 -> node1;
@@ -50,11 +51,13 @@ node6 -> node7;
 node7 -> node1;
 node7 -> node8;
 node8 -> node2;
-node0 -> node5;
-node0 -> node9;
-node9 -> node2;
-node9 -> node10;
+node4 -> node9;
+node9 -> node1;
+node9 -> node6;
+node0 -> node10;
 node10 -> node2;
+node10 -> node11;
+node11 -> node2;
 node0 -> node8;
 
 }
@@ -74,6 +77,9 @@ node0 -> node8;
      </div>
      <div>
       trait <a href="SocketChannelsActor$$Connect.html" t="n">Connect</a>
+     </div>
+     <div>
+      trait <a href="../message/Notice.html" t="n">Notice</a>
      </div>
      <div>
       trait <a href="../message/Ask.html" t="n">Ask</a>[<a href="ChannelsActor$$ChannelEstablished.html" t="t">ChannelEstablished</a>]

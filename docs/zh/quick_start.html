@@ -83,7 +83,7 @@
 </span><span line-number="6" class=""><span class="tooltip-container"></span>      println("PingActor send Ping Message")
 </span><span line-number="7" class=""><span class="tooltip-container"></span>      val state = FutureState[Pong]()
 </span><span line-number="8" class=""><span class="tooltip-container"></span>      pongActorAddress.ask(Ping(stack.notice.sid), state.future)
-</span><span line-number="9" class=""><span class="tooltip-container"></span>      state.suspend()
+</span><span line-number="9" class=""><span class="tooltip-container"></span>      stack.suspend(state)  
 </span><span line-number="10" class=""><span class="tooltip-container"></span>    case state: FutureState[Pong] =&gt;
 </span><span line-number="11" class=""><span class="tooltip-container"></span>      val future = state.future
 </span><span line-number="12" class=""><span class="tooltip-container"></span>      if (future.isSuccess) {
@@ -247,7 +247,7 @@
 </span><span line-number="6" class=""><span class="tooltip-container"></span>      val state = PongTimeoutState()
 </span><span line-number="7" class=""><span class="tooltip-container"></span>      pongActorAddress.ask(Ping(stack.notice.sid), state.pongFuture)
 </span><span line-number="8" class=""><span class="tooltip-container"></span>      timer.sleepStack(state.timeoutFuture, 2 * 1000)
-</span><span line-number="9" class=""><span class="tooltip-container"></span>      state.suspend()
+</span><span line-number="9" class=""><span class="tooltip-container"></span>      stack.suspend(state)  
 </span><span line-number="10" class=""><span class="tooltip-container"></span>    case state: PongTimeoutState =&gt;
 </span><span line-number="11" class=""><span class="tooltip-container"></span>      val future = state.pongFuture
 </span><span line-number="12" class=""><span class="tooltip-container"></span>      if (future.isSuccess) {
@@ -288,7 +288,7 @@
 </span><span line-number="5" class=""><span class="tooltip-container"></span>      println("PingActor send Ping Message")
 </span><span line-number="6" class=""><span class="tooltip-container"></span>      val state = FutureState()
 </span><span line-number="7" class=""><span class="tooltip-container"></span>      pongActorAddress.ask(Ping(stack.notice.sid), state.future, 2 * 1000)
-</span><span line-number="8" class=""><span class="tooltip-container"></span>      state.suspend()
+</span><span line-number="8" class=""><span class="tooltip-container"></span>      stack.suspend(state)  
 </span><span line-number="9" class=""><span class="tooltip-container"></span>    case state: FutureState[Pong] =&gt;
 </span><span line-number="10" class=""><span class="tooltip-container"></span>      val future = state.future
 </span><span line-number="11" class=""><span class="tooltip-container"></span>      if (future.isSuccess) {
@@ -393,11 +393,11 @@
 </span><span line-number="6" class=""><span class="tooltip-container"></span>  override def resumeAsk(stack: AskStack[ReadLines]): Option[StackState] = {
 </span><span line-number="7" class=""><span class="tooltip-container"></span>    stack.state match {
 </span><span line-number="8" class=""><span class="tooltip-container"></span>      case StackState.start =&gt;
-</span><span line-number="9" class=""><span class="tooltip-container"></span>        openFileChannelAndSuspend(file, Seq(StandardOpenOption.READ), attrs = Seq.empty)
+</span><span line-number="9" class=""><span class="tooltip-container"></span>        stack.suspend(openFile(file, Seq(StandardOpenOption.READ), attrs = Seq.empty))  
 </span><span line-number="10" class=""><span class="tooltip-container"></span>      case openState: ChannelFutureState if openState.id == 0 =&gt;
 </span><span line-number="11" class=""><span class="tooltip-container"></span>        val linesState = ChannelFutureState(1)
 </span><span line-number="12" class=""><span class="tooltip-container"></span>        openState.future.channel.ask(FileReadPlan(-1, -1), linesState.future)
-</span><span line-number="13" class=""><span class="tooltip-container"></span>        linesState.suspend()
+</span><span line-number="13" class=""><span class="tooltip-container"></span>        stack.suspend(linesState)  
 </span><span line-number="14" class=""><span class="tooltip-container"></span>      case linesState: ChannelFutureState if linesState.id == 1 =&gt;
 </span><span line-number="15" class=""><span class="tooltip-container"></span>        stack.`return`(LinesReply(linesState.future.getNow.asInstanceOf[Seq[String]]))
 </span><span line-number="16" class=""><span class="tooltip-container"></span>    }
@@ -406,14 +406,16 @@
 </span></code></pre>
   <div class="buttons"></div>
  </div>
- <p>首先我们使用 <code>openFileChannelAndSuspend</code> 打开文件并且返回一个 <code>StackState</code> 状态，文件打开完成的时候这个状态就达到可运 行状态。其个方法是 <code>ChannelsActor</code> 提供的一个快捷方法，我们可以查看源码，其实现为：</p>
+ <p>首先我们使用 <code>openFile</code> 打开文件并且返回一个 <code>StackState</code> 状态，文件打开完成的时候这个状态就达到可运 行状态。其个方法是 <code>ChannelsActor</code> 提供的一个快捷方法，我们可以查看源码，其实现为：</p>
  <div class="snippet mono-small-block" scala-snippet="">
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>// source code from ChannelsActor
-</span><span line-number="2" class=""><span class="tooltip-container"></span>val channel = createFileChannelAndInit()
-</span><span line-number="3" class=""><span class="tooltip-container"></span>val state = ChannelFutureState()
-</span><span line-number="4" class=""><span class="tooltip-container"></span>val future: ChannelFuture = state.future
-</span><span line-number="5" class=""><span class="tooltip-container"></span>channel.open(path, opts, attrs, future)
-</span><span line-number="6" class=""><span class="tooltip-container"></span>state.suspend().asInstanceOf[Option[ChannelFutureState]]
+</span><span line-number="2" class=""><span class="tooltip-container"></span>final protected def openFile(path: Path, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): StackState = {
+</span><span line-number="3" class=""><span class="tooltip-container"></span>  val channel               = createFileChannelAndInit()
+</span><span line-number="4" class=""><span class="tooltip-container"></span>  val state                 = ChannelFutureState()
+</span><span line-number="5" class=""><span class="tooltip-container"></span>  val future: ChannelFuture = state.future
+</span><span line-number="6" class=""><span class="tooltip-container"></span>  channel.open(path, opts, attrs, future)
+</span><span line-number="7" class=""><span class="tooltip-container"></span>  state
+</span><span line-number="8" class=""><span class="tooltip-container"></span>}
 </span></code></pre>
   <div class="buttons"></div>
  </div>
@@ -482,7 +484,7 @@
 </span><span line-number="6" class=""><span class="tooltip-container"></span>      case _: StartState =&gt;
 </span><span line-number="7" class=""><span class="tooltip-container"></span>        val state = FutureState[LinesReply]()
 </span><span line-number="8" class=""><span class="tooltip-container"></span>        readLinesActor.ask(ReadLines(), state.future)
-</span><span line-number="9" class=""><span class="tooltip-container"></span>        state.suspend()
+</span><span line-number="9" class=""><span class="tooltip-container"></span>        stack.suspend(state)  
 </span><span line-number="10" class=""><span class="tooltip-container"></span>      case state: FutureState[LinesReply] =&gt;
 </span><span line-number="11" class=""><span class="tooltip-container"></span>        for (line &lt;- state.future.getNow.lines) print(line)
 </span><span line-number="12" class=""><span class="tooltip-container"></span>        stack.`return`()
@@ -551,7 +553,7 @@
 </span><span line-number="6" class=""><span class="tooltip-container"></span>        val acceptor = system.buildActor(() =&gt; new EchoAcceptor())
 </span><span line-number="7" class=""><span class="tooltip-container"></span>        val state = FutureState[BindReply]()
 </span><span line-number="8" class=""><span class="tooltip-container"></span>        acceptor.ask(Bind(8080), state.future)
-</span><span line-number="9" class=""><span class="tooltip-container"></span>        state.suspend()
+</span><span line-number="9" class=""><span class="tooltip-container"></span>        stack.suspend(state)  
 </span><span line-number="10" class=""><span class="tooltip-container"></span>      case state: FutureState[BindReply] =&gt;
 </span><span line-number="11" class=""><span class="tooltip-container"></span>        println("echo server bind port 8080 success")
 </span><span line-number="12" class=""><span class="tooltip-container"></span>        stack.`return`()
@@ -614,7 +616,7 @@
 </span><span line-number="10" class=""><span class="tooltip-container"></span>    case StackState.start =&gt;
 </span><span line-number="11" class=""><span class="tooltip-container"></span>      val state = FutureState[Result1]()
 </span><span line-number="12" class=""><span class="tooltip-container"></span>      queryService.ask(Query1(), state.future)
-</span><span line-number="13" class=""><span class="tooltip-container"></span>      state.suspend()
+</span><span line-number="13" class=""><span class="tooltip-container"></span>      stack.suspend(state)  
 </span><span line-number="14" class=""><span class="tooltip-container"></span>    case state: FutureState[?] =&gt;
 </span><span line-number="15" class=""><span class="tooltip-container"></span>      val pong = state.future.asInstanceOf[MessageFuture[Result1]].getNow
 </span><span line-number="16" class=""><span class="tooltip-container"></span>      stack.`return`()

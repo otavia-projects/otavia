@@ -33,11 +33,13 @@ node4 [id=node4, label="<span style=\"color: #FFFFFF;\">sealed trait <a href=\"C
 node5 [id=node5, label="<span style=\"color: #FFFFFF;\">sealed trait <a href=\"Message.html\" t=\"n\">Message</a></span>", class="trait vertex"];
 node6 [id=node6, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Serializable</span></span>", class="class vertex"];
 node7 [id=node7, label="<span style=\"color: #FFFFFF;\">class <a href=\"../actor/MainActor$$Args.html\" t=\"n\">Args</a></span>", class="class vertex"];
-node8 [id=node8, label="<span style=\"color: #FFFFFF;\">class <a href=\"helper$$ArrayNotice.html\" t=\"n\">ArrayNotice</a>[<span t=\"t\">T</span>]</span>", class="class vertex"];
-node9 [id=node9, label="<span style=\"color: #FFFFFF;\">class <a href=\"helper$$IntNotice.html\" t=\"n\">IntNotice</a></span>", class="class vertex"];
-node10 [id=node10, label="<span style=\"color: #FFFFFF;\">class <a href=\"helper$$SeqNotice.html\" t=\"n\">SeqNotice</a>[<span t=\"t\">T</span>]</span>", class="class vertex"];
-node11 [id=node11, label="<span style=\"color: #FFFFFF;\">class <a href=\"helper$$StringNotice.html\" t=\"n\">StringNotice</a></span>", class="class vertex"];
-node12 [id=node12, label="<span style=\"color: #FFFFFF;\">class <a href=\"../testkit/ProbeActor$$ProbeStart.html\" t=\"n\">ProbeStart</a></span>", class="class vertex"];
+node8 [id=node8, label="<span style=\"color: #FFFFFF;\">trait <a href=\"../actor/SocketChannelsActor$$Connect.html\" t=\"n\">Connect</a></span>", class="trait vertex"];
+node9 [id=node9, label="<span style=\"color: #FFFFFF;\">class <a href=\"../actor/SocketChannelsActor$$ConnectChannel.html\" t=\"n\">ConnectChannel</a></span>", class="class vertex"];
+node10 [id=node10, label="<span style=\"color: #FFFFFF;\">class <a href=\"helper$$ArrayNotice.html\" t=\"n\">ArrayNotice</a>[<span t=\"t\">T</span>]</span>", class="class vertex"];
+node11 [id=node11, label="<span style=\"color: #FFFFFF;\">class <a href=\"helper$$IntNotice.html\" t=\"n\">IntNotice</a></span>", class="class vertex"];
+node12 [id=node12, label="<span style=\"color: #FFFFFF;\">class <a href=\"helper$$SeqNotice.html\" t=\"n\">SeqNotice</a>[<span t=\"t\">T</span>]</span>", class="class vertex"];
+node13 [id=node13, label="<span style=\"color: #FFFFFF;\">class <a href=\"helper$$StringNotice.html\" t=\"n\">StringNotice</a></span>", class="class vertex"];
+node14 [id=node14, label="<span style=\"color: #FFFFFF;\">class <a href=\"../testkit/ProbeActor$$ProbeStart.html\" t=\"n\">ProbeStart</a></span>", class="class vertex"];
 
 
  node0 -> node1;
@@ -52,10 +54,12 @@ node5 -> node6;
 node6 -> node2;
 node7 -> node0;
 node8 -> node0;
-node9 -> node0;
+node9 -> node8;
 node10 -> node0;
 node11 -> node0;
 node12 -> node0;
+node13 -> node0;
+node14 -> node0;
 
 }
 </script>
@@ -93,6 +97,12 @@ node12 -> node0;
     <div class="mono-small-block subtypes">
      <div>
       class <a href="../actor/MainActor$$Args.html" t="n">Args</a>
+     </div>
+     <div>
+      trait <a href="../actor/SocketChannelsActor$$Connect.html" t="n">Connect</a>
+     </div>
+     <div>
+      class <a href="../actor/SocketChannelsActor$$ConnectChannel.html" t="n">ConnectChannel</a>
      </div>
      <div>
       class <a href="helper$$ArrayNotice.html" t="n">ArrayNotice</a>[<span t="t">T</span>]
