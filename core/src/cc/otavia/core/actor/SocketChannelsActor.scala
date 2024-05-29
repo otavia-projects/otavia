@@ -81,6 +81,8 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
         fu
     }
 
+    override protected def isBarrierCall(call: Call): Boolean = call.isInstanceOf[Connect]
+
     protected def afterConnected(channel: ChannelAddress): Unit = {}
 
     override protected def newChannel(): Channel = system.channelFactory.openSocketChannel(family)
