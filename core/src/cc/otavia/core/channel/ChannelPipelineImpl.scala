@@ -171,10 +171,13 @@ class ChannelPipelineImpl(override val channel: AbstractChannel) extends Channel
     override def addLast(name: Option[String], handler: ChannelHandler): ChannelPipeline = {
         val newCtx = newContext(name, handler)
         if (handlers.isEmpty && newCtx.isBufferHandlerContext) setHeadAdaptiveBuffer(newCtx)
-        if (handlers.nonEmpty && newCtx.isBufferHandlerContext && !handlers.last.isBufferHandlerContext)
-            throw new IllegalStateException(
-              s"buffered handler $handler can't add after no buffered handler ${handlers.last.handler}"
-            )
+        if (handlers.nonEmpty && newCtx.isBufferHandlerContext) {
+            if (!handlers.last.isBufferHandlerContext)
+                throw new IllegalStateException(
+                  s"buffered handler $handler can't add after no buffered handler ${handlers.last.handler}"
+                )
+            else setAdaptiveBuffer(newCtx, channel.heapAllocator)
+        }
 
         handlers.addOne(newCtx)
         resetIndices()
