@@ -85,4 +85,17 @@ object ParameterSerde {
         }
     }
 
+    def write(out: Buffer, params: Map[String, String]): Unit = {
+        out.writeByte(HttpConstants.PARAM_START)
+
+        var i = 0
+        for ((key, value) <- params) {
+            out.writeBytes(URLEncoder.encode(key, URL_CHARSET).getBytes(US_ASCII))
+            out.writeByte(HttpConstants.EQ)
+            out.writeBytes(URLEncoder.encode(value, URL_CHARSET).getBytes(US_ASCII))
+            i += 1
+            if (i < params.size) out.writeByte(HttpConstants.PARAM_SPLITTER)
+        }
+    }
+
 }
