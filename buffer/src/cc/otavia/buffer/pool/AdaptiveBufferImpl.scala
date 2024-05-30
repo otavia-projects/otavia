@@ -2730,7 +2730,7 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
 
     override def skipIfNextIgnoreCaseAre(bytes: Array[Byte]): Boolean =
         if (nonEmpty && head.readableBytes >= bytes.length) {
-            val res = head.skipIfNextAre(bytes)
+            val res = head.skipIfNextIgnoreCaseAre(bytes)
             if (res) {
                 ridx += bytes.length
                 if (head.readableBytes == 0) recycleHead()
@@ -2763,7 +2763,49 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             throw new IndexOutOfBoundsException(s"to is beyond the end of the buffer: to = $to, writerOffset = $widx")
     }
 
-    override def sslunwarp(engine: SSLEngine, target: AdaptiveBuffer): SSLEngineResult = ???
+    override def sslunwarp(engine: SSLEngine, packetLength: Int, target: ByteBuffer): SSLEngineResult = {
+        if (head.readableBytes >= packetLength) {
+            val src = head.underlying
+            src.position(head.readerOffset)
+            src.limit(head.writerOffset)
+            val res = engine.unwrap(src, target)
+            this.skipReadableBytes(packetLength)
+            res
+        } else if (packetLength <= allocator.fixedCapacity) {
+            val buffer = allocator.allocate()
+            this.readBytes(buffer, packetLength)
+            buffer.byteBuffer.position(buffer.readerOffset)
+            buffer.byteBuffer.limit(buffer.writerOffset)
+            val res = engine.unwrap(buffer.byteBuffer, target)
+            buffer.close()
+            res
+        } else {
+            val byteBuffer =
+                if (isDirect) ByteBuffer.allocateDirect(packetLength) else ByteBuffer.allocate(packetLength)
+            this.readBytes(byteBuffer, packetLength)
+            byteBuffer.flip()
+            engine.unwrap(byteBuffer, target)
+        }
+    }
 
     override def sslwarp(engine: SSLEngine, target: AdaptiveBuffer): SSLEngineResult = ???
+
+    override def sslHandshakeWarp(engine: SSLEngine, emptySource: Array[ByteBuffer]): SSLEngineResult = {
+        if (allocatedWritableBytes == 0) this.extendBuffer()
+        val buffer     = last
+        val byteBuffer = last.underlying
+        byteBuffer.position(buffer.writerOffset)
+        byteBuffer.limit(buffer.writerOffset + buffer.writableBytes)
+
+        val bf = ByteBuffer.allocate(2048)
+
+        var result = engine.wrap(emptySource, bf)
+
+        val packetBufferSize = engine.getSession.getPacketBufferSize
+        println("")
+        ???
+    }
+
+    override def sslHandshakeUnwarp(engine: SSLEngine, emptyTarget: Array[ByteBuffer]): SSLEngineResult = ???
+
 }
