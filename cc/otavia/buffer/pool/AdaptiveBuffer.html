@@ -111,11 +111,29 @@ node4 -> node1;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="sslunwarp-995">
+        <div class="documentableElement" id="sslHandshakeUnwarp-fffff073">
          <div class="documentableElement-expander">
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AdaptiveBuffer.html#sslunwarp-995" t="n" class="documentableName ">sslunwarp</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">engine</span>: <span data-unresolved-link="" t="t">SSLEngine</span>, <span t="k"></span><span data-unresolved-link="" t="n">target</span>: <a href="AdaptiveBuffer.html" t="t">AdaptiveBuffer</a>): <span data-unresolved-link="" t="t">SSLEngineResult</span>
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AdaptiveBuffer.html#sslHandshakeUnwarp-fffff073" t="n" class="documentableName ">sslHandshakeUnwarp</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">engine</span>: <span data-unresolved-link="" t="t">SSLEngine</span>, <span t="k"></span><span data-unresolved-link="" t="n">emptyTarget</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">ByteBuffer</span>]): <span data-unresolved-link="" t="t">SSLEngineResult</span>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="sslHandshakeWarp-fffff073">
+         <div class="documentableElement-expander">
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AdaptiveBuffer.html#sslHandshakeWarp-fffff073" t="n" class="documentableName ">sslHandshakeWarp</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">engine</span>: <span data-unresolved-link="" t="t">SSLEngine</span>, <span t="k"></span><span data-unresolved-link="" t="n">emptySource</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">ByteBuffer</span>]): <span data-unresolved-link="" t="t">SSLEngineResult</span>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="sslunwarp-fffff256">
+         <div class="documentableElement-expander">
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AdaptiveBuffer.html#sslunwarp-fffff256" t="n" class="documentableName ">sslunwarp</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">engine</span>: <span data-unresolved-link="" t="t">SSLEngine</span>, <span t="k"></span><span data-unresolved-link="" t="n">packetLength</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">target</span>: <span data-unresolved-link="" t="t">ByteBuffer</span>): <span data-unresolved-link="" t="t">SSLEngineResult</span>
            </div>
           </div>
          </div>
@@ -7422,6 +7440,56 @@ node4 -> node1;
               </dt>
               <dd class="body-medium">
                <a href="../Buffer.html#skipIfNextAre-6e">Buffer</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="skipIfNextIgnoreCaseAre-6e" data-f-inherited="Buffer">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AdaptiveBuffer.html#skipIfNextIgnoreCaseAre-6e" t="n" class="documentableName ">skipIfNextIgnoreCaseAre</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">bytes</span>: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">Byte</span>]): <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>increase the <a href="../Buffer.html#readerOffset-fffffa19">readerOffset</a> by length of <span data-unresolved-link="" title="Problem linking bytes: No DRI found for query">bytes</span> if the next readable bytes is the gaven bytes</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>increase the <a href="../Buffer.html#readerOffset-fffffa19">readerOffset</a> by length of <span data-unresolved-link="" title="Problem linking bytes: No DRI found for query">bytes</span> if the next readable bytes is the gaven bytes</p>
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               bytes
+              </dt>
+              <dd class="body-medium">
+               <p>the compared bytes.</p>
+              </dd>
+              <dt class="body-small">
+               ignoreCase
+              </dt>
+              <dd class="body-medium">
+               <p>whether ignore char case of bytes.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../Buffer.html#skipIfNextIgnoreCaseAre-6e">Buffer</a>
               </dd>
              </dl>
             </div>
