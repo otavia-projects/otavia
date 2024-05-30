@@ -264,6 +264,7 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
 
     private def writeResponseHeadLine(status: HttpStatus, output: Buffer): Unit = {
         output.writeBytes(HttpVersion.HTTP_1_1.bytes)
+        output.writeByte(' ')
         output.writeBytes(status.bytesCRCL)
     }
 
