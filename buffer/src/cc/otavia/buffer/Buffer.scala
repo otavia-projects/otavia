@@ -2233,6 +2233,14 @@ trait Buffer {
     /** increase the [[readerOffset]] by length of [[bytes]] if the next readable bytes is the gaven bytes */
     def skipIfNextAre(bytes: Array[Byte]): Boolean
 
+    /** increase the [[readerOffset]] by length of [[bytes]] if the next readable bytes is the gaven bytes
+     *  @param bytes
+     *    the compared bytes.
+     *  @param ignoreCase
+     *    whether ignore char case of bytes.
+     */
+    def skipIfNextIgnoreCaseAre(bytes: Array[Byte]): Boolean
+
     /** increase the [[readerOffset]] by one if the next readable byte is in the gaven bytes. */
     def skipIfNextIn(set: Array[Byte]): Boolean
 

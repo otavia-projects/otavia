@@ -2728,6 +2728,25 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         skip
     } else false
 
+    override def skipIfNextIgnoreCaseAre(bytes: Array[Byte]): Boolean =
+        if (nonEmpty && head.readableBytes >= bytes.length) {
+            val res = head.skipIfNextAre(bytes)
+            if (res) {
+                ridx += bytes.length
+                if (head.readableBytes == 0) recycleHead()
+            }
+            res
+        } else if (readableBytes >= bytes.length) {
+            var skip = true
+            var i    = 0
+            while (skip && i < bytes.length) {
+                skip = ignoreCaseEqual(getByte(ridx + i), bytes(i))
+                i += 1
+            }
+            if (skip) readerOffset(ridx + bytes.length)
+            skip
+        } else false
+
     override def skipIfNextIn(set: Array[Byte]): Boolean = if (nonEmpty) {
         val res = head.skipIfNextIn(set)
         if (res) {

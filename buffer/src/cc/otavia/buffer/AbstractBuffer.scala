@@ -1882,6 +1882,17 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         skip
     }
 
+    override def skipIfNextIgnoreCaseAre(bytes: Array[Byte]): Boolean = {
+        var skip = true
+        var i    = 0
+        while (skip && i < bytes.length) {
+            skip = ignoreCaseEqual(underlying.get(ridx + i), bytes(i))
+            i += 1
+        }
+        if (skip) ridx += bytes.length
+        skip
+    }
+
     override def skipIfNextIn(set: Array[Byte]): Boolean = {
         var notIn = true
         var i     = 0
