@@ -19,7 +19,7 @@ package cc.otavia.http
 import java.nio.charset.StandardCharsets
 
 /** http header key */
-enum HttpHeaderKey(val string: String) {
+final class HttpHeaderKey(string: String) {
 
     private val bytes: Array[Byte] = string.getBytes(StandardCharsets.US_ASCII).nn
 
@@ -29,241 +29,327 @@ enum HttpHeaderKey(val string: String) {
 
     override def toString: String = string
 
+}
+
+object HttpHeaderKey {
+
     /** accept */
-    case ACCEPT extends HttpHeaderKey("accept")
+    val ACCEPT = new HttpHeaderKey("accept")
 
     /** accept-charset */
-    case ACCEPT_CHARSET extends HttpHeaderKey("accept-charset")
+    val ACCEPT_CHARSET = new HttpHeaderKey("accept-charset")
 
     /** accept-encoding */
-    case ACCEPT_ENCODING extends HttpHeaderKey("accept-encoding")
+    val ACCEPT_ENCODING = new HttpHeaderKey("accept-encoding")
 
     /** accept-language */
-    case ACCEPT_LANGUAGE extends HttpHeaderKey("accept-language")
+    val ACCEPT_LANGUAGE = new HttpHeaderKey("accept-language")
 
     /** accept-ranges */
-    case ACCEPT_RANGES extends HttpHeaderKey("accept-ranges")
+    val ACCEPT_RANGES = new HttpHeaderKey("accept-ranges")
 
     /** accept-patch */
-    case ACCEPT_PATCH extends HttpHeaderKey("accept-patch")
+    val ACCEPT_PATCH = new HttpHeaderKey("accept-patch")
 
     /** access-control-allow-credentials */
-    case ACCESS_CONTROL_ALLOW_CREDENTIALS extends HttpHeaderKey("access-control-allow-credentials")
+    val ACCESS_CONTROL_ALLOW_CREDENTIALS = new HttpHeaderKey("access-control-allow-credentials")
 
     /** access-control-allow-headers */
-    case ACCESS_CONTROL_ALLOW_HEADERS extends HttpHeaderKey("access-control-allow-headers")
+    val ACCESS_CONTROL_ALLOW_HEADERS = new HttpHeaderKey("access-control-allow-headers")
 
     /** access-control-allow-methods */
-    case ACCESS_CONTROL_ALLOW_METHODS extends HttpHeaderKey("access-control-allow-methods")
+    val ACCESS_CONTROL_ALLOW_METHODS = new HttpHeaderKey("access-control-allow-methods")
 
     /** access-control-allow-origin */
-    case ACCESS_CONTROL_ALLOW_ORIGIN extends HttpHeaderKey("access-control-allow-origin")
+    val ACCESS_CONTROL_ALLOW_ORIGIN = new HttpHeaderKey("access-control-allow-origin")
 
     /** access-control-allow-private-network */
-    case ACCESS_CONTROL_ALLOW_PRIVATE_NETWORK extends HttpHeaderKey("access-control-allow-private-network")
+    val ACCESS_CONTROL_ALLOW_PRIVATE_NETWORK = new HttpHeaderKey("access-control-allow-private-network")
 
     /** access-control-expose-headers */
-    case ACCESS_CONTROL_EXPOSE_HEADERS extends HttpHeaderKey("access-control-expose-headers")
+    val ACCESS_CONTROL_EXPOSE_HEADERS = new HttpHeaderKey("access-control-expose-headers")
 
     /** access-control-max-age */
-    case ACCESS_CONTROL_MAX_AGE extends HttpHeaderKey("access-control-max-age")
+    val ACCESS_CONTROL_MAX_AGE = new HttpHeaderKey("access-control-max-age")
 
     /** access-control-request-headers */
-    case ACCESS_CONTROL_REQUEST_HEADERS extends HttpHeaderKey("access-control-request-headers")
+    val ACCESS_CONTROL_REQUEST_HEADERS = new HttpHeaderKey("access-control-request-headers")
 
     /** access-control-request-method */
-    case ACCESS_CONTROL_REQUEST_METHOD extends HttpHeaderKey("access-control-request-method")
+    val ACCESS_CONTROL_REQUEST_METHOD = new HttpHeaderKey("access-control-request-method")
 
     /** access-control-request-private-network */
-    case ACCESS_CONTROL_REQUEST_PRIVATE_NETWORK extends HttpHeaderKey("access-control-request-private-network")
+    val ACCESS_CONTROL_REQUEST_PRIVATE_NETWORK = new HttpHeaderKey("access-control-request-private-network")
 
     /** age */
-    case AGE extends HttpHeaderKey("age")
+    val AGE = new HttpHeaderKey("age")
 
     /** allow */
-    case ALLOW extends HttpHeaderKey("allow")
+    val ALLOW = new HttpHeaderKey("allow")
 
     /** authorization */
-    case AUTHORIZATION extends HttpHeaderKey("authorization")
+    val AUTHORIZATION = new HttpHeaderKey("authorization")
 
     /** cache-control */
-    case CACHE_CONTROL extends HttpHeaderKey("cache-control")
+    val CACHE_CONTROL = new HttpHeaderKey("cache-control")
 
     /** connection */
-    case CONNECTION extends HttpHeaderKey("connection")
+    val CONNECTION = new HttpHeaderKey("connection")
 
     /** content-base */
-    case CONTENT_BASE extends HttpHeaderKey("content-base")
+    val CONTENT_BASE = new HttpHeaderKey("content-base")
 
     /** content-encoding */
-    case CONTENT_ENCODING extends HttpHeaderKey("content-encoding")
+    val CONTENT_ENCODING = new HttpHeaderKey("content-encoding")
 
     /** content-language */
-    case CONTENT_LANGUAGE extends HttpHeaderKey("content-language")
+    val CONTENT_LANGUAGE = new HttpHeaderKey("content-language")
 
     /** content-length */
-    case CONTENT_LENGTH extends HttpHeaderKey("Content-Length")
+    val CONTENT_LENGTH = new HttpHeaderKey("Content-Length")
 
     /** content-location */
-    case CONTENT_LOCATION extends HttpHeaderKey("content-location")
+    val CONTENT_LOCATION = new HttpHeaderKey("content-location")
 
     /** content-transfer-encoding */
-    case CONTENT_TRANSFER_ENCODING extends HttpHeaderKey("content-transfer-encoding")
+    val CONTENT_TRANSFER_ENCODING = new HttpHeaderKey("content-transfer-encoding")
 
     /** content-disposition */
-    case CONTENT_DISPOSITION extends HttpHeaderKey("content-disposition")
+    val CONTENT_DISPOSITION = new HttpHeaderKey("content-disposition")
 
     /** content-md5 */
-    case CONTENT_MD5 extends HttpHeaderKey("content-md5")
+    val CONTENT_MD5 = new HttpHeaderKey("content-md5")
 
     /** content-range */
-    case CONTENT_RANGE extends HttpHeaderKey("content-range")
+    val CONTENT_RANGE = new HttpHeaderKey("content-range")
 
     /** content-security-policy */
-    case CONTENT_SECURITY_POLICY extends HttpHeaderKey("content-security-policy")
+    val CONTENT_SECURITY_POLICY = new HttpHeaderKey("content-security-policy")
 
     /** content-type */
-    case CONTENT_TYPE extends HttpHeaderKey("Content-Type")
+    val CONTENT_TYPE = new HttpHeaderKey("Content-Type")
 
     /** cookie */
-    case COOKIE extends HttpHeaderKey("Cookie")
+    val COOKIE = new HttpHeaderKey("Cookie")
 
     /** date */
-    case DATE extends HttpHeaderKey("Date")
+    val DATE = new HttpHeaderKey("Date")
 
     /** dnt */
-    case DNT extends HttpHeaderKey("dnt")
+    val DNT = new HttpHeaderKey("dnt")
 
     /** etag */
-    case ETAG extends HttpHeaderKey("etag")
+    val ETAG = new HttpHeaderKey("etag")
 
     /** expect */
-    case EXPECT extends HttpHeaderKey("expect")
+    val EXPECT = new HttpHeaderKey("expect")
 
     /** expires */
-    case EXPIRES extends HttpHeaderKey("expires")
+    val EXPIRES = new HttpHeaderKey("expires")
 
     /** from */
-    case FROM extends HttpHeaderKey("from")
+    val FROM = new HttpHeaderKey("from")
 
     /** host */
-    case HOST extends HttpHeaderKey("host")
+    val HOST = new HttpHeaderKey("host")
 
     /** if-match */
-    case IF_MATCH extends HttpHeaderKey("if-match")
+    val IF_MATCH = new HttpHeaderKey("if-match")
 
     /** if-modified-since */
-    case IF_MODIFIED_SINCE extends HttpHeaderKey("if-modified-since")
+    val IF_MODIFIED_SINCE = new HttpHeaderKey("if-modified-since")
 
     /** if-none-match */
-    case IF_NONE_MATCH extends HttpHeaderKey("if-none-match")
+    val IF_NONE_MATCH = new HttpHeaderKey("if-none-match")
 
     /** if-range */
-    case IF_RANGE extends HttpHeaderKey("if-range")
+    val IF_RANGE = new HttpHeaderKey("if-range")
 
     /** if-unmodified-since */
-    case IF_UNMODIFIED_SINCE extends HttpHeaderKey("if-unmodified-since")
+    val IF_UNMODIFIED_SINCE = new HttpHeaderKey("if-unmodified-since")
 
     /** keep-alive */
-    case KEEP_ALIVE extends HttpHeaderKey("keep-alive")
+    val KEEP_ALIVE = new HttpHeaderKey("keep-alive")
 
     /** last-modified */
-    case LAST_MODIFIED extends HttpHeaderKey("last-modified")
+    val LAST_MODIFIED = new HttpHeaderKey("last-modified")
 
     /** location */
-    case LOCATION extends HttpHeaderKey("location")
+    val LOCATION = new HttpHeaderKey("location")
 
     /** max-forwards */
-    case MAX_FORWARDS extends HttpHeaderKey("max-forwards")
+    val MAX_FORWARDS = new HttpHeaderKey("max-forwards")
 
     /** origin */
-    case ORIGIN extends HttpHeaderKey("origin")
+    val ORIGIN = new HttpHeaderKey("origin")
 
     /** pragma */
-    case PRAGMA extends HttpHeaderKey("pragma")
+    val PRAGMA = new HttpHeaderKey("pragma")
 
     /** proxy-authenticate */
-    case PROXY_AUTHENTICATE extends HttpHeaderKey("proxy-authenticate")
+    val PROXY_AUTHENTICATE = new HttpHeaderKey("proxy-authenticate")
 
     /** proxy-authorization */
-    case PROXY_AUTHORIZATION extends HttpHeaderKey("proxy-authorization")
+    val PROXY_AUTHORIZATION = new HttpHeaderKey("proxy-authorization")
 
     /** proxy-connection */
-    case PROXY_CONNECTION extends HttpHeaderKey("proxy-connection")
+    val PROXY_CONNECTION = new HttpHeaderKey("proxy-connection")
 
     /** range */
-    case RANGE extends HttpHeaderKey("range")
+    val RANGE = new HttpHeaderKey("range")
 
     /** referer */
-    case REFERER extends HttpHeaderKey("referer")
+    val REFERER = new HttpHeaderKey("referer")
 
     /** retry-after */
-    case RETRY_AFTER extends HttpHeaderKey("retry-after")
+    val RETRY_AFTER = new HttpHeaderKey("retry-after")
 
     /** sec-websocket-protocol */
-    case SEC_WEBSOCKET_PROTOCOL extends HttpHeaderKey("sec-websocket-protocol")
+    val SEC_WEBSOCKET_PROTOCOL = new HttpHeaderKey("sec-websocket-protocol")
 
     /** sec-websocket-version */
-    case SEC_WEBSOCKET_VERSION extends HttpHeaderKey("sec-websocket-version")
+    val SEC_WEBSOCKET_VERSION = new HttpHeaderKey("sec-websocket-version")
 
     /** sec-websocket-key */
-    case SEC_WEBSOCKET_KEY extends HttpHeaderKey("sec-websocket-key")
+    val SEC_WEBSOCKET_KEY = new HttpHeaderKey("sec-websocket-key")
 
     /** Sec-WebSocket-Origin */
-    case SEC_WEBSOCKET_ORIGIN extends HttpHeaderKey("Sec-WebSocket-Origin")
+    val SEC_WEBSOCKET_ORIGIN = new HttpHeaderKey("Sec-WebSocket-Origin")
 
     /** sec-websocket-accept */
-    case SEC_WEBSOCKET_ACCEPT extends HttpHeaderKey("sec-websocket-accept")
+    val SEC_WEBSOCKET_ACCEPT = new HttpHeaderKey("sec-websocket-accept")
 
     /** sec-websocket-extensions */
-    case SEC_WEBSOCKET_EXTENSIONS extends HttpHeaderKey("sec-websocket-extensions")
+    val SEC_WEBSOCKET_EXTENSIONS = new HttpHeaderKey("sec-websocket-extensions")
 
     /** server */
-    case SERVER extends HttpHeaderKey("server")
+    val SERVER = new HttpHeaderKey("server")
 
     /** set-cookie */
-    case SET_COOKIE extends HttpHeaderKey("set-cookie")
+    val SET_COOKIE = new HttpHeaderKey("set-cookie")
 
     /** set-cookie2 */
-    case SET_COOKIE2 extends HttpHeaderKey("set-cookie2")
+    val SET_COOKIE2 = new HttpHeaderKey("set-cookie2")
 
     /** te */
-    case TE extends HttpHeaderKey("te")
+    val TE = new HttpHeaderKey("te")
 
     /** trailer */
-    case TRAILER extends HttpHeaderKey("trailer")
+    val TRAILER = new HttpHeaderKey("trailer")
 
     /** transfer-encoding */
-    case TRANSFER_ENCODING extends HttpHeaderKey("transfer-encoding")
+    val TRANSFER_ENCODING = new HttpHeaderKey("transfer-encoding")
 
     /** upgrade */
-    case UPGRADE extends HttpHeaderKey("upgrade")
+    val UPGRADE = new HttpHeaderKey("upgrade")
 
     /** upgrade-insecure-requests */
-    case UPGRADE_INSECURE_REQUESTS extends HttpHeaderKey("upgrade-insecure-requests")
+    val UPGRADE_INSECURE_REQUESTS = new HttpHeaderKey("upgrade-insecure-requests")
 
     /** user-agent */
-    case USER_AGENT extends HttpHeaderKey("user-agent")
+    val USER_AGENT = new HttpHeaderKey("user-agent")
 
     /** vary */
-    case VARY extends HttpHeaderKey("vary")
+    val VARY = new HttpHeaderKey("vary")
 
     /** via */
-    case VIA extends HttpHeaderKey("via")
+    val VIA = new HttpHeaderKey("via")
 
     /** warning */
-    case WARNING extends HttpHeaderKey("warning")
+    val WARNING = new HttpHeaderKey("warning")
 
     /** www-authenticate */
-    case WWW_AUTHENTICATE extends HttpHeaderKey("www-authenticate")
+    val WWW_AUTHENTICATE = new HttpHeaderKey("www-authenticate")
 
     /** x-frame-options */
-    case X_FRAME_OPTIONS extends HttpHeaderKey("x-frame-options")
+    val X_FRAME_OPTIONS = new HttpHeaderKey("x-frame-options")
 
     /** x-requested-with */
-    case X_REQUESTED_WITH extends HttpHeaderKey("x-requested-with")
+    val X_REQUESTED_WITH = new HttpHeaderKey("x-requested-with")
 
     /** alt-svc */
-    case ALT_SVC extends HttpHeaderKey("alt-svc")
+    val ALT_SVC = new HttpHeaderKey("alt-svc")
+
+    val values: Array[HttpHeaderKey] = Array(
+      ACCEPT,
+      ACCEPT_CHARSET,
+      ACCEPT_ENCODING,
+      ACCEPT_LANGUAGE,
+      ACCEPT_RANGES,
+      ACCEPT_PATCH,
+      ACCESS_CONTROL_ALLOW_CREDENTIALS,
+      ACCESS_CONTROL_ALLOW_HEADERS,
+      ACCESS_CONTROL_ALLOW_METHODS,
+      ACCESS_CONTROL_ALLOW_ORIGIN,
+      ACCESS_CONTROL_ALLOW_PRIVATE_NETWORK,
+      ACCESS_CONTROL_EXPOSE_HEADERS,
+      ACCESS_CONTROL_MAX_AGE,
+      ACCESS_CONTROL_REQUEST_HEADERS,
+      ACCESS_CONTROL_REQUEST_METHOD,
+      ACCESS_CONTROL_REQUEST_PRIVATE_NETWORK,
+      AGE,
+      ALLOW,
+      AUTHORIZATION,
+      CACHE_CONTROL,
+      CONNECTION,
+      CONTENT_BASE,
+      CONTENT_ENCODING,
+      CONTENT_LANGUAGE,
+      CONTENT_LENGTH,
+      CONTENT_LOCATION,
+      CONTENT_TRANSFER_ENCODING,
+      CONTENT_DISPOSITION,
+      CONTENT_MD5,
+      CONTENT_RANGE,
+      CONTENT_SECURITY_POLICY,
+      CONTENT_TYPE,
+      COOKIE,
+      DATE,
+      DNT,
+      ETAG,
+      EXPECT,
+      EXPIRES,
+      FROM,
+      HOST,
+      IF_MATCH,
+      IF_MODIFIED_SINCE,
+      IF_NONE_MATCH,
+      IF_RANGE,
+      IF_UNMODIFIED_SINCE,
+      KEEP_ALIVE,
+      LAST_MODIFIED,
+      LOCATION,
+      MAX_FORWARDS,
+      ORIGIN,
+      PRAGMA,
+      PROXY_AUTHENTICATE,
+      PROXY_AUTHORIZATION,
+      PROXY_CONNECTION,
+      RANGE,
+      REFERER,
+      RETRY_AFTER,
+      SEC_WEBSOCKET_PROTOCOL,
+      SEC_WEBSOCKET_VERSION,
+      SEC_WEBSOCKET_KEY,
+      SEC_WEBSOCKET_ORIGIN,
+      SEC_WEBSOCKET_ACCEPT,
+      SEC_WEBSOCKET_EXTENSIONS,
+      SERVER,
+      SET_COOKIE,
+      SET_COOKIE2,
+      TE,
+      TRAILER,
+      TRANSFER_ENCODING,
+      UPGRADE,
+      UPGRADE_INSECURE_REQUESTS,
+      USER_AGENT,
+      VARY,
+      VIA,
+      WARNING,
+      WWW_AUTHENTICATE,
+      X_FRAME_OPTIONS,
+      X_REQUESTED_WITH,
+      ALT_SVC
+    )
 
 }

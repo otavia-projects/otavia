@@ -18,7 +18,7 @@ package cc.otavia.http
 
 import java.nio.charset.StandardCharsets
 
-enum HttpHeaderValue(val string: String) {
+final class HttpHeaderValue(string: String) {
 
     private val bytes: Array[Byte] = string.getBytes(StandardCharsets.US_ASCII).nn
 
@@ -28,172 +28,236 @@ enum HttpHeaderValue(val string: String) {
 
     override def toString: String = string
 
+}
+
+object HttpHeaderValue {
+
     /** application/json */
-    case APPLICATION_JSON extends HttpHeaderValue("application/json")
+    val APPLICATION_JSON = new HttpHeaderValue("application/json")
 
     /** application/x-www-form-urlencoded */
-    case APPLICATION_X_WWW_FORM_URLENCODED extends HttpHeaderValue("application/x-www-form-urlencoded")
+    val APPLICATION_X_WWW_FORM_URLENCODED = new HttpHeaderValue("application/x-www-form-urlencoded")
 
     /** application/octet-stream */
-    case APPLICATION_OCTET_STREAM extends HttpHeaderValue("application/octet-stream")
+    val APPLICATION_OCTET_STREAM = new HttpHeaderValue("application/octet-stream")
 
     /** application/xhtml+xml */
-    case APPLICATION_XHTML extends HttpHeaderValue("application/xhtml+xml")
+    val APPLICATION_XHTML = new HttpHeaderValue("application/xhtml+xml")
 
     /** application/xml */
-    case APPLICATION_XML extends HttpHeaderValue("application/xml")
+    val APPLICATION_XML = new HttpHeaderValue("application/xml")
 
     /** application/zstd */
-    case APPLICATION_ZSTD extends HttpHeaderValue("application/zstd")
+    val APPLICATION_ZSTD = new HttpHeaderValue("application/zstd")
 
     /** attachment */
-    case ATTACHMENT extends HttpHeaderValue("attachment")
+    val ATTACHMENT = new HttpHeaderValue("attachment")
 
     /** base64 */
-    case BASE64 extends HttpHeaderValue("base64")
+    val BASE64 = new HttpHeaderValue("base64")
 
     /** binary */
-    case BINARY extends HttpHeaderValue("binary")
+    val BINARY = new HttpHeaderValue("binary")
 
     /** boundary */
-    case BOUNDARY extends HttpHeaderValue("boundary")
+    val BOUNDARY = new HttpHeaderValue("boundary")
 
     /** bytes */
-    case BYTES extends HttpHeaderValue("bytes")
+    val BYTES = new HttpHeaderValue("bytes")
 
     /** charset */
-    case CHARSET extends HttpHeaderValue("charset")
+    val CHARSET = new HttpHeaderValue("charset")
 
     /** chunked */
-    case CHUNKED extends HttpHeaderValue("chunked")
+    val CHUNKED = new HttpHeaderValue("chunked")
 
     /** close */
-    case CLOSE extends HttpHeaderValue("close")
+    val CLOSE = new HttpHeaderValue("close")
 
     /** compress */
-    case COMPRESS extends HttpHeaderValue("compress")
+    val COMPRESS = new HttpHeaderValue("compress")
 
     /** 100-continue */
-    case CONTINUE extends HttpHeaderValue("100-continue")
+    val CONTINUE = new HttpHeaderValue("100-continue")
 
     /** deflate */
-    case DEFLATE extends HttpHeaderValue("deflate")
+    val DEFLATE = new HttpHeaderValue("deflate")
 
     /** x-deflate */
-    case X_DEFLATE extends HttpHeaderValue("x-deflate")
+    val X_DEFLATE = new HttpHeaderValue("x-deflate")
 
     /** file */
-    case FILE extends HttpHeaderValue("file")
+    val FILE = new HttpHeaderValue("file")
 
     /** filename */
-    case FILENAME extends HttpHeaderValue("filename")
+    val FILENAME = new HttpHeaderValue("filename")
 
-    case FORM_DATA extends HttpHeaderValue("form-data")
+    val FORM_DATA = new HttpHeaderValue("form-data")
 
     /** gzip */
-    case GZIP extends HttpHeaderValue("gzip")
+    val GZIP = new HttpHeaderValue("gzip")
 
     /** br */
-    case BR extends HttpHeaderValue("br")
+    val BR = new HttpHeaderValue("br")
 
     /** snappy */
-    case SNAPPY extends HttpHeaderValue("snappy")
+    val SNAPPY = new HttpHeaderValue("snappy")
 
     /** zstd */
-    case ZSTD extends HttpHeaderValue("zstd")
+    val ZSTD = new HttpHeaderValue("zstd")
 
     /** gzip,deflate */
-    case GZIP_DEFLATE extends HttpHeaderValue("gzip,deflate")
+    val GZIP_DEFLATE = new HttpHeaderValue("gzip,deflate")
 
     /** x-gzip */
-    case X_GZIP extends HttpHeaderValue("x-gzip")
+    val X_GZIP = new HttpHeaderValue("x-gzip")
 
     /** identity */
-    case IDENTITY extends HttpHeaderValue("identity")
+    val IDENTITY = new HttpHeaderValue("identity")
 
     /** keep-alive */
-    case KEEP_ALIVE extends HttpHeaderValue("keep-alive")
+    val KEEP_ALIVE = new HttpHeaderValue("keep-alive")
 
     /** max-age */
-    case MAX_AGE extends HttpHeaderValue("max-age")
+    val MAX_AGE = new HttpHeaderValue("max-age")
 
     /** max-stale */
-    case MAX_STALE extends HttpHeaderValue("max-stale")
+    val MAX_STALE = new HttpHeaderValue("max-stale")
 
     /** min-fresh */
-    case MIN_FRESH extends HttpHeaderValue("min-fresh")
+    val MIN_FRESH = new HttpHeaderValue("min-fresh")
 
     /** multipart/form-data */
-    case MULTIPART_FORM_DATA extends HttpHeaderValue("multipart/form-data")
+    val MULTIPART_FORM_DATA = new HttpHeaderValue("multipart/form-data")
 
     /** multipart/mixed */
-    case MULTIPART_MIXED extends HttpHeaderValue("multipart/mixed")
+    val MULTIPART_MIXED = new HttpHeaderValue("multipart/mixed")
 
     /** must-revalidate */
-    case MUST_REVALIDATE extends HttpHeaderValue("must-revalidate")
+    val MUST_REVALIDATE = new HttpHeaderValue("must-revalidate")
 
     /** name */
-    case NAME extends HttpHeaderValue("name")
+    val NAME = new HttpHeaderValue("name")
 
     /** no-cache */
-    case NO_CACHE extends HttpHeaderValue("no-cache")
+    val NO_CACHE = new HttpHeaderValue("no-cache")
 
     /** no-store */
-    case NO_STORE extends HttpHeaderValue("no-store")
+    val NO_STORE = new HttpHeaderValue("no-store")
 
     /** no-transform */
-    case NO_TRANSFORM extends HttpHeaderValue("no-transform")
+    val NO_TRANSFORM = new HttpHeaderValue("no-transform")
 
     /** none */
-    case NONE extends HttpHeaderValue("none")
+    val NONE = new HttpHeaderValue("none")
 
     /** 0 */
-    case ZERO extends HttpHeaderValue("0")
+    val ZERO = new HttpHeaderValue("0")
 
     /** only-if-cached */
-    case ONLY_IF_CACHED extends HttpHeaderValue("only-if-cached")
+    val ONLY_IF_CACHED = new HttpHeaderValue("only-if-cached")
 
     /** private */
-    case PRIVATE extends HttpHeaderValue("private")
+    val PRIVATE = new HttpHeaderValue("private")
 
     /** proxy-revalidate */
-    case PROXY_REVALIDATE extends HttpHeaderValue("proxy-revalidate")
+    val PROXY_REVALIDATE = new HttpHeaderValue("proxy-revalidate")
 
     /** public */
-    case PUBLIC extends HttpHeaderValue("public")
+    val PUBLIC = new HttpHeaderValue("public")
 
     /** quoted-printable */
-    case QUOTED_PRINTABLE extends HttpHeaderValue("quoted-printable")
+    val QUOTED_PRINTABLE = new HttpHeaderValue("quoted-printable")
 
     /** s-maxage */
-    case S_MAXAGE extends HttpHeaderValue("s-maxage")
+    val S_MAXAGE = new HttpHeaderValue("s-maxage")
 
     /** text/css */
-    case TEXT_CSS extends HttpHeaderValue("text/css")
+    val TEXT_CSS = new HttpHeaderValue("text/css")
 
     /** text/html */
-    case TEXT_HTML extends HttpHeaderValue("text/html")
+    val TEXT_HTML = new HttpHeaderValue("text/html")
 
     /** text/event-stream */
-    case TEXT_EVENT_STREAM extends HttpHeaderValue("text/event-stream")
+    val TEXT_EVENT_STREAM = new HttpHeaderValue("text/event-stream")
 
     /** text/plain */
-    case TEXT_PLAIN extends HttpHeaderValue("text/plain")
+    val TEXT_PLAIN = new HttpHeaderValue("text/plain")
 
     /** trailers */
-    case TRAILERS extends HttpHeaderValue("trailers")
+    val TRAILERS = new HttpHeaderValue("trailers")
 
     /** upgrade */
-    case UPGRADE extends HttpHeaderValue("upgrade")
+    val UPGRADE = new HttpHeaderValue("upgrade")
 
     /** websocket */
-    case WEBSOCKET extends HttpHeaderValue("websocket")
+    val WEBSOCKET = new HttpHeaderValue("websocket")
 
     /** XMLHttpRequest */
-    case XML_HTTP_REQUEST extends HttpHeaderValue("XMLHttpRequest")
+    val XML_HTTP_REQUEST = new HttpHeaderValue("XMLHttpRequest")
 
     /** User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0 */
-    case UA_FIREFOX
-        extends HttpHeaderValue("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0")
+    val UA_FIREFOX = new HttpHeaderValue(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0"
+    )
+
+    val values: Array[HttpHeaderValue] = Array(
+      APPLICATION_JSON,
+      APPLICATION_X_WWW_FORM_URLENCODED,
+      APPLICATION_OCTET_STREAM,
+      APPLICATION_XHTML,
+      APPLICATION_XML,
+      APPLICATION_ZSTD,
+      ATTACHMENT,
+      BASE64,
+      BINARY,
+      BOUNDARY,
+      BYTES,
+      CHARSET,
+      CHUNKED,
+      CLOSE,
+      COMPRESS,
+      CONTINUE,
+      DEFLATE,
+      X_DEFLATE,
+      FILE,
+      FILENAME,
+      FORM_DATA,
+      GZIP,
+      BR,
+      SNAPPY,
+      ZSTD,
+      GZIP_DEFLATE,
+      X_GZIP,
+      IDENTITY,
+      KEEP_ALIVE,
+      MAX_AGE,
+      MAX_STALE,
+      MIN_FRESH,
+      MULTIPART_FORM_DATA,
+      MULTIPART_MIXED,
+      MUST_REVALIDATE,
+      NAME,
+      NO_CACHE,
+      NO_STORE,
+      NO_TRANSFORM,
+      NONE,
+      ZERO,
+      ONLY_IF_CACHED,
+      PRIVATE,
+      PROXY_REVALIDATE,
+      PUBLIC,
+      QUOTED_PRINTABLE,
+      S_MAXAGE,
+      TEXT_CSS,
+      TEXT_HTML,
+      TEXT_EVENT_STREAM,
+      TEXT_PLAIN,
+      TRAILERS,
+      UPGRADE,
+      WEBSOCKET,
+      XML_HTTP_REQUEST,
+      UA_FIREFOX
+    )
 
 }
