@@ -16,26 +16,69 @@
 
 package cc.otavia.http.server
 
+import cc.otavia.core.cache.ActorThreadLocal
 import cc.otavia.core.message.Reply
 import cc.otavia.http.{HttpHeaderKey, HttpHeaderValue}
 
 import scala.collection.mutable
+import scala.language.unsafeNulls
 
-class HttpResponse[C](val content: C) extends Reply {}
+class HttpResponse[C <: AnyRef] extends Reply {
+
+    private[http] var headers: Map[HttpHeaderKey, HttpHeaderValue] = _
+    private[http] var content: C                                   = _
+
+}
 
 object HttpResponse {
 
-    def apply[C](content: C): HttpResponse[C] = new HttpResponse(content)
+    private val builderLocal = new ActorThreadLocal[Builder[?]] {
+        override protected def initialValue(): Builder[?] = new Builder[AnyRef]()
+    }
 
-    def builder[C]: Builder[C] = new Builder[C]
+    def builder[C <: AnyRef]: Builder[C] = builderLocal.get().asInstanceOf[Builder[C]]
 
-    class Builder[C] {
+    class Builder[C <: AnyRef] {
 
-        def setContent(content: C): this.type = this
+        private var content: AnyRef                                      = _
+        private val headers: mutable.Map[HttpHeaderKey, HttpHeaderValue] = mutable.Map.empty
 
-        def setHeaders(headers: mutable.Map[HttpHeaderKey, HttpHeaderValue]): this.type = this
+        def setContent(content: C): this.type = {
+            this.content = content
+            this
+        }
 
-        def build(): HttpResponse[C] = ???
+        def setHeaders(headers: mutable.Map[HttpHeaderKey, HttpHeaderValue]): this.type = {
+            this.headers.addAll(headers)
+            this
+        }
+
+        def setHeaders(headers: Map[HttpHeaderKey, HttpHeaderValue]): this.type = {
+            this.headers.addAll(headers)
+            this
+        }
+
+        def addHeader(key: HttpHeaderKey, value: HttpHeaderValue): this.type = {
+            this.headers.put(key, value)
+            this
+        }
+
+        def addHeaders(headers: (HttpHeaderKey, HttpHeaderValue)*): this.type = {
+            this.headers.addAll(headers)
+            this
+        }
+
+        def build(): HttpResponse[C] = {
+            val response = new HttpResponse[C]()
+
+            response.content = content.asInstanceOf[C]
+            if (this.headers.nonEmpty) response.headers = this.headers.toMap
+
+            content = null
+            this.headers.clear()
+
+            response
+        }
 
     }
 
