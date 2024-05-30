@@ -54,9 +54,13 @@ trait AdaptiveBuffer extends Buffer {
      */
     private[otavia] def extend(buffer: RecyclablePageBuffer): Unit
 
-    def sslunwarp(engine: SSLEngine, target: AdaptiveBuffer): SSLEngineResult
+    def sslunwarp(engine: SSLEngine, packetLength: Int, target: ByteBuffer): SSLEngineResult
 
     def sslwarp(engine: SSLEngine, target: AdaptiveBuffer): SSLEngineResult
+
+    def sslHandshakeWarp(engine: SSLEngine, emptySource: Array[ByteBuffer]): SSLEngineResult
+
+    def sslHandshakeUnwarp(engine: SSLEngine, emptyTarget: Array[ByteBuffer]): SSLEngineResult
 
 }
 
