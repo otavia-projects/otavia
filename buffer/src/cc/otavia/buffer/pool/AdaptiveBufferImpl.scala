@@ -2788,24 +2788,24 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         }
     }
 
-    override def sslwarp(engine: SSLEngine, target: AdaptiveBuffer): SSLEngineResult = ???
+    override def sslwarp(engine: SSLEngine, target: ByteBuffer): SSLEngineResult = {
+        var result: SSLEngineResult = null
+        while (this.nonEmpty) {
+            val buffer = head
+            val bf     = buffer.underlying
+            bf.position(buffer.readerOffset)
+            bf.limit(buffer.writerOffset)
 
-    override def sslHandshakeWarp(engine: SSLEngine, emptySource: Array[ByteBuffer]): SSLEngineResult = {
-        if (allocatedWritableBytes == 0) this.extendBuffer()
-        val buffer     = last
-        val byteBuffer = last.underlying
-        byteBuffer.position(buffer.writerOffset)
-        byteBuffer.limit(buffer.writerOffset + buffer.writableBytes)
+            val res = engine.wrap(bf, target)
 
-        val bf = ByteBuffer.allocate(2048)
+            if (res.bytesConsumed() == buffer.readableBytes) {
+                ridx += buffer.readableBytes
+                this.recycleHead()
+            } else if (res.bytesConsumed() > 0) this.skipReadableBytes(res.bytesConsumed())
 
-        var result = engine.wrap(emptySource, bf)
-
-        val packetBufferSize = engine.getSession.getPacketBufferSize
-        println("")
-        ???
+            result = res
+        }
+        result
     }
-
-    override def sslHandshakeUnwarp(engine: SSLEngine, emptyTarget: Array[ByteBuffer]): SSLEngineResult = ???
 
 }
