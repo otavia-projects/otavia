@@ -18,6 +18,8 @@
 
 package cc.otavia.handler.ssl
 
+import cc.otavia.buffer.Buffer
+
 import java.security.{KeyManagementException, NoSuchAlgorithmException, Provider}
 import javax.net.ssl.{SSLContext, TrustManager}
 import scala.language.unsafeNulls
@@ -111,6 +113,56 @@ object SslUtils {
             case Some(value) => SSLContext.getInstance("TLS", value)
         context.init(null, Array.empty[TrustManager], null)
         context
+    }
+
+    def getEncryptedPacketLength(buffer: Buffer, offset: Int): Int = {
+        var packetLength = 0
+        // SSLv3 or TLS - Check ContentType
+        var tls = buffer.getUnsignedByte(offset) match
+            case SSL_CONTENT_TYPE_CHANGE_CIPHER_SPEC  => true
+            case SSL_CONTENT_TYPE_ALERT               => true
+            case SSL_CONTENT_TYPE_HANDSHAKE           => true
+            case SSL_CONTENT_TYPE_APPLICATION_DATA    => true
+            case SSL_CONTENT_TYPE_EXTENSION_HEARTBEAT => true
+            case _                                    => false
+
+        if (tls) {
+            // SSLv3 or TLS or GMSSLv1.0 or GMSSLv1.1 - Check ProtocolVersion
+            val major   = buffer.getUnsignedByte(offset + 1)
+            val version = buffer.getShort(offset + 1)
+            if (major == 3 || version == GMSSL_PROTOCOL_VERSION) {
+                // SSLv3 or TLS or GMSSLv1.0 or GMSSLv1.1
+                packetLength = buffer.getUnsignedShort(offset + 3) + SSL_RECORD_HEADER_LENGTH
+                if (packetLength < SSL_RECORD_HEADER_LENGTH) tls = false
+            } else if (version == DTLS_1_0 || version == DTLS_1_2 || version == DTLS_1_3) {
+                if (buffer.readableBytes < offset + DTLS_RECORD_HEADER_LENGTH) {
+                    packetLength = NOT_ENOUGH_DATA
+                } else {
+                    // length is the last 2 bytes in the 13 byte header.
+                    packetLength = buffer.getUnsignedShort(offset + DTLS_RECORD_HEADER_LENGTH - 2) +
+                        DTLS_RECORD_HEADER_LENGTH
+                }
+            } else {
+                // Neither SSLv3 or TLSv1 (i.e. SSLv2 or bad data)
+                tls = false
+            }
+        }
+
+        if (!tls) {
+            // SSLv2 or bad data - Check the version
+            val headerLen = if ((buffer.getUnsignedByte(offset) & 0x80) != 0) 2 else 3
+            val major     = buffer.getUnsignedByte(offset + headerLen + 1)
+            if (major == 2 || major == 3) {
+                // SSLv2
+                packetLength =
+                    if (headerLen == 2) (buffer.getShort(offset) & 0x7fff) + 2
+                    else (buffer.getShort(offset) & 0x3fff) + 3
+
+                if (packetLength <= headerLen) packetLength = NOT_ENOUGH_DATA
+            } else packetLength = NOT_ENOUGH_DATA
+        }
+
+        packetLength
     }
 
 }

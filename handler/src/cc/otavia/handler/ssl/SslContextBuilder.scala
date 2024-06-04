@@ -45,7 +45,7 @@ class SslContextBuilder private (private val forServer: Boolean) {
     private var sessionCacheSize                                    = 0L
     private var sessionTimeout                                      = 0L
     private var clientAuth: ClientAuth                              = ClientAuth.NONE
-    private var protocols: Array[String]                            = _
+    private var protocols: Array[String]                            = Array.empty
     private var startTls                                            = false
     private var enableOcsp                                          = false
     private var keyStoreType                                        = KeyStore.getDefaultType
