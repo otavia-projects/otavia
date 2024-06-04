@@ -2628,7 +2628,6 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                     buffer.writeBytes(buf)
                     buf.close()
                 }
-                ridx += length
             case buffer: AdaptiveBuffer =>
                 if (allocator == buffer.allocator) { // zero copy
                     var cursor = this.splitBefore(readerOffset + length)
@@ -2774,9 +2773,10 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         } else if (packetLength <= allocator.fixedCapacity) {
             val buffer = allocator.allocate()
             this.readBytes(buffer, packetLength)
-            buffer.byteBuffer.position(buffer.readerOffset)
-            buffer.byteBuffer.limit(buffer.writerOffset)
-            val res = engine.unwrap(buffer.byteBuffer, target)
+            val byteBuffer = buffer.byteBuffer
+            byteBuffer.position(buffer.readerOffset)
+            byteBuffer.limit(buffer.writerOffset)
+            val res = engine.unwrap(byteBuffer, target)
             buffer.close()
             res
         } else {
