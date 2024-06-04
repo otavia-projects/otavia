@@ -158,6 +158,117 @@ node9 -> node6;
           </div>
          </div>
         </div>
+        <div class="documentableElement" id="channelReadComplete-fffff848" data-f-keywords="override">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="SslHandler.html#channelReadComplete-fffff848" t="n" class="documentableName ">channelReadComplete</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">ctx</span>: <a href="../../core/channel/ChannelHandlerContext.html" t="t">ChannelHandlerContext</a>): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Invoked when the last message read by the current read operation has been consumed by <a href="SslHandler.html#channelRead-89f">channelRead</a>. If <span data-unresolved-link="" title="Problem linking ChannelOption.AUTO_READ: No DRI found for query">ChannelOption.AUTO_READ</span> is off, no further attempt to read an inbound data from the current <span data-unresolved-link="" title="Problem linking Channel: No DRI found for query">Channel</span> will be made until <span data-unresolved-link="" title="Problem linking ChannelOutboundInvoker.read(ReadBufferAllocator): No DRI found for query">ChannelOutboundInvoker.read(ReadBufferAllocator)</span> is called.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Invoked when the last message read by the current read operation has been consumed by <a href="SslHandler.html#channelRead-89f">channelRead</a>. If <span data-unresolved-link="" title="Problem linking ChannelOption.AUTO_READ: No DRI found for query">ChannelOption.AUTO_READ</span> is off, no further attempt to read an inbound data from the current <span data-unresolved-link="" title="Problem linking Channel: No DRI found for query">Channel</span> will be made until <span data-unresolved-link="" title="Problem linking ChannelOutboundInvoker.read(ReadBufferAllocator): No DRI found for query">ChannelOutboundInvoker.read(ReadBufferAllocator)</span> is called.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="../../core/channel/ChannelHandler.html">ChannelHandler</a>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="flush-fffff848" data-f-keywords="override">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="SslHandler.html#flush-fffff848" t="n" class="documentableName ">flush</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">ctx</span>: <a href="../../core/channel/ChannelHandlerContext.html" t="t">ChannelHandlerContext</a>): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Called once a flush operation is made. The flush operation will try to flush out all previous written messages that are pending.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Called once a flush operation is made. The flush operation will try to flush out all previous written messages that are pending.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="../../core/channel/ChannelHandler.html">ChannelHandler</a>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="handlerAdded-fffff848" data-f-keywords="override">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="SslHandler.html#handlerAdded-fffff848" t="n" class="documentableName ">handlerAdded</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">ctx</span>: <a href="../../core/channel/ChannelHandlerContext.html" t="t">ChannelHandlerContext</a>): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Gets called after the <span data-unresolved-link="" title="Problem linking ChannelHandler: No DRI found for query">ChannelHandler</span> was added to the actual context and it's ready to handle events.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Gets called after the <span data-unresolved-link="" title="Problem linking ChannelHandler: No DRI found for query">ChannelHandler</span> was added to the actual context and it's ready to handle events.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="../../core/channel/ChannelHandler.html">ChannelHandler</a>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
        </div>
       </section>
       <section id="Inherited-methods">
@@ -427,41 +538,6 @@ node9 -> node6;
               </dt>
               <dd class="body-medium">
                <a href="../../core/channel/handler/Byte2ByteDecoder.html#channelRead-e1b">Byte2ByteDecoder</a>
-              </dd>
-             </dl>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
-        <div class="documentableElement" id="channelReadComplete-fffff848" data-f-inherited="ChannelHandler">
-         <div class="documentableElement-expander">
-          <button class="icon-button ar show-content"></button>
-          <div class="header monospace mono-medium">
-           <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="SslHandler.html#channelReadComplete-fffff848" t="n" class="documentableName ">channelReadComplete</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">ctx</span>: <a href="../../core/channel/ChannelHandlerContext.html" t="t">ChannelHandlerContext</a>): <span data-unresolved-link="" t="t">Unit</span>
-           </div>
-          </div>
-         </div>
-         <div class="docs">
-          <span class="modifiers"></span>
-          <div>
-           <div class="originInfo"></div>
-           <div class="memberDocumentation">
-            <div class="documentableBrief doc">
-             <p>Invoked when the last message read by the current read operation has been consumed by <a href="../../core/channel/ChannelHandler.html#channelRead-89f">channelRead</a>. If <a href="../../core/channel/ChannelOption$.html#AUTO_READ-0">ChannelOption.AUTO_READ</a> is off, no further attempt to read an inbound data from the current <a href="../../core/channel/Channel.html">Channel</a> will be made until <a href="../../core/channel/ChannelOutboundInvoker.html#read-fffffdd3">ChannelOutboundInvoker.read</a> is called.</p>
-            </div>
-            <div class="cover">
-             <div class="doc">
-              <p>Invoked when the last message read by the current read operation has been consumed by <a href="../../core/channel/ChannelHandler.html#channelRead-89f">channelRead</a>. If <a href="../../core/channel/ChannelOption$.html#AUTO_READ-0">ChannelOption.AUTO_READ</a> is off, no further attempt to read an inbound data from the current <a href="../../core/channel/Channel.html">Channel</a> will be made until <a href="../../core/channel/ChannelOutboundInvoker.html#read-fffffdd3">ChannelOutboundInvoker.read</a> is called.</p>
-             </div>
-             <h2 class="h200">Attributes</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Inherited from:
-              </dt>
-              <dd class="body-medium">
-               <a href="../../core/channel/ChannelHandler.html#channelReadComplete-fffff848">ChannelHandler</a>
               </dd>
              </dl>
             </div>
@@ -846,76 +922,6 @@ node9 -> node6;
               </dt>
               <dd class="body-medium">
                <a href="../../core/channel/ChannelHandler.html#disconnect-fffff4ba">ChannelHandler</a>
-              </dd>
-             </dl>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
-        <div class="documentableElement" id="flush-fffff848" data-f-inherited="ChannelHandler">
-         <div class="documentableElement-expander">
-          <button class="icon-button ar show-content"></button>
-          <div class="header monospace mono-medium">
-           <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="SslHandler.html#flush-fffff848" t="n" class="documentableName ">flush</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">ctx</span>: <a href="../../core/channel/ChannelHandlerContext.html" t="t">ChannelHandlerContext</a>): <span data-unresolved-link="" t="t">Unit</span>
-           </div>
-          </div>
-         </div>
-         <div class="docs">
-          <span class="modifiers"></span>
-          <div>
-           <div class="originInfo"></div>
-           <div class="memberDocumentation">
-            <div class="documentableBrief doc">
-             <p>Called once a flush operation is made. The flush operation will try to flush out all previous written messages that are pending.</p>
-            </div>
-            <div class="cover">
-             <div class="doc">
-              <p>Called once a flush operation is made. The flush operation will try to flush out all previous written messages that are pending.</p>
-             </div>
-             <h2 class="h200">Attributes</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Inherited from:
-              </dt>
-              <dd class="body-medium">
-               <a href="../../core/channel/ChannelHandler.html#flush-fffff848">ChannelHandler</a>
-              </dd>
-             </dl>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
-        <div class="documentableElement" id="handlerAdded-fffff848" data-f-inherited="ChannelHandler">
-         <div class="documentableElement-expander">
-          <button class="icon-button ar show-content"></button>
-          <div class="header monospace mono-medium">
-           <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="SslHandler.html#handlerAdded-fffff848" t="n" class="documentableName ">handlerAdded</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">ctx</span>: <a href="../../core/channel/ChannelHandlerContext.html" t="t">ChannelHandlerContext</a>): <span data-unresolved-link="" t="t">Unit</span>
-           </div>
-          </div>
-         </div>
-         <div class="docs">
-          <span class="modifiers"></span>
-          <div>
-           <div class="originInfo"></div>
-           <div class="memberDocumentation">
-            <div class="documentableBrief doc">
-             <p>Gets called after the <a href="../../core/channel/ChannelHandler.html">ChannelHandler</a> was added to the actual context and it's ready to handle events.</p>
-            </div>
-            <div class="cover">
-             <div class="doc">
-              <p>Gets called after the <a href="../../core/channel/ChannelHandler.html">ChannelHandler</a> was added to the actual context and it's ready to handle events.</p>
-             </div>
-             <h2 class="h200">Attributes</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Inherited from:
-              </dt>
-              <dd class="body-medium">
-               <a href="../../core/channel/ChannelHandler.html#handlerAdded-fffff848">ChannelHandler</a>
               </dd>
              </dl>
             </div>
