@@ -54,7 +54,7 @@ trait Address[-M <: Call] extends EventableAddress {
     def askUnsafe(ask: Ask[?], f: MessageFuture[?])(using sender: AbstractActor[?]): MessageFuture[?]
 
     // format: off
-     final def ask[A <: M & Ask[? <: Reply], R <: ReplyOf[A] : ClassTag](ask: A)(using sender: AbstractActor[?]): FutureState[R] = {
+     final def ask[A <: M & Ask[? <: Reply], R <: ReplyOf[A]](ask: A)(using sender: AbstractActor[?]): FutureState[R] = {
          // format: on
         val state = FutureState[R]()
         this.ask(ask, state.future)
