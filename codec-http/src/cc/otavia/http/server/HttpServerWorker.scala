@@ -23,14 +23,19 @@ import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelOption}
 import cc.otavia.core.message.Reply
 import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState, StartState}
 import cc.otavia.core.stack.{AskStack, ChannelStack, StackState}
+import cc.otavia.handler.ssl.SslContext
 import cc.otavia.http.server.Router.{ControllerRouter, static}
 import cc.otavia.http.{HttpMethod, OK}
 
 import java.nio.charset.StandardCharsets
 import scala.language.unsafeNulls
 
-class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Array[Byte]], serverName: String)
-    extends AcceptedWorkerActor[Nothing] {
+class HttpServerWorker(
+    routerMatcher: RouterMatcher,
+    dates: ActorThreadLocal[Array[Byte]],
+    serverName: String,
+    sslCtx: Option[SslContext] = None
+) extends AcceptedWorkerActor[Nothing] {
 
     private val serverNameBytes: Array[Byte] = serverName.replaceAll("\r|\n", "").getBytes(StandardCharsets.US_ASCII)
 
@@ -38,6 +43,9 @@ class HttpServerWorker(routerMatcher: RouterMatcher, dates: ActorThreadLocal[Arr
         channel.setOption(ChannelOption.CHANNEL_STACK_BARRIER, HttpServerWorker.BARRIER_FUNC)
         channel.setOption(ChannelOption.CHANNEL_STACK_HEAD_OF_LINE, true)
         channel.setOption(ChannelOption.CHANNEL_MAX_STACK_INFLIGHT, 10240)
+        sslCtx match
+            case Some(ctx) => channel.pipeline.addLast(ctx.newHandler())
+            case None      =>
         channel.pipeline.addLast(new ServerCodec(routerMatcher, dates, serverNameBytes))
     }
 

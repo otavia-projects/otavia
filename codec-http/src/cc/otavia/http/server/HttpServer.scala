@@ -19,6 +19,7 @@ package cc.otavia.http.server
 import cc.otavia.core.actor.AcceptorActor
 import cc.otavia.core.cache.{ActorThreadLocal, ResourceTimer}
 import cc.otavia.core.timer.TimeoutTrigger
+import cc.otavia.handler.ssl.SslContext
 
 import java.nio.charset.StandardCharsets
 import java.time.format.DateTimeFormatter
@@ -26,8 +27,12 @@ import java.time.{LocalDateTime, ZoneId}
 import java.util.Locale
 import scala.language.unsafeNulls
 
-class HttpServer(override val workerNumber: Int = 8, routers: Seq[Router], serverName: String = "otavia-http")
-    extends AcceptorActor[HttpServerWorker] {
+class HttpServer(
+    override val workerNumber: Int = 8,
+    routers: Seq[Router],
+    serverName: String = "otavia-http",
+    sslCtx: Option[SslContext] = None
+) extends AcceptorActor[HttpServerWorker] {
 
     private val routerMatcher = new RouterMatcher(routers)
 
@@ -52,6 +57,6 @@ class HttpServer(override val workerNumber: Int = 8, routers: Seq[Router], serve
     }
 
     override protected def workerFactory: AcceptorActor.WorkerFactory[HttpServerWorker] = () =>
-        new HttpServerWorker(routerMatcher.sync(), dates, serverName)
+        new HttpServerWorker(routerMatcher.sync(), dates, serverName, sslCtx)
 
 }
