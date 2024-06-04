@@ -53,7 +53,7 @@ object HttpHeaderUtil {
     }
 
     def readKey(buffer: Buffer, keyLen: Int): HttpHeaderKey = {
-        if (keyLen < keyGroup.length) {
+        if (keyLen <= keyGroup.length) {
             val keys               = keyGroup(keyLen - 1)
             var key: HttpHeaderKey = null
             var continue           = true
@@ -73,7 +73,7 @@ object HttpHeaderUtil {
     }
 
     def readValue(buffer: Buffer, len: Int): HttpHeaderValue = {
-        if (len < valueGroup.length) {
+        if (len <= valueGroup.length) {
             val vs                     = valueGroup(len - 1)
             var value: HttpHeaderValue = null
 

@@ -39,6 +39,8 @@ enum HttpStatus(code: Int, phrase: String) {
     case INTERNAL_SERVER_ERROR extends HttpStatus(500, "Internal Server Error")
     case SERVICE_UNAVAILABLE   extends HttpStatus(503, "Service Unavailable")
 
+    override def toString: String = s"$code $phrase"
+
     val bytes: Array[Byte]     = s"$code $phrase".getBytes(StandardCharsets.US_ASCII)
     val bytesCRCL: Array[Byte] = s"$code $phrase\r\n".getBytes(StandardCharsets.US_ASCII)
 

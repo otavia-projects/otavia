@@ -16,6 +16,72 @@
 
 package cc.otavia.http.client
 
-class HttpClient {
+import cc.otavia.core.actor.ChannelsActor.*
+import cc.otavia.core.actor.SocketChannelsActor
+import cc.otavia.core.actor.SocketChannelsActor.*
+import cc.otavia.core.channel.{Channel, ChannelAddress}
+import cc.otavia.core.message.{Ask, Notice, Reply}
+import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState, FuturesState, StartState}
+import cc.otavia.core.stack.{AskStack, NoticeStack, StackState}
+import cc.otavia.handler.ssl.SslContext
+import cc.otavia.http.HttpVersion
+
+import java.net.InetSocketAddress
+
+class HttpClient(
+    host: String,
+    port: Int,
+    sslCtx: Option[SslContext] = None,
+    autoConnect: Boolean = true,
+    httpVersion: HttpVersion = HttpVersion.HTTP_1_1
+) extends SocketChannelsActor[HttpClientRequest | Connect] {
+
+    private var channel: ChannelAddress = _
+
+    override protected def initChannel(channel: Channel): Unit = {
+        sslCtx match
+            case None             =>
+            case Some(sslContext) => channel.pipeline.addLast(sslContext.newHandler())
+
+        channel.pipeline.addLast(new ClientCodec(httpVersion, sslCtx.nonEmpty))
+    }
+
+    override protected def afterMount(): Unit =
+        if (autoConnect) this.noticeSelfHead(ConnectChannel(new InetSocketAddress(host, port)))
+
+    override protected def resumeNotice(
+        stack: NoticeStack[(HttpClientRequest | Connect) & Notice]
+    ): Option[StackState] = stack.state match
+        case state: StartState =>
+            val stk = stack.asInstanceOf[NoticeStack[Connect]]
+            stack.suspend(connect(stk.notice.remote, stk.notice.local))
+        case state: ChannelFutureState =>
+            channel = state.future.channel
+            stack.`return`()
+
+    override protected def resumeAsk(stack: AskStack[HttpClientRequest | Connect]): Option[StackState] =
+        stack match
+            case stack: AskStack[HttpClientRequest] if stack.ask.isInstanceOf[HttpClientRequest] =>
+                handleRequest(stack)
+            case stack: AskStack[Connect] if stack.ask.isInstanceOf[Connect] => handleConnect(stack)
+
+    private def handleConnect(stack: AskStack[Connect]): Option[StackState] = stack.state match
+        case state: StartState =>
+            stack.suspend(connect(stack.ask.remote, stack.ask.local))
+        case state: ChannelFutureState =>
+            channel = state.future.channel
+            val established = ChannelEstablished(state.future.channel.id)
+            stack.`return`(established)
+
+    private def handleRequest(stack: AskStack[HttpClientRequest]): Option[StackState] = stack.state match
+        case state: StartState =>
+            val futureState = ChannelFutureState()
+            val request     = stack.ask
+            channel.ask(request, futureState.future)
+            stack.suspend(futureState)
+        case state: ChannelFutureState =>
+            stack.`return`(state.future.getNow.asInstanceOf[HttpClientResponse])
 
 }
+
+object HttpClient {}
