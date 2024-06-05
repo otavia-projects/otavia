@@ -24,6 +24,7 @@ import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import cc.otavia.core.channel.ChannelPipelineImpl.*
 import cc.otavia.core.channel.inflight.QueueMap
+import cc.otavia.core.channel.internal.ChannelHandlerMask
 import cc.otavia.core.channel.message.FixedReadPlanFactory.FixedReadPlan
 import cc.otavia.core.channel.message.{FixedReadPlanFactory, ReadPlan}
 import cc.otavia.core.slf4a.Logger
@@ -51,7 +52,6 @@ class ChannelPipelineImpl(override val channel: AbstractChannel) extends Channel
     tail.prev = head
 
     head.setInboundAdaptiveBuffer(channelInboundAdaptiveBuffer)
-    // head.setOutboundAdaptiveBuffer(channelOutboundAdaptiveBuffer)
 
     head.setAddComplete()
     tail.setAddComplete()
@@ -606,7 +606,12 @@ class ChannelPipelineImpl(override val channel: AbstractChannel) extends Channel
     }
 
     override def fireChannelRead(msg: AnyRef): this.type = {
-        head.invokeChannelRead(msg)
+        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_READ)
+        try {
+            ctx.handler.channelRead(ctx, msg)
+        } catch {
+            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
+        }
         this
     }
 
@@ -650,14 +655,9 @@ class ChannelPipelineImpl(override val channel: AbstractChannel) extends Channel
         tail.connect(remote, local, future)
     }
 
-    override def open(
-        path: Path,
-        options: Seq[OpenOption],
-        attrs: Seq[FileAttribute[?]],
-        future: ChannelFuture
-    ): ChannelFuture = {
+    override def open(ph: Path, opts: Seq[OpenOption], as: Seq[FileAttribute[?]], fu: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.open(path, options, attrs, future)
+        tail.open(ph, opts, as, fu)
     }
 
     override def disconnect(future: ChannelFuture): ChannelFuture = {
@@ -888,6 +888,7 @@ object ChannelPipelineImpl {
         override def sendOutboundEvent(ctx: ChannelHandlerContext, event: AnyRef): Unit = ???
 
     }
+
     private final class TailHandler extends ChannelHandler {
 
         override def channelRegistered(ctx: ChannelHandlerContext): Unit = {} // Just swallow event

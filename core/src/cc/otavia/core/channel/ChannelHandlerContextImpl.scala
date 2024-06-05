@@ -296,7 +296,11 @@ final class ChannelHandlerContextImpl(
 
     override def fireChannelRead(msg: AnyRef): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_READ)
-        ctx.invokeChannelRead(msg)
+        try {
+            ctx.handler.channelRead(this, msg)
+        } catch {
+            case t: Throwable => invokeChannelExceptionCaught(t)
+        }
         this
     }
 
@@ -605,6 +609,8 @@ final class ChannelHandlerContextImpl(
             catch { case e: IllegalStateException => ret = Some(e) }
             ret
         } else None
+
+    override def toString: String = name
 
 }
 
