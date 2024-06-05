@@ -2437,6 +2437,7 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         source match
             case buffer: AbstractBuffer =>
                 while {
+                    if (allocatedWritableBytes == 0) extendBuffer()
                     last.writeBytes(buffer, buffer.readableBytes - remaining)
                     val continue = buffer.readableBytes > remaining
                     if (continue) extendBuffer()
