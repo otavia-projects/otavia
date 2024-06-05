@@ -18,7 +18,6 @@ package cc.otavia.http.server
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.core.message.Reply
-import cc.otavia.http.ParameterSerde
 import cc.otavia.http.server.Router.*
 import cc.otavia.serde.Serde
 import org.scalatest.funsuite.AnyFunSuite
