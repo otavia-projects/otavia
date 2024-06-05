@@ -196,7 +196,7 @@ object codec extends OtaviaModule {
 object `codec-http` extends OtaviaModule {
 
     override def artifactName                   = "otavia-codec-http"
-    override def moduleDeps: Seq[PublishModule] = scala.Seq(codec, serde, `serde-json`)
+    override def moduleDeps: Seq[PublishModule] = scala.Seq(codec, serde, `serde-json`, handler)
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
