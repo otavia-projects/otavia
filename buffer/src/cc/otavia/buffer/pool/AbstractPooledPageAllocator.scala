@@ -36,7 +36,7 @@ abstract class AbstractPooledPageAllocator(val fixedCapacity: Int, val minCache:
 
     def this() = this(FixedCapacityAllocator.DEFAULT_PAGE_SIZE)
 
-    protected def push(pageBuffer: RecyclablePageBuffer): Unit = this.synchronized {
+    private final def push(pageBuffer: RecyclablePageBuffer): Unit = this.synchronized {
         if (count == 0) {
             head = pageBuffer
             tail = pageBuffer
@@ -48,7 +48,7 @@ abstract class AbstractPooledPageAllocator(val fixedCapacity: Int, val minCache:
         }
     }
 
-    protected def pop(): RecyclablePageBuffer | Null = this.synchronized {
+    private final def pop(): RecyclablePageBuffer | Null = this.synchronized {
         if (count > 0) {
             val page = head
             if (count == 1) {
