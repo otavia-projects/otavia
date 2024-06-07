@@ -23,7 +23,7 @@ import cc.otavia.core.channel.*
 import cc.otavia.core.message.*
 import cc.otavia.core.message.helper.UnitReply
 import cc.otavia.core.stack.*
-import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState}
+import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState, StartState}
 
 abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends ChannelsActor[Bind] {
 
@@ -46,9 +46,9 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
 
     final override protected def newChannel(): Channel = system.channelFactory.openServerSocketChannel(family)
 
-    final protected def bind(stack: AskStack[Bind]): Option[StackState] = {
+    final protected def bind(stack: AskStack[Bind]): StackYield = {
         stack.state match
-            case StackState.start =>
+            case _: StartState =>
                 val channel = createChannelAndInit()
                 val state   = ChannelFutureState()
                 channel.bind(stack.ask.local, state.future)
@@ -67,17 +67,17 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
         // default do nothing
     }
 
-    override def resumeAsk(stack: AskStack[Bind]): Option[StackState] = bind(stack)
+    override def resumeAsk(stack: AskStack[Bind]): StackYield = bind(stack)
 
-    override def resumeChannelStack(stack: ChannelStack[AnyRef]): Option[StackState] = {
+    override def resumeChannelStack(stack: ChannelStack[AnyRef]): StackYield = {
         stack match
             case _: ChannelStack[?] if stack.message.isInstanceOf[Channel] =>
                 handleAcceptedStack(stack.asInstanceOf[ChannelStack[Channel]])
     }
 
-    private def handleAcceptedStack(stack: ChannelStack[Channel]): Option[StackState] = {
+    private def handleAcceptedStack(stack: ChannelStack[Channel]): StackYield = {
         stack.state match
-            case StackState.start =>
+            case _: StartState =>
                 val state = FutureState[UnitReply]()
                 workers.ask(AcceptedChannel(stack.message), state.future)
                 stack.suspend(state)

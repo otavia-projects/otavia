@@ -22,7 +22,7 @@ import cc.otavia.core.actor.{ChannelsActor, SocketChannelsActor}
 import cc.otavia.core.channel.*
 import cc.otavia.core.message.*
 import cc.otavia.core.stack.*
-import cc.otavia.core.stack.helper.ChannelFutureState
+import cc.otavia.core.stack.helper.{ChannelFutureState, StartState}
 import cc.otavia.handler.codec.redis.RedisCodec
 import cc.otavia.redis.cmd.*
 
@@ -43,16 +43,16 @@ class Client extends SocketChannelsActor[Command[? <: CommandResponse] | Connect
         channel.setOption(ChannelOption.CHANNEL_MAX_FUTURE_INFLIGHT, 512)
     }
 
-    override def resumeAsk(stack: AskStack[Command[? <: CommandResponse] | Connect]): Option[StackState] = {
+    override def resumeAsk(stack: AskStack[Command[? <: CommandResponse] | Connect]): StackYield = {
         stack match
             case s: AskStack[Connect] if s.ask.isInstanceOf[Connect] =>
                 if (channel == null) connect(s) else stack.`throw`(ExceptionMessage(new AlreadyConnectedException()))
             case _ => handleCommand(stack.asInstanceOf[AskStack[Command[? <: CommandResponse]]])
     }
 
-    private def handleCommand(stack: AskStack[Command[? <: CommandResponse]]): Option[StackState] = {
+    private def handleCommand(stack: AskStack[Command[? <: CommandResponse]]): StackYield = {
         stack.state match
-            case StackState.start =>
+            case _: StartState =>
                 val state = ChannelFutureState()
                 channel.ask(stack.ask, state.future)
                 stack.suspend(state)

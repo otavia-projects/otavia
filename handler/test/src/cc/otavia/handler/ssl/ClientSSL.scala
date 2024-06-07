@@ -23,7 +23,7 @@ import cc.otavia.core.address.Address
 import cc.otavia.core.channel.Channel
 import cc.otavia.core.message.{Ask, Reply}
 import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState, FuturesState, StartState}
-import cc.otavia.core.stack.{AskStack, NoticeStack, StackState}
+import cc.otavia.core.stack.{AskStack, NoticeStack, StackState, StackYield}
 import cc.otavia.core.system.ActorSystem
 
 import java.net.InetSocketAddress
@@ -38,7 +38,7 @@ object ClientSSL {
                 private val handler                  = sslCtx.newHandler()
                 private var client: Address[Connect] = _
 
-                override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] = {
+                override def main0(stack: NoticeStack[MainActor.Args]): StackYield = {
                     stack.state match
                         case state: StartState =>
                             client = system.buildActor(() =>
@@ -47,7 +47,7 @@ object ClientSSL {
                                         channel.pipeline.addLast(sslCtx.newHandler())
                                     }
 
-                                    override protected def resumeAsk(stack: AskStack[Connect]): Option[StackState] =
+                                    override protected def resumeAsk(stack: AskStack[Connect]): StackYield =
                                         connect(stack)
                                 }
                             )

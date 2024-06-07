@@ -39,9 +39,9 @@ final class NoticeStack[N <: Notice] private () extends Stack {
     }
 
     /** Finish this [[NoticeStack]] */
-    def `return`(): None.type = {
+    def `return`(): StackYield = {
         done = true
-        None
+        StackYield.RETURN
     }
 
     def isDone: Boolean = done

@@ -22,7 +22,7 @@ import cc.otavia.core.cache.ActorThreadLocal
 import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelOption}
 import cc.otavia.core.message.Reply
 import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState, StartState}
-import cc.otavia.core.stack.{AskStack, ChannelStack, StackState}
+import cc.otavia.core.stack.{AskStack, ChannelStack, StackState, StackYield}
 import cc.otavia.handler.ssl.SslContext
 import cc.otavia.http.server.Router.{ControllerRouter, static}
 import cc.otavia.http.{HttpMethod, OK}
@@ -49,13 +49,13 @@ class HttpServerWorker(
         channel.pipeline.addLast(new ServerCodec(routerMatcher, dates, serverNameBytes))
     }
 
-    override def resumeAsk(stack: AskStack[AcceptedChannel]): Option[StackState] = handleAccepted(stack)
+    override def resumeAsk(stack: AskStack[AcceptedChannel]): StackYield = handleAccepted(stack)
 
     override protected def afterAccepted(channel: ChannelAddress): Unit = logger.debug("Accepted {}", channel)
 
-    override protected def resumeChannelStack(stack: ChannelStack[AnyRef]): Option[StackState] = {
+    override protected def resumeChannelStack(stack: ChannelStack[AnyRef]): StackYield = {
         stack.state match
-            case StackState.start =>
+            case _: StartState =>
                 val request = stack.message.asInstanceOf[HttpRequest[?, ?]]
                 request match
                     case request: InternalHttpRequest => stack.`return`(OK())

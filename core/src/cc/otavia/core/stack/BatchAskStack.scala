@@ -32,25 +32,25 @@ final class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
 
     def asks: Seq[Envelope[A]] = envelopes.asInstanceOf[Seq[Envelope[A]]]
 
-    def `return`(ret: ReplyOf[A]): None.type = {
+    def `return`(ret: ReplyOf[A]): StackYield = {
         val none = end(ret)
         done = true
         none
     }
 
-    def `return`(rets: Seq[(Envelope[A], ReplyOf[A])]): None.type = {
+    def `return`(rets: Seq[(Envelope[A], ReplyOf[A])]): StackYield = {
         done = true
         for ((envelope, ret) <- rets) envelope.sender.reply(ret, envelope.messageId, runtimeActor)
-        None
+        StackYield.RETURN
     }
 
-    def `throw`(cause: ExceptionMessage): None.type = {
+    def `throw`(cause: ExceptionMessage): StackYield = {
         val none = end(cause, true)
         done = true
         none
     }
 
-    private def end(ret: Reply, exception: Boolean = false): None.type = {
+    private def end(ret: Reply, exception: Boolean = false): StackYield = {
         for ((sender, envs) <- envelopes.groupBy(_.sender)) {
             if (envs.length > 1) {
                 val replyIds = envs.map(_.messageId).toArray
@@ -62,7 +62,7 @@ final class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
                 else sender.reply(ret, replyId, runtimeActor)
             }
         }
-        None
+        StackYield.RETURN
     }
 
     def isDone: Boolean = done

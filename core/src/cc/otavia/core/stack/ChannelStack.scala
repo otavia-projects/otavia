@@ -56,22 +56,22 @@ class ChannelStack[+T <: AnyRef] private () extends Stack with QueueMapEntity {
 
     def isDone: Boolean = done
 
-    def `return`(ret: AnyRef): None.type = {
+    def `return`(ret: AnyRef): StackYield = {
         this.ret = ret
         done = true
-        None
+        StackYield.RETURN
     }
 
-    def `return`(): None.type = {
+    def `return`(): StackYield = {
         this.noticeRet = true
         done = true
-        None
+        StackYield.RETURN
     }
 
-    def `throw`(cause: Throwable): None.type = {
+    def `throw`(cause: Throwable): StackYield = {
         this.ret = cause
         done = true
-        None
+        StackYield.RETURN
     }
 
     private[core] def hasResult: Boolean = ret != null

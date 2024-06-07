@@ -18,7 +18,7 @@ package cc.otavia.core.actor
 
 import cc.otavia.core.actor.MainActor.Args
 import cc.otavia.core.message.{Ask, Call, Notice}
-import cc.otavia.core.stack.{AskStack, NoticeStack, StackState}
+import cc.otavia.core.stack.{AskStack, NoticeStack, StackState, StackYield}
 
 abstract class MainActor(val args: Array[String] = Array.empty) extends StateActor[Args] {
 
@@ -30,9 +30,9 @@ abstract class MainActor(val args: Array[String] = Array.empty) extends StateAct
 
     protected def afterMount0(): Unit = {}
 
-    final override def resumeNotice(stack: NoticeStack[Args]): Option[StackState] = main0(stack)
+    final override def resumeNotice(stack: NoticeStack[Args]): StackYield = main0(stack)
 
-    def main0(stack: NoticeStack[Args]): Option[StackState]
+    def main0(stack: NoticeStack[Args]): StackYield
 
 }
 

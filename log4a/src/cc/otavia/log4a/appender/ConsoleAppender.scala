@@ -20,7 +20,7 @@ import cc.otavia.core.actor.StateActor
 import cc.otavia.core.address.Address
 import cc.otavia.core.ioc.{Component, Primary}
 import cc.otavia.core.message.Notice
-import cc.otavia.core.stack.{BatchNoticeStack, NoticeStack, StackState}
+import cc.otavia.core.stack.{BatchNoticeStack, NoticeStack, StackState, StackYield}
 import cc.otavia.log4a.appender.Appender
 import cc.otavia.log4a.appender.Appender.*
 
@@ -37,14 +37,14 @@ class ConsoleAppender extends StateActor[LogMsg], Appender {
     private val cache     = new mutable.StringBuilder()
     private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
-    override protected def resumeBatchNotice(stack: BatchNoticeStack[LogMsg]): Option[StackState] = {
+    override protected def resumeBatchNotice(stack: BatchNoticeStack[LogMsg]): StackYield = {
         stack.notices.foreach(serializeLogMsg)
         print(cache.toString())
         cache.clear()
         stack.`return`()
     }
 
-    override protected def resumeNotice(stack: NoticeStack[LogMsg]): Option[StackState] = {
+    override protected def resumeNotice(stack: NoticeStack[LogMsg]): StackYield = {
         serializeLogMsg(stack.notice)
         print(cache.toString())
         cache.clear()

@@ -23,7 +23,7 @@ import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelInitializer, Chan
 import cc.otavia.core.message.*
 import cc.otavia.core.stack.StackState.*
 import cc.otavia.core.stack.helper.*
-import cc.otavia.core.stack.{AskStack, ChannelFuture, NoticeStack, StackState}
+import cc.otavia.core.stack.{AskStack, ChannelFuture, NoticeStack, StackState, StackYield}
 import cc.otavia.sql.Authentication
 import cc.otavia.sql.Statement.*
 
@@ -57,7 +57,7 @@ class Connection(
 
     override protected def afterMount(): Unit = if (url != null) this.noticeSelfHead(Authentication(url, info))
 
-    override protected def resumeAsk(stack: AskStack[Connection.MSG]): Option[StackState] = {
+    override protected def resumeAsk(stack: AskStack[Connection.MSG]): StackYield = {
         stack match
             case stack: AskStack[?] if stack.ask.isInstanceOf[Authentication] =>
                 handleAuthentication(stack.asInstanceOf[AskStack[Authentication]])
@@ -67,9 +67,9 @@ class Connection(
                 handlePrepareQuery(stack.asInstanceOf[AskStack[PrepareQuery[Reply]]])
     }
 
-    override protected def resumeNotice(stack: NoticeStack[Connection.MSG & Notice]): Option[StackState] =
+    override protected def resumeNotice(stack: NoticeStack[Connection.MSG & Notice]): StackYield =
         stack.state match
-            case StackState.start =>
+            case _: StartState =>
                 val auth = stack.notice.asInstanceOf[Authentication]
                 createDriver(auth.driver, auth.url, auth.info)
                 stack.suspend(connect(connectOptions.socketAddress, None))
@@ -88,9 +88,9 @@ class Connection(
                     stack.`return`()
                 }
 
-    private def handleAuthentication(stack: AskStack[Authentication]): Option[StackState] =
+    private def handleAuthentication(stack: AskStack[Authentication]): StackYield =
         stack.state match
-            case StackState.start => // waiting for socket connected
+            case _: StartState => // waiting for socket connected
                 val auth = stack.ask
                 createDriver(auth.driver, auth.url, auth.info)
                 stack.suspend(connect(connectOptions.socketAddress, None))
@@ -116,9 +116,9 @@ class Connection(
         driver = factory.newDriver(connectOptions)
     }
 
-    private def handleSimpleQuery(stack: AskStack[SimpleQuery[Reply]]): Option[StackState] = {
+    private def handleSimpleQuery(stack: AskStack[SimpleQuery[Reply]]): StackYield = {
         stack.state match
-            case StackState.start =>
+            case _: StartState =>
                 val query        = stack.ask
                 val channelState = ChannelFutureState()
                 channel.ask(query, channelState.future)
@@ -128,9 +128,9 @@ class Connection(
                 else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
     }
 
-    private def handlePrepareQuery(stack: AskStack[PrepareQuery[Reply]]): Option[StackState] = {
+    private def handlePrepareQuery(stack: AskStack[PrepareQuery[Reply]]): StackYield = {
         stack.state match
-            case StackState.start =>
+            case _: StartState =>
                 val query        = stack.ask
                 val channelState = ChannelFutureState()
                 channel.ask(query, channelState.future)
@@ -140,7 +140,7 @@ class Connection(
                 else stack.`throw`(ExceptionMessage(state.future.causeUnsafe))
     }
 
-    private def handleCursor(stack: AskStack[ExecuteCursor[?]]): Option[StackState] = {
+    private def handleCursor(stack: AskStack[ExecuteCursor[?]]): StackYield = {
 
         ???
     }

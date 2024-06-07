@@ -166,12 +166,12 @@ trait Address[-M <: Call]
 需要实现以下方法来处理 `Call` 消息
 
 ```scala
-protected def resumeAsk(stack: AskStack[M & Ask[? <: Reply]]): Option[StackState]
+protected def resumeAsk(stack: AskStack[M & Ask[? <: Reply]]): StackYield
 
-protected def resumeNotice(stack: NoticeStack[M & Notice]): Option[StackState]
+protected def resumeNotice(stack: NoticeStack[M & Notice]): StackYield
 ```
 
-`Stack` 包含一个 `StackState`，其初始值为 `StackState.start`， `resumeXXX` 方法的返回值 `Option[StackState]` 代表每次
+`Stack` 包含一个 `StackState`，其初始值为 `StackState.start`， `resumeXXX` 方法的返回值 `StackYield` 代表每次
 `resumeXXX` 执行完成之后 `Stack` 切换为新的 `StackState`。`Stack` 使用 `return` 方法结束，`return` 方法自身的返回值为
 `None`，代表 `Stack` 不再切换新的 `StackState`。如果 `Stack` 是 `AskStack`，`return` 方法需要输入一个 `Reply`
 消息作为 `Ask` 消息的回复消息。

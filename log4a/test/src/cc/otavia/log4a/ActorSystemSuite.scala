@@ -18,7 +18,7 @@ package cc.otavia.log4a
 
 import cc.otavia.core.actor.MainActor
 import cc.otavia.core.slf4a.Logger
-import cc.otavia.core.stack.{NoticeStack, StackState}
+import cc.otavia.core.stack.{NoticeStack, StackState, StackYield}
 import cc.otavia.core.system.ActorSystem
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -32,7 +32,7 @@ object ActorSystemSuite {
 
     class Main(args: Array[String]) extends MainActor(args) {
 
-        override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] = {
+        override def main0(stack: NoticeStack[MainActor.Args]): StackYield = {
             logger.info("main actor running")
             stack.`return`()
         }

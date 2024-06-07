@@ -217,13 +217,13 @@ is loaded into an `AskStack` that executes the `resumeAsk` method. A developer i
 implement the following methods to handle `Call` messages.
 
 ```scala
-protected def resumeAsk(stack: AskStack[M & Ask[? <: Reply]]): Option[StackState]
+protected def resumeAsk(stack: AskStack[M & Ask[? <: Reply]]): StackYield
 
-protected def resumeNotice(stack: NoticeStack[M & Notice]): Option[StackState]
+protected def resumeNotice(stack: NoticeStack[M & Notice]): StackYield
 ```
 
 `Stack` contains a `StackState` with an initial value of `stackstate.start`. The return value of the `resumeXXX`
-method `Option[StackState]` means that Stack switches to a new `StackState` after each resumeXXX execution. `Stack`
+method `StackYield` means that Stack switches to a new `StackState` after each resumeXXX execution. `Stack`
 ends with the `return` method, which itself returns a value of `None`, meaning that `Stack` no longer switches to the
 new `StackState`. If `Stack` is `AskStack`, the `return` method requires an input `Reply` message as a reply to
 the `Ask` message.

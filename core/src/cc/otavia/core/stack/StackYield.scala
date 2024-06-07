@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.actors
+package cc.otavia.core.stack
 
-import cc.otavia.core.actor.{MessageOf, StateActor}
-import cc.otavia.core.actors.Shower.*
-import cc.otavia.core.message.Notice
-import cc.otavia.core.stack.{NoticeStack, StackState, StackYield}
+sealed trait StackYield {
+    def completed: Boolean
+}
 
-class ConsoleShower extends StateActor[MessageOf[Shower]] with Shower {
+object StackYield {
 
-    override def resumeNotice(stack: NoticeStack[ShowEvent]): StackYield = handleInfo(stack)
+    private[core] val SUSPEND = new StackYield {
+        override def completed: Boolean = false
+    }
 
-    private def handleInfo(stack: NoticeStack[ShowEvent]): StackYield = {
-        val msg = stack.notice
-        println(s"${msg.clz.getName} ${msg.time} ${msg.thread} ${msg.msg}")
-        stack.`return`()
+    private[core] val RETURN = new StackYield {
+        override def completed: Boolean = true
     }
 
 }

@@ -123,6 +123,8 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
                                 currentBodyLength = contentLength
                                 parseState = ST_PARSE_BODY
                             }
+                        case websocketRouter: WebsocketRouter =>
+                            
                         case _ =>
                             input.skipReadableBytes(headersLength + 4 + contentLength)
                             parseState = ST_PARSE_HEADLINE
@@ -238,6 +240,19 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
                 currentRequest = request
                 request.setRouter(controllerRouter)
                 request.setMethod(routerContext.method)
+                request.setPath(routerContext.path)
+                if (routerContext.pathVars.nonEmpty) request.setPathVariables(routerContext.pathVars.toMap)
+                if (buffer.readableBytes > 0 && buffer.nextIs(HttpConstants.PARAM_START)) {
+                    val params = ActorThread.threadMap[String, String]
+                    ParameterSerde.parse(buffer, params)
+                    request.setParam(params.toMap)
+                    params.clear()
+                }
+            case websocketRouter: WebsocketRouter =>
+                val request = new InternalHttpRequest()
+                currentRequest = request
+                request.setMethod(routerContext.method)
+                request.setRouter(currentRouter)
                 request.setPath(routerContext.path)
                 if (routerContext.pathVars.nonEmpty) request.setPathVariables(routerContext.pathVars.toMap)
                 if (buffer.readableBytes > 0 && buffer.nextIs(HttpConstants.PARAM_START)) {

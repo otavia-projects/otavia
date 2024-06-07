@@ -16,9 +16,9 @@
 
 package cc.otavia.core.stack
 
-import cc.otavia.core.actor.{AbstractActor, Actor}
+import cc.otavia.core.actor.*
 import cc.otavia.core.address.Address
-import cc.otavia.core.cache.{AbstractThreadIsolatedObjectPool, ActorThreadLocal, Poolable, ThreadLocalTimer}
+import cc.otavia.core.cache.*
 import cc.otavia.core.message.*
 import cc.otavia.core.timer.Timer
 
@@ -41,19 +41,19 @@ final class AskStack[A <: Ask[? <: Reply]] private () extends Stack {
 
     def ask: A = call.asInstanceOf[A]
 
-    def `return`(value: ReplyOf[A]): None.type = {
+    def `return`(value: ReplyOf[A]): StackYield = {
         reply = value
         sender.reply(reply, askId, runtimeActor)
-        None
+        StackYield.RETURN
     }
 
-    def `throw`(cause: ExceptionMessage): None.type = {
+    def `throw`(cause: ExceptionMessage): StackYield = {
         reply = cause
         sender.`throw`(cause, askId, runtimeActor)
-        None
+        StackYield.RETURN
     }
 
-    def `throw`(cause: Throwable): None.type = this.`throw`(ExceptionMessage(cause))
+    def `throw`(cause: Throwable): StackYield = this.`throw`(ExceptionMessage(cause))
 
     def isDone: Boolean = reply != null
 

@@ -20,8 +20,8 @@ import cc.otavia.core.actor.AcceptorActor.AcceptedChannel
 import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.message.*
 import cc.otavia.core.message.helper.UnitReply
-import cc.otavia.core.stack.helper.ChannelFutureState
-import cc.otavia.core.stack.{AskStack, ChannelFuture, StackState}
+import cc.otavia.core.stack.helper.{ChannelFutureState, StartState}
+import cc.otavia.core.stack.*
 
 import scala.language.unsafeNulls
 import scala.reflect.{ClassTag, classTag}
@@ -31,12 +31,12 @@ abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | Accepted
     override protected def newChannel(): Channel = throw new UnsupportedOperationException()
 
     /** handle [[AcceptedChannel]] message, this method will called by [[resumeAsk]] */
-    final protected def handleAccepted(stack: AskStack[AcceptedChannel]): Option[StackState] = {
+    final protected def handleAccepted(stack: AskStack[AcceptedChannel]): StackYield = {
         stack.state match
-            case StackState.`start` =>
+            case _: StartState =>
                 val channel = stack.ask.channel.asInstanceOf[Channel]
                 if (!channel.isMounted) channel.mount(this)
-                var res: Option[StackState] = null
+                var res: StackYield = null
                 try {
                     initChannel(channel)
                     val state = ChannelFutureState()

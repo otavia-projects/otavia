@@ -30,9 +30,9 @@ class BatchNoticeStack[N <: Notice] private () extends Stack {
 
     def notices: Seq[N] = messages.asInstanceOf[Seq[N]]
 
-    def `return`(): None.type = {
+    def `return`(): StackYield = {
         done = true
-        None
+        StackYield.RETURN
     }
 
     def isDone: Boolean = done

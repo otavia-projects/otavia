@@ -26,6 +26,7 @@ import scala.language.unsafeNulls
 abstract class Stack extends Poolable {
 
     private var stackState: StackState = StackState.start
+    private var nextState: StackState = _
 
     // completed promise
     private var completedHead: AbstractPromise[?] = _
@@ -57,7 +58,16 @@ abstract class Stack extends Poolable {
 
     def isDone: Boolean
 
-    final def suspend(state: StackState): Option[StackState] = state.option
+    final def suspend(state: StackState): StackYield = {
+        this.nextState = state
+        StackYield.SUSPEND
+    }
+
+    private[core] def getNextState(): StackState = {
+        val state = nextState
+        nextState = null
+        state
+    }
 
     override protected def cleanInstance(): Unit = {
         recycleCompletedPromises()

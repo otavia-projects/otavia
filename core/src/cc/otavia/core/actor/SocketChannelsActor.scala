@@ -23,7 +23,7 @@ import cc.otavia.core.message.*
 import cc.otavia.core.reactor.Reactor
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.*
-import cc.otavia.core.stack.helper.ChannelFutureState
+import cc.otavia.core.stack.helper.{ChannelFutureState, StartState}
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 
@@ -40,9 +40,9 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
      *  @return
      *    a [[ChannelEstablished]] which is registering to [[Reactor]].
      */
-    protected def connect(stack: AskStack[Connect]): Option[StackState] = {
+    protected def connect(stack: AskStack[Connect]): StackYield = {
         stack.state match
-            case StackState.start =>
+            case _: StartState =>
                 // TODO: check remote whether resolved, if not send ask message AddressResolver actor
                 val remote  = stack.ask.remote
                 val channel = createChannelAndInit()

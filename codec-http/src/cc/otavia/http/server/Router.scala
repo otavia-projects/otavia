@@ -43,6 +43,8 @@ enum Router {
     case ConstantRouter[T](method: HttpMethod, path: String, value: T, serde: Serde[T], mediaType: MediaType)
         extends Router
 
+    case WebsocketRouter(path: String, controller: Address[?]) extends Router
+
 }
 
 object Router {
@@ -65,6 +67,8 @@ object Router {
         responseSerde: HttpResponseSerde[?]
     ): ControllerRouter =
         ControllerRouter(method, path, controller, requestFactory, responseSerde)
+
+    def websocket(path: String, controller: Address[?]): WebsocketRouter = WebsocketRouter(path, controller)
 
     def get(
         path: String,

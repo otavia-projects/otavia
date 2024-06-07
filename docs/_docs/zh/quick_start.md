@@ -100,7 +100,7 @@ final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start]
 ```scala
 final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
 
-  override def resumeNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
+  override def resumeNotice(stack: NoticeStack[Start]): StackYield = stack.state match {
     case _: StartState =>
       println("PingActor handle Start message")
       println("PingActor send Ping Message")
@@ -124,7 +124,7 @@ final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start]
 
 ```scala
 final class PongActor() extends StateActor[Ping] {
-  override def resumeAsk(stack: AskStack[Ping]): Option[StackState] = {
+  override def resumeAsk(stack: AskStack[Ping]): StackYield = {
     println(s"PongActor received ${stack.ask} message")
     println(s"PongActor reply ${stack.ask} with Pong message")
     stack.`return`(Pong(stack.ask.id))
@@ -148,7 +148,7 @@ final class PongActor() extends StateActor[Ping] {
 5. `Future` 完成的时候会通过 `StackState` 检查与其关联的 `Stack` 是否可以再次被 `resumeXXX` 方法执行。当 `StackState`
    的 `resumable` 方法返回 `ture` 或者关联的所有的 `Future` 都达到完成状态的时候与其关联的 `Stack` 就可以再次被执行。
 6. `StackState` 由开发者自定义，`resumable` 方法可以被重写。当然 `otavia` 预定义了一些常用的 `StackState`，比如示例中
-   使用的 `FutureState`。`StackState` 提供了 `suspend` 方法返回 `Option[StackState]`。
+   使用的 `FutureState`。`StackState` 提供了 `suspend` 方法返回 `StackYield`。
 7. 当 `Actor` 处理 `Notice` 消息或者 `Ask` 消息的时候，就将消息装入一个新建的 `Stack` 中，并且将 `Stack` 的
    `StackState` 设置为一个特殊的值 `StackState.start`，然后将 `Stack` 传递给 `resumeXXX` 方法开始执行。
    `StackState.start` 是一个类型为 `StartState` 的特殊 `StackState`，其不关联任何 `Future` 并且 `resumable` 方
@@ -214,24 +214,24 @@ case class Ping() extends Ask[Pong]
 ```scala
 final class MultiMsgActor() extends StateActor[Echo | Hello | Ping] {
 
-  override def resumeNotice(stack: NoticeStack[Echo]): Option[StackState] = {
+  override def resumeNotice(stack: NoticeStack[Echo]): StackYield = {
     println("MultiMsgActor received Echo message")
     stack.`return`()
   }
 
-  override def resumeAsk(stack: AskStack[Hello | Ping]): Option[StackState] = {
+  override def resumeAsk(stack: AskStack[Hello | Ping]): StackYield = {
     stack match {
       case stack: AskStack[Hello] if stack.ask.isInstanceOf[Hello] => handleHello(stack)
       case stack: AskStack[Ping] if stack.ask.isInstanceOf[Ping] => handlePing(stack)
     }
   }
 
-  private def handleHello(stack: AskStack[Hello]): Option[StackState] = {
+  private def handleHello(stack: AskStack[Hello]): StackYield = {
     println("MultiMsgActor received Hello message")
     stack.`return`(World())
   }
 
-  private def handlePing(stack: AskStack[Ping]): Option[StackState] = {
+  private def handlePing(stack: AskStack[Ping]): StackYield = {
     println("MultiMsgActor received Ping message")
     stack.`return`(Pong())
   }
@@ -304,7 +304,7 @@ class PongTimeoutState extends StackState {
 
 ```scala
 final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
-  override def resumeNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
+  override def resumeNotice(stack: NoticeStack[Start]): StackYield = stack.state match {
     case _: StartState =>
       println("PingActor handle Start message")
       println("PingActor send Ping Message")
@@ -349,7 +349,7 @@ class PongTimeoutState extends StackState {
 
 ```scala
 final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
-  override def resumeNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
+  override def resumeNotice(stack: NoticeStack[Start]): StackYield = stack.state match {
     case _: StartState =>
       println("PingActor handle Start message")
       println("PingActor send Ping Message")
@@ -419,7 +419,7 @@ final class LifeActor extends StateActor[Start] with AutoCleanable {
 
   // if occurs some error which developer is not catch, this will trigger the actor restart
   // you can also override the noticeExceptionStrategy method to change the strategy
-  override def resumeNotice(stack: NoticeStack[Start]): Option[StackState] = {
+  override def resumeNotice(stack: NoticeStack[Start]): StackYield = {
     println("process message")
     throw new Error("")
   }
@@ -481,9 +481,9 @@ final class ReadLinesActor(file: File, charset: Charset = StandardCharsets.UTF_8
 
   override protected def initFileChannel(channel: Channel): Unit = ???
 
-  override def resumeAsk(stack: AskStack[ReadLines]): Option[StackState] = {
+  override def resumeAsk(stack: AskStack[ReadLines]): StackYield = {
     stack.state match {
-      case StackState.start =>
+      case _: StartState =>
         stack.suspend(openFile(file, Seq(StandardOpenOption.READ), attrs = Seq.empty))  
       case openState: ChannelFutureState if openState.id == 0 =>
         val linesState = ChannelFutureState(1)
@@ -594,7 +594,7 @@ override protected def initFileChannel(channel: Channel): Unit =
   val system = ActorSystem()
   val readLinesActor = system.buildActor(() => new ReadLinesActor("build.sc"))
   system.buildActor(() => new MainActor(Array.empty) {
-    override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] = stack.state match {
+    override def main0(stack: NoticeStack[MainActor.Args]): StackYield = stack.state match {
       case _: StartState =>
         val state = FutureState[LinesReply]()
         readLinesActor.ask(ReadLines(), state.future)
@@ -641,7 +641,7 @@ final class EchoWorker extends AcceptedWorkerActor[Nothing] {
 
   override protected def initChannel(channel: Channel): Unit = ???
 
-  override def resumeAsk(stack: AskStack[AcceptedChannel]): Option[StackState] =
+  override def resumeAsk(stack: AskStack[AcceptedChannel]): StackYield =
     handleAccepted(stack)
 
   override protected def afterAccepted(channel: ChannelAddress): Unit =
@@ -675,7 +675,7 @@ override protected def initChannel(channel: Channel): Unit =
 @main def start(): Unit = {
   val actorSystem = ActorSystem()
   actorSystem.buildActor(() => new MainActor() {
-    override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] = stack.state match {
+    override def main0(stack: NoticeStack[MainActor.Args]): StackYield = stack.state match {
       case _: StartState =>
         val acceptor = system.buildActor(() => new EchoAcceptor())
         val state = FutureState[BindReply]()
@@ -725,12 +725,12 @@ trait QueryService extends Actor[Query1 | Query2]
 
 ```scala
 final class QueryServiceImpl() extends StateActor with QueryService {
-  override def resumeAsk(stack: AskStack[Query1 | Query2]): Option[StackState] = ??? // impl logic
+  override def resumeAsk(stack: AskStack[Query1 | Query2]): StackYield = ??? // impl logic
 }
 
 // 另一种场景的 QueryService
 final class QueryServiceCase2() extends SocketChannelsActor with QueryService {
-  override def resumeAsk(stack: AskStack[Query1 | Query2]): Option[StackState] = ??? // impl logic
+  override def resumeAsk(stack: AskStack[Query1 | Query2]): StackYield = ??? // impl logic
 }
 ```
 
@@ -746,8 +746,8 @@ final class TestActor extends StateActor[Start] {
 
   override protected def afterMount(): Unit = queryService = autowire[QueryService]()
 
-  override def resumeNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
-    case StackState.start =>
+  override def resumeNotice(stack: NoticeStack[Start]): StackYield = stack.state match {
+    case _: StartState =>
       val state = FutureState[Result1]()
       queryService.ask(Query1(), state.future)
       stack.suspend(state)  

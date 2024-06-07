@@ -22,7 +22,7 @@ import cc.otavia.core.actor.SocketChannelsActor.*
 import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.message.{Ask, Notice, Reply}
 import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState, FuturesState, StartState}
-import cc.otavia.core.stack.{AskStack, NoticeStack, StackState}
+import cc.otavia.core.stack.{AskStack, NoticeStack, StackState, StackYield}
 import cc.otavia.handler.ssl.SslContext
 import cc.otavia.http.HttpVersion
 
@@ -51,7 +51,7 @@ class HttpClient(
 
     override protected def resumeNotice(
         stack: NoticeStack[(HttpClientRequest | Connect) & Notice]
-    ): Option[StackState] = stack.state match
+    ): StackYield = stack.state match
         case state: StartState =>
             val stk = stack.asInstanceOf[NoticeStack[Connect]]
             stack.suspend(connect(stk.notice.remote, stk.notice.local))
@@ -59,13 +59,13 @@ class HttpClient(
             channel = state.future.channel
             stack.`return`()
 
-    override protected def resumeAsk(stack: AskStack[HttpClientRequest | Connect]): Option[StackState] =
+    override protected def resumeAsk(stack: AskStack[HttpClientRequest | Connect]): StackYield =
         stack match
             case stack: AskStack[HttpClientRequest] if stack.ask.isInstanceOf[HttpClientRequest] =>
                 handleRequest(stack)
             case stack: AskStack[Connect] if stack.ask.isInstanceOf[Connect] => handleConnect(stack)
 
-    private def handleConnect(stack: AskStack[Connect]): Option[StackState] = stack.state match
+    private def handleConnect(stack: AskStack[Connect]): StackYield = stack.state match
         case state: StartState =>
             stack.suspend(connect(stack.ask.remote, stack.ask.local))
         case state: ChannelFutureState =>
@@ -73,7 +73,7 @@ class HttpClient(
             val established = ChannelEstablished(state.future.channel.id)
             stack.`return`(established)
 
-    private def handleRequest(stack: AskStack[HttpClientRequest]): Option[StackState] = stack.state match
+    private def handleRequest(stack: AskStack[HttpClientRequest]): StackYield = stack.state match
         case state: StartState =>
             val futureState = ChannelFutureState()
             val request     = stack.ask

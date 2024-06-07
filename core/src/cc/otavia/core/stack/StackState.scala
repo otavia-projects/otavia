@@ -22,19 +22,14 @@ import cc.otavia.core.stack.helper.StartState
 
 trait StackState {
 
-    private[stack] val option: Option[StackState] = Some(this) // for pooling Some(this) object to reduce GC
-
     def resumable(): Boolean = false
 
     def id: Int = 0
-
-    @deprecated("use stack.suspend(state)")
-    def suspend(): Option[StackState] = option
 
 }
 
 object StackState {
 
-    val start: StartState = new StartState()
+    private[core] val start: StartState = new StartState()
 
 }
