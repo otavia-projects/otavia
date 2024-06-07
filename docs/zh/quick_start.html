@@ -77,7 +77,7 @@
  <div class="snippet mono-small-block" scala-snippet="">
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
-</span><span line-number="3" class=""><span class="tooltip-container"></span>  override def resumeNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
+</span><span line-number="3" class=""><span class="tooltip-container"></span>  override def resumeNotice(stack: NoticeStack[Start]): StackYield = stack.state match {
 </span><span line-number="4" class=""><span class="tooltip-container"></span>    case _: StartState =&gt;
 </span><span line-number="5" class=""><span class="tooltip-container"></span>      println("PingActor handle Start message")
 </span><span line-number="6" class=""><span class="tooltip-container"></span>      println("PingActor send Ping Message")
@@ -100,7 +100,7 @@
  <p><code>resumeNotice</code> 是 <code>Actor</code> 处理 <code>Notice</code> 消息的入口，从其他地方发送来的 <code>Notice</code> 消息都会通过这个方法传入 <code>Actor</code>, 接下来我们来实现 <code>PongActor</code>, <code>PongActor</code> 接收 <code>Ping</code> 这种 <code>Ask</code> 消息，然后回复一个 <code>Pong</code> 消息：</p>
  <div class="snippet mono-small-block" scala-snippet="">
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class PongActor() extends StateActor[Ping] {
-</span><span line-number="2" class=""><span class="tooltip-container"></span>  override def resumeAsk(stack: AskStack[Ping]): Option[StackState] = {
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  override def resumeAsk(stack: AskStack[Ping]): StackYield = {
 </span><span line-number="3" class=""><span class="tooltip-container"></span>    println(s"PongActor received ${stack.ask} message")
 </span><span line-number="4" class=""><span class="tooltip-container"></span>    println(s"PongActor reply ${stack.ask} with Pong message")
 </span><span line-number="5" class=""><span class="tooltip-container"></span>    stack.`return`(Pong(stack.ask.id))
@@ -117,7 +117,7 @@
   <li><code>Future</code> 只能关联到一个 <code>StackState</code>，但是 <code>StackState</code> 可以关联多个 <code>Future</code>。</li>
   <li>一个 <code>Stack</code> 只能拥有一个 <code>StackState</code>。当 <code>resumeXXX</code> 方法结束时，如果返回值为 <code>Some(StackState)</code>， 就将这个 <code>StackState</code> 设置为 <code>Stack</code> 的当前状态，同时释放老的 <code>StackState</code> 及其关联的 <code>Future</code>。</li>
   <li><code>Future</code> 完成的时候会通过 <code>StackState</code> 检查与其关联的 <code>Stack</code> 是否可以再次被 <code>resumeXXX</code> 方法执行。当 <code>StackState</code> 的 <code>resumable</code> 方法返回 <code>ture</code> 或者关联的所有的 <code>Future</code> 都达到完成状态的时候与其关联的 <code>Stack</code> 就可以再次被执行。</li>
-  <li><code>StackState</code> 由开发者自定义，<code>resumable</code> 方法可以被重写。当然 <code>otavia</code> 预定义了一些常用的 <code>StackState</code>，比如示例中 使用的 <code>FutureState</code>。<code>StackState</code> 提供了 <code>suspend</code> 方法返回 <code>Option[StackState]</code>。</li>
+  <li><code>StackState</code> 由开发者自定义，<code>resumable</code> 方法可以被重写。当然 <code>otavia</code> 预定义了一些常用的 <code>StackState</code>，比如示例中 使用的 <code>FutureState</code>。<code>StackState</code> 提供了 <code>suspend</code> 方法返回 <code>StackYield</code>。</li>
   <li>当 <code>Actor</code> 处理 <code>Notice</code> 消息或者 <code>Ask</code> 消息的时候，就将消息装入一个新建的 <code>Stack</code> 中，并且将 <code>Stack</code> 的 <code>StackState</code> 设置为一个特殊的值 <code>StackState.start</code>，然后将 <code>Stack</code> 传递给 <code>resumeXXX</code> 方法开始执行。 <code>StackState.start</code> 是一个类型为 <code>StartState</code> 的特殊 <code>StackState</code>，其不关联任何 <code>Future</code> 并且 <code>resumable</code> 方 法返回 <code>ture</code>。</li>
   <li><code>Stack</code> 使用 <code>return</code> 方法结束与其绑定消息的处理，所以 <code>return</code> 方法返回值为 <code>None</code>。对于 <code>AskStack</code>，<code>return</code> 需要一个 <code>Reply</code> 消息作为参数发送给 <code>Ask</code> 消息的发送者作为 <code>Ask</code> 消息的回复消息。</li>
  </ol>
@@ -163,24 +163,24 @@
  <div class="snippet mono-small-block" scala-snippet="">
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class MultiMsgActor() extends StateActor[Echo | Hello | Ping] {
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
-</span><span line-number="3" class=""><span class="tooltip-container"></span>  override def resumeNotice(stack: NoticeStack[Echo]): Option[StackState] = {
+</span><span line-number="3" class=""><span class="tooltip-container"></span>  override def resumeNotice(stack: NoticeStack[Echo]): StackYield = {
 </span><span line-number="4" class=""><span class="tooltip-container"></span>    println("MultiMsgActor received Echo message")
 </span><span line-number="5" class=""><span class="tooltip-container"></span>    stack.`return`()
 </span><span line-number="6" class=""><span class="tooltip-container"></span>  }
 </span><span line-number="7" class=""><span class="tooltip-container"></span>
-</span><span line-number="8" class=""><span class="tooltip-container"></span>  override def resumeAsk(stack: AskStack[Hello | Ping]): Option[StackState] = {
+</span><span line-number="8" class=""><span class="tooltip-container"></span>  override def resumeAsk(stack: AskStack[Hello | Ping]): StackYield = {
 </span><span line-number="9" class=""><span class="tooltip-container"></span>    stack match {
 </span><span line-number="10" class=""><span class="tooltip-container"></span>      case stack: AskStack[Hello] if stack.ask.isInstanceOf[Hello] =&gt; handleHello(stack)
 </span><span line-number="11" class=""><span class="tooltip-container"></span>      case stack: AskStack[Ping] if stack.ask.isInstanceOf[Ping] =&gt; handlePing(stack)
 </span><span line-number="12" class=""><span class="tooltip-container"></span>    }
 </span><span line-number="13" class=""><span class="tooltip-container"></span>  }
 </span><span line-number="14" class=""><span class="tooltip-container"></span>
-</span><span line-number="15" class=""><span class="tooltip-container"></span>  private def handleHello(stack: AskStack[Hello]): Option[StackState] = {
+</span><span line-number="15" class=""><span class="tooltip-container"></span>  private def handleHello(stack: AskStack[Hello]): StackYield = {
 </span><span line-number="16" class=""><span class="tooltip-container"></span>    println("MultiMsgActor received Hello message")
 </span><span line-number="17" class=""><span class="tooltip-container"></span>    stack.`return`(World())
 </span><span line-number="18" class=""><span class="tooltip-container"></span>  }
 </span><span line-number="19" class=""><span class="tooltip-container"></span>
-</span><span line-number="20" class=""><span class="tooltip-container"></span>  private def handlePing(stack: AskStack[Ping]): Option[StackState] = {
+</span><span line-number="20" class=""><span class="tooltip-container"></span>  private def handlePing(stack: AskStack[Ping]): StackYield = {
 </span><span line-number="21" class=""><span class="tooltip-container"></span>    println("MultiMsgActor received Ping message")
 </span><span line-number="22" class=""><span class="tooltip-container"></span>    stack.`return`(Pong())
 </span><span line-number="23" class=""><span class="tooltip-container"></span>  }
@@ -240,7 +240,7 @@
  <p>接下来，重新实现我们的 <code>PingActor</code></p>
  <div class="snippet mono-small-block" scala-snippet="">
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
-</span><span line-number="2" class=""><span class="tooltip-container"></span>  override def resumeNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  override def resumeNotice(stack: NoticeStack[Start]): StackYield = stack.state match {
 </span><span line-number="3" class=""><span class="tooltip-container"></span>    case _: StartState =&gt;
 </span><span line-number="4" class=""><span class="tooltip-container"></span>      println("PingActor handle Start message")
 </span><span line-number="5" class=""><span class="tooltip-container"></span>      println("PingActor send Ping Message")
@@ -282,7 +282,7 @@
  <p>现在只要 <code>timeoutFuture</code> 完成，那么 <code>Stack</code> 就可以重新执行了。不过当我们使用 <code>pongFuture</code> 时需要通过 <code>pongFuture.isDone</code> 检测其是否完成。这的确是一种方法，但是考虑到这是一种比较常见的需求，<code>otavia</code> 提供了更简单的方法，我们只需对最开始的 <code>PingActor</code> 进行一点点微小的改动：</p>
  <div class="snippet mono-small-block" scala-snippet="">
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class PingActor(pongActorAddress: Address[Ping]) extends StateActor[Start] {
-</span><span line-number="2" class=""><span class="tooltip-container"></span>  override def resumeNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  override def resumeNotice(stack: NoticeStack[Start]): StackYield = stack.state match {
 </span><span line-number="3" class=""><span class="tooltip-container"></span>    case _: StartState =&gt;
 </span><span line-number="4" class=""><span class="tooltip-container"></span>      println("PingActor handle Start message")
 </span><span line-number="5" class=""><span class="tooltip-container"></span>      println("PingActor send Ping Message")
@@ -345,7 +345,7 @@
 </span><span line-number="19" class=""><span class="tooltip-container"></span>
 </span><span line-number="20" class=""><span class="tooltip-container"></span>  // if occurs some error which developer is not catch, this will trigger the actor restart
 </span><span line-number="21" class=""><span class="tooltip-container"></span>  // you can also override the noticeExceptionStrategy method to change the strategy
-</span><span line-number="22" class=""><span class="tooltip-container"></span>  override def resumeNotice(stack: NoticeStack[Start]): Option[StackState] = {
+</span><span line-number="22" class=""><span class="tooltip-container"></span>  override def resumeNotice(stack: NoticeStack[Start]): StackYield = {
 </span><span line-number="23" class=""><span class="tooltip-container"></span>    println("process message")
 </span><span line-number="24" class=""><span class="tooltip-container"></span>    throw new Error("")
 </span><span line-number="25" class=""><span class="tooltip-container"></span>  }
@@ -390,9 +390,9 @@
 </span><span line-number="3" class=""><span class="tooltip-container"></span>
 </span><span line-number="4" class=""><span class="tooltip-container"></span>  override protected def initFileChannel(channel: Channel): Unit = ???
 </span><span line-number="5" class=""><span class="tooltip-container"></span>
-</span><span line-number="6" class=""><span class="tooltip-container"></span>  override def resumeAsk(stack: AskStack[ReadLines]): Option[StackState] = {
+</span><span line-number="6" class=""><span class="tooltip-container"></span>  override def resumeAsk(stack: AskStack[ReadLines]): StackYield = {
 </span><span line-number="7" class=""><span class="tooltip-container"></span>    stack.state match {
-</span><span line-number="8" class=""><span class="tooltip-container"></span>      case StackState.start =&gt;
+</span><span line-number="8" class=""><span class="tooltip-container"></span>      case _: StartState =&gt;
 </span><span line-number="9" class=""><span class="tooltip-container"></span>        stack.suspend(openFile(file, Seq(StandardOpenOption.READ), attrs = Seq.empty))  
 </span><span line-number="10" class=""><span class="tooltip-container"></span>      case openState: ChannelFutureState if openState.id == 0 =&gt;
 </span><span line-number="11" class=""><span class="tooltip-container"></span>        val linesState = ChannelFutureState(1)
@@ -480,7 +480,7 @@
 </span><span line-number="2" class=""><span class="tooltip-container"></span>  val system = ActorSystem()
 </span><span line-number="3" class=""><span class="tooltip-container"></span>  val readLinesActor = system.buildActor(() =&gt; new ReadLinesActor("build.sc"))
 </span><span line-number="4" class=""><span class="tooltip-container"></span>  system.buildActor(() =&gt; new MainActor(Array.empty) {
-</span><span line-number="5" class=""><span class="tooltip-container"></span>    override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] = stack.state match {
+</span><span line-number="5" class=""><span class="tooltip-container"></span>    override def main0(stack: NoticeStack[MainActor.Args]): StackYield = stack.state match {
 </span><span line-number="6" class=""><span class="tooltip-container"></span>      case _: StartState =&gt;
 </span><span line-number="7" class=""><span class="tooltip-container"></span>        val state = FutureState[LinesReply]()
 </span><span line-number="8" class=""><span class="tooltip-container"></span>        readLinesActor.ask(ReadLines(), state.future)
@@ -516,7 +516,7 @@
 </span><span line-number="2" class=""><span class="tooltip-container"></span>
 </span><span line-number="3" class=""><span class="tooltip-container"></span>  override protected def initChannel(channel: Channel): Unit = ???
 </span><span line-number="4" class=""><span class="tooltip-container"></span>
-</span><span line-number="5" class=""><span class="tooltip-container"></span>  override def resumeAsk(stack: AskStack[AcceptedChannel]): Option[StackState] =
+</span><span line-number="5" class=""><span class="tooltip-container"></span>  override def resumeAsk(stack: AskStack[AcceptedChannel]): StackYield =
 </span><span line-number="6" class=""><span class="tooltip-container"></span>    handleAccepted(stack)
 </span><span line-number="7" class=""><span class="tooltip-container"></span>
 </span><span line-number="8" class=""><span class="tooltip-container"></span>  override protected def afterAccepted(channel: ChannelAddress): Unit =
@@ -548,7 +548,7 @@
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>@main def start(): Unit = {
 </span><span line-number="2" class=""><span class="tooltip-container"></span>  val actorSystem = ActorSystem()
 </span><span line-number="3" class=""><span class="tooltip-container"></span>  actorSystem.buildActor(() =&gt; new MainActor() {
-</span><span line-number="4" class=""><span class="tooltip-container"></span>    override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] = stack.state match {
+</span><span line-number="4" class=""><span class="tooltip-container"></span>    override def main0(stack: NoticeStack[MainActor.Args]): StackYield = stack.state match {
 </span><span line-number="5" class=""><span class="tooltip-container"></span>      case _: StartState =&gt;
 </span><span line-number="6" class=""><span class="tooltip-container"></span>        val acceptor = system.buildActor(() =&gt; new EchoAcceptor())
 </span><span line-number="7" class=""><span class="tooltip-container"></span>        val state = FutureState[BindReply]()
@@ -592,12 +592,12 @@
  <p>有了这个 <code>QueryService</code> 接口之后，我们实现的具体服务 <code>Actor</code> 只需继承这个接口。</p>
  <div class="snippet mono-small-block" scala-snippet="">
   <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class QueryServiceImpl() extends StateActor with QueryService {
-</span><span line-number="2" class=""><span class="tooltip-container"></span>  override def resumeAsk(stack: AskStack[Query1 | Query2]): Option[StackState] = ??? // impl logic
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  override def resumeAsk(stack: AskStack[Query1 | Query2]): StackYield = ??? // impl logic
 </span><span line-number="3" class=""><span class="tooltip-container"></span>}
 </span><span line-number="4" class=""><span class="tooltip-container"></span>
 </span><span line-number="5" class=""><span class="tooltip-container"></span>// 另一种场景的 QueryService
 </span><span line-number="6" class=""><span class="tooltip-container"></span>final class QueryServiceCase2() extends SocketChannelsActor with QueryService {
-</span><span line-number="7" class=""><span class="tooltip-container"></span>  override def resumeAsk(stack: AskStack[Query1 | Query2]): Option[StackState] = ??? // impl logic
+</span><span line-number="7" class=""><span class="tooltip-container"></span>  override def resumeAsk(stack: AskStack[Query1 | Query2]): StackYield = ??? // impl logic
 </span><span line-number="8" class=""><span class="tooltip-container"></span>}
 </span></code></pre>
   <div class="buttons"></div>
@@ -612,8 +612,8 @@
 </span><span line-number="6" class=""><span class="tooltip-container"></span>
 </span><span line-number="7" class=""><span class="tooltip-container"></span>  override protected def afterMount(): Unit = queryService = autowire[QueryService]()
 </span><span line-number="8" class=""><span class="tooltip-container"></span>
-</span><span line-number="9" class=""><span class="tooltip-container"></span>  override def resumeNotice(stack: NoticeStack[Start]): Option[StackState] = stack.state match {
-</span><span line-number="10" class=""><span class="tooltip-container"></span>    case StackState.start =&gt;
+</span><span line-number="9" class=""><span class="tooltip-container"></span>  override def resumeNotice(stack: NoticeStack[Start]): StackYield = stack.state match {
+</span><span line-number="10" class=""><span class="tooltip-container"></span>    case _: StartState =&gt;
 </span><span line-number="11" class=""><span class="tooltip-container"></span>      val state = FutureState[Result1]()
 </span><span line-number="12" class=""><span class="tooltip-container"></span>      queryService.ask(Query1(), state.future)
 </span><span line-number="13" class=""><span class="tooltip-container"></span>      stack.suspend(state)  
