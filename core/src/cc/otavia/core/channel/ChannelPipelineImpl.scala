@@ -26,7 +26,7 @@ import cc.otavia.core.channel.ChannelPipelineImpl.*
 import cc.otavia.core.channel.inflight.QueueMap
 import cc.otavia.core.channel.internal.ChannelHandlerMask
 import cc.otavia.core.channel.message.FixedReadPlanFactory.FixedReadPlan
-import cc.otavia.core.channel.message.{FixedReadPlanFactory, ReadPlan}
+import cc.otavia.core.channel.message.{AutoReadPlan, FixedReadPlanFactory, ReadPlan}
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.{ChannelFuture, ChannelPromise, ChannelStack}
 import cc.otavia.core.system.ActorSystem
@@ -38,9 +38,11 @@ import java.nio.file.{OpenOption, Path}
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-class ChannelPipelineImpl(override val channel: AbstractChannel) extends ChannelPipeline {
+final class ChannelPipelineImpl(override val channel: AbstractChannel) extends ChannelPipeline {
 
     protected val logger: Logger = Logger.getLogger(getClass, channel.system)
+
+    private var executionMask: Int = 0
 
     private val channelInboundAdaptiveBuffer: AdaptiveBuffer  = AdaptiveBuffer(channel.directAllocator)
     private val channelOutboundAdaptiveBuffer: AdaptiveBuffer = AdaptiveBuffer(channel.directAllocator)
@@ -81,7 +83,7 @@ class ChannelPipelineImpl(override val channel: AbstractChannel) extends Channel
     override def inflightStacks[T <: AnyRef]: QueueMap[ChannelStack[T]] =
         channel.inflightStacks.asInstanceOf[QueueMap[ChannelStack[T]]]
 
-    final def touch(msg: AnyRef, next: ChannelHandlerContextImpl): AnyRef = {
+    def touch(msg: AnyRef, next: ChannelHandlerContextImpl): AnyRef = {
         if (touch) Resource.touch(msg, next)
         msg
     }
@@ -561,47 +563,92 @@ class ChannelPipelineImpl(override val channel: AbstractChannel) extends Channel
     override def toMap: Map[String, ChannelHandler] = handlers.map(ctx => ctx.name -> ctx.handler).toMap
 
     override def fireChannelRegistered(): this.type = {
-        head.invokeChannelRegistered()
+        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_REGISTERED)
+        try {
+            ctx.handler.channelRegistered(ctx)
+        } catch {
+            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
+        }
         this
     }
 
     override def fireChannelUnregistered(): this.type = {
-        head.invokeChannelUnregistered()
+        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_UNREGISTERED)
+        try {
+            ctx.handler.channelUnregistered(ctx)
+        } catch {
+            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
+        }
         this
     }
 
     override def fireChannelActive(): this.type = {
-        head.invokeChannelActive()
+        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_ACTIVE)
+        try {
+            ctx.handler.channelActive(ctx)
+        } catch {
+            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
+        }
         this
     }
 
     override def fireChannelInactive(): this.type = {
-        head.invokeChannelInactive()
+        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_INACTIVE)
+        try {
+            ctx.handler.channelInactive(ctx)
+        } catch {
+            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
+        }
         this
     }
 
     override def fireChannelShutdown(direction: ChannelShutdownDirection): this.type = {
-        head.invokeChannelShutdown(direction)
+        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_SHUTDOWN)
+        try {
+            ctx.handler.channelShutdown(ctx, direction)
+        } catch {
+            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
+        }
         this
     }
 
     override def fireChannelExceptionCaught(cause: Throwable): this.type = {
-        head.invokeChannelExceptionCaught(cause)
+        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_EXCEPTION_CAUGHT)
+        try {
+            ctx.handler.channelExceptionCaught(ctx, cause)
+        } catch {
+            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
+        }
         this
     }
 
     override def fireChannelExceptionCaught(cause: Throwable, id: Long): ChannelPipelineImpl.this.type = {
-        head.invokeChannelExceptionCaught(cause, id)
+        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_EXCEPTION_CAUGHT_ID)
+        try {
+            ctx.handler.channelExceptionCaught(ctx, cause, id)
+        } catch {
+            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
+        }
         this
     }
 
     override def fireChannelInboundEvent(event: AnyRef): this.type = {
-        head.invokeChannelInboundEvent(event)
+        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_INBOUND_EVENT)
+        try {
+            ctx.handler.channelInboundEvent(ctx, event)
+        } catch {
+            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
+        }
         this
     }
 
     override def fireChannelTimeoutEvent(id: Long): this.type = {
-        head.invokeChannelTimeoutEvent(id)
+        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_TIMEOUT_EVENT)
+        try {
+            ctx.handler.channelTimeoutEvent(ctx, id)
+        } catch {
+            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
+        }
         this
     }
 
@@ -616,93 +663,127 @@ class ChannelPipelineImpl(override val channel: AbstractChannel) extends Channel
     }
 
     override def fireChannelRead(msg: AnyRef, msgId: Long): this.type = {
-        head.invokeChannelRead(msg, msgId)
+        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_READ_ID)
+        try {
+            ctx.handler.channelRead(ctx, msg, msgId)
+        } catch {
+            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
+        }
         this
     }
 
     override def fireChannelReadComplete(): this.type = {
-        head.invokeChannelReadComplete()
+        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_READ_COMPLETE)
+        try {
+            ctx.handler.channelReadComplete(ctx)
+        } catch {
+            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
+        }
         this
     }
 
     override def fireChannelWritabilityChanged(): this.type = {
-        head.invokeChannelWritabilityChanged()
+        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_WRITABILITY_CHANGED)
+        try {
+            ctx.handler.channelWritabilityChanged(ctx)
+        } catch {
+            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
+        }
         this
     }
 
     override def flush(): this.type = {
-        tail.flush()
+        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_FLUSH)
+        ctx.handler.flush(ctx)
         this
     }
 
     override def read(readPlan: ReadPlan): this.type = {
-        tail.read(readPlan)
+        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_READ)
+        ctx.handler.read(ctx, readPlan)
         this
     }
 
     override def read(): this.type = {
-        tail.read()
+        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_READ)
+        ctx.handler.read(ctx, AutoReadPlan)
         this
     }
 
     override def bind(local: SocketAddress, future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.bind(local, future)
+        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_BIND)
+        ctx.handler.bind(ctx, local, future)
     }
 
     override def connect(remote: SocketAddress, local: Option[SocketAddress], future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.connect(remote, local, future)
+        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_CONNECT)
+        ctx.handler.connect(ctx, remote, local, future)
     }
 
     override def open(ph: Path, opts: Seq[OpenOption], as: Seq[FileAttribute[?]], fu: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.open(ph, opts, as, fu)
+        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_OPEN)
+        ctx.handler.open(ctx, ph, opts, as, fu)
     }
 
     override def disconnect(future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.disconnect(future)
+        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_DISCONNECT)
+        ctx.handler.disconnect(ctx, future)
     }
 
     override def close(future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.close(future)
+        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_CLOSE)
+        ctx.handler.close(ctx, future)
     }
 
     override def shutdown(direction: ChannelShutdownDirection, future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.shutdown(direction, future)
+        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_SHUTDOWN)
+        ctx.handler.shutdown(ctx, direction, future)
     }
 
     override def register(future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.register(future)
+        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_REGISTER)
+        ctx.handler.register(ctx, future)
     }
 
     override def deregister(future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        tail.deregister(future)
+        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_DEREGISTER)
+        ctx.handler.deregister(ctx, future)
     }
 
     override def write(msg: AnyRef): Unit = {
         assertInExecutor()
-        tail.write(msg)
+        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_WRITE)
+        ctx.handler.write(ctx, msg)
     }
 
     override def write(msg: AnyRef, msgId: Long): Unit = {
         assertInExecutor()
-        tail.write(msg, msgId)
+        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_WRITE_ID)
+        ctx.handler.write(ctx, msg, msgId)
     }
 
     override def writeAndFlush(msg: AnyRef): Unit = {
         assertInExecutor()
-        tail.writeAndFlush(msg)
+        val ctx =
+            findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_WRITE | ChannelHandlerMask.MASK_FLUSH)
+        ctx.handler.write(ctx, msg)
+        ctx.handler.flush(ctx)
     }
 
     override def writeAndFlush(msg: AnyRef, msgId: Long): Unit = {
         assertInExecutor()
-        tail.writeAndFlush(msg, msgId)
+        val ctx =
+            findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_WRITE_ID | ChannelHandlerMask.MASK_FLUSH)
+        ctx.handler.write(ctx, msg, msgId)
+        ctx.handler.flush(ctx)
     }
 
     /** Send a custom outbound event via this [[ChannelOutboundInvoker]] through the [[ChannelPipeline]]. This will
@@ -713,10 +794,11 @@ class ChannelPipelineImpl(override val channel: AbstractChannel) extends Channel
      */
     override def sendOutboundEvent(event: AnyRef): Unit = {
         assertInExecutor()
-        tail.sendOutboundEvent(event)
+        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_SEND_OUTBOUND_EVENT)
+        ctx.handler.sendOutboundEvent(ctx, event)
     }
 
-    final def forceCloseTransport(): Unit = {
+    def forceCloseTransport(): Unit = {
         val abstractChannel = channel.asInstanceOf[AbstractChannel]
         abstractChannel.closeTransport(ChannelPromise())
     }
@@ -758,7 +840,7 @@ class ChannelPipelineImpl(override val channel: AbstractChannel) extends Channel
      *  @param delta
      *    the number of bytes to add.
      */
-    final def incrementPendingOutboundBytes(delta: Long): Unit = {
+    def incrementPendingOutboundBytes(delta: Long): Unit = {
         assert(delta > 0)
         _pendingOutboundBytes += delta
         if (_pendingOutboundBytes < 0) {
@@ -773,7 +855,7 @@ class ChannelPipelineImpl(override val channel: AbstractChannel) extends Channel
      *  @param delta
      *    the number of bytes to remove.
      */
-    final def decrementPendingOutboundBytes(delta: Long): Unit = {
+    def decrementPendingOutboundBytes(delta: Long): Unit = {
         assert(delta > 0)
         _pendingOutboundBytes -= delta
         if (_pendingOutboundBytes < 0) {
@@ -783,19 +865,38 @@ class ChannelPipelineImpl(override val channel: AbstractChannel) extends Channel
         pendingOutboundBytesUpdated(_pendingOutboundBytes)
     }
 
-    private def resetIndices(): Unit = handlers.indices.foreach(idx => handlers(idx).setIndex(idx))
-
-    private[core] def findContextInbound(from: Int, mask: Int): ChannelHandlerContextImpl = {
-        var cursor                         = from
-        var ctx: ChannelHandlerContextImpl = null
-        while {
-            ctx = if (cursor < handlers.length) handlers(cursor) else tail
-            cursor += 1
-            (ctx.executionMask & mask) == 0
-        } do ()
-
-        ctx
+    private def resetIndices(): Unit = {
+        this.executionMask = 0
+        handlers.indices.foreach { idx =>
+            val handler = handlers(idx)
+            handler.setIndex(idx)
+            this.executionMask |= handler.executionMask
+        }
     }
+
+    private def findContextInbound(from: Int, mask: Int): ChannelHandlerContextImpl =
+        if ((this.executionMask & mask) != 0) {
+            var cursor                         = from
+            var ctx: ChannelHandlerContextImpl = null
+            while {
+                ctx = if (cursor < handlers.length) handlers(cursor) else tail
+                cursor += 1
+                (ctx.executionMask & mask) == 0
+            } do ()
+            ctx
+        } else tail
+
+    private def findContextOutbound(from: Int, mask: Int): ChannelHandlerContextImpl =
+        if ((this.executionMask & mask) != 0) {
+            var cursor                         = from
+            var ctx: ChannelHandlerContextImpl = null
+            while {
+                ctx = if (cursor > -1) handlers(cursor) else head
+                cursor -= 1
+                (ctx.executionMask & mask) == 0
+            } do ()
+            ctx
+        } else head
 
 }
 
