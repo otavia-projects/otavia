@@ -26,7 +26,7 @@ import scala.language.unsafeNulls
 final class SelectedSelectionKeySet extends util.AbstractSet[SelectionKey] {
 
     private[reactor] var keys: Array[SelectionKey] = new Array[SelectionKey](2048)
-    private var _size: Int                         = 0
+    private[reactor] var _size: Int                = 0
 
     override def add(o: SelectionKey): Boolean = if (o != null) {
         if (size == keys.length) increaseCapacity()
@@ -37,19 +37,21 @@ final class SelectedSelectionKeySet extends util.AbstractSet[SelectionKey] {
 
     override def remove(o: Any): Boolean = false
 
-    override def contains(o: Any): Boolean = {
-        var i        = 0
-        var continue = true
-        var res      = false
-        while (continue && i < _size) {
-            val key = keys(i)
-            if (key.equals(o)) {
-                continue = false
-                res = true
-            } else i += 1
-        }
-        res
-    }
+    override def contains(o: Any): Boolean = false
+
+//    override def contains(o: Any): Boolean = {
+//        var i        = 0
+//        var continue = true
+//        var res      = false
+//        while (continue && i < _size) {
+//            val key = keys(i)
+//            if (key.equals(o)) {
+//                continue = false
+//                res = true
+//            } else i += 1
+//        }
+//        res
+//    }
 
     override def size(): Int = _size
 
@@ -69,7 +71,7 @@ final class SelectedSelectionKeySet extends util.AbstractSet[SelectionKey] {
 
     }
 
-    def reset(): Unit = {
+    def reset(): Unit = if (_size > 0) {
         var cursor = 0
         while (cursor < _size) {
             keys(cursor) = null

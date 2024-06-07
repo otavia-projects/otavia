@@ -267,25 +267,25 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
     private def processSelectedKeysOptimized(): Int = {
         var handled = 0
         val keys    = selectedKeys
-        var i       = 0
-        val size    = keys.size()
-        while (i < size) {
+        var i       = keys.size() - 1
+        while (i >= 0) {
             val key = keys.keys(i)
             // null out entry in the array to allow to have it GC'ed once the Channel close
             // See https://github.com/netty/netty/issues/2363
             keys.keys(i) = null
+            keys._size -= 1
 
-            processSelectedKey(key) // TODO: key is null
+            processSelectedKey(key)
             handled += 1
 
             if (needsToSelectAgain) {
                 // null out entries in the array to allow to have it GC'ed once the Channel close
                 // See https://github.com/netty/netty/issues/2363
-                keys.reset(i + 1)
+                keys.reset()
                 selectAgain()
-                i = -1
+                i = keys.size()
             }
-            i += 1
+            i -= 1
         }
 
         handled

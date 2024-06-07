@@ -28,7 +28,7 @@ import java.util.concurrent.Executor
 import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
 
-class NioReactorWorker(
+final class NioReactorWorker(
     val executor: Executor,
     val system: ActorSystem,
     val maxTasksPerRun: Int,
