@@ -282,7 +282,8 @@ class SslHandler(private val engine: SSLEngine, private val startTls: Boolean = 
 
     override def flush(ctx: ChannelHandlerContext): Unit =
         if (handshakeSuccess) {
-            // TODO
+            wrap(ctx, false)
+            forceFlush(ctx)
         } else ctx.flush()
 
     /** Will run the delegated task directly calling Runnable.run() and return true */
