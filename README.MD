@@ -17,7 +17,7 @@
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/otavia-projects/otavia)
 
 
-> This project is not yet stable, please don't use it in a production environment!
+> This project is not yet stable, so please be cautious about using it in a production environment.
 
 <hr>
 

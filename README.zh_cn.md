@@ -17,7 +17,7 @@
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/otavia-projects/otavia)
 
 
-> 这个项目还不稳定，请不要将其用在生产环境中。
+> 这个项目还不稳定，请谨慎的用于生成环境中。
 
 <hr>
 

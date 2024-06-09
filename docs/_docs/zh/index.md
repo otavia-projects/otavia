@@ -22,8 +22,6 @@ title: 中文文档
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/otavia-projects/otavia)
 
 
-> 这个项目目前处于孵化状态， API 设计还不稳定，请不要用于生产环境中。
-
 <hr>
 
 Language: [English](../index.md)

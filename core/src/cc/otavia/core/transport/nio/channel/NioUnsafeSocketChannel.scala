@@ -101,9 +101,8 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
             var continue = true
             while (continue && flushQueue.nonEmpty) {
                 flushQueue.removeHead() match
-                    case buffer: RecyclablePageBuffer =>
-                        continue = unsafeFlushBuffer(buffer)
-                    case fileRegion: FileRegion => unsafeFlushFileRegion(fileRegion)
+                    case buffer: RecyclablePageBuffer => continue = unsafeFlushBuffer(buffer)
+                    case fileRegion: FileRegion       => unsafeFlushFileRegion(fileRegion)
             }
             if (_selectionKey != null && _selectionKey.isValid) { // Channel not be closed.
                 val interestOps = _selectionKey.interestOps()
