@@ -20,8 +20,8 @@ import cc.otavia.buffer.Buffer
 import cc.otavia.core.actor.ChannelsActor.{Bind, ChannelEstablished}
 import cc.otavia.core.actor.MainActor
 import cc.otavia.core.slf4a.LoggerFactory
-import cc.otavia.core.stack.helper.FutureState
-import cc.otavia.core.stack.{NoticeStack, StackState}
+import cc.otavia.core.stack.helper.{FutureState, StartState}
+import cc.otavia.core.stack.{NoticeStack, StackState, StackYield}
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.demo.controller.ScaleMessageController
 import cc.otavia.demo.controller.ScaleMessageController.*
@@ -39,9 +39,10 @@ private class ServerMain(val port: Int = 8080) extends MainActor(Array.empty) {
 
     import ServerMain.*
 
-    override def main0(stack: NoticeStack[MainActor.Args]): Option[StackState] = stack.state match
-        case StackState.start =>
+    override def main0(stack: NoticeStack[MainActor.Args]): StackYield = stack.state match
+        case _: StartState =>
             val controller = system.buildActor(() => ScaleMessageController(), system.actorWorkerSize)
+            val helloSerde = summon[JsonSerde[HelloMessage]]
             val routers = Seq(
               constant[Array[Byte]](GET, "/plaintext", "Hello, World!".getBytes(UTF_8), BytesSerde, TEXT_PLAIN_UTF8),
               constant[HelloMessage](GET, "/json", HelloMessage("Hello, World!"), helloSerde, APP_JSON),
@@ -61,19 +62,7 @@ private class ServerMain(val port: Int = 8080) extends MainActor(Array.empty) {
 
 object ServerMain {
 
-    private case class HelloMessage(message: String)
-
-    private val helloSerde = new JsonSerde[HelloMessage] { // this object can be derived by macro
-
-        override def deserialize(in: Buffer): HelloMessage = throw new UnsupportedOperationException("no need")
-        override def serialize(value: HelloMessage, out: Buffer): Unit = {
-            this.serializeObjectStart(out)
-            this.serializeKey("message", out)
-            this.serializeString(value.message, out)
-            this.serializeObjectEnd(out)
-        }
-
-    }
+    private case class HelloMessage(message: String) derives JsonSerde
 
 }
 

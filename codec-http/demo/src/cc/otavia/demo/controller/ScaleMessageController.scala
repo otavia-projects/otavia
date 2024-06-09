@@ -20,7 +20,7 @@ import cc.otavia.buffer.Buffer
 import cc.otavia.core.actor.StateActor
 import cc.otavia.core.message.{Ask, Reply}
 import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState, StartState}
-import cc.otavia.core.stack.{AskStack, StackState}
+import cc.otavia.core.stack.{AskStack, StackState, StackYield}
 import cc.otavia.demo.controller.ScaleMessageController.*
 import cc.otavia.http.*
 import cc.otavia.http.server.{HttpRequest, HttpRequestFactory, HttpResponseSerde}
@@ -31,7 +31,7 @@ import scala.collection.mutable
 
 class ScaleMessageController extends StateActor[ScaleMessageRequest] {
 
-    override protected def resumeAsk(stack: AskStack[ScaleMessageRequest]): Option[StackState] = {
+    override protected def resumeAsk(stack: AskStack[ScaleMessageRequest]): StackYield = {
         val request      = stack.ask
         val scaleLength  = request.params.get("length").map(_.toInt).getOrElse(1)
         val scaleMessage = request.content.get
