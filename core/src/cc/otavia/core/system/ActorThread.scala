@@ -25,6 +25,7 @@ import cc.otavia.core.system.ActorThread.{GC_PEER_ROUND, ST_RUNNING, ST_STARTING
 import cc.otavia.core.system.monitor.ActorThreadMonitor
 
 import java.lang.ref.*
+import java.util.SplittableRandom
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.collection.mutable
 import scala.language.unsafeNulls
@@ -62,6 +63,8 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
     private val mutableSet: mutable.HashSet[AnyRef]         = mutable.HashSet.empty
     private val mutableMap: mutable.HashMap[AnyRef, AnyRef] = mutable.HashMap.empty
 
+    private val rd: SplittableRandom = new SplittableRandom()
+
     setName(s"otavia-actor-worker-$index")
 
     // prepare allocate buffer
@@ -84,6 +87,8 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
     def parent: ActorThreadPool = system.pool
 
     def index: Int = id
+
+    def random: SplittableRandom = rd
 
     def houseManager: HouseManager = manager
 
