@@ -28,6 +28,7 @@ import cc.otavia.core.channel.message.{AdaptiveBufferChangeNotice, DatagramAdapt
 import cc.otavia.core.message.ReactorEvent
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.*
+import cc.otavia.core.stack.helper.ChannelFutureState
 import cc.otavia.core.system.{ActorSystem, ActorThread}
 
 import java.net.SocketAddress
@@ -238,6 +239,18 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         pendingFutures.append(promise)
         processPendingFutures()
         future
+    }
+
+    override def ask(value: AnyRef): ChannelFutureState = {
+        val channelState = ChannelFutureState()
+        val promise      = channelState.future.promise
+        promise.setMessageId(generateMessageId)
+        promise.setAsk(value)
+        promise.setChannel(this)
+        actor.attachStack(actor.generateSendMessageId(), channelState.future)
+        pendingFutures.append(promise)
+        processPendingFutures()
+        channelState
     }
 
     override def notice(value: AnyRef): Unit = {
