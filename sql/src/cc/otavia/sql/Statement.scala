@@ -63,8 +63,11 @@ object Statement {
 
         def sql: String
         def bind: Product | Seq[Product]
-        final def isBatch: Boolean    = bind.isInstanceOf[Seq[?]]
-        override def toString: String = sql
+        final def isBatch: Boolean = bind.isInstanceOf[Seq[?]]
+        
+        override def toString: String = bind match
+            case product: Product => s"$sql; $product"
+            case products: Seq[?] => products.mkString(s"$sql; [", ", ", "]")
 
     }
 
