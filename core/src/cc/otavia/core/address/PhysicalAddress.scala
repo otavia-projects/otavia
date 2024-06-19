@@ -33,7 +33,7 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
 
     private[core] val house: ActorHouse
 
-    private def doEnvelope[T <: Message](message: T, sender: AbstractActor[?]): Envelope[T] = {
+    private def packaging[T <: Message](message: T, sender: AbstractActor[?]): Envelope[T] = {
         val envelope = Envelope[T]()
         envelope.setSender(sender.self.asInstanceOf[Address[Call]])
         envelope.setMessageId(sender.generateSendMessageId())
@@ -44,14 +44,14 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
     override def ask[A <: M & Ask[? <: Reply]](ask: A, future: MessageFuture[ReplyOf[A]])(using
         sender: AbstractActor[?]
     ): MessageFuture[ReplyOf[A]] = {
-        val envelope = doEnvelope(ask, sender)
+        val envelope = packaging(ask, sender)
         sender.attachStack(envelope.messageId, future)
         house.putAsk(envelope)
         future
     }
 
     override def askUnsafe(ask: Ask[?], future: MessageFuture[?])(using sender: AbstractActor[?]): MessageFuture[?] = {
-        val envelope = doEnvelope(ask, sender)
+        val envelope = packaging(ask, sender)
         sender.attachStack(envelope.messageId, future)
         house.putAsk(envelope)
         future
@@ -76,25 +76,25 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
     }
 
     override private[core] def reply(reply: Reply, replyId: Long, sender: AbstractActor[?]): Unit = {
-        val envelope = doEnvelope(reply, sender)
+        val envelope = packaging(reply, sender)
         envelope.setReplyId(replyId)
         house.putReply(envelope)
     }
 
     override private[core] def reply(reply: Reply, replyIds: Array[Long], sender: AbstractActor[?]): Unit = {
-        val envelope = doEnvelope(reply, sender)
+        val envelope = packaging(reply, sender)
         envelope.setReplyIds(replyIds)
         house.putReply(envelope)
     }
 
     override private[core] def `throw`(cause: ExceptionMessage, replyId: Long, sender: AbstractActor[?]): Unit = {
-        val envelope = doEnvelope(cause, sender)
+        val envelope = packaging(cause, sender)
         envelope.setReplyId(replyId)
         house.putException(envelope)
     }
 
     override private[core] def `throw`(cause: ExceptionMessage, ids: Array[Long], sender: AbstractActor[?]): Unit = {
-        val envelope = doEnvelope(cause, sender)
+        val envelope = packaging(cause, sender)
         envelope.setReplyIds(ids)
         house.putException(envelope)
     }
