@@ -222,9 +222,14 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
 
     }
 
+    private def recycleRowOffset(): Unit = {
+        for (off <- rowOffsets) off.recycle()
+        rowOffsets.clear()
+    }
+
     private def decodeDataRow(payload: Buffer, payloadLength: Int): Unit =
         if (continueParseRow) {
-            rowOffsets.clear()
+            recycleRowOffset()
             val len    = payload.readUnsignedShort
             var i      = 0
             var offset = 0
@@ -250,19 +255,17 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                     val row     = decoder.decode(rowParser)
                     rowBuffer.addOne(row)
                 case prepareQuery: PrepareFetchOneQuery[?] =>
-                    val ps      = prepareStatements(prepareQuery.sql)
-                    val decoder = prepareQuery.decoder
-                    rowParser.setRowDesc(ps.rowDesc)
-                    val row = decoder.decode(rowParser)
+                    decodeDataRow0(prepareQuery.decoder, prepareStatements(prepareQuery.sql))
                     continueParseRow = false
-                    rowBuffer.addOne(row)
                 case prepareQuery: PrepareFetchAllQuery[?] =>
-                    val ps      = prepareStatements(prepareQuery.sql)
-                    val decoder = prepareQuery.decoder
-                    rowParser.setRowDesc(ps.rowDesc)
-                    val row = decoder.decode(rowParser)
-                    rowBuffer.addOne(row)
+                    decodeDataRow0(prepareQuery.decoder, prepareStatements(prepareQuery.sql))
         }
+
+    private def decodeDataRow0(decoder: RowDecoder[?], ps: PreparedStatement): Unit = {
+        rowParser.setRowDesc(ps.rowDesc)
+        val row = decoder.decode(rowParser)
+        rowBuffer.addOne(row)
+    }
 
     private def decodeRowDescription(payload: Buffer): Unit = {
         ctx.inflightFutures.first.getAsk() match
@@ -453,8 +456,8 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
             case Some(ps) if ps.parsed =>
                 val bind = query.bind
                 bind match
-                    case products: Seq[Product] =>
-                        for (product <- products) {
+                    case products: Seq[?] =>
+                        for (product <- products.asInstanceOf[Seq[Product]]) {
                             encodeBind(ps, product, output)
                             encodeExecute(0, output)
                         }
@@ -540,7 +543,13 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
         // Result columns are all in Binary format
         if (ps.rowDesc.length > 0) {
             output.writeShort(ps.rowDesc.length.toShort)
-            for (rowDesc <- ps.rowDesc.columns) output.writeShort(if (rowDesc.dataType.supportsBinary) 1 else 0)
+            var i = 0
+            while (i < ps.rowDesc.length) {
+                val colDesc = ps.rowDesc(i)
+                output.writeShort(if (colDesc.dataType.supportsBinary) 1 else 0)
+                i += 1
+            }
+            // for (rowDesc <- ps.rowDesc.columns) output.writeShort(if (rowDesc.dataType.supportsBinary) 1 else 0)
         } else {
             output.writeShort(1)
             output.writeShort(1)

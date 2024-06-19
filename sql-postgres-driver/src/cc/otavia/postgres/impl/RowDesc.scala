@@ -22,7 +22,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.{IndexedSeqView, mutable}
 import scala.language.unsafeNulls
 
-private[postgres] class RowDesc {
+final private[postgres] class RowDesc {
 
     private var len: Int                              = 0
     private var colCapacity: Int                      = 16
@@ -46,14 +46,9 @@ private[postgres] class RowDesc {
 
     def length: Int = len
 
-    def apply(index: Int): ColumnDesc = {
-        val col = cols(index)
-        col
-    }
+    def apply(index: Int): ColumnDesc = cols(index)
 
-    def columnNames: IndexedSeqView[String] = cols.view.slice(0, len).map(_.name)
-
-    def columns: IndexedSeqView[ColumnDesc] = cols.view.slice(0, len)
+    private def columnNames: IndexedSeqView[String] = cols.view.slice(0, len).map(_.name)
 
     def queryColumnIndex(columnName: String): Int = {
         var index                  = 0
