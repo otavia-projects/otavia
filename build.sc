@@ -186,7 +186,7 @@ object codec extends OtaviaModule {
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
-        override def ivyDeps = Agg(ProjectInfo.testDep, ProjectInfo.netty5codec)
+        override def ivyDeps = Agg(ProjectInfo.testDep)
 
     }
 
