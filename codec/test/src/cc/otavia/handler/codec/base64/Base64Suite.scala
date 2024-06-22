@@ -17,7 +17,6 @@
 package cc.otavia.handler.codec.base64
 
 import cc.otavia.buffer.BufferAllocator
-import io.netty5.handler.codec.base64.{Base64 as NettyBase64, Base64Dialect as NettyBase64Dialect}
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.charset.StandardCharsets

@@ -43,7 +43,6 @@ object ProjectInfo {
 
     def testDep = ivy"org.scalatest::scalatest:3.2.18"
 
-    def netty5codec = ivy"io.netty:netty5-codec:5.0.0.Alpha5"
     def xml         = ivy"org.scala-lang.modules::scala-xml:2.2.0"
     def scram       = ivy"com.ongres.scram:client:2.1"
 
