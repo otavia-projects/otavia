@@ -16,19 +16,14 @@
 
 package cc.otavia.http.server
 
-import cc.otavia.buffer.Buffer
-import cc.otavia.core.message.Reply
 import cc.otavia.http.HttpHeaderKey
 import cc.otavia.serde.Serde
 
-import java.nio.charset.StandardCharsets
-import scala.collection.mutable
-import scala.language.unsafeNulls
+trait HttpRequestFactory {
 
-abstract class HttpRequestFactory(
-    val contentSerde: Option[Serde[?]] = None,
+    val contentSerde: Option[Serde[?]] = None
+
     val requireHeaders: Seq[HttpHeaderKey] = HttpRequestFactory.EMPTY_STRING
-) {
 
     final def hasContent: Boolean = contentSerde.nonEmpty
 
@@ -37,5 +32,7 @@ abstract class HttpRequestFactory(
 }
 
 object HttpRequestFactory {
+
     private val EMPTY_STRING: Seq[HttpHeaderKey] = Seq.empty
+
 }

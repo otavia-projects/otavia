@@ -18,6 +18,16 @@ package cc.otavia.http.server
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.http.MediaType
+import cc.otavia.json.JsonSerde
 import cc.otavia.serde.Serde
+import cc.otavia.serde.helper.StringSerde
 
 case class HttpResponseSerde[C](contentSerde: Serde[C], mediaType: MediaType = MediaType.ANY)
+
+object HttpResponseSerde {
+
+    def json[C](serde: JsonSerde[C]): HttpResponseSerde[C] = HttpResponseSerde(serde, MediaType.APP_JSON)
+
+    def stringHtml: HttpResponseSerde[String] = HttpResponseSerde[String](StringSerde.utf8, MediaType.TEXT_HTML_UTF8)
+
+}
