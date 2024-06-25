@@ -25,7 +25,7 @@ import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
 
-abstract class AbstractPooledPageAllocator(val fixedCapacity: Int, val minCache: Int = 8, val maxCache: Int = 10240)
+abstract class AbstractPooledPageAllocator(val fixedCapacity: Int, val minCache: Int = 32, val maxCache: Int = 10240)
     extends PooledPageAllocator {
 
     private var count: Int                  = 0
