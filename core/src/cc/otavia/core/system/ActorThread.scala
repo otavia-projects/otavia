@@ -171,7 +171,7 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
                 } else {
                     this.suspendThread()
                     if (emptyTimes % 100 == 0) if (manager.trySteal()) emptyTimes = 20
-                    if (System.currentTimeMillis() - spinStart > 1000) {
+                    if (System.currentTimeMillis() - spinStart > 600) {
                         if (ActorSystem.AGGRESSIVE_GC && !gc) {
                             system.gc()
                             gc = true
