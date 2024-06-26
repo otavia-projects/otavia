@@ -21,7 +21,7 @@ import cc.otavia.core.util.Nextable
 
 import scala.language.unsafeNulls
 
-class Envelope[M <: Message] extends Nextable {
+final private[core] class Envelope[M <: Message] extends Nextable {
 
     // sender message
     private var address: Address[Call] = _
@@ -34,15 +34,15 @@ class Envelope[M <: Message] extends Nextable {
     private var rid: Long         = 0 // reply id if is
     private var rids: Array[Long] = _
 
-    private[core] def setSender(address: Address[Call]): Unit = this.address = address
+    def setSender(address: Address[Call]): Unit = this.address = address
 
-    private[core] def setMessageId(id: Long): Unit = this.mid = id
+    def setMessageId(id: Long): Unit = this.mid = id
 
-    private[core] def setContent(msg: M): Unit = this.msg = msg
+    def setContent(msg: M): Unit = this.msg = msg
 
-    private[core] def setReplyId(id: Long): Unit = this.rid = id
+    def setReplyId(id: Long): Unit = this.rid = id
 
-    private[core] def setReplyIds(ids: Array[Long]): Unit = this.rids = ids
+    def setReplyIds(ids: Array[Long]): Unit = this.rids = ids
 
     def sender: Address[Call] = address
 
@@ -52,11 +52,11 @@ class Envelope[M <: Message] extends Nextable {
 
     def messageId: Long = mid
 
-    private[core] def replyId: Long = rid
+    def replyId: Long = rid
 
-    private[core] def replyIds: Array[Long] = rids
+    def replyIds: Array[Long] = rids
 
-    private[core] def isBatchReply: Boolean = rids != null
+    def isBatchReply: Boolean = rids != null
 
 }
 
