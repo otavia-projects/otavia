@@ -18,20 +18,13 @@ package cc.otavia.core.stack.helper
 
 import cc.otavia.core.cache.*
 import cc.otavia.core.message.Reply
-import cc.otavia.core.stack.helper.FutureState.pool
-import cc.otavia.core.stack.{MessageFuture, StackState, StackStatePool}
-import cc.otavia.core.system.ActorThread
-import cc.otavia.core.timer.TimeoutTrigger
+import cc.otavia.core.stack.{MessageFuture, StackState}
 
-import java.util.concurrent.TimeUnit
-import scala.compiletime.erasedValue
-import scala.deriving.Mirror
 import scala.language.unsafeNulls
-import scala.reflect.{ClassTag, TypeTest, Typeable, classTag}
 
 final class FutureState[R <: Reply] private () extends StackState with Poolable {
 
-    private var stateId: Int       = 0
+    private var stateId: Int         = 0
     private var fu: MessageFuture[R] = _
 
     def future: MessageFuture[R] = fu
@@ -62,7 +55,7 @@ object FutureState {
         state
     }
 
-    private val pool = new StackStatePool[FutureState[?]] {
+    private val pool = new ActorThreadIsolatedObjectPool[FutureState[?]] {
 
         override protected def newObject(): FutureState[?] = new FutureState()
 

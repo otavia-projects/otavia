@@ -16,13 +16,13 @@
 
 package cc.otavia.core.stack.helper
 
-import cc.otavia.core.cache.Poolable
+import cc.otavia.core.cache.{ActorThreadIsolatedObjectPool, Poolable}
 import cc.otavia.core.message.Reply
-import cc.otavia.core.stack.{MessageFuture, StackState, StackStatePool}
+import cc.otavia.core.stack.{MessageFuture, StackState}
 
 import scala.language.unsafeNulls
 
-class FuturesState[R <: Reply] private() extends StackState with Poolable {
+class FuturesState[R <: Reply] private () extends StackState with Poolable {
 
     private var stateId: Int               = 0
     private var fus: Seq[MessageFuture[R]] = _
@@ -51,7 +51,7 @@ object FuturesState {
         state
     }
 
-    private val pool = new StackStatePool[FuturesState[?]] {
+    private val pool = new ActorThreadIsolatedObjectPool[FuturesState[?]] {
 
         override protected def newObject(): FuturesState[?] = new FuturesState()
 

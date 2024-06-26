@@ -75,7 +75,7 @@ final class AskStack[A <: Ask[? <: Reply]] private () extends Stack {
 
 object AskStack {
 
-    private val stackPool = new StackPool[AskStack[? <: Ask[?]]] {
+    private val stackPool = new ActorThreadIsolatedObjectPool[AskStack[? <: Ask[?]]] {
         override protected def newObject(): AskStack[? <: Ask[?]] = new AskStack[Nothing]()
     }
 

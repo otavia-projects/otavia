@@ -20,10 +20,25 @@ import cc.otavia.core.cache.AbstractThreadIsolatedObjectPool.*
 import cc.otavia.core.system.ActorThread
 import cc.otavia.core.timer.TimeoutTrigger
 
+import java.util.concurrent.TimeUnit
+
 abstract class ActorThreadIsolatedObjectPool[T <: Poolable] extends AbstractThreadIsolatedObjectPool[T] {
 
     private val threadLocal = new ObjectPoolThreadLocal[T](this)
 
     final override protected def holder(): SingleThreadPoolableHolder[T] = threadLocal.get()
+
+    override def dropIfRecycleNotByCreated: Boolean = true
+
+    override protected val timeoutTrigger: Option[TimeoutTrigger] =
+        Some(TimeoutTrigger.DelayPeriod(60, 60, TimeUnit.SECONDS, TimeUnit.SECONDS))
+
+    override protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit = {
+        val duration = System.currentTimeMillis() - threadLocalTimer.recentlyGetTime
+        if (duration / 1000 > 30) {
+            val holder = this.holder()
+            if (holder.size > 10) holder.clean(10)
+        }
+    }
 
 }

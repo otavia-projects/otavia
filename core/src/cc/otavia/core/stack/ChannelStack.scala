@@ -16,6 +16,7 @@
 
 package cc.otavia.core.stack
 
+import cc.otavia.core.cache.ActorThreadIsolatedObjectPool
 import cc.otavia.core.channel.inflight.QueueMapEntity
 import cc.otavia.core.channel.{AbstractChannel, Channel, ChannelAddress}
 
@@ -82,7 +83,7 @@ class ChannelStack[+T <: AnyRef] private () extends Stack with QueueMapEntity {
 
 object ChannelStack {
 
-    private val stackPool = new StackPool[ChannelStack[AnyRef]] {
+    private val stackPool = new ActorThreadIsolatedObjectPool[ChannelStack[AnyRef]] {
         override protected def newObject(): ChannelStack[AnyRef] = new ChannelStack()
     }
 

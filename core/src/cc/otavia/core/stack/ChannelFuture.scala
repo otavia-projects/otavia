@@ -17,6 +17,7 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.actor.{AbstractActor, ChannelsActor}
+import cc.otavia.core.cache.ActorThreadIsolatedObjectPool
 import cc.otavia.core.channel.inflight.QueueMapEntity
 import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.message.ReactorEvent
@@ -35,7 +36,7 @@ trait ChannelFuture extends Future[AnyRef] {
 
 object ChannelFuture {
 
-    private[stack] val pool = new PromisePool[ChannelPromise] {
+    private[stack] val pool = new ActorThreadIsolatedObjectPool[ChannelPromise] {
         override protected def newObject(): ChannelPromise = new ChannelPromise()
     }
 

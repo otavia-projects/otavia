@@ -16,6 +16,7 @@
 
 package cc.otavia.core.stack
 
+import cc.otavia.core.cache.ActorThreadIsolatedObjectPool
 import cc.otavia.core.message.{ExceptionMessage, Reply}
 import cc.otavia.core.timer.Timer
 
@@ -34,7 +35,7 @@ sealed trait MessageFuture[+R <: Reply] extends Future[R] {
 
 object MessageFuture {
 
-    private[stack] val pool = new PromisePool[MessagePromise[?]] {
+    private[stack] val pool = new ActorThreadIsolatedObjectPool[MessagePromise[?]] {
         override protected def newObject(): MessagePromise[?] = new MessagePromise[Nothing]()
     }
 

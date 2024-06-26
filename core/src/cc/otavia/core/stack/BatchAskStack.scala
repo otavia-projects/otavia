@@ -18,6 +18,7 @@ package cc.otavia.core.stack
 
 import cc.otavia.core.actor.AbstractActor
 import cc.otavia.core.address.Address
+import cc.otavia.core.cache.ActorThreadIsolatedObjectPool
 import cc.otavia.core.message.*
 import cc.otavia.core.system.ActorThread
 
@@ -79,7 +80,7 @@ final class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
 
 object BatchAskStack {
 
-    private val pool = new StackPool[BatchAskStack[?]] {
+    private val pool = new ActorThreadIsolatedObjectPool[BatchAskStack[?]] {
         override protected def newObject(): BatchAskStack[?] = new BatchAskStack[Nothing]
     }
 
