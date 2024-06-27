@@ -16,7 +16,7 @@
 
 package cc.otavia.core.actor
 
-import cc.otavia.core.message.{Ask, Call, Notice}
+import cc.otavia.core.message.Call
 
 /** Message type of a actor can receive */
 type MessageOf[A <: Actor[?]] <: Call = A match {

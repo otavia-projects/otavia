@@ -16,12 +16,9 @@
 
 package cc.otavia.core.actor
 
-import cc.otavia.core.actor.Actor.{ASK_TYPE, MessageType, NOTICE_TYPE, REPLY_TYPE}
-import cc.otavia.core.address.{ActorAddress, Address}
-import cc.otavia.core.message.*
-import cc.otavia.core.stack.*
-
-import scala.reflect.ClassTag
+import cc.otavia.core.address.ActorAddress
+import cc.otavia.core.message.Call
+import cc.otavia.core.stack.ChannelStack
 
 abstract class StateActor[M <: Call] extends AbstractActor[M] {
 

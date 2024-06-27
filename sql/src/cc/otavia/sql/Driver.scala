@@ -17,13 +17,8 @@
 package cc.otavia.sql
 
 import cc.otavia.buffer.Buffer
-import cc.otavia.core.actor.ChannelsActor
+import cc.otavia.core.channel.Channel
 import cc.otavia.core.channel.handler.{Byte2MessageDecoder, Message2ByteEncoder}
-import cc.otavia.core.channel.{Channel, ChannelHandlerContext}
-import cc.otavia.core.message.{Ask, Reply}
-import cc.otavia.core.stack.ChannelFuture
-
-import java.net.SocketAddress
 
 abstract class Driver(val options: ConnectOptions) extends Byte2MessageDecoder with Message2ByteEncoder {
 

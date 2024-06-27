@@ -16,7 +16,6 @@
 
 package cc.otavia.core.cache
 
-import cc.otavia.core.message.ResourceTimeoutEvent
 import cc.otavia.core.system.ActorThread
 import cc.otavia.core.timer.{TimeoutTrigger, Timer}
 

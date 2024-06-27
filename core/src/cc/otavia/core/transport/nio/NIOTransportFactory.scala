@@ -18,7 +18,7 @@ package cc.otavia.core.transport.nio
 
 import cc.otavia.core.channel.socket.SocketProtocolFamily
 import cc.otavia.core.channel.{Channel, ChannelException}
-import cc.otavia.core.reactor.{DefaultSelectStrategy, IoHandler, Reactor}
+import cc.otavia.core.reactor.{IoHandler, Reactor}
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.transport.TransportFactory

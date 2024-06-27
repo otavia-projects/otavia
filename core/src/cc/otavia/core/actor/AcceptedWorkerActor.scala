@@ -20,11 +20,10 @@ import cc.otavia.core.actor.AcceptorActor.AcceptedChannel
 import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.message.*
 import cc.otavia.core.message.helper.UnitReply
-import cc.otavia.core.stack.helper.{ChannelFutureState, StartState}
 import cc.otavia.core.stack.*
+import cc.otavia.core.stack.helper.{ChannelFutureState, StartState}
 
 import scala.language.unsafeNulls
-import scala.reflect.{ClassTag, classTag}
 
 abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | AcceptedChannel] {
 

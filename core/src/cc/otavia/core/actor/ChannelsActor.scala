@@ -31,14 +31,9 @@ import cc.otavia.core.timer.Timer
 
 import java.io.File
 import java.net.*
-import java.nio.channels.SelectionKey
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
-import java.util.concurrent.CancellationException
-import scala.collection.mutable
 import scala.language.unsafeNulls
-import scala.reflect.ClassTag
-import scala.util.*
 
 abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 

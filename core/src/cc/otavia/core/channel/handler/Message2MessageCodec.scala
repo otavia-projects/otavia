@@ -16,6 +16,4 @@
 
 package cc.otavia.core.channel.handler
 
-import cc.otavia.core.channel.ChannelHandler
-
 trait Message2MessageCodec extends Message2MessageEncoder, Message2MessageDecoder

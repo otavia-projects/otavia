@@ -16,16 +16,12 @@
 
 package cc.otavia.core.ioc
 
-import cc.otavia.core.actor.{Actor, ActorFactory}
 import cc.otavia.core.address.Address
-import cc.otavia.core.message.Call
 import cc.otavia.core.system.ActorSystem
 
 import java.util.concurrent.ConcurrentHashMap
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 import scala.language.unsafeNulls
-import scala.reflect.ClassTag
 
 private[core] class BeanManager(val system: ActorSystem) {
 
@@ -49,7 +45,7 @@ private[core] class BeanManager(val system: ActorSystem) {
         for (sp <- bean.superClasses() if sp != bean.name) {
             var value: mutable.Buffer[String] = null
 
-            if (!superTypes.containsKey(sp)) value = new ArrayBuffer[String]() else value = superTypes.get(sp)
+            if (!superTypes.containsKey(sp)) value = new mutable.ArrayBuffer[String]() else value = superTypes.get(sp)
 
             value.addOne(bean.name)
         }

@@ -16,7 +16,6 @@
 
 package cc.otavia.core.cache
 
-import cc.otavia.core.system.ActorThread
 import cc.otavia.core.timer.TimeoutTrigger
 
 abstract class AbstractThreadIsolatedObjectPool[T <: Poolable] extends ObjectPool[T] {

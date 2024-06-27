@@ -17,10 +17,7 @@
 package cc.otavia.log4a.appender
 
 import cc.otavia.core.actor.StateActor
-import cc.otavia.core.address.Address
-import cc.otavia.core.ioc.{Component, Primary}
-import cc.otavia.core.message.Notice
-import cc.otavia.core.stack.{BatchNoticeStack, NoticeStack, StackState, StackYield}
+import cc.otavia.core.stack.{BatchNoticeStack, NoticeStack, StackYield}
 import cc.otavia.log4a.appender.Appender
 import cc.otavia.log4a.appender.Appender.*
 

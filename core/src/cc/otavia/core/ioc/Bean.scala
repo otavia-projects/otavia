@@ -16,7 +16,7 @@
 
 package cc.otavia.core.ioc
 
-import cc.otavia.core.actor.{AbstractActor, Actor, ActorFactory}
+import cc.otavia.core.actor.{AbstractActor, Actor}
 import cc.otavia.core.address.Address
 
 import scala.collection.mutable

@@ -16,8 +16,7 @@
 
 package cc.otavia.core.ioc
 
-import cc.otavia.core.actor.{Actor, ActorFactory}
-import cc.otavia.core.message.Call
+import cc.otavia.core.actor.ActorFactory
 
 case class BeanDefinition(
     factory: ActorFactory[?],

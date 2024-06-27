@@ -25,6 +25,7 @@ import cc.otavia.demo.controller.ScaleMessageController.*
 import cc.otavia.http.*
 import cc.otavia.http.server.{HttpRequest, HttpRequestFactory, HttpResponseSerde}
 import cc.otavia.json.{JsonConstants, JsonSerde}
+import cc.otavia.serde.Serde
 
 import java.nio.charset.StandardCharsets
 import scala.collection.mutable
@@ -87,10 +88,13 @@ object ScaleMessageController {
 
     }
 
-    val messageRequestFactory: HttpRequestFactory = new HttpRequestFactory(Some(messageSerde)) {
+    val messageRequestFactory: HttpRequestFactory = new HttpRequestFactory() {
+
+        override val contentSerde: Option[Serde[_]]         = Some(messageSerde)
         override def createHttpRequest(): HttpRequest[?, ?] = new ScaleMessageRequest()
+
     }
 
-    val messageResponseSerde = new HttpResponseSerde[ScaleMessage](messageSerde, MediaType.APP_JSON)
+    val messageResponseSerde = HttpResponseSerde[ScaleMessage](messageSerde, MediaType.APP_JSON)
 
 }

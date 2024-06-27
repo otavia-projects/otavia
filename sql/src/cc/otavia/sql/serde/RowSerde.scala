@@ -16,7 +16,6 @@
 
 package cc.otavia.sql.serde
 
-import cc.otavia.buffer.Buffer
 import cc.otavia.serde.Serde
 import cc.otavia.sql.RowParser
 

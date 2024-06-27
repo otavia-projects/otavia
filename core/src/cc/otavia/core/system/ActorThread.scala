@@ -155,7 +155,7 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
             val runHouse = manager.run()
             val runEvent = this.runThreadEvent()
 
-            if (stops > 0 || runHouse || runEvent) success = true
+            if (stops > 0 || runHouse) success = true
 
             if (success) {
                 emptyTimes = 0

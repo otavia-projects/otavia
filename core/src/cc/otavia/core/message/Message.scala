@@ -16,8 +16,7 @@
 
 package cc.otavia.core.message
 
-import cc.otavia.core.actor.{AbstractActor, Actor}
-import cc.otavia.core.address.Address
+import cc.otavia.core.actor.Actor
 import cc.otavia.core.stack.Stack
 import cc.otavia.core.util.Nextable
 

@@ -16,8 +16,6 @@
 
 package cc.otavia.core.cache
 
-import cc.otavia.core.system.ActorThread
-
 import scala.language.unsafeNulls
 
 /** Light-weight object pool.

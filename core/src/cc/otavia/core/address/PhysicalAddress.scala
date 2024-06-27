@@ -16,7 +16,7 @@
 
 package cc.otavia.core.address
 
-import cc.otavia.core.actor.{AbstractActor, Actor, ChannelsActor, StateActor}
+import cc.otavia.core.actor.AbstractActor
 import cc.otavia.core.message.*
 import cc.otavia.core.stack.MessageFuture
 import cc.otavia.core.system.{ActorHouse, House}

@@ -54,19 +54,6 @@ object RowOffset {
 
         override protected def newObject(): RowOffset = new RowOffset
 
-        override def dropIfRecycleNotByCreated: Boolean = true
-
-        override protected val timeoutTrigger: Option[TimeoutTrigger] =
-            Some(TimeoutTrigger.DelayPeriod(60, 60, TimeUnit.SECONDS, TimeUnit.SECONDS))
-
-        override protected def handleTimeout(registerId: Long, threadLocalTimer: ThreadLocalTimer): Unit = {
-            val duration = System.currentTimeMillis() - threadLocalTimer.recentlyGetTime
-            if (duration / 1000 > 60) {
-                val holder = this.holder()
-                if (holder.size > 10) holder.clean(10)
-            }
-        }
-
     }
 
 }

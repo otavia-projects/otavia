@@ -16,6 +16,4 @@
 
 package cc.otavia.core.channel.handler
 
-import cc.otavia.core.channel.ChannelHandler
-
 trait Byte2ByteCodec extends Byte2ByteDecoder, Byte2ByteEncoder

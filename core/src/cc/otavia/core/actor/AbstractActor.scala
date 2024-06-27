@@ -16,8 +16,7 @@
 
 package cc.otavia.core.actor
 
-import cc.otavia.core.actor.Actor.{ASK_TYPE, MessageType, NOTICE_TYPE, REPLY_TYPE}
-import cc.otavia.core.address.{ActorAddress, Address, PhysicalAddress}
+import cc.otavia.core.address.*
 import cc.otavia.core.cache.Poolable
 import cc.otavia.core.message.*
 import cc.otavia.core.reactor.*
@@ -26,10 +25,8 @@ import cc.otavia.core.stack.*
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.Timer
 
-import scala.collection.immutable.Seq
 import scala.concurrent.TimeoutException
 import scala.language.unsafeNulls
-import scala.reflect.ClassTag
 
 private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher with Actor[M] {
 

@@ -17,12 +17,11 @@
 package cc.otavia.core.actor
 
 import cc.otavia.core.channel.Channel
-import cc.otavia.core.message.{Ask, Call, Notice}
+import cc.otavia.core.message.Call
 
 import scala.language.unsafeNulls
-import scala.reflect.ClassTag
 
 abstract class DatagramChannelsActor[M <: Call] extends ChannelsActor[M] {
     override protected def newChannel(): Channel = system.channelFactory.openDatagramChannel(family)
-    
+
 }

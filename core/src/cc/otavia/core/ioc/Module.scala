@@ -18,9 +18,6 @@ package cc.otavia.core.ioc
 
 import cc.otavia.core.system.ActorSystem
 
-import java.util.concurrent.ConcurrentLinkedQueue
-import scala.language.unsafeNulls
-
 trait Module {
 
     protected def system: ActorSystem

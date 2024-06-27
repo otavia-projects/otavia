@@ -16,7 +16,7 @@
 
 package cc.otavia.core.reactor
 
-import cc.otavia.buffer.pool.{AdaptiveBuffer, RecyclablePageBuffer}
+import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.channel.{Channel, ChannelShutdownDirection, FileRegion}
 import cc.otavia.core.reactor.Reactor.Command

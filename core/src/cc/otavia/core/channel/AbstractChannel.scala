@@ -18,7 +18,6 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.buffer.AbstractBuffer
 import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, AdaptiveBuffer}
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.ChannelOption.*

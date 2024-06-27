@@ -19,8 +19,6 @@ package cc.otavia.sql
 import cc.otavia.core.actor.ChannelsActor.ChannelEstablished
 import cc.otavia.core.message.{Ask, Notice}
 
-import java.net.SocketAddress
-
 case class Authentication(url: String, info: Map[String, String], driver: Option[String] = None)
     extends Ask[ChannelEstablished]
     with Notice

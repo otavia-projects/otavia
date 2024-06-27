@@ -17,13 +17,12 @@
 package cc.otavia.sql
 
 import cc.otavia.core.actor.ChannelsActor.ChannelEstablished
+import cc.otavia.core.actor.SocketChannelsActor
 import cc.otavia.core.actor.SocketChannelsActor.Connect
-import cc.otavia.core.actor.{ChannelsActor, SocketChannelsActor}
-import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelInitializer, ChannelState}
+import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.message.*
-import cc.otavia.core.stack.StackState.*
+import cc.otavia.core.stack.*
 import cc.otavia.core.stack.helper.*
-import cc.otavia.core.stack.{AskStack, ChannelFuture, NoticeStack, StackState, StackYield}
 import cc.otavia.sql.Authentication
 import cc.otavia.sql.Statement.*
 

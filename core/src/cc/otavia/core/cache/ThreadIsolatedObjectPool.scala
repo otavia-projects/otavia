@@ -16,9 +16,8 @@
 
 package cc.otavia.core.cache
 
-import cc.otavia.core.cache.AbstractThreadIsolatedObjectPool.*
+import cc.otavia.core.cache.AbstractThreadIsolatedObjectPool.ObjectPoolThreadLocal
 import cc.otavia.core.system.ActorThread
-import cc.otavia.core.timer.TimeoutTrigger
 
 import java.lang.ThreadLocal as JThreadLocal
 import scala.language.unsafeNulls

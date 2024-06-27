@@ -16,6 +16,6 @@
 
 package cc.otavia.core.address
 
-import cc.otavia.core.message.{Ask, Message, Notice, Call}
+import cc.otavia.core.message.Call
 
 trait ProxyAddress[-M <: Call] extends Address[M]

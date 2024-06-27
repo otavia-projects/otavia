@@ -16,8 +16,7 @@
 
 package cc.otavia.core.address
 
-import cc.otavia.core.actor.{Actor, StateActor}
-import cc.otavia.core.message.*
+import cc.otavia.core.message.Call
 import cc.otavia.core.system.ActorHouse
 
 /** Actor physical address

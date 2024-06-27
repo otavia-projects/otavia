@@ -26,7 +26,7 @@ import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.Timer
 
 import scala.language.unsafeNulls
-import scala.reflect.{ClassTag, TypeTest, classTag}
+import scala.reflect.{ClassTag, classTag}
 
 /** base class of IO & Actor model, it has two subclass
  *    1. [[cc.otavia.core.actor.StateActor]]: general actor

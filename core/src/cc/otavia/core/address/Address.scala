@@ -16,12 +16,10 @@
 
 package cc.otavia.core.address
 
-import cc.otavia.core.actor.{AbstractActor, Actor}
+import cc.otavia.core.actor.AbstractActor
 import cc.otavia.core.message.*
 import cc.otavia.core.stack.helper.FutureState
 import cc.otavia.core.stack.{AskStack, MessageFuture}
-
-import scala.reflect.ClassTag
 
 /** Address is the facade of an actor. Actors cannot call each other directly, only send messages to the actor via its
  *  address.

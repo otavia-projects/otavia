@@ -16,7 +16,6 @@
 
 package cc.otavia.core.cache
 
-import cc.otavia.core.system.{ActorSystem, ActorThreadPool}
 import cc.otavia.core.util.Nextable
 
 import scala.language.unsafeNulls
