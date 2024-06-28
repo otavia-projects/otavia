@@ -185,10 +185,12 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                         buffer.writerOffset(len)
                         len = 0
                     }
+                    this.extend(buffer)
                     len > 0
                 } do ()
                 widx = offset
             } else {
+                last.writerOffset(last.writerOffset + offset - widx)
                 widx = offset
             }
         } else {

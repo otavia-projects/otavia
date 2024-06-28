@@ -135,7 +135,7 @@ object BufferUtils {
     }
 
     def readEscapedString(buffer: Buffer, len: Int): String = {
-        val cs = buffer.readCharSequence(len).toString()
+        val cs = buffer.readCharSequence(len).toString
         cs.translateEscapes()
     }
 
