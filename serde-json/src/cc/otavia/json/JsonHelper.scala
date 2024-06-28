@@ -16,7 +16,7 @@
 
 package cc.otavia.json
 
-import cc.otavia.buffer.Buffer
+import cc.otavia.buffer.{Buffer, BufferUtils}
 import cc.otavia.datatype.Money
 import cc.otavia.json.types.*
 import cc.otavia.serde.{Serde, SerdeOps}
@@ -81,6 +81,13 @@ private[json] object JsonHelper {
         out.writeByte(JsonConstants.TOKEN_COLON)
     }
 
+    final def serializeKey(key: Array[Byte], out: Buffer): Unit = {
+        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+        out.writeBytes(key)
+        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+        out.writeByte(JsonConstants.TOKEN_COLON)
+    }
+
     final def serializeNull(out: Buffer): Unit = out.writeBytes(JsonConstants.TOKEN_NULL)
 
     final def serializeByte(byte: Byte, out: Buffer): Unit = serializeInt(byte, out)
@@ -96,9 +103,9 @@ private[json] object JsonHelper {
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
     }
 
-    final def serializeShort(short: Short, out: Buffer): Unit = out.writeCharSequence(short.toString)
+    final def serializeShort(short: Short, out: Buffer): Unit = BufferUtils.writeShortAsString(out, short)
 
-    final def serializeInt(int: Int, out: Buffer): Unit = out.writeCharSequence(int.toString)
+    final def serializeInt(int: Int, out: Buffer): Unit = BufferUtils.writeIntAsString(out, int)
 
     final def serializeLong(long: Long, out: Buffer): Unit = out.writeCharSequence(long.toString)
 
@@ -129,19 +136,9 @@ private[json] object JsonHelper {
         b.toChar
     }
 
-    final def deserializeShort(in: Buffer): Short = deserializeInt(in).toShort
+    final def deserializeShort(in: Buffer): Short = BufferUtils.readStringAsShort(in)
 
-    final def deserializeInt(in: Buffer): Int = {
-        skipBlanks(in)
-        in.skipIfNextIs(JsonConstants.TOKEN_PLUS)
-        val minus    = in.skipIfNextIs(JsonConstants.TOKEN_MINUS)
-        var ret: Int = 0
-        while (in.readableBytes > 0 && in.nextIn(JsonConstants.TOKEN_NUMBERS)) {
-            val b = in.readByte
-            ret = ret * 10 + (b - JsonConstants.TOKEN_ZERO)
-        }
-        if (minus) -ret else ret
-    }
+    final def deserializeInt(in: Buffer): Int = BufferUtils.readStringAsInt(in)
 
     final def deserializeLong(in: Buffer): Long = {
         skipBlanks(in)
