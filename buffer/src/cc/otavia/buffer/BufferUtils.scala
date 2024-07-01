@@ -177,6 +177,31 @@ object BufferUtils {
      */
     final def isNonEscapedAscii(ch: Char): Boolean = ch < 0x80 && escapedChars(ch) == 0
 
+    def readStringAsByte(buffer: Buffer): Byte = {
+        val isNeg = buffer.skipIfNextIs('-')
+        if (isNeg && !buffer.nextInRange('0', '9'))
+            throw new NumberFormatException(s"except number at '-', but got ${buffer.getByte(buffer.readerOffset)}")
+        var x: Int = 0
+        while (buffer.readableBytes > 0 && buffer.nextInRange('0', '9')) {
+            x = x * 10 + (buffer.readByte - '0')
+            if (x >= 128) throw new NumberFormatException(s"short value overflow error")
+        }
+        if (isNeg) x = -x
+        x.toByte
+    }
+
+    def writeByteAsString(buffer: Buffer, byte: Byte): Unit = {
+        val q0: Int =
+            if (byte >= 0) byte
+            else {
+                buffer.writeByte('-')
+                -byte
+            }
+        if (q0 < 10) buffer.writeByte((q0 + '0').toByte)
+        else if (q0 < 100) buffer.writeShortLE(digits(q0))
+        else buffer.writeMediumLE(digits(q0 - 100) << 8 | 0x31)
+    }
+
     def readStringAsShort(buffer: Buffer): Short = {
         val isNeg = buffer.skipIfNextIs('-')
         if (isNeg && !buffer.nextInRange('0', '9'))

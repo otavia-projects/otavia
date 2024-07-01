@@ -88,6 +88,35 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
     }
 
+    test("byte") {
+        val buffer = allocator.allocate()
+        BufferUtils.writeByteAsString(buffer, 0)
+        assert(buffer.nextIs('0'))
+        assert(BufferUtils.readStringAsByte(buffer) == 0)
+
+        BufferUtils.writeByteAsString(buffer, 5)
+        assert(buffer.nextIs('5'))
+        assert(BufferUtils.readStringAsByte(buffer) == 5)
+
+        BufferUtils.writeByteAsString(buffer, 10)
+        assert(buffer.nextAre("10".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsByte(buffer) == 10)
+
+        BufferUtils.writeByteAsString(buffer, 88)
+        assert(buffer.nextAre("88".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsByte(buffer) == 88)
+
+        BufferUtils.writeByteAsString(buffer, 100)
+        assert(buffer.nextAre("100".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsByte(buffer) == 100)
+
+        BufferUtils.writeByteAsString(buffer, 110)
+        assert(buffer.nextAre("110".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsByte(buffer) == 110)
+
+
+    }
+
     test("short") {
         val buffer = allocator.allocate()
 
