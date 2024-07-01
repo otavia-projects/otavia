@@ -22,7 +22,7 @@ import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.common.{SystemPropertyUtil, ThrowableUtil}
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.channel.{Channel, ChannelException, FileRegion}
-import cc.otavia.core.message.ReactorEvent
+import cc.otavia.core.message.*
 import cc.otavia.core.reactor.*
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
@@ -313,7 +313,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
             try {
                 nioUnsafeChannel.registerSelector(unwrappedSelector)
                 channel.executorAddress.inform(
-                  ReactorEvent.RegisterReply(channel, nioUnsafeChannel.isActive)
+                  RegisterReply(channel, nioUnsafeChannel.isActive)
                 )
                 success = true
             } catch {
@@ -321,9 +321,9 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
                     if (!selected) {
                         selectNow()
                         selected = true
-                    } else channel.executorAddress.inform(ReactorEvent.RegisterReply(channel, cause = Some(e)))
+                    } else channel.executorAddress.inform(RegisterReply(channel, cause = Some(e)))
                 case e: ClosedChannelException =>
-                    channel.executorAddress.inform(ReactorEvent.RegisterReply(channel, cause = Some(e)))
+                    channel.executorAddress.inform(RegisterReply(channel, cause = Some(e)))
                     success = true
             }
         }
@@ -344,7 +344,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
             channel.unsafeChannel.unsafeBind(local)
         } catch {
             case t: Throwable =>
-                channel.executorAddress.inform(ReactorEvent.BindReply(channel, cause = Some(t)))
+                channel.executorAddress.inform(BindReply(channel, cause = Some(t)))
         }
     }
 
@@ -353,7 +353,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
             channel.unsafeChannel.unsafeOpen(path, options, attrs)
         } catch {
             case t: Throwable =>
-                channel.executorAddress.inform(ReactorEvent.OpenReply(channel, Some(t)))
+                channel.executorAddress.inform(OpenReply(channel, Some(t)))
         }
     }
 
@@ -367,7 +367,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
             channel.unsafeChannel.unsafeConnect(remote, local, fastOpen) // non-blocking
         } catch {
             case t: Throwable =>
-                channel.executorAddress.inform(ReactorEvent.ConnectReply(channel, cause = Some(t)))
+                channel.executorAddress.inform(ConnectReply(channel, cause = Some(t)))
         }
     }
 
@@ -375,7 +375,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         try {
             channel.unsafeChannel.unsafeDisconnect()
         } catch {
-            case t: Throwable => channel.executorAddress.inform(ReactorEvent.DisconnectReply(channel, Some(t)))
+            case t: Throwable => channel.executorAddress.inform(DisconnectReply(channel, Some(t)))
         }
     }
 
@@ -383,7 +383,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         try {
             channel.unsafeChannel.unsafeClose(None)
         } catch {
-            case t: Throwable => channel.executorAddress.inform(ReactorEvent.ChannelClose(channel, Some(t)))
+            case t: Throwable => channel.executorAddress.inform(ChannelClose(channel, Some(t)))
         }
     }
 

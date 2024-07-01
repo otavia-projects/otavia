@@ -24,7 +24,7 @@ import cc.otavia.core.channel.ChannelOption.*
 import cc.otavia.core.channel.inflight.QueueMap
 import cc.otavia.core.channel.internal.AdaptiveBufferOffset
 import cc.otavia.core.channel.message.{AdaptiveBufferChangeNotice, DatagramAdaptiveRangePacket, ReadPlan, ReadPlanFactory}
-import cc.otavia.core.message.ReactorEvent
+import cc.otavia.core.message.*
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.*
 import cc.otavia.core.stack.helper.ChannelFutureState
@@ -388,13 +388,13 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     // impl EventHandle
 
-    final private[core] def handleChannelAcceptedEvent(event: ReactorEvent.AcceptedEvent): Unit =
+    final private[core] def handleChannelAcceptedEvent(event: AcceptedEvent): Unit =
         event.channel.pipeline.fireChannelRead(event.accepted)
 
-    final private[core] def handleChannelReadCompletedEvent(event: ReactorEvent.ReadCompletedEvent): Unit =
+    final private[core] def handleChannelReadCompletedEvent(event: ReadCompletedEvent): Unit =
         pipe.fireChannelReadComplete()
 
-    final private[core] def handleChannelReadBufferEvent(event: ReactorEvent.ReadBuffer): Unit = {
+    final private[core] def handleChannelReadBufferEvent(event: ReadBuffer): Unit = {
         event.sender match
             case Some(address) => // fire UDP message
                 val start = channelInboundAdaptiveBuffer.writerOffset
@@ -509,24 +509,24 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     // Event from Reactor
 
     /** Handle channel close event */
-    private[core] def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = {}
+    private[core] def handleChannelCloseEvent(event: ChannelClose): Unit = {}
 
     /** Handle channel register result event */
-    private[core] def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {}
+    private[core] def handleChannelRegisterReplyEvent(event: RegisterReply): Unit = {}
 
     /** Handle channel deregister result event */
-    private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = {}
+    private[core] def handleChannelDeregisterReplyEvent(event: DeregisterReply): Unit = {}
 
     /** Handle channel readiness event */
-    private[core] def handleChannelReadinessEvent(event: ReactorEvent.ChannelReadiness): Unit = {}
+    private[core] def handleChannelReadinessEvent(event: ChannelReadiness): Unit = {}
 
-    private[core] def handleChannelBindReplyEvent(event: ReactorEvent.BindReply): Unit = {}
+    private[core] def handleChannelBindReplyEvent(event: BindReply): Unit = {}
 
-    private[core] def handleChannelConnectReplyEvent(event: ReactorEvent.ConnectReply): Unit = {}
+    private[core] def handleChannelConnectReplyEvent(event: ConnectReply): Unit = {}
 
-    private[core] def handleChannelDisconnectReplyEvent(event: ReactorEvent.DisconnectReply): Unit = {}
+    private[core] def handleChannelDisconnectReplyEvent(event: DisconnectReply): Unit = {}
 
-    private[core] def handleChannelOpenReplyEvent(event: ReactorEvent.OpenReply): Unit = {}
+    private[core] def handleChannelOpenReplyEvent(event: OpenReply): Unit = {}
 
     // Event from Timer
 

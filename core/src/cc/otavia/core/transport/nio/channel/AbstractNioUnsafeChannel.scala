@@ -20,7 +20,7 @@ package cc.otavia.core.transport.nio.channel
 
 import cc.otavia.core.channel.message.{AutoReadPlan, ReadPlan, ReadPlanFactory}
 import cc.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelException, ChannelShutdownDirection}
-import cc.otavia.core.message.ReactorEvent
+import cc.otavia.core.message.*
 
 import java.io.IOException
 import java.net.{PortUnreachableException, SocketAddress}
@@ -52,13 +52,13 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
         try {
             _selectionKey.cancel()
             _selectionKey = null
-            executorAddress.inform(ReactorEvent.DeregisterReply(channel, false, isOpen))
+            executorAddress.inform(DeregisterReply(channel, false, isOpen))
         } catch {
             case e: Throwable =>
-                executorAddress.inform(ReactorEvent.DeregisterReply(channel, false, isOpen, Some(e)))
+                executorAddress.inform(DeregisterReply(channel, false, isOpen, Some(e)))
         }
     } else {
-        executorAddress.inform(ReactorEvent.DeregisterReply(channel, false, isOpen, Some(new IllegalStateException())))
+        executorAddress.inform(DeregisterReply(channel, false, isOpen, Some(new IllegalStateException())))
     }
 
     override def handle(key: SelectionKey): Unit = if (!key.isValid) {
@@ -93,7 +93,7 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
         }
     }
 
-    override def closeProcessor(): Unit = executorAddress.inform(ReactorEvent.ChannelClose(channel))
+    override def closeProcessor(): Unit = executorAddress.inform(ChannelClose(channel))
 
     override def unsafeRead(readPlan: ReadPlan): Unit = if (_selectionKey.isValid) {
         if (readPlan == AutoReadPlan) {
@@ -107,7 +107,7 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
 
     override def unsafeOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = {
         channel.executorAddress.inform(
-          ReactorEvent.OpenReply(channel, cause = Some(new UnsupportedOperationException()))
+          OpenReply(channel, cause = Some(new UnsupportedOperationException()))
         )
     }
 
@@ -115,10 +115,10 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
         try {
             if (_selectionKey != null) deregisterSelector()
             ch.close()
-            executorAddress.inform(ReactorEvent.ChannelClose(channel, cause))
+            executorAddress.inform(ChannelClose(channel, cause))
         } catch {
             case t: Throwable =>
-                executorAddress.inform(ReactorEvent.ChannelClose(channel, Some(t)))
+                executorAddress.inform(ChannelClose(channel, Some(t)))
         }
     }
 
@@ -170,7 +170,7 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
 
     private def completed(): Unit = {
         currentReadPlan.readComplete()
-        executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel))
+        executorAddress.inform(ReadCompletedEvent(channel))
     }
 
     protected def processRead(attemptedBytesRead: Int, actualBytesRead: Int, numMessagesRead: Int): Unit = {

@@ -23,7 +23,7 @@ import cc.otavia.core.channel.ChannelOption.*
 import cc.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
 import cc.otavia.core.channel.internal.{AdaptiveBufferOffset, WriteBufferWaterMark}
 import cc.otavia.core.channel.message.ReadPlanFactory
-import cc.otavia.core.message.ReactorEvent
+import cc.otavia.core.message.*
 import cc.otavia.core.stack.{ChannelPromise, Promise}
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.{TimeoutTrigger, Timer}
@@ -155,7 +155,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
             reactor.register(this)
         }
 
-    override private[core] def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {
+    override private[core] def handleChannelRegisterReplyEvent(event: RegisterReply): Unit = {
         val promise = ongoingChannelPromise
         ongoingChannelPromise = null
         event.cause match
@@ -222,7 +222,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         reactor.bind(this, local)
     }
 
-    override final private[core] def handleChannelBindReplyEvent(event: ReactorEvent.BindReply): Unit = {
+    override final private[core] def handleChannelBindReplyEvent(event: BindReply): Unit = {
         val promise = ongoingChannelPromise
         ongoingChannelPromise = null
         event.cause match
@@ -231,7 +231,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
                 binding = false
                 if (event.firstActive) // first active
                     if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead()
-                promise.setSuccess(ReactorEvent.EMPTY_EVENT)
+                promise.setSuccess(EMPTY_EVENT)
             case Some(cause) =>
                 promise.setFailure(cause)
                 closeTransport(newPromise())
@@ -284,7 +284,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         }
     }
 
-    override final private[core] def handleChannelConnectReplyEvent(event: ReactorEvent.ConnectReply): Unit =
+    override final private[core] def handleChannelConnectReplyEvent(event: ConnectReply): Unit =
         if (ongoingChannelPromise != null) {
             val promise = ongoingChannelPromise
             this.ongoingChannelPromise = null
@@ -336,12 +336,12 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
             closing = true
             ongoingChannelPromise = promise
             reactor.close(this)
-        } else if (closed) { promise.setSuccess(ReactorEvent.EMPTY_EVENT) }
+        } else if (closed) { promise.setSuccess(EMPTY_EVENT) }
         else if (closing) { promise.setFailure(new IllegalStateException("A close operation is running")) }
         else promise.setFailure(new NotYetConnectedException())
     }
 
-    override private[core] def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = {
+    override private[core] def handleChannelCloseEvent(event: ChannelClose): Unit = {
         closing = false
         closed = true
 
@@ -370,14 +370,14 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
             if (isOpen) promise.setFailure(new NotYetConnectedException())
             else promise.setFailure(new ClosedChannelException())
         } else if (isShutdown(direction)) {
-            promise.setSuccess(ReactorEvent.EMPTY_EVENT)
+            promise.setSuccess(EMPTY_EVENT)
         } else {
             reactor.shutdown(this, direction)
-            promise.setSuccess(ReactorEvent.EMPTY_EVENT)
+            promise.setSuccess(EMPTY_EVENT)
         }
     }
 
-    final private[core] def handleShutdownReply(event: ReactorEvent.ShutdownReply): Unit = {
+    final private[core] def handleShutdownReply(event: ShutdownReply): Unit = {
         event.direction match
             case Inbound  => pipeline.fireChannelShutdown(event.direction)
             case Outbound => shutdownOutput(new ClosedChannelException())
@@ -392,14 +392,14 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
     }
 
     override private[core] def deregisterTransport(promise: ChannelPromise): Unit =
-        if (!registered) promise.setSuccess(ReactorEvent.EMPTY_EVENT)
+        if (!registered) promise.setSuccess(EMPTY_EVENT)
         else {
             // TODO: add deregistering state
             reactor.deregister(this)
             this.ongoingChannelPromise = promise
         }
 
-    override final private[core] def handleChannelDeregisterReplyEvent(event: ReactorEvent.DeregisterReply): Unit = {
+    override final private[core] def handleChannelDeregisterReplyEvent(event: DeregisterReply): Unit = {
         event.cause match
             case Some(value) =>
                 logger.warn("Unexpected exception occurred while deregistering a channel.", value)

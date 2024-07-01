@@ -22,7 +22,7 @@ import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
 import cc.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import cc.otavia.core.channel.{Channel, ChannelShutdownDirection, FileRegion}
-import cc.otavia.core.message.ReactorEvent
+import cc.otavia.core.message.*
 import cc.otavia.core.transport.nio.channel.NioUnsafeSocketChannel.NioSocketChannelReadPlan
 
 import java.io.IOException
@@ -44,10 +44,10 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
 
     override def unsafeBind(local: SocketAddress): Unit = try {
         javaChannel.bind(local)
-        executorAddress.inform(ReactorEvent.BindReply(channel))
+        executorAddress.inform(BindReply(channel))
     } catch {
         case t: Throwable =>
-            executorAddress.inform(ReactorEvent.BindReply(channel, cause = Some(t)))
+            executorAddress.inform(BindReply(channel, cause = Some(t)))
     }
 
     override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit = {
@@ -60,19 +60,19 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
             if (!connected) {
                 _selectionKey.interestOps(SelectionKey.OP_CONNECT)
             } else {
-                executorAddress.inform(ReactorEvent.ConnectReply(channel, true))
+                executorAddress.inform(ConnectReply(channel, true))
             }
         } catch {
-            case t: Throwable => executorAddress.inform(ReactorEvent.ConnectReply(channel, cause = Some(t)))
+            case t: Throwable => executorAddress.inform(ConnectReply(channel, cause = Some(t)))
         }
     }
 
     override protected def finishConnect(): Unit = {
         try {
             javaChannel.finishConnect()
-            executorAddress.inform(ReactorEvent.ConnectReply(channel, true))
+            executorAddress.inform(ConnectReply(channel, true))
         } catch {
-            case t: Throwable => executorAddress.inform(ReactorEvent.ConnectReply(channel, cause = Some(t)))
+            case t: Throwable => executorAddress.inform(ConnectReply(channel, cause = Some(t)))
         }
     }
 
@@ -88,9 +88,9 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
                 case Outbound =>
                     javaChannel.shutdownOutput()
                     shutdownedOutbound = true
-            executorAddress.inform(ReactorEvent.ShutdownReply(this.channel, direction))
+            executorAddress.inform(ShutdownReply(this.channel, direction))
         } catch {
-            case e: Throwable => executorAddress.inform(ReactorEvent.ShutdownReply(this.channel, direction, Some(e)))
+            case e: Throwable => executorAddress.inform(ShutdownReply(this.channel, direction, Some(e)))
         }
     }
 
@@ -200,7 +200,7 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
         }
 
         if (read > 0) {
-            executorAddress.inform(ReactorEvent.ReadBuffer(channel, page, recipient = null))
+            executorAddress.inform(ReadBuffer(channel, page, recipient = null))
             false
         } else if (read == 0) {
             page.close()

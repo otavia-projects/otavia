@@ -40,45 +40,48 @@ case class AskTimeoutEvent(registerId: Long, askId: Long) extends TimerEvent
 case class ResourceTimeoutEvent(registerId: Long, cache: ResourceTimer) extends TimerEvent
 
 /** channel event for [[cc.otavia.core.actor.ChannelsActor]] */
-enum ReactorEvent extends Event {
+sealed abstract class ReactorEvent extends Event
 
-    // event for
-    case RegisterReply(channel: Channel, active: Boolean = false, cause: Option[Throwable] = None)
-    case DeregisterReply(
-        channel: Channel,
-        firstInactive: Boolean = false,
-        isOpen: Boolean = false,
-        cause: Option[Throwable] = None
-    )
+// event for
+case class RegisterReply(channel: Channel, active: Boolean = false, cause: Option[Throwable] = None)
+    extends ReactorEvent
 
-    case BindReply(channel: Channel, firstActive: Boolean = false, cause: Option[Throwable] = None)
+case class DeregisterReply(
+    channel: Channel,
+    firstInactive: Boolean = false,
+    isOpen: Boolean = false,
+    cause: Option[Throwable] = None
+) extends ReactorEvent
 
-    case OpenReply(channel: Channel, cause: Option[Throwable] = None)
+case class BindReply(channel: Channel, firstActive: Boolean = false, cause: Option[Throwable] = None)
+    extends ReactorEvent
 
-    case ConnectReply(channel: Channel, firstActive: Boolean = false, cause: Option[Throwable] = None)
+case class OpenReply(channel: Channel, cause: Option[Throwable] = None) extends ReactorEvent
 
-    case DisconnectReply(channel: Channel, cause: Option[Throwable] = None)
+case class ConnectReply(channel: Channel, firstActive: Boolean = false, cause: Option[Throwable] = None)
+    extends ReactorEvent
 
-    case ShutdownReply(channel: Channel, direction: ChannelShutdownDirection, cause: Option[Throwable] = None)
+case class DisconnectReply(channel: Channel, cause: Option[Throwable] = None) extends ReactorEvent
 
-    case ChannelReadiness(channel: Channel, readyOps: Int)
-    case ChannelClose(channel: Channel, cause: Option[Throwable] = None)
+case class ShutdownReply(channel: Channel, direction: ChannelShutdownDirection, cause: Option[Throwable] = None)
+    extends ReactorEvent
 
-    case EMPTY_EVENT
+case class ChannelReadiness(channel: Channel, readyOps: Int)               extends ReactorEvent
+case class ChannelClose(channel: Channel, cause: Option[Throwable] = None) extends ReactorEvent
 
-    case ReadEvent(channel: Channel, cause: Option[Throwable] = None)
-    case ReadCompletedEvent(channel: Channel, cause: Option[Throwable] = None)
+object EMPTY_EVENT extends ReactorEvent
 
-    case AcceptedEvent(channel: Channel, accepted: Channel)
+case class ReadEvent(channel: Channel, cause: Option[Throwable] = None)          extends ReactorEvent
+case class ReadCompletedEvent(channel: Channel, cause: Option[Throwable] = None) extends ReactorEvent
 
-    case ReadBuffer(
-        channel: Channel,
-        buffer: RecyclablePageBuffer,
-        sender: Option[SocketAddress] = None,
-        recipient: SocketAddress,
-        cause: Option[Throwable] = None
-    )
+case class AcceptedEvent(channel: Channel, accepted: Channel) extends ReactorEvent
 
-    case ExceptionEvent(channel: Channel, cause: Throwable)
+case class ReadBuffer(
+    channel: Channel,
+    buffer: RecyclablePageBuffer,
+    sender: Option[SocketAddress] = None,
+    recipient: SocketAddress,
+    cause: Option[Throwable] = None
+) extends ReactorEvent
 
-}
+case class ExceptionEvent(channel: Channel, cause: Throwable) extends ReactorEvent

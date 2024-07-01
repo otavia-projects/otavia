@@ -22,7 +22,7 @@ import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.channel.{Channel, ChannelShutdownDirection, FileRegion}
-import cc.otavia.core.message.ReactorEvent
+import cc.otavia.core.message.*
 
 import java.net.SocketAddress
 import java.nio.channels.{SelectableChannel, SelectionKey, ServerSocketChannel}
@@ -53,7 +53,7 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, re
         javaChannel.bind(local, getBacklog)
         bound = true
         val firstActive = !bindWasActive && channel.unsafeChannel.isActive
-        channel.executorAddress.inform(ReactorEvent.BindReply(channel, firstActive, None))
+        channel.executorAddress.inform(BindReply(channel, firstActive, None))
     }
 
     override def unsafeOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit =
@@ -66,7 +66,7 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, re
 
     override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = {
         val cause = Some(new UnsupportedOperationException())
-        executorAddress.inform(ReactorEvent.ShutdownReply(channel, direction, cause))
+        executorAddress.inform(ShutdownReply(channel, direction, cause))
     }
 
     override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit =
@@ -86,7 +86,7 @@ class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, re
             val c = new NioSocketChannel(channel.system)
             val u = new NioUnsafeSocketChannel(c, socket, SelectionKey.OP_READ)
             c.setUnsafeChannel(u)
-            executorAddress.inform(ReactorEvent.AcceptedEvent(channel, c))
+            executorAddress.inform(AcceptedEvent(channel, c))
             processRead(0, 0, 1)
         } else processRead(0, 0, 0)
 

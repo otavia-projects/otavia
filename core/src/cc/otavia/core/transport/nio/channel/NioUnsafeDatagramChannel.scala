@@ -22,7 +22,7 @@ import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
 import cc.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
 import cc.otavia.core.channel.{Channel, ChannelShutdownDirection, FileRegion}
-import cc.otavia.core.message.ReactorEvent
+import cc.otavia.core.message.*
 import cc.otavia.core.transport.nio.channel.NioUnsafeDatagramChannel.NioDatagramChannelReadPlan
 
 import java.io.IOException
@@ -55,16 +55,16 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
             javaChannel.connect(remote)
             // When connected we are also bound
             bound = true
-            executorAddress.inform(ReactorEvent.ConnectReply(channel, true))
+            executorAddress.inform(ConnectReply(channel, true))
         } catch {
             case t: Throwable =>
-                executorAddress.inform(ReactorEvent.ConnectReply(channel, cause = Some(t)))
+                executorAddress.inform(ConnectReply(channel, cause = Some(t)))
         }
     }
 
     override def unsafeDisconnect(): Unit = {
         ch.disconnect()
-        channel.executorAddress.inform(ReactorEvent.DisconnectReply(channel))
+        channel.executorAddress.inform(DisconnectReply(channel))
     }
 
     override def unsafeShutdown(direction: ChannelShutdownDirection): Unit = {
@@ -72,7 +72,7 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
             case ChannelShutdownDirection.Inbound  => shutdownedInbound = true
             case ChannelShutdownDirection.Outbound => shutdownedOutbound = true
 
-        executorAddress.inform(ReactorEvent.ShutdownReply(channel, direction))
+        executorAddress.inform(ShutdownReply(channel, direction))
     }
 
     override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit = {
@@ -124,7 +124,7 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
 
         if (read > 0) {
             executorAddress.inform(
-              ReactorEvent.ReadBuffer(channel, page, sender = Some(address), recipient = localAddress)
+              ReadBuffer(channel, page, sender = Some(address), recipient = localAddress)
             )
             false
         } else if (read == 0) {

@@ -20,7 +20,7 @@ package cc.otavia.core.channel
 
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.message.ReadPlan
-import cc.otavia.core.message.ReactorEvent
+import cc.otavia.core.message.*
 import cc.otavia.core.stack.{ChannelFuture, ChannelPromise}
 import cc.otavia.core.system.ActorSystem
 
@@ -60,13 +60,13 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
 
     override private[core] def registerTransport(promise: ChannelPromise): Unit = {
         registered = true
-        promise.setSuccess(ReactorEvent.EMPTY_EVENT)
+        promise.setSuccess(EMPTY_EVENT)
     }
 
-    override private[core] def handleChannelRegisterReplyEvent(event: ReactorEvent.RegisterReply): Unit = {}
+    override private[core] def handleChannelRegisterReplyEvent(event: RegisterReply): Unit = {}
 
     override private[core] def deregisterTransport(promise: ChannelPromise): Unit = {
-        promise.setSuccess(ReactorEvent.EMPTY_EVENT)
+        promise.setSuccess(EMPTY_EVENT)
     }
 
     override private[core] def openTransport(
@@ -88,7 +88,7 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
         }
     }
 
-    override final private[core] def handleChannelOpenReplyEvent(event: ReactorEvent.OpenReply): Unit = {
+    override final private[core] def handleChannelOpenReplyEvent(event: OpenReply): Unit = {
         val promise = ongoingChannelPromise
         ongoingChannelPromise = null
         event.cause match
@@ -104,7 +104,7 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
 
     override private[core] def closeTransport(promise: ChannelPromise): Unit = {
         if (!opened) promise.setFailure(new IllegalStateException("File not opened!"))
-        else if (closing || closed) promise.setSuccess(ReactorEvent.EMPTY_EVENT)
+        else if (closing || closed) promise.setSuccess(EMPTY_EVENT)
         else {
             closing = true
             this.ongoingChannelPromise = promise
@@ -112,7 +112,7 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
         }
     }
 
-    override private[core] def handleChannelCloseEvent(event: ReactorEvent.ChannelClose): Unit = {
+    override private[core] def handleChannelCloseEvent(event: ChannelClose): Unit = {
         val promise = ongoingChannelPromise
         ongoingChannelPromise = null
         event.cause match

@@ -18,7 +18,7 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.core.message.ReactorEvent
+import cc.otavia.core.message.*
 import cc.otavia.core.stack.ChannelPromise
 import cc.otavia.core.system.ActorSystem
 
@@ -35,7 +35,7 @@ abstract class AbstractDatagramChannel(system: ActorSystem) extends AbstractNetw
         }
     }
 
-    override private[core] def handleChannelDisconnectReplyEvent(event: ReactorEvent.DisconnectReply): Unit = {
+    override private[core] def handleChannelDisconnectReplyEvent(event: DisconnectReply): Unit = {
         disconnecting = false
         val promise = this.ongoingChannelPromise
         this.ongoingChannelPromise = null

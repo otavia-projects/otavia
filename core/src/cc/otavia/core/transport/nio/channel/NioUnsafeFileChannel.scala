@@ -21,7 +21,7 @@ package cc.otavia.core.transport.nio.channel
 import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.channel.message.{FileReadPlan, MaxMessagesReadPlanFactory, ReadPlan}
 import cc.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelShutdownDirection, FileRegion}
-import cc.otavia.core.message.ReactorEvent
+import cc.otavia.core.message.*
 
 import java.net.SocketAddress
 import java.nio.channels.FileChannel
@@ -39,29 +39,29 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
     private def javaChannel: FileChannel = ch
 
     override def unsafeBind(local: SocketAddress): Unit =
-        executorAddress.inform(ReactorEvent.BindReply(channel, cause = Some(new UnsupportedOperationException())))
+        executorAddress.inform(BindReply(channel, cause = Some(new UnsupportedOperationException())))
 
     override def unsafeOpen(path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = {
         try {
             ch = FileChannel.open(path, options.toSet.asJava, attrs: _*)
-            executorAddress.inform(ReactorEvent.OpenReply(channel))
+            executorAddress.inform(OpenReply(channel))
         } catch {
             case t: Throwable =>
-                executorAddress.inform(ReactorEvent.OpenReply(channel, Some(t)))
+                executorAddress.inform(OpenReply(channel, Some(t)))
         }
     }
 
     override def unsafeDisconnect(): Unit =
-        executorAddress.inform(ReactorEvent.DisconnectReply(channel, cause = Some(new UnsupportedOperationException())))
+        executorAddress.inform(DisconnectReply(channel, cause = Some(new UnsupportedOperationException())))
 
     override def unsafeClose(cause: Option[Throwable]): Unit = {
         try {
             ch.close()
             ch = null
-            executorAddress.inform(ReactorEvent.ChannelClose(channel, cause))
+            executorAddress.inform(ChannelClose(channel, cause))
         } catch {
             case t: Throwable =>
-                executorAddress.inform(ReactorEvent.ChannelClose(channel, Some(t)))
+                executorAddress.inform(ChannelClose(channel, Some(t)))
         }
     }
 
@@ -88,10 +88,10 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
                                     remaining -= realRead
                                     byteBuffer.clear()
                                     buffer.writerOffset(realRead)
-                                    executorAddress.inform(ReactorEvent.ReadBuffer(channel, buffer, recipient = null))
+                                    executorAddress.inform(ReadBuffer(channel, buffer, recipient = null))
                                     if (remaining == 0) {
                                         continue = false
-                                        executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel))
+                                        executorAddress.inform(ReadCompletedEvent(channel))
                                     }
                                 } else if (realRead == 0) {
                                     continue = false
@@ -100,7 +100,7 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
                                     val cause = new IndexOutOfBoundsException(
                                       s"require read length [${length}] is large than file remaining [${length - remaining}], actual read [${length - remaining}]"
                                     )
-                                    executorAddress.inform(ReactorEvent.ReadEvent(channel, cause = Some(cause)))
+                                    executorAddress.inform(ReadEvent(channel, cause = Some(cause)))
                                 }
                             }
                         } else {
@@ -115,10 +115,10 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
                                     remaining -= realRead
                                     byteBuffer.clear()
                                     buffer.writerOffset(realRead)
-                                    executorAddress.inform(ReactorEvent.ReadBuffer(channel, buffer, recipient = null))
+                                    executorAddress.inform(ReadBuffer(channel, buffer, recipient = null))
                                     if (remaining == 0) {
                                         continue = false
-                                        executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel))
+                                        executorAddress.inform(ReadCompletedEvent(channel))
                                     }
                                 } else if (realRead == 0) {
                                     continue = false
@@ -128,14 +128,14 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
                                       s"require read length [${length}] is large than file remaining [${length - remaining}], actual read [${length - remaining}]"
                                     )
                                     executorAddress.inform(
-                                      ReactorEvent.ReadCompletedEvent(channel, cause = Some(cause))
+                                      ReadCompletedEvent(channel, cause = Some(cause))
                                     )
                                 }
                             }
                         }
                     } catch {
                         case t: Throwable =>
-                            executorAddress.inform(ReactorEvent.ReadEvent(channel, cause = Some(t)))
+                            executorAddress.inform(ReadEvent(channel, cause = Some(t)))
                     }
                 } else if (length == -1) {
                     try {
@@ -154,10 +154,10 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
                                     remaining -= realRead
                                     byteBuffer.clear()
                                     buffer.writerOffset(realRead)
-                                    executorAddress.inform(ReactorEvent.ReadBuffer(channel, buffer, recipient = null))
+                                    executorAddress.inform(ReadBuffer(channel, buffer, recipient = null))
                                     if (remaining == 0) {
                                         continue = false
-                                        executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel))
+                                        executorAddress.inform(ReadCompletedEvent(channel))
                                     }
                                 } else if (realRead == 0) {
                                     continue = false
@@ -176,10 +176,10 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
                                     remaining -= realRead
                                     byteBuffer.clear()
                                     buffer.writerOffset(realRead)
-                                    executorAddress.inform(ReactorEvent.ReadBuffer(channel, buffer, recipient = null))
+                                    executorAddress.inform(ReadBuffer(channel, buffer, recipient = null))
                                     if (remaining == 0) {
                                         continue = false
-                                        executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel))
+                                        executorAddress.inform(ReadCompletedEvent(channel))
                                     }
                                 } else if (realRead == 0) {
                                     continue = false
@@ -188,23 +188,23 @@ class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(chann
                         }
                     } catch {
                         case t: Throwable =>
-                            executorAddress.inform(ReactorEvent.ReadEvent(channel, cause = Some(t)))
+                            executorAddress.inform(ReadEvent(channel, cause = Some(t)))
                     }
                 } else {
                     val cause = new UnsupportedOperationException(s"read length is $length")
-                    executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel, cause = Some(cause)))
+                    executorAddress.inform(ReadCompletedEvent(channel, cause = Some(cause)))
                 }
             case _ =>
                 val cause = new IllegalArgumentException(
                   s"${getClass.getSimpleName} not support ${readPlan.getClass.getSimpleName} read plan"
                 )
-                executorAddress.inform(ReactorEvent.ReadCompletedEvent(channel, cause = Some(cause)))
+                executorAddress.inform(ReadCompletedEvent(channel, cause = Some(cause)))
     }
 
     override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit = ???
 
     override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit =
-        executorAddress.inform(ReactorEvent.ConnectReply(channel, cause = Some(new UnsupportedOperationException())))
+        executorAddress.inform(ConnectReply(channel, cause = Some(new UnsupportedOperationException())))
 
     override def isOpen: Boolean = ch != null && ch.isOpen
 
