@@ -177,7 +177,7 @@ object BufferUtils {
      */
     final def isNonEscapedAscii(ch: Char): Boolean = ch < 0x80 && escapedChars(ch) == 0
 
-    def readStringAsByte(buffer: Buffer): Byte = {
+    final def readStringAsByte(buffer: Buffer): Byte = {
         val isNeg = buffer.skipIfNextIs('-')
         if (isNeg && !buffer.nextInRange('0', '9'))
             throw new NumberFormatException(s"except number at '-', but got ${buffer.getByte(buffer.readerOffset)}")
@@ -190,7 +190,7 @@ object BufferUtils {
         x.toByte
     }
 
-    def writeByteAsString(buffer: Buffer, byte: Byte): Unit = {
+    final def writeByteAsString(buffer: Buffer, byte: Byte): Unit = {
         val q0: Int =
             if (byte >= 0) byte
             else {
@@ -202,7 +202,21 @@ object BufferUtils {
         else buffer.writeMediumLE(digits(q0 - 100) << 8 | 0x31)
     }
 
-    def readStringAsShort(buffer: Buffer): Short = {
+    final def readStringAsBoolean(buffer: Buffer): Boolean = {
+        val bs = buffer.readIntLE
+        if (bs == 0x65757274) true                             // e u r t
+        else if (bs == 0x736c6166 && buffer.nextIs('e')) false // e s l a f
+        else throw new Exception("except 'ture' or 'false'")
+    }
+
+    final def writeBooleanAsString(buffer: Buffer, boolean: Boolean): Unit =
+        if (boolean) buffer.writeIntLE(0x65757274) // e u r t
+        else {
+            buffer.writeIntLE(0x736c6166) // s l a f
+            buffer.writeByte('e')         // e
+        }
+
+    final def readStringAsShort(buffer: Buffer): Short = {
         val isNeg = buffer.skipIfNextIs('-')
         if (isNeg && !buffer.nextInRange('0', '9'))
             throw new NumberFormatException(s"except number at '-', but got ${buffer.getByte(buffer.readerOffset)}")
@@ -215,7 +229,7 @@ object BufferUtils {
         x.toShort
     }
 
-    def writeShortAsString(buffer: Buffer, short: Short): Unit = {
+    final def writeShortAsString(buffer: Buffer, short: Short): Unit = {
         val ds = digits
         val q0: Int =
             if (short >= 0) short
@@ -244,7 +258,7 @@ object BufferUtils {
         }
     }
 
-    def readStringAsInt(buffer: Buffer): Int = {
+    final def readStringAsInt(buffer: Buffer): Int = {
         val isNeg   = buffer.skipIfNextIs('-')
         var x: Long = 0
         while (buffer.readableBytes > 0 && buffer.nextInRange('0', '9')) {
@@ -256,7 +270,7 @@ object BufferUtils {
         ret.toInt
     }
 
-    def writeIntAsString(buffer: Buffer, int: Int): Unit = if (int != Int.MinValue) {
+    final def writeIntAsString(buffer: Buffer, int: Int): Unit = if (int != Int.MinValue) {
         val ds = digits
         val q0 =
             if (int >= 0) int
@@ -267,6 +281,81 @@ object BufferUtils {
         buffer.writerOffset(buffer.writerOffset + digitCount(q0))
         writePositiveIntDigits(q0, buffer.writerOffset, buffer, ds)
     } else buffer.writeBytes(MIN_INT_BYTES)
+
+    final def readStringAsLong(buffer: Buffer): Long = { // TODO: optimize
+        buffer.skipIfNextIs('+')
+        val minus     = buffer.skipIfNextIs('-')
+        var ret: Long = 0
+        while (buffer.readableBytes > 0 && buffer.nextInRange('0', '9')) {
+            val b = buffer.readByte
+            ret = ret * 10L + (b - '0')
+        }
+        if (minus) -ret else ret
+    }
+
+    // TODO: optimize
+    final def writeLongAsString(buffer: Buffer, long: Long): Unit = if (long <= Int.MaxValue || long >= Int.MinValue)
+        writeIntAsString(buffer, long.toInt)
+    else buffer.writeCharSequence(long.toString, StandardCharsets.US_ASCII)
+
+    final def readStringAsFloat(buffer: Buffer): Float = { // TODO: optimize
+        buffer.skipIfNextIs('+')
+        val minus               = buffer.skipIfNextIs('-')
+        var intPart: Float      = 0
+        var floatPart: Float    = 0f
+        var startFloat: Boolean = false
+        var floatIdx: Float     = 0
+        while (buffer.readableBytes > 0 && (buffer.nextInRange('0', '9') || buffer.nextIs('.'))) {
+            val b = buffer.readByte
+            if (b == '.') startFloat = true
+            else {
+                if (!startFloat) intPart = intPart * 10f + (b - '0')
+                else {
+                    floatIdx += 1
+                    floatPart = floatPart + ((b - '0').toFloat / Math.pow(10f, floatIdx).toFloat)
+                }
+            }
+        }
+        if (minus) -(intPart + floatPart) else intPart + floatPart
+    }
+
+    // TODO: optimize
+    final def writeFloatAsString(buffer: Buffer, float: Float): Unit =
+        buffer.writeCharSequence(float.toString, StandardCharsets.US_ASCII)
+
+    // TODO: optimize
+    final def readStringAsDouble(buffer: Buffer): Double = {
+        buffer.skipIfNextIs('+')
+        val minus               = buffer.skipIfNextIs('-')
+        var intPart: Double     = 0d
+        var floatPart: Double   = 0d
+        var startFloat: Boolean = false
+        var floatIdx: Double    = 0d
+        while (buffer.readableBytes > 0 && (buffer.nextInRange('0', '9') || buffer.nextIs('.'))) {
+            val b = buffer.readByte
+            if (b == '.') startFloat = true
+            else {
+                if (!startFloat) intPart = intPart * 10d + (b - '0')
+                else {
+                    floatIdx += 1
+                    floatPart = floatPart + ((b - '0').toFloat / Math.pow(10d, floatIdx))
+                }
+            }
+        }
+        if (minus) -(intPart + floatPart) else intPart + floatPart
+    }
+
+    // TODO: optimize
+    final def writeDoubleAsString(buffer: Buffer, double: Double): Unit =
+        buffer.writeCharSequence(double.toString, StandardCharsets.US_ASCII)
+
+    final def readStringAsBigInt(buffer: Buffer): BigInt = {
+        ???
+    }
+
+    final def writeBigIntAsString(buffer: Buffer, bigInt: BigInt): Unit = if (bigInt.isValidLong)
+        writeLongAsString(buffer, bigInt.longValue)
+    else ???
 
     private def writePositiveIntDigits(q: Int, p: Int, buffer: Buffer, ds: Array[Short]): Unit = {
         var q0  = q
@@ -489,7 +578,7 @@ object BufferUtils {
       es(127) = -1
       es.grouped(16).map(_.mkString(", ")).mkString("Array(\n", ",\n", "\n)")
      */
-    final val escapedChars: Array[Byte] = Array(
+    private final val escapedChars: Array[Byte] = Array(
       -1, -1, -1, -1, -1, -1, -1, -1, 98, 116, 110, -1, 102, 114, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, 0, 0, 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 92, 0, 0, 0, 0, 0, 0, 0, 0,

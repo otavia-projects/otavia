@@ -90,16 +90,13 @@ private[json] object JsonHelper {
 
     final def serializeNull(out: Buffer): Unit = out.writeBytes(JsonConstants.TOKEN_NULL)
 
-    final def serializeByte(byte: Byte, out: Buffer): Unit = serializeInt(byte, out)
+    final def serializeByte(byte: Byte, out: Buffer): Unit = BufferUtils.writeByteAsString(out, byte)
 
-    final def serializeBoolean(boolean: Boolean, out: Buffer): Unit = if (boolean)
-        out.writeBytes(JsonConstants.TOKEN_TURE)
-    else
-        out.writeBytes(JsonConstants.TOKEN_FALSE)
+    final def serializeBoolean(boolean: Boolean, out: Buffer): Unit = BufferUtils.writeBooleanAsString(out, boolean)
 
     final def serializeChar(char: Char, out: Buffer): Unit = {
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
-        out.writeByte(char.toByte)
+        BufferUtils.writeEscapedChar(out, char)
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
     }
 
@@ -107,33 +104,34 @@ private[json] object JsonHelper {
 
     final def serializeInt(int: Int, out: Buffer): Unit = BufferUtils.writeIntAsString(out, int)
 
-    final def serializeLong(long: Long, out: Buffer): Unit = out.writeCharSequence(long.toString)
+    final def serializeLong(long: Long, out: Buffer): Unit = BufferUtils.writeLongAsString(out, long)
 
-    final def serializeFloat(float: Float, out: Buffer): Unit = out.writeCharSequence(float.toString)
+    final def serializeFloat(float: Float, out: Buffer): Unit = BufferUtils.writeFloatAsString(out, float)
 
-    final def serializeDouble(double: Double, out: Buffer): Unit = out.writeCharSequence(double.toString)
+    final def serializeDouble(double: Double, out: Buffer): Unit = BufferUtils.writeDoubleAsString(out, double)
 
     final def serializeString(string: String, out: Buffer): Unit = {
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
-        out.writeCharSequence(string, StandardCharsets.UTF_8) // TODO: escape char
+        BufferUtils.writeEscapedString(out, string)
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
     }
 
-    final def deserializeByte(in: Buffer): Byte = deserializeInt(in).toByte
+    final def deserializeByte(in: Buffer): Byte = {
+        skipBlanks(in)
+        BufferUtils.readStringAsByte(in)
+    }
 
     final def deserializeBoolean(in: Buffer): Boolean = {
         skipBlanks(in)
-        if (in.skipIfNextAre(JsonConstants.TOKEN_TURE)) true
-        else if (in.skipIfNextAre(JsonConstants.TOKEN_FALSE)) false
-        else throw new JsonFormatException()
+        BufferUtils.readStringAsBoolean(in)
     }
 
     final def deserializeChar(in: Buffer): Char = {
         skipBlanks(in)
         assert(in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE), s"except \" but get ${in.readByte}")
-        val b = in.readByte
+        val b = BufferUtils.readEscapedChar(in)
         assert(in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE), s"except \" but get ${in.readByte}")
-        b.toChar
+        b
     }
 
     final def deserializeShort(in: Buffer): Short = BufferUtils.readStringAsShort(in)
@@ -142,58 +140,17 @@ private[json] object JsonHelper {
 
     final def deserializeLong(in: Buffer): Long = {
         skipBlanks(in)
-        in.skipIfNextIs(JsonConstants.TOKEN_PLUS)
-        val minus     = in.skipIfNextIs(JsonConstants.TOKEN_MINUS)
-        var ret: Long = 0
-        while (in.readableBytes > 0 && in.nextIn(JsonConstants.TOKEN_NUMBERS)) {
-            val b = in.readByte
-            ret = ret * 10L + (b - JsonConstants.TOKEN_ZERO)
-        }
-        if (minus) -ret else ret
+        BufferUtils.readStringAsLong(in)
     }
 
     final def deserializeFloat(in: Buffer): Float = {
         skipBlanks(in)
-        in.skipIfNextIs(JsonConstants.TOKEN_PLUS)
-        val minus               = in.skipIfNextIs(JsonConstants.TOKEN_MINUS)
-        var intPart: Float      = 0
-        var floatPart: Float    = 0f
-        var startFloat: Boolean = false
-        var floatIdx: Float     = 0
-        while (in.readableBytes > 0 && in.nextIn(JsonConstants.TOKEN_FLOATS)) {
-            val b = in.readByte
-            if (b == JsonConstants.TOKEN_POINT) startFloat = true
-            else {
-                if (!startFloat) intPart = intPart * 10f + (b - JsonConstants.TOKEN_ZERO)
-                else {
-                    floatIdx += 1
-                    floatPart = floatPart + ((b - JsonConstants.TOKEN_ZERO).toFloat / Math.pow(10f, floatIdx).toFloat)
-                }
-            }
-        }
-        if (minus) -(intPart + floatPart) else intPart + floatPart
+        BufferUtils.readStringAsFloat(in)
     }
 
     final def deserializeDouble(in: Buffer): Double = {
         skipBlanks(in)
-        in.skipIfNextIs(JsonConstants.TOKEN_PLUS)
-        val minus               = in.skipIfNextIs(JsonConstants.TOKEN_MINUS)
-        var intPart: Double     = 0d
-        var floatPart: Double   = 0d
-        var startFloat: Boolean = false
-        var floatIdx: Double    = 0d
-        while (in.readableBytes > 0 && in.nextIn(JsonConstants.TOKEN_FLOATS)) {
-            val b = in.readByte
-            if (b == JsonConstants.TOKEN_POINT) startFloat = true
-            else {
-                if (!startFloat) intPart = intPart * 10d + (b - JsonConstants.TOKEN_ZERO)
-                else {
-                    floatIdx += 1
-                    floatPart = floatPart + ((b - JsonConstants.TOKEN_ZERO).toFloat / Math.pow(10d, floatIdx))
-                }
-            }
-        }
-        if (minus) -(intPart + floatPart) else intPart + floatPart
+        BufferUtils.readStringAsDouble(in)
     }
 
     final def deserializeString(in: Buffer): String = {
@@ -207,7 +164,7 @@ private[json] object JsonHelper {
 
     // math type
 
-    final def serializeBigInt(bigInt: BigInt, out: Buffer): Unit = ???
+    final def serializeBigInt(bigInt: BigInt, out: Buffer): Unit = BufferUtils.writeBigIntAsString(out, bigInt)
 
     final def serializeBigDecimal(bigDecimal: BigDecimal, out: Buffer): Unit = ???
 
@@ -223,29 +180,41 @@ private[json] object JsonHelper {
 
     final def deserializeJBigDecimal(in: Buffer): java.math.BigDecimal = ???
 
-    final def serializeJDuration(duration: JDuration, out: Buffer): Unit = ???
+    final def serializeJDuration(duration: JDuration, out: Buffer): Unit =
+        BufferUtils.writeJDurationAsString(out, duration)
 
-    final def serializeDuration(duration: Duration, out: Buffer): Unit = ???
+    final def serializeDuration(duration: Duration, out: Buffer): Unit =
+        BufferUtils.writeDurationAsString(out, duration)
 
     final def serializeInstant(instant: Instant, out: Buffer): Unit = ???
 
-    final def serializeLocalDate(localDate: LocalDate, out: Buffer): Unit = ???
+    final def serializeLocalDate(localDate: LocalDate, out: Buffer): Unit = {
+        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+        BufferUtils.writeLocalDateAsString(out, localDate)
+        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+    }
 
-    final def serializeLocalDateTime(localDateTime: LocalDateTime, out: Buffer): Unit = ???
+    final def serializeLocalDateTime(localDateTime: LocalDateTime, out: Buffer): Unit =
+        BufferUtils.writeLocalDateTimeAsString(out, localDateTime)
 
-    final def serializeLocalTime(localTime: LocalTime, out: Buffer): Unit = ???
+    final def serializeLocalTime(localTime: LocalTime, out: Buffer): Unit =
+        BufferUtils.writeLocalTimeAsString(out, localTime)
 
-    final def serializeMonthDay(monthDay: MonthDay, out: Buffer): Unit = ???
+    final def serializeMonthDay(monthDay: MonthDay, out: Buffer): Unit =
+        BufferUtils.writeMonthDayAsString(out, monthDay)
 
-    final def serializeOffsetDateTime(offsetDateTime: OffsetDateTime, out: Buffer): Unit = ???
+    final def serializeOffsetDateTime(offsetDateTime: OffsetDateTime, out: Buffer): Unit =
+        BufferUtils.writeOffsetDateTimeAsString(out, offsetDateTime)
 
-    final def serializeOffsetTime(offsetTime: OffsetTime, out: Buffer): Unit = ???
+    final def serializeOffsetTime(offsetTime: OffsetTime, out: Buffer): Unit =
+        BufferUtils.writeOffsetTimeAsString(out, offsetTime)
 
-    final def serializePeriod(period: Period, out: Buffer): Unit = ???
+    final def serializePeriod(period: Period, out: Buffer): Unit = BufferUtils.writePeriodAsString(out, period)
 
-    final def serializeYear(year: Year, out: Buffer): Unit = ???
+    final def serializeYear(year: Year, out: Buffer): Unit = BufferUtils.writeYearAsString(out, year)
 
-    final def serializeYearMonth(yearMonth: YearMonth, out: Buffer): Unit = ???
+    final def serializeYearMonth(yearMonth: YearMonth, out: Buffer): Unit =
+        BufferUtils.writeYearMonthAsString(out, yearMonth)
 
     final def serializeZonedDateTime(zonedDateTime: ZonedDateTime, out: Buffer): Unit = ???
 
