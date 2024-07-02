@@ -66,12 +66,14 @@ case class DisconnectReply(channel: Channel, cause: Option[Throwable] = None) ex
 case class ShutdownReply(channel: Channel, direction: ChannelShutdownDirection, cause: Option[Throwable] = None)
     extends ReactorEvent
 
-case class ChannelReadiness(channel: Channel, readyOps: Int)               extends ReactorEvent
+case class ChannelReadiness(channel: Channel, readyOps: Int) extends ReactorEvent
+
 case class ChannelClose(channel: Channel, cause: Option[Throwable] = None) extends ReactorEvent
 
 object EMPTY_EVENT extends ReactorEvent
 
-case class ReadEvent(channel: Channel, cause: Option[Throwable] = None)          extends ReactorEvent
+case class ReadEvent(channel: Channel, cause: Option[Throwable] = None) extends ReactorEvent
+
 case class ReadCompletedEvent(channel: Channel, cause: Option[Throwable] = None) extends ReactorEvent
 
 case class AcceptedEvent(channel: Channel, accepted: Channel) extends ReactorEvent

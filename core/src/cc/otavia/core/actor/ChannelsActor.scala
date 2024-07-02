@@ -80,8 +80,6 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
             case e: ChannelClose =>
                 e.channel.asInstanceOf[AbstractChannel].handleChannelCloseEvent(e)
                 afterChannelClosed(e.channel, e.cause)
-            case e: ChannelReadiness =>
-                e.channel.asInstanceOf[AbstractChannel].handleChannelReadinessEvent(e)
             case e: AcceptedEvent => e.channel.asInstanceOf[AbstractChannel].handleChannelAcceptedEvent(e)
             case e: ReadCompletedEvent =>
                 e.channel.asInstanceOf[AbstractChannel].handleChannelReadCompletedEvent(e)

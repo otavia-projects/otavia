@@ -517,9 +517,6 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     /** Handle channel deregister result event */
     private[core] def handleChannelDeregisterReplyEvent(event: DeregisterReply): Unit = {}
 
-    /** Handle channel readiness event */
-    private[core] def handleChannelReadinessEvent(event: ChannelReadiness): Unit = {}
-
     private[core] def handleChannelBindReplyEvent(event: BindReply): Unit = {}
 
     private[core] def handleChannelConnectReplyEvent(event: ConnectReply): Unit = {}
