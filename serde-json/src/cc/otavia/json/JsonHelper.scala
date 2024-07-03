@@ -76,7 +76,7 @@ private[json] object JsonHelper {
 
     final def serializeKey(key: String, out: Buffer): Unit = {
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
-        out.writeCharSequence(key)
+        BufferUtils.writeEscapedString(out, key)
         out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
         out.writeByte(JsonConstants.TOKEN_COLON)
     }
