@@ -38,12 +38,16 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
 
     private var stClosed: Boolean = false
 
+    private var markCursor: Int = -1
+    private var markLen: Int    = 0
+
     private def startIndex = ridx - head.readerOffset
 
     private def endIndex: Int = widx + last.writableBytes
 
-    private def offsetAtOffset(offset: Int): (Int, Int) = if (nonEmpty && offset - ridx <= head.readableBytes) {
-        (0, offset - ridx)
+    private def resetOffsetMark(offset: Int): Unit = if (nonEmpty && offset - ridx <= head.readableBytes) {
+        markCursor = 0
+        markLen = offset - ridx
     } else if (nonEmpty && offset >= startIndex && offset < endIndex) {
         var len    = offset - ridx
         var cursor = 0
@@ -51,8 +55,12 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             len -= apply(cursor).readableBytes
             cursor += 1
         }
-        (cursor, len)
-    } else (-1, 0)
+        markCursor = cursor
+        markLen = len
+    } else {
+        markCursor = -1
+        markLen = 0
+    }
 
     private def recycleHead(compact: Boolean = false): Unit = {
         if (nonEmpty) {
@@ -89,18 +97,20 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         widx += buffer.readableBytes
     }
 
-    final private[otavia] def extend(buffer: RecyclablePageBuffer): Unit = {
+    private[otavia] def extend(buffer: RecyclablePageBuffer): Unit = {
         addOne(buffer)
         widx += buffer.readableBytes
     }
 
     override private[otavia] def splitBefore(offset: Int): RecyclablePageBuffer = {
-        val (idx, off) = offsetAtOffset(offset)
-        val split      = apply(idx)
-        val len        = split.readableBytes - off
-        val first      = head
-        var cursor     = head
-        var continue   = true
+        resetOffsetMark(offset)
+        val idx      = markCursor
+        val off      = markLen
+        val split    = apply(idx)
+        val len      = split.readableBytes - off
+        val first    = head
+        var cursor   = head
+        var continue = true
         while (continue) {
             if (cursor == split) {
                 if (len == 0) {
@@ -150,8 +160,10 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         if (offset == widx) recycleAll()
         else {
             checkReadBounds(offset)
-            val (index, off) = offsetAtOffset(offset)
-            var cursor       = index
+            resetOffsetMark(offset)
+            val index  = markCursor
+            val off    = markLen
+            var cursor = index
             while (cursor > 0) {
                 recycleHead()
                 cursor -= 1
@@ -194,8 +206,10 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                 widx = offset
             }
         } else {
-            val (index, off) = offsetAtOffset(offset)
-            var release      = size - index - 1
+            resetOffsetMark(offset)
+            val index   = markCursor
+            val off     = markLen
+            var release = size - index - 1
             while (release > 0) {
                 val last = splitLast()
                 last.close()
@@ -228,8 +242,12 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         if (size == 1) {
             head.copyInto(head.readerOffset + (srcPos - ridx), dest, destPos, length)
         } else {
-            val (srcIndex, srcOff) = offsetAtOffset(srcPos)
-            val (endIndex, off)    = offsetAtOffset(srcPos + length)
+            resetOffsetMark(srcPos)
+            val srcIndex = markCursor
+            val srcOff   = markLen
+            resetOffsetMark(srcPos + length)
+            val endIndex = markCursor
+            val off      = markLen
             if (srcIndex == endIndex) {
                 val buffer = apply(srcIndex)
                 buffer.copyInto(buffer.readerOffset + srcOff, dest, destPos, length)
@@ -275,8 +293,12 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         if (size == 1) {
             head.copyInto(head.readerOffset + (srcPos - ridx), dest, destPos, length)
         } else {
-            val (srcIndex, srcOff) = offsetAtOffset(srcPos)
-            val (endIndex, off)    = offsetAtOffset(srcPos + length)
+            resetOffsetMark(srcPos)
+            val srcIndex = markCursor
+            val srcOff   = markLen
+            resetOffsetMark(srcPos + length)
+            val endIndex = markCursor
+            val off      = markLen
             if (srcIndex == endIndex) {
                 val buffer = apply(srcIndex)
                 buffer.copyInto(buffer.readerOffset + srcOff, dest, destPos, length)
@@ -335,9 +357,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     private def bytesBefore1(a: Byte, from: Int, to: Int): Int = {
-        val (start, offset) = offsetAtOffset(from)
-        val end         = if (to == widx) size else { val tp = offsetAtOffset(to); if (tp._2 > 0) tp._1 + 1 else tp._1 }
-        var cursor: Int = from
+        resetOffsetMark(from)
+        val start  = markCursor
+        val offset = markLen
+        val end    = if (to == widx) size else { resetOffsetMark(to); if (markLen > 0) markCursor + 1 else markCursor }
+        var cursor: Int       = from
         var continue: Boolean = true
         var idx               = start
         var idxStart          = from - offset
@@ -354,9 +378,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     private def bytesBefore1ignoreCase(a: Byte, from: Int, to: Int): Int = {
-        val (start, offset) = offsetAtOffset(from)
-        val end         = if (to == widx) size else { val tp = offsetAtOffset(to); if (tp._2 > 0) tp._1 + 1 else tp._1 }
-        var cursor: Int = from
+        resetOffsetMark(from)
+        val start  = markCursor
+        val offset = markLen
+        val end    = if (to == widx) size else { resetOffsetMark(to); if (markLen > 0) markCursor + 1 else markCursor }
+        var cursor: Int       = from
         var continue: Boolean = true
         var idx               = start
         var idxStart          = from - offset
@@ -441,9 +467,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     } else -1
 
     private def bytesBefore2(a1: Byte, a2: Byte, from: Int, to: Int): Int = {
-        val (start, offset) = offsetAtOffset(from)
-        val end         = if (to == widx) size else { val tp = offsetAtOffset(to); if (tp._2 > 0) tp._1 + 1 else tp._1 }
-        var cursor: Int = from
+        resetOffsetMark(from)
+        val start  = markCursor
+        val offset = markLen
+        val end    = if (to == widx) size else { resetOffsetMark(to); if (markLen > 0) markCursor + 1 else markCursor }
+        var cursor: Int       = from
         var continue: Boolean = true
         var idx               = start
         var idxStart          = from - offset
@@ -466,11 +494,14 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     private def bytesBefore2ignoreCase(a1: Byte, a2: Byte, from: Int, to: Int): Int = {
-        val (start, offset) = offsetAtOffset(from)
+        resetOffsetMark(from)
+        val start  = markCursor
+        val offset = markLen
         val end =
             if (to == widx) size
             else {
-                val tp = offsetAtOffset(to); if (tp._2 > 0) tp._1 + 1 else tp._1
+                resetOffsetMark(to)
+                if (markLen > 0) markCursor + 1 else markCursor
             }
         var cursor: Int       = from
         var continue: Boolean = true
@@ -522,11 +553,14 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     } else -1
 
     private def bytesBefore3(a1: Byte, a2: Byte, a3: Byte, from: Int, to: Int): Int = {
-        val (start, offset) = offsetAtOffset(from)
+        resetOffsetMark(from)
+        val start  = markCursor
+        val offset = markLen
         val end =
             if (to == widx) size
             else {
-                val tp = offsetAtOffset(to); if (tp._2 > 0) tp._1 + 1 else tp._1
+                resetOffsetMark(to)
+                if (markLen > 0) markCursor + 1 else markCursor
             }
         var cursor: Int       = from
         var continue: Boolean = true
@@ -550,12 +584,14 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     private def bytesBefore3ignoreCase(a1: Byte, a2: Byte, a3: Byte, from: Int, to: Int): Int = {
-        val (start, offset) = offsetAtOffset(from)
+        resetOffsetMark(from)
+        val start  = markCursor
+        val offset = markLen
         val end =
             if (to == widx) size
             else {
-                val tp = offsetAtOffset(to);
-                if (tp._2 > 0) tp._1 + 1 else tp._1
+                resetOffsetMark(to)
+                if (markLen > 0) markCursor + 1 else markCursor
             }
         var cursor: Int       = from
         var continue: Boolean = true
@@ -611,12 +647,14 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         } else -1
 
     private def bytesBefore4(a1: Byte, a2: Byte, a3: Byte, a4: Byte, from: Int, to: Int): Int = {
-        val (start, offset) = offsetAtOffset(from)
+        resetOffsetMark(from)
+        val start  = markCursor
+        val offset = markLen
         val end =
             if (to == widx) size
             else {
-                val tp = offsetAtOffset(to);
-                if (tp._2 > 0) tp._1 + 1 else tp._1
+                resetOffsetMark(to)
+                if (markLen > 0) markCursor + 1 else markCursor
             }
         var cursor: Int       = from
         var continue: Boolean = true
@@ -640,12 +678,14 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     private def bytesBefore4ignoreCase(a1: Byte, a2: Byte, a3: Byte, a4: Byte, from: Int, to: Int): Int = {
-        val (start, offset) = offsetAtOffset(from)
+        resetOffsetMark(from)
+        val start  = markCursor
+        val offset = markLen
         val end =
             if (to == widx) size
             else {
-                val tp = offsetAtOffset(to);
-                if (tp._2 > 0) tp._1 + 1 else tp._1
+                resetOffsetMark(to)
+                if (markLen > 0) markCursor + 1 else markCursor
             }
         var cursor: Int       = from
         var continue: Boolean = true
@@ -1112,9 +1152,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         val a1     = bts(0)
         val a      = BytesUtil.bytes4Int(a1, bts(1), bts(2), bts(3))
 
-        val (start, offset) = offsetAtOffset(from)
-        val end         = if (to == widx) size else { val tp = offsetAtOffset(to); if (tp._2 > 0) tp._1 + 1 else tp._1 }
-        var cursor: Int = from
+        resetOffsetMark(from)
+        val start  = markCursor
+        val offset = markLen
+        val end    = if (to == widx) size else { resetOffsetMark(to); if (markLen > 0) markCursor + 1 else markCursor }
+        var cursor: Int       = from
         var continue: Boolean = true
         var idx               = start
         var idxStart          = from - offset
@@ -1149,11 +1191,13 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     private def bytesBeforeBytesIgnoreCase(bts: Array[Byte], from: Int, to: Int): Int = {
-        val length          = bts.length
-        val a1              = bts(0); val a2 = bts(1); val a3 = bts(2); val a4 = bts(3)
-        val (start, offset) = offsetAtOffset(from)
-        val end         = if (to == widx) size else { val tp = offsetAtOffset(to); if (tp._2 > 0) tp._1 + 1 else tp._1 }
-        var cursor: Int = from
+        val length = bts.length
+        val a1     = bts(0); val a2 = bts(1); val a3 = bts(2); val a4 = bts(3)
+        resetOffsetMark(from)
+        val start  = markCursor
+        val offset = markLen
+        val end    = if (to == widx) size else { resetOffsetMark(to); if (markLen > 0) markCursor + 1 else markCursor }
+        var cursor: Int       = from
         var continue: Boolean = true
         var idx               = start
         var idxStart          = from - offset
@@ -1224,11 +1268,13 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
               s"The fromOffset + length is beyond the writerOffset of the buffer: fromOffset = ${fromOffset}, length = ${length}"
             )
 
+        resetOffsetMark(fromOffset)
+        val fromIndex = markCursor
+        val fromOff   = markLen
+
         new ByteCursor {
             private var value: Byte = _
             private var read: Int   = 0
-
-            private val (fromIndex, fromOff) = offsetAtOffset(fromOffset)
 
             private var currentComponent: Int = fromIndex
             private var currentBuffer: Buffer = apply(currentComponent)
@@ -1266,11 +1312,13 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
               s"The fromOffset - length would underflow the readerOffset: fromOffset - length = ${fromOffset - length}, readerOffset = ${ridx}."
             )
 
+        resetOffsetMark(fromOffset)
+        val fromIndex = markCursor
+        val fromOff   = markLen
+
         new ByteCursor {
             private var value: Byte = _
             private var read: Int   = 0
-
-            private val (fromIndex, fromOff) = offsetAtOffset(fromOffset)
 
             private var currentComponent: Int = fromIndex
             private var currentBuffer: Buffer = apply(currentComponent)
@@ -1318,9 +1366,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def getByte(index: Int): Byte = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len > 0) buffer.getByte(buffer.readerOffset + off)
         else {
             val next = apply(idx + 1)
@@ -1336,9 +1386,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def getUnsignedByte(index: Int): Int = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len > 0) buffer.getUnsignedByte(buffer.readerOffset + off)
         else {
             val next = apply(idx + 1)
@@ -1359,9 +1411,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def setByte(index: Int, value: Byte): Buffer = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len > 0) buffer.setByte(buffer.readerOffset + off, value)
         else {
             val next = apply(idx + 1)
@@ -1383,9 +1437,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def setUnsignedByte(index: Int, value: Int): Buffer = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len > 0) buffer.setUnsignedByte(buffer.readerOffset + off, value)
         else {
             val next = apply(idx + 1)
@@ -1413,9 +1469,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def getChar(index: Int): Char = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= Character.BYTES) {
             buffer.getChar(buffer.readerOffset + off)
         } else if (len > 0) {
@@ -1441,9 +1499,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def setChar(index: Int, value: Char): Buffer = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= Character.BYTES) {
             buffer.setChar(buffer.readerOffset + off, value)
         } else if (len == 0) {
@@ -1487,9 +1547,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def setShort(index: Int, value: Short): Buffer = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= JShort.BYTES) {
             buffer.setShort(buffer.readerOffset + off, value)
         } else if (len == 0) {
@@ -1504,9 +1566,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def getShort(index: Int): Short = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= JShort.BYTES) {
             buffer.getShort(buffer.readerOffset + off)
         } else if (len > 0) {
@@ -1539,9 +1603,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def getUnsignedShort(index: Int): Int = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= JShort.BYTES) {
             buffer.getUnsignedShort(buffer.readerOffset + off)
         } else if (len > 0) {
@@ -1567,9 +1633,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def setUnsignedShort(index: Int, value: Int): Buffer = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= JShort.BYTES) {
             buffer.setUnsignedShort(buffer.readerOffset + off, value)
         } else if (len == 0) {
@@ -1613,9 +1681,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def getMedium(index: Int): Int = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= 3) {
             buffer.getMedium(buffer.readerOffset + off)
         } else if (len == 2) {
@@ -1637,9 +1707,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def setMedium(index: Int, value: Int): Buffer = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= 3) {
             buffer.setMedium(buffer.readerOffset + off, value)
         } else if (len == 2) {
@@ -1689,9 +1761,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def getMediumLE(index: Int): Int = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= 3) {
             buffer.getMediumLE(buffer.readerOffset + off)
         } else if (len == 2) {
@@ -1713,9 +1787,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def setMediumLE(index: Int, value: Int): Buffer = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= 3) {
             buffer.setMediumLE(buffer.readerOffset + off, value)
         } else if (len == 2) {
@@ -1765,9 +1841,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def getUnsignedMedium(index: Int): Int = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= 3) {
             buffer.getUnsignedMedium(buffer.readerOffset + off)
         } else if (len == 2) {
@@ -1789,9 +1867,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def setUnsignedMedium(index: Int, value: Int): Buffer = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= 3) {
             buffer.setUnsignedMedium(buffer.readerOffset + off, value)
         } else if (len == 2) {
@@ -1830,9 +1910,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def getUnsignedMediumLE(index: Int): Int = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= 3) {
             buffer.getUnsignedMediumLE(buffer.readerOffset + off)
         } else if (len == 2) {
@@ -1865,9 +1947,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def setUnsignedMediumLE(index: Int, value: Int): Buffer = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= 3) {
             buffer.setUnsignedMediumLE(buffer.readerOffset + off, value)
         } else if (len == 2) {
@@ -1909,9 +1993,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         val startOff = index - ridx
         if (startOff + Integer.BYTES <= head.readableBytes) head.getInt(head.readerOffset + startOff)
         else {
-            val (idx, off) = offsetAtOffset(index)
-            val buffer     = apply(idx)
-            val len        = buffer.readableBytes - off
+            resetOffsetMark(index)
+            val idx    = markCursor
+            val off    = markLen
+            val buffer = apply(idx)
+            val len    = buffer.readableBytes - off
             if (len >= Integer.BYTES) {
                 buffer.getInt(buffer.readerOffset + off)
             } else if (len == 3) {
@@ -1954,9 +2040,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def setInt(index: Int, value: Int): Buffer = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= Integer.BYTES) {
             buffer.setInt(buffer.readerOffset + off, value)
         } else if (len == 3) {
@@ -2019,9 +2107,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def getUnsignedInt(index: Int): Long = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= Integer.BYTES) {
             buffer.getUnsignedInt(buffer.readerOffset + off)
         } else if (len == 3) {
@@ -2063,9 +2153,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def setUnsignedInt(index: Int, value: Long): Buffer = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= Integer.BYTES) {
             buffer.setUnsignedInt(buffer.readerOffset + off, value)
         } else if (len == 3) {
@@ -2131,9 +2223,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def getFloat(index: Int): Float = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= Integer.BYTES) {
             buffer.getFloat(buffer.readerOffset + off)
         } else if (len == 3) {
@@ -2175,9 +2269,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def setFloat(index: Int, value: Float): Buffer = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= JFloat.BYTES) {
             buffer.setFloat(buffer.readerOffset + off, value)
         } else if (len == 3) {
@@ -2227,9 +2323,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def getLong(index: Int): Long = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= JLong.BYTES) {
             buffer.getLong(buffer.readerOffset + off)
         } else if (len > 0) {
@@ -2264,9 +2362,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def setLong(index: Int, value: Long): Buffer = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
-        val len        = buffer.readableBytes - off
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
+        val len    = buffer.readableBytes - off
         if (len >= JLong.BYTES) {
             buffer.setLong(buffer.readerOffset + off, value)
         } else if (len > 0) {
@@ -2363,8 +2463,10 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
 
     override def getStringAsLong(index: Int, length: Int, radix: Int): Long = {
         checkReadBounds(index + length)
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
         if (buffer.readableBytes - off >= length) buffer.getStringAsLong(buffer.readerOffset + off, length, radix)
         else {
             val str = getCharSequence(index, length).toString
@@ -2381,8 +2483,10 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
 
     override def getStringAsDouble(index: Int, length: Int): Double = {
         checkReadBounds(index + length)
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
         if (buffer.readableBytes - off >= length) buffer.getStringAsDouble(buffer.readerOffset + off, length)
         else {
             val str = getCharSequence(index, length).toString
@@ -2397,8 +2501,10 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def setUUIDAsString(index: Int, uuid: UUID): Unit = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
         if (buffer.readableBytes - off >= 36) buffer.setUUIDAsString(buffer.readerOffset + off, uuid)
         else {
             val str = uuid.toString
@@ -2420,8 +2526,10 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     }
 
     override def getStringAsUUID(index: Int): UUID = {
-        val (idx, off) = offsetAtOffset(index)
-        val buffer     = apply(idx)
+        resetOffsetMark(index)
+        val idx    = markCursor
+        val off    = markLen
+        val buffer = apply(idx)
         if (buffer.readableBytes - off >= 36) buffer.getStringAsUUID(buffer.readerOffset + off)
         else {
             val str = this.getCharSequence(index, 36).toString
@@ -2525,11 +2633,11 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
               s"length can't large than writerOffset - index: writerOffset - index = ${widx - index}, length = $length"
             )
 
-        val (fromIndex, fromOff) = offsetAtOffset(index)
-        var remaining            = length
-        var cursor               = fromIndex
-        var off                  = fromOff
-        var sourceRead           = 0
+        resetOffsetMark(index)
+        var cursor     = markCursor
+        var off        = markLen
+        var remaining  = length
+        var sourceRead = 0
         while {
             val buffer = apply(cursor)
             val write  = Math.min(remaining, buffer.writerOffset - off)
@@ -2673,7 +2781,9 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     override def indexIs(byte: Byte, index: Int): Boolean = this.getByte(index) == byte
 
     override def indexAre(bytes: Array[Byte], index: Int): Boolean = if (widx - index >= bytes.length) {
-        val (idx, off) = offsetAtOffset(index)
+        resetOffsetMark(index)
+        val idx = markCursor
+        val off = markLen
         if (head.readableBytes - off >= bytes.length) head.indexAre(bytes, head.readerOffset + off)
         else {
             val copy = new Array[Byte](bytes.length)
