@@ -16,7 +16,7 @@
 
 package cc.otavia.postgres.impl
 
-import cc.otavia.buffer.Buffer
+import cc.otavia.buffer.{Buffer, BufferUtils}
 import cc.otavia.postgres.protocol.DataType
 import cc.otavia.postgres.protocol.DataType.UUID
 
@@ -130,7 +130,7 @@ object RowValueCodec {
         ???
     }
 
-    def textDecodeUUID(index: Int, len: Int, buffer: Buffer): UUID = buffer.getStringAsUUID(index)
+    def textDecodeUUID(index: Int, len: Int, buffer: Buffer): UUID = BufferUtils.getStringAsUUID(buffer, index)
 
     def binaryDecodeUUID(index: Int, len: Int, buffer: Buffer): UUID =
         new UUID(buffer.getLong(index), buffer.getLong(index + 8))
