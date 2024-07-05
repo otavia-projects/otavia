@@ -43,7 +43,7 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
 
     private def startIndex = ridx - head.readerOffset
 
-    private def endIndex: Int = widx + last.writableBytes
+    private def endIndex: Int = widx + realWritableBytes
 
     private def resetOffsetMark(offset: Int): Unit = if (nonEmpty && offset - ridx <= head.readableBytes) {
         markCursor = 0
@@ -186,7 +186,7 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         if (offset > widx) {
             if (offset > endIndex) {
                 var len = offset - endIndex
-                last.writerOffset(last.capacity)
+                if (realWritableBytes > 0) last.writerOffset(last.capacity)
                 while {
                     val buffer = allocator.allocate()
                     val cap    = buffer.capacity
