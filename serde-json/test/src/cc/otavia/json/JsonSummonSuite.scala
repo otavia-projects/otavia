@@ -21,6 +21,7 @@ import cc.otavia.buffer.pool.{AdaptiveBuffer, HeapPooledPageAllocator}
 import cc.otavia.serde.annotation.stringfield
 import org.scalatest.funsuite.AnyFunSuite
 
+import java.time.YearMonth
 import scala.language.unsafeNulls
 
 class JsonSummonSuite extends AnyFunSuite {
@@ -60,7 +61,7 @@ class JsonSummonSuite extends AnyFunSuite {
         val buffer = AdaptiveBuffer(new HeapPooledPageAllocator())
         val tps    = summon[JsonSerde[Hello]]
 
-        tps.serialize(Hello(1, "world"), buffer)
+        tps.serialize(Hello(1, "world", YearMonth.now()), buffer)
 
         assert(true)
     }

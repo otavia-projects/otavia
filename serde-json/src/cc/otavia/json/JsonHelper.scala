@@ -111,9 +111,9 @@ private[json] object JsonHelper {
     final def serializeDouble(double: Double, out: Buffer): Unit = BufferUtils.writeDoubleAsString(out, double)
 
     final def serializeString(string: String, out: Buffer): Unit = {
-        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+        out.writeByte('\"')
         BufferUtils.writeEscapedString(out, string)
-        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+        out.writeByte('\"')
     }
 
     final def deserializeByte(in: Buffer): Byte = {
@@ -180,47 +180,87 @@ private[json] object JsonHelper {
 
     final def deserializeJBigDecimal(in: Buffer): java.math.BigDecimal = ???
 
-    final def serializeJDuration(duration: JDuration, out: Buffer): Unit =
+    final def serializeJDuration(duration: JDuration, out: Buffer): Unit = {
+        out.writeByte('\"')
         BufferUtils.writeJDurationAsString(out, duration)
-
-    final def serializeDuration(duration: Duration, out: Buffer): Unit =
-        BufferUtils.writeDurationAsString(out, duration)
-
-    final def serializeInstant(instant: Instant, out: Buffer): Unit = ???
-
-    final def serializeLocalDate(localDate: LocalDate, out: Buffer): Unit = {
-        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
-        BufferUtils.writeLocalDateAsString(out, localDate)
-        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+        out.writeByte('\"')
     }
 
-    final def serializeLocalDateTime(localDateTime: LocalDateTime, out: Buffer): Unit =
+    final def serializeDuration(duration: Duration, out: Buffer): Unit = {
+        out.writeByte('\"')
+        BufferUtils.writeDurationAsString(out, duration)
+        out.writeByte('\"')
+    }
+
+    final def serializeInstant(instant: Instant, out: Buffer): Unit = {
+        out.writeByte('\"')
+        // TODO
+        out.writeByte('\"')
+    }
+
+    final def serializeLocalDate(localDate: LocalDate, out: Buffer): Unit = {
+        out.writeByte('\"')
+        BufferUtils.writeLocalDateAsString(out, localDate)
+        out.writeByte('\"')
+    }
+
+    final def serializeLocalDateTime(localDateTime: LocalDateTime, out: Buffer): Unit = {
+        out.writeByte('\"')
         BufferUtils.writeLocalDateTimeAsString(out, localDateTime)
+        out.writeByte('\"')
+    }
 
-    final def serializeLocalTime(localTime: LocalTime, out: Buffer): Unit =
+    final def serializeLocalTime(localTime: LocalTime, out: Buffer): Unit = {
+        out.writeByte('\"')
         BufferUtils.writeLocalTimeAsString(out, localTime)
+        out.writeByte('\"')
+    }
 
-    final def serializeMonthDay(monthDay: MonthDay, out: Buffer): Unit =
+    final def serializeMonthDay(monthDay: MonthDay, out: Buffer): Unit = {
+        out.writeByte('\"')
         BufferUtils.writeMonthDayAsString(out, monthDay)
+        out.writeByte('\"')
+    }
 
-    final def serializeOffsetDateTime(offsetDateTime: OffsetDateTime, out: Buffer): Unit =
+    final def serializeOffsetDateTime(offsetDateTime: OffsetDateTime, out: Buffer): Unit = {
+        out.writeByte('\"')
         BufferUtils.writeOffsetDateTimeAsString(out, offsetDateTime)
+        out.writeByte('\"')
+    }
 
-    final def serializeOffsetTime(offsetTime: OffsetTime, out: Buffer): Unit =
+    final def serializeOffsetTime(offsetTime: OffsetTime, out: Buffer): Unit = {
+        out.writeByte('\"')
         BufferUtils.writeOffsetTimeAsString(out, offsetTime)
+        out.writeByte('\"')
+    }
 
-    final def serializePeriod(period: Period, out: Buffer): Unit = BufferUtils.writePeriodAsString(out, period)
+    final def serializePeriod(period: Period, out: Buffer): Unit = {
+        out.writeByte('\"')
+        BufferUtils.writePeriodAsString(out, period)
+        out.writeByte('\"')
+    }
 
-    final def serializeYear(year: Year, out: Buffer): Unit = BufferUtils.writeYearAsString(out, year)
+    final def serializeYear(year: Year, out: Buffer): Unit = {
+        out.writeByte('\"')
+        BufferUtils.writeYearAsString(out, year)
+        out.writeByte('\"')
+    }
 
-    final def serializeYearMonth(yearMonth: YearMonth, out: Buffer): Unit =
+    final def serializeYearMonth(yearMonth: YearMonth, out: Buffer): Unit = {
+        out.writeByte('\"')
         BufferUtils.writeYearMonthAsString(out, yearMonth)
+        out.writeByte('\"')
+    }
 
     final def serializeZonedDateTime(zonedDateTime: ZonedDateTime, out: Buffer): Unit = ???
 
     final def serializeZoneId(zoneId: ZoneId, out: Buffer): Unit = ???
 
-    final def serializeZoneOffset(zoneOffset: ZoneOffset, out: Buffer): Unit = ???
+    final def serializeZoneOffset(zoneOffset: ZoneOffset, out: Buffer): Unit = {
+        out.writeByte('\"')
+        BufferUtils.writeZoneOffset(out, zoneOffset)
+        out.writeByte('\"')
+    }
 
     final def deserializeJDuration(in: Buffer): JDuration = ???
 
@@ -252,7 +292,11 @@ private[json] object JsonHelper {
 
     final def deserializeZoneOffset(in: Buffer): ZoneOffset = ???
 
-    final def serializeUUID(uuid: UUID, out: Buffer): Unit = ???
+    final def serializeUUID(uuid: UUID, out: Buffer): Unit = {
+        out.writeByte('\"')
+        BufferUtils.writeUUIDAsString(out, uuid)
+        out.writeByte('\"')
+    }
 
     final def serializeLocale(locale: Locale, out: Buffer): Unit = ???
 

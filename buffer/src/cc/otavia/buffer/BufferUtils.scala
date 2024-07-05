@@ -28,7 +28,7 @@ import scala.language.unsafeNulls
 
 object BufferUtils {
 
-    def readEscapedChar(buffer: Buffer): Char = {
+    final def readEscapedChar(buffer: Buffer): Char = {
         val b1 = buffer.readByte
         if (b1 >= 0) {
             if (b1 != '\\') {
@@ -57,7 +57,7 @@ object BufferUtils {
         } else throw new IllegalStateException("illegal surrogate character")
     }
 
-    def getEscapedChar(index: Int, buffer: Buffer): Char = {
+    final def getEscapedChar(index: Int, buffer: Buffer): Char = {
         val b1 = buffer.getByte(index)
         if (b1 >= 0) {
             if (b1 != '\\') {
@@ -96,7 +96,7 @@ object BufferUtils {
         case '/'  => '/'
         case '\\' => '\\'
 
-    def writeEscapedChar(buffer: Buffer, ch: Char): Unit = {
+    final def writeEscapedChar(buffer: Buffer, ch: Char): Unit = {
         if (ch < 0x80) {
             val ecs = escapedChars(ch)
             if (ecs == 0) { // 00000000 0aaaaaaa (UTF-16 char) -> 0aaaaaaa (UTF-8 byte)
@@ -115,7 +115,7 @@ object BufferUtils {
         }
     }
 
-    def writeEscapedCharWithQuote(buffer: Buffer, ch: Char): Unit = {
+    final def writeEscapedCharWithQuote(buffer: Buffer, ch: Char): Unit = {
         if (ch < 0x80) { // 00000000 0aaaaaaa (UTF-16 char) -> 0aaaaaaa (UTF-8 byte)
             val ecs = escapedChars(ch)
             if (ecs == 0) {
@@ -134,12 +134,12 @@ object BufferUtils {
         }
     }
 
-    def readEscapedString(buffer: Buffer, len: Int): String = {
+    final def readEscapedString(buffer: Buffer, len: Int): String = {
         val cs = buffer.readCharSequence(len).toString
         cs.translateEscapes()
     }
 
-    def writeEscapedString(buffer: Buffer, str: String): Unit = {
+    final def writeEscapedString(buffer: Buffer, str: String): Unit = {
         var i = 0
         while (i < str.length()) {
             val ch = str.charAt(i)
@@ -492,6 +492,54 @@ object BufferUtils {
         writeLongAsString(buffer, bigInt.longValue)
     else ???
 
+    private def writeSignificantFractionDigits(x: Long, p: Int, pl: Int, buffer: Buffer, ds: Array[Short]): Unit = {
+        var q0     = x.toInt
+        var pos    = p
+        var posLim = pl
+        if (q0 != x) {
+            val q1    = (Math.multiplyHigh(x, 6189700196426901375L) >>> 25).toInt // divide a positive long by 100000000
+            val r1    = (x - q1 * 100000000L).toInt
+            val posm8 = pos - 8
+            if (r1 == 0) {
+                q0 = q1
+                pos = posm8
+            } else {
+                writeFractionDigits(q1, posm8, posLim, buffer, ds)
+                q0 = r1
+                posLim = posm8
+            }
+        }
+        writeSignificantFractionDigits(q0, pos, posLim, buffer, ds)
+    }
+
+    private def writeSignificantFractionDigits(x: Int, p: Int, posLim: Int, buffer: Buffer, ds: Array[Short]): Unit = {
+        var q0  = x
+        var q1  = 0
+        var pos = p
+        while ({
+            val qp = q0 * 1374389535L
+            q1 = (qp >> 37).toInt     // divide a positive int by 100
+            (qp & 0x1fc0000000L) == 0 // check if q is divisible by 100
+        }) {
+            q0 = q1
+            pos -= 2
+        }
+        val d = ds(q0 - q1 * 100)
+        buffer.setShortLE(pos - 1, d)
+        writeFractionDigits(q1, pos - 2, posLim, buffer, ds)
+    }
+
+    private def writeFractionDigits(x: Int, p: Int, posLim: Int, buffer: Buffer, ds: Array[Short]): Unit = {
+        var q0  = x
+        var pos = p
+        while (pos > posLim) {
+            val q1 = (q0 * 1374389535L >> 37).toInt // divide a positive int by 100
+            buffer.setShortLE(pos - 1, ds(q0 - q1 * 100))
+            q0 = q1
+            pos -= 2
+        }
+    }
+
     private def writePositiveIntDigits(q: Int, p: Int, buffer: Buffer, ds: Array[Short]): Unit = {
         var q0  = q
         var pos = p
@@ -510,9 +558,9 @@ object BufferUtils {
     // https://lemire.me/blog/2021/06/03/computing-the-number-of-digits-of-an-integer-even-faster/
     private def digitCount(q0: Long): Int = (offsets(java.lang.Long.numberOfLeadingZeros(q0)) + q0 >> 58).toInt
 
-    def writeYearAsString(buffer: Buffer, year: Year): Unit = writeYearAsString(buffer, year.getValue)
+    final def writeYearAsString(buffer: Buffer, year: Year): Unit = writeYearAsString(buffer, year.getValue)
 
-    def writeYearAsString(buffer: Buffer, year: Int): Unit = {
+    final def writeYearAsString(buffer: Buffer, year: Int): Unit = {
         val ds = digits
         if (year >= 0 && year < 10000) write4Digits(buffer, year, ds) else writeYearWithSign(buffer, year, ds)
     }
@@ -533,13 +581,13 @@ object BufferUtils {
         }
     }
 
-    def writeYearMonthAsString(buffer: Buffer, ym: YearMonth): Unit = {
+    final def writeYearMonthAsString(buffer: Buffer, ym: YearMonth): Unit = {
         val ds = digits
         writeYearAsString(buffer, ym.getYear)
         buffer.writeMediumLE(ds(ym.getMonthValue) << 8 | 0x00002d)
     }
 
-    def writeLocalDateAsString(buffer: Buffer, localDate: LocalDate): Unit = {
+    final def writeLocalDateAsString(buffer: Buffer, localDate: LocalDate): Unit = {
         val ds = digits
         writeYearAsString(buffer, localDate.getYear)
         val d1 = ds(localDate.getMonthValue) << 8
@@ -548,7 +596,7 @@ object BufferUtils {
         buffer.writerOffset(buffer.writerOffset - 2)
     }
 
-    def writeLocalTimeAsString(buffer: Buffer, localTime: LocalTime): Unit = {
+    final def writeLocalTimeAsString(buffer: Buffer, localTime: LocalTime): Unit = {
         val ds     = digits
         val second = localTime.getSecond
         val nano   = localTime.getNano
@@ -583,13 +631,13 @@ object BufferUtils {
         }
     }
 
-    def writeLocalDateTimeAsString(buffer: Buffer, localDateTime: LocalDateTime): Unit = {
+    final def writeLocalDateTimeAsString(buffer: Buffer, localDateTime: LocalDateTime): Unit = {
         writeLocalDateAsString(buffer, localDateTime.toLocalDate)
         buffer.writeByte('T')
         writeLocalTimeAsString(buffer, localDateTime.toLocalTime)
     }
 
-    def writeMonthDayAsString(buffer: Buffer, monthDay: MonthDay): Unit = { // "--01-01"
+    final def writeMonthDayAsString(buffer: Buffer, monthDay: MonthDay): Unit = { // "--01-01"
         val ds = digits
         val d1 = ds(monthDay.getMonthValue) << 16
         val d2 = ds(monthDay.getDayOfMonth).toLong << 40
@@ -597,19 +645,19 @@ object BufferUtils {
         buffer.writerOffset(buffer.writerOffset - 1)
     }
 
-    def writeOffsetDateTimeAsString(buffer: Buffer, offsetDateTime: OffsetDateTime): Unit = {
+    final def writeOffsetDateTimeAsString(buffer: Buffer, offsetDateTime: OffsetDateTime): Unit = {
         val ds = digits
         writeLocalDateTimeAsString(buffer, offsetDateTime.toLocalDateTime)
-        writeOffset(buffer, offsetDateTime.getOffset)
+        writeZoneOffset(buffer, offsetDateTime.getOffset)
     }
 
-    def writeOffsetTimeAsString(buffer: Buffer, offsetTime: OffsetTime): Unit = {
+    final def writeOffsetTimeAsString(buffer: Buffer, offsetTime: OffsetTime): Unit = {
         val ds = digits
         writeLocalTimeAsString(buffer, offsetTime.toLocalTime)
-        writeOffset(buffer, offsetTime.getOffset)
+        writeZoneOffset(buffer, offsetTime.getOffset)
     }
 
-    private def writeOffset(buffer: Buffer, zoneOffset: ZoneOffset): Unit = {
+    final def writeZoneOffset(buffer: Buffer, zoneOffset: ZoneOffset): Unit = {
         val ds = digits
         var y  = zoneOffset.getTotalSeconds
         if (y == 0) {
@@ -662,7 +710,49 @@ object BufferUtils {
     }
 
     def writeJDurationAsString(buffer: Buffer, duration: JDuration): Unit = {
-        duration.getSeconds
+        val totalSecs = duration.getSeconds
+        var nano      = duration.getNano
+        if ((totalSecs | nano) != 0) {
+            buffer.writeShortLE(0x5450) // PT
+            val effectiveTotalSecs = if (totalSecs < 0) (-nano >> 31) - totalSecs else totalSecs
+            val hours =
+                Math.multiplyHigh(effectiveTotalSecs >> 4, 655884233731895169L) >> 3 // divide a positive long by 3600
+            val secsOfHour = (effectiveTotalSecs - hours * 3600).toInt
+            val minutes    = secsOfHour * 17477 >> 20 // divide a small positive int by 60
+            val seconds    = secsOfHour - minutes * 60
+            val ds         = digits
+            if (hours != 0) {
+                if (totalSecs < 0) buffer.writeByte('-')
+                if (hours < 100000000) {
+                    buffer.writerOffset(buffer.writerOffset + digitCount(hours))
+                    writePositiveIntDigits(hours.toInt, buffer.writerOffset, buffer, ds)
+                } else {
+                    val q1 =
+                        Math.multiplyHigh(hours, 6189700196426901375L) >>> 25 // divide a positive long by 100000000
+                    buffer.writerOffset(buffer.writerOffset + digitCount(q1))
+                    writePositiveIntDigits(q1.toInt, buffer.writerOffset, buffer, ds)
+                    write8Digits(buffer, hours - q1 * 100000000, ds)
+                }
+                buffer.writeByte('H')
+            }
+            if (minutes != 0) {
+                if (totalSecs < 0) buffer.writeByte('-')
+                if (minutes < 10) buffer.writeByte((minutes + '0').toByte) else write2Digits(buffer, minutes, ds)
+                buffer.writeByte('M')
+            }
+            if ((seconds | nano) != 0) {
+                if (totalSecs < 0) buffer.writeByte('-')
+                if (seconds < 10) buffer.writeByte((seconds + '0').toByte) else write2Digits(buffer, seconds, ds)
+                if (nano != 0) {
+                    if (totalSecs < 0) nano = 1000000000 - nano
+                    val dotPos = buffer.writerOffset
+                    buffer.writerOffset(dotPos + 10)
+                    writeSignificantFractionDigits(nano, buffer.writerOffset - 1, dotPos, buffer, ds)
+                    buffer.setByte(dotPos, '.')
+                }
+                buffer.writeByte('S')
+            }
+        } else buffer.writeUnsignedIntLE(0x53305450L) // PT0S
     }
 
     def writeDurationAsString(buffer: Buffer, duration: Duration): Unit = {}

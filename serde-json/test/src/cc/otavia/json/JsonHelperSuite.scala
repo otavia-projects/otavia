@@ -16,8 +16,24 @@
 
 package cc.otavia.json
 
-import cc.otavia.serde.annotation.{rename, stringfield}
+import cc.otavia.buffer.BufferAllocator
+import org.scalatest.funsuite.AnyFunSuite
 
-import java.time.YearMonth
+import java.time.LocalDate
+import scala.language.unsafeNulls
 
-case class Hello(id: Int, hello: String, yearMonth: YearMonth) derives JsonSerde
+class JsonHelperSuite extends AnyFunSuite {
+
+    private val allocator = BufferAllocator.onHeapAllocator()
+
+    test("LocalDate") {
+        val buffer    = allocator.allocate(4096)
+        val localDate = LocalDate.of(2024, 7, 1)
+
+        JsonHelper.serializeLocalDate(localDate, buffer)
+
+        assert(buffer.nextAre("\"2024-07-01\"".getBytes()))
+
+    }
+
+}
