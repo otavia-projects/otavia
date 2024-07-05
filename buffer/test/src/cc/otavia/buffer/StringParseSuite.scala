@@ -31,20 +31,20 @@ class StringParseSuite extends AnyFunSuiteLike {
         val uuid = UUID.randomUUID()
 
         val buffer = allocator.allocate()
-        buffer.writeUUIDAsString(uuid)
+        BufferUtils.writeUUIDAsString(buffer, uuid)
 
         buffer.writerOffset(36 + 36)
 
-        buffer.setUUIDAsString(36, uuid)
+        BufferUtils.setUUIDAsString(buffer, 36, uuid)
 
         assert(buffer.getCharSequence(0, 36).toString == uuid.toString)
         assert(buffer.getCharSequence(36, 36).toString == uuid.toString)
 
-        assert(buffer.getStringAsUUID(0) == uuid)
-        assert(buffer.getStringAsUUID(36) == uuid)
+        assert(BufferUtils.getStringAsUUID(buffer, 0) == uuid)
+        assert(BufferUtils.getStringAsUUID(buffer, 36) == uuid)
 
-        assert(buffer.readStringAsUUID() == uuid)
-        assert(buffer.readStringAsUUID() == uuid)
+        assert(BufferUtils.readStringAsUUID(buffer) == uuid)
+        assert(BufferUtils.readStringAsUUID(buffer) == uuid)
 
     }
 
@@ -52,25 +52,25 @@ class StringParseSuite extends AnyFunSuiteLike {
         val uuid   = UUID.randomUUID()
         val buffer = AdaptiveBuffer(allocator)
 
-        buffer.writeUUIDAsString(uuid)
+        BufferUtils.writeUUIDAsString(buffer, uuid)
         buffer.writeCharSequence(" " * 36)
-        buffer.setUUIDAsString(36, uuid)
+        BufferUtils.setUUIDAsString(buffer, 36, uuid)
 
         assert(buffer.getCharSequence(0, 36).toString == uuid.toString)
         assert(buffer.getCharSequence(36, 36).toString == uuid.toString)
 
-        assert(buffer.getStringAsUUID(0) == uuid)
-        assert(buffer.getStringAsUUID(36) == uuid)
+        assert(BufferUtils.getStringAsUUID(buffer, 0) == uuid)
+        assert(BufferUtils.getStringAsUUID(buffer, 36) == uuid)
 
-        assert(buffer.readStringAsUUID() == uuid)
-        assert(buffer.readStringAsUUID() == uuid)
+        assert(BufferUtils.readStringAsUUID(buffer) == uuid)
+        assert(BufferUtils.readStringAsUUID(buffer) == uuid)
 
         buffer.writeCharSequence(" " * (allocator.fixedCapacity - 10))
 
-        buffer.writeUUIDAsString(uuid)
+        BufferUtils.writeUUIDAsString(buffer, uuid)
 
         buffer.readerOffset(buffer.writerOffset - 36)
-        assert(buffer.readStringAsUUID() == uuid)
+        assert(BufferUtils.readStringAsUUID(buffer) == uuid)
 
     }
 

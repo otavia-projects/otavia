@@ -167,6 +167,141 @@ object BufferUtils {
         }
     }
 
+    /** Parses the string content stored in the buffer as a [[UUID]].
+     *
+     *  @param buffer
+     *    the buffer to read.
+     *  @param index
+     *    The read offset, an absolute offset into this buffer, to read from.
+     *  @return
+     *    The UUID represented by the string content.
+     */
+    final def getStringAsUUID(buffer: Buffer, index: Int): UUID = {
+        val ns = nibbles
+        val msb1 = ns(buffer.getByte(index) & 0xff).toLong << 28 | (
+          ns(buffer.getByte(index + 1) & 0xff) << 24 |
+              ns(buffer.getByte(index + 2) & 0xff) << 20 |
+              ns(buffer.getByte(index + 3) & 0xff) << 16 |
+              ns(buffer.getByte(index + 4) & 0xff) << 12 |
+              ns(buffer.getByte(index + 5) & 0xff) << 8 |
+              ns(buffer.getByte(index + 6) & 0xff) << 4 |
+              ns(buffer.getByte(index + 7) & 0xff)
+        )
+        if (msb1 < 0) throw new RuntimeException()
+        if (buffer.getByte(index + 8) != '-') throw new RuntimeException()
+
+        val msb2 = ns(buffer.getByte(index + 9) & 0xff) << 12 |
+            ns(buffer.getByte(index + 10) & 0xff) << 8 |
+            ns(buffer.getByte(index + 11) & 0xff) << 4 |
+            ns(buffer.getByte(index + 12) & 0xff)
+        if (msb2 < 0) throw new RuntimeException()
+        if (buffer.getByte(index + 13) != '-') throw new RuntimeException()
+
+        val msb3 = ns(buffer.getByte(index + 14) & 0xff) << 12 |
+            ns(buffer.getByte(index + 15) & 0xff) << 8 |
+            ns(buffer.getByte(index + 16) & 0xff) << 4 |
+            ns(buffer.getByte(index + 17) & 0xff)
+        if (msb3 < 0) throw new RuntimeException()
+        if (buffer.getByte(index + 18) != '-') throw new RuntimeException()
+
+        val lsb1 = ns(buffer.getByte(index + 19) & 0xff) << 12 |
+            ns(buffer.getByte(index + 20) & 0xff) << 8 |
+            ns(buffer.getByte(index + 21) & 0xff) << 4 |
+            ns(buffer.getByte(index + 22) & 0xff)
+        if (lsb1 < 0) throw new RuntimeException()
+        if (buffer.getByte(index + 23) != '-') throw new RuntimeException()
+
+        val lsb2 = (ns(buffer.getByte(index + 24) & 0xff) << 16 |
+            ns(buffer.getByte(index + 25) & 0xff) << 12 |
+            ns(buffer.getByte(index + 26) & 0xff) << 8 |
+            ns(buffer.getByte(index + 27) & 0xff) << 4 |
+            ns(buffer.getByte(index + 28) & 0xff)).toLong << 28 |
+            (ns(buffer.getByte(index + 29) & 0xff) << 24 |
+                ns(buffer.getByte(index + 30) & 0xff) << 20 |
+                ns(buffer.getByte(index + 31) & 0xff) << 16 |
+                ns(buffer.getByte(index + 32) & 0xff) << 12 |
+                ns(buffer.getByte(index + 33) & 0xff) << 8 |
+                ns(buffer.getByte(index + 34) & 0xff) << 4 |
+                ns(buffer.getByte(index + 35) & 0xff))
+        if (lsb2 < 0) throw new RuntimeException()
+
+        new UUID(msb1 << 32 | msb2.toLong << 16 | msb3, lsb1.toLong << 48 | lsb2)
+    }
+
+    /** Parses the string content stored in the buffer as a [[UUID]].
+     *
+     *  @param buffer
+     *    the buffer to read.
+     *  @return
+     *    The UUID represented by the string content.
+     */
+    final def readStringAsUUID(buffer: Buffer): UUID = {
+        val uuid = getStringAsUUID(buffer, buffer.readerOffset)
+        buffer.skipReadableBytes(36)
+        uuid
+    }
+
+    /** Writes into this buffer, all the bytes from the given [[uuid]] string. This updates the [[writerOffset]] of this
+     *  buffer.
+     *
+     *  @param buffer
+     *    the buffer to write.
+     *  @param uuid
+     *    uuid value.
+     */
+    final def writeUUIDAsString(buffer: Buffer, uuid: UUID): Unit = {
+        val index = buffer.writerOffset
+        buffer.writerOffset(index + 36)
+
+        setUUIDAsString(buffer, index, uuid)
+    }
+
+    /** Writes into this buffer, all the bytes from the given [[uuid]] string. This not updates the [[writerOffset]] of
+     *  this buffer.
+     *
+     *  @param buffer
+     *    the buffer to write.
+     *  @param index
+     *    The write offset, an absolute offset into this buffer to write to.
+     *  @param uuid
+     *    uuid value.
+     */
+    final def setUUIDAsString(buffer: Buffer, index: Int, uuid: UUID): Unit = {
+        val mostSigBits  = uuid.getMostSignificantBits
+        val leastSigBits = uuid.getLeastSignificantBits
+        val ds           = lowerCaseHexDigits
+
+        val mostSigBits1 = (mostSigBits >> 32).toInt
+        val d1           = ds(mostSigBits1 >>> 24)
+        val d2           = ds(mostSigBits1 >> 16 & 0xff).toLong << 16
+        val d3           = ds(mostSigBits1 >> 8 & 0xff).toLong << 32
+        val d4           = ds(mostSigBits1 & 0xff)
+        buffer.setLongLE(index, d1 | d2 | d3 | d4.toLong << 48)
+
+        val mostSigBits2 = mostSigBits.toInt
+        val d5           = ds(mostSigBits2 >>> 24) << 8
+        val d6           = ds(mostSigBits2 >> 16 & 0xff).toLong << 24
+        val d7           = ds(mostSigBits2 >> 8 & 0xff)
+        buffer.setLongLE(index + 8, d5 | d6 | d7.toLong << 48 | 0x2d000000002dL)
+
+        val d8            = ds(mostSigBits2 & 0xff)
+        val leastSigBits1 = (leastSigBits >> 32).toInt
+        val d9            = ds(leastSigBits1 >>> 24).toLong << 24
+        val d10           = ds(leastSigBits1 >> 16 & 0xff).toLong << 40
+        buffer.setLongLE(index + 16, d8 | d9 | d10 | 0x2d000000002d0000L)
+
+        val d11           = ds(leastSigBits1 >> 8 & 0xff)
+        val d12           = ds(leastSigBits1 & 0xff).toLong << 16
+        val leastSigBits2 = leastSigBits.toInt
+        val d13           = ds(leastSigBits2 >>> 24).toLong << 32
+        val d14           = ds(leastSigBits2 >> 16 & 0xff)
+        buffer.setLongLE(index + 24, d11 | d12 | d13 | d14.toLong << 48)
+
+        val d15 = ds(leastSigBits2 >> 8 & 0xff)
+        val d16 = ds(leastSigBits2 & 0xff).toInt << 16
+        buffer.setIntLE(index + 32, d15 | d16)
+    }
+
     /** Checks if a character does not require JSON escaping or encoding.
      *
      *  @param ch

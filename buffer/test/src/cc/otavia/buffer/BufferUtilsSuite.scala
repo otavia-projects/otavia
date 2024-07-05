@@ -19,8 +19,10 @@ package cc.otavia.buffer
 import cc.otavia.buffer.pool.HeapPooledPageAllocator
 import org.scalatest.funsuite.AnyFunSuiteLike
 
-import java.nio.charset.StandardCharsets
-import java.util.UUID
+import java.math.{BigInteger, BigDecimal as JBigDecimal}
+import java.nio.charset.{Charset, StandardCharsets}
+import java.time.{Duration as JDuration, *}
+import java.util.{Currency, Locale, UUID}
 import scala.language.unsafeNulls
 
 class BufferUtilsSuite extends AnyFunSuiteLike {
@@ -114,7 +116,18 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
         assert(buffer.nextAre("110".getBytes(StandardCharsets.US_ASCII)))
         assert(BufferUtils.readStringAsByte(buffer) == 110)
 
+    }
 
+    test("boolean") {
+        val buffer = allocator.allocate()
+
+        BufferUtils.writeBooleanAsString(buffer, true)
+        assert(buffer.nextAre("true".getBytes()))
+        assert(BufferUtils.readStringAsBoolean(buffer))
+
+        BufferUtils.writeBooleanAsString(buffer, false)
+        assert(buffer.nextAre("false".getBytes()))
+        assert(!BufferUtils.readStringAsBoolean(buffer))
     }
 
     test("short") {
@@ -260,6 +273,95 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
         BufferUtils.writeIntAsString(buffer, Int.MinValue)
         assert(buffer.nextAre(Int.MinValue.toString.getBytes(StandardCharsets.US_ASCII)))
         assert(BufferUtils.readStringAsInt(buffer) == Int.MinValue)
+    }
+
+    test("long") {
+        val buffer = allocator.allocate()
+
+        BufferUtils.writeLongAsString(buffer, 0)
+        assert(buffer.nextIs('0'))
+        assert(BufferUtils.readStringAsLong(buffer) == 0)
+
+        BufferUtils.writeLongAsString(buffer, 5)
+        assert(buffer.nextIs('5'))
+        assert(BufferUtils.readStringAsLong(buffer) == 5)
+
+        BufferUtils.writeLongAsString(buffer, 10)
+        assert(buffer.nextAre("10".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == 10)
+
+        BufferUtils.writeLongAsString(buffer, 88)
+        assert(buffer.nextAre("88".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == 88)
+
+        BufferUtils.writeLongAsString(buffer, 5566)
+        assert(buffer.nextAre("5566".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == 5566)
+
+        BufferUtils.writeLongAsString(buffer, 556677)
+        assert(buffer.nextAre("556677".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == 556677)
+
+        BufferUtils.writeLongAsString(buffer, 556677)
+        assert(buffer.nextAre("556677".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == 556677)
+
+        BufferUtils.writeLongAsString(buffer, Int.MaxValue)
+        assert(buffer.nextAre(Int.MaxValue.toString.getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == Int.MaxValue)
+
+        BufferUtils.writeLongAsString(buffer, -5)
+        assert(buffer.nextAre("-5".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == -5)
+
+        BufferUtils.writeLongAsString(buffer, -10)
+        assert(buffer.nextAre("-10".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == -10)
+
+        BufferUtils.writeLongAsString(buffer, -88)
+        assert(buffer.nextAre("-88".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == -88)
+
+        BufferUtils.writeLongAsString(buffer, -5566)
+        assert(buffer.nextAre("-5566".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == -5566)
+
+        BufferUtils.writeLongAsString(buffer, -556677)
+        assert(buffer.nextAre("-556677".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == -556677)
+
+        BufferUtils.writeLongAsString(buffer, -556677)
+        assert(buffer.nextAre("-556677".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == -556677)
+
+        BufferUtils.writeLongAsString(buffer, Int.MinValue)
+        assert(buffer.nextAre(Int.MinValue.toString.getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == Int.MinValue)
+    }
+
+    test("JDuration") {
+        val buffer = allocator.allocate()
+
+        val d1 = JDuration.ofHours(100000000)
+        BufferUtils.writeJDurationAsString(buffer, d1)
+        assert(buffer.skipIfNextAre(d1.toString.getBytes()))
+        assert(buffer.readableBytes == 0)
+
+        val d2 = JDuration.ofHours(100000000 + 1)
+        BufferUtils.writeJDurationAsString(buffer, d2)
+        assert(buffer.skipIfNextAre(d2.toString.getBytes()))
+        assert(buffer.readableBytes == 0)
+
+        val localDateTime1 = LocalDateTime.of(2024, 7, 2, 7, 7, 7)
+        val localDateTime2 = LocalDateTime.of(2023, 6, 1, 6, 6, 6, 6)
+
+        val d3 = JDuration.between(localDateTime1, localDateTime2)
+        BufferUtils.writeJDurationAsString(buffer, d3)
+        assert(buffer.skipIfNextAre(d3.toString.getBytes()))
+        assert(buffer.readableBytes == 0)
+
+        assert(true)
+
     }
 
 }

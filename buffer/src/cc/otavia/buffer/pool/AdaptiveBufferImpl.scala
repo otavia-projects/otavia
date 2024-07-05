@@ -2494,49 +2494,6 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         }
     }
 
-    override def writeUUIDAsString(uuid: UUID): Unit = {
-        if (realWritableBytes < 36) this.extendBuffer()
-        last.writeUUIDAsString(uuid)
-        widx += 36
-    }
-
-    override def setUUIDAsString(index: Int, uuid: UUID): Unit = {
-        resetOffsetMark(index)
-        val idx    = markCursor
-        val off    = markLen
-        val buffer = apply(idx)
-        if (buffer.readableBytes - off >= 36) buffer.setUUIDAsString(buffer.readerOffset + off, uuid)
-        else {
-            val str = uuid.toString
-            this.setCharSequence(index, str)
-        }
-    }
-
-    override def readStringAsUUID(): UUID = {
-        checkReadBounds(ridx + 36)
-        val uuid =
-            if (head.readableBytes >= 36) head.readStringAsUUID()
-            else {
-                val str = this.getCharSequence(ridx, 36).toString
-                UUID.fromString(str)
-            }
-        if (head.readableBytes == 0) recycleHead()
-        ridx += 36
-        uuid
-    }
-
-    override def getStringAsUUID(index: Int): UUID = {
-        resetOffsetMark(index)
-        val idx    = markCursor
-        val off    = markLen
-        val buffer = apply(idx)
-        if (buffer.readableBytes - off >= 36) buffer.getStringAsUUID(buffer.readerOffset + off)
-        else {
-            val str = this.getCharSequence(index, 36).toString
-            UUID.fromString(str)
-        }
-    }
-
     override def writeBytes(source: Buffer, length: Int): Buffer = {
         if (closed) throw new BufferClosedException()
         if (source.readableBytes < length)
