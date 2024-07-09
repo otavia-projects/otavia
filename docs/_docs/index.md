@@ -16,7 +16,6 @@ layout: main
 ![Static Badge](https://img.shields.io/badge/Scala-3.3-blue)
 [![Unit Tests](https://github.com/otavia-projects/otavia/actions/workflows/unittest.yml/badge.svg)](https://github.com/otavia-projects/otavia/actions/workflows/unittest.yml)
 ![Maven Central](https://img.shields.io/maven-central/v/cc.otavia/otavia-runtime_3)
-![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/cc.otavia/otavia-runtime_3?server=https%3A%2F%2Fs01.oss.sonatype.org)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/y/otavia-projects/otavia)
 ![GitHub Release Date - Published_At](https://img.shields.io/github/release-date/otavia-projects/otavia)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/otavia-projects/otavia)

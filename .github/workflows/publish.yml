@@ -2,15 +2,15 @@ name: Publish sonatype
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 env:
   COURSIER_REPOSITORIES: central|https://s01.oss.sonatype.org/content/repositories/snapshots|jitpack|https://corporate.com/repo
   PGP_SECRET: ${{ secrets.PGP_SECRET }}
   PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
   SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+  SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
 
 jobs:
   deploy:
@@ -25,5 +25,5 @@ jobs:
       - run: echo $PGP_SECRET | base64 --decode > gpg_key && gpg --import --no-tty --batch --yes gpg_key
       - run: ./millw -i __.publishArtifacts
       - run: gpg --passphrase=$PGP_PASSPHRASE --no-tty --pinentry-mode loopback --batch --yes -a -b build.sc
-      - run: ./millw -d mill.scalalib.PublishModule/publishAll --publishArtifacts __.publishArtifacts --sonatypeCreds yankun1992:$SONATYPE_PASSWORD  --gpgArgs --passphrase=$PGP_PASSPHRASE,--no-tty,--pinentry-mode,loopback,--batch,--yes,-a,-b --sonatypeUri https://s01.oss.sonatype.org/service/local --sonatypeSnapshotUri https://s01.oss.sonatype.org/content/repositories/snapshots --readTimeout 600000 --awaitTimeout 600000 --signed true --release true
+      - run: ./millw -d mill.scalalib.PublishModule/publishAll --publishArtifacts __.publishArtifacts --sonatypeCreds $SONATYPE_USERNAME:$SONATYPE_PASSWORD  --gpgArgs --passphrase=$PGP_PASSPHRASE,--no-tty,--pinentry-mode,loopback,--batch,--yes,-a,-b --sonatypeUri https://s01.oss.sonatype.org/service/local --sonatypeSnapshotUri https://s01.oss.sonatype.org/content/repositories/snapshots --readTimeout 600000 --awaitTimeout 600000 --signed true --release true
       - run: rm gpg_key
