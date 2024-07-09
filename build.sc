@@ -41,10 +41,10 @@ object ProjectInfo {
     def buildTool               = "mill"
     def buildToolVersion        = main.BuildInfo.millVersion
 
-    def testDep = ivy"org.scalatest::scalatest:3.2.18"
+    def testDep = ivy"org.scalatest::scalatest:3.2.19"
 
-    def xml         = ivy"org.scala-lang.modules::scala-xml:2.2.0"
-    def scram       = ivy"com.ongres.scram:client:2.1"
+    def xml   = ivy"org.scala-lang.modules::scala-xml:2.3.0"
+    def scram = ivy"com.ongres.scram:client:2.1"
 
     val settings = PomSettings(
       description = description,
