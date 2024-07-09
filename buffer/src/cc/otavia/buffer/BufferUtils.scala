@@ -339,8 +339,15 @@ object BufferUtils {
 
     final def readStringAsBoolean(buffer: Buffer): Boolean = {
         val bs = buffer.readIntLE
-        if (bs == 0x65757274) true                             // e u r t
-        else if (bs == 0x736c6166 && buffer.nextIs('e')) false // e s l a f
+        if (bs == 0x65757274) true                                   // e u r t
+        else if (bs == 0x736c6166 && buffer.skipIfNextIs('e')) false // e s l a f
+        else throw new Exception("except 'ture' or 'false'")
+    }
+
+    final def getStringAsBoolean(buffer: Buffer, index: Int): Boolean = {
+        val bs = buffer.getIntLE(index)
+        if (bs == 0x65757274) true                                                // e u r t
+        else if (bs == 0x736c6166 && buffer.indexIs('e'.toByte, index + 4)) false // e s l a f
         else throw new Exception("except 'ture' or 'false'")
     }
 
@@ -349,6 +356,13 @@ object BufferUtils {
         else {
             buffer.writeIntLE(0x736c6166) // s l a f
             buffer.writeByte('e')         // e
+        }
+
+    final def setBooleanAsString(buffer: Buffer, index: Int, boolean: Boolean): Unit =
+        if (boolean) buffer.setIntLE(index, 0x65757274) // e u r t
+        else {
+            buffer.setIntLE(index, 0x736c6166) // s l a f
+            buffer.setByte(index + 4, 'e')     // e
         }
 
     final def readStringAsShort(buffer: Buffer): Short = {
@@ -417,7 +431,7 @@ object BufferUtils {
         writePositiveIntDigits(q0, buffer.writerOffset, buffer, ds)
     } else buffer.writeBytes(MIN_INT_BYTES)
 
-    final def readStringAsLong(buffer: Buffer): Long = { // TODO: optimize
+    final def readStringAsLong(buffer: Buffer): Long = { // FIXME: long over flow
         buffer.skipIfNextIs('+')
         val minus     = buffer.skipIfNextIs('-')
         var ret: Long = 0
@@ -428,10 +442,40 @@ object BufferUtils {
         if (minus) -ret else ret
     }
 
-    // TODO: optimize
-    final def writeLongAsString(buffer: Buffer, long: Long): Unit = if (long <= Int.MaxValue || long >= Int.MinValue)
-        writeIntAsString(buffer, long.toInt)
-    else buffer.writeCharSequence(long.toString, StandardCharsets.US_ASCII)
+    final def writeLongAsString(buffer: Buffer, long: Long): Unit = {
+        val ds = digits
+        var q0 = long
+        if (long < 0) {
+            q0 = -q0
+            if (q0 != long) buffer.writeByte('-')
+            else {
+                q0 = 3372036854775808L
+                buffer.writeIntLE(0x3232392d)
+            }
+        }
+        var q       = 0
+        var lastPos = buffer.writerOffset
+        if (q0 < 100000000) {
+            q = q0.toInt
+            lastPos += digitCount(q0)
+            buffer.writerOffset(lastPos)
+        } else {
+            val q1 = Math.multiplyHigh(q0, 6189700196426901375L) >>> 25 // divide a positive long by 100000000
+            if (q1 < 100000000) {
+                q = q1.toInt
+                lastPos += digitCount(q1)
+                buffer.writerOffset(lastPos)
+            } else {
+                val q2 = (q1 >> 8) * 1441151881 >> 49 // divide a small positive long by 100000000
+                q = q2.toInt
+                lastPos += digitCount(q2)
+                buffer.writerOffset(lastPos)
+                write8Digits(buffer, q1 - q2 * 100000000, ds)
+            }
+            write8Digits(buffer, q0 - q1 * 100000000, ds)
+        }
+        writePositiveIntDigits(q, lastPos, buffer, ds)
+    }
 
     final def readStringAsFloat(buffer: Buffer): Float = { // TODO: optimize
         buffer.skipIfNextIs('+')

@@ -38,9 +38,8 @@ trait RedisSerde[T <: Command[?] | CommandResponse] extends Serde[T] {
     }
 
     final protected def deserializeBulkString(in: Buffer): String = if (in.skipIfNextIs('$')) {
-        val intLen = in.bytesBefore('\r'.toByte, '\n')
-        val strLen = in.readStringAsLong(intLen).toInt
-        in.skipReadableBytes(2)
+        val strLen = BufferUtils.readStringAsInt(in)
+        in.skipReadableBytes(2) // skip "\r\n"
         val string = if (strLen != 0) in.readCharSequence(strLen).toString else ""
         in.skipReadableBytes(2)
         string
@@ -54,9 +53,8 @@ trait RedisSerde[T <: Command[?] | CommandResponse] extends Serde[T] {
     }
 
     final protected def deserializeInteger(in: Buffer): Long = if (in.skipIfNextIs(':')) {
-        val intLen = in.bytesBefore('\r'.toByte, '\n')
-        val int    = in.readStringAsLong(intLen)
-        in.skipReadableBytes(2)
+        val int = BufferUtils.readStringAsLong(in)
+        in.skipReadableBytes(2) // skip "\r\n"
         int
     } else throw new RedisProtocolException(s"except byte ':' but get '${in.getByte(in.readerOffset)}'")
 

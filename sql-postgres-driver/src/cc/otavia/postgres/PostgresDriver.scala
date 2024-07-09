@@ -16,8 +16,8 @@
 
 package cc.otavia.postgres
 
-import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
+import cc.otavia.buffer.{Buffer, BufferUtils}
 import cc.otavia.core.channel.{Channel, ChannelHandlerContext, ChannelInflight, ChannelOption}
 import cc.otavia.core.slf4a.{Logger, LoggerFactory}
 import cc.otavia.postgres.impl.*
@@ -307,13 +307,13 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
 
     private def decodeCommandComplete(payload: Buffer, length: Int): Unit = {
         if (payload.skipIfNextAre(CMD_COMPLETED_UPDATE)) {
-            val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_UPDATE.length).toInt
+            val rows = BufferUtils.readStringAsInt(payload)
             modifyRows += rows
         } else if (payload.skipIfNextAre(CMD_COMPLETED_DELETE)) {
-            val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_DELETE.length).toInt
+            val rows = BufferUtils.readStringAsInt(payload)
             modifyRows += rows
         } else if (payload.skipIfNextAre(CMD_COMPLETED_INSERT)) {
-            val rows = payload.readStringAsLong(length - 5 - CMD_COMPLETED_INSERT.length).toInt
+            val rows = BufferUtils.readStringAsInt(payload)
             modifyRows += rows
         } else if (payload.skipIfNextAre(CMD_COMPLETED_SELECT)) {
             //

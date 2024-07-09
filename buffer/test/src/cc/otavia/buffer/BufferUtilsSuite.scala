@@ -339,6 +339,30 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
         assert(BufferUtils.readStringAsLong(buffer) == Int.MinValue)
     }
 
+    test("long > 100000000") {
+        val buffer = allocator.allocate()
+
+        BufferUtils.writeLongAsString(buffer, 1100000001)
+        assert(buffer.nextAre("1100000001".getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == 1100000001)
+
+        val num = 100000000L * 100000000L + 556677L
+        BufferUtils.writeLongAsString(buffer, num)
+        assert(buffer.nextAre(num.toString.getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == num)
+
+        val num2 = 100000000L * 100000000L - 556677L
+        BufferUtils.writeLongAsString(buffer, num2)
+        assert(buffer.nextAre(num2.toString.getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == num2)
+
+        val num3 = 100000000L + 556677L
+        BufferUtils.writeLongAsString(buffer, num3)
+        assert(buffer.nextAre(num3.toString.getBytes(StandardCharsets.US_ASCII)))
+        assert(BufferUtils.readStringAsLong(buffer) == num3)
+
+    }
+
     test("JDuration") {
         val buffer = allocator.allocate()
 
