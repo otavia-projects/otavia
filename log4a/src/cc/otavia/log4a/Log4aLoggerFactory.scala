@@ -16,6 +16,7 @@
 
 package cc.otavia.log4a
 
+import cc.otavia.core.actor.ActorFactory
 import cc.otavia.core.ioc
 import cc.otavia.core.ioc.BeanDefinition
 import cc.otavia.core.slf4a.{AbstractILoggerFactory, LogLevel, Logger}
@@ -97,7 +98,10 @@ class Log4aLoggerFactory extends AbstractILoggerFactory {
                 val appenderName = name + "@" + clzName
                 val qualifier    = Some(appenderName)
                 appenderMap.put(name, appenderName)
-                log4aModule.addDefinition(BeanDefinition(() => new ConsoleAppender(), qualifier = qualifier))
+                val factory = new ActorFactory[ConsoleAppender] {
+                    override def newActor(): ConsoleAppender = new ConsoleAppender()
+                }
+                log4aModule.addDefinition(BeanDefinition(factory, qualifier = qualifier))
             case _ =>
         }
     }
