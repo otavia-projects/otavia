@@ -363,6 +363,56 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
     }
 
+    test("float") {
+        val buffer = allocator.allocate()
+
+        BufferUtils.writeFloatAsString(buffer, 0.01)
+        assert(buffer.skipIfNextAre("0.01".getBytes()))
+
+        BufferUtils.writeFloatAsString(buffer, 0.1345600000015678)
+        assert(buffer.skipIfNextAre("0.13456".getBytes()))
+
+        BufferUtils.writeFloatAsString(buffer, 0.00015678)
+        assert(buffer.skipIfNextAre("1.5678E-4".getBytes()))
+
+        BufferUtils.writeFloatAsString(buffer, 0.0015678)
+        assert(buffer.skipIfNextAre("0.0015678".getBytes()))
+
+        BufferUtils.writeFloatAsString(buffer, 0.000000000015678)
+        assert(buffer.skipIfNextAre("1.5678E-11".getBytes()))
+
+        BufferUtils.writeFloatAsString(buffer, -0.000000000015678)
+        assert(buffer.skipIfNextAre("-1.5678E-11".getBytes()))
+
+        BufferUtils.writeFloatAsString(buffer, 456789.0000000000000000123)
+        assert(buffer.skipIfNextAre("456789.0".getBytes()))
+    }
+
+    test("double") {
+        val buffer = allocator.allocate()
+
+        BufferUtils.writeDoubleAsString(buffer, 0.01)
+        assert(buffer.skipIfNextAre("0.01".getBytes()))
+
+        BufferUtils.writeDoubleAsString(buffer, 0.1345600000015678)
+        assert(buffer.skipIfNextAre("0.1345600000015678".getBytes()))
+
+        BufferUtils.writeDoubleAsString(buffer, 0.00015678)
+        assert(buffer.skipIfNextAre("1.5678E-4".getBytes()))
+
+        BufferUtils.writeDoubleAsString(buffer, 0.0015678)
+        assert(buffer.skipIfNextAre("0.0015678".getBytes()))
+
+        BufferUtils.writeDoubleAsString(buffer, 0.000000000015678)
+        assert(buffer.skipIfNextAre("1.5678E-11".getBytes()))
+
+        BufferUtils.writeDoubleAsString(buffer, -0.000000000015678)
+        assert(buffer.skipIfNextAre("-1.5678E-11".getBytes()))
+
+        BufferUtils.writeDoubleAsString(buffer, 456789.0000000000000000123)
+        assert(buffer.skipIfNextAre("456789.0".getBytes()))
+    }
+
     test("JDuration") {
         val buffer = allocator.allocate()
 

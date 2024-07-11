@@ -498,9 +498,101 @@ object BufferUtils {
         if (minus) -(intPart + floatPart) else intPart + floatPart
     }
 
-    // TODO: optimize
-    final def writeFloatAsString(buffer: Buffer, float: Float): Unit =
-        buffer.writeCharSequence(float.toString, StandardCharsets.US_ASCII)
+    // Based on the amazing work of Raffaello Giulietti
+    // "The Schubfach way to render doubles": https://drive.google.com/file/d/1luHhyQF9zKlM8yJ1nebU0OgVYhfC6CBN/view
+    // Sources with the license are here: https://github.com/c4f7fcce9cb06515/Schubfach/blob/3c92d3c9b1fead540616c918cdfef432bca53dfa/todec/src/math/FloatToDecimal.java
+    final def writeFloatAsString(buffer: Buffer, float: Float): Unit = {
+        if (float < 0.0f) buffer.writeByte('-')
+        if (float == 0.0f) buffer.writeMedium(0x302e30)
+        else {
+            val bits     = java.lang.Float.floatToRawIntBits(float)
+            var e2       = (bits >> 23 & 0xff) - 150
+            var m2       = bits & 0x7fffff | 0x800000
+            var m10, e10 = 0
+            if (e2 == 0) m10 = m2
+            else if ((e2 >= -23 && e2 < 0) && m2 << e2 == 0) m10 = m2 >> -e2
+            else {
+                var e10Corr, e2Corr = 0
+                var cblCorr         = 2
+                if (e2 == -150) {
+                    m2 &= 0x7fffff
+                    e2 = -149
+                    if (m2 < 8) {
+                        m2 *= 10
+                        e10Corr = 1
+                    }
+                } else if (m2 == 0x800000 && e2 > -149) {
+                    e2Corr = 131007
+                    cblCorr = 1
+                }
+                e10 = e2 * 315653 - e2Corr >> 20
+                val g      = gs(e10 + 324 << 1) + 1
+                val h      = (e10 * -108853 >> 15) + e2 + 1
+                val cb     = m2 << 2
+                val vbCorr = (m2 & 0x1) - 1
+                val vb     = rop(g, cb << h)
+                val vbl    = rop(g, cb - cblCorr << h) + vbCorr
+                val vbr    = rop(g, cb + 2 << h) - vbCorr
+                if (
+                  vb < 400 || {
+                      m10 = (vb * 107374183L >> 32).toInt // divide a positive int by 40
+                      val vb40 = m10 * 40
+                      val diff = vbl - vb40
+                      (vb40 - vbr + 40 ^ diff) >= 0 || {
+                          m10 += ~diff >>> 31
+                          e10 += 1
+                          false
+                      }
+                  }
+                ) {
+                    m10 = vb >> 2
+                    val vb4  = m10 << 2
+                    var diff = vbl - vb4
+                    if ((vb4 - vbr + 4 ^ diff) >= 0) diff = (vb & 0x3) + (m10 & 0x1) - 3
+                    m10 += ~diff >>> 31
+                    e10 -= e10Corr
+                }
+            }
+            val ds  = digits
+            val len = digitCount(m10.toLong)
+            e10 += len - 1
+            if (e10 < -3 || e10 >= 7) {
+                val pos = buffer.writerOffset
+                writeSignificantFractionDigits(m10, buffer.writerOffset + len, buffer.writerOffset, buffer, ds)
+                buffer.setShortLE(pos, (buffer.getByte(pos + 1) | 0x2e00).toShort)
+                if (buffer.writerOffset - 3 < pos) buffer.writeByte('0') // write 0 after 0.
+                buffer.writeShortLE(0x2d45)                              // E-
+                if (e10 < 0) e10 = -e10
+                if (e10 < 10) buffer.writeByte((e10 + '0').toByte) else write2Digits(buffer, e10, ds)
+            } else if (e10 < 0) {
+                var pos    = buffer.writerOffset
+                val dotPos = pos + 1
+                buffer.writeIntLE(0x30303030)
+                pos -= e10
+                writeSignificantFractionDigits(m10, pos + len, pos, buffer, ds)
+                buffer.setByte(dotPos, '.')
+            } else if (e10 < len - 1) {
+                val pos = buffer.writerOffset
+                writeSignificantFractionDigits(m10, buffer.writerOffset + len, pos, buffer, ds)
+                val bs = buffer.getLongLE(pos)
+                val s  = e10 << 3
+                val m  = 0xffffffffffff0000L << s
+                val d1 = (~m & bs) >> 8
+                val d2 = 0x2e00L << s
+                val d3 = m & bs
+                buffer.setLongLE(pos, d1 | d2 | d3)
+            } else {
+                buffer.writerOffset(buffer.writerOffset + len)
+                writePositiveIntDigits(m10, buffer.writerOffset, buffer, ds)
+                buffer.writeShortLE(0x302e)
+            }
+        }
+    }
+
+    private def rop(g: Long, cp: Int): Int = {
+        val x = Math.multiplyHigh(g, cp.toLong << 32)
+        (x >>> 31).toInt | -x.toInt >>> 31
+    }
 
     // TODO: optimize
     final def readStringAsDouble(buffer: Buffer): Double = {
@@ -524,9 +616,106 @@ object BufferUtils {
         if (minus) -(intPart + floatPart) else intPart + floatPart
     }
 
-    // TODO: optimize
-    final def writeDoubleAsString(buffer: Buffer, double: Double): Unit =
-        buffer.writeCharSequence(double.toString, StandardCharsets.US_ASCII)
+    // Based on the amazing work of Raffaello Giulietti
+    // "The Schubfach way to render doubles": https://drive.google.com/file/d/1luHhyQF9zKlM8yJ1nebU0OgVYhfC6CBN/view
+    // Sources with the license are here: https://github.com/c4f7fcce9cb06515/Schubfach/blob/3c92d3c9b1fead540616c918cdfef432bca53dfa/todec/src/math/DoubleToDecimal.java
+    final def writeDoubleAsString(buffer: Buffer, double: Double): Unit = {
+        if (double < 0.0f) buffer.writeByte('-')
+        if (double == 0.0f) buffer.writeMedium(0x302e30)
+        else {
+            val bits = java.lang.Double.doubleToRawLongBits(double)
+            var e2   = ((bits >> 52).toInt & 0x7ff) - 1075
+            var m2   = bits & 0xfffffffffffffL | 0x10000000000000L
+            var m10  = 0L
+            var e10  = 0
+            if (e2 == 0) m10 = m2
+            else if ((e2 >= -52 && e2 < 0) && m2 << e2 == 0) m10 = m2 >> -e2
+            else {
+                var e10Corr, e2Corr = 0
+                var cblCorr         = 2
+                if (e2 == -1075) {
+                    m2 &= 0xfffffffffffffL
+                    e2 = -1074
+                    if (m2 < 3) {
+                        m2 *= 10
+                        e10Corr = 1
+                    }
+                } else if (m2 == 0x10000000000000L && e2 > -1074) {
+                    e2Corr = 131007
+                    cblCorr = 1
+                }
+                e10 = e2 * 315653 - e2Corr >> 20
+                val i      = e10 + 324 << 1
+                val g1     = gs(i)
+                val g0     = gs(i + 1)
+                val h      = (e10 * -108853 >> 15) + e2 + 2
+                val cb     = m2 << 2
+                val vbCorr = (m2.toInt & 0x1) - 1
+                val vb     = rop(g1, g0, cb << h)
+                val vbl    = rop(g1, g0, cb - cblCorr << h) + vbCorr
+                val vbr    = rop(g1, g0, cb + 2 << h) - vbCorr
+                if (
+                  vb < 400 || {
+                      m10 = Math.multiplyHigh(vb, 461168601842738792L) // divide a positive long by 40
+                      val vb40 = m10 * 40
+                      val diff = (vbl - vb40).toInt
+                      ((vb40 - vbr).toInt + 40 ^ diff) >= 0 || {
+                          m10 += ~diff >>> 31
+                          e10 += 1
+                          false
+                      }
+                  }
+                ) {
+                    m10 = vb >> 2
+                    val vb4  = m10 << 2
+                    var diff = (vbl - vb4).toInt
+                    if (((vb4 - vbr).toInt + 4 ^ diff) >= 0) diff = (vb.toInt & 0x3) + (m10.toInt & 0x1) - 3
+                    m10 += ~diff >>> 31
+                    e10 -= e10Corr
+                }
+            }
+            val ds  = digits
+            val len = digitCount(m10)
+            e10 += len - 1
+            if (e10 < -3 || e10 >= 7) {
+                val pos = buffer.writerOffset
+                writeSignificantFractionDigits(m10, buffer.writerOffset + len, buffer.writerOffset, buffer, ds)
+                buffer.setShortLE(pos, (buffer.getByte(pos + 1) | 0x2e00).toShort)
+                if (buffer.writerOffset - 3 < pos) buffer.writeByte('0') // write 0 after 0.
+                buffer.writeShortLE(0x2d45)                              // E-
+                if (e10 < 0) e10 = -e10
+                if (e10 < 10) buffer.writeByte((e10 + '0').toByte)
+                else if (e10 < 100) write2Digits(buffer, e10, ds)
+                else write3Digits(buffer, e10, ds)
+            } else if (e10 < 0) {
+                var pos    = buffer.writerOffset
+                val dotPos = pos + 1
+                buffer.writeIntLE(0x30303030)
+                pos -= e10
+                writeSignificantFractionDigits(m10, pos + len, pos, buffer, ds)
+                buffer.setByte(dotPos, '.')
+            } else if (e10 < len - 1) {
+                val pos = buffer.writerOffset
+                writeSignificantFractionDigits(m10, buffer.writerOffset + len, pos, buffer, ds)
+                val bs = buffer.getLongLE(pos)
+                val s  = e10 << 3
+                val m  = 0xffffffffffff0000L << s
+                val d1 = (~m & bs) >> 8
+                val d2 = 0x2e00L << s
+                val d3 = m & bs
+                buffer.setLongLE(pos, d1 | d2 | d3)
+            } else {
+                buffer.writerOffset(buffer.writerOffset + len)
+                writePositiveIntDigits(m10.toInt, buffer.writerOffset, buffer, ds)
+                buffer.writeShortLE(0x302e)
+            }
+        }
+    }
+
+    private def rop(g1: Long, g0: Long, cp: Long): Long = {
+        val x = Math.multiplyHigh(g0, cp) + (g1 * cp >>> 1)
+        Math.multiplyHigh(g1, cp) + (x >>> 63) | (-x ^ x) >>> 63
+    }
 
     final def readStringAsBigInt(buffer: Buffer): BigInt = {
         ???
@@ -548,6 +737,7 @@ object BufferUtils {
                 q0 = q1
                 pos = posm8
             } else {
+                buffer.writerOffset(posm8)
                 writeFractionDigits(q1, posm8, posLim, buffer, ds)
                 q0 = r1
                 posLim = posm8
@@ -569,8 +759,10 @@ object BufferUtils {
             pos -= 2
         }
         val d = ds(q0 - q1 * 100)
+        buffer.writerOffset(pos + 1)
         buffer.setShortLE(pos - 1, d)
         writeFractionDigits(q1, pos - 2, posLim, buffer, ds)
+        buffer.writerOffset(pos + ((0x3039 - d) >>> 31))
     }
 
     private def writeFractionDigits(x: Int, p: Int, posLim: Int, buffer: Buffer, ds: Array[Short]): Unit = {
@@ -790,8 +982,7 @@ object BufferUtils {
                 if (nano != 0) {
                     if (totalSecs < 0) nano = 1000000000 - nano
                     val dotPos = buffer.writerOffset
-                    buffer.writerOffset(dotPos + 10)
-                    writeSignificantFractionDigits(nano, buffer.writerOffset - 1, dotPos, buffer, ds)
+                    writeSignificantFractionDigits(nano, dotPos + 9, dotPos, buffer, ds)
                     buffer.setByte(dotPos, '.')
                 }
                 buffer.writeByte('S')
