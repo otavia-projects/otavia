@@ -168,7 +168,8 @@ private[json] object JsonHelper {
 
     final def serializeBigDecimal(bigDecimal: BigDecimal, out: Buffer): Unit = ???
 
-    final def serializeBigInteger(bigInteger: BigInteger, out: Buffer): Unit = ???
+    final def serializeBigInteger(bigInteger: BigInteger, out: Buffer): Unit =
+        BufferUtils.writeBigIntegerAsString(out, bigInteger)
 
     final def serializeJBigDecimal(bigDecimal: java.math.BigDecimal, out: Buffer): Unit = ???
 

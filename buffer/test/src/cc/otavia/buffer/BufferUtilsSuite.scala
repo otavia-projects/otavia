@@ -16,7 +16,7 @@
 
 package cc.otavia.buffer
 
-import cc.otavia.buffer.pool.HeapPooledPageAllocator
+import cc.otavia.buffer.pool.{AdaptiveBuffer, HeapPooledPageAllocator}
 import org.scalatest.funsuite.AnyFunSuiteLike
 
 import java.math.{BigInteger, BigDecimal as JBigDecimal}
@@ -25,6 +25,7 @@ import java.time.{Duration as JDuration, *}
 import java.util.{Currency, Locale, UUID}
 import scala.jdk.CollectionConverters.*
 import scala.language.unsafeNulls
+import scala.util.Random
 
 class BufferUtilsSuite extends AnyFunSuiteLike {
 
@@ -412,6 +413,38 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
         BufferUtils.writeDoubleAsString(buffer, 456789.0000000000000000123)
         assert(buffer.skipIfNextAre("456789.0".getBytes()))
+    }
+
+    test("BigInt") {
+        val buffer = AdaptiveBuffer(allocator)
+
+        var num = -BigInt(1 + Random.nextInt(10000))
+
+        var i = 0
+        while (i < 1000) {
+            BufferUtils.writeBigIntAsString(buffer, num)
+            assert(buffer.skipIfNextAre(num.toString().getBytes()))
+            assert(buffer.readableBytes == 0)
+            buffer.compact()
+            num = num * BigInt(1 + Random.nextInt(100000))
+            i += 1
+        }
+    }
+
+    test("BigInteger") {
+        val buffer = AdaptiveBuffer(allocator)
+
+        var num = BigInteger.valueOf(1 + Random.nextInt(10000))
+
+        var i = 0
+        while (i < 1000) {
+            BufferUtils.writeBigIntegerAsString(buffer, num)
+            assert(buffer.skipIfNextAre(num.toString().getBytes()))
+            assert(buffer.readableBytes == 0)
+            buffer.compact()
+            num = num.multiply(BigInteger.valueOf(1 + Random.nextInt(100000)))
+            i += 1
+        }
     }
 
     test("ZoneOffset") {

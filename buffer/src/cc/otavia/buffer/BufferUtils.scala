@@ -18,7 +18,7 @@
 
 package cc.otavia.buffer
 
-import java.math.MathContext
+import java.math.{BigInteger, MathContext}
 import java.nio.charset.StandardCharsets
 import java.time.{Duration as JDuration, *}
 import java.util.UUID
@@ -723,7 +723,37 @@ object BufferUtils {
 
     final def writeBigIntAsString(buffer: Buffer, bigInt: BigInt): Unit = if (bigInt.isValidLong)
         writeLongAsString(buffer, bigInt.longValue)
-    else ???
+    else writeBigInteger(buffer, bigInt.bigInteger, null)
+
+    final def writeBigIntegerAsString(buffer: Buffer, num: BigInteger): Unit = writeBigInteger(buffer, num, null)
+
+    private def writeBigInteger(buffer: Buffer, x: BigInteger, ss: Array[BigInteger]): Unit = {
+        val bitLen = x.bitLength
+        if (bitLen < 64) writeLongAsString(buffer, x.longValue)
+        else {
+            val n   = calculateTenPow18SquareNumber(bitLen)
+            val ss1 = if (ss eq null) getTenPow18Squares(n) else ss
+            val qr  = x.divideAndRemainder(ss1(n))
+            writeBigInteger(buffer, qr(0), ss1)
+            writeBigIntegerRemainder(buffer, qr(1), n - 1, ss1)
+        }
+    }
+
+    private def writeBigIntegerRemainder(buffer: Buffer, x: BigInteger, n: Int, ss: Array[BigInteger]): Unit =
+        if (n < 0) write18Digits(buffer, Math.abs(x.longValue), digits)
+        else {
+            val qr = x.divideAndRemainder(ss(n))
+            writeBigIntegerRemainder(buffer, qr(0), n - 1, ss)
+            writeBigIntegerRemainder(buffer, qr(1), n - 1, ss)
+        }
+
+    
+    
+    private def calculateTenPow18SquareNumber(bitLen: Int): Int = {
+        // Math.max((x.bitLength * Math.log(2) / Math.log(1e18)).toInt - 1, 1)
+        val m = Math.max((bitLen * 71828554L >> 32).toInt - 1, 1)
+        31 - java.lang.Integer.numberOfLeadingZeros(m)
+    }
 
     private def writeSignificantFractionDigits(x: Long, p: Int, pl: Int, buffer: Buffer, ds: Array[Short]): Unit = {
         var q0     = x.toInt
@@ -1034,6 +1064,14 @@ object BufferUtils {
         val d3 = ds((y3 >> 47).toInt).toLong << 32
         val d4 = ds((y4 >> 47).toInt).toLong << 48
         buffer.writeLongLE(d1 | d2 | d3 | d4)
+    }
+
+    private def write18Digits(buffer: Buffer, x: Long, ds: Array[Short]): Unit = {
+        val q1 = Math.multiplyHigh(x, 6189700196426901375L) >>> 25 // divide a positive long by 100000000
+        val q2 = (q1 >> 8) * 1441151881 >> 49                      // divide a small positive long by 100000000
+        write2Digits(buffer, q2.toInt, ds)
+        write8Digits(buffer, q1 - q2 * 100000000, ds)
+        write8Digits(buffer, x - q1 * 100000000, ds)
     }
 
     private val MAX_INT_BYTES: Array[Byte] = Int.MaxValue.toString.getBytes(StandardCharsets.US_ASCII)
@@ -1460,6 +1498,34 @@ object BufferUtils {
       8988465674311579538L, 5963149404718312264L, 7190772539449263630L, 8459868338516560134L, 5752618031559410904L,
       6767894670813248108L, 9204188850495057447L, 5294608251188331487L
     )
+
+    private val tenPow18Squares: Array[BigInteger] = {
+        val ss = new Array[BigInteger](8)
+        ss(0) = BigInteger.valueOf(1000000000000000000L)
+        var i = 1
+        var s = ss(0)
+        while (i <= 7) {
+            s = s.multiply(s)
+            ss(i) = s
+            i += 1
+        }
+        ss
+    }
+
+    def getTenPow18Squares(n: Int): Array[BigInteger] = {
+        var ss = tenPow18Squares
+        var i  = ss.length
+        if (n >= i) {
+            var s = ss(i - 1)
+            ss = java.util.Arrays.copyOf(ss, n + 1)
+            while (i <= n) {
+                s = s.multiply(s)
+                ss(i) = s
+                i += 1
+            }
+        }
+        ss
+    }
 
     //// -------------------- READ ----------------------
 
