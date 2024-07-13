@@ -897,7 +897,7 @@ object BufferUtils {
         val ds = digits
         var y  = zoneOffset.getTotalSeconds
         if (y == 0) {
-            buffer.writeShortLE(0x225a)
+            buffer.writeByte(0x5a)
         } else {
             var m = 0x30303a00002bL
             if (y < 0) {
@@ -919,6 +919,22 @@ object BufferUtils {
                     buffer.writeMediumLE(ds((y & 0x1ffffff) * 15 >> 23) << 8 | 0x00003a)
                 }
             }
+        }
+    }
+
+    final def writeZoneId(buffer: Buffer, zoneId: ZoneId): Unit = {
+        val s = zoneId.getId
+        buffer.writeCharSequence(s, StandardCharsets.US_ASCII)
+    }
+
+    final def writeZonedDateTime(buffer: Buffer, zonedDateTime: ZonedDateTime): Unit = {
+        writeLocalDateTimeAsString(buffer, zonedDateTime.toLocalDateTime)
+        writeZoneOffset(buffer, zonedDateTime.getOffset)
+        val zone = zonedDateTime.getZone
+        if (!zone.isInstanceOf[ZoneOffset]) {
+            buffer.writeByte('[')
+            writeZoneId(buffer, zone)
+            buffer.writeByte(']')
         }
     }
 

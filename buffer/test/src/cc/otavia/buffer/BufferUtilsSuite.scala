@@ -23,6 +23,7 @@ import java.math.{BigInteger, BigDecimal as JBigDecimal}
 import java.nio.charset.{Charset, StandardCharsets}
 import java.time.{Duration as JDuration, *}
 import java.util.{Currency, Locale, UUID}
+import scala.jdk.CollectionConverters.*
 import scala.language.unsafeNulls
 
 class BufferUtilsSuite extends AnyFunSuiteLike {
@@ -411,6 +412,48 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
         BufferUtils.writeDoubleAsString(buffer, 456789.0000000000000000123)
         assert(buffer.skipIfNextAre("456789.0".getBytes()))
+    }
+
+    test("ZoneOffset") {
+        val buffer = allocator.allocate()
+
+        val zoneOffset = ZoneOffset.UTC
+        BufferUtils.writeZoneOffset(buffer, zoneOffset)
+        assert(buffer.skipIfNextIs('Z'))
+        buffer.compact()
+
+        (-18 to 18).foreach { hour =>
+            val zoneOffset = ZoneOffset.ofHours(hour)
+            BufferUtils.writeZoneOffset(buffer, zoneOffset)
+            assert(buffer.skipIfNextAre(zoneOffset.toString.getBytes()))
+            assert(buffer.readableBytes == 0)
+            buffer.compact()
+        }
+
+    }
+
+    test("ZoneId") {
+        val buffer = allocator.allocate()
+
+        val ids = ZoneId.getAvailableZoneIds.asScala
+
+        ids.foreach { id =>
+            val zoneId = ZoneId.of(id)
+            BufferUtils.writeZoneId(buffer, zoneId)
+            assert(buffer.skipIfNextAre(id.getBytes()))
+            buffer.compact()
+        }
+
+    }
+
+    test("ZonedDateTime") {
+        val buffer = allocator.allocate()
+
+        val zonedDateTime = ZonedDateTime.now()
+
+        BufferUtils.writeZonedDateTime(buffer, zonedDateTime)
+        assert(buffer.skipIfNextAre(zonedDateTime.toString.getBytes()))
+
     }
 
     test("JDuration") {

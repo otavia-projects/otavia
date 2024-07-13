@@ -252,9 +252,17 @@ private[json] object JsonHelper {
         out.writeByte('\"')
     }
 
-    final def serializeZonedDateTime(zonedDateTime: ZonedDateTime, out: Buffer): Unit = ???
+    final def serializeZonedDateTime(zonedDateTime: ZonedDateTime, out: Buffer): Unit = {
+        out.writeByte('\"')
+        BufferUtils.writeZonedDateTime(out, zonedDateTime)
+        out.writeByte('\"')
+    }
 
-    final def serializeZoneId(zoneId: ZoneId, out: Buffer): Unit = ???
+    final def serializeZoneId(zoneId: ZoneId, out: Buffer): Unit = {
+        out.writeByte('\"')
+        BufferUtils.writeZoneId(out, zoneId)
+        out.writeByte('\"')
+    }
 
     final def serializeZoneOffset(zoneOffset: ZoneOffset, out: Buffer): Unit = {
         out.writeByte('\"')
