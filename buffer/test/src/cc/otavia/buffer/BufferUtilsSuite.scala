@@ -515,4 +515,14 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
     }
 
+    test("Instant") {
+        val buffer = allocator.allocate()
+
+        val instant = Instant.now()
+        BufferUtils.writeInstantAsString(buffer, instant)
+        assert(buffer.skipIfNextAre(instant.toString.getBytes()))
+        assert(buffer.readableBytes == 0)
+
+    }
+
 }

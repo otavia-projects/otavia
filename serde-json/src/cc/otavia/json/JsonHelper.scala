@@ -189,7 +189,7 @@ private[json] object JsonHelper {
 
     final def serializeInstant(instant: Instant, out: Buffer): Unit = {
         out.writeByte('\"')
-        // TODO
+        BufferUtils.writeInstantAsString(out, instant)
         out.writeByte('\"')
     }
 

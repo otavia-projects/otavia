@@ -881,6 +881,82 @@ object BufferUtils {
         buffer.writeMediumLE(ds(ym.getMonthValue) << 8 | 0x00002d)
     }
 
+    final def writeInstantAsString(buffer: Buffer, x: Instant): Unit = {
+        val epochSecond = x.getEpochSecond
+        if (epochSecond < 0) writeBeforeEpochInstant(buffer, epochSecond, x.getNano)
+        else {
+            val epochDay = Math.multiplyHigh(epochSecond, 1749024623285053783L) >> 13 // epochSecond / 86400
+            val marchZeroDay = epochDay + 719468 // 719468 == 719528 - 60 == days 0000 to 1970 - days 1st Jan to 1st Mar
+            var year =
+                (Math.multiplyHigh(
+                  marchZeroDay * 400 + 591,
+                  4137408090565272301L
+                ) >> 15).toInt // ((marchZeroDay * 400 + 591) / 146097).toInt
+            var year365        = year * 365L
+            var year1374389535 = year * 1374389535L
+            var century        = (year1374389535 >> 37).toInt
+            var marchDayOfYear = (marchZeroDay - year365).toInt - (year >> 2) + century - (century >> 2)
+            if (marchDayOfYear < 0) {
+                year365 -= 365
+                year1374389535 -= 1374389535
+                year -= 1
+                century = (year1374389535 >> 37).toInt
+                marchDayOfYear = (marchZeroDay - year365).toInt - (year >> 2) + century - (century >> 2)
+            }
+            val marchMonth = marchDayOfYear * 17135 + 6854 >> 19 // (marchDayOfYear * 5 + 2) / 153
+            val day =
+                marchDayOfYear - (marchMonth * 1002762 - 16383 >> 15) // marchDayOfYear - (marchMonth * 306 + 5) / 10 + 1
+            val m     = 9 - marchMonth >> 4
+            val month = (m & -9 | 3) + marchMonth
+            year -= m
+            writeInstant(buffer, year, month, day, (epochSecond - epochDay * 86400).toInt, x.getNano)
+        }
+    }
+
+    private def writeBeforeEpochInstant(buffer: Buffer, epochSecond: Long, nano: Int): Unit = {
+        val epochDay =
+            (Math.multiplyHigh(epochSecond - 86399, 1749024623285053783L) >> 13) + 1 // (epochSecond - 86399) / 86400
+        var marchZeroDay = epochDay + 719468 // 719468 == 719528 - 60 == days 0000 to 1970 - days 1st Jan to 1st Mar
+        val adjust400YearCycles = ((marchZeroDay + 1) * 7525902 >> 40).toInt // ((marchZeroDay + 1) / 146097).toInt - 1
+        marchZeroDay -= adjust400YearCycles * 146097L
+        var year = { // ((marchZeroDay * 400 + 591) / 146097).toInt
+            val pa = marchZeroDay * 400 + 591
+            ((Math.multiplyHigh(pa, 4137408090565272301L) >> 15) + (pa >> 63)).toInt
+        }
+        var year365        = year * 365L
+        var year1374389535 = year * 1374389535L
+        var century        = (year1374389535 >> 37).toInt
+        var marchDayOfYear = (marchZeroDay - year365).toInt - (year >> 2) + century - (century >> 2)
+        if (marchDayOfYear < 0) {
+            year365 -= 365
+            year1374389535 -= 1374389535
+            year -= 1
+            century = (year1374389535 >> 37).toInt
+            marchDayOfYear = (marchZeroDay - year365).toInt - (year >> 2) + century - (century >> 2)
+        }
+        val marchMonth = marchDayOfYear * 17135 + 6854 >> 19 // (marchDayOfYear * 5 + 2) / 153
+        val day =
+            marchDayOfYear - (marchMonth * 1002762 - 16383 >> 15) // marchDayOfYear - (marchMonth * 306 + 5) / 10 + 1
+        val m     = 9 - marchMonth >> 4
+        val month = (m & -9 | 3) + marchMonth
+        year += adjust400YearCycles * 400 - m
+        writeInstant(buffer, year, month, day, (epochSecond - epochDay * 86400).toInt, nano)
+    }
+
+    private def writeInstant(buffer: Buffer, year: Int, month: Int, day: Int, secsOfDay: Int, nano: Int): Unit = {
+        val ds = digits
+        writeYearAsString(buffer, year)
+        buffer.writeLongLE(ds(month) << 8 | ds(day).toLong << 32 | 0x5400002d00002dL)
+        buffer.writerOffset(buffer.writerOffset - 1)
+        val y1 =
+            secsOfDay * 37283 // Based on James Anhalt's algorithm: https://jk-jeon.github.io/posts/2022/02/jeaiii-algorithm/
+        val y2 = (y1 & 0x7ffffff) * 15
+        val y3 = (y2 & 0x1ffffff) * 15
+        buffer.writeLongLE(ds(y1 >>> 27) | ds(y2 >> 25).toLong << 24 | ds(y3 >> 23).toLong << 48 | 0x3a00003a0000L)
+        if (nano != 0) writeNanos(buffer, nano, ds)
+        buffer.writeByte(0x5a)
+    }
+
     final def writeLocalDateAsString(buffer: Buffer, localDate: LocalDate): Unit = {
         val ds = digits
         writeYearAsString(buffer, localDate.getYear)
