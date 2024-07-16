@@ -23,6 +23,7 @@ import java.math.{BigInteger, BigDecimal as JBigDecimal}
 import java.nio.charset.{Charset, StandardCharsets}
 import java.time.{Duration as JDuration, *}
 import java.util.{Currency, Locale, UUID}
+import scala.concurrent.duration.Duration
 import scala.jdk.CollectionConverters.*
 import scala.language.unsafeNulls
 import scala.util.Random

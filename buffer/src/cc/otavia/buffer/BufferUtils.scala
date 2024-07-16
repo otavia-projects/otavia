@@ -747,12 +747,40 @@ object BufferUtils {
             writeBigIntegerRemainder(buffer, qr(1), n - 1, ss)
         }
 
-    
-    
+    private def writeBigDecimal(buffer: Buffer, x: BigInteger, scale: Int, block: Int, ss: Array[BigInteger]): Long = {
+        val bitLen = x.bitLength
+        if (bitLen < 64) {
+            val v   = x.longValue
+            val pos = buffer.writerOffset
+            writeLongAsString(buffer, v)
+            val lastPos = buffer.writerOffset
+            val digits  = (v >> 63).toInt + lastPos - pos
+            val dotOff  = scale.toLong - block
+            val exp     = (digits - 1) - dotOff
+            if (scale >= 0 && exp >= -6) {} else {}
+        } else {
+            val n   = calculateTenPow18SquareNumber(bitLen)
+            val ss1 = if (ss eq null) getTenPow18Squares(n) else ss
+            val qr  = x.divideAndRemainder(ss1(n))
+            val exp = writeBigDecimal(buffer, qr(0), scale, (18 << n) + block, ss1)
+//            writeBigDecimalRemainder(qr(1), scale, blockScale, n - 1, ss1)
+            exp
+        }
+        ???
+    }
+
     private def calculateTenPow18SquareNumber(bitLen: Int): Int = {
         // Math.max((x.bitLength * Math.log(2) / Math.log(1e18)).toInt - 1, 1)
         val m = Math.max((bitLen * 71828554L >> 32).toInt - 1, 1)
         31 - java.lang.Integer.numberOfLeadingZeros(m)
+    }
+
+    private def insertDotWithZeroes(buffer: Buffer, digits: Int, pad: Int, lastPos: Int): Int = {
+        var pos    = lastPos + pad + 1
+        val numPos = pos - digits
+        val off    = pad + 2
+
+        ???
     }
 
     private def writeSignificantFractionDigits(x: Long, p: Int, pl: Int, buffer: Buffer, ds: Array[Short]): Unit = {
@@ -1035,8 +1063,6 @@ object BufferUtils {
             }
         } else buffer.writeUnsignedIntLE(0x53305450L) // PT0S
     }
-
-    def writeDurationAsString(buffer: Buffer, duration: Duration): Unit = {}
 
     private def write2Digits(buffer: Buffer, q0: Int, ds: Array[Short]): Unit =
         buffer.writeShortLE(ds(q0))

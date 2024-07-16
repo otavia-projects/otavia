@@ -187,12 +187,6 @@ private[json] object JsonHelper {
         out.writeByte('\"')
     }
 
-    final def serializeDuration(duration: Duration, out: Buffer): Unit = {
-        out.writeByte('\"')
-        BufferUtils.writeDurationAsString(out, duration)
-        out.writeByte('\"')
-    }
-
     final def serializeInstant(instant: Instant, out: Buffer): Unit = {
         out.writeByte('\"')
         // TODO
