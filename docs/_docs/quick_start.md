@@ -20,7 +20,7 @@ at [GitHub - otavia-projects/otavia-examples](https://github.com/otavia-projects
 ## Add dependencies
 
 If you use sbt, add the dependency with
-version ![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/cc.otavia/otavia-runtime_3?server=https%3A%2F%2Fs01.oss.sonatype.org)
+version ![Maven Central](https://img.shields.io/maven-central/v/cc.otavia/otavia-runtime_3)
 
 ```scala
 libraryDependencies += "cc.otavia" %% "otavia-all" % "{version}"

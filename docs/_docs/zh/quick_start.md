@@ -18,8 +18,7 @@ title: 快速开始
 
 ## 添加依赖
 
-如果您使用 sbt , 请添加以下依赖，其中 version =
-![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/cc.otavia/otavia-runtime_3?server=https%3A%2F%2Fs01.oss.sonatype.org)
+如果您使用 sbt , 请添加以下依赖，其中 version ![Maven Central](https://img.shields.io/maven-central/v/cc.otavia/otavia-runtime_3)
 
 ```scala
 libraryDependencies += "cc.otavia" %% "otavia-all" % "{version}"
