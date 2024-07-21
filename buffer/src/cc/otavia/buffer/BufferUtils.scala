@@ -875,6 +875,34 @@ object BufferUtils {
         }
     }
 
+    final def readStringAsYear(buffer: Buffer): Year = Year.of(readStringAsIntYear(buffer))
+
+    private def parseNon4DigitYearWithByte(buffer: Buffer, maxDigits: Int): Int = {
+        val b1 = buffer.readByte.toChar
+        assert((b1 == '-') || (b1 == '+'), s"excepted '-' or '+', but got $b1")
+        var year = buffer.readIntLE - 0x30303030
+        val m =
+            (year + 0x76767676 | year) & 0x80808080 // Based on the fast parsing of numbers by 8-byte words: https://github.com/wrandelshofer/FastDoubleParser/blob/0903817a765b25e654f02a5a9d4f1476c98a80c9/src/main/java/ch.randelshofer.fastdoubleparser/ch/randelshofer/fastdoubleparser/FastDoubleSimd.java#L114-L130
+        assert(m == 0)
+        year = (year * 2561 >> 8 & 0xff00ff) * 6553601 >> 16
+        var yearDigits = 4
+        while (buffer.readableBytes > 0 && buffer.nextInRange('0', '9') && yearDigits < maxDigits) {
+            year = if (year > 100000000) 2147483647 else year * 10 + (buffer.readByte - '0')
+            yearDigits += 1
+        }
+        if (b1 == '-') year = -year
+        year
+    }
+
+    final def readStringAsIntYear(buffer: Buffer): Int = {
+        var year = buffer.getIntLE(buffer.readerOffset) - 0x30303030
+        if (((year + 0x76767676 | year) & 0x80808080) == 0) {
+            year = (year * 2561 >> 8 & 0xff00ff) * 6553601 >> 16
+            buffer.skipReadableBytes(4)
+            year
+        } else parseNon4DigitYearWithByte(buffer, 9)
+    }
+
     final def writeYearMonthAsString(buffer: Buffer, ym: YearMonth): Unit = {
         val ds = digits
         writeYearAsString(buffer, ym.getYear)

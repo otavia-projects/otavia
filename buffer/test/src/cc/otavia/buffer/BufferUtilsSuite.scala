@@ -515,6 +515,22 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
     }
 
+    test("Year") {
+        val buffer = allocator.allocate()
+
+        val years =
+            Seq(0, 1, 3, 10, 11, 20, 99, 100, 122, 999, 1000, 1002, 4000, 7901, 9999, 10000, 10001, 36781, 3456789)
+
+        for (y <- years ++ years.map(a => -a)) {
+            val y1 = Year.of(y)
+            BufferUtils.writeYearAsString(buffer, y1)
+            assert(BufferUtils.readStringAsYear(buffer) == y1)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+
+    }
+
     test("Instant") {
         val buffer = allocator.allocate()
 
