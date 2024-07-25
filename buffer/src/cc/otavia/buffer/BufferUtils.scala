@@ -1101,6 +1101,14 @@ object BufferUtils {
         }
     }
 
+    final def readStringAsZoneOffset(buffer: Buffer): ZoneOffset = if (buffer.skipIfNextIs('Z')) ZoneOffset.UTC
+    else {
+        val b = buffer.readByte
+        assert(b == '-' || b == '+', s"except '-' or '-' but got ${b.toChar}")
+
+        ???
+    }
+
     final def writeZoneIdAsString(buffer: Buffer, zoneId: ZoneId): Unit =
         buffer.writeBytes(zoneIdMap(zoneId))
 

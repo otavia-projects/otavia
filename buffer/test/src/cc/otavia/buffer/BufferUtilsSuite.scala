@@ -453,11 +453,13 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
         val zoneOffset = ZoneOffset.UTC
         BufferUtils.writeZoneOffset(buffer, zoneOffset)
-        assert(buffer.skipIfNextIs('Z'))
+        assert(BufferUtils.readStringAsZoneOffset(buffer) == zoneOffset)
         buffer.compact()
+        assert(buffer.readableBytes == 0)
 
         (-18 to 18).foreach { hour =>
             val zoneOffset = ZoneOffset.ofHours(hour)
+            println(zoneOffset.toString)
             BufferUtils.writeZoneOffset(buffer, zoneOffset)
             assert(buffer.skipIfNextAre(zoneOffset.toString.getBytes()))
             assert(buffer.readableBytes == 0)
