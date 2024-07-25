@@ -518,6 +518,25 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
     }
 
+    test("Period") {
+        val buffer = allocator.allocate()
+
+        val zero = Period.of(0, 0, 0)
+        BufferUtils.writePeriodAsString(buffer, zero)
+        assert(BufferUtils.readStringAsPeriod(buffer) == zero)
+        buffer.compact()
+        assert(buffer.readableBytes == 0)
+
+        0 to 10000 foreach { _ =>
+            val period = Period.of(Random.nextInt(), Random.nextInt(), Random.nextInt())
+            BufferUtils.writePeriodAsString(buffer, period)
+            assert(BufferUtils.readStringAsPeriod(buffer) == period)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+
+    }
+
     test("Year") {
         val buffer = allocator.allocate()
 

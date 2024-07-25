@@ -1140,7 +1140,27 @@ object BufferUtils {
         }
     }
 
-    def writePeriodAsString(buffer: Buffer, period: Period): Unit = {
+    final def readStringAsPeriod(buffer: Buffer): Period = {
+        assert(buffer.skipIfNextIs('P'), s"except 'P' but got ${buffer.readByte.toChar}")
+        var year  = 0
+        var month = 0
+        var days  = 0
+
+        var cont = true
+        while (cont && buffer.readableBytes > 0) {
+            val int = readStringAsInt(buffer)
+            if (buffer.skipIfNextIs('Y')) year = int
+            else if (buffer.skipIfNextIs('M')) month = int
+            else if (buffer.skipIfNextIs('D')) {
+                days = int
+                cont = false
+            } else assert(false, s"except 'D' but got ${buffer.readByte.toChar}")
+        }
+
+        Period.of(year, month, days)
+    }
+
+    final def writePeriodAsString(buffer: Buffer, period: Period): Unit = {
         val years  = period.getYears
         val months = period.getMonths
         val days   = period.getDays
