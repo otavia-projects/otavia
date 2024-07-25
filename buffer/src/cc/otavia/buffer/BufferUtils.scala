@@ -1035,6 +1035,15 @@ object BufferUtils {
         writeLocalTimeAsString(buffer, localDateTime.toLocalTime)
     }
 
+    final def readStringAsMonthDay(buffer: Buffer): MonthDay = {
+        val ps       = buffer.readUnsignedMediumLE.toLong | (buffer.readUnsignedIntLE << 24)
+        val bs       = ps - 0x30302d30302d2dL
+        val monthDay = (bs * 2561 >> 24).toInt
+        val month    = monthDay.toByte.toInt
+        val day      = monthDay >> 24
+        MonthDay.of(month, day)
+    }
+
     final def writeMonthDayAsString(buffer: Buffer, monthDay: MonthDay): Unit = { // "--01-01"
         val ds = digits
         val d1 = ds(monthDay.getMonthValue) << 16

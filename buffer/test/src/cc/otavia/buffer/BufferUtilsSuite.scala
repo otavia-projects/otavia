@@ -531,6 +531,27 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
     }
 
+    test("MonthDay") {
+        val buffer = allocator.allocate()
+
+        val monthDays = Seq(
+          MonthDay.of(1, 2),
+          MonthDay.of(3, 8),
+          MonthDay.of(8, 16),
+          MonthDay.of(10, 27),
+          MonthDay.of(11, 27),
+          MonthDay.of(12, 31)
+        )
+
+        for (monthDay <- monthDays) {
+            BufferUtils.writeMonthDayAsString(buffer, monthDay)
+            assert(BufferUtils.readStringAsMonthDay(buffer) == monthDay)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+
+    }
+
     test("Instant") {
         val buffer = allocator.allocate()
 

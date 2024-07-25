@@ -277,7 +277,12 @@ private[json] object JsonHelper {
 
     final def deserializeLocalTime(in: Buffer): LocalTime = ???
 
-    final def deserializeMonthDay(in: Buffer): MonthDay = ???
+    final def deserializeMonthDay(in: Buffer): MonthDay = {
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        val monthDay = BufferUtils.readStringAsMonthDay(in)
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        monthDay
+    }
 
     final def deserializeOffsetDateTime(in: Buffer): OffsetDateTime = ???
 
