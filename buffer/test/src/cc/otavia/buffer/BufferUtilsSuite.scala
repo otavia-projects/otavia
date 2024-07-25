@@ -562,4 +562,23 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
     }
 
+    test("YearMonth") {
+        val buffer = allocator.allocate()
+
+        val months = 1 to 12
+
+        val yearMonths =
+            Seq(0, 1, 3, 10, 11, 20, 99, 100, 122, 999, 1000, 1002, 4000, 7901, 9999, 10000, 10001, 36781, 3456789)
+                .flatMap(y => months.map(m => YearMonth.of(y, m)) ++ months.map(m => YearMonth.of(-y, m)))
+                .distinct
+
+        for (yearMonth <- yearMonths) {
+            BufferUtils.writeYearMonthAsString(buffer, yearMonth)
+            assert(BufferUtils.readStringAsYearMonth(buffer) == yearMonth)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+
+    }
+
 }

@@ -909,6 +909,13 @@ object BufferUtils {
         buffer.writeMediumLE(ds(ym.getMonthValue) << 8 | 0x00002d)
     }
 
+    final def readStringAsYearMonth(buffer: Buffer): YearMonth = {
+        val year = readStringAsIntYear(buffer)
+        buffer.skipReadableBytes(1) // skip '-'
+        val month = (buffer.readByte - '0') * 10 + buffer.readByte - '0'
+        YearMonth.of(year, month)
+    }
+
     final def writeInstantAsString(buffer: Buffer, x: Instant): Unit = {
         val epochSecond = x.getEpochSecond
         if (epochSecond < 0) writeBeforeEpochInstant(buffer, epochSecond, x.getNano)

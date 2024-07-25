@@ -297,7 +297,12 @@ private[json] object JsonHelper {
         year
     }
 
-    final def deserializeYearMonth(in: Buffer): YearMonth = ???
+    final def deserializeYearMonth(in: Buffer): YearMonth = {
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        val yearMonth = BufferUtils.readStringAsYearMonth(in)
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        yearMonth
+    }
 
     final def deserializeZonedDateTime(in: Buffer): ZonedDateTime = ???
 
