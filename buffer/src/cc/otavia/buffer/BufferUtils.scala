@@ -24,6 +24,7 @@ import java.time.{Duration as JDuration, *}
 import java.util.UUID
 import scala.annotation.switch
 import scala.concurrent.duration.Duration
+import scala.jdk.CollectionConverters.*
 import scala.language.unsafeNulls
 
 object BufferUtils {
@@ -1100,9 +1101,24 @@ object BufferUtils {
         }
     }
 
-    final def writeZoneId(buffer: Buffer, zoneId: ZoneId): Unit = {
-        val s = zoneId.getId
-        buffer.writeCharSequence(s, StandardCharsets.US_ASCII)
+    final def writeZoneIdAsString(buffer: Buffer, zoneId: ZoneId): Unit =
+        buffer.writeBytes(zoneIdMap(zoneId))
+
+    final def readStringAsZoneId(buffer: Buffer): ZoneId = {
+        var i            = 0
+        var break        = false
+        var zone: ZoneId = null
+        while (i < allZoneIdSort.length && !break) {
+            val tp     = allZoneIdSort(i)
+            val zoneId = tp._1
+            val bytes  = tp._2
+            if (buffer.readableBytes >= bytes.length && buffer.nextIs(bytes(0)) && buffer.skipIfNextAre(bytes)) {
+                zone = zoneId
+                break = true
+            }
+            i += 1
+        }
+        zone
     }
 
     final def writeZonedDateTime(buffer: Buffer, zonedDateTime: ZonedDateTime): Unit = {
@@ -1111,7 +1127,7 @@ object BufferUtils {
         val zone = zonedDateTime.getZone
         if (!zone.isInstanceOf[ZoneOffset]) {
             buffer.writeByte('[')
-            writeZoneId(buffer, zone)
+            writeZoneIdAsString(buffer, zone)
             buffer.writeByte(']')
         }
     }
@@ -1944,5 +1960,9 @@ object BufferUtils {
 
     /** The maximum number of digits in `BigInt` values. */
     final val bigIntDigitsLimit: Int = 308
+
+    private final val zoneIdMap = ZoneId.getAvailableZoneIds.asScala.map(z => ZoneId.of(z) -> z.getBytes()).toMap
+
+    private final val allZoneIdSort = zoneIdMap.toArray.sortBy(z => (-z._2.length, z._1.getId))
 
 }

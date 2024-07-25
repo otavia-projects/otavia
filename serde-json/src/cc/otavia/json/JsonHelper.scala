@@ -255,7 +255,7 @@ private[json] object JsonHelper {
 
     final def serializeZoneId(zoneId: ZoneId, out: Buffer): Unit = {
         out.writeByte('\"')
-        BufferUtils.writeZoneId(out, zoneId)
+        BufferUtils.writeZoneIdAsString(out, zoneId)
         out.writeByte('\"')
     }
 
@@ -306,7 +306,12 @@ private[json] object JsonHelper {
 
     final def deserializeZonedDateTime(in: Buffer): ZonedDateTime = ???
 
-    final def deserializeZoneId(in: Buffer): ZoneId = ???
+    final def deserializeZoneId(in: Buffer): ZoneId = {
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        val zoneId = BufferUtils.readStringAsZoneId(in)
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        zoneId
+    }
 
     final def deserializeZoneOffset(in: Buffer): ZoneOffset = ???
 

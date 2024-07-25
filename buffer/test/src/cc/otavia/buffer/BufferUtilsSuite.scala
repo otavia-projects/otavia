@@ -473,9 +473,10 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
         ids.foreach { id =>
             val zoneId = ZoneId.of(id)
-            BufferUtils.writeZoneId(buffer, zoneId)
-            assert(buffer.skipIfNextAre(id.getBytes()))
+            BufferUtils.writeZoneIdAsString(buffer, zoneId)
+            assert(BufferUtils.readStringAsZoneId(buffer) == zoneId)
             buffer.compact()
+            assert(buffer.readableBytes == 0)
         }
 
     }
