@@ -993,13 +993,22 @@ object BufferUtils {
         buffer.writeByte(0x5a)
     }
 
+    final def readStringAsLocalDate(buffer: Buffer): LocalDate = {
+        val year = readStringAsIntYear(buffer)
+        buffer.skipIfNextIs('-')
+        val month = readStringAsInt(buffer)
+        buffer.skipIfNextIs('-')
+        val days = readStringAsInt(buffer)
+        LocalDate.of(year, month, days)
+    }
+
     final def writeLocalDateAsString(buffer: Buffer, localDate: LocalDate): Unit = {
         val ds = digits
         writeYearAsString(buffer, localDate.getYear)
         val d1 = ds(localDate.getMonthValue) << 8
-        val d2 = ds(localDate.getDayOfMonth).toLong << 32
-        buffer.writeLongLE(d1 | d2 | 0x00002d00002dL)
-        buffer.writerOffset(buffer.writerOffset - 2)
+        val d2 = ds(localDate.getDayOfMonth) << 8
+        buffer.writeUnsignedMediumLE(d1 | 0x00002d) // -xx
+        buffer.writeUnsignedMediumLE(d2 | 0x00002d) // -xx
     }
 
     final def writeLocalTimeAsString(buffer: Buffer, localTime: LocalTime): Unit = {
