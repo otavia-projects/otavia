@@ -1101,7 +1101,7 @@ object BufferUtils {
                 y = (y & 0x7ffffff) * 15
                 buffer.writeLongLE(ds(y >> 25).toLong << 32 | m)
                 if ((y & 0x1f80000) == 0)
-                    buffer.writerOffset(buffer.writerOffset - 1) // check if totalSeconds is divisible by 60
+                    buffer.writerOffset(buffer.writerOffset - 2) // check if totalSeconds is divisible by 60
                 else {
                     buffer.writerOffset(buffer.writerOffset - 2)
                     buffer.writeMediumLE(ds((y & 0x1ffffff) * 15 >> 23) << 8 | 0x00003a)
@@ -1113,9 +1113,20 @@ object BufferUtils {
     final def readStringAsZoneOffset(buffer: Buffer): ZoneOffset = if (buffer.skipIfNextIs('Z')) ZoneOffset.UTC
     else {
         val b = buffer.readByte
-        assert(b == '-' || b == '+', s"except '-' or '-' but got ${b.toChar}")
+        val isNeg =
+            if (b == '-') true
+            else if (b == '+') false
+            else throw AssertionError(s"except '-' or '-' but got ${b.toChar}")
+        var minutes = 0
+        var seconds = 0
 
-        ???
+        val hours = readStringAsInt(buffer)
+        if (buffer.skipIfNextIs(':')) {
+            minutes = readStringAsInt(buffer)
+            if (buffer.skipIfNextIs(':')) seconds = readStringAsInt(buffer)
+        }
+        if (isNeg) ZoneOffset.ofHoursMinutesSeconds(-hours, -minutes, -seconds)
+        else ZoneOffset.ofHoursMinutesSeconds(hours, minutes, seconds)
     }
 
     final def writeZoneIdAsString(buffer: Buffer, zoneId: ZoneId): Unit =

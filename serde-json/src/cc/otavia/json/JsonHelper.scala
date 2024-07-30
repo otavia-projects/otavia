@@ -323,7 +323,12 @@ private[json] object JsonHelper {
         zoneId
     }
 
-    final def deserializeZoneOffset(in: Buffer): ZoneOffset = ???
+    final def deserializeZoneOffset(in: Buffer): ZoneOffset = {
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        val offset = BufferUtils.readStringAsZoneOffset(in)
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        offset
+    }
 
     final def serializeUUID(uuid: UUID, out: Buffer): Unit = {
         out.writeByte('\"')

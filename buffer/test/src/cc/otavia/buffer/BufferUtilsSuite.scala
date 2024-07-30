@@ -470,13 +470,28 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
         buffer.compact()
         assert(buffer.readableBytes == 0)
 
+        0 to 10000 foreach { i =>
+            val offset = ZoneOffset.ofHoursMinutesSeconds(Random.nextInt(18), Random.nextInt(60), Random.nextInt(60))
+            BufferUtils.writeZoneOffset(buffer, offset)
+            assert(BufferUtils.readStringAsZoneOffset(buffer) == offset)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+
+        0 to 10000 foreach { i =>
+            val offset = ZoneOffset.ofHoursMinutesSeconds(-Random.nextInt(18), -Random.nextInt(60), -Random.nextInt(60))
+            BufferUtils.writeZoneOffset(buffer, offset)
+            assert(BufferUtils.readStringAsZoneOffset(buffer) == offset)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+
         (-18 to 18).foreach { hour =>
             val zoneOffset = ZoneOffset.ofHours(hour)
-            println(zoneOffset.toString)
             BufferUtils.writeZoneOffset(buffer, zoneOffset)
-            assert(buffer.skipIfNextAre(zoneOffset.toString.getBytes()))
-            assert(buffer.readableBytes == 0)
+            assert(BufferUtils.readStringAsZoneOffset(buffer) == zoneOffset)
             buffer.compact()
+            assert(buffer.readableBytes == 0)
         }
 
     }
