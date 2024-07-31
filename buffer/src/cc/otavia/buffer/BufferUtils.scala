@@ -1165,6 +1165,12 @@ object BufferUtils {
         }
     }
 
+    final def readStringAsOffsetDateTime(buffer: Buffer): OffsetDateTime = {
+        val localDateTime = readStringAsLocalDateTime(buffer)
+        val offset        = readStringAsZoneOffset(buffer)
+        OffsetDateTime.of(localDateTime, offset)
+    }
+
     final def readStringAsZoneOffset(buffer: Buffer): ZoneOffset = if (buffer.skipIfNextIs('Z')) ZoneOffset.UTC
     else {
         val b = buffer.readByte
@@ -1219,6 +1225,16 @@ object BufferUtils {
             writeZoneIdAsString(buffer, zone)
             buffer.writeByte(']')
         }
+    }
+
+    final def readStringAsZonedDateTime(buffer: Buffer): ZonedDateTime = {
+        val localDateTime = readStringAsLocalDateTime(buffer)
+        val offset        = readStringAsZoneOffset(buffer)
+        if (buffer.skipIfNextIs('[')) {
+            val zoneId = readStringAsZoneId(buffer)
+            assert(buffer.skipIfNextIs(']'), s"except ']' but got '${buffer.readByte.toChar}'")
+            ZonedDateTime.ofInstant(localDateTime, offset, zoneId)
+        } else ZonedDateTime.of(localDateTime, offset)
     }
 
     final def readStringAsPeriod(buffer: Buffer): Period = {

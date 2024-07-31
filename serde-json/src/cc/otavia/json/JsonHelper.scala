@@ -299,7 +299,12 @@ private[json] object JsonHelper {
         monthDay
     }
 
-    final def deserializeOffsetDateTime(in: Buffer): OffsetDateTime = ???
+    final def deserializeOffsetDateTime(in: Buffer): OffsetDateTime = {
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        val offsetDateTime = BufferUtils.readStringAsOffsetDateTime(in)
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        offsetDateTime
+    }
 
     final def deserializeOffsetTime(in: Buffer): OffsetTime = {
         assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
@@ -329,7 +334,12 @@ private[json] object JsonHelper {
         yearMonth
     }
 
-    final def deserializeZonedDateTime(in: Buffer): ZonedDateTime = ???
+    final def deserializeZonedDateTime(in: Buffer): ZonedDateTime = {
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        val zonedDateTime = BufferUtils.readStringAsZonedDateTime(in)
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        zonedDateTime
+    }
 
     final def deserializeZoneId(in: Buffer): ZoneId = {
         assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")

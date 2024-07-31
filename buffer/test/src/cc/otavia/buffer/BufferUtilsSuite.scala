@@ -661,6 +661,46 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
         }
     }
 
+    test("OffsetDateTime") {
+        val buffer = allocator.allocate()
+
+        0 to 10000 foreach { i =>
+            val localDateTime = LocalDateTime.of(
+              Random.nextInt(999999999 * 2) - 999999999,
+              Random.nextInt(12) + 1,
+              Random.nextInt(28) + 1,
+              Random.nextInt(24),
+              Random.nextInt(60),
+              Random.nextInt(60),
+              Random.nextInt(1000000000)
+            )
+            val offset = ZoneOffset.ofHoursMinutesSeconds(Random.nextInt(18), Random.nextInt(60), Random.nextInt(60))
+            val offsetDateTime = OffsetDateTime.of(localDateTime, offset)
+            BufferUtils.writeOffsetDateTimeAsString(buffer, offsetDateTime)
+            assert(BufferUtils.readStringAsOffsetDateTime(buffer) == offsetDateTime)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+
+        0 to 10000 foreach { i =>
+            val localDateTime = LocalDateTime.of(
+              Random.nextInt(999999999 * 2) - 999999999,
+              Random.nextInt(12) + 1,
+              Random.nextInt(28) + 1,
+              Random.nextInt(24),
+              Random.nextInt(60),
+              Random.nextInt(60),
+              Random.nextInt(1000000000)
+            )
+            val offset = ZoneOffset.ofHoursMinutesSeconds(-Random.nextInt(18), -Random.nextInt(60), -Random.nextInt(60))
+            val offsetDateTime = OffsetDateTime.of(localDateTime, offset)
+            BufferUtils.writeOffsetDateTimeAsString(buffer, offsetDateTime)
+            assert(BufferUtils.readStringAsOffsetDateTime(buffer) == offsetDateTime)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+    }
+
     test("Instant") {
         val buffer = allocator.allocate()
 
