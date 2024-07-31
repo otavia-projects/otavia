@@ -550,7 +550,91 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
         val zonedDateTime = ZonedDateTime.now()
 
         BufferUtils.writeZonedDateTime(buffer, zonedDateTime)
-        assert(buffer.skipIfNextAre(zonedDateTime.toString.getBytes()))
+        assert(BufferUtils.readStringAsZonedDateTime(buffer) == zonedDateTime)
+
+        0 to 10000 foreach { i =>
+            val localDateTime = LocalDateTime.of(
+              Random.nextInt(999999999 * 2) - 999999999,
+              Random.nextInt(12) + 1,
+              Random.nextInt(28) + 1,
+              Random.nextInt(24),
+              Random.nextInt(60),
+              Random.nextInt(60),
+              Random.nextInt(1000000000)
+            )
+            val offset = ZoneOffset.ofHoursMinutesSeconds(Random.nextInt(18), Random.nextInt(60), Random.nextInt(60))
+            val zonedDateTime1 = ZonedDateTime.of(localDateTime, offset)
+            BufferUtils.writeZonedDateTime(buffer, zonedDateTime1)
+            assert(BufferUtils.readStringAsZonedDateTime(buffer) == zonedDateTime1)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+
+        0 to 10000 foreach { i =>
+            val localDateTime = LocalDateTime.of(
+              Random.nextInt(999999999 * 2) - 999999999,
+              Random.nextInt(12) + 1,
+              Random.nextInt(28) + 1,
+              Random.nextInt(24),
+              Random.nextInt(60),
+              Random.nextInt(60),
+              Random.nextInt(1000000000)
+            )
+            val offset = ZoneOffset.ofHoursMinutesSeconds(-Random.nextInt(18), -Random.nextInt(60), -Random.nextInt(60))
+            val zonedDateTime1 = ZonedDateTime.of(localDateTime, offset)
+            BufferUtils.writeZonedDateTime(buffer, zonedDateTime1)
+            assert(BufferUtils.readStringAsZonedDateTime(buffer) == zonedDateTime1)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+
+        0 to 1000 foreach { i =>
+            ZoneId.getAvailableZoneIds.asScala.foreach { id =>
+                val localDateTime = LocalDateTime.of(
+                  Random.nextInt(999999999 * 2) - 999999999,
+                  Random.nextInt(12) + 1,
+                  Random.nextInt(28) + 1,
+                  Random.nextInt(24),
+                  Random.nextInt(60),
+                  Random.nextInt(60),
+                  Random.nextInt(1000000000)
+                )
+                val offset =
+                    ZoneOffset.ofHoursMinutesSeconds(Random.nextInt(18), Random.nextInt(60), Random.nextInt(60))
+
+                val zoneId = ZoneId.of(id)
+
+                val zonedDateTime1 = ZonedDateTime.ofInstant(localDateTime, offset, zoneId)
+                BufferUtils.writeZonedDateTime(buffer, zonedDateTime1)
+                assert(BufferUtils.readStringAsZonedDateTime(buffer) == zonedDateTime1)
+                buffer.compact()
+                assert(buffer.readableBytes == 0)
+            }
+        }
+
+        0 to 1000 foreach { i =>
+            ZoneId.getAvailableZoneIds.asScala.foreach { id =>
+                val localDateTime = LocalDateTime.of(
+                  Random.nextInt(999999999 * 2) - 999999999,
+                  Random.nextInt(12) + 1,
+                  Random.nextInt(28) + 1,
+                  Random.nextInt(24),
+                  Random.nextInt(60),
+                  Random.nextInt(60),
+                  Random.nextInt(1000000000)
+                )
+                val offset =
+                    ZoneOffset.ofHoursMinutesSeconds(-Random.nextInt(18), -Random.nextInt(60), -Random.nextInt(60))
+
+                val zoneId = ZoneId.of(id)
+
+                val zonedDateTime1 = ZonedDateTime.ofInstant(localDateTime, offset, zoneId)
+                BufferUtils.writeZonedDateTime(buffer, zonedDateTime1)
+                assert(BufferUtils.readStringAsZonedDateTime(buffer) == zonedDateTime1)
+                buffer.compact()
+                assert(buffer.readableBytes == 0)
+            }
+        }
 
     }
 
