@@ -216,6 +216,7 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
                 release -= 1
             }
             last.writerOffset(last.readerOffset + off)
+            widx = offset
         }
         this
     }
