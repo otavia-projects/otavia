@@ -1027,6 +1027,29 @@ object BufferUtils {
         }
     }
 
+    final def readStringAsLocalTime(buffer: Buffer): LocalTime = {
+        var minute = 0
+        var second = 0
+        var nano   = 0
+        val hour   = readStringAsInt(buffer)
+        if (buffer.skipIfNextIs(':')) {
+            minute = readStringAsInt(buffer)
+            if (buffer.skipIfNextIs(':')) {
+                second = readStringAsInt(buffer)
+                if (buffer.skipIfNextIs('.')) {
+                    var count = 0
+                    while (buffer.readableBytes > 0 && buffer.nextInRange('0', '9')) {
+                        nano = nano * 10 + (buffer.readByte - '0')
+                        count += 1
+                    }
+                    if (count < 9)
+                        nano = nano * Math.pow(10, 9 - count).toInt
+                }
+            }
+        }
+        LocalTime.of(hour, minute, second, nano)
+    }
+
     private def writeNanos(buffer: Buffer, q0: Long, ds: Array[Short]): Unit = {
         val y1 =
             q0 * 1441151881 // Based on James Anhalt's algorithm for 9 digits: https://jk-jeon.github.io/posts/2022/02/jeaiii-algorithm/
