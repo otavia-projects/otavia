@@ -1052,6 +1052,38 @@ object BufferUtils {
         writeLocalTimeAsString(buffer, localDateTime.toLocalTime)
     }
 
+    final def readStringAsLocalDateTime(buffer: Buffer): LocalDateTime = {
+        val year = readStringAsIntYear(buffer)
+        buffer.skipIfNextIs('-')
+        val month = readStringAsInt(buffer)
+        buffer.skipIfNextIs('-')
+        val days = readStringAsInt(buffer)
+
+        assert(buffer.skipIfNextIs('T'), s"except 'T' but got ${buffer.readByte.toChar}")
+
+        var minute = 0
+        var second = 0
+        var nano   = 0
+        val hour   = readStringAsInt(buffer)
+        if (buffer.skipIfNextIs(':')) {
+            minute = readStringAsInt(buffer)
+            if (buffer.skipIfNextIs(':')) {
+                second = readStringAsInt(buffer)
+                if (buffer.skipIfNextIs('.')) {
+                    var count = 0
+                    while (buffer.readableBytes > 0 && buffer.nextInRange('0', '9')) {
+                        nano = nano * 10 + (buffer.readByte - '0')
+                        count += 1
+                    }
+                    if (count < 9)
+                        nano = nano * Math.pow(10, 9 - count).toInt
+                }
+            }
+        }
+
+        LocalDateTime.of(year, month, days, hour, minute, second, nano)
+    }
+
     final def readStringAsMonthDay(buffer: Buffer): MonthDay = {
         val ps       = buffer.readUnsignedMediumLE.toLong | (buffer.readUnsignedIntLE << 24)
         val bs       = ps - 0x30302d30302d2dL

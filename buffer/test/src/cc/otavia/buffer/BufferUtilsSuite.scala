@@ -448,6 +448,26 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
         }
     }
 
+    test("LocalDateTime") {
+        val buffer = AdaptiveBuffer(allocator)
+
+        0 to 10000 foreach { i =>
+            val localDateTime = LocalDateTime.of(
+              Random.nextInt(999999999 * 2) - 999999999,
+              Random.nextInt(12) + 1,
+              Random.nextInt(28) + 1,
+              Random.nextInt(24),
+              Random.nextInt(60),
+              Random.nextInt(60),
+              Random.nextInt(1000000000)
+            )
+            BufferUtils.writeLocalDateTimeAsString(buffer, localDateTime)
+            assert(BufferUtils.readStringAsLocalDateTime(buffer) == localDateTime)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+    }
+
     test("LocalDate") {
         val buffer = AdaptiveBuffer(allocator)
 
