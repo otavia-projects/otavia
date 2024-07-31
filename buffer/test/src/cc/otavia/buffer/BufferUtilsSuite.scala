@@ -461,6 +461,19 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
         }
     }
 
+    test("LocalTime") {
+        val buffer = AdaptiveBuffer(allocator)
+
+        0 to 10000 foreach { i =>
+            val localTime =
+                LocalTime.of(Random.nextInt(24), Random.nextInt(60), Random.nextInt(60), Random.nextInt(1000000000))
+            BufferUtils.writeLocalTimeAsString(buffer, localTime)
+            assert(BufferUtils.readStringAsLocalTime(buffer) == localTime)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+    }
+
     test("ZoneOffset") {
         val buffer = allocator.allocate()
 
