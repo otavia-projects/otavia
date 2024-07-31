@@ -635,6 +635,32 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
     }
 
+    test("OffsetTime") {
+        val buffer = allocator.allocate()
+
+        0 to 10000 foreach { i =>
+            val offsetTime = OffsetTime.of(
+              LocalTime.of(Random.nextInt(24), Random.nextInt(60), Random.nextInt(60), Random.nextInt(1000000000)),
+              ZoneOffset.ofHoursMinutesSeconds(Random.nextInt(18), Random.nextInt(60), Random.nextInt(60))
+            )
+            BufferUtils.writeOffsetTimeAsString(buffer, offsetTime)
+            assert(BufferUtils.readStringAsOffsetTime(buffer) == offsetTime)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+
+        0 to 10000 foreach { i =>
+            val offsetTime = OffsetTime.of(
+              LocalTime.of(Random.nextInt(24), Random.nextInt(60), Random.nextInt(60), Random.nextInt(1000000000)),
+              ZoneOffset.ofHoursMinutesSeconds(-Random.nextInt(18), -Random.nextInt(60), -Random.nextInt(60))
+            )
+            BufferUtils.writeOffsetTimeAsString(buffer, offsetTime)
+            assert(BufferUtils.readStringAsOffsetTime(buffer) == offsetTime)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+    }
+
     test("Instant") {
         val buffer = allocator.allocate()
 

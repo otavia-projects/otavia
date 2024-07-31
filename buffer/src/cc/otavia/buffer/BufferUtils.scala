@@ -1184,6 +1184,12 @@ object BufferUtils {
         else ZoneOffset.ofHoursMinutesSeconds(hours, minutes, seconds)
     }
 
+    final def readStringAsOffsetTime(buffer: Buffer): OffsetTime = {
+        val localTime  = readStringAsLocalTime(buffer)
+        val zoneOffset = readStringAsZoneOffset(buffer)
+        OffsetTime.of(localTime, zoneOffset)
+    }
+
     final def writeZoneIdAsString(buffer: Buffer, zoneId: ZoneId): Unit =
         buffer.writeBytes(zoneIdMap(zoneId))
 

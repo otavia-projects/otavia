@@ -301,7 +301,12 @@ private[json] object JsonHelper {
 
     final def deserializeOffsetDateTime(in: Buffer): OffsetDateTime = ???
 
-    final def deserializeOffsetTime(in: Buffer): OffsetTime = ???
+    final def deserializeOffsetTime(in: Buffer): OffsetTime = {
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        val offsetTime = BufferUtils.readStringAsOffsetTime(in)
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        offsetTime
+    }
 
     final def deserializePeriod(in: Buffer): Period = {
         assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
