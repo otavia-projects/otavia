@@ -269,7 +269,12 @@ private[json] object JsonHelper {
 
     final def deserializeDuration(in: Buffer): Duration = ???
 
-    final def deserializeInstant(in: Buffer): Instant = ???
+    final def deserializeInstant(in: Buffer): Instant = {
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        val instant = BufferUtils.readStringAsInstant(in)
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        instant
+    }
 
     final def deserializeLocalDate(in: Buffer): LocalDate = {
         assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")

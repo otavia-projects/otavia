@@ -993,6 +993,65 @@ object BufferUtils {
         buffer.writeByte(0x5a)
     }
 
+    final def readStringAsInstant(buffer: Buffer): Instant = {
+        val year = readStringAsIntYear(buffer)
+        assert(buffer.skipIfNextIs('-'), s"except '-' but got ${buffer.readByte.toChar}")
+        val month = readStringAsInt(buffer)
+        assert(buffer.skipIfNextIs('-'), s"except '-' but got ${buffer.readByte.toChar}")
+        val day = readStringAsInt(buffer)
+        assert(buffer.skipIfNextIs('T'), s"except 'T' but got ${buffer.readByte.toChar}")
+
+        val hour = readStringAsInt(buffer)
+        assert(buffer.skipIfNextIs(':'), s"except ':' but got ${buffer.readByte.toChar}")
+        val minute = readStringAsInt(buffer)
+        assert(buffer.skipIfNextIs(':'), s"except ':' but got ${buffer.readByte.toChar}")
+        val second = readStringAsInt(buffer)
+
+        var epochSecond = epochDay(year, month, day) * 86400 // 86400 == seconds per day
+        epochSecond = hour * 3600 + minute * 60 + second + epochSecond
+
+        var nano = 0
+        if (buffer.skipIfNextIs('.')) { // parse nano
+            var count = 0
+            while (buffer.readableBytes > 0 && buffer.nextInRange('0', '9')) {
+                nano = nano * 10 + (buffer.readByte - '0')
+                count += 1
+            }
+            if (count < 9)
+                nano = nano * Math.pow(10, 9 - count).toInt
+        }
+
+        if (!buffer.skipIfNextIs('Z')) { // parse zone offset
+            val b = buffer.readByte
+            val isNeg =
+                if (b == '-') true
+                else if (b == '+') false
+                else throw AssertionError(s"except '-' or '-' but got ${b.toChar}")
+            var minutes = 0
+            var seconds = 0
+
+            val hours = readStringAsInt(buffer)
+            if (buffer.skipIfNextIs(':')) {
+                minutes = readStringAsInt(buffer)
+                if (buffer.skipIfNextIs(':')) seconds = readStringAsInt(buffer)
+            }
+            val offsetTotal = hours * 60 * 60 + minutes * 60 + seconds
+            if (isNeg) epochSecond += offsetTotal else epochSecond -= offsetTotal
+        }
+
+        if (nano == 0) Instant.ofEpochSecond(epochSecond) else Instant.ofEpochSecond(epochSecond, nano.toLong)
+    }
+
+    private def epochDay(year: Int, month: Int, day: Int): Long =
+        year * 365L + ((year + 3 >> 2) - {
+            val cp = year * 1374389535L
+            if (year < 0) (cp >> 37) - (cp >> 39)                        // year / 100 - year / 400
+            else (cp + 136064563965L >> 37) - (cp + 548381424465L >> 39) // (year + 99) / 100 - (year + 399) / 400
+        }.toInt + (month * 1002277 - 988622 >> 15) +                     // (month * 367 - 362) / 12
+            (if (month <= 2) -719529
+             else if (isLeap(year)) -719530
+             else -719531) + day) // 719528 == days 0000 to 1970)
+
     final def readStringAsLocalDate(buffer: Buffer): LocalDate = {
         val year = readStringAsIntYear(buffer)
         buffer.skipIfNextIs('-')
@@ -1360,6 +1419,9 @@ object BufferUtils {
         write8Digits(buffer, q1 - q2 * 100000000, ds)
         write8Digits(buffer, x - q1 * 100000000, ds)
     }
+
+    private def isLeap(year: Int): Boolean =
+        (year & 0x3) == 0 && (year * -1030792151 - 2061584303 > -1975684958 || (year & 0xf) == 0) // year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
 
     private val MAX_INT_BYTES: Array[Byte] = Int.MaxValue.toString.getBytes(StandardCharsets.US_ASCII)
     private val MIN_INT_BYTES: Array[Byte] = Int.MinValue.toString.getBytes(StandardCharsets.US_ASCII)

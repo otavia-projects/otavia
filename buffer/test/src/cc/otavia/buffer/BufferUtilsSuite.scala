@@ -790,7 +790,9 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
         val instant = Instant.now()
         BufferUtils.writeInstantAsString(buffer, instant)
-        assert(buffer.skipIfNextAre(instant.toString.getBytes()))
+        assert(buffer.nextAre(instant.toString.getBytes()))
+        assert(BufferUtils.readStringAsInstant(buffer) == instant)
+        buffer.compact()
         assert(buffer.readableBytes == 0)
 
     }
