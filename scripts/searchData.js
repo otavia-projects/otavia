@@ -256,6 +256,7 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"cc/otavia/buffer/BufferUtils$.html#readStringAsByte-df0","e":false,"i":"","n":"readStringAsByte","t":"readStringAsByte(buffer: Buffer): Byte","d":"cc.otavia.buffer.BufferUtils","k":"def","x":""},
 {"l":"cc/otavia/buffer/BufferUtils$.html#readStringAsDouble-fffffeb9","e":false,"i":"","n":"readStringAsDouble","t":"readStringAsDouble(buffer: Buffer): Double","d":"cc.otavia.buffer.BufferUtils","k":"def","x":""},
 {"l":"cc/otavia/buffer/BufferUtils$.html#readStringAsFloat-fffff274","e":false,"i":"","n":"readStringAsFloat","t":"readStringAsFloat(buffer: Buffer): Float","d":"cc.otavia.buffer.BufferUtils","k":"def","x":""},
+{"l":"cc/otavia/buffer/BufferUtils$.html#readStringAsInstant-fffffacc","e":false,"i":"","n":"readStringAsInstant","t":"readStringAsInstant(buffer: Buffer): Instant","d":"cc.otavia.buffer.BufferUtils","k":"def","x":""},
 {"l":"cc/otavia/buffer/BufferUtils$.html#readStringAsInt-fffffe07","e":false,"i":"","n":"readStringAsInt","t":"readStringAsInt(buffer: Buffer): Int","d":"cc.otavia.buffer.BufferUtils","k":"def","x":""},
 {"l":"cc/otavia/buffer/BufferUtils$.html#readStringAsIntYear-fffffe07","e":false,"i":"","n":"readStringAsIntYear","t":"readStringAsIntYear(buffer: Buffer): Int","d":"cc.otavia.buffer.BufferUtils","k":"def","x":""},
 {"l":"cc/otavia/buffer/BufferUtils$.html#readStringAsLocalDate-fffffbe4","e":false,"i":"","n":"readStringAsLocalDate","t":"readStringAsLocalDate(buffer: Buffer): LocalDate","d":"cc.otavia.buffer.BufferUtils","k":"def","x":""},
