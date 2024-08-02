@@ -204,7 +204,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         val str = getCharSequence(index, length).toString
         str.toDouble
     }
-    
+
     override def writeBytes(source: Buffer, length: Int): Buffer = {
         underlying.position(widx)
         source.readBytes(underlying, length)
@@ -1804,6 +1804,14 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         }
         if (!notIn) ridx += 1
         !notIn
+    }
+
+    override def skipIfNextInRange(lower: Byte, upper: Byte): Boolean = {
+        val b = underlying.get(ridx)
+        if (b >= lower && b <= upper) {
+            ridx += 1
+            true
+        } else false
     }
 
     inline private def checkRead(index: Int, size: Int): Unit =

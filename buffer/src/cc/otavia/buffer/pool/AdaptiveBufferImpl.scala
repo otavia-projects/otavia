@@ -2826,6 +2826,15 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         res
     } else false
 
+    override def skipIfNextInRange(lower: Byte, upper: Byte): Boolean = if (nonEmpty) {
+        val res = head.skipIfNextInRange(lower, upper)
+        if (res) {
+            ridx += 1
+            if (head.readableBytes == 0) recycleHead()
+        }
+        res
+    } else false
+
     inline private def checkFromTo(from: Int, to: Int): Unit = {
         if (from < ridx)
             throw new IndexOutOfBoundsException(s"from is less than readerOffset: form = $from, readerOffset = $ridx")

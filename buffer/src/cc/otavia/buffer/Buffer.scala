@@ -2212,6 +2212,9 @@ trait Buffer {
     /** increase the [[readerOffset]] by one if the next readable byte is in the gaven bytes. */
     def skipIfNextIn(set: Array[Byte]): Boolean
 
+    /** increase the [[readerOffset]] by one if the next readable byte is in the gaven byte range. */
+    def skipIfNextInRange(lower: Byte, upper: Byte): Boolean
+
 }
 
 object Buffer {
