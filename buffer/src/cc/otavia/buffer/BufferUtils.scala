@@ -20,6 +20,7 @@ package cc.otavia.buffer
 
 import java.math.{BigInteger, MathContext}
 import java.nio.charset.StandardCharsets
+import java.time.format.DateTimeParseException
 import java.time.{Duration as JDuration, *}
 import java.util.UUID
 import scala.annotation.switch
@@ -1382,6 +1383,119 @@ object BufferUtils {
                 buffer.writeByte('S')
             }
         } else buffer.writeUnsignedIntLE(0x53305450L) // PT0S
+    }
+
+    /** Obtains a [[java.time.Duration]] from a text string such as `PnDTnHnMn.nS`.
+     *
+     *  This will parse a textual representation of a duration, like the string produced by `toString`. The formats
+     *  accepted are based on the ISO-8601 duration format `PnDTnHnMn.nS` with days considered to be exactly 24 hours.
+     *
+     *  The string starts with an optional sign, denoted by the ASCII negative or positive symbol. If negative, the
+     *  whole period is negated. The ASCII letter "P" is next in upper or lower case. There are then four sections, each
+     *  consisting of a number and a suffix. The sections have suffixes in ASCII of "D", "H", "M" and "S" for days,
+     *  hours, minutes and seconds, accepted in upper or lower case. The suffixes must occur in order. The ASCII letter
+     *  "T" must occur before the first occurrence, if any, of an hour, minute or second section. At least one of the
+     *  four sections must be present, and if "T" is present there must be at least one section after the "T". The
+     *  number part of each section must consist of one or more ASCII digits. The number may be prefixed by the ASCII
+     *  negative or positive symbol. The number of days, hours and minutes must parse to a `long`. The number of seconds
+     *  must parse to a `long` with optional fraction. The decimal point may be either a dot or a comma. The fractional
+     *  part may have from zero to 9 digits.
+     *
+     *  The leading plus/minus sign, and negative values for other units are not part of the ISO-8601 standard.
+     *
+     *  Examples:
+     *  {{{
+     *    "PT20.345S" -- parses as "20.345 seconds"
+     *    "PT15M"     -- parses as "15 minutes" (where a minute is 60 seconds)
+     *    "PT10H"     -- parses as "10 hours" (where an hour is 3600 seconds)
+     *    "P2D"       -- parses as "2 days" (where a day is 24 hours or 86400 seconds)
+     *    "P2DT3H4M"  -- parses as "2 days, 3 hours and 4 minutes"
+     *    "PT-6H3M"    -- parses as "-6 hours and +3 minutes"
+     *    "-PT6H3M"    -- parses as "-6 hours and -3 minutes"
+     *    "-PT-6H+3M"  -- parses as "+6 hours and -3 minutes"
+     *  }}}
+     *
+     *  @param buffer
+     *    the [[Buffer]] to read.
+     *  @return
+     *    the parsed duration, not null
+     *  @throws DateTimeParseException
+     *    if the text cannot be parsed to a duration
+     */
+    final def readStringAsJDuration(buffer: Buffer): JDuration = {
+        var b = buffer.readByte
+        var s = 0L
+        if (b == '-') {
+            b = buffer.readByte
+            s = ~s
+        } else if (b == '+') b = buffer.readByte
+        if (b != 'P') throw new DateTimeParseException(s"except 'p' but got ${b.toChar}", "", buffer.readerOffset)
+        b = buffer.readByte
+        var state = -1
+        if (b == 'T') {
+            b = buffer.readByte
+            state = 0
+        }
+        var seconds = 0L
+        var nano    = 0
+
+        while ({
+            var sx = s
+            if (b == '-') {
+                b = buffer.readByte
+                sx = ~sx
+            } else if (b == '+') b = buffer.readByte
+            if (b < '0' || b > '9')
+                throw new DateTimeParseException(s"except digit but got ${b.toChar}", "", buffer.readerOffset)
+
+            var x = ('0' - b).toLong
+            while (buffer.readableBytes > 0 && buffer.nextInRange('0', '9')) {
+                if (
+                  x < -922337203685477580L || {
+                      x = x * 10 + ('0' - buffer.readByte)
+                      x > 0
+                  }
+                ) throw new DateTimeParseException("illegal duration", "", buffer.readerOffset)
+            }
+
+            b = buffer.readByte
+
+            if (b == 'D' && state < 0) {
+                seconds = (sx - (x ^ sx)) * 86400
+                state = 0
+                buffer.skipIfNextIs('T') && buffer.readableBytes > 0
+            } else if (b == 'H' && state <= 0) {
+                seconds = (sx - (x ^ sx)) * 3600 + seconds
+                state = 1
+                buffer.readableBytes > 0 && (buffer.nextInRange('0', '9') || buffer.nextIs('-') || buffer.nextIs('+'))
+            } else if (b == 'M' && state <= 1) {
+                seconds = (sx - (x ^ sx)) * 60 + seconds
+                state = 2
+                buffer.readableBytes > 0 && (buffer.nextInRange('0', '9') || buffer.nextIs('-') || buffer.nextIs('+'))
+            } else if (b == 'S' || b == '.') {
+                seconds = sx - (x ^ sx) + seconds
+                state = 3
+                if (b == '.') {
+                    var count = 0
+                    while (buffer.readableBytes > 0 && buffer.nextInRange('0', '9')) {
+                        nano = nano * 10 + (buffer.readByte - '0')
+                        count += 1
+                    }
+                    if (count < 9) nano = nano * Math.pow(10, 9 - count).toInt
+
+                    if (sx != 0) nano = -nano
+
+                    if (buffer.skipIfNextIs('S')) {
+                        false
+                    } else {
+                        val msg = s"except 'S' but got ${buffer.readByte.toChar}"
+                        throw new DateTimeParseException(msg, "", buffer.readerOffset)
+                    }
+                } else false
+            } else throw new DateTimeParseException("", "", buffer.readerOffset)
+        }) b = buffer.readByte
+
+        JDuration.ofSeconds(seconds, nano.toLong)
     }
 
     private def write2Digits(buffer: Buffer, q0: Int, ds: Array[Short]): Unit =

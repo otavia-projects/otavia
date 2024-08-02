@@ -265,7 +265,18 @@ private[json] object JsonHelper {
         out.writeByte('\"')
     }
 
-    final def deserializeJDuration(in: Buffer): JDuration = ???
+    /** Reads a JSON string value into a [[java.time.Duration]] instance.
+     *  @param in
+     *    The [[Buffer]] to read.
+     *  @return
+     *    a [[java.time.Duration]] instance of the parsed JSON value.
+     */
+    final def deserializeJDuration(in: Buffer): JDuration = {
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        val duration = BufferUtils.readStringAsJDuration(in)
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        duration
+    }
 
     final def deserializeDuration(in: Buffer): Duration = ???
 

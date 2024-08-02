@@ -641,14 +641,43 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
     test("JDuration") {
         val buffer = allocator.allocate()
 
+        val durations = Seq(
+          "PT20.345S",
+          "PT15M",
+          "PT10H",
+          "P2D",
+          "P2DT3H4M",
+          "PT-6H3M",
+          "-PT6H3M",
+          "-PT-6H+3M",
+          "PT-20.345S",
+          "-PT20.345S",
+          "-PT-20.345S",
+          "+PT-20.345S",
+          "+PT+20.345S",
+          "PT0S"
+        )
+
+        for (str <- durations) {
+            val duration = JDuration.parse(str)
+            BufferUtils.writeJDurationAsString(buffer, duration)
+            assert(BufferUtils.readStringAsJDuration(buffer) == duration)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+
         val d1 = JDuration.ofHours(100000000)
         BufferUtils.writeJDurationAsString(buffer, d1)
-        assert(buffer.skipIfNextAre(d1.toString.getBytes()))
+        assert(buffer.nextAre(d1.toString.getBytes()))
+        assert(BufferUtils.readStringAsJDuration(buffer) == d1)
+        buffer.compact()
         assert(buffer.readableBytes == 0)
 
         val d2 = JDuration.ofHours(100000000 + 1)
         BufferUtils.writeJDurationAsString(buffer, d2)
-        assert(buffer.skipIfNextAre(d2.toString.getBytes()))
+        assert(buffer.nextAre(d2.toString.getBytes()))
+        assert(BufferUtils.readStringAsJDuration(buffer) == d2)
+        buffer.compact()
         assert(buffer.readableBytes == 0)
 
         val localDateTime1 = LocalDateTime.of(2024, 7, 2, 7, 7, 7)
@@ -656,10 +685,10 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
         val d3 = JDuration.between(localDateTime1, localDateTime2)
         BufferUtils.writeJDurationAsString(buffer, d3)
-        assert(buffer.skipIfNextAre(d3.toString.getBytes()))
+        assert(buffer.nextAre(d3.toString.getBytes()))
+        assert(BufferUtils.readStringAsJDuration(buffer) == d3)
+        buffer.compact()
         assert(buffer.readableBytes == 0)
-
-        assert(true)
 
     }
 
