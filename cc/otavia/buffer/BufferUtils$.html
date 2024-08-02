@@ -298,6 +298,77 @@ node3 -> node2;
           </div>
          </div>
         </div>
+        <div class="documentableElement" id="readStringAsJDuration-609" data-f-keywords="final">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="BufferUtils$.html#readStringAsJDuration-609" t="n" class="documentableName ">readStringAsJDuration</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">buffer</span>: <a href="Buffer.html" t="t">Buffer</a>): <span data-unresolved-link="" t="t">Duration</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Obtains a <span data-unresolved-link="">java.time.Duration</span> from a text string such as <code>PnDTnHnMn.nS</code>.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Obtains a <span data-unresolved-link="">java.time.Duration</span> from a text string such as <code>PnDTnHnMn.nS</code>.</p>
+              <p>This will parse a textual representation of a duration, like the string produced by <code>toString</code>. The formats accepted are based on the ISO-8601 duration format <code>PnDTnHnMn.nS</code> with days considered to be exactly 24 hours.</p>
+              <p>The string starts with an optional sign, denoted by the ASCII negative or positive symbol. If negative, the whole period is negated. The ASCII letter "P" is next in upper or lower case. There are then four sections, each consisting of a number and a suffix. The sections have suffixes in ASCII of "D", "H", "M" and "S" for days, hours, minutes and seconds, accepted in upper or lower case. The suffixes must occur in order. The ASCII letter "T" must occur before the first occurrence, if any, of an hour, minute or second section. At least one of the four sections must be present, and if "T" is present there must be at least one section after the "T". The number part of each section must consist of one or more ASCII digits. The number may be prefixed by the ASCII negative or positive symbol. The number of days, hours and minutes must parse to a <code>long</code>. The number of seconds must parse to a <code>long</code> with optional fraction. The decimal point may be either a dot or a comma. The fractional part may have from zero to 9 digits.</p>
+              <p>The leading plus/minus sign, and negative values for other units are not part of the ISO-8601 standard.</p>
+              <p>Examples:</p>
+              <div class="snippet mono-small-block">
+               <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span><span class="hideable">  </span>"PT20.345S" -- parses as "20.345 seconds"
+</span><span line-number="2" class=""><span class="tooltip-container"></span><span class="hideable">  </span>"PT15M"     -- parses as "15 minutes" (where a minute is 60 seconds)
+</span><span line-number="3" class=""><span class="tooltip-container"></span><span class="hideable">  </span>"PT10H"     -- parses as "10 hours" (where an hour is 3600 seconds)
+</span><span line-number="4" class=""><span class="tooltip-container"></span><span class="hideable">  </span>"P2D"       -- parses as "2 days" (where a day is 24 hours or 86400 seconds)
+</span><span line-number="5" class=""><span class="tooltip-container"></span><span class="hideable">  </span>"P2DT3H4M"  -- parses as "2 days, 3 hours and 4 minutes"
+</span><span line-number="6" class=""><span class="tooltip-container"></span><span class="hideable">  </span>"PT-6H3M"    -- parses as "-6 hours and +3 minutes"
+</span><span line-number="7" class=""><span class="tooltip-container"></span><span class="hideable">  </span>"-PT6H3M"    -- parses as "-6 hours and -3 minutes"
+</span><span line-number="8" class=""><span class="tooltip-container"></span><span class="hideable">  </span>"-PT-6H+3M"  -- parses as "+6 hours and -3 minutes"
+</span></code></pre>
+               <div class="buttons"></div>
+              </div>
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               buffer
+              </dt>
+              <dd class="body-medium">
+               <p>the <a href="Buffer.html">Buffer</a> to read.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>the parsed duration, not null</p>
+              </dd>
+              <dt class="body-small">
+               Throws
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <div>
+                 <span data-unresolved-link="" title="Problem linking DateTimeParseException: No DRI found for query">DateTimeParseException</span>
+                 <p>if the text cannot be parsed to a duration</p>
+                </div>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
         <div class="documentableElement" id="readStringAsLocalDate-fffffbe4" data-f-keywords="final">
          <div class="documentableElement-expander">
           <div class="header monospace mono-medium">
