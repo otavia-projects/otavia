@@ -277,28 +277,7 @@ trait JsonSerde[A] extends Serde[A] with SerdeOps {
         this
     }
 
-    override final protected def serializeLocale(locale: Locale, out: Buffer): this.type = {
-        JsonHelper.serializeLocale(locale, out)
-        this
-    }
-
-    override final protected def serializeCurrency(currency: Currency, out: Buffer): this.type = {
-        JsonHelper.serializeCurrency(currency, out)
-        this
-    }
-
     override final protected def deserializeUUID(in: Buffer): UUID = JsonHelper.deserializeUUID(in)
-
-    override final protected def deserializeLocale(in: Buffer): Locale = JsonHelper.deserializeLocale(in)
-
-    override final protected def deserializeCurrency(in: Buffer): Currency = JsonHelper.deserializeCurrency(in)
-
-    override final protected def serializeMoney(money: Money, out: Buffer): this.type = {
-        JsonHelper.serializeMoney(money, out)
-        this
-    }
-
-    override final protected def deserializeMoney(in: Buffer): Money = JsonHelper.deserializeMoney(in)
 
 }
 

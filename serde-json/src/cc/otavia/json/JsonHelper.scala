@@ -377,23 +377,11 @@ private[json] object JsonHelper {
         out.writeByte('\"')
     }
 
-    final def serializeLocale(locale: Locale, out: Buffer): Unit = ???
-
-    final def serializeCurrency(currency: Currency, out: Buffer): Unit = ???
-
     final def deserializeUUID(in: Buffer): UUID = {
         assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
         val uuid = BufferUtils.readStringAsUUID(in)
         assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
         uuid
     }
-
-    final def deserializeLocale(in: Buffer): Locale = ???
-
-    final def deserializeCurrency(in: Buffer): Currency = ???
-
-    final def serializeMoney(money: Money, out: Buffer): Unit = ???
-
-    final def deserializeMoney(in: Buffer): Money = ???
 
 }

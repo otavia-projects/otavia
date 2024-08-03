@@ -599,28 +599,6 @@ trait SerdeOps {
      */
     protected def serializeUUID(uuid: UUID, out: Buffer): this.type
 
-    /** Serialize [[Locale]] value to [[Buffer]].
-     *
-     *  @param locale
-     *    Value.
-     *  @param out
-     *    Output [[Buffer]].
-     *  @return
-     *    This [[Serde]] instance.
-     */
-    protected def serializeLocale(locale: Locale, out: Buffer): this.type
-
-    /** Serialize [[Currency]] value to [[Buffer]].
-     *
-     *  @param currency
-     *    Value.
-     *  @param out
-     *    Output [[Buffer]].
-     *  @return
-     *    This [[Serde]] instance.
-     */
-    protected def serializeCurrency(currency: Currency, out: Buffer): this.type
-
     /** Deserialize [[UUID]] value from [[Buffer]].
      *
      *  @param in
@@ -629,46 +607,5 @@ trait SerdeOps {
      *    [[UUID]] value.
      */
     protected def deserializeUUID(in: Buffer): UUID
-
-    /** Deserialize [[Locale]] value from [[Buffer]].
-     *
-     *  @param in
-     *    Input [[Buffer]]
-     *  @return
-     *    [[Locale]] value.
-     */
-    protected def deserializeLocale(in: Buffer): Locale
-
-    /** Deserialize [[Currency]] value from [[Buffer]].
-     *
-     *  @param in
-     *    Input [[Buffer]]
-     *  @return
-     *    [[Currency]] value.
-     */
-    protected def deserializeCurrency(in: Buffer): Currency
-
-    //// otavia common data types
-    // serialize ops
-
-    /** Serialize [[Money]] value to [[Buffer]].
-     *
-     *  @param money
-     *    Value.
-     *  @param out
-     *    Output [[Buffer]].
-     *  @return
-     *    This [[Serde]] instance.
-     */
-    protected def serializeMoney(money: Money, out: Buffer): this.type
-
-    /** Deserialize [[Money]] value from [[Buffer]].
-     *
-     *  @param in
-     *    Input [[Buffer]]
-     *  @return
-     *    [[Money]] value.
-     */
-    protected def deserializeMoney(in: Buffer): Money
 
 }
