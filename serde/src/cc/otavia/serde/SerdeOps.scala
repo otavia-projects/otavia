@@ -304,6 +304,17 @@ trait SerdeOps {
      */
     protected def serializeJDuration(duration: JDuration, out: Buffer): this.type
 
+    /** Serialize [[Duration]] value to [[Buffer]].
+     *
+     *  @param duration
+     *    Value.
+     *  @param out
+     *    Output [[Buffer]].
+     *  @return
+     *    This [[Serde]] instance.
+     */
+    protected def serializeDuration(duration: Duration, out: Buffer): this.type
+
     /** Serialize [[Instant]] value to [[Buffer]].
      *
      *  @param instant

@@ -187,6 +187,12 @@ private[json] object JsonHelper {
         out.writeByte('\"')
     }
 
+    final def serializeDuration(duration: Duration, out: Buffer): Unit = {
+        out.writeByte('\"')
+        BufferUtils.writeDurationAsString(out, duration)
+        out.writeByte('\"')
+    }
+
     final def serializeInstant(instant: Instant, out: Buffer): Unit = {
         out.writeByte('\"')
         BufferUtils.writeInstantAsString(out, instant)
@@ -278,7 +284,19 @@ private[json] object JsonHelper {
         duration
     }
 
-    final def deserializeDuration(in: Buffer): Duration = ???
+    /** Reads a JSON string value into a [[Duration]] instance.
+     *
+     *  @param in
+     *    The [[Buffer]] to read.
+     *  @return
+     *    a [[Duration]] instance of the parsed JSON value.
+     */
+    final def deserializeDuration(in: Buffer): Duration = {
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        val duration = BufferUtils.readStringAsDuration(in)
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
+        duration
+    }
 
     final def deserializeInstant(in: Buffer): Instant = {
         assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")

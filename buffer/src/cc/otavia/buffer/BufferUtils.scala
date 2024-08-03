@@ -18,13 +18,15 @@
 
 package cc.otavia.buffer
 
+import cc.otavia.buffer.constant.DurationConstants
+
 import java.math.{BigInteger, MathContext}
 import java.nio.charset.StandardCharsets
 import java.time.format.DateTimeParseException
 import java.time.{Duration as JDuration, *}
 import java.util.UUID
 import scala.annotation.switch
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.*
 import scala.jdk.CollectionConverters.*
 import scala.language.unsafeNulls
 
@@ -1496,6 +1498,60 @@ object BufferUtils {
         }) b = buffer.readByte
 
         JDuration.ofSeconds(seconds, nano.toLong)
+    }
+
+    final def writeDurationAsString(buffer: Buffer, duration: Duration): Unit = {
+        if (duration eq Duration.Undefined) buffer.writeBytes(DurationConstants.Undefined)
+        else if (duration == Duration.Inf) buffer.writeBytes(DurationConstants.Inf)
+        else if (duration == Duration.MinusInf) buffer.writeBytes(DurationConstants.MinusInf)
+        else {
+            writeLongAsString(buffer, duration.length)
+            buffer.writeByte(' ')
+            duration.unit match
+                case DAYS         => buffer.writeBytes(DurationConstants.DAY_BYTES)
+                case HOURS        => buffer.writeBytes(DurationConstants.HOUR_BYTES)
+                case MINUTES      => buffer.writeBytes(DurationConstants.MINUTE_BYTES)
+                case SECONDS      => buffer.writeBytes(DurationConstants.SECOND_BYTES)
+                case MILLISECONDS => buffer.writeBytes(DurationConstants.MILLISECOND_BYTES)
+                case MICROSECONDS => buffer.writeBytes(DurationConstants.MICROSECOND_BYTES)
+                case NANOSECONDS  => buffer.writeBytes(DurationConstants.NANOSECOND_BYTES)
+            if (duration.length != 1) buffer.writeByte('s')
+        }
+    }
+
+    /** Parse String into Duration. Format is `"<length><unit>"`, where whitespace is allowed before, between and after
+     *  the parts. Infinities are designated by `"Inf"`, `"PlusInf"`, `"+Inf"`, `"Duration.Inf"` and `"-Inf"`,
+     *  `"MinusInf"` or `"Duration.MinusInf"`. Undefined is designated by `"Duration.Undefined"`.
+     *
+     *  @throws NumberFormatException
+     *    if format is not parsable
+     */
+    final def readStringAsDuration(buffer: Buffer): Duration = {
+        while (buffer.skipIfNextIs(' ')) {}
+
+        if (buffer.nextInRange('0', '9')) { // parse FiniteDuration
+            val length = readStringAsLong(buffer)
+            while (buffer.skipIfNextIs(' ')) {}
+            val timeUnit =
+                if (buffer.skipIfNextAre(DurationConstants.DAY_BYTES)) DAYS
+                else if (buffer.skipIfNextAre(DurationConstants.HOUR_BYTES)) HOURS
+                else if (buffer.skipIfNextAre(DurationConstants.MINUTE_BYTES)) MINUTES
+                else if (buffer.skipIfNextAre(DurationConstants.SECOND_BYTES)) SECONDS
+                else if (buffer.skipIfNextAre(DurationConstants.MILLISECOND_BYTES)) MILLISECONDS
+                else if (buffer.skipIfNextAre(DurationConstants.MICROSECOND_BYTES)) MICROSECONDS
+                else if (buffer.skipIfNextAre(DurationConstants.NANOSECOND_BYTES)) NANOSECONDS
+                else throw new NumberFormatException(s"Duration format error at buffer index ${buffer.readerOffset}")
+
+            if (length != 1) buffer.skipIfNextIs('s')
+            Duration(length, timeUnit)
+        } else { // parse Infinite Duration
+            if (buffer.skipIfNextAre(DurationConstants.Undefined)) Duration.Undefined
+            else if (buffer.skipIfNextAre(DurationConstants.Inf)) Duration.Inf
+            else if (buffer.skipIfNextAre(DurationConstants.MinusInf)) Duration.MinusInf
+            else if (DurationConstants.InfArray.exists(bts => buffer.skipIfNextAre(bts))) Duration.Inf
+            else if (DurationConstants.MinusInfArray.exists(bts => buffer.skipIfNextAre(bts))) Duration.MinusInf
+            else throw new NumberFormatException(s"Duration format error at buffer index ${buffer.readerOffset}")
+        }
     }
 
     private def write2Digits(buffer: Buffer, q0: Int, ds: Array[Short]): Unit =

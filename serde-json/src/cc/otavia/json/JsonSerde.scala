@@ -165,6 +165,11 @@ trait JsonSerde[A] extends Serde[A] with SerdeOps {
         this
     }
 
+    override protected def serializeDuration(duration: Duration, out: Buffer): JsonSerde.this.type = {
+        JsonHelper.serializeDuration(duration, out)
+        this
+    }
+
     override final protected def serializeInstant(instant: Instant, out: Buffer): this.type = {
         JsonHelper.serializeInstant(instant, out)
         this
@@ -302,9 +307,6 @@ object JsonSerde {
     given JsonSerde[ZoneId]         = ZoneIdJsonSerde
     given JsonSerde[ZoneOffset]     = ZoneOffsetJsonSerde
     given JsonSerde[UUID]           = UUIDJsonSerde
-    given JsonSerde[Locale]         = LocaleJsonSerde
-    given JsonSerde[Currency]       = CurrencyJsonSerde
-    given JsonSerde[Money]          = MoneyJsonSerde
     given JsonSerde[String]         = StringJsonSerde
 
     /** Derives a [[JsonSerde]] for JSON values for the specified type [[T]].

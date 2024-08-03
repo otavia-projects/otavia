@@ -692,6 +692,33 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
     }
 
+    test("Duration") {
+        val buffer = allocator.allocate()
+
+        val undefined = Duration.Undefined
+        BufferUtils.writeDurationAsString(buffer, undefined)
+        assert(BufferUtils.readStringAsDuration(buffer) eq undefined)
+        buffer.compact()
+        assert(buffer.readableBytes == 0)
+
+        val durations = Seq(Duration.Zero, Duration.MinusInf, Duration.Inf)
+        for (duration <- durations) {
+            BufferUtils.writeDurationAsString(buffer, duration)
+            assert(BufferUtils.readStringAsDuration(buffer) == duration)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+
+        0 to 10000 foreach { i =>
+            val duration = Duration.fromNanos(Random.nextLong(10000000000L))
+            BufferUtils.writeDurationAsString(buffer, duration)
+            assert(BufferUtils.readStringAsDuration(buffer) == duration)
+            buffer.compact()
+            assert(buffer.readableBytes == 0)
+        }
+
+    }
+
     test("Period") {
         val buffer = allocator.allocate()
 
