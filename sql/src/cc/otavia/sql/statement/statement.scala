@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
-package cc.otavia.sql
+package cc.otavia.sql.statement
 
-import cc.otavia.core.message.Reply
+import cc.otavia.core.message.{Ask, Notice, Reply}
+import cc.otavia.sql.{Row, RowDecoder}
 
-case class RowSet[R <: Row](rows: Array[R]) extends Reply
+case class Cursor(id: Int) extends Reply
+
+class ExecuteCursor[R <: Row](sql: String, decoder: RowDecoder[R]) extends Ask[Cursor]
+
+case class CursorRow[R <: Row](row: R, cursorId: Int) extends Notice
+
+case class CursorEnd(cursorId: Int) extends Notice

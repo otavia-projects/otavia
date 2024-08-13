@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-package cc.otavia.sql
+package cc.otavia.sql.statement
 
 import cc.otavia.core.message.Reply
 
-case class RowSet[R <: Row](rows: Array[R]) extends Reply
+case class ModifyRows(rows: Int) extends Reply

@@ -24,7 +24,7 @@ import cc.otavia.core.message.*
 import cc.otavia.core.stack.*
 import cc.otavia.core.stack.helper.*
 import cc.otavia.sql.Authentication
-import cc.otavia.sql.Statement.*
+import cc.otavia.sql.statement.*
 
 import java.net.{ProtocolFamily, StandardProtocolFamily}
 import scala.language.unsafeNulls

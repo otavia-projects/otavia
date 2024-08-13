@@ -25,7 +25,8 @@ import cc.otavia.mysql.protocol.CapabilitiesFlag.*
 import cc.otavia.mysql.protocol.Packets.*
 import cc.otavia.mysql.protocol.{CapabilitiesFlag, CommandType, EofPacket, OkPacket}
 import cc.otavia.mysql.utils.*
-import cc.otavia.sql.Statement.{ExecuteUpdate, ModifyRows}
+import cc.otavia.sql.statement.ModifyRows
+import cc.otavia.sql.statement.SimpleQuery.ExecuteUpdate
 import cc.otavia.sql.{Authentication, ConnectOptions, Driver}
 
 import java.net.SocketAddress
