@@ -20,8 +20,22 @@ import org.scalatest.funsuite.AnyFunSuiteLike
 
 class MacroSuite extends AnyFunSuiteLike {
 
+    import MacroSuite.*
+
     test("derived") {
-        val decoder = summon[RowDecoder[World]]
+        val decoder = summon[RowCodec[World]]
     }
 
+    test("derived RowCodec Tuple") {
+        val codec = RowCodec.derived[(Int, String, Option[Int])]
+    }
+
+    test("derived RowCodec Case Class") {
+        val codec = RowCodec.derived[Person]
+    }
+
+}
+
+object MacroSuite {
+    case class Person(id: Int, name: String, sonAge: Option[Int]) derives RowCodec
 }

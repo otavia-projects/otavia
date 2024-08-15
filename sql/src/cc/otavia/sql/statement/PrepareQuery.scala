@@ -17,7 +17,7 @@
 package cc.otavia.sql.statement
 
 import cc.otavia.core.message.{Ask, Reply}
-import cc.otavia.sql.{Row, RowSet, RowDecoder as Decoder}
+import cc.otavia.sql.{Row, RowCodec, RowSet}
 
 sealed trait PrepareQuery[T <: Reply] extends Ask[T] {
 
@@ -29,63 +29,105 @@ sealed trait PrepareQuery[T <: Reply] extends Ask[T] {
 
 object PrepareQuery {
 
-    def update(sql: String, param: Product): PrepareQuery[ModifyRows] = PrepareUpdate(sql, param)
+    def updateWithProduct(sql: String, param: Product): PrepareQuery[ModifyRows] = PrepareUpdate(sql, param)
 
-    def insert(sql: String, param: Product): PrepareQuery[ModifyRows] = PrepareUpdate(sql, param)
+    def update[P <: Product](sql: String, param: P)(using codec: RowCodec[P]): PrepareQuery[ModifyRows] =
+        PrepareUpdate(sql, param).withParameterCodec(codec)
 
-    def delete(sql: String, param: Product): PrepareQuery[ModifyRows] = PrepareUpdate(sql, param)
+    def insertWithProduct(sql: String, param: Product): PrepareQuery[ModifyRows] = PrepareUpdate(sql, param)
 
-    def updateBatch(sql: String, params: Seq[Product]): PrepareQuery[ModifyRows] = PrepareUpdateBatch(sql, params)
+    def insert[P <: Product](sql: String, param: P)(using codec: RowCodec[P]): PrepareQuery[ModifyRows] =
+        PrepareUpdate(sql, param).withParameterCodec(codec)
 
-    def insertBatch(sql: String, params: Seq[Product]): PrepareQuery[ModifyRows] = PrepareUpdateBatch(sql, params)
+    def deleteWithProduct(sql: String, param: Product): PrepareQuery[ModifyRows] = PrepareUpdate(sql, param)
+    def delete[P <: Product](sql: String, param: P)(using codec: RowCodec[P]): PrepareQuery[ModifyRows] =
+        PrepareUpdate(sql, param).withParameterCodec(codec)
 
-    def deleteBatch(sql: String, params: Seq[Product]): PrepareQuery[ModifyRows] = PrepareUpdateBatch(sql, params)
+    def updateBatchWithProduct(sql: String, params: Seq[Product]): PrepareQuery[ModifyRows] =
+        PrepareUpdateBatch(sql, params)
 
-    def fetchOne[R <: Row](sql: String)(using decoder: Decoder[R]): PrepareQuery[R] =
-        new FetchOneBindNothing[R](sql, decoder)
+    def updateBatch[P <: Product](sql: String, params: Seq[P])(using codec: RowCodec[P]): PrepareQuery[ModifyRows] =
+        PrepareUpdateBatch(sql, params).withParameterCodec(codec)
 
-    def fetchOne[R <: Row](sql: String, parm: Byte)(using decoder: Decoder[R]): PrepareQuery[R] =
-        new FetchOneBindByte[R](sql, decoder, parm)
+    def insertBatchWithProduct(sql: String, params: Seq[Product]): PrepareQuery[ModifyRows] =
+        PrepareUpdateBatch(sql, params)
 
-    def fetchOne[R <: Row](sql: String, parm: Char)(using decoder: Decoder[R]): PrepareQuery[R] =
-        new FetchOneBindChar[R](sql, decoder, parm)
+    def insertBatch[P <: Product](sql: String, params: Seq[P])(using codec: RowCodec[P]): PrepareQuery[ModifyRows] =
+        PrepareUpdateBatch(sql, params).withParameterCodec(codec)
 
-    def fetchOne[R <: Row](sql: String, parm: Boolean)(using decoder: Decoder[R]): PrepareQuery[R] =
-        new FetchOneBindBoolean[R](sql, decoder, parm)
+    def deleteBatchWithProduct(sql: String, params: Seq[Product]): PrepareQuery[ModifyRows] =
+        PrepareUpdateBatch(sql, params)
 
-    def fetchOne[R <: Row](sql: String, parm: Short)(using decoder: Decoder[R]): PrepareQuery[R] =
-        new FetchOneBindShort[R](sql, decoder, parm)
+    def deleteBatch[P <: Product](sql: String, params: Seq[P])(using codec: RowCodec[P]): PrepareQuery[ModifyRows] =
+        PrepareUpdateBatch(sql, params).withParameterCodec(codec)
 
-    def fetchOne[R <: Row](sql: String, parm: Int)(using decoder: Decoder[R]): PrepareQuery[R] =
-        new FetchOneBindInt[R](sql, decoder, parm)
+    def fetchOne[R <: Row](sql: String)(using codec: RowCodec[R]): PrepareQuery[R] =
+        new FetchOneBindNothing[R](sql, codec)
 
-    def fetchOne[R <: Row](sql: String, parm: Long)(using decoder: Decoder[R]): PrepareQuery[R] =
-        new FetchOneBindLong[R](sql, decoder, parm)
+    def fetchOne[R <: Row](sql: String, parm: Byte)(using codec: RowCodec[R]): PrepareQuery[R] =
+        new FetchOneBindByte[R](sql, codec, parm)
 
-    def fetchOne[R <: Row](sql: String, parm: String)(using decoder: Decoder[R]): PrepareQuery[R] =
-        new FetchOneBindString[R](sql, decoder, parm)
+    def fetchOne[R <: Row](sql: String, parm: Char)(using codec: RowCodec[R]): PrepareQuery[R] =
+        new FetchOneBindChar[R](sql, codec, parm)
 
-    def fetchOne[R <: Row](sql: String, parm: Product)(using decoder: Decoder[R]): PrepareQuery[R] =
-        new FetchOneBindProduct[R](sql, decoder, parm)
+    def fetchOne[R <: Row](sql: String, parm: Boolean)(using codec: RowCodec[R]): PrepareQuery[R] =
+        new FetchOneBindBoolean[R](sql, codec, parm)
 
-    def fetchAll[R <: Row](sql: String)(using decoder: Decoder[R]): PrepareQuery[RowSet[R]] =
-        new FetchAllBindNothing[R](sql, decoder)
+    def fetchOne[R <: Row](sql: String, parm: Short)(using codec: RowCodec[R]): PrepareQuery[R] =
+        new FetchOneBindShort[R](sql, codec, parm)
 
-    def fetchAll[R <: Row](sql: String, parm: Byte)(using decoder: Decoder[R]): PrepareQuery[RowSet[R]] =
-        new FetchAllBindByte[R](sql, decoder, parm)
+    def fetchOne[R <: Row](sql: String, parm: Int)(using codec: RowCodec[R]): PrepareQuery[R] =
+        new FetchOneBindInt[R](sql, codec, parm)
 
-    def fetchAll[R <: Row](sql: String, parm: Int)(using decoder: Decoder[R]): PrepareQuery[RowSet[R]] =
-        new FetchAllBindInt[R](sql, decoder, parm)
+    def fetchOne[R <: Row](sql: String, parm: Long)(using codec: RowCodec[R]): PrepareQuery[R] =
+        new FetchOneBindLong[R](sql, codec, parm)
+
+    def fetchOne[R <: Row](sql: String, parm: String)(using codec: RowCodec[R]): PrepareQuery[R] =
+        new FetchOneBindString[R](sql, codec, parm)
+
+    def fetchOne[R <: Row, P <: Product](sql: String, parm: P)(using
+        codec: RowCodec[R],
+        pcodec: RowCodec[P]
+    ): PrepareQuery[R] = new FetchOneBindProduct[R](sql, parm, codec, pcodec)
+
+    def fetchAll[R <: Product](sql: String)(using codec: RowCodec[R]): PrepareQuery[RowSet[R]] =
+        new FetchAllBindNothing[R](sql, codec)
+
+    def fetchAll[R <: Product](sql: String, parm: Byte)(using codec: RowCodec[R]): PrepareQuery[RowSet[R]] =
+        new FetchAllBindByte[R](sql, codec, parm)
+
+    def fetchAll[R <: Product](sql: String, parm: Char)(using codec: RowCodec[R]): PrepareQuery[RowSet[R]] =
+        new FetchAllBindChar[R](sql, codec, parm)
+
+    def fetchAll[R <: Product](sql: String, parm: Boolean)(using codec: RowCodec[R]): PrepareQuery[RowSet[R]] =
+        new FetchAllBindBoolean[R](sql, codec, parm)
+
+    def fetchAll[R <: Product](sql: String, parm: Short)(using codec: RowCodec[R]): PrepareQuery[RowSet[R]] =
+        new FetchAllBindShort[R](sql, codec, parm)
+
+    def fetchAll[R <: Product](sql: String, parm: Int)(using codec: RowCodec[R]): PrepareQuery[RowSet[R]] =
+        new FetchAllBindInt[R](sql, codec, parm)
+
+    def fetchAll[R <: Product](sql: String, parm: Long)(using codec: RowCodec[R]): PrepareQuery[RowSet[R]] =
+        new FetchAllBindLong[R](sql, codec, parm)
+
+    def fetchAll[R <: Product](sql: String, parm: String)(using codec: RowCodec[R]): PrepareQuery[RowSet[R]] =
+        new FetchAllBindString[R](sql, codec, parm)
+
+    def fetchAll[R <: Product, P <: Product](sql: String, parm: P)(using
+        codec: RowCodec[R],
+        pcodec: RowCodec[P]
+    ): PrepareQuery[RowSet[R]] = new FetchAllBindProduct[R](sql, parm, codec, pcodec)
 
     private[otavia] trait FetchQuery[R <: Reply] extends PrepareQuery[R] {
 
         def all: Boolean
 
-        def decoder: Decoder[?]
+        def codec: RowCodec[?]
 
     }
 
-    private[otavia] case class FetchOneBindNothing[R <: Row](sql: String, decoder: Decoder[R]) extends FetchQuery[R] {
+    private[otavia] case class FetchOneBindNothing[R <: Row](sql: String, codec: RowCodec[R]) extends FetchQuery[R] {
 
         override def all: Boolean = false
 
@@ -93,7 +135,7 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchAllBindNothing[R <: Row](sql: String, decoder: Decoder[R])
+    private[otavia] case class FetchAllBindNothing[R <: Product](sql: String, codec: RowCodec[R])
         extends FetchQuery[RowSet[R]] {
 
         override def all: Boolean = true
@@ -102,7 +144,7 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchOneBindByte[R <: Row](sql: String, decoder: Decoder[?], parm: Byte)
+    private[otavia] case class FetchOneBindByte[R <: Row](sql: String, codec: RowCodec[?], parm: Byte)
         extends FetchQuery[R] {
 
         override def all: Boolean = false
@@ -111,7 +153,7 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchAllBindByte[R <: Row](sql: String, decoder: Decoder[?], parm: Byte)
+    private[otavia] case class FetchAllBindByte[R <: Product](sql: String, codec: RowCodec[?], parm: Byte)
         extends FetchQuery[RowSet[R]] {
 
         override def all: Boolean = true
@@ -120,7 +162,7 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchOneBindBoolean[R <: Row](sql: String, decoder: Decoder[?], parm: Boolean)
+    private[otavia] case class FetchOneBindBoolean[R <: Row](sql: String, codec: RowCodec[?], parm: Boolean)
         extends FetchQuery[R] {
 
         override def all: Boolean = false
@@ -129,7 +171,7 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchAllBindBoolean[R <: Row](sql: String, decoder: Decoder[?], parm: Boolean)
+    private[otavia] case class FetchAllBindBoolean[R <: Product](sql: String, codec: RowCodec[?], parm: Boolean)
         extends FetchQuery[RowSet[R]] {
 
         override def all: Boolean = true
@@ -138,7 +180,7 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchOneBindChar[R <: Row](sql: String, decoder: Decoder[R], parm: Char)
+    private[otavia] case class FetchOneBindChar[R <: Row](sql: String, codec: RowCodec[R], parm: Char)
         extends FetchQuery[R] {
 
         override def all: Boolean = false
@@ -147,7 +189,7 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchAllBindChar[R <: Row](sql: String, decoder: Decoder[R], parm: Char)
+    private[otavia] case class FetchAllBindChar[R <: Product](sql: String, codec: RowCodec[R], parm: Char)
         extends FetchQuery[RowSet[R]] {
 
         override def all: Boolean = false
@@ -156,7 +198,7 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchOneBindShort[R <: Row](sql: String, decoder: Decoder[R], parm: Short)
+    private[otavia] case class FetchOneBindShort[R <: Row](sql: String, codec: RowCodec[R], parm: Short)
         extends FetchQuery[R] {
 
         override def all: Boolean = false
@@ -165,7 +207,7 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchAllBindShort[R <: Row](sql: String, decoder: Decoder[R], parm: Short)
+    private[otavia] case class FetchAllBindShort[R <: Product](sql: String, codec: RowCodec[R], parm: Short)
         extends FetchQuery[RowSet[R]] {
 
         override def all: Boolean = true
@@ -174,7 +216,7 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchOneBindInt[R <: Row](sql: String, decoder: Decoder[R], parm: Int)
+    private[otavia] case class FetchOneBindInt[R <: Row](sql: String, codec: RowCodec[R], parm: Int)
         extends FetchQuery[R] {
 
         override def all: Boolean = false
@@ -183,7 +225,7 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchAllBindInt[R <: Row](sql: String, decoder: Decoder[R], parm: Int)
+    private[otavia] case class FetchAllBindInt[R <: Product](sql: String, codec: RowCodec[R], parm: Int)
         extends FetchQuery[RowSet[R]] {
 
         override def all: Boolean = true
@@ -192,7 +234,7 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchOneBindLong[R <: Row](sql: String, decoder: Decoder[R], parm: Long)
+    private[otavia] case class FetchOneBindLong[R <: Row](sql: String, codec: RowCodec[R], parm: Long)
         extends FetchQuery[R] {
 
         override def all: Boolean = false
@@ -201,8 +243,8 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchAllBindLong[R <: Row](sql: String, decoder: Decoder[R], parm: Long)
-        extends FetchQuery[R] {
+    private[otavia] case class FetchAllBindLong[R <: Product](sql: String, codec: RowCodec[R], parm: Long)
+        extends FetchQuery[RowSet[R]] {
 
         override def all: Boolean = true
 
@@ -210,7 +252,7 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchOneBindString[R <: Row](sql: String, decoder: Decoder[R], parm: String)
+    private[otavia] case class FetchOneBindString[R <: Row](sql: String, codec: RowCodec[R], parm: String)
         extends FetchQuery[R] {
 
         override def all: Boolean = false
@@ -219,8 +261,8 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchAllBindString[R <: Row](sql: String, decoder: Decoder[R], parm: String)
-        extends FetchQuery[R] {
+    private[otavia] case class FetchAllBindString[R <: Product](sql: String, codec: RowCodec[R], parm: String)
+        extends FetchQuery[RowSet[R]] {
 
         override def all: Boolean = true
 
@@ -228,8 +270,12 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchOneBindProduct[R <: Row](sql: String, decoder: Decoder[R], parm: Product)
-        extends FetchQuery[R] {
+    private[otavia] case class FetchOneBindProduct[R <: Row](
+        sql: String,
+        parm: Product,
+        codec: RowCodec[R],
+        pcodec: RowCodec[?]
+    ) extends FetchQuery[R] {
 
         override def all: Boolean = false
 
@@ -237,8 +283,12 @@ object PrepareQuery {
 
     }
 
-    private[otavia] case class FetchAllBindProduct[R <: Row](sql: String, decoder: Decoder[R], parm: Product)
-        extends FetchQuery[R] {
+    private[otavia] case class FetchAllBindProduct[R <: Product](
+        sql: String,
+        parm: Product,
+        codec: RowCodec[R],
+        pcodec: RowCodec[?]
+    ) extends FetchQuery[RowSet[R]] {
 
         override def all: Boolean = true
 
@@ -247,11 +297,33 @@ object PrepareQuery {
     }
 
     private[otavia] case class PrepareUpdate(sql: String, param: Product) extends PrepareQuery[ModifyRows] {
+
+        private var codec: RowCodec[?] = _
+
         override def parameterLength: Short = param.productArity.toShort
+
+        def withParameterCodec(codec: RowCodec[?]): this.type = {
+            this.codec = codec
+            this
+        }
+
+        def parameterCodec: RowCodec[?] = codec
+
     }
 
     private[otavia] case class PrepareUpdateBatch(sql: String, params: Seq[Product]) extends PrepareQuery[ModifyRows] {
+
+        private var codec: RowCodec[?] = _
+
         override def parameterLength: Short = params.head.productArity.toShort
+
+        def withParameterCodec(codec: RowCodec[?]): this.type = {
+            this.codec = codec
+            this
+        }
+
+        def parameterCodec: RowCodec[?] = codec
+
     }
 
 }

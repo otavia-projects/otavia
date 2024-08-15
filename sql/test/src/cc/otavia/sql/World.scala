@@ -16,4 +16,4 @@
 
 package cc.otavia.sql
 
-case class World(id: Int, message: String, age: Option[Double]) extends Row derives RowDecoder
+case class World(id: Int, message: String, age: Option[Double]) extends Row derives RowCodec

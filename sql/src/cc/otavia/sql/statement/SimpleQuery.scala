@@ -17,7 +17,7 @@
 package cc.otavia.sql.statement
 
 import cc.otavia.core.message.{Ask, Reply}
-import cc.otavia.sql.{Row, RowDecoder, RowSet}
+import cc.otavia.sql.{Row, RowCodec, RowSet}
 
 sealed trait SimpleQuery[T <: Reply] extends Ask[T] {
 
@@ -29,10 +29,10 @@ sealed trait SimpleQuery[T <: Reply] extends Ask[T] {
 
 object SimpleQuery {
 
-    def fetchOne[R <: Row](sql: String)(using decoder: RowDecoder[R]): ExecuteQuery[R] =
+    def fetchOne[R <: Row](sql: String)(using decoder: RowCodec[R]): ExecuteQuery[R] =
         new ExecuteQuery(sql, decoder)
 
-    def fetchAll[R <: Row](sql: String)(using decoder: RowDecoder[R]): ExecuteQueries[R] =
+    def fetchAll[R <: Row](sql: String)(using decoder: RowCodec[R]): ExecuteQueries[R] =
         new ExecuteQueries[R](sql, decoder)
 
     def update(sql: String): SimpleQuery[ModifyRows] = new ExecuteUpdate(sql)
@@ -45,10 +45,10 @@ object SimpleQuery {
 
     private[otavia] class ExecuteUpdate(override val sql: String) extends SimpleQuery[ModifyRows]
 
-    private[otavia] class ExecuteQuery[R <: Row](override val sql: String, val decoder: RowDecoder[R])
+    private[otavia] class ExecuteQuery[R <: Row](override val sql: String, val codec: RowCodec[R])
         extends SimpleQuery[R]
 
-    private[otavia] class ExecuteQueries[R <: Row](override val sql: String, val decoder: RowDecoder[R])
+    private[otavia] class ExecuteQueries[R <: Row](override val sql: String, val codec: RowCodec[R])
         extends SimpleQuery[RowSet[R]]
 
 }

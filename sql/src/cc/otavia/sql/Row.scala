@@ -18,4 +18,4 @@ package cc.otavia.sql
 
 import cc.otavia.core.message.Reply
 
-trait Row extends Reply
+trait Row extends Reply with Product

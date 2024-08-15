@@ -17,11 +17,11 @@
 package cc.otavia.sql.statement
 
 import cc.otavia.core.message.{Ask, Notice, Reply}
-import cc.otavia.sql.{Row, RowDecoder}
+import cc.otavia.sql.{Row, RowCodec}
 
 case class Cursor(id: Int) extends Reply
 
-class ExecuteCursor[R <: Row](sql: String, decoder: RowDecoder[R]) extends Ask[Cursor]
+class ExecuteCursor[R <: Row](sql: String, decoder: RowCodec[R]) extends Ask[Cursor]
 
 case class CursorRow[R <: Row](row: R, cursorId: Int) extends Notice
 

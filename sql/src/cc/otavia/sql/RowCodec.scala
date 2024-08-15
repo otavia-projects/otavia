@@ -1,7 +1,8 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License")
+
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -16,19 +17,24 @@
 
 package cc.otavia.sql
 
-trait RowDecoder[+R <: Row] {
-    def decode(parser: RowParser): R
+trait RowCodec[R <: Product] {
+
+    private[otavia] def decode(parser: RowParser): R
+
+    private[otavia] def encode(row: R, writer: RowWriter): Unit
+
+    private[otavia] final def encodeProduct(row: Product, writer: RowWriter): Unit = encode(row.asInstanceOf[R], writer)
+
 }
 
-object RowDecoder {
+object RowCodec {
 
-    /** Derives a [[RowDecoder]] for database values for the specified type [[T]].
+    /** Derives a [[RowCodec]] for database values for the specified type [[T]].
      *
      *  @tparam T
      *    a type that should be encoded and decoded by the derived serde
      *  @return
      *    an instance of the derived serde
      */
-    inline def derived[T <: Row]: RowDecoder[T] = ${ RowMacro.derivedMacro[T] }
-
+    inline def derived[T <: Product]: RowCodec[T] = ${ RowCodecMacro.derivedImpl[T] }
 }

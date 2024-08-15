@@ -18,4 +18,4 @@ package cc.otavia.sql
 
 import cc.otavia.core.message.Reply
 
-case class RowSet[R <: Row](rows: Array[R]) extends Reply
+case class RowSet[R <: Product](rows: Array[R]) extends Reply

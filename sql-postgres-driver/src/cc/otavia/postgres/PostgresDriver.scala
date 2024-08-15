@@ -58,10 +58,11 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
     private val rowDesc: RowDesc          = new RowDesc()
     private var continueParseRow: Boolean = false
 
-    private val rowBuffer: mutable.ArrayBuffer[Row]        = mutable.ArrayBuffer.empty
+    private val rowBuffer: mutable.ArrayBuffer[Product]    = mutable.ArrayBuffer.empty
     private val rowOffsets: mutable.ArrayBuffer[RowOffset] = mutable.ArrayBuffer.empty
 
     private val rowParser: PostgresRowParser = new PostgresRowParser()
+    private val rowWriter: PostgresRowWriter = new PostgresRowWriter()
 
     private val prepareStatements: mutable.HashMap[String, PreparedStatement] = mutable.HashMap.empty
     private val psSeq             = new HexSequence() // used for generating named prepared statement name
@@ -212,11 +213,13 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
                             ctx.fireChannelRead(ModifyRows(modifyRows), promise.messageId)
                             modifyRows = 0
                         case query: ExecuteQuery[?] =>
-                            if (rowBuffer.nonEmpty) ctx.fireChannelRead(rowBuffer.head, promise.messageId)
+                            if (rowBuffer.nonEmpty)
+                                ctx.fireChannelRead(rowBuffer.head.asInstanceOf[Row], promise.messageId)
                             else ctx.fireChannelExceptionCaught(new Error("No data fetch"), promise.messageId)
                             rowBuffer.clear()
                         case query: PrepareQuery.FetchQuery[?] if !query.all =>
-                            if (rowBuffer.nonEmpty) ctx.fireChannelRead(rowBuffer.head, promise.messageId)
+                            if (rowBuffer.nonEmpty)
+                                ctx.fireChannelRead(rowBuffer.head.asInstanceOf[Row], promise.messageId)
                             else ctx.fireChannelExceptionCaught(new Error("No data fetch"), promise.messageId)
                             rowBuffer.clear()
                         case queries: ExecuteQueries[?] =>
@@ -260,21 +263,21 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
 
             cmd match
                 case executeQuery: ExecuteQuery[?] =>
-                    val row = executeQuery.decoder.decode(rowParser)
+                    val row = executeQuery.codec.decode(rowParser)
                     continueParseRow = false
                     rowBuffer.addOne(row)
                 case executeQueries: ExecuteQueries[?] =>
-                    val decoder = executeQueries.decoder
-                    val row     = decoder.decode(rowParser)
+                    val codec = executeQueries.codec
+                    val row   = codec.decode(rowParser)
                     rowBuffer.addOne(row)
                 case fetchQuery: PrepareQuery.FetchQuery[?] =>
-                    decodeDataRow0(fetchQuery.decoder, prepareStatements(fetchQuery.sql))
+                    decodeDataRow0(fetchQuery.codec, prepareStatements(fetchQuery.sql))
                     if (!fetchQuery.all) continueParseRow = false
         }
 
-    private def decodeDataRow0(decoder: RowDecoder[?], ps: PreparedStatement): Unit = {
+    private def decodeDataRow0(codec: RowCodec[?], ps: PreparedStatement): Unit = {
         rowParser.setRowDesc(ps.rowDesc)
-        val row = decoder.decode(rowParser)
+        val row = codec.decode(rowParser)
         rowBuffer.addOne(row)
     }
 
@@ -517,19 +520,27 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
 
     private def encodePrepareQueryParams(ps: PreparedStatement, query: PrepareQuery[?], output: Buffer): Unit = {
         query match
-            case updateBatch: PrepareUpdateBatch =>
+            case updateBatch: PrepareUpdateBatch if updateBatch.parameterCodec == null =>
                 for (product <- updateBatch.params) {
                     encodeBindProduct(ps, product, output)
                     encodeExecute(0, output)
                 }
+            case updateBatch: PrepareUpdateBatch if updateBatch.parameterCodec != null =>
+                for (product <- updateBatch.params) {
+                    encodeBindTyped(ps, product, updateBatch.parameterCodec, output)
+                    encodeExecute(0, output)
+                }
             case fetchOneBindProduct: FetchOneBindProduct[?] =>
-                encodeBindProduct(ps, fetchOneBindProduct.parm, output)
+                encodeBindTyped(ps, fetchOneBindProduct.parm, fetchOneBindProduct.pcodec, output)
                 encodeExecute(0, output)
             case fetchAllBindProduct: FetchAllBindProduct[?] =>
-                encodeBindProduct(ps, fetchAllBindProduct.parm, output)
+                encodeBindTyped(ps, fetchAllBindProduct.parm, fetchAllBindProduct.pcodec, output)
                 encodeExecute(0, output)
-            case prepareUpdate: PrepareUpdate =>
+            case prepareUpdate: PrepareUpdate if prepareUpdate.parameterCodec == null =>
                 encodeBindProduct(ps, prepareUpdate.param, output)
+                encodeExecute(0, output)
+            case prepareUpdate: PrepareUpdate if prepareUpdate.parameterCodec != null =>
+                encodeBindTyped(ps, prepareUpdate.param, prepareUpdate.parameterCodec, output)
                 encodeExecute(0, output)
             case _ =>
                 encodeBindPrimary(ps, query, output)
@@ -607,6 +618,14 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
             i += 1
         }
 
+        writeBindTail(ps, pos, output)
+    }
+
+    private def encodeBindTyped(ps: PreparedStatement, params: Product, pcodec: RowCodec[?], output: Buffer): Unit = {
+        rowWriter.setPreparedStatement(ps)
+        rowWriter.setBuffer(output)
+        val pos = writeBindHead(params.productArity.toShort, ps, output)
+        pcodec.encodeProduct(params, rowWriter)
         writeBindTail(ps, pos, output)
     }
 
