@@ -57,8 +57,6 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
     final override def readableBytes: Int = widx - ridx
 
     override def compact(): Buffer = {
-        "hello".translateEscapes()
-        "hello".charAt(1)
         if (readableBytes == 0) {
             ridx = 0
             widx = 0

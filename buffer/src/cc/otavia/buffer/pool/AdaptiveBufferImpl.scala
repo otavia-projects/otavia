@@ -1513,7 +1513,7 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         } else { // len == 1
             val next = apply(idx + 1)
             buffer.setByte(buffer.readerOffset + off, (value.toShort >>> 8).toByte)
-            next.setByte(next.readableBytes, value.toByte)
+            next.setByte(next.readerOffset, value.toByte)
         }
         this
     }
@@ -1561,7 +1561,7 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         } else {
             buffer.setByte(buffer.readerOffset + off, (value >>> 8).toByte)
             val next = apply(idx + 1)
-            next.setByte(next.readableBytes, value.toByte)
+            next.setByte(next.readerOffset, value.toByte)
         }
         this
     }
@@ -1647,7 +1647,7 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         } else {
             val next = apply(idx + 1)
             buffer.setByte(buffer.readerOffset + off, (value >>> 8).toByte)
-            next.setByte(next.readableBytes, value.toByte)
+            next.setByte(next.readerOffset, value.toByte)
         }
         this
     }

@@ -278,6 +278,21 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
         assert(BufferUtils.readStringAsInt(buffer) == Int.MinValue)
     }
 
+    test("int adaptive buffer gap") {
+        val buffer = AdaptiveBuffer(allocator)
+
+        val int = 1509
+
+        0 until 4093 foreach (_ => buffer.writeByte('s'))
+
+        BufferUtils.writeIntAsString(buffer, int)
+
+        buffer.skipReadableBytes(4093)
+
+        assert(BufferUtils.readStringAsInt(buffer) == int)
+        
+    }
+
     test("long") {
         val buffer = allocator.allocate()
 
