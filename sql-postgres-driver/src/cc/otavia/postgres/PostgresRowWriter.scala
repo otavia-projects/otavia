@@ -35,12 +35,8 @@ protected class PostgresRowWriter extends RowWriter {
     override def writeShort(value: Short, index: Int): Unit = ???
 
     override def writeInt(value: Int, index: Int): Unit = {
-        val datatype = ps.paramDesc(index)
-        if (datatype.supportsBinary) {
-            val pos = buffer.writerOffset
-            buffer.writeInt(4)
-            buffer.writeInt(value)
-        } else ???
+        buffer.writeInt(4)
+        buffer.writeInt(value)
     }
 
     override def writeLong(value: Long, index: Int): Unit = ???
