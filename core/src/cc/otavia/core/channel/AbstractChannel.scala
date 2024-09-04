@@ -54,7 +54,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     private var maxStackInflight: Int            = 1
     private var maxFutureInflight: Int           = 1
 
-    // outbound futures which is write to channel and wait channel reply
+    // outbound futures which is written to channel and waiting channel reply
     private[core] val inflightFutures: QueueMap[ChannelPromise] = new QueueMap[ChannelPromise]()
     // outbound futures which is waiting channel to send
     private val pendingFutures: QueueMap[ChannelPromise] = new QueueMap[ChannelPromise]()

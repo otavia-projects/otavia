@@ -250,6 +250,8 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
 
     override private[core] def channelFactory: ChannelFactory = chFactory
 
+    override private[core] def transportFactory = transFactory
+
     override def isBusy: Boolean = busy
 
     private def calculateBusy(): Unit = {

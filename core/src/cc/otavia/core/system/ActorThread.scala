@@ -65,6 +65,8 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
 
     private val rd: SplittableRandom = new SplittableRandom()
 
+    private val ioHandler = system.transportFactory.openIoHandler(system)
+
     setName(s"otavia-actor-worker-$index")
 
     // prepare allocate buffer

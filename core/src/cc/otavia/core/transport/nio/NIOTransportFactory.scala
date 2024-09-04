@@ -156,4 +156,6 @@ class NIOTransportFactory(val system: ActorSystem) extends TransportFactory {
         reactor
     }
 
+    override def openIoHandler(system: ActorSystem): IoHandler = new NioHandler(system)
+
 }
