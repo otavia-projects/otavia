@@ -16,18 +16,14 @@
 
 package cc.otavia.core.actor
 
-import cc.otavia.common.ThrowableUtil
-import cc.otavia.core.actor.Actor
 import cc.otavia.core.actor.ChannelsActor.*
-import cc.otavia.core.address.{ActorAddress, Address}
+import cc.otavia.core.address.ActorAddress
 import cc.otavia.core.channel.*
 import cc.otavia.core.message.*
 import cc.otavia.core.reactor.*
-import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.*
 import cc.otavia.core.stack.helper.ChannelFutureState
 import cc.otavia.core.system.ActorThread
-import cc.otavia.core.timer.Timer
 
 import java.io.File
 import java.net.*
@@ -73,21 +69,27 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
     final override private[core] def receiveReactorEvent(event: ReactorEvent): Unit = {
         event match {
             case e: RegisterReply =>
-                e.channel.asInstanceOf[AbstractChannel].handleChannelRegisterReplyEvent(e)
+                e.channel.asInstanceOf[AbstractChannel].handleChannelRegisterReply(e.active, e.cause)
                 afterChannelRegistered(e)
             case e: DeregisterReply =>
-                e.channel.asInstanceOf[AbstractChannel].handleChannelDeregisterReplyEvent(e)
+                e.channel
+                    .asInstanceOf[AbstractChannel]
+                    .handleChannelDeregisterReply(e.firstInactive, e.isOpen, e.cause)
             case e: ChannelClose =>
-                e.channel.asInstanceOf[AbstractChannel].handleChannelCloseEvent(e)
+                e.channel.asInstanceOf[AbstractChannel].handleChannelClose(e.cause)
                 afterChannelClosed(e.channel, e.cause)
             case e: AcceptedEvent => e.channel.asInstanceOf[AbstractChannel].handleChannelAcceptedEvent(e)
             case e: ReadCompletedEvent =>
-                e.channel.asInstanceOf[AbstractChannel].handleChannelReadCompletedEvent(e)
-            case e: BindReply => e.channel.asInstanceOf[AbstractChannel].handleChannelBindReplyEvent(e)
+                e.channel.asInstanceOf[AbstractChannel].handleChannelReadCompleted(e.cause)
+            case e: BindReply =>
+                e.channel.asInstanceOf[AbstractChannel].handleChannelBindReply(e.firstActive, e.cause)
             case e: ConnectReply =>
-                e.channel.asInstanceOf[AbstractChannel].handleChannelConnectReplyEvent(e)
-            case e: ReadBuffer => e.channel.asInstanceOf[AbstractChannel].handleChannelReadBufferEvent(e)
-            case e: OpenReply  => e.channel.asInstanceOf[AbstractChannel].handleChannelOpenReplyEvent(e)
+                e.channel.asInstanceOf[AbstractChannel].handleChannelConnectReply(e.firstActive, e.cause)
+            case e: ReadBuffer =>
+                e.channel
+                    .asInstanceOf[AbstractChannel]
+                    .handleChannelReadBuffer(e.buffer, e.sender, e.recipient, e.cause)
+            case e: OpenReply => e.channel.asInstanceOf[AbstractChannel].handleChannelOpenReply(e.cause)
             case e: ShutdownReply =>
                 e.channel.asInstanceOf[AbstractNetworkChannel].handleShutdownReply(e)
         }

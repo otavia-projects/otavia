@@ -18,8 +18,8 @@
 
 package cc.otavia.core.transport.nio.channel
 
-import cc.otavia.core.channel.message.{AutoReadPlan, ReadPlan, ReadPlanFactory}
-import cc.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelException, ChannelShutdownDirection}
+import cc.otavia.core.channel.*
+import cc.otavia.core.channel.message.{AutoReadPlan, ReadPlan}
 import cc.otavia.core.message.*
 
 import java.io.IOException
@@ -29,8 +29,11 @@ import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
-abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel, val ch: C, val readInterestOp: Int)
-    extends AbstractUnsafeChannel(channel)
+abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](
+    channel: AbstractChannel,
+    val ch: C,
+    val readInterestOp: Int
+) extends AbstractUnsafeChannel(channel)
     with NioUnsafeChannel {
 
     protected var _selectionKey: SelectionKey = _
@@ -52,13 +55,17 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
         try {
             _selectionKey.cancel()
             _selectionKey = null
+            // channel.invokeLater(() => channel.handleChannelDeregisterReply(false, isOpen, None))
             executorAddress.inform(DeregisterReply(channel, false, isOpen))
         } catch {
             case e: Throwable =>
                 executorAddress.inform(DeregisterReply(channel, false, isOpen, Some(e)))
+            // channel.invokeLater(() => channel.handleChannelDeregisterReply(false, isOpen, Some(e)))
         }
     } else {
-        executorAddress.inform(DeregisterReply(channel, false, isOpen, Some(new IllegalStateException())))
+        val cause = Some(new IllegalStateException())
+        // channel.invokeLater(() => channel.handleChannelDeregisterReply(false, isOpen, cause))
+        executorAddress.inform(DeregisterReply(channel, false, isOpen, cause))
     }
 
     override def handle(key: SelectionKey): Unit = if (!key.isValid) {
@@ -170,7 +177,8 @@ abstract class AbstractNioUnsafeChannel[C <: SelectableChannel](channel: Channel
 
     private def completed(): Unit = {
         currentReadPlan.readComplete()
-        executorAddress.inform(ReadCompletedEvent(channel))
+        channel.handleChannelReadCompleted(None)
+        // executorAddress.inform(ReadCompletedEvent(channel))
     }
 
     protected def processRead(attemptedBytesRead: Int, actualBytesRead: Int, numMessagesRead: Int): Unit = {

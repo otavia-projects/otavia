@@ -27,11 +27,11 @@ trait IoExecutionContext {
     def canBlock: Boolean
 
     /** Returns the amount of time left until the scheduled task with the closest deadline should run. */
-    def delayNanos(currentTimeNanos: Long): Long
+    def delayNanos(currentTimeNanos: Long): Long = 0
 
     /** Returns the absolute point in time at which the next closest scheduled task should run or `-1` if nothing is
      *  scheduled to run.
      */
-    def deadlineNanos: Long
+    def deadlineNanos: Long = 0
 
 }

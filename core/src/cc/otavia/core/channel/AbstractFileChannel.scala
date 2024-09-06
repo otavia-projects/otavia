@@ -18,10 +18,8 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.message.*
-import cc.otavia.core.stack.{ChannelFuture, ChannelPromise}
+import cc.otavia.core.stack.ChannelPromise
 import cc.otavia.core.system.ActorSystem
 
 import java.net.SocketAddress
@@ -63,7 +61,7 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
         promise.setSuccess(EMPTY_EVENT)
     }
 
-    override private[core] def handleChannelRegisterReplyEvent(event: RegisterReply): Unit = {}
+    override private[otavia] def handleChannelRegisterReply(active: Boolean, cause: Option[Throwable]): Unit = {}
 
     override private[core] def deregisterTransport(promise: ChannelPromise): Unit = {
         promise.setSuccess(EMPTY_EVENT)
@@ -84,19 +82,20 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
             opening = true
             this.ongoingChannelPromise = promise
             this.path = path
-            reactor.open(this, path, options, attrs)
+            // mountedThread.ioHandler.open(this, path, options, attrs)
+            reactor.open(this, path, options, attrs) // file io use aio
         }
     }
 
-    override final private[core] def handleChannelOpenReplyEvent(event: OpenReply): Unit = {
+    override final private[core] def handleChannelOpenReply(cause: Option[Throwable]): Unit = {
         val promise = ongoingChannelPromise
         ongoingChannelPromise = null
-        event.cause match
+        cause match
             case None =>
                 opening = false
                 opened = true
                 pipeline.fireChannelActive()
-                promise.setSuccess(event)
+                promise.setSuccess(EMPTY_EVENT)
             case Some(cause) =>
                 promise.setFailure(cause)
                 closeTransport(newPromise())
@@ -108,19 +107,20 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
         else {
             closing = true
             this.ongoingChannelPromise = promise
+            // mountedThread.ioHandler.close(this)
             reactor.close(this)
         }
     }
 
-    override private[core] def handleChannelCloseEvent(event: ChannelClose): Unit = {
+    override private[core] def handleChannelClose(cause: Option[Throwable]): Unit = {
         val promise = ongoingChannelPromise
         ongoingChannelPromise = null
-        event.cause match
+        cause match
             case None =>
                 closed = true
                 closing = false
                 pipeline.fireChannelInactive()
-                promise.setSuccess(event)
+                promise.setSuccess(EMPTY_EVENT)
             case Some(cause) =>
                 promise.setFailure(cause)
     }

@@ -29,8 +29,8 @@ import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
-/** The [[Channel]] in [[Reactor]] */
-abstract class AbstractUnsafeChannel(val channel: Channel) extends UnsafeChannel with ChannelState {
+/** The [[AbstractChannel]] in [[Reactor]] */
+abstract class AbstractUnsafeChannel(val channel: AbstractChannel) extends UnsafeChannel with ChannelState {
 
     // read sink
     protected var currentReadPlan: ReadPlan = _
@@ -47,6 +47,8 @@ abstract class AbstractUnsafeChannel(val channel: Channel) extends UnsafeChannel
     autoRead = true
     autoClose = true
     writable = true
+
+    def isConnected: Boolean = connected
 
     final private[core] def setAutoRead(auto: Boolean): Unit = this.synchronized {
         autoRead = auto

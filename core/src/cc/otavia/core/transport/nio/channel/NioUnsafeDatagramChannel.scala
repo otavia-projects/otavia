@@ -21,7 +21,7 @@ package cc.otavia.core.transport.nio.channel
 import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
 import cc.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
-import cc.otavia.core.channel.{Channel, ChannelShutdownDirection, FileRegion}
+import cc.otavia.core.channel.{AbstractChannel, Channel, ChannelShutdownDirection, FileRegion}
 import cc.otavia.core.message.*
 import cc.otavia.core.transport.nio.channel.NioUnsafeDatagramChannel.NioDatagramChannelReadPlan
 
@@ -30,7 +30,7 @@ import java.net.SocketAddress
 import java.nio.channels.{DatagramChannel, SelectableChannel}
 import scala.language.unsafeNulls
 
-class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readInterestOp: Int)
+class NioUnsafeDatagramChannel(channel: AbstractChannel, ch: DatagramChannel, readInterestOp: Int)
     extends AbstractNioUnsafeChannel[DatagramChannel](channel, ch, readInterestOp) {
 
     setReadPlanFactory((channel: Channel) => new NioDatagramChannelReadPlan())
@@ -55,6 +55,7 @@ class NioUnsafeDatagramChannel(channel: Channel, ch: DatagramChannel, readIntere
             javaChannel.connect(remote)
             // When connected we are also bound
             bound = true
+            connected = true
             executorAddress.inform(ConnectReply(channel, true))
         } catch {
             case t: Throwable =>

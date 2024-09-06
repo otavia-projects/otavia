@@ -21,7 +21,7 @@ package cc.otavia.core.transport.nio.channel
 import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.channel.message.ReadPlan
-import cc.otavia.core.channel.{Channel, ChannelShutdownDirection, FileRegion}
+import cc.otavia.core.channel.{AbstractChannel, Channel, ChannelShutdownDirection, FileRegion}
 import cc.otavia.core.message.*
 
 import java.net.SocketAddress
@@ -30,7 +30,7 @@ import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
-class NioUnsafeServerSocketChannel(channel: Channel, ch: ServerSocketChannel, readInterestOp: Int)
+class NioUnsafeServerSocketChannel(channel: AbstractChannel, ch: ServerSocketChannel, readInterestOp: Int)
     extends AbstractNioUnsafeChannel[ServerSocketChannel](channel, ch, readInterestOp) {
 
     import NioUnsafeServerSocketChannel.*

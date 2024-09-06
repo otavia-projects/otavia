@@ -18,12 +18,12 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, AdaptiveBuffer}
+import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, AdaptiveBuffer, RecyclablePageBuffer}
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.ChannelOption.*
 import cc.otavia.core.channel.inflight.QueueMap
 import cc.otavia.core.channel.internal.AdaptiveBufferOffset
-import cc.otavia.core.channel.message.{AdaptiveBufferChangeNotice, DatagramAdaptiveRangePacket, ReadPlan, ReadPlanFactory}
+import cc.otavia.core.channel.message.{DatagramAdaptiveRangePacket, ReadPlan}
 import cc.otavia.core.message.*
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.*
@@ -69,9 +69,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     protected var outboundQueue: mutable.ArrayDeque[AdaptiveBufferOffset | FileRegion] = mutable.ArrayDeque.empty
 
-    private var direct: AbstractPooledPageAllocator = _
-    private var heap: AbstractPooledPageAllocator   = _
-    private var threadId: Int                       = -1
+    protected var mountedThread: ActorThread = _
 
     // initial channel state on constructing
     created = true
@@ -274,19 +272,17 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         assert(!mounted, s"The channel $this has been mounted already, you can't mount it twice!")
         actor = channelsActor
         val thread = ActorThread.currentThread()
-        threadId = thread.index
-        direct = thread.directAllocator
-        heap = thread.heapAllocator
+        mountedThread = thread
         channelId = executor.generateChannelId()
         pipe = newChannelPipeline()
         mounted = true
     }
 
-    final override def mountThreadId: Int = threadId
+    final override def mountThreadId: Int = mountedThread.index
 
-    override def directAllocator: AbstractPooledPageAllocator = direct
+    override def directAllocator: AbstractPooledPageAllocator = mountedThread.directAllocator
 
-    override def heapAllocator: AbstractPooledPageAllocator = heap
+    override def heapAllocator: AbstractPooledPageAllocator = mountedThread.heapAllocator
 
     def unsafeChannel: AbstractUnsafeChannel = unsafe
 
@@ -310,7 +306,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     //         -> handlerA.channelInactive() - (2) another inbound handler method called while in (1) yet
     //
     // which means the execution of two inbound handler methods of the same handler overlap undesirably.
-    protected def invokeLater(task: Runnable): Unit = laterTasks.append(task)
+    def invokeLater(task: Runnable): Unit = laterTasks.append(task)
 
     override final def getOption[T](option: ChannelOption[T]): T = option match
         case CHANNEL_FUTURE_BARRIER      => futureBarrier
@@ -391,31 +387,36 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     final private[core] def handleChannelAcceptedEvent(event: AcceptedEvent): Unit =
         event.channel.pipeline.fireChannelRead(event.accepted)
 
-    final private[core] def handleChannelReadCompletedEvent(event: ReadCompletedEvent): Unit =
+    final private[core] def handleChannelReadCompleted(cause: Option[Throwable]): Unit =
         pipe.fireChannelReadComplete()
 
-    final private[core] def handleChannelReadBufferEvent(event: ReadBuffer): Unit = {
-        event.sender match
+    final private[core] def handleChannelReadBuffer(
+        buffer: RecyclablePageBuffer,
+        sender: Option[SocketAddress] = None,
+        recipient: SocketAddress,
+        cause: Option[Throwable] = None
+    ): Unit = {
+        sender match
             case Some(address) => // fire UDP message
                 val start = channelInboundAdaptiveBuffer.writerOffset
-                channelInboundAdaptiveBuffer.extend(event.buffer)
+                channelInboundAdaptiveBuffer.extend(buffer)
                 val length = channelInboundAdaptiveBuffer.writerOffset - start
-                pipeline.fireChannelRead(DatagramAdaptiveRangePacket(start, length, event.recipient, event.sender))
+                pipeline.fireChannelRead(DatagramAdaptiveRangePacket(start, length, recipient, sender))
             case None => // fire other message
                 if (channelInboundAdaptiveBuffer.readableBytes == 0) {
-                    channelInboundAdaptiveBuffer.extend(event.buffer)
-                } else if (channelInboundAdaptiveBuffer.allocatedWritableBytes >= event.buffer.readableBytes) {
-                    channelInboundAdaptiveBuffer.writeBytes(event.buffer)
+                    channelInboundAdaptiveBuffer.extend(buffer)
+                } else if (channelInboundAdaptiveBuffer.allocatedWritableBytes >= buffer.readableBytes) {
+                    channelInboundAdaptiveBuffer.writeBytes(buffer)
                 } else {
                     val last = channelInboundAdaptiveBuffer.splitLast()
-                    if (last.capacity - last.readableBytes >= event.buffer.readableBytes) {
+                    if (last.capacity - last.readableBytes >= buffer.readableBytes) {
                         last.compact()
-                        last.writeBytes(event.buffer)
-                        event.buffer.close()
+                        last.writeBytes(buffer)
+                        buffer.close()
                         channelInboundAdaptiveBuffer.extend(last)
                     } else {
                         channelInboundAdaptiveBuffer.extend(last)
-                        channelInboundAdaptiveBuffer.extend(event.buffer)
+                        channelInboundAdaptiveBuffer.extend(buffer)
                     }
                 }
                 pipeline.fireChannelRead(channelInboundAdaptiveBuffer)
@@ -470,10 +471,13 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         while (outboundQueue.nonEmpty) {
             val payload = outboundQueue.removeHead()
             payload match
-                case fileRegion: FileRegion => reactor.flush(this, fileRegion)
+                case fileRegion: FileRegion =>
+                    // reactor.flush(this, fileRegion)
+                    mountedThread.ioHandler.flush(this, fileRegion)
                 case adaptiveBufferOffset: AdaptiveBufferOffset =>
                     val chain = channelOutboundAdaptiveBuffer.splitBefore(adaptiveBufferOffset.endIndex)
-                    reactor.flush(this, chain)
+                    // reactor.flush(this, chain)
+                    mountedThread.ioHandler.flush(this, chain)
         }
         if (resize) outboundQueue.clearAndShrink()
     }
@@ -496,34 +500,41 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     /** Call by head handler on pipeline register outbound event.
      *
-     *  send channel register to reactor, and handle reactor reply at [[handleChannelRegisterReplyEvent]]
+     *  send channel register to reactor, and handle reactor reply at [[handleChannelRegisterReply]]
      */
     private[core] def registerTransport(promise: ChannelPromise): Unit
 
     private[core] def deregisterTransport(promise: ChannelPromise): Unit
 
-    private[core] def readTransport(readPlan: ReadPlan): Unit = reactor.read(this, readPlan)
+    private[core] def readTransport(readPlan: ReadPlan): Unit = {
+        mountedThread.ioHandler.read(this, readPlan)
+        // reactor.read(this, readPlan)
+    }
 
     //// Event Handler: A handle that will process [[Event]] from [[Reactor]] and [[Timer]].
 
     // Event from Reactor
 
     /** Handle channel close event */
-    private[core] def handleChannelCloseEvent(event: ChannelClose): Unit = {}
+    private[core] def handleChannelClose(cause: Option[Throwable]): Unit = {}
 
     /** Handle channel register result event */
-    private[core] def handleChannelRegisterReplyEvent(event: RegisterReply): Unit = {}
+    private[otavia] def handleChannelRegisterReply(active: Boolean, cause: Option[Throwable]): Unit = {}
 
     /** Handle channel deregister result event */
-    private[core] def handleChannelDeregisterReplyEvent(event: DeregisterReply): Unit = {}
+    private[otavia] def handleChannelDeregisterReply(
+        firstInactive: Boolean,
+        isOpen: Boolean,
+        cause: Option[Throwable]
+    ): Unit = {}
 
-    private[core] def handleChannelBindReplyEvent(event: BindReply): Unit = {}
+    private[otavia] def handleChannelBindReply(firstActive: Boolean, cause: Option[Throwable]): Unit = {}
 
-    private[core] def handleChannelConnectReplyEvent(event: ConnectReply): Unit = {}
+    private[otavia] def handleChannelConnectReply(firstActive: Boolean, cause: Option[Throwable]): Unit = {}
 
-    private[core] def handleChannelDisconnectReplyEvent(event: DisconnectReply): Unit = {}
+    private[core] def handleChannelDisconnectReply(cause: Option[Throwable]): Unit = {}
 
-    private[core] def handleChannelOpenReplyEvent(event: OpenReply): Unit = {}
+    private[core] def handleChannelOpenReply(cause: Option[Throwable]): Unit = {}
 
     // Event from Timer
 

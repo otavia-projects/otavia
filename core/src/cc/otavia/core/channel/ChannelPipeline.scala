@@ -21,8 +21,8 @@ package cc.otavia.core.channel
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.*
 import cc.otavia.core.channel.inflight.QueueMap
-import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.stack.{ChannelPromise, ChannelStack}
+import cc.otavia.core.system.ActorThread
 
 trait ChannelPipeline extends ChannelInboundInvoker with ChannelOutboundInvoker {
 
@@ -368,7 +368,10 @@ trait ChannelPipeline extends ChannelInboundInvoker with ChannelOutboundInvoker 
     def pendingOutboundBytes: Long
 
     final def assertInExecutor(): Unit =
-        assert(executor.inExecutor(), "method must be called in ChannelsActor which this channel registered!")
+        assert(
+          channel.mountThreadId == ActorThread.currentThread().index,
+          "method must be called in ActorThread which this channel registered!"
+        )
 
     private[core] def channelInboundBuffer: AdaptiveBuffer
 

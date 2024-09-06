@@ -124,6 +124,7 @@ final class NioReactorWorker(
         case Flush(channel, payload)                   => ioHandler.flush(channel, payload)
         case Disconnect(channel)                       => ioHandler.disconnect(channel)
         case Close(channel)                            => ioHandler.close(channel)
+        case Shutdown(channel, direction)              => ioHandler
 
     private def confirmShutdown(): Boolean = false
 

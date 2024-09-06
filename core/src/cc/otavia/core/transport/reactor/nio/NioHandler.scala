@@ -20,8 +20,8 @@ package cc.otavia.core.transport.reactor.nio
 
 import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.common.{SystemPropertyUtil, ThrowableUtil}
+import cc.otavia.core.channel.*
 import cc.otavia.core.channel.message.ReadPlan
-import cc.otavia.core.channel.{Channel, ChannelException, FileRegion}
 import cc.otavia.core.message.*
 import cc.otavia.core.reactor.*
 import cc.otavia.core.slf4a.Logger
@@ -37,11 +37,8 @@ import java.nio.channels.{CancelledKeyException, ClosedChannelException, Selecti
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import java.util
-import java.util.Set
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.IntSupplier
-import scala.jdk.CollectionConverters
 import scala.language.unsafeNulls
 import scala.util.*
 
@@ -189,21 +186,10 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
 
     }
 
-    override def run(runner: IoExecutionContext): Int = {
+    override def run(context: IoExecutionContext): Int = {
         var handled = 0
         try {
-            val strategy = selectStrategy.calculateStrategy(selectNowSupplier, !runner.canBlock)
-            if (strategy == SelectStrategy.SELECT) { // can block to select ready io events.
-                try {
-                    select(runner)
-                    if (wakenUp.get()) wakenUp.set(false)
-                } catch {
-                    case e: IOException =>
-                        rebuildSelector()
-                        handleLoopException(e)
-                        handled = 0
-                }
-            }
+            select(context)
             cancelledKeys = 0
             needsToSelectAgain = false
             handled = processSelectedKeys()
@@ -305,13 +291,14 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         }
     }
 
-    override def register(channel: Channel): Unit = {
+    override def register(channel: AbstractChannel): Unit = {
         val nioUnsafeChannel  = nioUnsafe(channel)
         var selected: Boolean = false
         var success: Boolean  = false
         while (!success) {
             try {
                 nioUnsafeChannel.registerSelector(unwrappedSelector)
+                // channel.invokeLater(() => channel.handleChannelRegisterReply(nioUnsafeChannel.isActive, None))
                 channel.executorAddress.inform(
                   RegisterReply(channel, nioUnsafeChannel.isActive)
                 )
@@ -321,15 +308,19 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
                     if (!selected) {
                         selectNow()
                         selected = true
-                    } else channel.executorAddress.inform(RegisterReply(channel, cause = Some(e)))
+                    } else {
+                        channel.executorAddress.inform(RegisterReply(channel, cause = Some(e)))
+                        // channel.invokeLater(() => channel.handleChannelRegisterReply(false, Some(e)))
+                    }
                 case e: ClosedChannelException =>
+                    // channel.invokeLater(() => channel.handleChannelRegisterReply(false, Some(e)))
                     channel.executorAddress.inform(RegisterReply(channel, cause = Some(e)))
                     success = true
             }
         }
     }
 
-    override def deregister(channel: Channel): Unit = {
+    override def deregister(channel: AbstractChannel): Unit = {
         val nioUnsafeChannel = nioUnsafe(channel)
         nioUnsafeChannel.deregisterSelector()
         cancelledKeys += 1
@@ -339,7 +330,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         }
     }
 
-    override def bind(channel: Channel, local: SocketAddress): Unit = {
+    override def bind(channel: AbstractChannel, local: SocketAddress): Unit = {
         try {
             channel.unsafeChannel.unsafeBind(local)
         } catch {
@@ -348,7 +339,12 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         }
     }
 
-    override def open(channel: Channel, path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit = {
+    override def open(
+        channel: AbstractChannel,
+        path: Path,
+        options: Seq[OpenOption],
+        attrs: Seq[FileAttribute[?]]
+    ): Unit = {
         try {
             channel.unsafeChannel.unsafeOpen(path, options, attrs)
         } catch {
@@ -358,7 +354,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
     }
 
     override def connect(
-        channel: Channel,
+        channel: AbstractChannel,
         remote: SocketAddress,
         local: Option[SocketAddress],
         fastOpen: Boolean
@@ -371,7 +367,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         }
     }
 
-    override def disconnect(channel: Channel): Unit = {
+    override def disconnect(channel: AbstractChannel): Unit = {
         try {
             channel.unsafeChannel.unsafeDisconnect()
         } catch {
@@ -379,7 +375,9 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         }
     }
 
-    override def close(channel: Channel): Unit = {
+    override def shutdown(channel: AbstractChannel, direction: ChannelShutdownDirection): Unit = ???
+
+    override def close(channel: AbstractChannel): Unit = {
         try {
             channel.unsafeChannel.unsafeClose(None)
         } catch {
@@ -387,79 +385,33 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         }
     }
 
-    override def read(channel: Channel, plan: ReadPlan): Unit = {
+    override def read(channel: AbstractChannel, plan: ReadPlan): Unit = {
         channel.unsafeChannel.unsafeRead(plan)
     }
 
-    override def flush(channel: Channel, payload: FileRegion | RecyclablePageBuffer): Unit =
+    override def flush(channel: AbstractChannel, payload: FileRegion | RecyclablePageBuffer): Unit =
         channel.unsafeChannel.unsafeFlush(payload)
 
     override def wakeup(): Unit =
-        if (wakenUp.compareAndSet(true, false)) selector.wakeup()
+        selector.wakeup()
 
-    override def isCompatible(handleType: Class[? <: Channel]): Boolean = ???
+    override def isCompatible(handleType: Class[? <: AbstractChannel]): Boolean = ???
     // classOf[AbstractNioChannel[?, ?]].isAssignableFrom(handleType)
 
     @throws[IOException]
     private def selectNow(): Int = selector.selectNow()
 
     @throws[IOException]
-    private def select(runner: IoExecutionContext): Unit = {
-        var selector = this.selector
+    private def select(context: IoExecutionContext): Unit = {
         try {
-            var selectCnt: Int = 0
-            var break: Boolean = false
-            var blocks: Int    = 0
-            while (!break) {
-                if (!runner.canBlock) {
-                    // If a task was submitted when wakenUp value was true, the task didn't get a chance to call
-                    // Selector#wakeup. So we need to check task queue again before executing select operation.
-                    // If we don't, the task might be pended until select operation was timed out.
-                    // It might be pended until idle timeout if IdleStateHandler existed in pipeline.
-                    selector.selectNow()
-                    selectCnt = 1
-                    break = true
-                } else {
-                    val currentTimeMillis = System.currentTimeMillis()
-                    val timeoutMillis =
-                        if (blocks > 10 && runner.canBlock) {
-                            /*if (!wakenUp.get())*/
-                            wakenUp.set(true)
-                            10
-                        } else 0
-                    val selectedKeys = if (timeoutMillis != 0) selector.select(timeoutMillis) else selector.selectNow()
-                    selectCnt += 1
-                    blocks += 1
-
-                    if (selectedKeys != 0 || !runner.canBlock) {
-                        // - Selected something,
-                        // - waken up by user, or
-                        // - the task queue has a pending task.
-                        // - a scheduled task is ready for processing
-                        break = true
-                    } else {
-                        val time = System.currentTimeMillis()
-                        if (time - timeoutMillis >= currentTimeMillis) {
-                            // timeoutMillis elapsed without anything selected.
-                            selectCnt = 1
-                        } else if (
-                          SELECTOR_AUTO_REBUILD_THRESHOLD > 0 &&
-                          selectCnt >= SELECTOR_AUTO_REBUILD_THRESHOLD
-                        ) {
-                            // The code exists in an extra method to ensure the method is not too big to inline as this
-                            // branch is not very likely to get hit very frequently.
-                            selector = selectRebuildSelector(selectCnt)
-                            selectCnt = 1
-                            break = true
-                        }
-                    }
-                }
-            }
-
-            if (selectCnt > MIN_PREMATURE_SELECTOR_RETURNS) {
-                logger.debug(
-                  s"Selector.select() returned prematurely ${selectCnt - 1} times in a row for Selector $selector."
-                )
+            if (!context.canBlock) {
+                // If a task was submitted when wakenUp value was true, the task didn't get a chance to call
+                // Selector#wakeup. So we need to check task queue again before executing select operation.
+                // If we don't, the task might be pended until select operation was timed out.
+                // It might be pended until idle timeout if IdleStateHandler existed in pipeline.
+                selector.selectNow()
+            } else {
+                selector.select(10)
             }
         } catch {
             case e: CancelledKeyException => // Harmless exception - log anyway

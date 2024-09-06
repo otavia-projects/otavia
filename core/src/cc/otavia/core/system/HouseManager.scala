@@ -17,7 +17,7 @@
 package cc.otavia.core.system
 
 import cc.otavia.common.SystemPropertyUtil
-import cc.otavia.core.actor.{Actor, ChannelsActor}
+import cc.otavia.core.actor.Actor
 import cc.otavia.core.message.{Event, Message}
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorHouse.CHANNELS_ACTOR
@@ -33,7 +33,7 @@ class HouseManager(val thread: ActorThread) {
 
     private val mountingQueue = new FIFOHouseQueue(this)
 
-    private val serverActorQueue   = new FIFOHouseQueue(this)
+    // private val serverActorQueue   = new FIFOHouseQueue(this)
     private val channelsActorQueue = new PriorityHouseQueue(this)
     private val actorQueue         = new PriorityHouseQueue(this)
 
@@ -54,6 +54,9 @@ class HouseManager(val thread: ActorThread) {
 
     def laterTasks: mutable.ArrayDeque[Runnable] = thread.laterTasks
 
+    def runnable: Boolean =
+        actorQueue.nonEmpty || mountingQueue.nonEmpty || channelsActorQueue.nonEmpty // || serverActorQueue.nonEmpty
+
     def mount(house: ActorHouse): Unit = {
         mountingQueue.enqueue(house)
         thread.notifyThread()
@@ -65,8 +68,8 @@ class HouseManager(val thread: ActorThread) {
      */
     def ready(house: ActorHouse): Unit = {
         if (house.actorType == ActorHouse.STATE_ACTOR) actorQueue.enqueue(house)
-        else if (house.actorType == ActorHouse.CHANNELS_ACTOR) channelsActorQueue.enqueue(house)
-        else if (house.actorType == ActorHouse.SERVER_CHANNELS_ACTOR) serverActorQueue.enqueue(house)
+        else if (house.actorType >= ActorHouse.CHANNELS_ACTOR) channelsActorQueue.enqueue(house)
+        // else if (house.actorType == ActorHouse.SERVER_CHANNELS_ACTOR) serverActorQueue.enqueue(house)
 
         thread.notifyThread()
     }
@@ -78,7 +81,7 @@ class HouseManager(val thread: ActorThread) {
      */
     def change(house: ActorHouse): Unit = {
         if (house.highPriority && !house.inHighPriorityQueue) {
-            // try adjust priority
+            // try to adjust priority
             if (house.actorType == ActorHouse.CHANNELS_ACTOR) channelsActorQueue.adjustPriority(house)
             else if (house.actorType == ActorHouse.STATE_ACTOR) actorQueue.adjustPriority(house)
         }
@@ -100,7 +103,7 @@ class HouseManager(val thread: ActorThread) {
 
         var success = false
 
-        if (this.run0(serverActorQueue)) success = true
+        // if (this.run0(serverActorQueue)) success = true
 
         if (this.run0(channelsActorQueue)) success = true
 
@@ -169,12 +172,12 @@ class HouseManager(val thread: ActorThread) {
 
     def monitor(): HouseManagerMonitor = HouseManagerMonitor(
       mountingQueue.readies,
-      serverActorQueue.readies,
+      channelsActorQueue.readies,
       channelsActorQueue.readies,
       actorQueue.readies
     )
 
-    override def toString: String = s"mounting=${mountingQueue.readies}, server=${serverActorQueue.readies}, " +
+    override def toString: String = s"mounting=${mountingQueue.readies}, server=${channelsActorQueue.readies}, " +
         s"channels=${channelsActorQueue.readies}, state=${actorQueue.readies}"
 
 }

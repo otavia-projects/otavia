@@ -31,18 +31,19 @@ abstract class AbstractDatagramChannel(system: ActorSystem) extends AbstractNetw
         else {
             disconnecting = true
             this.ongoingChannelPromise = promise
-            reactor.disconnect(this)
+            mountedThread.ioHandler.disconnect(this)
+            // reactor.disconnect(this)
         }
     }
 
-    override private[core] def handleChannelDisconnectReplyEvent(event: DisconnectReply): Unit = {
+    override private[core] def handleChannelDisconnectReply(cause: Option[Throwable]): Unit = {
         disconnecting = false
         val promise = this.ongoingChannelPromise
         this.ongoingChannelPromise = null
-        event.cause match
+        cause match
             case None =>
                 disconnected = true
-                promise.setSuccess(event)
+                promise.setSuccess(EMPTY_EVENT)
             case Some(cause) =>
                 promise.setFailure(cause)
                 closeTransport(newPromise())

@@ -20,7 +20,7 @@ package cc.otavia.core.transport.nio.channel
 
 import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.channel.message.{FileReadPlan, MaxMessagesReadPlanFactory, ReadPlan}
-import cc.otavia.core.channel.{AbstractUnsafeChannel, Channel, ChannelShutdownDirection, FileRegion}
+import cc.otavia.core.channel.{AbstractChannel, AbstractUnsafeChannel, Channel, ChannelShutdownDirection, FileRegion}
 import cc.otavia.core.message.*
 
 import java.net.SocketAddress
@@ -30,7 +30,7 @@ import java.nio.file.{OpenOption, Path}
 import scala.jdk.CollectionConverters.*
 import scala.language.unsafeNulls
 
-class NioUnsafeFileChannel(channel: Channel) extends AbstractUnsafeChannel(channel) {
+class NioUnsafeFileChannel(channel: AbstractChannel) extends AbstractUnsafeChannel(channel) {
 
     private var ch: FileChannel = _
 

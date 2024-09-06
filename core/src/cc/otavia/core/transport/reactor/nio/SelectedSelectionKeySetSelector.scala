@@ -54,7 +54,7 @@ final class SelectedSelectionKeySetSelector(
     @throws[IOException]
     override def select(): Int = {
         selectionKeys.reset()
-        delegate.selectNow()
+        delegate.select()
     }
 
     override def wakeup(): Selector = delegate.wakeup()

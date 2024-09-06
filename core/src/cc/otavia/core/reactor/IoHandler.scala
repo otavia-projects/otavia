@@ -20,14 +20,14 @@ package cc.otavia.core.reactor
 
 import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.channel.message.ReadPlan
-import cc.otavia.core.channel.{Channel, FileRegion}
+import cc.otavia.core.channel.{AbstractChannel, ChannelShutdownDirection, FileRegion}
 import cc.otavia.core.system.ActorSystem
 
 import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 
-/** Handles IO dispatching for an [[cc.otavia.core.actor.ChannelsActor]] All operations except [[wakeup]] and
+/** Handles IO dispatching for an [[cc.otavia.core.actor.AbstractChannelsActor]] All operations except [[wakeup]] and
  *  [[isCompatible]] <strong>MUST</strong> be executed on the [[cc.otavia.core.reactor.Reactor]] and should never be
  *  called from the user-directly.
  */
@@ -50,36 +50,38 @@ abstract class IoHandler(val system: ActorSystem) {
     /** Destroy the [[IoHandler]] and free all its resources. */
     def destroy(): Unit
 
-    /** Register a [[Channel]] for IO.
+    /** Register a [[AbstractChannel]] for IO.
      *  @param channel
-     *    the [[Channel]] to register.
+     *    the [[AbstractChannel]] to register.
      */
     @throws[Exception]
-    def register(channel: Channel): Unit
+    def register(channel: AbstractChannel): Unit
 
-    /** Deregister a [[Channel]] for IO.
+    /** Deregister a [[AbstractChannel]] for IO.
      *
      *  @param channel
-     *    the [[Channel]] to deregister..
+     *    the [[AbstractChannel]] to deregister..
      *  @throws Exception
      *    thrown if an error happens during deregistration.
      */
     @throws[Exception]
-    def deregister(channel: Channel): Unit
+    def deregister(channel: AbstractChannel): Unit
 
-    def bind(channel: Channel, local: SocketAddress): Unit
+    def bind(channel: AbstractChannel, local: SocketAddress): Unit
 
-    def open(channel: Channel, path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit
+    def open(channel: AbstractChannel, path: Path, options: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): Unit
 
-    def connect(channel: Channel, remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit
+    def connect(channel: AbstractChannel, remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit
 
-    def disconnect(channel: Channel): Unit
+    def disconnect(channel: AbstractChannel): Unit
 
-    def close(channel: Channel): Unit
+    def shutdown(channel: AbstractChannel, direction: ChannelShutdownDirection): Unit
 
-    def read(channel: Channel, plan: ReadPlan): Unit
+    def close(channel: AbstractChannel): Unit
 
-    def flush(channel: Channel, payload: FileRegion | RecyclablePageBuffer): Unit
+    def read(channel: AbstractChannel, plan: ReadPlan): Unit
+
+    def flush(channel: AbstractChannel, payload: FileRegion | RecyclablePageBuffer): Unit
 
     /** Wakeup the [[IoHandler]], which means if any operation blocks it should be unblocked and return as soon as
      *  possible.
@@ -89,10 +91,10 @@ abstract class IoHandler(val system: ActorSystem) {
     /** Returns true if the given type is compatible with this [[IoHandler]] and so can be registered, false otherwise.
      *
      *  @param handleType
-     *    the type of the [[Channel]].
+     *    the type of the [[AbstractChannel]].
      *  @return
      *    if compatible of not.
      */
-    def isCompatible(handleType: Class[? <: Channel]): Boolean
+    def isCompatible(handleType: Class[? <: AbstractChannel]): Boolean
 
 }

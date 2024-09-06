@@ -18,24 +18,20 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelOption.*
 import cc.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
-import cc.otavia.core.channel.internal.{AdaptiveBufferOffset, WriteBufferWaterMark}
+import cc.otavia.core.channel.internal.WriteBufferWaterMark
 import cc.otavia.core.channel.message.ReadPlanFactory
 import cc.otavia.core.message.*
 import cc.otavia.core.stack.{ChannelPromise, Promise}
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.{TimeoutTrigger, Timer}
-import cc.otavia.core.transport.nio.channel.NioChannelOption
 import cc.otavia.internal.Platform
 
-import java.io.IOException
 import java.net.{InetSocketAddress, SocketAddress}
 import java.nio.channels.{AlreadyConnectedException, ClosedChannelException, ConnectionPendingException, NotYetConnectedException}
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
-import scala.collection.mutable
 import scala.language.unsafeNulls
 
 abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChannel(system) {
@@ -152,23 +148,24 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         else {
             registering = true
             ongoingChannelPromise = promise
-            reactor.register(this)
+            mountedThread.ioHandler.register(this)
+            // reactor.register(this)
         }
 
-    override private[core] def handleChannelRegisterReplyEvent(event: RegisterReply): Unit = {
+    override private[otavia] def handleChannelRegisterReply(active: Boolean, cause: Option[Throwable]): Unit = {
         val promise = ongoingChannelPromise
         ongoingChannelPromise = null
-        event.cause match
+        cause match
             case None =>
                 val firstRegistration = neverRegistered
                 neverRegistered = false
                 registering = false
                 registered = true
                 pipeline.fireChannelRegistered()
-                promise.setSuccess(event)
+                promise.setSuccess(EMPTY_EVENT)
                 // Only fire a channelActive if the channel has never been registered. This prevents firing
                 // multiple channel actives if the channel is deregistered and re-registered.
-                if (event.active) {
+                if (active) {
                     if (firstRegistration) fireChannelActiveIfNotActiveBefore()
                     readIfIsAutoRead()
                 }
@@ -219,17 +216,18 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         ongoingChannelPromise = promise
 
         setUnresolvedLocalAddress(local)
-        reactor.bind(this, local)
+        mountedThread.ioHandler.bind(this, local)
+        // reactor.bind(this, local)
     }
 
-    override final private[core] def handleChannelBindReplyEvent(event: BindReply): Unit = {
+    override final private[otavia] def handleChannelBindReply(firstActive: Boolean, cause: Option[Throwable]): Unit = {
         val promise = ongoingChannelPromise
         ongoingChannelPromise = null
-        event.cause match
+        cause match
             case None =>
                 bound = true
                 binding = false
-                if (event.firstActive) // first active
+                if (firstActive) // first active
                     if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead()
                 promise.setSuccess(EMPTY_EVENT)
             case Some(cause) =>
@@ -272,29 +270,30 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         val fastOption = ChannelOption.TCP_FASTOPEN_CONNECT
         val fastOpen   = if (isOptionSupported(fastOption) && getOption(fastOption)) true else false
 
-        reactor.connect(this, remote, local, fastOpen)
+        mountedThread.ioHandler.connect(this, remote, local, fastOpen)
+        // reactor.connect(this, remote, local, fastOpen)
 
         // setup connect timeout
         // register connect timeout trigger. When timeout, the timer will send a timeout event, the
         // handleConnectTimeout method will handle this timeout event.
-        if (connectTimeoutMillis > 0) {
+        if (connectTimeoutMillis > 0 && !unsafeChannel.isConnected) {
             val tid = timer.registerChannelTimeout(TimeoutTrigger.DelayTime(connectTimeoutMillis), this)
             connectTimeoutRegisterId = tid
             promise.setTimeoutId(tid)
         }
     }
 
-    override final private[core] def handleChannelConnectReplyEvent(event: ConnectReply): Unit =
+    override final private[otavia] def handleChannelConnectReply(firstActive: Boolean, cause: Option[Throwable]): Unit =
         if (ongoingChannelPromise != null) {
             val promise = ongoingChannelPromise
             this.ongoingChannelPromise = null
             connecting = false
-            event.cause match
+            cause match
                 case None =>
                     connected = true
                     if (promise.canTimeout) timer.cancelTimerTask(promise.timeoutId) // cancel timeout trigger
-                    if (event.firstActive) if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead()
-                    promise.setSuccess(event)
+                    if (firstActive) if (fireChannelActiveIfNotActiveBefore()) readIfIsAutoRead()
+                    promise.setSuccess(EMPTY_EVENT)
                 case Some(cause) =>
                     promise.setFailure(cause)
                     closeTransport(newPromise())
@@ -335,18 +334,19 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
             registering = false
             closing = true
             ongoingChannelPromise = promise
-            reactor.close(this)
+            mountedThread.ioHandler.close(this)
+            // reactor.close(this)
         } else if (closed) { promise.setSuccess(EMPTY_EVENT) }
         else if (closing) { promise.setFailure(new IllegalStateException("A close operation is running")) }
         else promise.setFailure(new NotYetConnectedException())
     }
 
-    override private[core] def handleChannelCloseEvent(event: ChannelClose): Unit = {
+    override private[core] def handleChannelClose(cause: Option[Throwable]): Unit = {
         closing = false
         closed = true
 
         if (ongoingChannelPromise != null) {
-            ongoingChannelPromise.setSuccess(event)
+            ongoingChannelPromise.setSuccess(EMPTY_EVENT)
             ongoingChannelPromise = null
         }
 
@@ -372,7 +372,8 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         } else if (isShutdown(direction)) {
             promise.setSuccess(EMPTY_EVENT)
         } else {
-            reactor.shutdown(this, direction)
+            mountedThread.ioHandler.shutdown(this, direction)
+            // reactor.shutdown(this, direction)
             promise.setSuccess(EMPTY_EVENT)
         }
     }
@@ -395,24 +396,29 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         if (!registered) promise.setSuccess(EMPTY_EVENT)
         else {
             // TODO: add deregistering state
-            reactor.deregister(this)
+            mountedThread.ioHandler.deregister(this)
+            // reactor.deregister(this)
             this.ongoingChannelPromise = promise
         }
 
-    override final private[core] def handleChannelDeregisterReplyEvent(event: DeregisterReply): Unit = {
-        event.cause match
+    override final private[otavia] def handleChannelDeregisterReply(
+        firstInactive: Boolean,
+        isOpen: Boolean,
+        cause: Option[Throwable]
+    ): Unit = {
+        cause match
             case Some(value) =>
                 logger.warn("Unexpected exception occurred while deregistering a channel.", value)
             case None =>
 
-        if (event.firstInactive) pipeline.fireChannelInactive()
+        if (firstInactive) pipeline.fireChannelInactive()
 
         // TODO: add deregistering state
         if (registered) {
             registered = false
             pipeline.fireChannelUnregistered()
 
-            if (!event.isOpen) {
+            if (!isOpen) {
                 // Remove all handlers from the ChannelPipeline. This is needed to ensure
                 // handlerRemoved(...) is called and so resources are released.
                 while (!pipeline.isEmpty) {
@@ -428,7 +434,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         if (this.ongoingChannelPromise != null) {
             val promise = this.ongoingChannelPromise
             this.ongoingChannelPromise = null
-            promise.setSuccess(event)
+            promise.setSuccess(EMPTY_EVENT)
         }
 
     }
@@ -450,7 +456,8 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
     private def closeNowAndFail(promise: Promise[?], cause: Throwable): Unit = {
         closing = true
         try {
-            reactor.close(this)
+            mountedThread.ioHandler.close(this)
+            // reactor.close(this)
         } catch {
             case e: Exception => logger.warn("Failed to close a channel.", e)
         }

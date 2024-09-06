@@ -21,7 +21,8 @@ import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.actor.Actor
 import cc.otavia.core.address.{ActorAddress, ActorThreadAddress}
 import cc.otavia.core.message.{Event, ResourceTimeoutEvent}
-import cc.otavia.core.system.ActorThread.{GC_PEER_ROUND, ST_RUNNING, ST_STARTING, ST_WAITING}
+import cc.otavia.core.reactor.IoExecutionContext
+import cc.otavia.core.system.ActorThread.*
 import cc.otavia.core.system.monitor.ActorThreadMonitor
 
 import java.lang.ref.*
@@ -65,9 +66,9 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
 
     private val rd: SplittableRandom = new SplittableRandom()
 
-    private val ioHandler = system.transportFactory.openIoHandler(system)
+    private[core] val ioHandler = system.transportFactory.openIoHandler(system)
 
-    setName(s"otavia-actor-worker-$index")
+    setName(s"otavia-worker-$index")
 
     // prepare allocate buffer
     private[core] def prepared(): Unit = {
@@ -131,57 +132,87 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
     }
 
     private[core] def notifyThread(): Unit = {
-        if (status == ST_WAITING) lock.synchronized(lock.notify())
+        if (Thread.currentThread() != this) ioHandler.wakeup()
+        // if (status == ST_WAITING) lock.synchronized(lock.notify())
     }
 
     private[core] def putEvent(event: Event): Unit = {
         eventQueue.offer(event)
-        if (status == ST_WAITING) lock.synchronized(lock.notify())
+        notifyThread()
     }
 
     private[core] def putEvents(events: Seq[Event]): Unit = {
         events.foreach(event => eventQueue.offer(event))
-        if (status == ST_WAITING) lock.synchronized(lock.notify())
+        notifyThread()
     }
+
+//    override def run(): Unit = {
+//        status = ST_RUNNING
+//        var spinStart: Long  = System.currentTimeMillis()
+//        var emptyTimes: Long = 0
+//        var gc               = false
+//        while (true) {
+//
+//            ioHandler.run(ioCtx)
+//
+//            var success: Boolean = false
+//            // run current thread tasks
+//            val stops    = if (refSet.isEmpty) 0 else this.stopActors()
+//            val runHouse = manager.run()
+//            val runEvent = this.runThreadEvent()
+//
+//            if (stops > 0 || runHouse) success = true
+//
+//            if (success) {
+//                emptyTimes = 0
+//                gc = false
+//            } else {
+//                emptyTimes += 1
+//                if (emptyTimes == 1) spinStart = System.currentTimeMillis()
+//                else if (emptyTimes < 20) Thread.`yield`()
+//                else if (emptyTimes < 25) {
+//                    if (manager.trySteal()) emptyTimes -= 1
+//                } else if (emptyTimes < 50) {
+//                    this.suspendThread(5)
+//                } else {
+//                    this.suspendThread()
+//                    if (emptyTimes % 100 == 0) if (manager.trySteal()) emptyTimes = 20
+//                    if (System.currentTimeMillis() - spinStart > 600) {
+//                        if (ActorSystem.AGGRESSIVE_GC && !gc) {
+//                            system.gc()
+//                            gc = true
+//                        }
+//                        if (directAllocator.releasable) directAllocator.release()
+//                        if (heapAllocator.releasable) heapAllocator.release()
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     override def run(): Unit = {
         status = ST_RUNNING
+        val ioCtx = new IoExecutionContext {
+            override def canBlock: Boolean = !manager.runnable && refSet.isEmpty && eventQueue.isEmpty
+        }
 
-        var spinStart: Long  = System.currentTimeMillis()
-        var emptyTimes: Long = 0
-        var gc               = false
-        while (true) {
-            var success: Boolean = false
+        while (!confirmShutdown()) {
             // run current thread tasks
-            val stops    = if (refSet.isEmpty) 0 else this.stopActors()
-            val runHouse = manager.run()
-            val runEvent = this.runThreadEvent()
+            val stops    = if (refSet.isEmpty) 0 else this.stopActors() // stop and release died actor.
+            val runHouse = manager.run()                                // run actor which has been received message.
+            val runEvent = this.runThreadEvent()                        // run event received by this thread.
 
-            if (stops > 0 || runHouse) success = true
+            ioHandler.run(ioCtx)
+        }
 
-            if (success) {
-                emptyTimes = 0
-                gc = false
-            } else {
-                emptyTimes += 1
-                if (emptyTimes == 1) spinStart = System.currentTimeMillis()
-                else if (emptyTimes < 20) Thread.`yield`()
-                else if (emptyTimes < 25) {
-                    if (manager.trySteal()) emptyTimes -= 1
-                } else if (emptyTimes < 50) {
-                    this.suspendThread(5)
-                } else {
-                    this.suspendThread()
-                    if (emptyTimes % 100 == 0) if (manager.trySteal()) emptyTimes = 20
-                    if (System.currentTimeMillis() - spinStart > 600) {
-                        if (ActorSystem.AGGRESSIVE_GC && !gc) {
-                            system.gc()
-                            gc = true
-                        }
-                        if (directAllocator.releasable) directAllocator.release()
-                        if (heapAllocator.releasable) heapAllocator.release()
-                    }
-                }
+    }
+
+    private def runLaterTasks(): Unit = {
+        while (channelLaterTasks.nonEmpty) {
+            val task = channelLaterTasks.removeHead()
+            try task.run()
+            catch {
+                case t: Throwable => t.printStackTrace()
             }
         }
     }
@@ -204,6 +235,8 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
     }
 
     def monitor(): ActorThreadMonitor = ActorThreadMonitor(eventQueue.size(), manager.monitor())
+
+    private def confirmShutdown(): Boolean = false
 
 }
 

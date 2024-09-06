@@ -21,18 +21,17 @@ package cc.otavia.core.transport.nio.channel
 import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
 import cc.otavia.core.channel.message.{ReadPlan, ReadPlanFactory}
-import cc.otavia.core.channel.{Channel, ChannelShutdownDirection, FileRegion}
+import cc.otavia.core.channel.{AbstractChannel, Channel, ChannelShutdownDirection, FileRegion}
 import cc.otavia.core.message.*
 import cc.otavia.core.transport.nio.channel.NioUnsafeSocketChannel.NioSocketChannelReadPlan
 
 import java.io.IOException
 import java.net.SocketAddress
-import java.nio.ByteBuffer
-import java.nio.channels.{ClosedChannelException, SelectableChannel, SelectionKey, SocketChannel}
+import java.nio.channels.{SelectionKey, SocketChannel}
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp: Int)
+class NioUnsafeSocketChannel(channel: AbstractChannel, ch: SocketChannel, readInterestOp: Int)
     extends AbstractNioUnsafeChannel[SocketChannel](channel, ch, readInterestOp) {
 
     private var flushQueue: mutable.ArrayDeque[FileRegion | RecyclablePageBuffer] = _
@@ -56,10 +55,12 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
             case Some(value) => javaChannel.bind(value)
 
         try {
-            val connected = javaChannel.connect(remote)
-            if (!connected) {
+            val res = javaChannel.connect(remote)
+            if (!res) {
                 _selectionKey.interestOps(SelectionKey.OP_CONNECT)
             } else {
+                connected = true
+                // channel.invokeLater(() => channel.handleChannelConnectReply(true, None))
                 executorAddress.inform(ConnectReply(channel, true))
             }
         } catch {
@@ -200,7 +201,8 @@ class NioUnsafeSocketChannel(channel: Channel, ch: SocketChannel, readInterestOp
         }
 
         if (read > 0) {
-            executorAddress.inform(ReadBuffer(channel, page, recipient = null))
+            channel.handleChannelReadBuffer(page, recipient = null)
+            // executorAddress.inform(ReadBuffer(channel, page, recipient = null))
             false
         } else if (read == 0) {
             page.close()
