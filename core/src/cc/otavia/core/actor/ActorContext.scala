@@ -16,19 +16,26 @@
 
 package cc.otavia.core.actor
 
-import cc.otavia.core.actor.Actor
 import cc.otavia.core.address.Address
 import cc.otavia.core.message.Message
 import cc.otavia.core.system.ActorSystem
 
-/** [[Actor]] content info, the content info is create by actor system when a [[Actor]] instance is creating by actor
+/** [[Actor]] content info, the content info is created by actor system when a [[Actor]] instance is creating by actor
  *  system, and inject to [[Actor]] instance by [[Actor.setCtx]]
- *
- *  @param system
- *    actor system
- *  @param address
- *    physical address
- *  @param actorId
- *    id distributed by actor system
  */
-final case class ActorContext(system: ActorSystem, address: Address[? <: Message], actorId: Long)
+trait ActorContext {
+
+    /** actor system */
+    def system: ActorSystem
+
+    /** physical address of the binding actor. */
+    def address: Address[? <: Message]
+
+    /** id distributed by actor system */
+    def actorId: Long
+
+    def isLoadBalance: Boolean
+
+    def mountedThreadId: Int
+
+}

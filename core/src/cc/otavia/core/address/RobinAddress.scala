@@ -20,7 +20,8 @@ import cc.otavia.core.actor.AbstractActor
 import cc.otavia.core.message.*
 import cc.otavia.core.stack.MessageFuture
 
-class RobinAddress[M <: Call](val underlying: Array[ActorAddress[M]]) extends ProxyAddress[M] {
+class RobinAddress[M <: Call](val underlying: Array[ActorAddress[M]], val isLB: Boolean = false)
+    extends ProxyAddress[M] {
 
     private var noticeCursor: Int = 0
     private var askCursor: Int    = 0
@@ -51,8 +52,8 @@ class RobinAddress[M <: Call](val underlying: Array[ActorAddress[M]]) extends Pr
     }
 
     final private def getAddress(using sender: AbstractActor[? <: Call]): Address[M] = {
-        if (sender.instances == underlying.length) {
-            underlying(sender.instanceIndex)
+        if (sender.context.isLoadBalance && isLB) {
+            underlying(sender.context.mountedThreadId)
         } else {
             val index = askCursor % underlying.length
             askCursor += 1

@@ -49,9 +49,6 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
 
     private var currentSendMessageId: Long = Long.MinValue
 
-    private[core] var instances: Int     = 1
-    private[core] var instanceIndex: Int = 0
-
     final private[core] def stackEndRate: Float =
         if (revAsks != 0) sendAsks.toFloat / revAsks.toFloat else Float.MaxValue
 

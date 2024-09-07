@@ -108,6 +108,7 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
 
     private[core] def createActorHouse(): ActorHouse = {
         val house = new ActorHouse(manager)
+        house.createUntypedAddress()
         house
     }
 
@@ -192,9 +193,14 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
 
     override def run(): Unit = {
         status = ST_RUNNING
+
         val ioCtx = new IoExecutionContext {
             override def canBlock: Boolean = !manager.runnable && refSet.isEmpty && eventQueue.isEmpty
+
+            override def canNotBlock: Boolean = manager.runnable || !eventQueue.isEmpty || refSet.nonEmpty
         }
+
+        prepared()
 
         while (!confirmShutdown()) {
             // run current thread tasks

@@ -26,6 +26,8 @@ trait IoExecutionContext {
      */
     def canBlock: Boolean
 
+    def canNotBlock: Boolean = !canBlock
+
     /** Returns the amount of time left until the scheduled task with the closest deadline should run. */
     def delayNanos(currentTimeNanos: Long): Long = 0
 

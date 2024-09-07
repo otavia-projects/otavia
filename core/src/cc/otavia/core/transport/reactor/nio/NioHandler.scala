@@ -401,10 +401,9 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
     @throws[IOException]
     private def selectNow(): Int = selector.selectNow()
 
-    @throws[IOException]
     private def select(context: IoExecutionContext): Unit = {
         try {
-            if (!context.canBlock) {
+            if (context.canNotBlock) {
                 // If a task was submitted when wakenUp value was true, the task didn't get a chance to call
                 // Selector#wakeup. So we need to check task queue again before executing select operation.
                 // If we don't, the task might be pended until select operation was timed out.

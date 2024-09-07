@@ -23,7 +23,6 @@ import cc.otavia.core.message.*
 import cc.otavia.core.system.ActorHouse.*
 import cc.otavia.core.util.Nextable
 
-import java.lang.management.*
 import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.mutable
 import scala.language.unsafeNulls
@@ -34,10 +33,14 @@ import scala.language.unsafeNulls
  *  @tparam M
  *    the message type of the mounted actor instance can handle
  */
-final private[core] class ActorHouse(val manager: HouseManager) {
+final private[core] class ActorHouse(val manager: HouseManager) extends ActorContext {
 
     private var dweller: AbstractActor[? <: Call] = _
+    private var actorAddress: ActorAddress[Call]  = _
+    private var dwellerId: Long                   = -1
     private var atp: Int                          = 0
+
+    private var isLB: Boolean = false
 
     private val noticeMailbox: MailBox    = new MailBox(this)
     private val askMailbox: MailBox       = new MailBox(this)
@@ -51,6 +54,8 @@ final private[core] class ActorHouse(val manager: HouseManager) {
     @volatile private var nextHouse: ActorHouse = _
 
     @volatile private var _inHighPriorityQueue: Boolean = false
+
+    override def mountedThreadId: Int = manager.thread.index
 
     def highPriority: Boolean = (replyMailbox.size() > HIGH_PRIORITY_REPLY_SIZE) ||
         (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE) || (dweller.stackEndRate < 0.6)
@@ -92,9 +97,19 @@ final private[core] class ActorHouse(val manager: HouseManager) {
             case _                   => throw new IllegalStateException("")
     }
 
+    def setActorId(id: Long): Unit = dwellerId = id
+
+    def setLB(boolean: Boolean): Unit = isLB = boolean
+
+    override def isLoadBalance: Boolean = isLB
+
     def actor: AbstractActor[? <: Call] = this.dweller
 
-    def system: ActorSystem = manager.thread.system
+    override def system: ActorSystem = manager.system
+
+    override def address: ActorAddress[_ <: Message] = actorAddress
+
+    override def actorId: Long = dwellerId
 
     def actorType: Int = atp
 
@@ -304,11 +319,11 @@ final private[core] class ActorHouse(val manager: HouseManager) {
         address
     }
 
-    private[core] def createUntypedAddress(): ActorAddress[?] = {
+    private[core] def createUntypedAddress(): Unit = {
         val address = new ActorAddress[Call](this)
         if (actor.isInstanceOf[AutoCleanable])
             manager.thread.registerAddressRef(address)
-        address
+        actorAddress = address
     }
 
     override def toString: String = s"events=${eventMailbox.size()}, notices=${noticeMailbox.size()}, " +

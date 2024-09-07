@@ -16,30 +16,23 @@
 
 package cc.otavia.core.system
 
-import cc.otavia.buffer.BufferAllocator
-import cc.otavia.buffer.pool.{DirectPooledPageAllocator, HeapPooledPageAllocator}
-import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.actor.*
 import cc.otavia.core.address.*
 import cc.otavia.core.cache.ThreadLocal
 import cc.otavia.core.channel.ChannelFactory
 import cc.otavia.core.ioc.{BeanDefinition, BeanManager, Module}
 import cc.otavia.core.message.Call
-import cc.otavia.core.slf4a.{LogLevel, Logger}
+import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.monitor.{ReactorMonitor, SystemMonitor, SystemMonitorTask, ThreadMonitor}
 import cc.otavia.core.timer.{Timeout, Timer, TimerImpl}
 import cc.otavia.core.transport.TransportFactory
 
-import java.io.File
 import java.lang.management.{ManagementFactory, MemoryMXBean}
-import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
-import java.nio.file.StandardOpenOption
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicLong
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.duration.{MILLISECONDS, MINUTES, TimeUnit}
+import scala.concurrent.duration.MILLISECONDS
 import scala.language.unsafeNulls
 
 final private[core] class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFactory)
@@ -148,20 +141,17 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
         address match
             case addr: ActorAddress[?] => addr.house.mount()
             case robinAddress: RobinAddress[?] =>
-                robinAddress.underlying.foreach { addr =>
-                    addr.asInstanceOf[ActorAddress[?]].house.mount()
-                }
+                robinAddress.underlying.foreach { addr => addr.house.mount() }
     }
 
-    private def setActorContext(actor: AbstractActor[?], thread: ActorThread): ActorAddress[?] = {
+    private def setActorContext(actor: AbstractActor[?], thread: ActorThread, lb: Boolean = false): ActorAddress[?] = {
         val house = thread.createActorHouse()
         house.setActor(actor)
-        val address = house.createUntypedAddress()
-        val context = ActorContext(this, address, generator.getAndIncrement())
+        house.setActorId(generator.getAndIncrement())
+        house.setLB(lb)
+        actor.setCtx(house)
 
-        actor.setCtx(context)
-
-        address
+        house.address
     }
 
     private def createActor(factory: ActorFactory[?], num: Int): (Address[?], Class[?]) = {
@@ -172,6 +162,13 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
             val address = setActorContext(actor, thread)
             logger.debug(s"Created actor $actor")
             (address, actor.getClass)
+        } else if (num == pool.size) {
+            val address = pool.workers.map { thread =>
+                val actor = factory.create().asInstanceOf[AbstractActor[? <: Call]]
+                setActorContext(actor, thread, true)
+            }
+            val clz = address.head.house.actor.getClass
+            (new RobinAddress[Call](address.asInstanceOf[Array[ActorAddress[Call]]], true), clz)
         } else if (num > 1) {
             val range   = (0 until num).toArray
             val actors  = range.map(_ => factory.create().asInstanceOf[AbstractActor[? <: Call]])
@@ -180,8 +177,6 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
             val address = range.map { index =>
                 val actor  = actors(index)
                 val thread = threads(index)
-                actor.instances = range.length
-                actor.instanceIndex = index
                 setActorContext(actor, thread)
             }
             logger.debug(s"Created actors ${actors.mkString("Array(", ", ", ")")}")

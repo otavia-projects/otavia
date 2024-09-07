@@ -27,7 +27,7 @@ import cc.otavia.core.system.monitor.HouseManagerMonitor
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-class HouseManager(val thread: ActorThread) {
+final class HouseManager(val thread: ActorThread) {
 
     private val logger = Logger.getLogger(getClass, thread.system)
 
@@ -50,12 +50,14 @@ class HouseManager(val thread: ActorThread) {
 
     private var currentRunning: Actor[?] = _
 
+    def system: ActorSystem = thread.system
+
     private[core] def currentRunningActor: Actor[?] = currentRunning
 
     def laterTasks: mutable.ArrayDeque[Runnable] = thread.laterTasks
 
     def runnable: Boolean =
-        actorQueue.nonEmpty || mountingQueue.nonEmpty || channelsActorQueue.nonEmpty // || serverActorQueue.nonEmpty
+        actorQueue.nonEmpty || channelsActorQueue.nonEmpty || mountingQueue.nonEmpty // || serverActorQueue.nonEmpty
 
     def mount(house: ActorHouse): Unit = {
         mountingQueue.enqueue(house)
@@ -87,7 +89,7 @@ class HouseManager(val thread: ActorThread) {
         }
     }
 
-    final private def adjustPriority(queue: PriorityHouseQueue, house: ActorHouse): Unit = {
+    private def adjustPriority(queue: PriorityHouseQueue, house: ActorHouse): Unit = {
         if (queue.adjust(house)) {
             queue.enqueue(house)
         }
@@ -99,7 +101,7 @@ class HouseManager(val thread: ActorThread) {
      *    true if run some [[ActorHouse]], otherwise false.
      */
     def run(): Boolean = {
-        runningStart = System.nanoTime()
+        // runningStart = System.nanoTime()
 
         var success = false
 
@@ -113,19 +115,18 @@ class HouseManager(val thread: ActorThread) {
             val house = mountingQueue.dequeue()
             if (house != null) {
                 currentRunning = house.actor
-                if (house.actorType == CHANNELS_ACTOR) thread.prepared()
                 house.doMount()
                 currentRunning = null
                 success = true
             }
         }
 
-        runningStart = Long.MaxValue
+        // runningStart = Long.MaxValue
 
         success
     }
 
-    final private def run0(houseQueue: HouseQueue): Boolean = {
+    private def run0(houseQueue: HouseQueue): Boolean = {
         val house = houseQueue.dequeue()
         if (house != null) {
             currentRunning = house.actor
@@ -160,7 +161,7 @@ class HouseManager(val thread: ActorThread) {
     }
 
     /** Steal running by other [[ActorThread]] */
-    final private def runSteal(): Boolean = {
+    private def runSteal(): Boolean = {
         if (actorQueue.available) {
             val house = actorQueue.dequeue()
             if (house != null) {
