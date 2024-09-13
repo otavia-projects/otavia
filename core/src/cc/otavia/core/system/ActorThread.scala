@@ -232,12 +232,12 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
     }
 
     private def runThreadEvent(): Boolean = {
-        if (!eventQueue.isEmpty) {
+        val run = !eventQueue.isEmpty
+        while (!eventQueue.isEmpty) {
             val event = eventQueue.poll().asInstanceOf[ResourceTimeoutEvent]
-
             event.cache.parent.handleTimeout(event.registerId, event.cache)
-            true
-        } else false
+        }
+        run
     }
 
     def monitor(): ActorThreadMonitor = ActorThreadMonitor(eventQueue.size(), manager.monitor())
@@ -248,7 +248,7 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
 
 object ActorThread {
 
-    private val GC_PEER_ROUND_DEFAULT = 64
+    private val GC_PEER_ROUND_DEFAULT = 512
 
     private val GC_PEER_ROUND = SystemPropertyUtil.getInt("cc.otavia.core.stop.size", GC_PEER_ROUND_DEFAULT)
 

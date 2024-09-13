@@ -21,7 +21,6 @@ import cc.otavia.core.actor.Actor.*
 import cc.otavia.core.address.Address
 import cc.otavia.core.message.*
 import cc.otavia.core.reactor.Reactor
-import cc.otavia.core.stack.*
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.Timer
 
@@ -77,14 +76,6 @@ trait Actor[+M <: Call] {
     protected def afterRestart(): Unit = {}
 
     def maxFetchPerRunning: Int = system.defaultMaxFetchPerRunning
-
-    def niceAsk: Int = NICE_ASK
-
-    def niceReply: Int = NICE_REPLY
-
-    def niceNotice: Int = NICE_NOTICE
-
-    def niceEvent: Int = NICE_EVENT
 
     def nice: Int = 8
 
@@ -164,17 +155,5 @@ object Actor {
     val NOTICE_TYPE: MessageType = 0
     val ASK_TYPE: MessageType    = 1
     val REPLY_TYPE: MessageType  = 2
-
-    private val NICE_MESSAGE_DEFAULT = 16
-    private val NICE_MESSAGE = SystemPropertyUtil.getInt("cc.otavia.core.actor.nice.message", NICE_MESSAGE_DEFAULT)
-
-    private val NICE_ASK = SystemPropertyUtil.getInt("cc.otavia.core.actor.nice.ask", NICE_MESSAGE)
-
-    private val NICE_REPLY = SystemPropertyUtil.getInt("cc.otavia.core.actor.nice.reply", NICE_MESSAGE)
-
-    private val NICE_NOTICE = SystemPropertyUtil.getInt("cc.otavia.core.actor.nice.notice", NICE_MESSAGE)
-
-    private val NICE_EVENT_DEFAULT = 32
-    private val NICE_EVENT         = SystemPropertyUtil.getInt("cc.otavia.core.actor.nice.notice", NICE_EVENT_DEFAULT)
 
 }

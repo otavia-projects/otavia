@@ -107,18 +107,19 @@ final class HouseManager(val thread: ActorThread) {
 
         // if (this.run0(serverActorQueue)) success = true
 
-        if (this.run0(channelsActorQueue)) success = true
+        if (channelsActorQueue.available) {
+            this.run0(channelsActorQueue)
+            success = true
+        }
 
-        if (this.run0(actorQueue)) success = true
+        if (actorQueue.available) {
+            this.run0(actorQueue)
+            success = true
+        }
 
         if (mountingQueue.available) {
-            val house = mountingQueue.dequeue()
-            if (house != null) {
-                currentRunning = house.actor
-                house.doMount()
-                currentRunning = null
-                success = true
-            }
+            this.mount0()
+            success = true
         }
 
         // runningStart = Long.MaxValue
@@ -126,14 +127,24 @@ final class HouseManager(val thread: ActorThread) {
         success
     }
 
-    private def run0(houseQueue: HouseQueue): Boolean = {
-        val house = houseQueue.dequeue()
-        if (house != null) {
+    private def run0(houseQueue: HouseQueue): Unit = {
+        var house = houseQueue.dequeue()
+        while (house != null) {
             currentRunning = house.actor
             house.run()
             currentRunning = null
-            true
-        } else false
+            house = houseQueue.dequeue()
+        }
+    }
+
+    private def mount0(): Unit = {
+        var house = mountingQueue.dequeue()
+        while (house != null) {
+            currentRunning = house.actor
+            house.doMount()
+            currentRunning = null
+            house = mountingQueue.dequeue()
+        }
     }
 
     private def stealable: Boolean = (actorQueue.readies > STEAL_REMAINING_THRESHOLD) ||

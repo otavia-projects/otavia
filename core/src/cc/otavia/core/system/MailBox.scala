@@ -95,6 +95,14 @@ class MailBox(val house: ActorHouse) { // extends SpinLock
         obj
     }
 
+    def getAll: Nextable = this.synchronized {
+        val obj = head
+        head = null
+        tail = null
+        count = 0
+        obj
+    }
+
     def size(): Int = count
 
     def isEmpty: Boolean = count == 0

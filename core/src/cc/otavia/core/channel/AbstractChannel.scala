@@ -28,7 +28,7 @@ import cc.otavia.core.message.*
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.*
 import cc.otavia.core.stack.helper.ChannelFutureState
-import cc.otavia.core.system.{ActorSystem, ActorThread}
+import cc.otavia.core.system.{ActorHouse, ActorSystem, ActorThread}
 
 import java.net.SocketAddress
 import java.nio.ByteBuffer
@@ -42,8 +42,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     import AbstractChannel.*
 
-    protected val logger: Logger        = Logger.getLogger(getClass, system)
-    private var actor: ChannelsActor[?] = _
+    protected val logger: Logger       = Logger.getLogger(getClass, system)
+    private var actorHouse: ActorHouse = _
 
     private var channelId: Int                = -1
     private var pipe: ChannelPipelineImpl     = _
@@ -69,8 +69,6 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     protected var outboundQueue: mutable.ArrayDeque[AdaptiveBufferOffset | FileRegion] = mutable.ArrayDeque.empty
 
-    protected var mountedThread: ActorThread = _
-
     // initial channel state on constructing
     created = true
     registering = false
@@ -92,7 +90,11 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     closed = false
     closing = false
 
+    private def actor: ChannelsActor[?] = actorHouse.actor.asInstanceOf[ChannelsActor[?]]
+
     override final def isMounted: Boolean = mounted
+
+    protected def mountedThread: ActorThread = actorHouse.manager.thread
 
     // impl ChannelInflight
 
@@ -270,10 +272,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     final private[core] def mount(channelsActor: ChannelsActor[?]): Unit = {
         assert(!mounted, s"The channel $this has been mounted already, you can't mount it twice!")
-        actor = channelsActor
-        val thread = ActorThread.currentThread()
-        mountedThread = thread
-        channelId = executor.generateChannelId()
+        actorHouse = channelsActor.context.asInstanceOf[ActorHouse]
+        channelId = channelsActor.generateChannelId()
         pipe = newChannelPipeline()
         mounted = true
     }
@@ -481,6 +481,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         }
         if (resize) outboundQueue.clearAndShrink()
     }
+
+    override final def flushable(): Boolean = outboundQueue.nonEmpty
 
     private[core] def bindTransport(local: SocketAddress, channelPromise: ChannelPromise): Unit
 

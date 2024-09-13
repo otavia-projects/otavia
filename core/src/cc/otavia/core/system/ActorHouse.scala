@@ -48,6 +48,9 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     private val exceptionMailbox: MailBox = new MailBox(this)
     private val eventMailbox: MailBox     = new MailBox(this)
 
+    private var tmpAskCursor: Nextable    = _
+    private var tmpNoticeCursor: Nextable = _
+
     private[system] val status: AtomicInteger = new AtomicInteger(CREATED)
 
     @volatile private var preHouse: ActorHouse  = _
@@ -166,70 +169,15 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     def run(): Unit = {
         if (status.compareAndSet(SCHEDULED, RUNNING)) {
-            if (replyMailbox.size() > dweller.niceReply * 2) dispatchReplies(dweller.niceReply * 2)
-            else {
-                if (replyMailbox.nonEmpty) { dispatchReplies(dweller.niceReply) }
-                if (exceptionMailbox.nonEmpty) { dispatchExceptions(dweller.niceReply) }
-                if (eventMailbox.nonEmpty) { dispatchEvents(dweller.niceEvent) }
-                if (!dweller.inBarrier && noticeMailbox.nonEmpty) {
-                    if (dweller.batchable) {
-                        var cursor = noticeMailbox.getChain(dweller.maxBatchSize)
-                        val buf    = ActorThread.threadBuffer[Notice]
-                        while (cursor != null) {
-                            val envelope = cursor.asInstanceOf[Envelope[?]]
-                            cursor = envelope.next
-                            envelope.deChain()
-                            val notice = envelope.message.asInstanceOf[Notice]
-                            if (dweller.batchNoticeFilter(notice)) {
-                                buf.addOne(notice)
-                                // TODO: recycle envelope
-                            } else {
-                                if (buf.nonEmpty) handleBatchNotice(buf)
-                                dweller.receiveNotice(envelope)
-                                runLaterTasks()
-                            }
-                        }
-                        if (buf.nonEmpty) handleBatchNotice(buf)
-                    } else {
-                        var cursor = noticeMailbox.getChain(dweller.niceNotice)
-                        while (cursor != null) {
-                            val msg = cursor
-                            cursor = msg.next
-                            msg.deChain()
-                            dweller.receiveNotice(msg.asInstanceOf[Envelope[?]])
-                            runLaterTasks()
-                        }
-                    }
-                }
-                if (!dweller.inBarrier && askMailbox.nonEmpty) {
-                    if (dweller.batchable) {
-                        var cursor = askMailbox.getChain(dweller.maxBatchSize)
-                        val buf    = ActorThread.threadBuffer[Envelope[Ask[?]]]
-                        while (cursor != null) {
-                            val envelope = cursor.asInstanceOf[Envelope[Ask[?]]]
-                            cursor = envelope.next
-                            envelope.deChain()
-                            val ask = envelope.message
-                            if (dweller.batchAskFilter(ask)) buf.addOne(envelope)
-                            else {
-                                if (buf.nonEmpty) handleBatchAsk(buf)
-                                dweller.receiveAsk(envelope)
-                                runLaterTasks()
-                            }
-                        }
-                        if (buf.nonEmpty) handleBatchAsk(buf)
-                    } else {
-                        var cursor = askMailbox.getChain(dweller.niceAsk)
-                        while (cursor != null) {
-                            val msg = cursor
-                            cursor = msg.next
-                            msg.deChain()
-                            dweller.receiveAsk(msg.asInstanceOf[Envelope[Ask[?]]])
-                            runLaterTasks()
-                        }
-                    }
-                }
-            }
+            if (replyMailbox.nonEmpty) dispatchReplies()
+            if (exceptionMailbox.nonEmpty) dispatchExceptions()
+
+            if (!dweller.inBarrier && askMailbox.nonEmpty) dispatchAsks()
+            if (!dweller.inBarrier && noticeMailbox.nonEmpty) dispatchNotices()
+
+            if (eventMailbox.nonEmpty) dispatchEvents()
+
+            runLaterTasks()
 
             completeRunning()
         }
@@ -251,36 +199,91 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         }
     }
 
-    private def dispatchReplies(size: Int): Unit = {
-        var cursor = replyMailbox.getChain(size)
+    private def dispatchAsks(): Unit = if (dweller.batchable) dispatchBatchAsks() else dispatchAsks0()
+
+    private def dispatchAsks0(): Unit = {
+        if (tmpAskCursor == null) tmpAskCursor = askMailbox.getAll
+        while (tmpAskCursor != null && !dweller.inBarrier) {
+            val msg = tmpAskCursor
+            tmpAskCursor = msg.next
+            msg.deChain()
+            dweller.receiveAsk(msg.asInstanceOf[Envelope[Ask[?]]])
+        }
+    }
+
+    private def dispatchBatchAsks(): Unit = {
+        if (tmpAskCursor == null) tmpAskCursor = askMailbox.getAll
+        val buf = ActorThread.threadBuffer[Envelope[Ask[?]]]
+        while (tmpAskCursor != null && !dweller.inBarrier) {
+            val envelope = tmpAskCursor.asInstanceOf[Envelope[Ask[?]]]
+            tmpAskCursor = envelope.next
+            envelope.deChain()
+            val ask = envelope.message
+            if (dweller.batchAskFilter(ask)) buf.addOne(envelope)
+            else {
+                if (buf.nonEmpty) handleBatchAsk(buf)
+                dweller.receiveAsk(envelope)
+            }
+        }
+        if (buf.nonEmpty) handleBatchAsk(buf)
+    }
+
+    private def dispatchNotices(): Unit = if (dweller.batchable) dispatchBatchNotices() else dispatchNotices0()
+
+    private def dispatchNotices0(): Unit = {
+        if (tmpNoticeCursor == null) tmpNoticeCursor = noticeMailbox.getAll
+        while (tmpNoticeCursor != null && !dweller.inBarrier) {
+            val msg = tmpNoticeCursor
+            tmpNoticeCursor = msg.next
+            msg.deChain()
+            dweller.receiveNotice(msg.asInstanceOf[Envelope[?]])
+        }
+    }
+
+    private def dispatchBatchNotices(): Unit = {
+        if (tmpNoticeCursor == null) tmpNoticeCursor = noticeMailbox.getAll
+        val buf = ActorThread.threadBuffer[Notice]
+        while (tmpNoticeCursor != null && !dweller.inBarrier) {
+            val envelope = tmpNoticeCursor.asInstanceOf[Envelope[?]]
+            tmpNoticeCursor = envelope.next
+            envelope.deChain()
+            val notice = envelope.message.asInstanceOf[Notice]
+            if (dweller.batchNoticeFilter(notice)) buf.addOne(notice)
+            else {
+                if (buf.nonEmpty) handleBatchNotice(buf)
+                dweller.receiveNotice(envelope)
+            }
+        }
+        if (buf.nonEmpty) handleBatchNotice(buf)
+    }
+
+    private def dispatchReplies(): Unit = {
+        var cursor = replyMailbox.getAll
         while (cursor != null) {
             val msg = cursor
             cursor = msg.next
             msg.deChain()
             dweller.receiveReply(msg.asInstanceOf[Envelope[?]])
-            runLaterTasks()
         }
     }
 
-    private def dispatchExceptions(size: Int): Unit = {
-        var cursor = exceptionMailbox.getChain(size)
+    private def dispatchExceptions(): Unit = {
+        var cursor = exceptionMailbox.getAll
         while (cursor != null) {
             val msg = cursor
             cursor = msg.next
             msg.deChain()
             dweller.receiveExceptionReply(msg.asInstanceOf[Envelope[?]])
-            runLaterTasks()
         }
     }
 
-    private def dispatchEvents(size: Int): Unit = {
-        var cursor = eventMailbox.getChain(size)
+    private def dispatchEvents(): Unit = {
+        var cursor = eventMailbox.getAll
         while (cursor != null) {
             val msg = cursor.asInstanceOf[Event]
             cursor = msg.next
             msg.deChain()
             dweller.receiveEvent(msg)
-            runLaterTasks()
         }
     }
 
@@ -288,14 +291,12 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         val notices = buf.toSeq
         buf.clear()
         dweller.receiveBatchNotice(notices)
-        runLaterTasks()
     }
 
     private def handleBatchAsk(buf: mutable.ArrayBuffer[Envelope[Ask[?]]]): Unit = {
         val asks = buf.toSeq
         buf.clear()
         dweller.receiveBatchAsk(asks)
-        runLaterTasks()
     }
 
     private def runLaterTasks(): Unit = {

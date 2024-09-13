@@ -16,18 +16,17 @@
 
 package cc.otavia.core.channel
 
-import cc.otavia.core.actor.{Actor, ChannelsActor}
+import cc.otavia.core.actor.Actor
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.reactor.Reactor
+import cc.otavia.core.stack.ChannelFuture
 import cc.otavia.core.stack.helper.ChannelFutureState
-import cc.otavia.core.stack.{ChannelFuture, Future}
-import cc.otavia.core.system.ActorSystem
 
 import java.io.File
 import java.net.SocketAddress
 import java.nio.channels.FileChannel
 import java.nio.file.attribute.FileAttribute
-import java.nio.file.{FileAlreadyExistsException, OpenOption, Path}
+import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
 /** An interface for [[Channel]] used in [[Actor]] */
@@ -269,7 +268,7 @@ trait ChannelAddress {
         this
     }
 
-    /** actor send ask message to channel, in underlying, it call channel.write
+    /** actor send ask message to channel, in underlying, it calls channel.write
      *  @param value
      *    ask message which need this [[Channel]] relpy a message.
      *  @param future
@@ -285,5 +284,12 @@ trait ChannelAddress {
     def notice(value: AnyRef): Unit
 
     def batchNotice(notices: Seq[AnyRef]): Unit
+
+    final def flush(): this.type = {
+        pipeline.flush()
+        this
+    }
+
+    def flushable(): Boolean
 
 }

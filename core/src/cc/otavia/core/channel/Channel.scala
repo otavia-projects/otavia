@@ -177,8 +177,6 @@ trait Channel extends ChannelAddress {
 
     final def writeAndFlush(msg: AnyRef, msgId: Long): Unit = pipeline.writeAndFlush(msg, msgId)
 
-    final def flush(): this.type = { pipeline.flush(); this }
-
     final def sendOutboundEvent(event: AnyRef): Unit = pipeline.sendOutboundEvent(event)
 
     final def assertExecutor(): Unit =
