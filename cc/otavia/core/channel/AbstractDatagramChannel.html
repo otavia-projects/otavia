@@ -33,7 +33,8 @@ node6 [id=node6, label="<span style=\"color: #FFFFFF;\">trait <a href=\"Channel.
 node7 [id=node7, label="<span style=\"color: #FFFFFF;\">trait <a href=\"ChannelAddress.html\" t=\"n\">ChannelAddress</a></span>", class="trait vertex"];
 node8 [id=node8, label="<span style=\"color: #FFFFFF;\">trait <a href=\"ChannelState.html\" t=\"n\">ChannelState</a></span>", class="trait vertex"];
 node9 [id=node9, label="<span style=\"color: #FFFFFF;\">trait <a href=\"../util/CompressionBooleanLong.html\" t=\"n\">CompressionBooleanLong</a></span>", class="trait vertex"];
-node10 [id=node10, label="<span style=\"color: #FFFFFF;\">class <a href=\"../transport/nio/channel/NioDatagramChannel.html\" t=\"n\">NioDatagramChannel</a></span>", class="class vertex"];
+node10 [id=node10, label="<span style=\"color: #FFFFFF;\">trait <a href=\"inflight/QueueMapEntity.html\" t=\"n\">QueueMapEntity</a></span>", class="trait vertex"];
+node11 [id=node11, label="<span style=\"color: #FFFFFF;\">class <a href=\"../transport/nio/channel/NioDatagramChannel.html\" t=\"n\">NioDatagramChannel</a></span>", class="class vertex"];
 
 
  node0 -> node1;
@@ -50,7 +51,9 @@ node2 -> node8;
 node8 -> node3;
 node8 -> node9;
 node9 -> node3;
-node10 -> node0;
+node2 -> node10;
+node10 -> node3;
+node11 -> node0;
 
 }
 </script>
@@ -66,6 +69,9 @@ node10 -> node0;
      </div>
      <div>
       class <a href="AbstractChannel.html" t="n">AbstractChannel</a>
+     </div>
+     <div>
+      trait <a href="inflight/QueueMapEntity.html" t="n">QueueMapEntity</a>
      </div>
      <div>
       trait <a href="ChannelState.html" t="n">ChannelState</a>
@@ -408,6 +414,36 @@ node10 -> node0;
           </div>
          </div>
         </div>
+        <div class="documentableElement" id="cleanEntity-94c" data-f-inherited="QueueMapEntity">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AbstractDatagramChannel.html#cleanEntity-94c" t="n" class="documentableName ">cleanEntity</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="inflight/QueueMapEntity.html#cleanEntity-94c">QueueMapEntity</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
         <div class="documentableElement" id="close-fffff8be" data-f-inherited="ChannelAddress">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -650,6 +686,44 @@ node10 -> node0;
               </dt>
               <dd class="body-medium">
                <a href="ChannelAddress.html#disconnect-fffff8be">ChannelAddress</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="entityId-0" data-f-keywords="override" data-f-inherited="AbstractChannel">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="AbstractDatagramChannel.html#entityId-0" t="n" class="documentableName ">entityId</a>: <span data-unresolved-link="" t="t">Long</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="AbstractChannel.html#entityId-0">AbstractChannel</a> -&gt; <a href="inflight/QueueMapEntity.html">QueueMapEntity</a>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="AbstractChannel.html#entityId-0">AbstractChannel</a>
               </dd>
              </dl>
             </div>
@@ -1361,6 +1435,36 @@ node10 -> node0;
               </dt>
               <dd class="body-medium">
                <a href="AbstractChannel.html#isOptionSupported-fffffc74">AbstractChannel</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="isPending-0" data-f-inherited="AbstractChannel">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="AbstractDatagramChannel.html#isPending-0" t="n" class="documentableName ">isPending</a>: <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="AbstractChannel.html#isPending-0">AbstractChannel</a>
               </dd>
              </dl>
             </div>

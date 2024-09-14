@@ -27,7 +27,17 @@
 node1 [id=node1, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Object</span></span>", class="class vertex"];
 node2 [id=node2, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Any</span></span>", class="class vertex"];
 node3 [id=node3, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Matchable</span></span>", class="trait vertex"];
-node4 [id=node4, label="<span style=\"color: #FFFFFF;\">class <a href=\"../../stack/ChannelStack.html\" t=\"n\">ChannelStack</a>[<span t=\"t\">T</span>]</span>", class="class vertex"];
+node4 [id=node4, label="<span style=\"color: #FFFFFF;\">class <a href=\"../AbstractChannel.html\" t=\"n\">AbstractChannel</a></span>", class="class vertex"];
+node5 [id=node5, label="<span style=\"color: #FFFFFF;\">class <a href=\"../AbstractFileChannel.html\" t=\"n\">AbstractFileChannel</a></span>", class="class vertex"];
+node6 [id=node6, label="<span style=\"color: #FFFFFF;\">class <a href=\"../../transport/nio/channel/NioFileChannel.html\" t=\"n\">NioFileChannel</a></span>", class="class vertex"];
+node7 [id=node7, label="<span style=\"color: #FFFFFF;\">class <a href=\"../AbstractNetworkChannel.html\" t=\"n\">AbstractNetworkChannel</a></span>", class="class vertex"];
+node8 [id=node8, label="<span style=\"color: #FFFFFF;\">class <a href=\"../AbstractDatagramChannel.html\" t=\"n\">AbstractDatagramChannel</a></span>", class="class vertex"];
+node9 [id=node9, label="<span style=\"color: #FFFFFF;\">class <a href=\"../../transport/nio/channel/NioDatagramChannel.html\" t=\"n\">NioDatagramChannel</a></span>", class="class vertex"];
+node10 [id=node10, label="<span style=\"color: #FFFFFF;\">class <a href=\"../AbstractServerChannel.html\" t=\"n\">AbstractServerChannel</a></span>", class="class vertex"];
+node11 [id=node11, label="<span style=\"color: #FFFFFF;\">class <a href=\"../../transport/nio/channel/NioServerSocketChannel.html\" t=\"n\">NioServerSocketChannel</a></span>", class="class vertex"];
+node12 [id=node12, label="<span style=\"color: #FFFFFF;\">class <a href=\"../AbstractSocketChannel.html\" t=\"n\">AbstractSocketChannel</a></span>", class="class vertex"];
+node13 [id=node13, label="<span style=\"color: #FFFFFF;\">class <a href=\"../../transport/nio/channel/NioSocketChannel.html\" t=\"n\">NioSocketChannel</a></span>", class="class vertex"];
+node14 [id=node14, label="<span style=\"color: #FFFFFF;\">class <a href=\"../../stack/ChannelStack.html\" t=\"n\">ChannelStack</a>[<span t=\"t\">T</span>]</span>", class="class vertex"];
 
 
  node0 -> node1;
@@ -35,6 +45,16 @@ node1 -> node2;
 node1 -> node3;
 node3 -> node2;
 node4 -> node0;
+node5 -> node4;
+node6 -> node5;
+node7 -> node4;
+node8 -> node7;
+node9 -> node8;
+node10 -> node7;
+node11 -> node10;
+node12 -> node7;
+node13 -> node12;
+node14 -> node0;
 
 }
 </script>
@@ -62,8 +82,38 @@ node4 -> node0;
    <dd class="body-medium">
     <div class="mono-small-block subtypes">
      <div>
+      class <a href="../AbstractChannel.html" t="n">AbstractChannel</a>
+     </div>
+     <div>
+      class <a href="../AbstractFileChannel.html" t="n">AbstractFileChannel</a>
+     </div>
+     <div>
+      class <a href="../../transport/nio/channel/NioFileChannel.html" t="n">NioFileChannel</a>
+     </div>
+     <div>
+      class <a href="../AbstractNetworkChannel.html" t="n">AbstractNetworkChannel</a>
+     </div>
+     <div>
+      class <a href="../AbstractDatagramChannel.html" t="n">AbstractDatagramChannel</a>
+     </div>
+     <div>
+      class <a href="../../transport/nio/channel/NioDatagramChannel.html" t="n">NioDatagramChannel</a>
+     </div>
+     <div>
+      class <a href="../AbstractServerChannel.html" t="n">AbstractServerChannel</a>
+     </div>
+     <div>
+      class <a href="../../transport/nio/channel/NioServerSocketChannel.html" t="n">NioServerSocketChannel</a>
+     </div>
+     <div>
+      class <a href="../AbstractSocketChannel.html" t="n">AbstractSocketChannel</a>
+     </div>
+     <div>
+      class <a href="../../transport/nio/channel/NioSocketChannel.html" t="n">NioSocketChannel</a>
+     </div>
+     <div>
       class <a href="../../stack/ChannelStack.html" t="n">ChannelStack</a>[<span t="t">T</span>]
-     </div><span></span>
+     </div><span class="show-all-code show-content text-button h100">Show all</span>
     </div>
    </dd>
   </dl>

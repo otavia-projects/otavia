@@ -10,7 +10,7 @@
 </div>
 <div class="main-signature mono-small-block">
  <div class="signature">
-  <span class="modifiers"></span><span class="kind"><span t="k">class </span></span><a href="QueueMap.html" t="n" class="documentableName ">QueueMap</a>[<span t="k"></span><span data-unresolved-link="" t="t">V</span><span t="k"> &lt;: </span><a href="QueueMapEntity.html" t="t">QueueMapEntity</a>]
+  <span class="signature-short"><span class="modifiers"></span><span class="kind"><span t="k">class </span></span><a href="QueueMap.html" t="n" class="documentableName ">QueueMap</a>[<span t="k"></span><span data-unresolved-link="" t="t">V</span><span t="k"> &lt;: </span><a href="QueueMapEntity.html" t="t">QueueMapEntity</a>]<span t="k"> extends </span><span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>]</span><span class="signature-long"></span>
  </div>
 </div>
 <div class="cover">
@@ -36,12 +36,21 @@
 node1 [id=node1, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Object</span></span>", class="class vertex"];
 node2 [id=node2, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Any</span></span>", class="class vertex"];
 node3 [id=node3, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Matchable</span></span>", class="trait vertex"];
+node4 [id=node4, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Iterator</span>[<span t=\"t\">V</span>]</span>", class="class vertex"];
+node5 [id=node5, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">IterableOnce</span>[<span t=\"t\">V</span>]</span>", class="class vertex"];
+node6 [id=node6, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">IterableOnceOps</span>[<span t=\"t\">V</span>, <span data-unresolved-link=\"\" t=\"t\">Iterator</span>, <span data-unresolved-link=\"\" t=\"t\">Iterator</span>[<span t=\"t\">V</span>]]</span>", class="class vertex"];
 
 
  node0 -> node1;
 node1 -> node2;
 node1 -> node3;
 node3 -> node2;
+node0 -> node4;
+node4 -> node1;
+node4 -> node5;
+node5 -> node2;
+node4 -> node6;
+node6 -> node2;
 
 }
 </script>
@@ -53,6 +62,15 @@ node3 -> node2;
    <dd class="body-medium">
     <div class="mono-small-block supertypes">
      <div>
+      trait <span data-unresolved-link="" t="n">Iterator</span>[<span t="t">V</span>]
+     </div>
+     <div>
+      trait <span data-unresolved-link="" t="n">IterableOnceOps</span>[<span t="t">V</span>, <span data-unresolved-link="" t="t">Iterator</span>, <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>]]
+     </div>
+     <div>
+      trait <span data-unresolved-link="" t="n">IterableOnce</span>[<span t="t">V</span>]
+     </div>
+     <div>
       class <span data-unresolved-link="" t="n">Object</span>
      </div>
      <div>
@@ -60,7 +78,7 @@ node3 -> node2;
      </div>
      <div>
       class <span data-unresolved-link="" t="n">Any</span>
-     </div><span></span>
+     </div><span class="show-all-code show-content text-button h100">Show all</span>
     </div>
    </dd>
   </dl>
@@ -74,6 +92,79 @@ node3 -> node2;
  <div class="membersList expand">
   <div class="tabs">
    <div class="contents">
+    <section id="Type-members">
+     <div data-togglable="Type members" class="tab expand">
+      <div class="member-group-header">
+       <h3 data-togglable="Type members" class="h400">Type members</h3>
+      </div>
+      <section id="Inherited-classlikes">
+       <div class="documentableList expand">
+        <div class="documentableList-expander">
+         <button class="icon-button show-content expand"></button>
+         <h4 class="groupHeader h200">Inherited classlikes</h4>
+        </div>
+        <div class="documentableElement" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">class </span></span><a href="../../../../../scala/collection/Iterator$GroupedIterator.html" t="n" class="documentableName ">GroupedIterator</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">A</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">self</span>: <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">B</span>], <span t="k"></span><span data-unresolved-link="" t="n">size</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">step</span>: <span data-unresolved-link="" t="t">Int</span>)
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../../../../../scala/collection/Iterator$GroupedIterator.html">Iterator</a>
+              </dd>
+              <dt class="body-small">
+               Supertypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <div>
+                 class <span data-unresolved-link="" t="n">AbstractIterator</span>[<span data-unresolved-link="" t="t">Seq</span>[<span t="t">B</span>]]
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Iterator</span>[<span data-unresolved-link="" t="t">Seq</span>[<span t="t">B</span>]]
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">IterableOnceOps</span>[<span data-unresolved-link="" t="t">Seq</span>[<span t="t">B</span>], <span data-unresolved-link="" t="t">Iterator</span>, <span data-unresolved-link="" t="t">Iterator</span>[<span data-unresolved-link="" t="t">Seq</span>[<span t="t">B</span>]]]
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">IterableOnce</span>[<span data-unresolved-link="" t="t">Seq</span>[<span t="t">B</span>]]
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Object</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Matchable</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Any</span>
+                </div><span class="show-all-code show-content text-button h100">Show all</span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+      </section>
+     </div>
+    </section>
     <section id="Value-members">
      <div data-togglable="Value members" class="tab expand">
       <div class="member-group-header">
@@ -112,6 +203,38 @@ node3 -> node2;
           </div>
          </div>
         </div>
+        <div class="documentableElement" id="hasNext-0" data-f-keywords="override">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#hasNext-0" t="n" class="documentableName ">hasNext</a>: <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <span data-unresolved-link="">Iterator</span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
         <div class="documentableElement" id="isBarrierMode-0">
          <div class="documentableElement-expander">
           <div class="header monospace mono-medium">
@@ -121,11 +244,34 @@ node3 -> node2;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="isEmpty-0">
+        <div class="documentableElement" id="isEmpty-0" data-f-keywords="override">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#isEmpty-0" t="n" class="documentableName ">isEmpty</a>: <span data-unresolved-link="" t="t">Boolean</span>
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#isEmpty-0" t="n" class="documentableName ">isEmpty</a>: <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <span data-unresolved-link="">Iterator</span> -&gt; <span data-unresolved-link="">IterableOnceOps</span>
+               </div>
+              </dd>
+             </dl>
+            </div>
            </div>
           </div>
          </div>
@@ -157,11 +303,75 @@ node3 -> node2;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="nonEmpty-0">
+        <div class="documentableElement" id="next-ddb" data-f-keywords="override">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#next-ddb" t="n" class="documentableName ">next</a>(<span t="k"></span>): <span t="t">V</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <span data-unresolved-link="">Iterator</span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="nonEmpty-0" data-f-keywords="override">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#nonEmpty-0" t="n" class="documentableName ">nonEmpty</a>: <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <span data-unresolved-link="">IterableOnceOps</span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="resetIterator-94c">
          <div class="documentableElement-expander">
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#nonEmpty-0" t="n" class="documentableName ">nonEmpty</a>: <span data-unresolved-link="" t="t">Boolean</span>
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#resetIterator-94c" t="n" class="documentableName ">resetIterator</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Unit</span>
            </div>
           </div>
          </div>
@@ -175,11 +385,34 @@ node3 -> node2;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="size-0">
+        <div class="documentableElement" id="size-0" data-f-keywords="override">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#size-0" t="n" class="documentableName ">size</a>: <span data-unresolved-link="" t="t">Int</span>
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#size-0" t="n" class="documentableName ">size</a>: <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <span data-unresolved-link="">IterableOnceOps</span>
+               </div>
+              </dd>
+             </dl>
+            </div>
            </div>
           </div>
          </div>
@@ -195,9 +428,2995 @@ node3 -> node2;
         </div>
        </div>
       </section>
+      <section id="Inherited-methods">
+       <div class="documentableList expand">
+        <div class="documentableList-expander">
+         <button class="icon-button show-content expand"></button>
+         <h4 class="groupHeader h200">Inherited methods</h4>
+        </div>
+        <div class="documentableElement" id="++-9d7" data-f-keywords="final" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#++-9d7" t="n" class="documentableName ">++</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">xs</span>: <span t="k">=&gt; </span><span data-unresolved-link="" t="t">IterableOnce</span>[<span t="t">B</span>]): <span data-unresolved-link="" t="t">Iterator</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="addString-ff4" data-f-keywords="final" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#addString-ff4" t="n" class="documentableName ">addString</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">b</span>: <span data-unresolved-link="" t="t">StringBuilder</span>): b.<span t="k">type</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="addString-e99" data-f-keywords="final" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#addString-e99" t="n" class="documentableName ">addString</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">b</span>: <span data-unresolved-link="" t="t">StringBuilder</span>, <span t="k"></span><span data-unresolved-link="" t="n">sep</span>: <span data-unresolved-link="" t="t">String</span>): b.<span t="k">type</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="addString-de3" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#addString-de3" t="n" class="documentableName ">addString</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">b</span>: <span data-unresolved-link="" t="t">StringBuilder</span>, <span t="k"></span><span data-unresolved-link="" t="n">start</span>: <span data-unresolved-link="" t="t">String</span>, <span t="k"></span><span data-unresolved-link="" t="n">sep</span>: <span data-unresolved-link="" t="t">String</span>, <span t="k"></span><span data-unresolved-link="" t="n">end</span>: <span data-unresolved-link="" t="t">String</span>): b.<span t="k">type</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="buffered-0" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#buffered-0" t="n" class="documentableName ">buffered</a>: <span data-unresolved-link="" t="t">BufferedIterator</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="collect-fffff916" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#collect-fffff916" t="n" class="documentableName ">collect</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">pf</span>: <span data-unresolved-link="" t="t">PartialFunction</span>[<span t="t">V</span>, <span t="t">B</span>]): <span data-unresolved-link="" t="t">Iterator</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="collectFirst-25d" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#collectFirst-25d" t="n" class="documentableName ">collectFirst</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">pf</span>: <span data-unresolved-link="" t="t">PartialFunction</span>[<span t="t">V</span>, <span t="t">B</span>]): <span data-unresolved-link="" t="t">Option</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="concat-9d7" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#concat-9d7" t="n" class="documentableName ">concat</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">xs</span>: <span t="k">=&gt; </span><span data-unresolved-link="" t="t">IterableOnce</span>[<span t="t">B</span>]): <span data-unresolved-link="" t="t">Iterator</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="contains-4ad" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#contains-4ad" t="n" class="documentableName ">contains</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">elem</span>: <span data-unresolved-link="" t="t">Any</span>): <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="copyToArray-fffffd03" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#copyToArray-fffffd03" t="n" class="documentableName ">copyToArray</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">xs</span>: <span data-unresolved-link="" t="t">Array</span>[<span t="t">B</span>], <span t="k"></span><span data-unresolved-link="" t="n">start</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">len</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="copyToArray-fffffaa4" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#copyToArray-fffffaa4" t="n" class="documentableName ">copyToArray</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">xs</span>: <span data-unresolved-link="" t="t">Array</span>[<span t="t">B</span>], <span t="k"></span><span data-unresolved-link="" t="n">start</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="copyToArray-fffff3e3" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#copyToArray-fffff3e3" t="n" class="documentableName ">copyToArray</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">xs</span>: <span data-unresolved-link="" t="t">Array</span>[<span t="t">B</span>]): <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="corresponds-958" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#corresponds-958" t="n" class="documentableName ">corresponds</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">that</span>: <span data-unresolved-link="" t="t">IterableOnce</span>[<span t="t">B</span>])(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">p</span>: (<span t="t">V</span>, <span t="t">B</span>)<span t="k"> =&gt; </span><span data-unresolved-link="" t="t">Boolean</span>): <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="count-db6" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#count-db6" t="n" class="documentableName ">count</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">p</span>: <span t="t">V</span><span t="k"> =&gt; </span><span data-unresolved-link="" t="t">Boolean</span>): <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="distinct-0" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#distinct-0" t="n" class="documentableName ">distinct</a>: <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="distinctBy-fffffcf6" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#distinctBy-fffffcf6" t="n" class="documentableName ">distinctBy</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">f</span>: <span t="t">V</span><span t="k"> =&gt; </span><span t="t">B</span>): <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="drop-fffffbef" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#drop-fffffbef" t="n" class="documentableName ">drop</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">n</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="dropWhile-fffff1c5" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#dropWhile-fffff1c5" t="n" class="documentableName ">dropWhile</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">p</span>: <span t="t">V</span><span t="k"> =&gt; </span><span data-unresolved-link="" t="t">Boolean</span>): <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="duplicate-0" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#duplicate-0" t="n" class="documentableName ">duplicate</a>: (<span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>], <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>])
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="exists-fffff66f" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#exists-fffff66f" t="n" class="documentableName ">exists</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">p</span>: <span t="t">V</span><span t="k"> =&gt; </span><span data-unresolved-link="" t="t">Boolean</span>): <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="filter-fffff1c5" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#filter-fffff1c5" t="n" class="documentableName ">filter</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">p</span>: <span t="t">V</span><span t="k"> =&gt; </span><span data-unresolved-link="" t="t">Boolean</span>): <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="filterNot-fffff1c5" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#filterNot-fffff1c5" t="n" class="documentableName ">filterNot</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">p</span>: <span t="t">V</span><span t="k"> =&gt; </span><span data-unresolved-link="" t="t">Boolean</span>): <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="find-94e" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#find-94e" t="n" class="documentableName ">find</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">p</span>: <span t="t">V</span><span t="k"> =&gt; </span><span data-unresolved-link="" t="t">Boolean</span>): <span data-unresolved-link="" t="t">Option</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="flatMap-fffffcf6" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#flatMap-fffffcf6" t="n" class="documentableName ">flatMap</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">f</span>: <span t="t">V</span><span t="k"> =&gt; </span><span data-unresolved-link="" t="t">IterableOnce</span>[<span t="t">B</span>]): <span data-unresolved-link="" t="t">Iterator</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="flatten-fffffcf6" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#flatten-fffffcf6" t="n" class="documentableName ">flatten</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k">implicit </span><span t="k"></span><span data-unresolved-link="" t="n">ev</span>: <span t="t">V</span><span t="k"> =&gt; </span><span data-unresolved-link="" t="t">IterableOnce</span>[<span t="t">B</span>]): <span data-unresolved-link="" t="t">Iterator</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="fold-fffff9e1" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#fold-fffff9e1" t="n" class="documentableName ">fold</a>[<span t="k"></span><span data-unresolved-link="" t="t">A1</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">z</span>: <span t="t">A1</span>)(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">op</span>: (<span t="t">A1</span>, <span t="t">A1</span>)<span t="k"> =&gt; </span><span t="t">A1</span>): <span data-unresolved-link="" t="t">A1</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="foldLeft-fffff9e1" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#foldLeft-fffff9e1" t="n" class="documentableName ">foldLeft</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">z</span>: <span t="t">B</span>)(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">op</span>: (<span t="t">B</span>, <span t="t">V</span>)<span t="k"> =&gt; </span><span t="t">B</span>): <span data-unresolved-link="" t="t">B</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="foldRight-fffff9e1" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#foldRight-fffff9e1" t="n" class="documentableName ">foldRight</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">z</span>: <span t="t">B</span>)(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">op</span>: (<span t="t">V</span>, <span t="t">B</span>)<span t="k"> =&gt; </span><span t="t">B</span>): <span data-unresolved-link="" t="t">B</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="forall-fffff66f" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#forall-fffff66f" t="n" class="documentableName ">forall</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">p</span>: <span t="t">V</span><span t="k"> =&gt; </span><span data-unresolved-link="" t="t">Boolean</span>): <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="foreach-58c" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#foreach-58c" t="n" class="documentableName ">foreach</a>[<span t="k"></span><span data-unresolved-link="" t="t">U</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">f</span>: <span t="t">V</span><span t="k"> =&gt; </span><span t="t">U</span>): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="grouped-fffff3be" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#grouped-fffff3be" t="n" class="documentableName ">grouped</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">size</span>: <span data-unresolved-link="" t="t">Int</span>): <a href="../../../../../scala/collection/Iterator$GroupedIterator.html" t="t">GroupedIterator</a>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="indexOf-fffffaa4" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#indexOf-fffffaa4" t="n" class="documentableName ">indexOf</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">elem</span>: <span t="t">B</span>, <span t="k"></span><span data-unresolved-link="" t="n">from</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="indexOf-fffff3e3" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#indexOf-fffff3e3" t="n" class="documentableName ">indexOf</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">elem</span>: <span t="t">B</span>): <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="indexWhere-fffffe31" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#indexWhere-fffffe31" t="n" class="documentableName ">indexWhere</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">p</span>: <span t="t">V</span><span t="k"> =&gt; </span><span data-unresolved-link="" t="t">Boolean</span>, <span t="k"></span><span data-unresolved-link="" t="n">from</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="isTraversableAgain-0" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#isTraversableAgain-0" t="n" class="documentableName ">isTraversableAgain</a>: <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="iterator-0" data-f-keywords="final" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#iterator-0" t="n" class="documentableName ">iterator</a>: <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="knownSize-0" data-f-inherited="IterableOnce">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#knownSize-0" t="n" class="documentableName ">knownSize</a>: <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnce</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="length-0" data-f-keywords="final" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#length-0" t="n" class="documentableName ">length</a>: <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="map-fffffcf6" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#map-fffffcf6" t="n" class="documentableName ">map</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">f</span>: <span t="t">V</span><span t="k"> =&gt; </span><span t="t">B</span>): <span data-unresolved-link="" t="t">Iterator</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="max-ffffff34" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#max-ffffff34" t="n" class="documentableName ">max</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k">implicit </span><span t="k"></span><span data-unresolved-link="" t="n">ord</span>: <span data-unresolved-link="" t="t">Ordering</span>[<span t="t">B</span>]): <span t="t">V</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="maxBy-fffff0c5" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#maxBy-fffff0c5" t="n" class="documentableName ">maxBy</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">f</span>: <span t="t">V</span><span t="k"> =&gt; </span><span t="t">B</span>)(<span t="k">implicit </span><span t="k"></span><span data-unresolved-link="" t="n">ord</span>: <span data-unresolved-link="" t="t">Ordering</span>[<span t="t">B</span>]): <span t="t">V</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="maxByOption-fffff66f" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#maxByOption-fffff66f" t="n" class="documentableName ">maxByOption</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">f</span>: <span t="t">V</span><span t="k"> =&gt; </span><span t="t">B</span>)(<span t="k">implicit </span><span t="k"></span><span data-unresolved-link="" t="n">ord</span>: <span data-unresolved-link="" t="t">Ordering</span>[<span t="t">B</span>]): <span data-unresolved-link="" t="t">Option</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="maxOption-fffff45e" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#maxOption-fffff45e" t="n" class="documentableName ">maxOption</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k">implicit </span><span t="k"></span><span data-unresolved-link="" t="n">ord</span>: <span data-unresolved-link="" t="t">Ordering</span>[<span t="t">B</span>]): <span data-unresolved-link="" t="t">Option</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="min-ffffff34" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#min-ffffff34" t="n" class="documentableName ">min</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k">implicit </span><span t="k"></span><span data-unresolved-link="" t="n">ord</span>: <span data-unresolved-link="" t="t">Ordering</span>[<span t="t">B</span>]): <span t="t">V</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="minBy-fffff0c5" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#minBy-fffff0c5" t="n" class="documentableName ">minBy</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">f</span>: <span t="t">V</span><span t="k"> =&gt; </span><span t="t">B</span>)(<span t="k">implicit </span><span t="k"></span><span data-unresolved-link="" t="n">ord</span>: <span data-unresolved-link="" t="t">Ordering</span>[<span t="t">B</span>]): <span t="t">V</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="minByOption-fffff66f" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#minByOption-fffff66f" t="n" class="documentableName ">minByOption</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">f</span>: <span t="t">V</span><span t="k"> =&gt; </span><span t="t">B</span>)(<span t="k">implicit </span><span t="k"></span><span data-unresolved-link="" t="n">ord</span>: <span data-unresolved-link="" t="t">Ordering</span>[<span t="t">B</span>]): <span data-unresolved-link="" t="t">Option</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="minOption-fffff45e" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#minOption-fffff45e" t="n" class="documentableName ">minOption</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k">implicit </span><span t="k"></span><span data-unresolved-link="" t="n">ord</span>: <span data-unresolved-link="" t="t">Ordering</span>[<span t="t">B</span>]): <span data-unresolved-link="" t="t">Option</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="mkString-0" data-f-keywords="final" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#mkString-0" t="n" class="documentableName ">mkString</a>: <span data-unresolved-link="" t="t">String</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="mkString-fffff2ca" data-f-keywords="final" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#mkString-fffff2ca" t="n" class="documentableName ">mkString</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">sep</span>: <span data-unresolved-link="" t="t">String</span>): <span data-unresolved-link="" t="t">String</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="mkString-d94" data-f-keywords="final" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#mkString-d94" t="n" class="documentableName ">mkString</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">start</span>: <span data-unresolved-link="" t="t">String</span>, <span t="k"></span><span data-unresolved-link="" t="n">sep</span>: <span data-unresolved-link="" t="t">String</span>, <span t="k"></span><span data-unresolved-link="" t="n">end</span>: <span data-unresolved-link="" t="t">String</span>): <span data-unresolved-link="" t="t">String</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="nextOption-fffff63d" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#nextOption-fffff63d" t="n" class="documentableName ">nextOption</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Option</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="padTo-dad" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#padTo-dad" t="n" class="documentableName ">padTo</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">len</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">elem</span>: <span t="t">B</span>): <span data-unresolved-link="" t="t">Iterator</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="partition-243" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#partition-243" t="n" class="documentableName ">partition</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">p</span>: <span t="t">V</span><span t="k"> =&gt; </span><span data-unresolved-link="" t="t">Boolean</span>): (<span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>], <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>])
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="patch-3cf" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#patch-3cf" t="n" class="documentableName ">patch</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">from</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">patchElems</span>: <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">B</span>], <span t="k"></span><span data-unresolved-link="" t="n">replaced</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Iterator</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="product-533" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#product-533" t="n" class="documentableName ">product</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k">implicit </span><span t="k"></span><span data-unresolved-link="" t="n">num</span>: <span data-unresolved-link="" t="t">Numeric</span>[<span t="t">B</span>]): <span data-unresolved-link="" t="t">B</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="reduce-fffff3d4" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#reduce-fffff3d4" t="n" class="documentableName ">reduce</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">op</span>: (<span t="t">B</span>, <span t="t">B</span>)<span t="k"> =&gt; </span><span t="t">B</span>): <span data-unresolved-link="" t="t">B</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="reduceLeft-fffff3d4" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#reduceLeft-fffff3d4" t="n" class="documentableName ">reduceLeft</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">op</span>: (<span t="t">B</span>, <span t="t">V</span>)<span t="k"> =&gt; </span><span t="t">B</span>): <span data-unresolved-link="" t="t">B</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="reduceLeftOption-8fe" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#reduceLeftOption-8fe" t="n" class="documentableName ">reduceLeftOption</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">op</span>: (<span t="t">B</span>, <span t="t">V</span>)<span t="k"> =&gt; </span><span t="t">B</span>): <span data-unresolved-link="" t="t">Option</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="reduceOption-8fe" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#reduceOption-8fe" t="n" class="documentableName ">reduceOption</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">op</span>: (<span t="t">B</span>, <span t="t">B</span>)<span t="k"> =&gt; </span><span t="t">B</span>): <span data-unresolved-link="" t="t">Option</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="reduceRight-fffff3d4" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#reduceRight-fffff3d4" t="n" class="documentableName ">reduceRight</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">op</span>: (<span t="t">V</span>, <span t="t">B</span>)<span t="k"> =&gt; </span><span t="t">B</span>): <span data-unresolved-link="" t="t">B</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="reduceRightOption-8fe" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#reduceRightOption-8fe" t="n" class="documentableName ">reduceRightOption</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">op</span>: (<span t="t">V</span>, <span t="t">B</span>)<span t="k"> =&gt; </span><span t="t">B</span>): <span data-unresolved-link="" t="t">Option</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="reversed-0" data-f-visibility="protected" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">protected </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#reversed-0" t="n" class="documentableName ">reversed</a>: <span data-unresolved-link="" t="t">Iterable</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="sameElements-356" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#sameElements-356" t="n" class="documentableName ">sameElements</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">that</span>: <span data-unresolved-link="" t="t">IterableOnce</span>[<span t="t">B</span>]): <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="scanLeft-8a8" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#scanLeft-8a8" t="n" class="documentableName ">scanLeft</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">z</span>: <span t="t">B</span>)(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">op</span>: (<span t="t">B</span>, <span t="t">V</span>)<span t="k"> =&gt; </span><span t="t">B</span>): <span data-unresolved-link="" t="t">Iterator</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="slice-fffff156" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#slice-fffff156" t="n" class="documentableName ">slice</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">from</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">until</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="sliding-fffff663" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#sliding-fffff663" t="n" class="documentableName ">sliding</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">size</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">step</span>: <span data-unresolved-link="" t="t">Int</span>): <a href="../../../../../scala/collection/Iterator$GroupedIterator.html" t="t">GroupedIterator</a>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="span-243" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#span-243" t="n" class="documentableName ">span</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">p</span>: <span t="t">V</span><span t="k"> =&gt; </span><span data-unresolved-link="" t="t">Boolean</span>): (<span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>], <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>])
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="splitAt-fffffbd9" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#splitAt-fffffbd9" t="n" class="documentableName ">splitAt</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">n</span>: <span data-unresolved-link="" t="t">Int</span>): (<span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>], <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>])
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="stepper-190" data-f-inherited="IterableOnce">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#stepper-190" t="n" class="documentableName ">stepper</a>[<span t="k"></span><span data-unresolved-link="" t="t">S</span><span t="k"> &lt;: </span><span data-unresolved-link="" t="t">Stepper</span>[<span t="k">_</span>]](<span t="k">implicit </span><span t="k"></span><span data-unresolved-link="" t="n">shape</span>: <span data-unresolved-link="" t="t">StepperShape</span>[<span t="t">V</span>, <span t="t">S</span>]): <span data-unresolved-link="" t="t">S</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnce</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="sum-533" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#sum-533" t="n" class="documentableName ">sum</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k">implicit </span><span t="k"></span><span data-unresolved-link="" t="n">num</span>: <span data-unresolved-link="" t="t">Numeric</span>[<span t="t">B</span>]): <span data-unresolved-link="" t="t">B</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="take-fffffbef" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#take-fffffbef" t="n" class="documentableName ">take</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">n</span>: <span data-unresolved-link="" t="t">Int</span>): <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="takeWhile-fffff1c5" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#takeWhile-fffff1c5" t="n" class="documentableName ">takeWhile</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">p</span>: <span t="t">V</span><span t="k"> =&gt; </span><span data-unresolved-link="" t="t">Boolean</span>): <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="tapEach-fffffcf6" data-f-keywords="override" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#tapEach-fffffcf6" t="n" class="documentableName ">tapEach</a>[<span t="k"></span><span data-unresolved-link="" t="t">U</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">f</span>: <span t="t">V</span><span t="k"> =&gt; </span><span t="t">U</span>): <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <span data-unresolved-link="">Iterator</span> -&gt; <span data-unresolved-link="">IterableOnceOps</span>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="to-fffff006" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#to-fffff006" t="n" class="documentableName ">to</a>[<span t="k"></span><span data-unresolved-link="" t="t">C1</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">factory</span>: <span data-unresolved-link="" t="t">Factory</span>[<span t="t">V</span>, <span t="t">C1</span>]): <span data-unresolved-link="" t="t">C1</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="toArray-fffff5df" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#toArray-fffff5df" t="n" class="documentableName ">toArray</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span> : <span data-unresolved-link="" t="t">ClassTag</span>]: <span data-unresolved-link="" t="t">Array</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="toBuffer-fffff87f" data-f-keywords="final" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#toBuffer-fffff87f" t="n" class="documentableName ">toBuffer</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>]: <span data-unresolved-link="" t="t">Buffer</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="toIndexedSeq-0" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#toIndexedSeq-0" t="n" class="documentableName ">toIndexedSeq</a>: <span data-unresolved-link="" t="t">IndexedSeq</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="toList-0" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#toList-0" t="n" class="documentableName ">toList</a>: <span data-unresolved-link="" t="t">List</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="toMap-c0c" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#toMap-c0c" t="n" class="documentableName ">toMap</a>[<span t="k"></span><span data-unresolved-link="" t="t">K</span>, <span t="k"></span><span data-unresolved-link="" t="t">V</span>](<span t="k">implicit </span><span t="k"></span><span data-unresolved-link="" t="n">ev</span>: <span t="t">V</span> <span data-unresolved-link="" t="t">&lt;:&lt;</span> (<span t="t">K</span>, <span t="t">V</span>)): <span data-unresolved-link="" t="t">Map</span>[<span data-unresolved-link="" t="t">K</span>, <span data-unresolved-link="" t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="toSeq-0" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#toSeq-0" t="n" class="documentableName ">toSeq</a>: <span data-unresolved-link="" t="t">Seq</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="toSet-fffffe9f" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#toSet-fffffe9f" t="n" class="documentableName ">toSet</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>]: <span data-unresolved-link="" t="t">Set</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="toString-665" data-f-keywords="override" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#toString-665" t="n" class="documentableName ">toString</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">String</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Returns a string representation of the object.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Returns a string representation of the object.</p>
+              <p>The default representation is platform dependent.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>a string representation of the object.</p>
+              </dd>
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <span data-unresolved-link="">Iterator</span> -&gt; <span data-unresolved-link="">Any</span>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="toVector-0" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#toVector-0" t="n" class="documentableName ">toVector</a>: <span data-unresolved-link="" t="t">Vector</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="withFilter-fffff1c5" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#withFilter-fffff1c5" t="n" class="documentableName ">withFilter</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">p</span>: <span t="t">V</span><span t="k"> =&gt; </span><span data-unresolved-link="" t="t">Boolean</span>): <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="zip-c2c" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#zip-c2c" t="n" class="documentableName ">zip</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">that</span>: <span data-unresolved-link="" t="t">IterableOnce</span>[<span t="t">B</span>]): <span data-unresolved-link="" t="t">Iterator</span>[(<span t="t">V</span>, <span data-unresolved-link="" t="t">B</span>)]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="zipAll-f07" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#zipAll-f07" t="n" class="documentableName ">zipAll</a>[<span t="k"></span><span data-unresolved-link="" t="t">A1</span><span t="k"> &gt;: </span><span t="t">V</span>, <span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">that</span>: <span data-unresolved-link="" t="t">IterableOnce</span>[<span t="t">B</span>], <span t="k"></span><span data-unresolved-link="" t="n">thisElem</span>: <span t="t">A1</span>, <span t="k"></span><span data-unresolved-link="" t="n">thatElem</span>: <span t="t">B</span>): <span data-unresolved-link="" t="t">Iterator</span>[(<span data-unresolved-link="" t="t">A1</span>, <span data-unresolved-link="" t="t">B</span>)]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="zipWithIndex-0" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#zipWithIndex-0" t="n" class="documentableName ">zipWithIndex</a>: <span data-unresolved-link="" t="t">Iterator</span>[(<span t="t">V</span>, <span data-unresolved-link="" t="t">Int</span>)]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+      </section>
+      <section id="Deprecated-and-Inherited-methods">
+       <div class="documentableList expand">
+        <div class="documentableList-expander">
+         <button class="icon-button show-content expand"></button>
+         <h4 class="groupHeader h200">Deprecated and Inherited methods</h4>
+        </div>
+        <div class="documentableElement" id="/:-fffff9e1" data-f-keywords="final" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#/:-fffff9e1" t="n" class="documentableName deprecated">/:</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">z</span>: <span t="t">B</span>)(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">op</span>: (<span t="t">B</span>, <span t="t">V</span>)<span t="k"> =&gt; </span><span t="t">B</span>): <span data-unresolved-link="" t="t">B</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Deprecated
+              </dt>
+              <dd class="body-medium">
+               <code>[Since version 2.13.0] </code>Use foldLeft instead of /:
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id=":\-fffff9e1" data-f-keywords="final" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#:\-fffff9e1" t="n" class="documentableName deprecated">:\</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">z</span>: <span t="t">B</span>)(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">op</span>: (<span t="t">V</span>, <span t="t">B</span>)<span t="k"> =&gt; </span><span t="t">B</span>): <span data-unresolved-link="" t="t">B</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Deprecated
+              </dt>
+              <dd class="body-medium">
+               <code>[Since version 2.13.0] </code>Use foldRight instead of :\\
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="aggregate-952" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#aggregate-952" t="n" class="documentableName deprecated">aggregate</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">z</span>: <span t="k">=&gt; </span><span t="t">B</span>)(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">seqop</span>: (<span t="t">B</span>, <span t="t">V</span>)<span t="k"> =&gt; </span><span t="t">B</span>, <span t="k"></span><span data-unresolved-link="" t="n">combop</span>: (<span t="t">B</span>, <span t="t">B</span>)<span t="k"> =&gt; </span><span t="t">B</span>): <span data-unresolved-link="" t="t">B</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Deprecated
+              </dt>
+              <dd class="body-medium">
+               <code>[Since version 2.13.0] </code>`aggregate` is not relevant for sequential collections. Use `foldLeft(z)(seqop)` instead.
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="copyToBuffer-f0b" data-f-keywords="final" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#copyToBuffer-f0b" t="n" class="documentableName deprecated">copyToBuffer</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span><span t="k"> &gt;: </span><span t="t">V</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">dest</span>: <span data-unresolved-link="" t="t">Buffer</span>[<span t="t">B</span>]): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Deprecated
+              </dt>
+              <dd class="body-medium">
+               <code>[Since version 2.13.0] </code>Use `dest ++= coll` instead
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="hasDefiniteSize-0" data-f-keywords="final,override" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final override </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#hasDefiniteSize-0" t="n" class="documentableName deprecated">hasDefiniteSize</a>: <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Deprecated
+              </dt>
+              <dd class="body-medium">
+               <code>[Since version 2.13.0] </code>hasDefiniteSize on Iterator is the same as isEmpty
+              </dd>
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <span data-unresolved-link="">Iterator</span> -&gt; <span data-unresolved-link="">IterableOnceOps</span>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="scanRight-8a8" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#scanRight-8a8" t="n" class="documentableName deprecated">scanRight</a>[<span t="k"></span><span data-unresolved-link="" t="t">B</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">z</span>: <span t="t">B</span>)(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">op</span>: (<span t="t">V</span>, <span t="t">B</span>)<span t="k"> =&gt; </span><span t="t">B</span>): <span data-unresolved-link="" t="t">Iterator</span>[<span data-unresolved-link="" t="t">B</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Deprecated
+              </dt>
+              <dd class="body-medium">
+               <code>[Since version 2.13.0] </code>Call scanRight on an Iterable instead.
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="seq-0" data-f-inherited="Iterator">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#seq-0" t="n" class="documentableName deprecated">seq</a>: <span data-unresolved-link="" t="t">Iterator</span>.<span t="k">this</span>.<span t="k">type</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Deprecated
+              </dt>
+              <dd class="body-medium">
+               <code>[Since version 2.13.0] </code>Iterator.seq always returns the iterator itself
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">Iterator</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="toIterator-0" data-f-keywords="final" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#toIterator-0" t="n" class="documentableName deprecated">toIterator</a>: <span data-unresolved-link="" t="t">Iterator</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Deprecated
+              </dt>
+              <dd class="body-medium">
+               <code>[Since version 2.13.0] </code>Use .iterator instead of .toIterator
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="toStream-0" data-f-keywords="final" data-f-inherited="IterableOnceOps">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="QueueMap.html#toStream-0" t="n" class="documentableName deprecated">toStream</a>: <span data-unresolved-link="" t="t">Stream</span>[<span t="t">V</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="cover">
+             <div class="doc"></div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Deprecated
+              </dt>
+              <dd class="body-medium">
+               <code>[Since version 2.13.0] </code>Use .to(LazyList) instead of .toStream
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">IterableOnceOps</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+      </section>
      </div>
     </section>
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Type-members">Type members</a><ul><li><a href="#Inherited-classlikes">Inherited classlikes</a></li></ul></li><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li><li><a href="#Deprecated-and-Inherited-methods">Deprecated and Inherited methods</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
