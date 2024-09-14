@@ -21,7 +21,7 @@ package cc.otavia.core.channel
 import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, AdaptiveBuffer, RecyclablePageBuffer}
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.ChannelOption.*
-import cc.otavia.core.channel.inflight.QueueMap
+import cc.otavia.core.channel.inflight.{QueueMap, QueueMapEntity}
 import cc.otavia.core.channel.internal.AdaptiveBufferOffset
 import cc.otavia.core.channel.message.{DatagramAdaptiveRangePacket, ReadPlan}
 import cc.otavia.core.message.*
@@ -38,7 +38,7 @@ import scala.collection.mutable
 import scala.language.unsafeNulls
 
 /** Abstract class of file channel and network channel. */
-abstract class AbstractChannel(val system: ActorSystem) extends Channel, ChannelState {
+abstract class AbstractChannel(val system: ActorSystem) extends Channel, ChannelState, QueueMapEntity {
 
     import AbstractChannel.*
 
@@ -95,6 +95,10 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     override final def isMounted: Boolean = mounted
 
     protected def mountedThread: ActorThread = actorHouse.manager.thread
+
+    override def entityId: Long = channelId
+
+    def isPending: Boolean = pendingFutures.nonEmpty
 
     // impl ChannelInflight
 
@@ -236,7 +240,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         promise.setChannel(this)
         actor.attachStack(actor.generateSendMessageId(), future)
         pendingFutures.append(promise)
-        processPendingFutures()
+        // processPendingFutures()
+        actorHouse.pendingChannel(this)
         future
     }
 
@@ -248,7 +253,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         promise.setChannel(this)
         actor.attachStack(actor.generateSendMessageId(), channelState.future)
         pendingFutures.append(promise)
-        processPendingFutures()
+        // processPendingFutures()
+        actorHouse.pendingChannel(this)
         channelState
     }
 

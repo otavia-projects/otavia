@@ -18,19 +18,20 @@ package cc.otavia.core.channel.inflight
 
 import scala.language.unsafeNulls
 
-class QueueMap[V <: QueueMapEntity] {
+class QueueMap[V <: QueueMapEntity] extends Iterator[V] {
 
     import QueueMap.*
 
     private var table: Array[QueueMapEntity] = new Array[QueueMapEntity](tableSizeFor(initialCapacity))
     private var mask: Int                    = tableSizeFor(initialCapacity) - 1
-    private var head: QueueMapEntity         = _
-    private var tail: QueueMapEntity         = _
+    private var hd: QueueMapEntity           = _
+    private var tl: QueueMapEntity           = _
 
-    private var threshold: Int   = newThreshold(tableSizeFor(initialCapacity))
     private var contentSize: Int = 0
 
     private var barrier: Boolean = false
+
+    private var cursor: QueueMapEntity = _
 
     private final def loadFactor: Double   = 2.0
     private final def initialCapacity: Int = 16
@@ -41,36 +42,46 @@ class QueueMap[V <: QueueMapEntity] {
     def isBarrierMode: Boolean              = barrier
     def setBarrierMode(mode: Boolean): Unit = barrier = mode
 
-    def size: Int = contentSize
+    override def hasNext: Boolean = cursor != null && !barrier
 
-    def isEmpty: Boolean = contentSize == 0
+    override def next(): V = {
+        val v = cursor
+        cursor = cursor.queueLater
+        v.asInstanceOf[V]
+    }
 
-    def nonEmpty: Boolean = contentSize != 0
+    def resetIterator(): Unit = cursor = hd
+
+    override def size: Int = contentSize
+
+    override def isEmpty: Boolean = contentSize == 0
+
+    override def nonEmpty: Boolean = contentSize != 0
 
     final private[core] def append(v: V): Unit = {
         if (contentSize == 0) {
-            head = v
-            tail = v
+            hd = v
+            tl = v
             put0(v)
         } else {
-            tail.queueLater = v
-            v.queueEarlier = tail
-            tail = v
+            tl.queueLater = v
+            v.queueEarlier = tl
+            tl = v
             put0(v)
         }
         contentSize += 1
     }
 
     final private[core] def pop(): V = if (contentSize == 1) {
-        val entity = head
-        head = null
-        tail = null
+        val entity = hd
+        hd = null
+        tl = null
         remove0(entity.entityId)
         entity.asInstanceOf[V]
     } else {
-        val entity = head
-        head = entity.queueLater
-        head.queueEarlier = null
+        val entity = hd
+        hd = entity.queueLater
+        hd.queueEarlier = null
         entity.queueLater = null
         remove0(entity.entityId)
         entity.asInstanceOf[V]
@@ -88,14 +99,14 @@ class QueueMap[V <: QueueMapEntity] {
             pre.queueLater = next
             next.queueEarlier = pre
         } else if (pre == null && next == null) {
-            head = null
-            tail = null
+            hd = null
+            tl = null
         } else if (pre == null) {
-            head = next
-            head.queueEarlier = null
+            hd = next
+            hd.queueEarlier = null
         } else {
-            tail = pre
-            tail.queueLater = null
+            tl = pre
+            tl.queueLater = null
         }
 
         entity.asInstanceOf[V]
@@ -110,16 +121,16 @@ class QueueMap[V <: QueueMapEntity] {
 
     def contains(id: Long): Boolean = findNode(id) != null
 
-    def isHead(value: V): Boolean = head == value
+    def isHead(value: V): Boolean = hd == value
 
-    def isTail(value: V): Boolean = tail == value
+    def isTail(value: V): Boolean = tl == value
 
-    def first: V = head.asInstanceOf[V]
+    def first: V = hd.asInstanceOf[V]
 
-    def last: V = tail.asInstanceOf[V]
+    def last: V = tl.asInstanceOf[V]
 
     private def findNode(id: Long): QueueMapEntity = {
-        if (tail != null && tail.entityId == id) tail
+        if (tl != null && tl.entityId == id) tl
         else if (table ne null) {
             table(index(id)) match
                 case null   => null
@@ -169,7 +180,6 @@ class QueueMap[V <: QueueMapEntity] {
         val oldTable = table
         table = new Array[QueueMapEntity](newLen)
         mask = newLen - 1
-        threshold = newThreshold(table.length)
 
         for (node <- oldTable) {
             var cursor = node

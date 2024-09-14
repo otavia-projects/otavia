@@ -147,50 +147,6 @@ final class ActorThread(private[core] val system: ActorSystem) extends Thread() 
         notifyThread()
     }
 
-//    override def run(): Unit = {
-//        status = ST_RUNNING
-//        var spinStart: Long  = System.currentTimeMillis()
-//        var emptyTimes: Long = 0
-//        var gc               = false
-//        while (true) {
-//
-//            ioHandler.run(ioCtx)
-//
-//            var success: Boolean = false
-//            // run current thread tasks
-//            val stops    = if (refSet.isEmpty) 0 else this.stopActors()
-//            val runHouse = manager.run()
-//            val runEvent = this.runThreadEvent()
-//
-//            if (stops > 0 || runHouse) success = true
-//
-//            if (success) {
-//                emptyTimes = 0
-//                gc = false
-//            } else {
-//                emptyTimes += 1
-//                if (emptyTimes == 1) spinStart = System.currentTimeMillis()
-//                else if (emptyTimes < 20) Thread.`yield`()
-//                else if (emptyTimes < 25) {
-//                    if (manager.trySteal()) emptyTimes -= 1
-//                } else if (emptyTimes < 50) {
-//                    this.suspendThread(5)
-//                } else {
-//                    this.suspendThread()
-//                    if (emptyTimes % 100 == 0) if (manager.trySteal()) emptyTimes = 20
-//                    if (System.currentTimeMillis() - spinStart > 600) {
-//                        if (ActorSystem.AGGRESSIVE_GC && !gc) {
-//                            system.gc()
-//                            gc = true
-//                        }
-//                        if (directAllocator.releasable) directAllocator.release()
-//                        if (heapAllocator.releasable) heapAllocator.release()
-//                    }
-//                }
-//            }
-//        }
-//    }
-
     override def run(): Unit = {
         status = ST_RUNNING
 

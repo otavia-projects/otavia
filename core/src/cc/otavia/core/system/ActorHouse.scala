@@ -19,6 +19,8 @@ package cc.otavia.core.system
 import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.actor.*
 import cc.otavia.core.address.ActorAddress
+import cc.otavia.core.channel.AbstractChannel
+import cc.otavia.core.channel.inflight.QueueMap
 import cc.otavia.core.message.*
 import cc.otavia.core.system.ActorHouse.*
 import cc.otavia.core.util.Nextable
@@ -58,6 +60,8 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     @volatile private var _inHighPriorityQueue: Boolean = false
 
+    private var pendingChannels: QueueMap[AbstractChannel] = _
+
     override def mountedThreadId: Int = manager.thread.index
 
     def highPriority: Boolean = (replyMailbox.size() > HIGH_PRIORITY_REPLY_SIZE) ||
@@ -95,9 +99,11 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         dweller = actor
         actor match
             case _: AcceptorActor[?] => atp = SERVER_CHANNELS_ACTOR
-            case _: ChannelsActor[?] => atp = CHANNELS_ACTOR
-            case _: StateActor[?]    => atp = STATE_ACTOR
-            case _                   => throw new IllegalStateException("")
+            case _: ChannelsActor[?] =>
+                atp = CHANNELS_ACTOR
+                pendingChannels = new QueueMap[AbstractChannel]()
+            case _: StateActor[?] => atp = STATE_ACTOR
+            case _                => throw new IllegalStateException("")
     }
 
     def setActorId(id: Long): Unit = dwellerId = id
@@ -115,6 +121,9 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     override def actorId: Long = dwellerId
 
     def actorType: Int = atp
+
+    def pendingChannel(channel: AbstractChannel): Unit =
+        if (!pendingChannels.contains(channel.entityId)) pendingChannels.append(channel)
 
     /** True if this house has not received [[Message]] or [[Event]] */
     def isEmpty: Boolean = askMailbox.isEmpty && noticeMailbox.isEmpty && replyMailbox.isEmpty &&
@@ -177,6 +186,8 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
             if (eventMailbox.nonEmpty) dispatchEvents()
 
+            if (atp == CHANNELS_ACTOR) dispatchChannels()
+
             runLaterTasks()
 
             completeRunning()
@@ -196,6 +207,14 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
             } else {
                 if (status.compareAndSet(RUNNING, WAITING) && barrierNonEmpty) waiting2ready()
             }
+        }
+    }
+
+    private def dispatchChannels(): Unit = {
+        pendingChannels.resetIterator()
+        for (channel <- pendingChannels) {
+            channel.processPendingFutures()
+            if (!channel.isPending) pendingChannels.remove(channel.entityId)
         }
     }
 
