@@ -30,29 +30,6 @@ import java.nio.file.{OpenOption, Path}
 /** [[Reactor]] is an io event generator for [[AbstractChannel]]. */
 trait Reactor {
 
-    /** API for [[cc.otavia.core.actor.ChannelsActor]] to register [[Channel]] to [[Reactor]].
-     *  @param channel
-     *    [[AbstractChannel]] to listen io event.
-     */
-    final def register(channel: AbstractChannel): Unit = {
-        val command = Command.Register(channel)
-        submit(command)
-    }
-
-    /** API for [[cc.otavia.core.actor.ChannelsActor]] to deregister [[AbstractChannel]] to [[Reactor]].
-     *  @param channel
-     *    [[AbstractChannel]] to cancel listen io event.
-     */
-    final def deregister(channel: AbstractChannel): Unit = {
-        val command = Command.Deregister(channel)
-        submit(command)
-    }
-
-    final def bind(channel: AbstractChannel, local: SocketAddress): Unit = {
-        val command = Command.Bind(channel, local)
-        submit(command)
-    }
-
     final def open(
         channel: AbstractChannel,
         path: Path,
@@ -63,16 +40,6 @@ trait Reactor {
         submit(command)
     }
 
-    final def connect(
-        channel: AbstractChannel,
-        remote: SocketAddress,
-        local: Option[SocketAddress],
-        fast: Boolean
-    ): Unit = {
-        val command = Command.Connect(channel, remote, local, fast)
-        submit(command)
-    }
-
     final def disconnect(channel: AbstractChannel): Unit = {
         val command = Command.Disconnect(channel)
         submit(command)
@@ -80,11 +47,6 @@ trait Reactor {
 
     final def close(channel: AbstractChannel): Unit = {
         val command = Command.Close(channel)
-        submit(command)
-    }
-
-    final def shutdown(channel: AbstractChannel, direction: ChannelShutdownDirection): Unit = {
-        val command = Command.Shutdown(channel, direction)
         submit(command)
     }
 

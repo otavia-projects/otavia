@@ -18,6 +18,7 @@
 
 package cc.otavia.core.channel
 
+import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.message.*
 import cc.otavia.core.stack.ChannelPromise
 import cc.otavia.core.system.ActorSystem
@@ -86,6 +87,8 @@ abstract class AbstractFileChannel(system: ActorSystem) extends AbstractChannel(
             reactor.open(this, path, options, attrs) // file io use aio
         }
     }
+
+    override private[core] def readTransport(readPlan: ReadPlan): Unit = reactor.read(this, readPlan)
 
     override final private[core] def handleChannelOpenReply(cause: Option[Throwable]): Unit = {
         val promise = ongoingChannelPromise

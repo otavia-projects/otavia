@@ -18,12 +18,10 @@ package cc.otavia.sql
 
 import cc.otavia.core.actor.ChannelsActor.ChannelEstablished
 import cc.otavia.core.actor.SocketChannelsActor
-import cc.otavia.core.actor.SocketChannelsActor.Connect
 import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.message.*
 import cc.otavia.core.stack.*
 import cc.otavia.core.stack.helper.*
-import cc.otavia.sql.Authentication
 import cc.otavia.sql.statement.*
 
 import java.net.{ProtocolFamily, StandardProtocolFamily}
