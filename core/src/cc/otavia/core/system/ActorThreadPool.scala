@@ -27,7 +27,7 @@ trait ActorThreadPool {
 
     def nextThreadId(): Int
 
-    protected def createActorThread(): ActorThread
+    protected def createActorThread(index: Int): ActorThread
 
     def next(channels: Boolean = false): ActorThread
 

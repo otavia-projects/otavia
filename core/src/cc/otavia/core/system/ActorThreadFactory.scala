@@ -24,7 +24,7 @@ abstract class ActorThreadFactory {
 
     def setSystem(actorSystem: ActorSystem): Unit
 
-    def newThread(): ActorThread
+    def newThread(index: Int): ActorThread
 
 }
 
@@ -37,8 +37,8 @@ object ActorThreadFactory {
 
         override def system: ActorSystem = sys
 
-        override def newThread(): ActorThread = {
-            val thread = new ActorThread(system)
+        override def newThread(index: Int): ActorThread = {
+            val thread = new ActorThread(system, index)
             if (thread.isDaemon) thread.setDaemon(false)
             if (thread.getPriority != Thread.NORM_PRIORITY) thread.setPriority(Thread.NORM_PRIORITY)
             thread

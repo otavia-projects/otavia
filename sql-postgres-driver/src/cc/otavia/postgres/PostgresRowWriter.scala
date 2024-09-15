@@ -1,6 +1,6 @@
 package cc.otavia.postgres
 
-import cc.otavia.buffer.Buffer
+import cc.otavia.buffer.{Buffer, BufferUtils}
 import cc.otavia.postgres.impl.{PreparedStatement, RowValueCodec}
 import cc.otavia.sql.RowWriter
 
@@ -24,11 +24,17 @@ protected class PostgresRowWriter extends RowWriter {
 
     override def writeNull(index: Int): Unit = buffer.writeInt(-1)
 
-    override def writeChar(value: Char, index: Int): Unit = ???
+    override def writeChar(value: Char, index: Int): Unit = {
+        buffer.writeInt(0)
+        ???
+    }
 
     override def writeString(value: String, index: Int): Unit = ???
 
-    override def writeBoolean(value: Boolean, index: Int): Unit = ???
+    override def writeBoolean(value: Boolean, index: Int): Unit = {
+        buffer.writeInt(1)
+        buffer.writeBoolean(value)
+    }
 
     override def writeByte(value: Byte, index: Int): Unit = ???
 

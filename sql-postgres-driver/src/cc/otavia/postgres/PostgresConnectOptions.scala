@@ -45,7 +45,7 @@ object PostgresConnectOptions {
     private val DEFAULT_DATABASE              = "db"
     private val DEFAULT_USER                  = "user"
     private val DEFAULT_PASSWORD              = "pass"
-    private val DEFAULT_PIPELINING_LIMIT: Int = 10240
+    private val DEFAULT_PIPELINING_LIMIT: Int = 102400
     private val DEFAULT_SSL_MODE: SslMode     = SslMode.DISABLE
     private val DEFAULT_USE_LAYER_7_PROXY     = false
     private val DEFAULT_PROPERTIES: Map[String, String] = Map(

@@ -31,9 +31,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-final class ActorThread(private[core] val system: ActorSystem) extends Thread() {
-
-    private val id = system.pool.nextThreadId()
+final class ActorThread(private[core] val system: ActorSystem, private val id: Int) extends Thread() {
 
     private val channelLaterTasks: mutable.ArrayDeque[Runnable] = mutable.ArrayDeque.empty
 

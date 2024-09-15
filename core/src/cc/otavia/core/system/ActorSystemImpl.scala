@@ -48,12 +48,6 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
 
     private val timerImpl = new TimerImpl(this)
 
-    private val actorThreadPool: ActorThreadPool = new DefaultActorThreadPool(
-      this,
-      actorThreadFactory,
-      ActorSystem.ACTOR_THREAD_POOL_SIZE
-    )
-
     private val generator = new AtomicLong(1)
 
     private val beanManager = new BeanManager(this)
@@ -64,6 +58,12 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
 
     private val transFactory: TransportFactory = TransportFactory.getTransportFactory(this)
     private val chFactory: ChannelFactory      = new ChannelFactory(transFactory)
+
+    private val actorThreadPool: ActorThreadPool = new DefaultActorThreadPool(
+      this,
+      actorThreadFactory,
+      ActorSystem.ACTOR_THREAD_POOL_SIZE
+    )
 
     private val memoryMXBean: MemoryMXBean = ManagementFactory.getMemoryMXBean
 
