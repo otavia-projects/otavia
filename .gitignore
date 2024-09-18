@@ -13,6 +13,8 @@ target/
 !**/target
 !**/Cargo.lock
 
+examples/
+
 */target
 target
 */*/target

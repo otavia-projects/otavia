@@ -119,7 +119,7 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
     private def stopActors(): Int = {
         var count    = 0
         var continue = true
-        while (count < GC_PEER_ROUND && continue) {
+        while (continue) {
             val reference = referenceQueue.poll()
             if (reference != null) {
                 reference.clear()
@@ -201,10 +201,6 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
 }
 
 object ActorThread {
-
-    private val GC_PEER_ROUND_DEFAULT = 512
-
-    private val GC_PEER_ROUND = SystemPropertyUtil.getInt("cc.otavia.core.stop.size", GC_PEER_ROUND_DEFAULT)
 
     /** Status of [[ActorThread]]: starting to loop schedule. */
     private val ST_STARTING: Int = 0

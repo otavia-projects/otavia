@@ -16,7 +16,6 @@
 
 package cc.otavia.core.system
 
-import java.util.concurrent.ThreadFactory
 
 abstract class ActorThreadFactory {
 

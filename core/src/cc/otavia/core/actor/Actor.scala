@@ -137,6 +137,8 @@ trait Actor[+M <: Call] {
      */
     private[core] def receiveBatchAsk(asks: Seq[Envelope[Ask[?]]]): Unit
 
+    final private[core] def isBarrier(call: Call): Boolean = isBarrierCall(call)
+
     protected def isBarrierCall(call: Call): Boolean = false
 
     final def autowire[A <: Actor[?]: ClassTag](

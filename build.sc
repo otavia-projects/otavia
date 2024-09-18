@@ -35,7 +35,7 @@ object ProjectInfo {
     def repository              = github.browsableRepository.get
     def licenses                = Seq(License.`Apache-2.0`)
     def author                  = Seq("Yan Kun <yan_kun_1992@foxmail.com>")
-    def version                 = "0.4.5" // -SNAPSHOT
+    def version                 = "0.4.6-SNAPSHOT" // -SNAPSHOT
     def scalaVersion            = "3.3.3"
     def scoverageVersion        = "1.4.0"
     def buildTool               = "mill"
@@ -200,14 +200,6 @@ object `codec-http` extends OtaviaModule {
     object test extends ScalaTests with TestModule.ScalaTest {
 
         override def ivyDeps = Agg(ProjectInfo.testDep)
-
-    }
-
-    object demo extends ScalaModule {
-
-        override def scalaVersion = ProjectInfo.scalaVersion
-
-        override def moduleDeps = Seq(`codec-http`, log4a)
 
     }
 

@@ -22,7 +22,7 @@ import cc.otavia.core.message.*
 import cc.otavia.core.reactor.*
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.*
-import cc.otavia.core.system.ActorSystem
+import cc.otavia.core.system.{ActorHouse, ActorSystem}
 import cc.otavia.core.timer.Timer
 
 import scala.concurrent.TimeoutException
@@ -33,31 +33,15 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     import AbstractActor.*
 
     protected var logger: Logger = _
-
-    private var ctx: ActorContext = _
+    private var ctx: ActorHouse  = _
 
     // current received msg
     private[core] var currentReceived: Call | Reply | Seq[Call] | AnyRef = _
 
-    private[core] var inBarrier: Boolean = false
-
     /** current stack frame for running ask or notice message */
     private[core] var currentStack: Stack = _
 
-    private var revAsks: Long  = 0
-    private var sendAsks: Long = 0
-
-    private var currentSendMessageId: Long = Long.MinValue
-
-    final private[core] def stackEndRate: Float =
-        if (revAsks != 0) sendAsks.toFloat / revAsks.toFloat else Float.MaxValue
-
-    /** Generate a unique id for send [[Ask]] message. */
-    private[core] def generateSendMessageId(): Long = {
-        val id = currentSendMessageId
-        currentSendMessageId += 1
-        id
-    }
+    private[core] def generateSendMessageId(): Long = ctx.generateSendMessageId()
 
     /** self address of this actor instance */
     def self: Address[M] = context.address.asInstanceOf[Address[M]]
@@ -67,9 +51,9 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
      *  set system context information.
      *
      *  @param context
-     *    the system context of this actor
+     *    the context of this actor
      */
-    final private[core] def setCtx(context: ActorContext): Unit = {
+    final private[core] def setCtx(context: ActorHouse): Unit = {
         ctx = context
         logger = Logger.getLogger(getClass, ctx.system)
     }
@@ -103,7 +87,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentStack.addUncompletedPromise(promise)
         promise match
             case promise: MessagePromise[? <: Reply] =>
-                sendAsks += 1
+                ctx.increaseSendCounter()
                 this.push(promise)
             case _ =>
     }
@@ -118,7 +102,6 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         val notice = envelope.message.asInstanceOf[Notice]
         currentReceived = notice
         // TODO: recycle envelope
-        inBarrier = isBarrierCall(notice)
         val stack = NoticeStack[M & Notice](this) // generate a NoticeStack instance from object pool.
         stack.setNotice(notice)
         dispatchNoticeStack(stack)
@@ -134,10 +117,8 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     }
 
     final override private[core] def receiveAsk(envelope: Envelope[?]): Unit = {
-        revAsks += 1
         val ask = envelope.message.asInstanceOf[Ask[?]]
         currentReceived = ask
-        inBarrier = isBarrierCall(ask)
         val stack = AskStack[M & Ask[? <: Reply]](this) // generate a AskStack instance from object pool.
         stack.setAsk(envelope)
         // TODO: recycle envelope
@@ -320,7 +301,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     final private[core] def recycleStack(stack: Stack): Unit = {
         if (stack.hasUncompletedPromise) recycleUncompletedPromise(stack.uncompletedPromises())
         stack.recycle()
-        if (inBarrier) inBarrier = false
+        if (ctx.isBarrier) ctx.cleanBarrier()
     }
 
     /** Exception handler when this actor received notice message or resume notice stack frame

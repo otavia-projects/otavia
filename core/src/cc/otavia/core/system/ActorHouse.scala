@@ -31,17 +31,21 @@ import scala.language.unsafeNulls
 
 /** House is [[cc.otavia.core.actor.AbstractActor]] instance mount point. when a actor is creating by actor system, a
  *  house is creating at the same time, and mount the actor instance to the house instance.
- *
- *  @tparam M
- *    the message type of the mounted actor instance can handle
  */
 final private[core] class ActorHouse(val manager: HouseManager) extends ActorContext {
 
+    // actor part
     private var dweller: AbstractActor[? <: Call] = _
     private var actorAddress: ActorAddress[Call]  = _
     private var dwellerId: Long                   = -1
     private var atp: Int                          = 0
+    private var inBarrier: Boolean                = false
+    private var revAsks: Long                     = 0
+    private var sendAsks: Long                    = 0
 
+    private var currentSendMessageId: Long = Long.MinValue
+
+    // dispatch part
     private var isLB: Boolean = false
 
     private val noticeMailbox: MailBox    = new MailBox(this)
@@ -62,10 +66,22 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     private var pendingChannels: QueueMap[AbstractChannel] = _
 
+    /** Generate a unique id for send [[Ask]] message. */
+    def generateSendMessageId(): Long = {
+        val id = currentSendMessageId
+        currentSendMessageId += 1
+        id
+    }
+
+    private def stackEndRate: Float =
+        if (revAsks != 0) sendAsks.toFloat / revAsks.toFloat else Float.MaxValue
+
+    def increaseSendCounter(): Unit = sendAsks += 1
+
     override def mountedThreadId: Int = manager.thread.index
 
     def highPriority: Boolean = (replyMailbox.size() > HIGH_PRIORITY_REPLY_SIZE) ||
-        (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE) || (dweller.stackEndRate < 0.6)
+        (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE) || (stackEndRate < 0.6)
 
     def inHighPriorityQueue: Boolean = _inHighPriorityQueue
 
@@ -121,6 +137,10 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     override def actorId: Long = dwellerId
 
     def actorType: Int = atp
+
+    def cleanBarrier(): Unit = inBarrier = false
+
+    def isBarrier: Boolean = inBarrier
 
     def pendingChannel(channel: AbstractChannel): Unit =
         if (!pendingChannels.contains(channel.entityId)) pendingChannels.append(channel)
@@ -181,8 +201,8 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
             if (replyMailbox.nonEmpty) dispatchReplies()
             if (exceptionMailbox.nonEmpty) dispatchExceptions()
 
-            if (!dweller.inBarrier && askMailbox.nonEmpty) dispatchAsks()
-            if (!dweller.inBarrier && noticeMailbox.nonEmpty) dispatchNotices()
+            if (!inBarrier && askMailbox.nonEmpty) dispatchAsks()
+            if (!inBarrier && noticeMailbox.nonEmpty) dispatchNotices()
 
             if (eventMailbox.nonEmpty) dispatchEvents()
 
@@ -195,7 +215,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     }
 
     private def completeRunning(): Unit = {
-        if (!dweller.inBarrier) {
+        if (!inBarrier) {
             if (nonEmpty) {
                 if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
             } else {
@@ -222,18 +242,21 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     private def dispatchAsks0(): Unit = {
         if (tmpAskCursor == null) tmpAskCursor = askMailbox.getAll
-        while (tmpAskCursor != null && !dweller.inBarrier) {
+        while (tmpAskCursor != null && !inBarrier) {
             val msg = tmpAskCursor
             tmpAskCursor = msg.next
             msg.deChain()
-            dweller.receiveAsk(msg.asInstanceOf[Envelope[Ask[?]]])
+            val envelope = msg.asInstanceOf[Envelope[Ask[?]]]
+            inBarrier = dweller.isBarrier(envelope.message)
+            revAsks += 1
+            dweller.receiveAsk(envelope)
         }
     }
 
     private def dispatchBatchAsks(): Unit = {
         if (tmpAskCursor == null) tmpAskCursor = askMailbox.getAll
         val buf = ActorThread.threadBuffer[Envelope[Ask[?]]]
-        while (tmpAskCursor != null && !dweller.inBarrier) {
+        while (tmpAskCursor != null && !inBarrier) {
             val envelope = tmpAskCursor.asInstanceOf[Envelope[Ask[?]]]
             tmpAskCursor = envelope.next
             envelope.deChain()
@@ -241,6 +264,8 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
             if (dweller.batchAskFilter(ask)) buf.addOne(envelope)
             else {
                 if (buf.nonEmpty) handleBatchAsk(buf)
+                inBarrier = dweller.isBarrier(ask)
+                revAsks += 1
                 dweller.receiveAsk(envelope)
             }
         }
@@ -251,25 +276,28 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     private def dispatchNotices0(): Unit = {
         if (tmpNoticeCursor == null) tmpNoticeCursor = noticeMailbox.getAll
-        while (tmpNoticeCursor != null && !dweller.inBarrier) {
+        while (tmpNoticeCursor != null && !inBarrier) {
             val msg = tmpNoticeCursor
             tmpNoticeCursor = msg.next
             msg.deChain()
-            dweller.receiveNotice(msg.asInstanceOf[Envelope[?]])
+            val envelop = msg.asInstanceOf[Envelope[Notice]]
+            inBarrier = dweller.isBarrier(envelop.message)
+            dweller.receiveNotice(envelop)
         }
     }
 
     private def dispatchBatchNotices(): Unit = {
         if (tmpNoticeCursor == null) tmpNoticeCursor = noticeMailbox.getAll
         val buf = ActorThread.threadBuffer[Notice]
-        while (tmpNoticeCursor != null && !dweller.inBarrier) {
-            val envelope = tmpNoticeCursor.asInstanceOf[Envelope[?]]
+        while (tmpNoticeCursor != null && !inBarrier) {
+            val envelope = tmpNoticeCursor.asInstanceOf[Envelope[Notice]]
             tmpNoticeCursor = envelope.next
             envelope.deChain()
-            val notice = envelope.message.asInstanceOf[Notice]
+            val notice = envelope.message
             if (dweller.batchNoticeFilter(notice)) buf.addOne(notice)
             else {
                 if (buf.nonEmpty) handleBatchNotice(buf)
+                inBarrier = dweller.isBarrier(envelope.message)
                 dweller.receiveNotice(envelope)
             }
         }

@@ -19,15 +19,13 @@ package cc.otavia.core.address
 import cc.otavia.core.actor.AbstractActor
 import cc.otavia.core.message.*
 import cc.otavia.core.stack.MessageFuture
-import cc.otavia.core.system.{ActorHouse, House}
+import cc.otavia.core.system.ActorHouse
 import cc.otavia.core.timer.TimeoutTrigger
 
 /** every actor instance has one and only one physical address.
  *
  *  @tparam M
  *    the message type that this actor can receive.
- *  @tparam H
- *    actor house
  */
 abstract class PhysicalAddress[M <: Call] extends Address[M] {
 
