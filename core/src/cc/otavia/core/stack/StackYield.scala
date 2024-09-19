@@ -23,11 +23,11 @@ sealed trait StackYield {
 object StackYield {
 
     private[core] val SUSPEND = new StackYield {
-        override def completed: Boolean = false
+        final override def completed: Boolean = false
     }
 
     private[core] val RETURN = new StackYield {
-        override def completed: Boolean = true
+        final override def completed: Boolean = true
     }
 
 }

@@ -49,6 +49,7 @@ import java.time.ZonedDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import scala.collection.immutable
+import cc.otavia.util.ASCII
 
 object JsonMacro {
 
@@ -633,9 +634,9 @@ object JsonMacro {
                         val vterm = Select(x.asTerm, fieldInfo.getterOrField).asExprOf[ft]
                         val term = if (fieldInfo.isStringified && isStringableType(fTpe)) '{
                             JsonHelper.serializeKey(${ Expr(fieldInfo.mappedName) }, $out)
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                             ${ genWriteCode(fTpe, vterm, out) }
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                         }.asTerm
                         else
                             '{
@@ -643,7 +644,7 @@ object JsonMacro {
                                 ${ genWriteCode(fTpe, vterm, out) }
                             }.asTerm
                         writeFields.addOne(term)
-                        writeFields.append('{ $out.writeByte(JsonConstants.TOKEN_COMMA) }.asTerm)
+                        writeFields.append('{ $out.writeByte(ASCII.COMMA) }.asTerm)
             }
             Block(
               '{ JsonHelper.serializeObjectStart($out) }.asTerm :: writeFields.init.toList,
@@ -657,9 +658,9 @@ object JsonMacro {
                 case Some(serde) =>
                     if (isString && isStringableType(tpe)) '{
                         JsonHelper.skipBlanks($in)
-                        $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                        $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                         val ret = ${ serde.asExprOf[JsonSerde[T]] }.deserialize($in)
-                        $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                        $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                         ret
                     }
                     else '{ JsonHelper.skipBlanks($in); ${ serde.asExprOf[JsonSerde[T]] }.deserialize($in) }
@@ -670,18 +671,18 @@ object JsonMacro {
                     else if (tpe =:= TypeRepr.of[Byte])
                         if (isString) '{
                             JsonHelper.skipBlanks($in)
-                            $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                             val ret = JsonHelper.deserializeByte($in)
-                            $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                             ret
                         }.asExprOf[T]
                         else '{ JsonHelper.deserializeByte($in) }.asExprOf[T]
                     else if (tpe =:= TypeRepr.of[Boolean])
                         if (isString) '{
                             JsonHelper.skipBlanks($in)
-                            $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                             val ret = JsonHelper.deserializeBoolean($in)
-                            $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                             ret
                         }.asExprOf[T]
                         else '{ JsonHelper.deserializeBoolean($in) }.asExprOf[T]
@@ -690,45 +691,45 @@ object JsonMacro {
                     else if (tpe =:= TypeRepr.of[Short])
                         if (isString) '{
                             JsonHelper.skipBlanks($in)
-                            $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                             val ret = JsonHelper.deserializeShort($in)
-                            $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                             ret
                         }.asExprOf[T]
                         else '{ JsonHelper.deserializeShort($in) }.asExprOf[T]
                     else if (tpe =:= TypeRepr.of[Int])
                         if (isString) '{
                             JsonHelper.skipBlanks($in)
-                            $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                             val ret = JsonHelper.deserializeInt($in)
-                            $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                             ret
                         }.asExprOf[T]
                         else '{ JsonHelper.deserializeInt($in) }.asExprOf[T]
                     else if (tpe =:= TypeRepr.of[Long])
                         if (isString) '{
                             JsonHelper.skipBlanks($in)
-                            $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                             val ret = JsonHelper.deserializeLong($in)
-                            $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                             ret
                         }.asExprOf[T]
                         else '{ JsonHelper.deserializeLong($in) }.asExprOf[T]
                     else if (tpe =:= TypeRepr.of[Float])
                         if (isString) '{
                             JsonHelper.skipBlanks($in)
-                            $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                             val ret = JsonHelper.deserializeFloat($in)
-                            $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                             ret
                         }.asExprOf[T]
                         else '{ JsonHelper.deserializeFloat($in) }.asExprOf[T]
                     else if (tpe =:= TypeRepr.of[Double])
                         if (isString) '{
                             JsonHelper.skipBlanks($in)
-                            $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                             val ret = JsonHelper.deserializeDouble($in)
-                            $in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $in.skipIfNextIs(ASCII.DOUBLE_QUOTE)
                             ret
                         }.asExprOf[T]
                         else '{ JsonHelper.deserializeDouble($in) }.asExprOf[T]
@@ -755,7 +756,7 @@ object JsonMacro {
                                             else
                                                 '{
                                                     assert(
-                                                      JsonHelper.isNextToken($in, JsonConstants.TOKEN_COMMA),
+                                                      JsonHelper.isNextToken($in, ASCII.COMMA),
                                                       "decode error, except ','"
                                                     )
                                                     ${ genReadCode[t](te, in) }
@@ -766,7 +767,7 @@ object JsonMacro {
                               valDefs,
                               '{
                                   assert(
-                                    JsonHelper.isNextToken($in, JsonConstants.TOKEN_ARRAY_END),
+                                    JsonHelper.isNextToken($in, ASCII.BRACKET_RIGHT),
                                     "decode error, except ']'"
                                   )
                                   ${
@@ -782,7 +783,7 @@ object JsonMacro {
                             )
                             '{
                                 assert(
-                                  JsonHelper.isNextToken($in, JsonConstants.TOKEN_ARRAY_START),
+                                  JsonHelper.isNextToken($in, ASCII.BRACKET_LEFT),
                                   "decode error, except '['"
                                 )
                                 ${ readCreateBlock.asExprOf[T] }
@@ -804,9 +805,9 @@ object JsonMacro {
             impli match
                 case Some(serde) =>
                     if (isString && isStringableType(tpe)) '{
-                        $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                        $out.writeByte(ASCII.DOUBLE_QUOTE)
                         ${ serde.asExprOf[JsonSerde[T]] }.serialize($value, $out)
-                        $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                        $out.writeByte(ASCII.DOUBLE_QUOTE)
                     }
                     else '{ ${ serde.asExprOf[JsonSerde[T]] }.serialize($value, $out) }
                 case None =>
@@ -816,52 +817,52 @@ object JsonMacro {
                         Apply(Ref(encodeMethodSym.get), List(value.asTerm, out.asTerm)).asExprOf[Unit]
                     else if (tpe =:= TypeRepr.of[Byte])
                         if (isString) '{
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                             JsonHelper.serializeByte(${ value.asExprOf[Byte] }, $out)
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                         }
                         else '{ JsonHelper.serializeByte(${ value.asExprOf[Byte] }, $out) }
                     else if (tpe =:= TypeRepr.of[Boolean])
                         if (isString) '{
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                             JsonHelper.serializeBoolean(${ value.asExprOf[Boolean] }, $out)
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                         }
                         else '{ JsonHelper.serializeBoolean(${ value.asExprOf[Boolean] }, $out) }
                     else if (tpe =:= TypeRepr.of[Char]) '{ JsonHelper.serializeChar(${ value.asExprOf[Char] }, $out) }
                     else if (tpe =:= TypeRepr.of[Short])
                         if (isString) '{
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                             JsonHelper.serializeShort(${ value.asExprOf[Short] }, $out)
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                         }
                         else '{ JsonHelper.serializeShort(${ value.asExprOf[Short] }, $out) }
                     else if (tpe =:= TypeRepr.of[Int])
                         if (isString) '{
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                             JsonHelper.serializeInt(${ value.asExprOf[Int] }, $out)
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                         }
                         else '{ JsonHelper.serializeInt(${ value.asExprOf[Int] }, $out) }
                     else if (tpe =:= TypeRepr.of[Long])
                         if (isString) '{
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                             JsonHelper.serializeLong(${ value.asExprOf[Long] }, $out)
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                         }
                         else '{ JsonHelper.serializeLong(${ value.asExprOf[Long] }, $out) }
                     else if (tpe =:= TypeRepr.of[Float])
                         if (isString) '{
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                             JsonHelper.serializeFloat(${ value.asExprOf[Float] }, $out)
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                         }
                         else '{ JsonHelper.serializeFloat(${ value.asExprOf[Float] }, $out) }
                     else if (tpe =:= TypeRepr.of[Double])
                         if (isString) '{
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                             JsonHelper.serializeDouble(${ value.asExprOf[Double] }, $out)
-                            $out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+                            $out.writeByte(ASCII.DOUBLE_QUOTE)
                         }
                         else '{ JsonHelper.serializeDouble(${ value.asExprOf[Double] }, $out) }
                     else if (tpe =:= TypeRepr.of[String])
@@ -889,7 +890,7 @@ object JsonMacro {
                                     while (i < $tx.length) {
                                         ${ genWriteCode(tpe1, '{ $tx.apply(i) }, out) }
                                         i += 1
-                                        if (i != $tx.length) $out.writeByte(JsonConstants.TOKEN_COMMA)
+                                        if (i != $tx.length) $out.writeByte(ASCII.COMMA)
                                     }
                                     JsonHelper.serializeArrayEnd($out)
                                 }
@@ -907,7 +908,7 @@ object JsonMacro {
                                         while (i < xs.length) {
                                             ${ genWriteCode[t](tpe1, '{ xs(i) }, out) }
                                             i += 1
-                                            if (i != xs.length) $out.writeByte(JsonConstants.TOKEN_COMMA)
+                                            if (i != xs.length) $out.writeByte(ASCII.COMMA)
                                         }
                                         JsonHelper.serializeArrayEnd($out)
                                     }
@@ -925,7 +926,7 @@ object JsonMacro {
                                         while (i < xs.length) {
                                             ${ genWriteCode[t](tpe1, '{ xs(i) }, out) }
                                             i += 1
-                                            if (i != xs.length) $out.writeByte(JsonConstants.TOKEN_COMMA)
+                                            if (i != xs.length) $out.writeByte(ASCII.COMMA)
                                         }
                                         JsonHelper.serializeArrayEnd($out)
                                     }
@@ -942,7 +943,7 @@ object JsonMacro {
                                         while (i < $tx.length) {
                                             ${ genWriteCode[t](tpe1, '{ $tx(i) }, out) }
                                             i += 1
-                                            if (i != $tx.length) $out.writeByte(JsonConstants.TOKEN_COMMA)
+                                            if (i != $tx.length) $out.writeByte(ASCII.COMMA)
                                         }
                                         JsonHelper.serializeArrayEnd($out)
                                     }
@@ -958,7 +959,7 @@ object JsonMacro {
                                     while (l ne Nil) {
                                         ${ genWriteCode[t1](tpe1, '{ l.head }, out) }
                                         l = l.tail
-                                        if (l ne Nil) $out.writeByte(JsonConstants.TOKEN_COMMA)
+                                        if (l ne Nil) $out.writeByte(ASCII.COMMA)
                                     }
                                     JsonHelper.serializeObjectEnd($out)
                                 }
@@ -976,14 +977,14 @@ object JsonMacro {
                                         while (i < l) {
                                             ${ genWriteCode[t1](tpe1, '{ $tx(i) }, out) }
                                             i += 1
-                                            if (i != l) $out.writeByte(JsonConstants.TOKEN_COMMA)
+                                            if (i != l) $out.writeByte(ASCII.COMMA)
                                         }
                                     } else {
                                         var i = 0
                                         while (i < $tx.length) {
                                             ${ genWriteCode(tpe1, '{ $tx.apply(i) }, out) }
                                             i += 1
-                                            if (i != $tx.length) $out.writeByte(JsonConstants.TOKEN_COMMA)
+                                            if (i != $tx.length) $out.writeByte(ASCII.COMMA)
                                         }
                                     }
                                     JsonHelper.serializeObjectEnd($out)
@@ -1001,7 +1002,7 @@ object JsonMacro {
                                         while (i < $tx.length) {
                                             ${ genWriteCode(tpe1, '{ $tx.apply(i) }, out) }
                                             i += 1
-                                            if (i != $tx.length) $out.writeByte(JsonConstants.TOKEN_COMMA)
+                                            if (i != $tx.length) $out.writeByte(ASCII.COMMA)
                                         }
                                         JsonHelper.serializeArrayEnd($out)
                                     }
@@ -1021,7 +1022,7 @@ object JsonMacro {
                                             JsonHelper.serializeKey(k.toString(), $out)
                                             ${ genWriteCode(tpe2, 'v, out) }
                                             i += 1
-                                            if (i != length) $out.writeByte(JsonConstants.TOKEN_COMMA)
+                                            if (i != length) $out.writeByte(ASCII.COMMA)
                                         }
                                         JsonHelper.serializeObjectEnd($out)
                                     }
@@ -1036,7 +1037,7 @@ object JsonMacro {
                                     if (idx != length)
                                         '{
                                             ${ genWriteCode(te, Select.unique(x.asTerm, "_" + idx).asExprOf[t], out) }
-                                            $out.writeByte(JsonConstants.TOKEN_COMMA)
+                                            $out.writeByte(ASCII.COMMA)
                                         }.asTerm
                                     else genWriteCode(te, Select.unique(x.asTerm, "_" + idx).asExprOf[t], out).asTerm
                         }

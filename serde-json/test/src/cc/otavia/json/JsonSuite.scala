@@ -47,32 +47,6 @@ class JsonSuite extends AnyFunSuite {
 
 object JsonSuite {
 
-    case class User(id: Int, name: String) // derives JsonSerde
-
-    object User {
-
-        // TODO: auto derives this
-        given userJsonSerde: JsonSerde[User] with {
-
-            override def deserialize(in: Buffer): User = {
-                ???
-            }
-
-            override def serialize(value: User, out: Buffer): Unit = {
-                serializeObjectStart(out)
-                serializeKey("id", out)
-                out.writeByte(JsonConstants.TOKEN_COLON)
-                serializeInt(value.id, out)
-
-                out.writeByte(JsonConstants.TOKEN_COMMA)
-                serializeKey("name", out)
-                out.writeByte(JsonConstants.TOKEN_COLON)
-                serializeString(value.name, out)
-
-                serializeObjectEnd(out)
-            }
-
-        }
-    }
+    case class User(id: Int, name: String) derives JsonSerde
 
 }

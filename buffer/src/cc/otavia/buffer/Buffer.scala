@@ -25,7 +25,6 @@ import java.lang.{Double as JDouble, Float as JFloat, Long as JLong, Short as JS
 import java.nio.ByteBuffer
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
 import java.nio.charset.{Charset, StandardCharsets}
-import java.util.UUID
 import scala.language.unsafeNulls
 
 /** A wrapper of [[java.nio.ByteBuffer]], with separate reader and writer offsets.

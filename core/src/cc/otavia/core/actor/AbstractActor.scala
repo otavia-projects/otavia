@@ -272,10 +272,10 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     final private[core] def switchState(stack: Stack, stackYield: StackYield): Unit =
         if (!stackYield.completed) {
             val oldState = stack.state
-            val newState = stack.getNextState()
+            val newState = stack.getNextState
             if (oldState != newState) {
                 stack.setState(newState)         // change the stack to new state.
-                this.recycleStackState(oldState) // recycle old state if enable.
+                this.recycleStackState(oldState) // recycle old state if enabled.
             }
             assert(stack.hasUncompletedPromise, s"has no future to wait for $stack")
         } else {

@@ -17,18 +17,13 @@
 package cc.otavia.json
 
 import cc.otavia.buffer.{Buffer, BufferUtils}
-import cc.otavia.datatype.Money
-import cc.otavia.json.types.*
-import cc.otavia.serde.{Serde, SerdeOps}
+import cc.otavia.util.ASCII
 
-import java.math.{BigInteger, BigDecimal as JBigDecimal}
-import java.nio.charset.{Charset, StandardCharsets}
+import java.math.BigInteger
+import java.nio.charset.StandardCharsets
 import java.time.{Duration as JDuration, *}
-import java.util.{Currency, Locale, UUID}
-import scala.collection.mutable
-import scala.compiletime.*
+import java.util.UUID
 import scala.concurrent.duration.Duration
-import scala.deriving.Mirror
 import scala.language.unsafeNulls
 
 private[json] object JsonHelper {
@@ -45,47 +40,47 @@ private[json] object JsonHelper {
         in.skipIfNextAre(token)
     }
 
-    final def serializeObjectStart(out: Buffer): Unit = out.writeByte(JsonConstants.TOKEN_OBJECT_START)
+    final def serializeObjectStart(out: Buffer): Unit = out.writeByte(ASCII.BRACE_LEFT)
 
     // TODO: replace to exceptXXX, if false throws error
     final def skipObjectStart(in: Buffer): Boolean = {
         skipBlanks(in)
-        in.skipIfNextIs(JsonConstants.TOKEN_OBJECT_START)
+        in.skipIfNextIs(ASCII.BRACE_LEFT)
     }
 
-    final def serializeArrayStart(out: Buffer): Unit = out.writeByte(JsonConstants.TOKEN_ARRAY_START)
+    final def serializeArrayStart(out: Buffer): Unit = out.writeByte(ASCII.BRACKET_LEFT)
 
     final def skipArrayStart(in: Buffer): Boolean = {
         skipBlanks(in)
-        in.skipIfNextIs(JsonConstants.TOKEN_ARRAY_START)
+        in.skipIfNextIs(ASCII.BRACKET_LEFT)
     }
 
-    final def serializeObjectEnd(out: Buffer): Unit = out.writeByte(JsonConstants.TOKEN_OBJECT_END)
+    final def serializeObjectEnd(out: Buffer): Unit = out.writeByte(ASCII.BRACE_RIGHT)
 
     final def skipObjectEnd(in: Buffer): Boolean = {
         skipBlanks(in)
-        in.skipIfNextIs(JsonConstants.TOKEN_OBJECT_END)
+        in.skipIfNextIs(ASCII.BRACE_RIGHT)
     }
 
-    final def serializeArrayEnd(out: Buffer): Unit = out.writeByte(JsonConstants.TOKEN_ARRAY_END)
+    final def serializeArrayEnd(out: Buffer): Unit = out.writeByte(ASCII.BRACKET_RIGHT)
 
     final def skipArrayEnd(in: Buffer): Boolean = {
         skipBlanks(in)
-        in.skipIfNextIs(JsonConstants.TOKEN_ARRAY_END)
+        in.skipIfNextIs(ASCII.BRACKET_RIGHT)
     }
 
     final def serializeKey(key: String, out: Buffer): Unit = {
-        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+        out.writeByte('\"')
         BufferUtils.writeEscapedString(out, key)
-        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
-        out.writeByte(JsonConstants.TOKEN_COLON)
+        out.writeByte('\"')
+        out.writeByte(ASCII.COLON)
     }
 
     final def serializeKey(key: Array[Byte], out: Buffer): Unit = {
-        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+        out.writeByte('\"')
         out.writeBytes(key)
-        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
-        out.writeByte(JsonConstants.TOKEN_COLON)
+        out.writeByte('\"')
+        out.writeByte(ASCII.COLON)
     }
 
     final def serializeNull(out: Buffer): Unit = out.writeBytes(JsonConstants.TOKEN_NULL)
@@ -95,9 +90,9 @@ private[json] object JsonHelper {
     final def serializeBoolean(boolean: Boolean, out: Buffer): Unit = BufferUtils.writeBooleanAsString(out, boolean)
 
     final def serializeChar(char: Char, out: Buffer): Unit = {
-        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+        out.writeByte('\"')
         BufferUtils.writeEscapedChar(out, char)
-        out.writeByte(JsonConstants.TOKEN_DOUBLE_QUOTE)
+        out.writeByte('\"')
     }
 
     final def serializeShort(short: Short, out: Buffer): Unit = BufferUtils.writeShortAsString(out, short)
@@ -128,9 +123,9 @@ private[json] object JsonHelper {
 
     final def deserializeChar(in: Buffer): Char = {
         skipBlanks(in)
-        assert(in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE), s"except \" but get ${in.readByte}")
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte}")
         val b = BufferUtils.readEscapedChar(in)
-        assert(in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE), s"except \" but get ${in.readByte}")
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte}")
         b
     }
 
@@ -155,8 +150,8 @@ private[json] object JsonHelper {
 
     final def deserializeString(in: Buffer): String = {
         skipBlanks(in)
-        assert(in.skipIfNextIs(JsonConstants.TOKEN_DOUBLE_QUOTE), s"except \" but get ${in.readByte}")
-        val len = in.bytesBefore(JsonConstants.TOKEN_DOUBLE_QUOTE) // TODO: escape
+        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte}")
+        val len = in.bytesBefore('\"'.toByte) // TODO: escape
         val str = in.readCharSequence(len, StandardCharsets.UTF_8).toString
         in.readByte
         str

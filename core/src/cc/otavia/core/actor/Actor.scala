@@ -16,7 +16,6 @@
 
 package cc.otavia.core.actor
 
-import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.actor.Actor.*
 import cc.otavia.core.address.Address
 import cc.otavia.core.message.*
@@ -85,28 +84,28 @@ trait Actor[+M <: Call] {
     // method for receive message
 
     /** receive notice message by this method, the method will be call when this actor instance receive notice message
-     *  @param notice
+     *  @param envelope
      *    notice message receive by this actor instance
      */
     private[core] def receiveNotice(envelope: Envelope[?]): Unit
 
     /** receive ask message by this method, the method will be call when this actor instance receive ask message
      *
-     *  @param ask
+     *  @param envelope
      *    ask message received by this actor instance
      */
     private[core] def receiveAsk(envelope: Envelope[?]): Unit
 
     /** receive reply message by this method, the method will be call when this actor instance receive reply message
      *
-     *  @param reply
+     *  @param envelope
      *    reply message receive by this actor instance
      */
     private[core] def receiveReply(envelope: Envelope[?]): Unit
 
     /** receive exception reply message by this method, the method will be call when this actor instance receive reply
      *  message
-     *  @param exceptionMessage
+     *  @param envelope
      *    exception reply message receive by this actor instance
      */
     private[core] def receiveExceptionReply(envelope: Envelope[?]): Unit

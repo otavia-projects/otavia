@@ -148,18 +148,17 @@ object ActorSystem {
     // buffer setting
     private val DEFAULT_PAGE_SIZE: Int        = 4
     private val ENABLE_PAGE_SIZES: Array[Int] = Array(1, 2, 4, 8, 16)
-    private val K: Int                        = 1024
 
     val PAGE_SIZE: Int = {
         val size = SystemPropertyUtil.getInt("cc.otavia.buffer.page.size", DEFAULT_PAGE_SIZE)
-        if (ENABLE_PAGE_SIZES.contains(size)) size * K
+        if (ENABLE_PAGE_SIZES.contains(size)) size * 1024
         else {
             Report.report(
               s"cc.otavia.buffer.page.size is set to $size, but only support ${ENABLE_PAGE_SIZES
-                      .mkString("[", ", ", "]")}, set to default ${DEFAULT_PAGE_SIZE * K} ",
+                      .mkString("[", ", ", "]")}, set to default ${DEFAULT_PAGE_SIZE * 1024} ",
               "Buffer"
             )
-            DEFAULT_PAGE_SIZE * K
+            DEFAULT_PAGE_SIZE * 1024
         }
     }
 

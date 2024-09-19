@@ -16,9 +16,8 @@
 
 package cc.otavia.core.stack
 
-import cc.otavia.core.actor.{AbstractActor, Actor}
+import cc.otavia.core.actor.AbstractActor
 import cc.otavia.core.cache.Poolable
-import cc.otavia.core.message.Call
 import cc.otavia.core.util.Nextable
 
 import scala.language.unsafeNulls
@@ -26,7 +25,7 @@ import scala.language.unsafeNulls
 abstract class Stack extends Poolable {
 
     private var stackState: StackState = StackState.start
-    private var nextState: StackState = _
+    private var nextState: StackState  = _
 
     // completed promise
     private var completedHead: AbstractPromise[?] = _
@@ -63,7 +62,7 @@ abstract class Stack extends Poolable {
         StackYield.SUSPEND
     }
 
-    private[core] def getNextState(): StackState = {
+    private[core] def getNextState: StackState = {
         val state = nextState
         nextState = null
         state

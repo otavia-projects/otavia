@@ -31,7 +31,7 @@ import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
 
     /** Request to connect to the given [[SocketAddress]]. This method return a channel which is not connected to the
-     *  remote address, it only register this channel to [[Reactor]], when register operation completes, this actor will
+     *  remote address, it only registers this channel to [[Reactor]], when register operation completes, this actor will
      *  receive a [[ReactorEvent.RegisterReply]] event, then this actor will call [[afterChannelRegisterReplyEvent]] to
      *  handle register result and connect to remote address.
      *

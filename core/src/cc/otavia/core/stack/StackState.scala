@@ -16,8 +16,6 @@
 
 package cc.otavia.core.stack
 
-import cc.otavia.core.cache.Poolable
-import cc.otavia.core.message.Reply
 import cc.otavia.core.stack.helper.StartState
 
 trait StackState {

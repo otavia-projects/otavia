@@ -19,6 +19,6 @@ package cc.otavia.core.stack.helper
 import cc.otavia.core.stack.{Stack, StackState}
 
 /** The first [[StackState]] of a [[Stack]], it only have one constant value [[StackState.start]]. */
-class StartState private[core] () extends StackState {
+class StartState private[core] extends StackState {
     final override def resumable(): Boolean = true
 }
