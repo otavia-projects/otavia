@@ -17,8 +17,7 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.cache.ActorThreadIsolatedObjectPool
-import cc.otavia.core.message.{ExceptionMessage, Reply}
-import cc.otavia.core.timer.Timer
+import cc.otavia.core.message.Reply
 
 import scala.annotation.tailrec
 import scala.language.unsafeNulls
@@ -30,7 +29,6 @@ import scala.language.unsafeNulls
  */
 sealed trait MessageFuture[+R <: Reply] extends Future[R] {
     private[core] override def promise: MessagePromise[Reply] = this.asInstanceOf[MessagePromise[Reply]]
-
 }
 
 object MessageFuture {

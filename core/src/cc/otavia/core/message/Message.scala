@@ -16,26 +16,30 @@
 
 package cc.otavia.core.message
 
-import cc.otavia.core.actor.Actor
-import cc.otavia.core.stack.Stack
-import cc.otavia.core.util.Nextable
-
 /** Message is base unit for actor community */
 sealed trait Message extends Serializable
 
-/** Message which will generate [[Stack]] when a [[Actor]] received. */
+/** Message which will generate [[cc.otavia.core.stack.Stack]] when a [[cc.otavia.core.actor.Actor]] received. */
 sealed trait Call extends Message
 
-/** message which do not need reply */
+/** message which do not need to reply */
 trait Notice extends Call
 
 /** message which need reply */
 trait Ask[R <: Reply] extends Call
 
+/** Calculate the message type of the Ask message */
 type ReplyOf[A <: Ask[? <: Reply]] <: Reply = A match
     case Ask[r] => r
 
-/** reply message, it reply at least one ask message */
+/** reply message, it replies at least one ask message */
 trait Reply extends Message
 
-case class TimeoutReply() extends Reply
+sealed trait TimeoutReply extends Reply
+
+object TimeoutReply {
+
+    private val INSTANCE      = new TimeoutReply {}
+    def apply(): TimeoutReply = INSTANCE
+
+}

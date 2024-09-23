@@ -20,15 +20,11 @@ import cc.otavia.core.actor.{AbstractActor, Actor}
 import cc.otavia.core.address.{Address, EventableAddress}
 import cc.otavia.core.cache.{ResourceTimer, TimeoutResource}
 import cc.otavia.core.channel.Channel
-import cc.otavia.core.message.{TimeoutEvent, TimeoutReply}
-import cc.otavia.core.reactor.Reactor
+import cc.otavia.core.message.TimeoutReply
 import cc.otavia.core.stack.MessageFuture
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.system.monitor.TimerMonitor
-import cc.otavia.core.timer.Timer.*
 
-import java.util.Date
-import java.util.concurrent.ConcurrentHashMap
 import scala.concurrent.duration.{MILLISECONDS, TimeUnit}
 
 /** [[Timer]] can generate timeout event. */
@@ -99,7 +95,7 @@ trait Timer {
     private[core] def registerAskTimeout(trigger: TimeoutTrigger, sender: EventableAddress, askId: Long): Long
 
     final def sleepStack(future: MessageFuture[TimeoutReply], delay: Long, unit: TimeUnit = MILLISECONDS)(using
-                                                                                                          actor: AbstractActor[?]
+        actor: AbstractActor[?]
     ): MessageFuture[TimeoutReply] = {
         val aid = actor.generateSendMessageId()
         actor.attachStack(aid, future)
