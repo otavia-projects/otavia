@@ -1756,7 +1756,6 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"cc/otavia/core/timer/Timer$.html#","e":false,"i":"","n":"Timer","t":"Timer","d":"cc.otavia.core.timer","k":"object","x":""},
 {"l":"cc/otavia/core/timer/Timer$.html#INVALID_TIMEOUT_REGISTER_ID-0","e":false,"i":"","n":"INVALID_TIMEOUT_REGISTER_ID","t":"INVALID_TIMEOUT_REGISTER_ID: Long","d":"cc.otavia.core.timer.Timer","k":"val","x":""},
 {"l":"cc/otavia/core/timer/TimerImpl.html#","e":false,"i":"","n":"TimerImpl","t":"TimerImpl(val system: ActorSystem) extends Timer","d":"cc.otavia.core.timer","k":"class","x":""},
-{"l":"cc/otavia/core/timer/TimerImpl.html#logger-0","e":false,"i":"","n":"logger","t":"logger: Logger","d":"cc.otavia.core.timer.TimerImpl","k":"val","x":""},
 {"l":"cc/otavia/core/timer/TimerTask.html#","e":false,"i":"","n":"TimerTask","t":"TimerTask","d":"cc.otavia.core.timer","k":"trait","x":""},
 {"l":"cc/otavia/core/timer/TimerTask.html#run-fffff803","e":false,"i":"","n":"run","t":"run(timeout: Timeout): Unit","d":"cc.otavia.core.timer.TimerTask","k":"def","x":""},
 {"l":"cc/otavia/core/timer/TimerTaskManager.html#","e":false,"i":"","n":"TimerTaskManager","t":"TimerTaskManager(val timer: Timer)","d":"cc.otavia.core.timer","k":"class","x":""},
@@ -2325,5 +2324,5 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"otavia","t":"otavia","d":"","k
 {"l":"docs/zh/module/index.html#","e":false,"i":"","n":"Modules","t":"Modules","d":"","k":"static","x":""},
 {"l":"docs/zh/module/buffer.html#","e":false,"i":"","n":"Buffer","t":"Buffer","d":"","k":"static","x":""},
 {"l":"docs/blog/index.html#","e":false,"i":"","n":"Blog","t":"Blog","d":"","k":"static","x":""},
-{"l":"docs/blog/2023/05/19/hello-world-blog.zh-cn.html#","e":false,"i":"","n":"你好世界","t":"你好世界","d":"","k":"static","x":""},
-{"l":"docs/blog/2023/05/19/hello-world-blog.html#","e":false,"i":"","n":"hello world blog","t":"hello world blog","d":"","k":"static","x":""}];
+{"l":"docs/blog/2023/05/19/hello-world-blog.html#","e":false,"i":"","n":"hello world blog","t":"hello world blog","d":"","k":"static","x":""},
+{"l":"docs/blog/2023/05/19/hello-world-blog.zh-cn.html#","e":false,"i":"","n":"你好世界","t":"你好世界","d":"","k":"static","x":""}];
