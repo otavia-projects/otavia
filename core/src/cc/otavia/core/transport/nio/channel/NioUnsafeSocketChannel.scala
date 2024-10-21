@@ -31,7 +31,7 @@ import java.nio.channels.{SelectionKey, SocketChannel}
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-class NioUnsafeSocketChannel(channel: AbstractChannel, ch: SocketChannel, readInterestOp: Int)
+final class NioUnsafeSocketChannel(channel: AbstractChannel, ch: SocketChannel, readInterestOp: Int)
     extends AbstractNioUnsafeChannel[SocketChannel](channel, ch, readInterestOp) {
 
     private var flushQueue: mutable.ArrayDeque[FileRegion | RecyclablePageBuffer] = _
@@ -134,12 +134,13 @@ class NioUnsafeSocketChannel(channel: AbstractChannel, ch: SocketChannel, readIn
             buf.next = null
             if (!closed) {
                 val writable   = buf.readableBytes
-                val byteBuffer = buf.byteBuffer
+                val byteBuffer = buf.underlying
                 byteBuffer.limit(buf.writerOffset)
                 byteBuffer.position(buf.readerOffset)
                 try {
                     val write = ch.write(byteBuffer)
-                    if (write != writable) {
+                    if (write == writable) buf.close()
+                    else {
                         continue = false
                         buf.skipReadableBytes(write)
                         buf.next = cursor
@@ -148,7 +149,7 @@ class NioUnsafeSocketChannel(channel: AbstractChannel, ch: SocketChannel, readIn
                         val interestOps = _selectionKey.interestOps()
                         if ((interestOps & SelectionKey.OP_WRITE) == 0)
                             _selectionKey.interestOps(interestOps | SelectionKey.OP_WRITE)
-                    } else buf.close()
+                    }
                 } catch {
                     case e: IOException =>
                         unsafeClose(Some(e))

@@ -20,7 +20,6 @@ package cc.otavia.core.transport.reactor.nio
 
 import java.nio.channels.SelectionKey
 import java.util
-import java.util.Arrays
 import scala.language.unsafeNulls
 
 final class SelectedSelectionKeySet extends util.AbstractSet[SelectionKey] {
@@ -37,21 +36,21 @@ final class SelectedSelectionKeySet extends util.AbstractSet[SelectionKey] {
 
     override def remove(o: Any): Boolean = false
 
-    override def contains(o: Any): Boolean = false
+    // override def contains(o: Any): Boolean = false
 
-//    override def contains(o: Any): Boolean = {
-//        var i        = 0
-//        var continue = true
-//        var res      = false
-//        while (continue && i < _size) {
-//            val key = keys(i)
-//            if (key.equals(o)) {
-//                continue = false
-//                res = true
-//            } else i += 1
-//        }
-//        res
-//    }
+    override def contains(o: Any): Boolean = {
+        var i        = 0
+        var continue = true
+        var res      = false
+        while (continue && i < _size) {
+            val key = keys(i)
+            if (key.equals(o)) {
+                continue = false
+                res = true
+            } else i += 1
+        }
+        res
+    }
 
     override def size(): Int = _size
 

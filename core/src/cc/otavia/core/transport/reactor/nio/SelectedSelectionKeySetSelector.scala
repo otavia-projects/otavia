@@ -18,9 +18,6 @@
 
 package cc.otavia.core.transport.reactor.nio
 
-import cc.otavia.core.transport.reactor.nio.SelectedSelectionKeySet
-
-import java.io.IOException
 import java.nio.channels.spi.SelectorProvider
 import java.nio.channels.{SelectionKey, Selector}
 import java.util
@@ -39,19 +36,16 @@ final class SelectedSelectionKeySetSelector(
 
     override def selectedKeys(): util.Set[SelectionKey] = delegate.selectedKeys()
 
-    @throws[IOException]
     override def selectNow(): Int = {
         selectionKeys.reset()
         delegate.selectNow()
     }
 
-    @throws[IOException]
     override def select(timeout: Long): Int = {
         selectionKeys.reset()
         delegate.select(timeout)
     }
 
-    @throws[IOException]
     override def select(): Int = {
         selectionKeys.reset()
         delegate.select()

@@ -398,7 +398,6 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
     override def isCompatible(handleType: Class[? <: AbstractChannel]): Boolean = ???
     // classOf[AbstractNioChannel[?, ?]].isAssignableFrom(handleType)
 
-    @throws[IOException]
     private def selectNow(): Int = selector.selectNow()
 
     private def select(context: IoExecutionContext): Unit = {
@@ -410,7 +409,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
                 // It might be pended until idle timeout if IdleStateHandler existed in pipeline.
                 selector.selectNow()
             } else {
-                selector.select(10)
+                selector.select()
             }
         } catch {
             case e: CancelledKeyException => // Harmless exception - log anyway
@@ -421,7 +420,6 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         }
     }
 
-    @throws[IOException]
     private def selectRebuildSelector(selectCnt: Int): Selector = {
         // The selector returned prematurely many times in a row.
         // Rebuild the selector to work around the problem.
