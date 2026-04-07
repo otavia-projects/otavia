@@ -1,0 +1,490 @@
+//| mvnDeps: ["com.lihaoyi::mill-contrib-buildinfo:$MILL_VERSION", "com.lihaoyi::mill-contrib-jmh:$MILL_VERSION", "com.lihaoyi::mill-contrib-scoverage:$MILL_VERSION"]
+
+/*
+ * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+package build
+
+import mill.*, api.*, scalalib.*, publish.*
+import mill.contrib.buildinfo.BuildInfo
+import mill.contrib.jmh.JmhModule
+import os.Path
+
+object ProjectInfo {
+
+    def description: String     = "Your shiny new IO & Actor programming model!"
+    def organization: String    = "cc.otavia"
+    def organizationUrl: String = "https://github.com/otavia-projects"
+    def projectUrl: String      = "https://github.com/otavia-projects/otavia"
+    def github                  = VersionControl.github("otavia-projects", "otavia")
+    def repository              = github.browsableRepository.get
+    def licenses                = Seq(License.`Apache-2.0`)
+    def author                  = Seq("Yan Kun <yan_kun_1992@foxmail.com>")
+    def version                 = "0.4.6-SNAPSHOT" // -SNAPSHOT
+    def scalaVersion            = "3.3.7"
+    def scoverageVersion        = "1.4.0"
+    def buildTool               = "mill"
+    // def buildToolVersion        = main.BuildInfo.millVersion
+
+    def testDep = mvn"org.scalatest::scalatest:3.2.19"
+
+    def xml   = mvn"org.scala-lang.modules::scala-xml:2.4.0"
+    def scram = mvn"com.ongres.scram:client:2.1"
+
+    val settings = PomSettings(
+      description = description,
+      organization = organization,
+      url = repository,
+      licenses = licenses,
+      versionControl = github,
+      developers = Seq(
+        // format: off
+        Developer("yankun1992", "Yan Kun", "https://github.com/yankun1992", Some("otavia-projects"), Some("https://github.com/otavia-projects"))
+        // format: on
+      )
+    )
+
+}
+
+object common extends ScalaModule with BuildInfo with PublishModule {
+
+    def scalaVersion         = ProjectInfo.scalaVersion
+    def buildInfoPackageName = "cc.otavia"
+
+    def buildInfoMembers = Seq(
+      BuildInfo.Value("scalaVersion", scalaVersion()),
+      BuildInfo.Value("publishVersion", publishVersion()),
+      BuildInfo.Value("name", "otavia"),
+      BuildInfo.Value("description", ProjectInfo.description),
+      BuildInfo.Value("organization", ProjectInfo.organization),
+      BuildInfo.Value("organizationUrl", ProjectInfo.organizationUrl),
+      BuildInfo.Value("github", ProjectInfo.repository),
+      BuildInfo.Value(
+        "licenses", {
+            if (ProjectInfo.licenses.length == 1) ProjectInfo.licenses.head.name
+            else ProjectInfo.licenses.map(_.name).mkString("[", ", ", "]")
+        }
+      ),
+      BuildInfo.Value(
+        "author", {
+            if (ProjectInfo.author.length == 1) ProjectInfo.author.head else ProjectInfo.author.mkString("[", ", ", "]")
+        }
+      ),
+      BuildInfo.Value("copyright", "2022")
+    )
+
+    def pomSettings    = ProjectInfo.settings
+    def publishVersion = ProjectInfo.version
+    def artifactName   = "otavia-common"
+
+    object test extends ScalaTests with TestModule.ScalaTest {
+
+        def mvnDeps = Seq(ProjectInfo.testDep)
+
+    }
+
+}
+
+trait OtaviaModule extends ScalaModule with PublishModule {
+
+    def scalaVersion                = ProjectInfo.scalaVersion
+    def publishVersion   = ProjectInfo.version
+    def pomSettings  = ProjectInfo.settings
+    def scalacOptions               = Task { scala.Seq("-Yexplicit-nulls") }
+
+}
+
+trait BufferModule extends OtaviaModule {
+
+    trait BufferTests extends ScalaTests with TestModule.ScalaTest {
+        def mvnDeps = Seq(ProjectInfo.testDep)
+    }
+}
+
+trait JvmBufferModule extends BufferModule with ScalaModule {
+
+    object test extends BufferTests
+
+}
+
+object buffer extends JvmBufferModule {
+
+    //    object native extends NativeBufferModule
+    //
+    //    trait NativeBufferModule extends BufferModule with ScalaNativeModule {
+    //
+    //        def scalaNativeVersion = "0.4.14"
+    //
+    //        object test extends BufferTests
+    //
+    //    }
+
+    def artifactName = "otavia-buffer"
+
+    object bench extends ScalaModule with JmhModule {
+
+        def scalaVersion = ProjectInfo.scalaVersion
+        def jmhCoreVersion        = "1.37"
+        def moduleDeps   = Seq(buffer)
+
+    }
+
+}
+
+object core extends OtaviaModule {
+
+    def artifactName = "otavia-runtime"
+    def moduleDeps   = Seq(buffer, common)
+
+    object test extends ScalaTests with TestModule.ScalaTest {
+
+        def mvnDeps = Seq(ProjectInfo.testDep)
+
+    }
+
+}
+
+object testkit extends OtaviaModule {
+
+    def artifactName = "otavia-testkit"
+    def moduleDeps   = Seq(core)
+
+}
+
+object handler extends OtaviaModule {
+
+    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+    def artifactName                   = "otavia-handler"
+
+    object test extends ScalaTests with TestModule.ScalaTest {
+
+        def mvnDeps = Seq(ProjectInfo.testDep)
+
+    }
+
+}
+
+object codec extends OtaviaModule {
+
+    def moduleDeps: Seq[PublishModule] = scala.Seq(core)
+    def artifactName                   = "otavia-codec"
+
+    object test extends ScalaTests with TestModule.ScalaTest {
+
+        def mvnDeps = Seq(ProjectInfo.testDep)
+
+    }
+
+}
+
+object `codec-http` extends OtaviaModule {
+
+    def artifactName                   = "otavia-codec-http"
+    def moduleDeps: Seq[PublishModule] = scala.Seq(codec, serde, `serde-json`, handler)
+
+    object test extends ScalaTests with TestModule.ScalaTest {
+
+        def mvnDeps = Seq(ProjectInfo.testDep)
+
+    }
+
+}
+
+object sql extends OtaviaModule {
+
+    def artifactName                   = "otavia-sql"
+    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, serde)
+
+    object test extends ScalaTests with TestModule.ScalaTest {
+
+        def mvnDeps = Seq(ProjectInfo.testDep)
+
+    }
+
+}
+
+object `codec-redis` extends OtaviaModule {
+
+    def artifactName        = "otavia-codec-redis"
+    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, serde)
+
+    object test extends ScalaTests with TestModule.ScalaTest {
+
+        def mvnDeps = Seq(ProjectInfo.testDep)
+
+    }
+
+}
+
+object `codec-socks` extends OtaviaModule {
+
+    def artifactName        = "otavia-codec-socks"
+    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+}
+
+object `codec-haproxy` extends OtaviaModule {
+
+    def artifactName        = "otavia-codec-haproxy"
+    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+}
+
+object `codec-mqtt` extends OtaviaModule {
+
+    def artifactName        = "otavia-codec-mqtt"
+    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+}
+
+object `codec-memcache` extends OtaviaModule {
+
+    def artifactName        = "otavia-codec-memcache"
+    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+}
+
+object `codec-smtp` extends OtaviaModule {
+
+    def artifactName        = "otavia-codec-smtp"
+    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+}
+
+object `codec-kafka` extends OtaviaModule {
+
+    def artifactName        = "otavia-codec-kafka"
+    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+}
+
+object `codec-dns` extends OtaviaModule {
+
+    def artifactName        = "otavia-codec-dns"
+    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+
+}
+
+object log4a extends OtaviaModule {
+
+    def moduleDeps: Seq[PublishModule] = scala.Seq(core)
+    def artifactName        = "otavia-log4a"
+    def mvnDeps                        = Seq(ProjectInfo.xml)
+
+    object test extends ScalaTests with TestModule.ScalaTest {
+
+        def mvnDeps = Seq(ProjectInfo.testDep)
+
+    }
+
+}
+
+object serde extends OtaviaModule {
+
+    def artifactName = "otavia-serde"
+    def moduleDeps   = Seq(buffer, common)
+
+}
+
+object `serde-json` extends OtaviaModule {
+
+    def artifactName = "otavia-serde-json"
+    def moduleDeps   = Seq(serde)
+
+    object test extends ScalaTests with TestModule.ScalaTest {
+
+        def mvnDeps = Seq(ProjectInfo.testDep)
+
+    }
+
+}
+
+object `serde-proto` extends OtaviaModule {
+
+    def artifactName = "otavia-serde-proto"
+    def moduleDeps   = Seq(serde)
+
+    object test extends ScalaTests with TestModule.ScalaTest {
+
+        def mvnDeps = Seq(ProjectInfo.testDep)
+
+    }
+
+}
+
+object `sql-mysql-driver` extends OtaviaModule {
+
+    def artifactName = "otavia-mysql-driver"
+    def moduleDeps   = Seq(sql)
+
+    object test extends ScalaTests with TestModule.ScalaTest {
+
+        def mvnDeps = Seq(ProjectInfo.testDep)
+
+    }
+
+}
+
+object `sql-postgres-driver` extends OtaviaModule {
+
+    def artifactName = "otavia-postgres-driver"
+    def moduleDeps   = Seq(sql)
+    def mvnDeps      = Seq(ProjectInfo.scram)
+
+    object test extends ScalaTests with TestModule.ScalaTest {
+
+        def mvnDeps = Seq(ProjectInfo.testDep)
+
+    }
+
+}
+
+trait SiteModule extends ScalaModule {
+
+    private val RE = "(.*)<a href=\"(.*?)\" class=\"logo-container\">(.*)".r
+
+    def projectName: String
+
+    def projectVersion: String
+
+    def projectUrl: String
+
+    def docSource = Task.Source(moduleDir)
+
+    private def replace(child: Path): Unit = {
+        val content: String = os.read(child)
+        val end             = content.indexOf("\" class=\"logo-container\">")
+        if (end != -1) {
+            var start = end - 1
+            while (content(start) != '\"') start -= 1
+
+            os.remove(child)
+            os.write(child, content.substring(0, start))
+            os.write.append(child, content.substring(start, end) + "home.html")
+            os.write.append(child, content.substring(end, content.length))
+        }
+    }
+
+    def site = Task {
+
+        val compileCp = Seq(
+          "-classpath",
+          compileClasspath().iterator
+              .filter(_.path.ext != "pom")
+              .map(_.path)
+              .mkString(java.io.File.pathSeparator)
+        )
+
+        val docs = Task.dest / "docs"
+        for {
+            child <- os.walk(docSource().path) if os.isFile(child)
+        } {
+            val fileName = child.toNIO.toString.toLowerCase.trim
+            if (fileName.endsWith(".md")) {
+                val content = os.read(child)
+                val newCtx  = content.replaceAll("([(\"]).*/_assets/images/", "$1images/")
+                os.write(docs / child.subRelativeTo(docSource().path), newCtx, createFolders = true)
+            } else os.copy.over(child, docs / child.subRelativeTo(docSource().path), createFolders = true)
+        }
+
+        val files = Lib.findSourceFiles(Task.traverse(moduleDeps)(_.docSources)().flatten, Seq("tasty"))
+
+        val javadocDir = Task.dest / "_site"
+        os.makeDir.all(javadocDir)
+
+        // format: off
+        val options = Seq(
+            "-d", javadocDir.toNIO.toString,
+            "-siteroot", docs.toNIO.toString,
+            "-project-version", projectVersion,
+            "-project", projectName,
+            // "-project-logo", "docs/_assets/images/logo.drawio.svg",
+            "-project-footer", "Copyright (c) 2022, Yan Kun/Otavia Project",
+            "-source-links:docs=github://otavia-projects/otavia/main#docs",
+            s"-social-links:github::$projectUrl"
+        ) ++ scalaDocPluginClasspath().map(pluginPathRef => s"-Xplugin:${pluginPathRef.path}")
+        // format: on
+
+        if (
+          jvmWorker()
+              .worker()
+              .docJar(
+                scalaVersion(),
+                scalaOrganization(),
+                scalaDocClasspath(),
+                scalacPluginClasspath(),
+                None,
+                options ++ compileCp ++ scalaDocOptions() ++ files.map(_.toString)
+              )
+        ) {
+            replace(javadocDir / "index.html")
+            for (child <- os.walk(javadocDir / "cc") if child.toNIO.toString.endsWith(".html")) replace(child)
+            for (child <- os.walk(javadocDir / "docs") if child.toNIO.toString.endsWith(".html")) replace(child)
+
+            os.copy.over(docs / "home.html", javadocDir / "home.html")
+            os.copy.over(docs / "CNAME", javadocDir / "CNAME")
+            // os.remove.all.apply(docs)
+            Result.Success(PathRef(javadocDir))
+        } else {
+            os.remove.all.apply(docs)
+            Result.Failure("doc generation failed")
+        }
+    }
+
+}
+
+object docs extends SiteModule {
+
+    def scalaVersion = ProjectInfo.scalaVersion
+
+    def moduleDeps: Seq[PublishModule] = Seq(buffer, core, serde, handler, codec, testkit)
+
+    def projectName: String = "otavia"
+
+    def projectVersion: String = ProjectInfo.version
+
+    def projectUrl: String = ProjectInfo.projectUrl
+
+}
+
+object all extends OtaviaModule {
+
+    def artifactName = "otavia-all"
+
+    def moduleDeps = Seq(
+      `sql-postgres-driver`,
+      `sql-mysql-driver`,
+      `serde-proto`,
+      `serde-json`,
+      log4a,
+      `codec-dns`,
+      `codec-kafka`,
+      `codec-mqtt`,
+      `codec-smtp`,
+      `codec-http`,
+      `codec-haproxy`,
+      `codec-memcache`,
+      `codec-redis`,
+      `codec-socks`,
+      handler,
+      core,
+      buffer,
+      serde,
+      sql
+    )
+
+}
