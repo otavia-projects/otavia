@@ -23,6 +23,7 @@ import cc.otavia.core.address.{ActorAddress, ActorThreadAddress}
 import cc.otavia.core.message.{Event, ResourceTimeoutEvent}
 import cc.otavia.core.reactor.IoExecutionContext
 import cc.otavia.core.system.ActorThread.*
+import cc.otavia.core.transport.reactor.nio.NioHandler
 import cc.otavia.core.system.monitor.ActorThreadMonitor
 
 import java.lang.ref.*
@@ -156,15 +157,48 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
 
         prepared()
 
-        while (!confirmShutdown()) {
-            // run current thread tasks
-            val stops    = if (refSet.isEmpty) 0 else this.stopActors() // stop and release died actor.
-            val runHouse = manager.run()                                // run actor which has been received message.
-            val runEvent = this.runThreadEvent()                        // run event received by this thread.
+        var selectCnt = 0
 
-            ioHandler.run(ioCtx)
+        while (!confirmShutdown()) {
+            // ---- Phase 1: IO (select + processSelectedKeys) ----
+            val ioStartTime = System.nanoTime()
+            val strategy = ioHandler.run(ioCtx)
+            val ioTime = System.nanoTime() - ioStartTime
+
+            // epoll bug detection
+            if (strategy > 0) selectCnt = 0
+            else {
+                selectCnt += 1
+                if (unexpectedSelectorWakeup(selectCnt)) selectCnt = 0
+            }
+
+            // ---- Phase 2: IO pipeline (ChannelsActor + Events + Cleanup) ----
+            manager.runChannelsActors()
+            this.runThreadEvent()
+            if (refSet.nonEmpty) this.stopActors()
+
+            // ---- Phase 3: Business logic (StateActor) with time budget ----
+            val deadline = computeDeadline(ioTime, strategy)
+            manager.runStateActors(deadline)
         }
 
+    }
+
+    private def computeDeadline(ioTime: Long, strategy: Int): Long = {
+        if (ioRatio == 100) return Long.MaxValue
+        if (strategy <= 0) return System.nanoTime() + minActorBudgetNanos
+        System.nanoTime() + ioTime * (100 - ioRatio) / ioRatio
+    }
+
+    private def unexpectedSelectorWakeup(selectCnt: Int): Boolean = {
+        if (Thread.interrupted()) true
+        else if (SELECTOR_AUTO_REBUILD_THRESHOLD > 0 && selectCnt >= SELECTOR_AUTO_REBUILD_THRESHOLD) {
+            ioHandler match {
+                case nio: NioHandler => nio.rebuildSelector()
+                case _               =>
+            }
+            true
+        } else false
     }
 
     private def runLaterTasks(): Unit = {
@@ -201,6 +235,23 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
 }
 
 object ActorThread {
+
+    /** IO ratio: percentage of event loop time allocated to IO. The remaining time is allocated to StateActor
+     *  execution. Default is 50 (equal time for IO and actors). Set to 100 to disable time budgeting.
+     */
+    private val ioRatio = SystemPropertyUtil.getInt("cc.otavia.actor.io.ratio", 50)
+
+    /** Minimum time budget (in microseconds) for StateActor execution when there are no IO events. Prevents actor
+     *  starvation when the system is idle from an IO perspective.
+     */
+    private val minActorBudgetNanos =
+        SystemPropertyUtil.getInt("cc.otavia.actor.min.budget.microsecond", 500) * 1000L
+
+    /** The number of consecutive premature Selector returns before rebuilding the Selector to work around the
+     *  epoll 100% CPU bug. Set to 0 to disable auto-rebuild.
+     */
+    private val SELECTOR_AUTO_REBUILD_THRESHOLD =
+        SystemPropertyUtil.getInt("io.otavia.selectorAutoRebuildThreshold", 512)
 
     /** Status of [[ActorThread]]: starting to loop schedule. */
     private val ST_STARTING: Int = 0

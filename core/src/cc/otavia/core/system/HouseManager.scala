@@ -95,44 +95,32 @@ final class HouseManager(val thread: ActorThread) {
         }
     }
 
-    /** Run by [[thread]], if no house is available, spin timeout nanosecond to wait some house become ready.
-     *
-     *  @return
-     *    true if run some [[ActorHouse]], otherwise false.
+    /** Run channels actor queue (IO pipeline work) and mounting queue. These are always drained fully as they are
+     *  part of the IO pipeline.
      */
-    def run(): Boolean = {
-        // runningStart = System.nanoTime()
-
-        var success = false
-
-        // if (this.run0(serverActorQueue)) success = true
-
-        if (channelsActorQueue.available) {
-            this.run0(channelsActorQueue)
-            success = true
-        }
-
-        if (actorQueue.available) {
-            this.run0(actorQueue)
-            success = true
-        }
-
-        if (mountingQueue.available) {
-            this.mount0()
-            success = true
-        }
-
-        // runningStart = Long.MaxValue
-
-        success
+    def runChannelsActors(): Unit = {
+        if (channelsActorQueue.available) run0(channelsActorQueue, Long.MaxValue)
+        if (mountingQueue.available) mount0()
     }
 
-    private def run0(houseQueue: HouseQueue): Unit = {
+    /** Run state actor queue (business logic) within the given time budget. Actors that are not processed within
+     *  the deadline remain in the queue for the next iteration.
+     *
+     *  @param deadlineNanos
+     *    the absolute time (in nanos) after which no more actors should be dequeued. [[Long.MaxValue]] means no limit.
+     */
+    def runStateActors(deadlineNanos: Long): Unit = {
+        if (!actorQueue.available) return
+        run0(actorQueue, deadlineNanos)
+    }
+
+    private def run0(houseQueue: HouseQueue, deadlineNanos: Long): Unit = {
         var house = houseQueue.dequeue()
         while (house != null) {
             currentRunning = house.actor
             house.run()
             currentRunning = null
+            if (deadlineNanos != Long.MaxValue && System.nanoTime() >= deadlineNanos) return
             house = houseQueue.dequeue()
         }
     }

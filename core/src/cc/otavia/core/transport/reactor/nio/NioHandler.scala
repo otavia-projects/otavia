@@ -147,7 +147,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
     /** Replaces the current [[Selector]] of this event loop with newly created [[Selector]]s to work around the
      *  infamous epoll 100% CPU bug.
      */
-    private def rebuildSelector(): Unit = {
+    private[core] def rebuildSelector(): Unit = {
         val oldSelector = selector
         Try { openSelector() } match
             case Failure(e) =>
@@ -189,17 +189,18 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
     override def run(context: IoExecutionContext): Int = {
         var handled = 0
         try {
-            select(context)
+            val strategy = select(context)
             cancelledKeys = 0
             needsToSelectAgain = false
-            handled = processSelectedKeys()
+            if (strategy > 0) handled = processSelectedKeys()
+            math.max(handled, strategy)
         } catch {
             case e: Error =>
                 e.printStackTrace()
                 throw e
             case t: Throwable => handleLoopException(t)
+            0
         }
-        handled
     }
 
     private def handleLoopException(t: Throwable): Unit = {
@@ -400,13 +401,9 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
 
     private def selectNow(): Int = selector.selectNow()
 
-    private def select(context: IoExecutionContext): Unit = {
+    private def select(context: IoExecutionContext): Int = {
         try {
             if (context.canNotBlock) {
-                // If a task was submitted when wakenUp value was true, the task didn't get a chance to call
-                // Selector#wakeup. So we need to check task queue again before executing select operation.
-                // If we don't, the task might be pended until select operation was timed out.
-                // It might be pended until idle timeout if IdleStateHandler existed in pipeline.
                 selector.selectNow()
             } else {
                 selector.select()
@@ -417,6 +414,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
                 logger.debug(
                   s"${classOf[CancelledKeyException].getSimpleName} raised by a Selector $trace - JDK bug?"
                 )
+                0
         }
     }
 
