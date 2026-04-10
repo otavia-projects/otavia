@@ -1307,7 +1307,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         if (capacity <= fromOffset)
             throw new IndexOutOfBoundsException(s"The fromOffset is beyond the end of the buffer: ${fromOffset}")
         if (fromOffset - length < -1)
-            new IndexOutOfBoundsException(
+            throw new IndexOutOfBoundsException(
               "The fromOffset - length would underflow the buffer: " + "fromOffset = " + fromOffset + ", length = " + length + '.'
             )
 
@@ -1524,16 +1524,16 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
     }
 
     override def setUnsignedMedium(index: Int, value: Int): Buffer = {
-        underlying.put(widx, (value >> 16).toByte)
-        underlying.put(widx + 1, (value >> 8 & 0xff).toByte)
-        underlying.put(widx + 2, (value & 0xff).toByte)
+        underlying.put(index, (value >> 16).toByte)
+        underlying.put(index + 1, (value >> 8 & 0xff).toByte)
+        underlying.put(index + 2, (value & 0xff).toByte)
         this
     }
 
     override def setUnsignedMediumLE(index: Int, value: Int): Buffer = {
-        underlying.put(widx, (value & 0xff).toByte)
-        underlying.put(widx + 1, (value >> 8 & 0xff).toByte)
-        underlying.put(widx + 2, (value >> 16).toByte)
+        underlying.put(index, (value & 0xff).toByte)
+        underlying.put(index + 1, (value >> 8 & 0xff).toByte)
+        underlying.put(index + 2, (value >> 16).toByte)
         this
     }
 
