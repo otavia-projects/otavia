@@ -57,7 +57,7 @@ trait BufferBaseUtils {
     final def getStringAsBoolean(buffer: Buffer, index: Int): Boolean = {
         val bs = buffer.getIntLE(index)
         if (bs == 0x65757274) true                                                // e u r t
-        else if (bs == 0x736c6166 && buffer.indexIs('e'.toByte, index + 4)) false // e s l a f
+        else if (bs == 0x736c6166 && buffer.matchIs(index + 4, 'e'.toByte)) false // e s l a f
         else throw new Exception("except 'ture' or 'false'")
     }
 

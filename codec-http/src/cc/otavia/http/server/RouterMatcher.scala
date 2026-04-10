@@ -127,8 +127,8 @@ class RouterMatcher(routers: Seq[Router]) {
         routerContext.setMethod(method)
 
         // skip schema
-        buffer.skipIfNextAre(HttpConstants.HTTP_SCHEMA)
-        buffer.skipIfNextAre(HttpConstants.HTTPS_SCHEMA)
+        buffer.skipIfNextMatch(HttpConstants.HTTP_SCHEMA)
+        buffer.skipIfNextMatch(HttpConstants.HTTPS_SCHEMA)
 
         if (!buffer.skipIfNextIs('/')) { // skip host
             val len = buffer.bytesBefore('/'.toByte) + 1
@@ -150,8 +150,8 @@ class RouterMatcher(routers: Seq[Router]) {
                     while (find == null && i < matched.children.length) {
                         val node = matched.children(i)
                         if (
-                          buffer.nextAre(node.text) &&
-                          buffer.indexIn(HttpConstants.NODE_END, node.text.length + buffer.readerOffset)
+                          buffer.nextMatch(node.text) &&
+                          buffer.matchIn(node.text.length + buffer.readerOffset, HttpConstants.NODE_END)
                         ) {
                             find = node
                             routerContext.appendPath("/")

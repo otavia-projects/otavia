@@ -2450,52 +2450,6 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         new String(array, 0, length, charset)
     }
 
-    override def readStringAsLong(length: Int, radix: Int): Long = if (length > 0) {
-        checkReadBounds(ridx + length)
-        if (head.readableBytes >= length) {
-            val value = head.readStringAsLong(length, radix)
-            if (head.readableBytes == 0) recycleHead()
-            ridx += length
-            value
-        } else {
-            val str = readCharSequence(length).toString
-            str.toLong
-        }
-    } else throw new NumberFormatException(s"string length must be positive: length = $length")
-
-    override def getStringAsLong(index: Int, length: Int, radix: Int): Long = {
-        checkReadBounds(index + length)
-        resetOffsetMark(index)
-        val idx    = markCursor
-        val off    = markLen
-        val buffer = apply(idx)
-        if (buffer.readableBytes - off >= length) buffer.getStringAsLong(buffer.readerOffset + off, length, radix)
-        else {
-            val str = getCharSequence(index, length).toString
-            str.toLong
-        }
-    }
-
-    override def readStringAsDouble(length: Int): Double = if (length > 0) {
-        checkReadBounds(ridx + length)
-        val v = head.readStringAsDouble(length)
-        if (head.readableBytes == 0) recycleHead()
-        v
-    } else throw new NumberFormatException(s"string length must be positive: length = $length")
-
-    override def getStringAsDouble(index: Int, length: Int): Double = {
-        checkReadBounds(index + length)
-        resetOffsetMark(index)
-        val idx    = markCursor
-        val off    = markLen
-        val buffer = apply(idx)
-        if (buffer.readableBytes - off >= length) buffer.getStringAsDouble(buffer.readerOffset + off, length)
-        else {
-            val str = getCharSequence(index, length).toString
-            str.toDouble
-        }
-    }
-
     override def writeBytes(source: Buffer, length: Int): Buffer = {
         if (closed) throw new BufferClosedException()
         if (source.readableBytes < length)
@@ -2728,8 +2682,8 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
 
     override def nextIs(byte: Byte): Boolean = if (nonEmpty) head.nextIs(byte) else false
 
-    override def nextAre(bytes: Array[Byte]): Boolean = if (readableBytes >= bytes.length) {
-        if (head.readableBytes > bytes.length) head.nextAre(bytes)
+    override def nextMatch(bytes: Array[Byte]): Boolean = if (readableBytes >= bytes.length) {
+        if (head.readableBytes > bytes.length) head.nextMatch(bytes)
         else {
             val copy = new Array[Byte](bytes.length)
             this.copyInto(ridx, copy, 0, bytes.length)
@@ -2737,13 +2691,13 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         }
     } else false
 
-    override def indexIs(byte: Byte, index: Int): Boolean = this.getByte(index) == byte
+    override def matchIs(index: Int, byte: Byte): Boolean = this.getByte(index) == byte
 
-    override def indexAre(bytes: Array[Byte], index: Int): Boolean = if (widx - index >= bytes.length) {
+    override def matchAt(index: Int, bytes: Array[Byte]): Boolean = if (widx - index >= bytes.length) {
         resetOffsetMark(index)
         val idx = markCursor
         val off = markLen
-        if (head.readableBytes - off >= bytes.length) head.indexAre(bytes, head.readerOffset + off)
+        if (head.readableBytes - off >= bytes.length) head.matchAt(head.readerOffset + off, bytes)
         else {
             val copy = new Array[Byte](bytes.length)
             this.copyInto(index, copy, 0, bytes.length)
@@ -2753,7 +2707,7 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
 
     override def nextIn(bytes: Array[Byte]): Boolean = if (nonEmpty) head.nextIn(bytes) else false
 
-    override def indexIn(bytes: Array[Byte], index: Int): Boolean = {
+    override def matchIn(index: Int, bytes: Array[Byte]): Boolean = {
         var notIn = true
         var i     = 0
         val b     = this.getByte(index)
@@ -2767,7 +2721,7 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
     override def nextInRange(lower: Byte, upper: Byte): Boolean =
         if (nonEmpty) head.nextInRange(lower, upper) else false
 
-    override def indexInRange(lower: Byte, upper: Byte, index: Int): Boolean = {
+    override def matchInRange(index: Int, lower: Byte, upper: Byte): Boolean = {
         val b = this.getByte(index)
         b >= lower && b <= upper
     }
@@ -2781,27 +2735,9 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
         res
     } else false
 
-    override def skipIfNextAre(bytes: Array[Byte]): Boolean = if (nonEmpty && head.readableBytes >= bytes.length) {
-        val res = head.skipIfNextAre(bytes)
-        if (res) {
-            ridx += bytes.length
-            if (head.readableBytes == 0) recycleHead()
-        }
-        res
-    } else if (readableBytes >= bytes.length) {
-        var skip = true
-        var i    = 0
-        while (skip && i < bytes.length) {
-            skip = getByte(ridx + i) == bytes(i)
-            i += 1
-        }
-        if (skip) readerOffset(ridx + bytes.length)
-        skip
-    } else false
-
-    override def skipIfNextIgnoreCaseAre(bytes: Array[Byte]): Boolean =
+    override def skipIfNextMatch(bytes: Array[Byte], ignoreCase: Boolean = false): Boolean =
         if (nonEmpty && head.readableBytes >= bytes.length) {
-            val res = head.skipIfNextIgnoreCaseAre(bytes)
+            val res = head.skipIfNextMatch(bytes, ignoreCase)
             if (res) {
                 ridx += bytes.length
                 if (head.readableBytes == 0) recycleHead()
@@ -2811,7 +2747,8 @@ final private class AdaptiveBufferImpl(val allocator: PooledPageAllocator)
             var skip = true
             var i    = 0
             while (skip && i < bytes.length) {
-                skip = ignoreCaseEqual(getByte(ridx + i), bytes(i))
+                skip = if (ignoreCase) ignoreCaseEqual(getByte(ridx + i), bytes(i))
+                       else getByte(ridx + i) == bytes(i)
                 i += 1
             }
             if (skip) readerOffset(ridx + bytes.length)

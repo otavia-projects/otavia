@@ -413,80 +413,6 @@ trait Buffer {
         new String(array, charset)
     }
 
-    /** Parses the string content stored in the buffer as a signed integer in the radix specified by the second
-     *  argument. The characters in the string must all be digits of the specified radix (as determined by whether
-     *  Character.digit(char, int) returns a non-negative value), except that the first character may be an ASCII minus
-     *  sign '-' ('\u002D') to indicate a negative value or an ASCII plus sign '+' ('\u002B') to indicate a positive
-     *  value. The resulting integer value is returned.
-     *
-     *  An exception of type [[NumberFormatException]] is thrown if any of the following situations occurs:
-     *
-     *  this method fork form JDK [[Integer.parseInt]]
-     *
-     *  @param length
-     *    string number content length.
-     *  @param radix
-     *    the radix to be used while parsing the string.
-     *  @throws NumberFormatException
-     *    if the string content does not contain a parsable int.
-     *  @return
-     *    the integer represented by the string content in the specified radix.
-     */
-    @throws[NumberFormatException]
-    def readStringAsLong(length: Int, radix: Int = 10): Long
-
-    /** Parses the string content stored in the buffer as a signed integer in the radix specified by the third argument.
-     *  The characters in the string must all be digits of the specified radix (as determined by whether
-     *  Character.digit(char, int) returns a nonnegative value), except that the first character may be an ASCII minus
-     *  sign '-' ('\u002D') to indicate a negative value or an ASCII plus sign '+' ('\u002B') to indicate a positive
-     *  value. The resulting integer value is returned.
-     *
-     *  An exception of type [[NumberFormatException]] is thrown if any of the following situations occurs:
-     *
-     *  this method fork form JDK [[Integer.parseInt]]
-     *
-     *  @param index
-     *    The read offset, an absolute offset into this buffer, to read from.
-     *  @param length
-     *    string number content length.
-     *  @param radix
-     *    the radix to be used while parsing the string.
-     *  @throws NumberFormatException
-     *    if the string content does not contain a parsable int.
-     *  @return
-     *    the integer represented by the string content in the specified radix.
-     */
-    @throws[NumberFormatException]
-    def getStringAsLong(index: Int, length: Int, radix: Int = 10): Long
-
-    /** Parses the string content stored in the buffer as a signed [[Double]].
-     *
-     *  An exception of type [[NumberFormatException]] is thrown if any of the following situations occurs:
-     *
-     *  this method fork form JDK [[JFloat.parseFloat]] and [[JDouble.parseDouble]]
-     *
-     *  @param length
-     *    string number content length.
-     *  @return
-     *    the float represented by the string content.
-     */
-    def readStringAsDouble(length: Int): Double
-
-    /** Parses the string content stored in the buffer as a signed [[Double]].
-     *
-     *  An exception of type [[NumberFormatException]] is thrown if any of the following situations occurs:
-     *
-     *  this method fork form JDK [[JFloat.parseFloat]] and [[JDouble.parseDouble]]
-     *
-     *  @param index
-     *    The read offset, an absolute offset into this buffer, to read from.
-     *  @param length
-     *    string number content length.
-     *  @return
-     *    the float represented by the string content.
-     */
-    def getStringAsDouble(index: Int, length: Int): Double
-
     /** Writes into this buffer, all the readable bytes from the given buffer. This updates the [[writerOffset]] of this
      *  buffer, and the [[readerOffset]] of the given buffer.
      *
@@ -2170,48 +2096,133 @@ trait Buffer {
      */
     final def setDoubleLE(index: Int, value: Double): Buffer = setLongLE(index, JDouble.doubleToRawLongBits(value))
 
-    /** Check the next readable byte is the gaven byte */
+    /** Check if the next readable byte at the current [[readerOffset]] equals the given [[byte]].
+      * The [[readerOffset]] is not modified.
+      *
+      * @param byte
+      *   The byte value to compare against.
+      * @return
+      *   `true` if the next readable byte equals the given byte, `false` otherwise.
+      */
     def nextIs(byte: Byte): Boolean
 
-    /** Check the next readable bytes is the gaven bytes */
-    def nextAre(bytes: Array[Byte]): Boolean
+    /** Check if the next readable bytes at the current [[readerOffset]] match the given [[bytes]].
+      * The [[readerOffset]] is not modified.
+      *
+      * @param bytes
+      *   The byte array to compare against.
+      * @return
+      *   `true` if the next readable bytes match the given bytes, `false` otherwise.
+      */
+    def nextMatch(bytes: Array[Byte]): Boolean
 
-    /** Check the byte at [[index]] is the gaven byte */
-    def indexIs(byte: Byte, index: Int): Boolean
+    /** Check if the byte at the given [[index]] equals the given [[byte]].
+      *
+      * @param index
+      *   The absolute offset into this buffer to check.
+      * @param byte
+      *   The byte value to compare against.
+      * @return
+      *   `true` if the byte at the given index equals the given byte, `false` otherwise.
+      */
+    def matchIs(index: Int, byte: Byte): Boolean
 
-    /** Check the bytes at [[index]] is the gaven bytes. */
-    def indexAre(bytes: Array[Byte], index: Int): Boolean
+    /** Check if the bytes at the given [[index]] match the given [[bytes]].
+      *
+      * @param index
+      *   The absolute offset into this buffer to start checking from.
+      * @param bytes
+      *   The byte array to compare against.
+      * @return
+      *   `true` if the bytes at the given index match the given bytes, `false` otherwise.
+      */
+    def matchAt(index: Int, bytes: Array[Byte]): Boolean
 
-    /** Check the next readable byte is in the gaven bytes */
+    /** Check if the next readable byte at the current [[readerOffset]] is in the given [[bytes]] set.
+      * The [[readerOffset]] is not modified.
+      *
+      * @param bytes
+      *   The set of byte values to check membership against.
+      * @return
+      *   `true` if the next readable byte is in the given set, `false` otherwise.
+      */
     def nextIn(bytes: Array[Byte]): Boolean
 
-    /** Check the byte at index is in the gaven bytes */
-    def indexIn(bytes: Array[Byte], index: Int): Boolean
+    /** Check if the byte at the given [[index]] is in the given [[bytes]] set.
+      *
+      * @param index
+      *   The absolute offset into this buffer to check.
+      * @param bytes
+      *   The set of byte values to check membership against.
+      * @return
+      *   `true` if the byte at the given index is in the given set, `false` otherwise.
+      */
+    def matchIn(index: Int, bytes: Array[Byte]): Boolean
 
-    /** Check the next readable byte is in the gaven byte range */
+    /** Check if the next readable byte at the current [[readerOffset]] is in the given range
+      * [[`[lower, upper]`]]. The [[readerOffset]] is not modified.
+      *
+      * @param lower
+      *   The lower bound (inclusive) of the range.
+      * @param upper
+      *   The upper bound (inclusive) of the range.
+      * @return
+      *   `true` if the next readable byte is within the given range, `false` otherwise.
+      */
     def nextInRange(lower: Byte, upper: Byte): Boolean
 
-    /** Check the byte at index is in the gaven byte range */
-    def indexInRange(lower: Byte, upper: Byte, index: Int): Boolean
+    /** Check if the byte at the given [[index]] is in the given range [[`[lower, upper]`]].
+      *
+      * @param index
+      *   The absolute offset into this buffer to check.
+      * @param lower
+      *   The lower bound (inclusive) of the range.
+      * @param upper
+      *   The upper bound (inclusive) of the range.
+      * @return
+      *   `true` if the byte at the given index is within the given range, `false` otherwise.
+      */
+    def matchInRange(index: Int, lower: Byte, upper: Byte): Boolean
 
-    /** increase the [[readerOffset]] by one if the next readable byte is the gaven byte */
+    /** Increase the [[readerOffset]] by one if the next readable byte equals the given [[byte]].
+      *
+      * @param byte
+      *   The byte value to compare against.
+      * @return
+      *   `true` if the reader offset was advanced, `false` otherwise.
+      */
     def skipIfNextIs(byte: Byte): Boolean
 
-    /** increase the [[readerOffset]] by length of [[bytes]] if the next readable bytes is the gaven bytes */
-    def skipIfNextAre(bytes: Array[Byte]): Boolean
+    /** Increase the [[readerOffset]] by the length of [[bytes]] if the next readable bytes match the given [[bytes]].
+      *
+      * @param bytes
+      *   The byte array to compare against.
+      * @param ignoreCase
+      *   Whether to ignore case when comparing bytes. Defaults to `false`.
+      * @return
+      *   `true` if the reader offset was advanced, `false` otherwise.
+      */
+    def skipIfNextMatch(bytes: Array[Byte], ignoreCase: Boolean = false): Boolean
 
-    /** increase the [[readerOffset]] by length of [[bytes]] if the next readable bytes is the gaven bytes
-     *  @param bytes
-     *    the compared bytes.
-     *  @param ignoreCase
-     *    whether ignore char case of bytes.
-     */
-    def skipIfNextIgnoreCaseAre(bytes: Array[Byte]): Boolean
-
-    /** increase the [[readerOffset]] by one if the next readable byte is in the gaven bytes. */
+    /** Increase the [[readerOffset]] by one if the next readable byte is in the given [[set]].
+      *
+      * @param set
+      *   The set of byte values to check membership against.
+      * @return
+      *   `true` if the reader offset was advanced, `false` otherwise.
+      */
     def skipIfNextIn(set: Array[Byte]): Boolean
 
-    /** increase the [[readerOffset]] by one if the next readable byte is in the gaven byte range. */
+    /** Increase the [[readerOffset]] by one if the next readable byte is in the given range
+      * [[`[lower, upper]`]].
+      *
+      * @param lower
+      *   The lower bound (inclusive) of the range.
+      * @param upper
+      *   The upper bound (inclusive) of the range.
+      * @return
+      *   `true` if the reader offset was advanced, `false` otherwise.
+      */
     def skipIfNextInRange(lower: Byte, upper: Byte): Boolean
 
 }

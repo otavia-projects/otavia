@@ -94,7 +94,7 @@ trait RedisSerde[T <: Command[?] | CommandResponse] extends Serde[T] {
      *    [[None]]
      */
     final protected def deserializeNull(in: Buffer): None.type =
-        if (in.skipIfNextIs('_') && in.skipIfNextAre(CRLF)) None
+        if (in.skipIfNextIs('_') && in.skipIfNextMatch(CRLF)) None
         else
             throw new RedisProtocolException(s"RESP3 Null except byte '_' but get '${in.getByte(in.readerOffset)}'")
 
@@ -124,8 +124,8 @@ trait RedisSerde[T <: Command[?] | CommandResponse] extends Serde[T] {
      *    double value
      */
     final protected def deserializeDouble(in: Buffer): Double =
-        if (in.skipIfNextAre(INF)) Double.PositiveInfinity
-        else if (in.skipIfNextAre(NE_INF)) Double.NegativeInfinity
+        if (in.skipIfNextMatch(INF)) Double.PositiveInfinity
+        else if (in.skipIfNextMatch(NE_INF)) Double.NegativeInfinity
         else if (in.skipIfNextIs(',')) {
             val double = in.readCharSequence(in.bytesBefore(CRLF)).toString.toDouble
             in.skipReadableBytes(2)
@@ -153,8 +153,8 @@ trait RedisSerde[T <: Command[?] | CommandResponse] extends Serde[T] {
      *    boolean value
      */
     final protected def deserializeBoolean(in: Buffer): Boolean =
-        if (in.skipIfNextAre(TRUE)) true
-        else if (in.skipIfNextAre(FALSE)) false
+        if (in.skipIfNextMatch(TRUE)) true
+        else if (in.skipIfNextMatch(FALSE)) false
         else
             throw new RedisProtocolException(s"RESP3 Boolean except byte '#' but get '${in.getByte(in.readerOffset)}'")
 
@@ -188,7 +188,7 @@ trait RedisSerde[T <: Command[?] | CommandResponse] extends Serde[T] {
         val strLen = in.readCharSequence(in.bytesBefore(CRLF)).toString.toInt
         in.skipReadableBytes(2)
         val error = in.readCharSequence(strLen).toString
-        if (in.skipIfNextAre(CRLF)) {} else
+        if (in.skipIfNextMatch(CRLF)) {} else
             throw new RedisProtocolException(
               s"RESP3 Blob Error except bytes '<CR><LF>' but get '${in.getBytes(in.readerOffset, 2).mkString("'", ", ", "'")}'"
             )
@@ -227,7 +227,7 @@ trait RedisSerde[T <: Command[?] | CommandResponse] extends Serde[T] {
         val strLen = in.readCharSequence(in.bytesBefore(CRLF)).toString.toInt
         in.skipReadableBytes(2)
         val verbatim = in.readCharSequence(strLen).toString
-        if (in.skipIfNextAre(CRLF)) {} else
+        if (in.skipIfNextMatch(CRLF)) {} else
             throw new RedisProtocolException(
               s"RESP3 Verbatim String except bytes '<CR><LF>' but get '${in.getBytes(in.readerOffset, 2).mkString("'", ", ", "'")}'"
             )

@@ -34,7 +34,7 @@ object OKSerde extends AbstractResponseSerde[OK] {
     }
 
     final override def deserialize(in: Buffer): OK = {
-        if (in.skipIfNextAre(OK_BYTES)) {
+        if (in.skipIfNextMatch(OK_BYTES)) {
             OK()
         } else if (in.skipIfNextIs('-')) {
             val errorMsg = deserializeSimpleError(in)

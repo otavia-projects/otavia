@@ -16,7 +16,7 @@
 
 package cc.otavia.buffer.pool
 
-import cc.otavia.buffer.{Buffer, BufferClosedException}
+import cc.otavia.buffer.{Buffer, BufferClosedException, BufferUtils}
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.{ByteBuffer, ByteOrder}
@@ -721,17 +721,17 @@ class AdaptiveBufferComprehensiveSuite extends AnyFunSuite {
             buf.setByte(63, 1)
             buf.setByte(64, 2)
             buf.readerOffset(63)
-            assert(buf.nextAre(Array[Byte](1, 2)))
+            assert(buf.nextMatch(Array[Byte](1, 2)))
         }
     }
 
-    test("skipIfNextAre across page boundary") {
+    test("skipIfNextMatch across page boundary") {
         withAdaptive { buf =>
             for (i <- 0 until 66) buf.writeByte(0)
             buf.setByte(63, 'A')
             buf.setByte(64, 'B')
             buf.readerOffset(63)
-            assert(buf.skipIfNextAre(Array[Byte]('A', 'B')))
+            assert(buf.skipIfNextMatch(Array[Byte]('A', 'B')))
             assert(buf.readerOffset == 65)
         }
     }
@@ -822,17 +822,17 @@ class AdaptiveBufferComprehensiveSuite extends AnyFunSuite {
     // String parsing methods
     // =========================================================================
 
-    test("readStringAsLong within single page") {
+    test("readFixedStringAsLong within single page") {
         withAdaptive { buf =>
             buf.writeCharSequence("12345", StandardCharsets.UTF_8)
-            assert(buf.readStringAsLong(5) == 12345L)
+            assert(BufferUtils.readFixedStringAsLong(buf, 5) == 12345L)
         }
     }
 
-    test("getStringAsDouble within single page") {
+    test("getFixedStringAsDouble within single page") {
         withAdaptive { buf =>
             buf.writeCharSequence("3.14", StandardCharsets.UTF_8)
-            assert(buf.getStringAsDouble(0, 4) == 3.14)
+            assert(BufferUtils.getFixedStringAsDouble(buf, 0, 4) == 3.14)
         }
     }
 

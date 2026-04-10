@@ -143,25 +143,25 @@ class ClientCodec(httpVersion: HttpVersion, isSsl: Boolean) extends ByteToMessag
         currentResponse = new HttpClientResponse()
         while (buffer.skipIfNextIs(HttpConstants.SP)) {}
         // parse http version
-        if (buffer.skipIfNextAre(HttpVersion.HTTP_1_1.bytes)) currentResponse.version = HttpVersion.HTTP_1_1
-        else if (buffer.skipIfNextAre(HttpVersion.HTTP_1_0.bytes)) currentResponse.version = HttpVersion.HTTP_1_0
+        if (buffer.skipIfNextMatch(HttpVersion.HTTP_1_1.bytes)) currentResponse.version = HttpVersion.HTTP_1_1
+        else if (buffer.skipIfNextMatch(HttpVersion.HTTP_1_0.bytes)) currentResponse.version = HttpVersion.HTTP_1_0
         while (buffer.skipIfNextIs(HttpConstants.SP)) {}
 
         // parse http status
-        if (buffer.skipIfNextAre(HttpStatus.OK.bytes)) currentResponse.status = HttpStatus.OK
-        else if (buffer.skipIfNextAre(HttpStatus.NOT_CONTENT.bytes)) currentResponse.status = HttpStatus.NOT_CONTENT
-        else if (buffer.skipIfNextAre(HttpStatus.PARTIAL_CONTENT.bytes))
+        if (buffer.skipIfNextMatch(HttpStatus.OK.bytes)) currentResponse.status = HttpStatus.OK
+        else if (buffer.skipIfNextMatch(HttpStatus.NOT_CONTENT.bytes)) currentResponse.status = HttpStatus.NOT_CONTENT
+        else if (buffer.skipIfNextMatch(HttpStatus.PARTIAL_CONTENT.bytes))
             currentResponse.status = HttpStatus.PARTIAL_CONTENT
 
         while (buffer.skipIfNextIs(HttpConstants.SP)) {}
 
-        buffer.skipIfNextAre(HttpConstants.HEADER_LINE_END)
+        buffer.skipIfNextMatch(HttpConstants.HEADER_LINE_END)
         parseState = ST_PARSE_HEADERS
     }
 
     private def parseHeaders(buffer: Buffer, headersLen: Int): Unit = {
         val headers = tempHeaders
-        buffer.skipIfNextAre(HttpConstants.HEADER_LINE_END)
+        buffer.skipIfNextMatch(HttpConstants.HEADER_LINE_END)
 
         var consumed = 0
         while (consumed < headersLen) {

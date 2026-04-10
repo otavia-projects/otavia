@@ -320,22 +320,22 @@ class PostgresDriver(override val options: PostgresConnectOptions) extends Drive
     }
 
     private def decodeCommandComplete(payload: Buffer, length: Int): Unit = {
-        if (payload.skipIfNextAre(CMD_COMPLETED_UPDATE)) {
+        if (payload.skipIfNextMatch(CMD_COMPLETED_UPDATE)) {
             val rows = BufferUtils.readStringAsInt(payload)
             modifyRows += rows
-        } else if (payload.skipIfNextAre(CMD_COMPLETED_DELETE)) {
+        } else if (payload.skipIfNextMatch(CMD_COMPLETED_DELETE)) {
             val rows = BufferUtils.readStringAsInt(payload)
             modifyRows += rows
-        } else if (payload.skipIfNextAre(CMD_COMPLETED_INSERT)) {
+        } else if (payload.skipIfNextMatch(CMD_COMPLETED_INSERT)) {
             val rows = BufferUtils.readStringAsInt(payload)
             modifyRows += rows
-        } else if (payload.skipIfNextAre(CMD_COMPLETED_SELECT)) {
+        } else if (payload.skipIfNextMatch(CMD_COMPLETED_SELECT)) {
             //
-        } else if (payload.skipIfNextAre(CMD_COMPLETED_FETCH)) {
+        } else if (payload.skipIfNextMatch(CMD_COMPLETED_FETCH)) {
             //
-        } else if (payload.skipIfNextAre(CMD_COMPLETED_COPY)) {
+        } else if (payload.skipIfNextMatch(CMD_COMPLETED_COPY)) {
             //
-        } else if (payload.skipIfNextAre(CMD_COMPLETED_MOVE)) {
+        } else if (payload.skipIfNextMatch(CMD_COMPLETED_MOVE)) {
             //
         }
     }

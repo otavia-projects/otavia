@@ -232,7 +232,7 @@ trait BufferNumberUtils extends BufferBaseUtils {
         }
 
         // Three-tier conversion with Float-specific bounds
-        var x: Float =
+        val x: Float =
             if (m10 == 0) 0.0f
             else if (e10 == 0) m10.toFloat
             else if (m10 < 4294967296L && e10 >= -22 && e10 <= 19 - digits) {
@@ -420,7 +420,7 @@ trait BufferNumberUtils extends BufferBaseUtils {
         }
 
         // Three-tier conversion
-        var x: Double =
+        val x: Double =
             if (m10 == 0) 0.0
             else if (e10 == 0) m10.toDouble
             else if (m10 < 4503599627370496L && e10 >= -22 && e10 <= 38 - digits) {
@@ -710,7 +710,7 @@ trait BufferNumberUtils extends BufferBaseUtils {
             val digits  = 18
             val dotOff  = scale.toLong - block
             if (dotOff > 0 && dotOff < digits) insertDot(buffer, lastPos - dotOff.toInt, lastPos)
-            else if (dotOff >= digits) insertDotWithZeroes(buffer, digits, (dotOff.toInt - digits), lastPos)
+            else if (dotOff >= digits) insertDotWithZeroes(buffer, digits, dotOff.toInt - digits, lastPos)
         } else {
             val qr = x.divideAndRemainder(ss(n))
             writeBigDecimalRemainder(buffer, qr(0), scale, block, n - 1, ss)
@@ -769,6 +769,175 @@ trait BufferNumberUtils extends BufferBaseUtils {
         }
         buffer.setShortLE(dotPos - 1, 0x2E30.toShort) // ".0"
         buffer.writerOffset(lastPos + off)
+    }
+
+    // =========================================================================
+    // Fixed-length string-to-number parsing methods
+    // =========================================================================
+
+    /** Parses a fixed-length string in the buffer as a signed Long, then advances the readerOffset by `length`.
+      * Uses direct byte-level parsing with overflow checking (port of JDK Long.parseLong).
+      */
+    final def readFixedStringAsLong(buffer: Buffer, length: Int, radix: Int = 10): Long = {
+        val value = getFixedStringAsLong(buffer, buffer.readerOffset, length, radix)
+        buffer.skipReadableBytes(length)
+        value
+    }
+
+    /** Parses a fixed-length string at the given index as a signed Long, without advancing the readerOffset.
+      * Uses direct byte-level parsing with overflow checking (port of JDK Long.parseLong).
+      */
+    final def getFixedStringAsLong(buffer: Buffer, index: Int, length: Int, radix: Int = 10): Long = {
+        if (radix < Character.MIN_RADIX)
+            throw new NumberFormatException(s"radix $radix less than Character.MIN_RADIX")
+        if (radix > Character.MAX_RADIX)
+            throw new NumberFormatException(s"radix $radix greater than Character.MAX_RADIX")
+        if (length <= 0)
+            throw new NumberFormatException(s"string length must be positive: length = $length")
+
+        var negative = false
+        var i        = 0
+        var limit    = -Long.MaxValue
+
+        val firstByte = buffer.getByte(index)
+        if (firstByte < '0') {
+            if (firstByte == '-') {
+                negative = true
+                limit = Long.MinValue
+            } else if (firstByte != '+')
+                throw new NumberFormatException(s"For input string: \"${buffer.getCharSequence(index, length)}\"")
+            if (length == 1)
+                throw new NumberFormatException(s"For input string: \"${firstByte.toChar}\"")
+            i = 1
+        }
+
+        val multmin = limit / radix
+        var result  = 0L
+        while (i < length) {
+            val digit = Character.digit(buffer.getByte(index + i), radix)
+            i += 1
+            if (digit < 0 || result < multmin)
+                throw new NumberFormatException(s"For input string: \"${buffer.getCharSequence(index, length)}\"")
+            result *= radix
+            if (result < limit + digit)
+                throw new NumberFormatException(s"For input string: \"${buffer.getCharSequence(index, length)}\"")
+            result -= digit
+        }
+
+        if (negative) result else -result
+    }
+
+    /** Parses a fixed-length string in the buffer as a Double, then advances the readerOffset by `length`.
+      * Uses zero-allocation manual mantissa/exponent parsing with three-tier conversion.
+      */
+    final def readFixedStringAsDouble(buffer: Buffer, length: Int): Double = {
+        val value = getFixedStringAsDouble(buffer, buffer.readerOffset, length)
+        buffer.skipReadableBytes(length)
+        value
+    }
+
+    /** Parses a fixed-length string at the given index as a Double, without advancing the readerOffset.
+      * Uses zero-allocation manual mantissa/exponent parsing with three-tier conversion.
+      */
+    final def getFixedStringAsDouble(buffer: Buffer, index: Int, length: Int): Double = {
+        if (length <= 0)
+            throw new NumberFormatException(s"string length must be positive: length = $length")
+
+        val end = index + length
+        var pos = index
+
+        // Parse sign
+        var isNeg = false
+        var b     = buffer.getByte(pos)
+        if (b == '+') { pos += 1; b = buffer.getByte(pos) }
+        if (b == '-') { isNeg = true; pos += 1; b = buffer.getByte(pos) }
+        if (b < '0' || b > '9')
+            throw new NumberFormatException(s"expected digit, but got '${b.toChar}'")
+
+        // Parse integer part as mantissa, tracking overflow as exponent adjustment
+        var m10: Long = (b - '0').toLong
+        var e10       = 0
+        var digits    = 1
+        pos += 1
+        var intContinue = true
+        while (intContinue && pos < end) {
+            b = buffer.getByte(pos)
+            if (b < '0' || b > '9') intContinue = false
+            else {
+                pos += 1
+                if (m10 < 922337203685477580L) { m10 = m10 * 10 + (b - '0'); digits += 1 }
+                else e10 += 1
+            }
+        }
+
+        // Parse fractional part
+        if (pos < end) {
+            b = buffer.getByte(pos)
+            if (b == '.') {
+                pos += 1
+                var noFracDigits = true
+                var fracContinue = true
+                while (fracContinue && pos < end) {
+                    b = buffer.getByte(pos)
+                    if (b < '0' || b > '9') {
+                        if (noFracDigits) throw new NumberFormatException("expected digit after '.'")
+                        fracContinue = false
+                    } else {
+                        pos += 1
+                        noFracDigits = false
+                        if (m10 < 922337203685477580L) { m10 = m10 * 10 + (b - '0'); digits += 1 }
+                        e10 -= 1
+                    }
+                }
+            }
+        }
+
+        // Parse exponent
+        if (pos < end) {
+            b = buffer.getByte(pos)
+            if ((b | 0x20) == 'e') {
+                pos += 1
+                val expSign =
+                    if (pos < end && buffer.getByte(pos) == '-') { pos += 1; -1 }
+                    else {
+                        if (pos < end && buffer.getByte(pos) == '+') pos += 1
+                        1
+                    }
+                if (pos >= end || buffer.getByte(pos) < '0' || buffer.getByte(pos) > '9')
+                    throw new NumberFormatException("expected digit in exponent")
+                var exp = 0
+                var expContinue = true
+                while (expContinue && pos < end) {
+                    b = buffer.getByte(pos)
+                    if (b < '0' || b > '9') expContinue = false
+                    else {
+                        pos += 1
+                        exp = exp * 10 + (b - '0')
+                        if (exp > 10000) throw new NumberFormatException("exponent too large")
+                    }
+                }
+                e10 += exp * expSign
+            }
+        }
+
+        // Three-tier conversion
+        val x: Double =
+            if (m10 == 0) 0.0
+            else if (e10 == 0) m10.toDouble
+            else if (m10 < 4503599627370496L && e10 >= -22 && e10 <= 38 - digits) {
+                val pow10 = BufferConstants.pow10Doubles
+                if (e10 < 0) m10 / pow10(-e10)
+                else if (e10 <= 22) m10 * pow10(e10)
+                else {
+                    val slop = 16 - digits
+                    (m10 * pow10(slop)) * pow10(e10 - slop)
+                }
+            } else {
+                if (e10 >= 310) Double.PositiveInfinity
+                else if (e10 < -343) 0.0
+                else m10 * math.pow(10, e10)
+            }
+        if (isNeg) -x else x
     }
 
 }

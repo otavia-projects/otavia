@@ -16,7 +16,7 @@
 
 package cc.otavia.postgres.impl
 
-import cc.otavia.buffer.Buffer
+import cc.otavia.buffer.{Buffer, BufferUtils}
 import cc.otavia.postgres.protocol.{DataFormat, DataType}
 import cc.otavia.sql.RowParser
 
@@ -78,7 +78,7 @@ final class PostgresRowParser extends RowParser {
         val columnDesc = desc(columnIndex)
         val rowOffset  = offsets(columnIndex)
         if (columnDesc.dataFormat == DataFormat.TEXT) {
-            val value = buffer.getStringAsLong(buffer.readerOffset + rowOffset.offset + 4, rowOffset.length)
+            val value = BufferUtils.getFixedStringAsLong(buffer, buffer.readerOffset + rowOffset.offset + 4, rowOffset.length)
             value.toInt
         } else {
             val value = buffer.getInt(buffer.readerOffset + rowOffset.offset + 4)
@@ -88,7 +88,7 @@ final class PostgresRowParser extends RowParser {
 
     override def parseLong(columnIndex: Int): Long = {
         val rowOffset = offsets(columnIndex)
-        buffer.getStringAsLong(buffer.readerOffset + rowOffset.offset + 4, rowOffset.length)
+        BufferUtils.getFixedStringAsLong(buffer, buffer.readerOffset + rowOffset.offset + 4, rowOffset.length)
     }
 
     override def parseFloat(columnIndex: Int): Float = ???

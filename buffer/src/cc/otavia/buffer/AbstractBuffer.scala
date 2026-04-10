@@ -22,10 +22,8 @@ import cc.otavia.buffer.BytesUtil.{bytes8Long, ignoreCaseEqual}
 
 import java.lang.{Byte as JByte, Double as JDouble, Float as JFloat, Long as JLong, Short as JShort}
 import java.nio.channels.{FileChannel, ReadableByteChannel, WritableByteChannel}
-import java.nio.charset.{Charset, StandardCharsets}
+import java.nio.charset.Charset
 import java.nio.{ByteBuffer, ByteOrder}
-import java.util
-import java.util.UUID
 import scala.language.unsafeNulls
 
 abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
@@ -36,7 +34,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
     underlying.limit(underlying.capacity())
     underlying.order(ByteOrder.BIG_ENDIAN)
 
-    override def toString: String = s"Buffer[ridx:$ridx, widx:$widx, cap:${capacity}]"
+    override def toString: String = s"Buffer[ridx:$ridx, widx:$widx, cap:$capacity]"
 
     override def readerOffset: Int = ridx
 
@@ -82,127 +80,6 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         new String(array, 0, length, charset)
     }
 
-    override def readStringAsLong(length: Int, radix: Int): Long = {
-        if (radix < Character.MIN_RADIX)
-            throw new NumberFormatException(s"radix $radix less than Character.MIN_RADIX")
-
-        if (radix > Character.MAX_RADIX)
-            throw new NumberFormatException(s"radix $radix greater than Character.MAX_RADIX")
-
-        checkRead(ridx, length)
-
-        var negative = false
-        var i        = 0
-        var limit    = -Integer.MAX_VALUE
-
-        if (length > 0) {
-            val firstByte = underlying.get(ridx)
-            if (firstByte < '0') { // Possible leading "+" or "-"
-                if (firstByte == '-') {
-                    negative = true
-                    limit = Integer.MIN_VALUE
-                } else if (firstByte != '+') {
-                    throw new NumberFormatException(
-                      s"For input string: \"${readCharSequence(length)}\" under radix $radix"
-                    )
-                }
-
-                if (length == 1)
-                    throw new NumberFormatException(s"For input string \"$readByte\" under radix $radix")
-
-                i += 1
-            }
-            val multmin = limit / radix
-            var result  = 0
-            while (i < length) {
-                val digit = Character.digit(underlying.get(ridx + i), radix)
-                i += 1
-                if (digit < 0 || result < multmin) {
-                    throw new NumberFormatException(
-                      s"For input string: \"${readCharSequence(length)}\" under radix $radix"
-                    )
-                }
-                result *= radix
-                if (result < limit + digit)
-                    throw new NumberFormatException(
-                      s"For input string: \"${readCharSequence(length)}\" under radix $radix"
-                    )
-
-                result -= digit
-            }
-
-            skipReadableBytes(length)
-
-            if (negative) result else -result
-
-        } else throw new NumberFormatException(s"string length must be positive: length = $length")
-    }
-
-    override def getStringAsLong(index: Int, length: Int, radix: Int): Long = {
-        if (radix < Character.MIN_RADIX)
-            throw new NumberFormatException(s"radix $radix less than Character.MIN_RADIX")
-
-        if (radix > Character.MAX_RADIX)
-            throw new NumberFormatException(s"radix $radix greater than Character.MAX_RADIX")
-
-        checkRead(index, length)
-
-        var negative = false
-        var i        = 0
-        var limit    = -Integer.MAX_VALUE
-
-        if (length > 0) {
-            val firstByte = underlying.get(index)
-            if (firstByte < '0') { // Possible leading "+" or "-"
-                if (firstByte == '-') {
-                    negative = true
-                    limit = Integer.MIN_VALUE
-                } else if (firstByte != '+') {
-                    throw new NumberFormatException(
-                      s"For input string: \"${getCharSequence(index, length)}\" under radix $radix"
-                    )
-                }
-
-                if (length == 1)
-                    throw new NumberFormatException(s"For input string \"${getByte(index)}\" under radix $radix")
-
-                i += 1
-            }
-            val multmin = limit / radix
-            var result  = 0
-            while (i < length) {
-                val digit = Character.digit(underlying.get(index + i), radix)
-                i += 1
-                if (digit < 0 || result < multmin) {
-                    throw new NumberFormatException(
-                      s"For input string: \"${getCharSequence(index, length)}\" under radix $radix"
-                    )
-                }
-                result *= radix
-                if (result < limit + digit)
-                    throw new NumberFormatException(
-                      s"For input string: \"${getCharSequence(index, length)}\" under radix $radix"
-                    )
-
-                result -= digit
-            }
-
-            if (negative) result else -result
-
-        } else throw new NumberFormatException(s"string length must be positive: length = $length")
-    }
-
-    override def readStringAsDouble(length: Int): Double = {
-        val value = getStringAsDouble(ridx, length)
-        ridx += length
-        value
-    }
-
-    override def getStringAsDouble(index: Int, length: Int): Double = { // TODO: optimum
-        val str = getCharSequence(index, length).toString
-        str.toDouble
-    }
-
     override def writeBytes(source: Buffer, length: Int): Buffer = {
         underlying.position(widx)
         source.readBytes(underlying, length)
@@ -219,7 +96,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
 
     override def writeBytes(length: Int, value: Byte): Buffer = {
         if (writableBytes < length)
-            throw new IndexOutOfBoundsException(s"except length ${length}, but only $writableBytes")
+            throw new IndexOutOfBoundsException(s"except length $length, but only $writableBytes")
         var i = 0
         while (i < length) {
             underlying.put(widx + i, value)
@@ -1273,11 +1150,11 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
 
     override def openCursor(fromOffset: Int, length: Int): ByteCursor = {
         if (closed) throw new BufferClosedException()
-        if (fromOffset < 0) throw new IndexOutOfBoundsException(s"The fromOffset cannot be negative: ${fromOffset}")
-        if (length < 0) throw new IndexOutOfBoundsException(s"The length cannot be negative: ${length}")
+        if (fromOffset < 0) throw new IndexOutOfBoundsException(s"The fromOffset cannot be negative: $fromOffset")
+        if (length < 0) throw new IndexOutOfBoundsException(s"The length cannot be negative: $length")
         if (capacity < fromOffset + length)
             throw new IndexOutOfBoundsException(
-              s"The fromOffset + length is beyond the end of the buffer: fromOffset = ${fromOffset}, length = ${length}"
+              s"The fromOffset + length is beyond the end of the buffer: fromOffset = $fromOffset, length = $length"
             )
 
         new ByteCursor {
@@ -1302,10 +1179,10 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
 
     override def openReverseCursor(fromOffset: Int, length: Int): ByteCursor = {
         if (closed) throw new BufferClosedException()
-        if (fromOffset < 0) throw new IndexOutOfBoundsException(s"The fromOffset cannot be negative: ${fromOffset}")
-        if (length < 0) throw new IndexOutOfBoundsException(s"The length cannot be negative: ${length}")
+        if (fromOffset < 0) throw new IndexOutOfBoundsException(s"The fromOffset cannot be negative: $fromOffset")
+        if (length < 0) throw new IndexOutOfBoundsException(s"The length cannot be negative: $length")
         if (capacity <= fromOffset)
-            throw new IndexOutOfBoundsException(s"The fromOffset is beyond the end of the buffer: ${fromOffset}")
+            throw new IndexOutOfBoundsException(s"The fromOffset is beyond the end of the buffer: $fromOffset")
         if (fromOffset - length < -1)
             throw new IndexOutOfBoundsException(
               "The fromOffset - length would underflow the buffer: " + "fromOffset = " + fromOffset + ", length = " + length + '.'
@@ -1333,8 +1210,8 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
     override def ensureWritable(size: Int, minimumGrowth: Int, allowCompaction: Boolean): Buffer = {
         if (this.writableBytes >= size) {} else if (capacity - this.readableBytes >= size) {
             if (allowCompaction) compact()
-            else throw new IllegalStateException(s"${this} can't write with size ${size} ")
-        } else throw new IllegalStateException(s"${this} can't write with size ${size} ")
+            else throw new IllegalStateException(s"$this can't write with size $size ")
+        } else throw new IllegalStateException(s"$this can't write with size $size ")
         this
     }
 
@@ -1711,7 +1588,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
 
     override def nextIs(byte: Byte): Boolean = underlying.get(ridx) == byte
 
-    override def nextAre(bytes: Array[Byte]): Boolean = if (readableBytes >= bytes.length) {
+    override def nextMatch(bytes: Array[Byte]): Boolean = if (readableBytes >= bytes.length) {
         var same: Boolean = true
         var i             = 0
         while (same && i < bytes.length) {
@@ -1721,9 +1598,9 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         same
     } else false
 
-    override def indexIs(byte: Byte, index: Int): Boolean = underlying.get(index) == byte
+    override def matchIs(index: Int, byte: Byte): Boolean = underlying.get(index) == byte
 
-    override def indexAre(bytes: Array[Byte], index: Int): Boolean = if (widx - index >= bytes.length) {
+    override def matchAt(index: Int, bytes: Array[Byte]): Boolean = if (widx - index >= bytes.length) {
         var same: Boolean = true
         var i             = 0
         while (same && i < bytes.length) {
@@ -1744,7 +1621,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         !notIn
     }
 
-    override def indexIn(bytes: Array[Byte], index: Int): Boolean = {
+    override def matchIn(index: Int, bytes: Array[Byte]): Boolean = {
         var notIn = true
         var i     = 0
         val b     = underlying.get(index)
@@ -1760,7 +1637,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         b >= lower && b <= upper
     }
 
-    override def indexInRange(lower: Byte, upper: Byte, index: Int): Boolean = {
+    override def matchInRange(index: Int, lower: Byte, upper: Byte): Boolean = {
         val b = underlying.get(index)
         b >= lower && b <= upper
     }
@@ -1770,22 +1647,12 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
         true
     } else false
 
-    override def skipIfNextAre(bytes: Array[Byte]): Boolean = {
+    override def skipIfNextMatch(bytes: Array[Byte], ignoreCase: Boolean = false): Boolean = {
         var skip = true
         var i    = 0
         while (skip && i < bytes.length) {
-            skip = underlying.get(ridx + i) == bytes(i)
-            i += 1
-        }
-        if (skip) ridx += bytes.length
-        skip
-    }
-
-    override def skipIfNextIgnoreCaseAre(bytes: Array[Byte]): Boolean = {
-        var skip = true
-        var i    = 0
-        while (skip && i < bytes.length) {
-            skip = ignoreCaseEqual(underlying.get(ridx + i), bytes(i))
+            skip = if (ignoreCase) ignoreCaseEqual(underlying.get(ridx + i), bytes(i))
+                   else underlying.get(ridx + i) == bytes(i)
             i += 1
         }
         if (skip) ridx += bytes.length
@@ -1826,7 +1693,7 @@ abstract class AbstractBuffer(val underlying: ByteBuffer) extends Buffer {
 
     inline private def outOfBounds(index: Int, size: Int): IndexOutOfBoundsException =
         new IndexOutOfBoundsException(
-          s"Access at index ${index} of size ${size} is out of bounds: [read 0 to ${widx}, write 0 to ${capacity}]."
+          s"Access at index $index of size $size is out of bounds: [read 0 to $widx, write 0 to $capacity]."
         )
 
     inline private def checkFromTo(from: Int, to: Int): Unit = {

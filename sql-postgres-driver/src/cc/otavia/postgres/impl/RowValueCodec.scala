@@ -18,7 +18,6 @@ package cc.otavia.postgres.impl
 
 import cc.otavia.buffer.{Buffer, BufferUtils}
 import cc.otavia.postgres.protocol.DataType
-import cc.otavia.postgres.protocol.DataType.UUID
 
 import java.nio.charset.StandardCharsets
 import java.time.*
@@ -37,27 +36,32 @@ object RowValueCodec {
             case _             => ???
     }
 
-    def textDecodeBOOL(index: Int, len: Int, buffer: Buffer): Boolean = buffer.indexIs('t', index)
+    def textDecodeBOOL(index: Int, len: Int, buffer: Buffer): Boolean = buffer.matchIs(index, 't')
 
     def binaryDecodeBOOL(index: Int, len: Int, buffer: Buffer): Boolean = buffer.getBoolean(index)
 
-    def textDecodeINT2(index: Int, len: Int, buffer: Buffer): Short = buffer.getStringAsLong(index, len).toShort
+    def textDecodeINT2(index: Int, len: Int, buffer: Buffer): Short =
+        BufferUtils.getFixedStringAsLong(buffer, index, len).toShort
 
     def binaryDecodeINT2(index: Int, len: Int, buffer: Buffer): Short = buffer.getShort(index)
 
-    def textDecodeINT4(index: Int, len: Int, buffer: Buffer): Int = buffer.getStringAsLong(index, len).toInt
+    def textDecodeINT4(index: Int, len: Int, buffer: Buffer): Int =
+        BufferUtils.getFixedStringAsLong(buffer, index, len).toInt
 
     def binaryDecodeINT4(index: Int, len: Int, buffer: Buffer): Int = buffer.getInt(index)
 
-    def textDecodeINT8(index: Int, len: Int, buffer: Buffer): Long = buffer.getStringAsLong(index, len)
+    def textDecodeINT8(index: Int, len: Int, buffer: Buffer): Long =
+        BufferUtils.getFixedStringAsLong(buffer, index, len)
 
     def binaryDecodeINT8(index: Int, len: Int, buffer: Buffer): Long = buffer.getLong(index)
 
-    def textDecodeFLOAT4(index: Int, len: Int, buffer: Buffer): Float = buffer.getStringAsDouble(index, len).toFloat
+    def textDecodeFLOAT4(index: Int, len: Int, buffer: Buffer): Float =
+        BufferUtils.getFixedStringAsDouble(buffer, index, len).toFloat
 
     def binaryDecodeFLOAT4(index: Int, len: Int, buffer: Buffer): Float = buffer.getFloat(index)
 
-    def textDecodeFLOAT8(index: Int, len: Int, buffer: Buffer): Double = buffer.getStringAsDouble(index, len)
+    def textDecodeFLOAT8(index: Int, len: Int, buffer: Buffer): Double =
+        BufferUtils.getFixedStringAsDouble(buffer, index, len)
 
     def binaryDecodeFLOAT8(index: Int, len: Int, buffer: Buffer): Double = buffer.getDouble(index)
 
@@ -146,7 +150,7 @@ object RowValueCodec {
     private def decodeHexChar(ch: Byte): Byte = (((ch & 0x1f) + ((ch >> 6) * 0x19) - 0x10) & 0x0f).toByte
 
     private def isHexFormat(index: Int, len: Int, buffer: Buffer): Boolean =
-        len >= 2 && buffer.indexAre(HEX_PREFIX, index)
+        len >= 2 && buffer.matchAt(index, HEX_PREFIX)
 
     private val TIMETZ_FORMAT = new DateTimeFormatterBuilder().parseCaseInsensitive
         .append(ISO_LOCAL_TIME)

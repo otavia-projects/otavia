@@ -33,7 +33,7 @@ class JsonHelperSuite extends AnyFunSuite {
 
         JsonHelper.serializeLocalDate(localDate, buffer)
 
-        assert(buffer.nextAre("\"2024-07-01\"".getBytes()))
+        assert(buffer.nextMatch("\"2024-07-01\"".getBytes()))
     }
 
     // ==================== deserializeString tests ====================

@@ -439,7 +439,7 @@ trait BufferTimeUtils extends BufferNumberUtils {
             val tp     = BufferConstants.allZoneIdSort(i)
             val zoneId = tp._1
             val bytes  = tp._2
-            if (buffer.readableBytes >= bytes.length && buffer.nextIs(bytes(0)) && buffer.skipIfNextAre(bytes)) {
+            if (buffer.readableBytes >= bytes.length && buffer.nextIs(bytes(0)) && buffer.skipIfNextMatch(bytes)) {
                 zone = zoneId
                 break = true
             }
@@ -703,23 +703,23 @@ trait BufferTimeUtils extends BufferNumberUtils {
             val length = readStringAsLong(buffer)
             while (buffer.skipIfNextIs(' ')) {}
             val timeUnit =
-                if (buffer.skipIfNextAre(DurationConstants.DAY_BYTES)) DAYS
-                else if (buffer.skipIfNextAre(DurationConstants.HOUR_BYTES)) HOURS
-                else if (buffer.skipIfNextAre(DurationConstants.MINUTE_BYTES)) MINUTES
-                else if (buffer.skipIfNextAre(DurationConstants.SECOND_BYTES)) SECONDS
-                else if (buffer.skipIfNextAre(DurationConstants.MILLISECOND_BYTES)) MILLISECONDS
-                else if (buffer.skipIfNextAre(DurationConstants.MICROSECOND_BYTES)) MICROSECONDS
-                else if (buffer.skipIfNextAre(DurationConstants.NANOSECOND_BYTES)) NANOSECONDS
+                if (buffer.skipIfNextMatch(DurationConstants.DAY_BYTES)) DAYS
+                else if (buffer.skipIfNextMatch(DurationConstants.HOUR_BYTES)) HOURS
+                else if (buffer.skipIfNextMatch(DurationConstants.MINUTE_BYTES)) MINUTES
+                else if (buffer.skipIfNextMatch(DurationConstants.SECOND_BYTES)) SECONDS
+                else if (buffer.skipIfNextMatch(DurationConstants.MILLISECOND_BYTES)) MILLISECONDS
+                else if (buffer.skipIfNextMatch(DurationConstants.MICROSECOND_BYTES)) MICROSECONDS
+                else if (buffer.skipIfNextMatch(DurationConstants.NANOSECOND_BYTES)) NANOSECONDS
                 else throw new NumberFormatException(s"Duration format error at buffer index ${buffer.readerOffset}")
 
             if (length != 1) buffer.skipIfNextIs('s')
             Duration(length, timeUnit)
         } else { // parse Infinite Duration
-            if (buffer.skipIfNextAre(DurationConstants.Undefined)) Duration.Undefined
-            else if (buffer.skipIfNextAre(DurationConstants.Inf)) Duration.Inf
-            else if (buffer.skipIfNextAre(DurationConstants.MinusInf)) Duration.MinusInf
-            else if (DurationConstants.InfArray.exists(bts => buffer.skipIfNextAre(bts))) Duration.Inf
-            else if (DurationConstants.MinusInfArray.exists(bts => buffer.skipIfNextAre(bts))) Duration.MinusInf
+            if (buffer.skipIfNextMatch(DurationConstants.Undefined)) Duration.Undefined
+            else if (buffer.skipIfNextMatch(DurationConstants.Inf)) Duration.Inf
+            else if (buffer.skipIfNextMatch(DurationConstants.MinusInf)) Duration.MinusInf
+            else if (DurationConstants.InfArray.exists(bts => buffer.skipIfNextMatch(bts))) Duration.Inf
+            else if (DurationConstants.MinusInfArray.exists(bts => buffer.skipIfNextMatch(bts))) Duration.MinusInf
             else throw new NumberFormatException(s"Duration format error at buffer index ${buffer.readerOffset}")
         }
     }

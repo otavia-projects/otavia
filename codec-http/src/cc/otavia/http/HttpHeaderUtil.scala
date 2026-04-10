@@ -60,7 +60,7 @@ object HttpHeaderUtil {
             var i                  = 0
             while (continue && i < keys.length) {
                 val k = keys(i)
-                if (buffer.skipIfNextIgnoreCaseAre(k.getBytes)) {
+                if (buffer.skipIfNextMatch(k.getBytes, ignoreCase = true)) {
                     key = k
                     continue = false
                 } else i += 1
@@ -81,7 +81,7 @@ object HttpHeaderUtil {
             var i        = 0
             while (continue && i < vs.length) {
                 val v = vs(i)
-                if (buffer.skipIfNextIgnoreCaseAre(v.getBytes)) {
+                if (buffer.skipIfNextMatch(v.getBytes, ignoreCase = true)) {
                     value = v
                     continue = false
                 } else i += 1

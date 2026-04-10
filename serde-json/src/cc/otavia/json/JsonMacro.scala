@@ -742,7 +742,7 @@ object JsonMacro {
                             case '[t1] =>
                                 '{
                                     JsonHelper.skipBlanks($in)
-                                    if ($in.skipIfNextAre(JsonConstants.TOKEN_NULL)) None
+                                    if ($in.skipIfNextMatch(JsonConstants.TOKEN_NULL)) None
                                     else Some(${ genReadCode[t1](tpe1, in, isString) })
                                 }.asExprOf[T]
                     } else if (isTuple(tpe))
@@ -1075,7 +1075,7 @@ object JsonMacro {
                                 Block(
                                     List('{ JsonHelper.skipBlanks($in) }.asTerm),
                                     If(
-                                        '{ $in.skipIfNextAre(JsonConstants.TOKEN_NULL) }.asTerm,
+                                        '{ $in.skipIfNextMatch(JsonConstants.TOKEN_NULL) }.asTerm,
                                         Literal(UnitConstant()),
                                         Assign(Ref(sym), readExpr.asTerm)
                                     )

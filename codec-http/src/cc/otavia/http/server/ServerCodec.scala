@@ -408,8 +408,8 @@ class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array
     private def httpVersion(buffer: Buffer): HttpVersion = {
         while (buffer.skipIfNextIs(HttpConstants.SP)) {}
         val version =
-            if (buffer.skipIfNextAre(HttpVersion.HTTP_1_1.bytes)) HttpVersion.HTTP_1_1
-            else if (buffer.skipIfNextAre(HttpVersion.HTTP_2.bytes)) HttpVersion.HTTP_2
+            if (buffer.skipIfNextMatch(HttpVersion.HTTP_1_1.bytes)) HttpVersion.HTTP_1_1
+            else if (buffer.skipIfNextMatch(HttpVersion.HTTP_2.bytes)) HttpVersion.HTTP_2
             else HttpVersion.HTTP_1_0
         buffer.skipReadableBytes(buffer.bytesBefore(HttpConstants.HEADER_LINE_END) + 2)
         version

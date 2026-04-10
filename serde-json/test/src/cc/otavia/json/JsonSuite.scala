@@ -32,7 +32,7 @@ class JsonSuite extends AnyFunSuite {
         val buffer  = Buffer.wrap(new Array[Byte](1024)).clean()
         serde.serialize(b, buffer)
         val bytes = b.toInt.toString.getBytes(StandardCharsets.US_ASCII)
-        assert(buffer.skipIfNextAre(bytes))
+        assert(buffer.skipIfNextMatch(bytes))
         buffer.writeBytes(bytes)
         assert(serde.deserialize(buffer) == b)
     }

@@ -38,7 +38,7 @@ private[json] object JsonHelper {
 
     final def isNextToken(in: Buffer, token: Array[Byte]): Boolean = {
         skipBlanks(in)
-        in.skipIfNextAre(token)
+        in.skipIfNextMatch(token)
     }
 
     final def serializeObjectStart(out: Buffer): Unit = out.writeByte(ASCII.BRACE_LEFT)
@@ -476,9 +476,9 @@ private[json] object JsonHelper {
             skipStringContent(in)
         } else if (b == '{') skipObject(in)
         else if (b == '[') skipArray(in)
-        else if (b == 't') assert(in.skipIfNextAre(JsonConstants.TOKEN_TURE), "expected 'true'")
-        else if (b == 'f') assert(in.skipIfNextAre(JsonConstants.TOKEN_FALSE), "expected 'false'")
-        else if (b == 'n') assert(in.skipIfNextAre(JsonConstants.TOKEN_NULL), "expected 'null'")
+        else if (b == 't') assert(in.skipIfNextMatch(JsonConstants.TOKEN_TURE), "expected 'true'")
+        else if (b == 'f') assert(in.skipIfNextMatch(JsonConstants.TOKEN_FALSE), "expected 'false'")
+        else if (b == 'n') assert(in.skipIfNextMatch(JsonConstants.TOKEN_NULL), "expected 'null'")
         else skipNumber(in)
     }
 

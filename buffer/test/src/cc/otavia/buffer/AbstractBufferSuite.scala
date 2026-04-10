@@ -497,38 +497,38 @@ class AbstractBufferSuite extends AnyFunSuite {
     // String parsing methods
     // =========================================================================
 
-    test("readStringAsLong roundtrip") {
+    test("readFixedStringAsLong roundtrip") {
         withBuffers() { buf =>
             buf.writeCharSequence("12345", StandardCharsets.UTF_8)
-            assert(buf.readStringAsLong(5) == 12345L)
+            assert(BufferUtils.readFixedStringAsLong(buf, 5) == 12345L)
         }
     }
 
-    test("readStringAsLong negative") {
+    test("readFixedStringAsLong negative") {
         withBuffers() { buf =>
             buf.writeCharSequence("-999", StandardCharsets.UTF_8)
-            assert(buf.readStringAsLong(4) == -999L)
+            assert(BufferUtils.readFixedStringAsLong(buf, 4) == -999L)
         }
     }
 
-    test("getStringAsLong") {
+    test("getFixedStringAsLong") {
         withBuffers() { buf =>
             buf.writeCharSequence("42", StandardCharsets.UTF_8)
-            assert(buf.getStringAsLong(0, 2) == 42L)
+            assert(BufferUtils.getFixedStringAsLong(buf, 0, 2) == 42L)
         }
     }
 
-    test("readStringAsDouble roundtrip") {
+    test("readFixedStringAsDouble roundtrip") {
         withBuffers() { buf =>
             buf.writeCharSequence("3.14", StandardCharsets.UTF_8)
-            assert(buf.readStringAsDouble(4) == 3.14)
+            assert(BufferUtils.readFixedStringAsDouble(buf, 4) == 3.14)
         }
     }
 
-    test("getStringAsDouble") {
+    test("getFixedStringAsDouble") {
         withBuffers() { buf =>
             buf.writeCharSequence("2.71", StandardCharsets.UTF_8)
-            assert(buf.getStringAsDouble(0, 4) == 2.71)
+            assert(BufferUtils.getFixedStringAsDouble(buf, 0, 4) == 2.71)
         }
     }
 
@@ -821,27 +821,27 @@ class AbstractBufferSuite extends AnyFunSuite {
     test("nextAre checks next readable bytes") {
         withBuffers() { buf =>
             buf.writeBytes(Array[Byte](1, 2, 3))
-            assert(buf.nextAre(Array[Byte](1, 2, 3)) == true)
-            assert(buf.nextAre(Array[Byte](1, 2)) == true)
-            assert(buf.nextAre(Array[Byte](2, 3)) == false)
+            assert(buf.nextMatch(Array[Byte](1, 2, 3)) == true)
+            assert(buf.nextMatch(Array[Byte](1, 2)) == true)
+            assert(buf.nextMatch(Array[Byte](2, 3)) == false)
         }
     }
 
-    test("indexIs checks byte at index") {
+    test("matchIs checks byte at index") {
         withBuffers() { buf =>
             buf.writeBytes(Array[Byte](10, 20, 30))
-            assert(buf.indexIs(10.toByte, 0) == true)
-            assert(buf.indexIs(20.toByte, 1) == true)
-            assert(buf.indexIs(10.toByte, 1) == false)
+            assert(buf.matchIs(0, 10.toByte) == true)
+            assert(buf.matchIs(1, 20.toByte) == true)
+            assert(buf.matchIs(1, 10.toByte) == false)
         }
     }
 
-    test("indexAre checks bytes at index") {
+    test("matchAt checks bytes at index") {
         withBuffers() { buf =>
             buf.writeBytes(Array[Byte](1, 2, 3, 4))
-            assert(buf.indexAre(Array[Byte](2, 3), 1) == true)
-            assert(buf.indexAre(Array[Byte](1, 2, 3), 0) == true)
-            assert(buf.indexAre(Array[Byte](2, 3), 0) == false)
+            assert(buf.matchAt(1, Array[Byte](2, 3)) == true)
+            assert(buf.matchAt(0, Array[Byte](1, 2, 3)) == true)
+            assert(buf.matchAt(0, Array[Byte](2, 3)) == false)
         }
     }
 
@@ -853,11 +853,11 @@ class AbstractBufferSuite extends AnyFunSuite {
         }
     }
 
-    test("indexIn checks if byte at index is in set") {
+    test("matchIn checks if byte at index is in set") {
         withBuffers() { buf =>
             buf.writeBytes(Array[Byte]('a', 'b'))
-            assert(buf.indexIn(Array[Byte]('a', 'b', 'c'), 0) == true)
-            assert(buf.indexIn(Array[Byte]('x'), 0) == false)
+            assert(buf.matchIn(0, Array[Byte]('a', 'b', 'c')) == true)
+            assert(buf.matchIn(0, Array[Byte]('x')) == false)
         }
     }
 
@@ -869,11 +869,11 @@ class AbstractBufferSuite extends AnyFunSuite {
         }
     }
 
-    test("indexInRange checks range at index") {
+    test("matchInRange checks range at index") {
         withBuffers() { buf =>
             buf.writeBytes(Array[Byte]('a', 'Z'))
-            assert(buf.indexInRange('a'.toByte, 'z'.toByte, 0) == true)
-            assert(buf.indexInRange('a'.toByte, 'z'.toByte, 1) == false)
+            assert(buf.matchInRange(0, 'a'.toByte, 'z'.toByte) == true)
+            assert(buf.matchInRange(1, 'a'.toByte, 'z'.toByte) == false)
         }
     }
 
@@ -891,20 +891,20 @@ class AbstractBufferSuite extends AnyFunSuite {
         }
     }
 
-    test("skipIfNextAre") {
+    test("skipIfNextMatch") {
         withBuffers() { buf =>
             buf.writeBytes(Array[Byte](1, 2, 3, 4))
-            assert(buf.skipIfNextAre(Array[Byte](1, 2)) == true)
+            assert(buf.skipIfNextMatch(Array[Byte](1, 2)) == true)
             assert(buf.readerOffset == 2)
-            assert(buf.skipIfNextAre(Array[Byte](3, 4)) == true)
+            assert(buf.skipIfNextMatch(Array[Byte](3, 4)) == true)
             assert(buf.readerOffset == 4)
         }
     }
 
-    test("skipIfNextIgnoreCaseAre") {
+    test("skipIfNextMatch with ignoreCase") {
         withBuffers() { buf =>
             buf.writeBytes("Hello".getBytes(StandardCharsets.UTF_8))
-            assert(buf.skipIfNextIgnoreCaseAre("HELLO".getBytes(StandardCharsets.UTF_8)) == true)
+            assert(buf.skipIfNextMatch("HELLO".getBytes(StandardCharsets.UTF_8), ignoreCase = true) == true)
             assert(buf.readerOffset == 5)
         }
     }
