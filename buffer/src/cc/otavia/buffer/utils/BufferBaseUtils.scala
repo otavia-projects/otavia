@@ -29,7 +29,7 @@ trait BufferBaseUtils {
         var x: Int = 0
         while (buffer.readableBytes > 0 && buffer.nextInRange('0', '9')) {
             x = x * 10 + (buffer.readByte - '0')
-            if (x >= 128) throw new NumberFormatException(s"short value overflow error")
+            if (x > 128) throw new NumberFormatException(s"short value overflow error")
         }
         if (isNeg) x = -x
         x.toByte

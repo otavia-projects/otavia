@@ -88,14 +88,14 @@ object JsonMacro {
         def isEnumOrModuleValue(tpe: TypeRepr): Boolean = tpe.isSingleton &&
             (tpe.typeSymbol.flags.is(Flags.Module) || tpe.termSymbol.flags.is(Flags.Enum))
 
-        def adtChildren(tpe: TypeRepr): Seq[TypeRepr] = { // TODO: explore yet one variant with mirrors
+        def adtChildren(tpe: TypeRepr): Seq[TypeRepr] = {
             def resolveParentTypeArg(
                 child: Symbol,
                 fromNudeChildTarg: TypeRepr,
                 parentTarg: TypeRepr,
                 binding: Map[String, TypeRepr]
             ): Map[String, TypeRepr] = {
-                if (fromNudeChildTarg.typeSymbol.isTypeParam) { // TODO: check for paramRef instead ?
+                if (fromNudeChildTarg.typeSymbol.isTypeParam) {
                     val paramName = fromNudeChildTarg.typeSymbol.name
                     binding.get(paramName) match
                         case None => binding.updated(paramName, parentTarg)
@@ -107,7 +107,7 @@ object JsonMacro {
                                       s"${tpe.show} two times differently, with ${oldBinding.show} and ${parentTarg.show}"
                                 )
                 } else if (fromNudeChildTarg <:< parentTarg)
-                    binding // TODO: assure parentTag is covariant, get covariance from type parameters
+                    binding
                 else {
                     (fromNudeChildTarg, parentTarg) match
                         case (AppliedType(ctycon, ctargs), AppliedType(ptycon, ptargs)) =>
@@ -357,8 +357,10 @@ object JsonMacro {
                   val transformed = name
                   JavaEnumValueInfo(sym, transformed, name != transformed)
               }
-              val nameCollisions = values.map(_.name).distinct // TODO:
-              // TODO:
+              val names = values.map(_.name)
+              val duplicates = names.diff(names.distinct)
+              if (duplicates.nonEmpty)
+                  fail(s"Duplicate JSON names in Java enum ${tpe.show}: ${duplicates.mkString(", ")}")
               values
           }
         )
@@ -647,7 +649,8 @@ object JsonMacro {
                         writeFields.append('{ $out.writeByte(ASCII.COMMA) }.asTerm)
             }
             Block(
-              '{ JsonHelper.serializeObjectStart($out) }.asTerm :: writeFields.init.toList,
+              '{ JsonHelper.serializeObjectStart($out) }.asTerm ::
+                  (if (writeFields.isEmpty) Nil else writeFields.init.toList),
               '{ JsonHelper.serializeObjectEnd($out) }.asTerm
             ).asExprOf[Unit]
         }
@@ -789,13 +792,368 @@ object JsonMacro {
                                 ${ readCreateBlock.asExprOf[T] }
                             }
                         }
+                    else if (tpe =:= TypeRepr.of[String])
+                        '{ JsonHelper.skipBlanks($in); JsonHelper.deserializeString($in) }.asExprOf[T]
+                    else if (tpe <:< TypeRepr.of[Array[?]])
+                        withDecoderFor(methodKey, in) { in =>
+                            val tpe1 = typeArg1(tpe)
+                            tpe1.asType match
+                                case '[t1] =>
+                                    val ct = summonClassTag(tpe1).asExprOf[ClassTag[t1]]
+                                    '{
+                                        given ClassTag[t1] = $ct
+                                        JsonHelper.skipBlanks($in)
+                                        assert(JsonHelper.isNextToken($in, ASCII.BRACKET_LEFT), "expected '['")
+                                        if (JsonHelper.isNextToken($in, ASCII.BRACKET_RIGHT)) Array.empty[t1]
+                                        else {
+                                            val buf = new scala.collection.mutable.ArrayBuffer[t1]
+                                            var continue = true
+                                            while (continue) {
+                                                buf += ${ genReadCode[t1](tpe1, in) }
+                                                JsonHelper.skipBlanks($in)
+                                                if ($in.skipIfNextIs(ASCII.COMMA)) {}
+                                                else {
+                                                    assert(JsonHelper.skipArrayEnd($in), "expected ']'")
+                                                    continue = false
+                                                }
+                                            }
+                                            buf.toArray
+                                        }
+                                    }.asExprOf[T]
+                        }
+                    else if (tpe <:< TypeRepr.of[List[?]])
+                        withDecoderFor(methodKey, in) { in =>
+                            val tpe1 = typeArg1(tpe)
+                            tpe1.asType match
+                                case '[t1] =>
+                                    '{
+                                        JsonHelper.skipBlanks($in)
+                                        assert(JsonHelper.isNextToken($in, ASCII.BRACKET_LEFT), "expected '['")
+                                        if (JsonHelper.isNextToken($in, ASCII.BRACKET_RIGHT)) List.empty[t1]
+                                        else {
+                                            val buf = new scala.collection.mutable.ListBuffer[t1]
+                                            var continue = true
+                                            while (continue) {
+                                                buf += ${ genReadCode[t1](tpe1, in) }
+                                                JsonHelper.skipBlanks($in)
+                                                if ($in.skipIfNextIs(ASCII.COMMA)) {}
+                                                else {
+                                                    assert(JsonHelper.skipArrayEnd($in), "expected ']'")
+                                                    continue = false
+                                                }
+                                            }
+                                            buf.toList
+                                        }
+                                    }.asExprOf[T]
+                        }
+                    else if (tpe <:< TypeRepr.of[mutable.ArraySeq[?]])
+                        withDecoderFor(methodKey, in) { in =>
+                            val tpe1 = typeArg1(tpe)
+                            tpe1.asType match
+                                case '[t1] =>
+                                    val ct = summonClassTag(tpe1).asExprOf[ClassTag[t1]]
+                                    '{
+                                        given ClassTag[t1] = $ct
+                                        JsonHelper.skipBlanks($in)
+                                        assert(JsonHelper.isNextToken($in, ASCII.BRACKET_LEFT), "expected '['")
+                                        if (JsonHelper.isNextToken($in, ASCII.BRACKET_RIGHT)) mutable.ArraySeq.empty[t1]
+                                        else {
+                                            val buf = new scala.collection.mutable.ArrayBuffer[t1]
+                                            var continue = true
+                                            while (continue) {
+                                                buf += ${ genReadCode[t1](tpe1, in) }
+                                                JsonHelper.skipBlanks($in)
+                                                if ($in.skipIfNextIs(ASCII.COMMA)) {}
+                                                else {
+                                                    assert(JsonHelper.skipArrayEnd($in), "expected ']'")
+                                                    continue = false
+                                                }
+                                            }
+                                            mutable.ArraySeq.from[t1](buf.toArray)
+                                        }
+                                    }.asExprOf[T]
+                        }
+                    else if (tpe <:< TypeRepr.of[immutable.ArraySeq[?]])
+                        withDecoderFor(methodKey, in) { in =>
+                            val tpe1 = typeArg1(tpe)
+                            tpe1.asType match
+                                case '[t1] =>
+                                    val ct = summonClassTag(tpe1).asExprOf[ClassTag[t1]]
+                                    '{
+                                        given ClassTag[t1] = $ct
+                                        JsonHelper.skipBlanks($in)
+                                        assert(JsonHelper.isNextToken($in, ASCII.BRACKET_LEFT), "expected '['")
+                                        if (JsonHelper.isNextToken($in, ASCII.BRACKET_RIGHT)) immutable.ArraySeq.empty[t1]
+                                        else {
+                                            val buf = new scala.collection.mutable.ArrayBuffer[t1]
+                                            var continue = true
+                                            while (continue) {
+                                                buf += ${ genReadCode[t1](tpe1, in) }
+                                                JsonHelper.skipBlanks($in)
+                                                if ($in.skipIfNextIs(ASCII.COMMA)) {}
+                                                else {
+                                                    assert(JsonHelper.skipArrayEnd($in), "expected ']'")
+                                                    continue = false
+                                                }
+                                            }
+                                            immutable.ArraySeq.from[t1](buf.toArray)
+                                        }
+                                    }.asExprOf[T]
+                        }
+                    else if (tpe.typeSymbol.fullName == "scala.IArray$package$.IArray")
+                        withDecoderFor(methodKey, in) { in =>
+                            val tpe1 = typeArg1(tpe)
+                            tpe1.asType match
+                                case '[t1] =>
+                                    val ct = summonClassTag(tpe1).asExprOf[ClassTag[t1]]
+                                    '{
+                                        given ClassTag[t1] = $ct
+                                        JsonHelper.skipBlanks($in)
+                                        assert(JsonHelper.isNextToken($in, ASCII.BRACKET_LEFT), "expected '['")
+                                        if (JsonHelper.isNextToken($in, ASCII.BRACKET_RIGHT)) IArray.empty[t1]
+                                        else {
+                                            val buf = new scala.collection.mutable.ArrayBuffer[t1]
+                                            var continue = true
+                                            while (continue) {
+                                                buf += ${ genReadCode[t1](tpe1, in) }
+                                                JsonHelper.skipBlanks($in)
+                                                if ($in.skipIfNextIs(ASCII.COMMA)) {}
+                                                else {
+                                                    assert(JsonHelper.skipArrayEnd($in), "expected ']'")
+                                                    continue = false
+                                                }
+                                            }
+                                            IArray.from(buf.toArray)
+                                        }
+                                    }.asExprOf[T]
+                        }
+                    else if (tpe <:< TypeRepr.of[IndexedSeq[?]])
+                        withDecoderFor(methodKey, in) { in =>
+                            val tpe1 = typeArg1(tpe)
+                            tpe1.asType match
+                                case '[t1] =>
+                                    '{
+                                        JsonHelper.skipBlanks($in)
+                                        assert(JsonHelper.isNextToken($in, ASCII.BRACKET_LEFT), "expected '['")
+                                        if (JsonHelper.isNextToken($in, ASCII.BRACKET_RIGHT)) IndexedSeq.empty[t1]
+                                        else {
+                                            val buf = new scala.collection.mutable.ArrayBuffer[t1]
+                                            var continue = true
+                                            while (continue) {
+                                                buf += ${ genReadCode[t1](tpe1, in) }
+                                                JsonHelper.skipBlanks($in)
+                                                if ($in.skipIfNextIs(ASCII.COMMA)) {}
+                                                else {
+                                                    assert(JsonHelper.skipArrayEnd($in), "expected ']'")
+                                                    continue = false
+                                                }
+                                            }
+                                            buf.toIndexedSeq
+                                        }
+                                    }.asExprOf[T]
+                        }
+                    else if (tpe <:< TypeRepr.of[scala.collection.Seq[?]])
+                        withDecoderFor(methodKey, in) { in =>
+                            val tpe1 = typeArg1(tpe)
+                            tpe1.asType match
+                                case '[t1] =>
+                                    '{
+                                        JsonHelper.skipBlanks($in)
+                                        assert(JsonHelper.isNextToken($in, ASCII.BRACKET_LEFT), "expected '['")
+                                        if (JsonHelper.isNextToken($in, ASCII.BRACKET_RIGHT)) Seq.empty[t1]
+                                        else {
+                                            val buf = new scala.collection.mutable.ArrayBuffer[t1]
+                                            var continue = true
+                                            while (continue) {
+                                                buf += ${ genReadCode[t1](tpe1, in) }
+                                                JsonHelper.skipBlanks($in)
+                                                if ($in.skipIfNextIs(ASCII.COMMA)) {}
+                                                else {
+                                                    assert(JsonHelper.skipArrayEnd($in), "expected ']'")
+                                                    continue = false
+                                                }
+                                            }
+                                            buf.toSeq
+                                        }
+                                    }.asExprOf[T]
+                        }
+                    else if (tpe <:< TypeRepr.of[scala.collection.Map[?, ?]])
+                        withDecoderFor(methodKey, in) { in =>
+                            val tpe1 = typeArg1(tpe)
+                            val tpe2 = typeArg2(tpe)
+                            (tpe1.asType, tpe2.asType) match
+                                case ('[tk], '[tv]) =>
+                                    '{
+                                        JsonHelper.skipBlanks($in)
+                                        assert(JsonHelper.isNextToken($in, ASCII.BRACE_LEFT), "expected '{'")
+                                        if (JsonHelper.isNextToken($in, ASCII.BRACE_RIGHT)) Map.empty[tk, tv]
+                                        else {
+                                            val builder = Map.newBuilder[tk, tv]
+                                            var continue = true
+                                            while (continue) {
+                                                JsonHelper.skipBlanks($in)
+                                                val key = JsonHelper.deserializeString($in).asInstanceOf[tk]
+                                                assert($in.skipIfNextIs(ASCII.COLON), "expected ':'")
+                                                builder += (key -> ${ genReadCode[tv](tpe2, in) })
+                                                JsonHelper.skipBlanks($in)
+                                                if ($in.skipIfNextIs(ASCII.COMMA)) {}
+                                                else {
+                                                    assert(JsonHelper.skipObjectEnd($in), "expected '}'")
+                                                    continue = false
+                                                }
+                                            }
+                                            builder.result()
+                                        }
+                                    }.asExprOf[T]
+                        }
                     else if (tpe <:< TypeRepr.of[AnyVal]) {
                         val te = valueClassValueType(tpe)
                         te.asType match
                             case '[t] =>
                                 val readVal = genReadCode[t](te, in, isString)
                                 getClassInfo(tpe).genNew(readVal.asTerm).asExprOf[T]
-                    } else '{ ??? }
+                    } else if (isNonAbstractScalaClass(tpe)) withDecoderFor(methodKey, in) { in =>
+                        val classInfo = getClassInfo(tpe)
+                        val fields = classInfo.fields
+
+                        // Generate default values for field types
+                        def genDefaultValue(ft: TypeRepr)(using Quotes): Term =
+                            if (ft =:= TypeRepr.of[Int]) '{ 0 }.asTerm
+                            else if (ft =:= TypeRepr.of[Long]) '{ 0L }.asTerm
+                            else if (ft =:= TypeRepr.of[Double]) '{ 0.0 }.asTerm
+                            else if (ft =:= TypeRepr.of[Float]) '{ 0.0f }.asTerm
+                            else if (ft =:= TypeRepr.of[Boolean]) '{ false }.asTerm
+                            else if (ft =:= TypeRepr.of[Byte]) '{ 0.toByte }.asTerm
+                            else if (ft =:= TypeRepr.of[Short]) '{ 0.toShort }.asTerm
+                            else if (ft =:= TypeRepr.of[Char]) '{ '\u0000' }.asTerm
+                            else if (ft <:< TypeRepr.of[Option[?]]) ft.asType match
+                                case '[t] => '{ None.asInstanceOf[t] }.asTerm
+                            else ft.asType match
+                                case '[t] => '{ null.asInstanceOf[t] }.asTerm
+
+                        // Create mutable var symbols for each field, initialized to defaults
+                        val fieldVarDefs = fields.map { fieldInfo =>
+                            val fTpe = fieldInfo.resolvedTpe
+                            fTpe.asType match
+                                case '[ft] =>
+                                    val sym = Symbol.newVal(
+                                        Symbol.spliceOwner,
+                                        "_" + fieldInfo.nonTransientFieldIndex,
+                                        fTpe,
+                                        Flags.Mutable,
+                                        Symbol.noSymbol
+                                    )
+                                    val defaultTerm = fieldInfo.defaultValue match
+                                        case Some(dv) => dv.asExprOf[ft].asTerm
+                                        case None => genDefaultValue(fTpe)
+                                    val valDef = ValDef(sym, Some(defaultTerm.changeOwner(sym)))
+                                    (sym, valDef, fTpe, fieldInfo)
+                        }
+
+                        // Build the reading loop body as raw AST.
+                        // We need a 'key' val symbol and an if-else chain for field matching.
+
+                        val continueSym = Symbol.newVal(Symbol.spliceOwner, "continue", TypeRepr.of[Boolean], Flags.Mutable, Symbol.noSymbol)
+                        val keySym = Symbol.newVal(Symbol.spliceOwner, "key", TypeRepr.of[String], Flags.EmptyFlags, Symbol.noSymbol)
+
+                        val unitVal = Literal(UnitConstant())
+
+                        // Build the if-else chain for matching key to field names
+                        val fieldMatchExpr = fieldVarDefs.foldRight[Term](
+                            '{ JsonHelper.skipValue($in) }.asTerm
+                        ) { case ((sym, _, fTpe, fieldInfo), elseBranch) =>
+                            val readExpr = if (fieldInfo.isStringified) {
+                                fTpe.asType match
+                                    case '[ft] => genReadCode[ft](fTpe, in, true)
+                            } else {
+                                fTpe.asType match
+                                    case '[ft] => genReadCode[ft](fTpe, in)
+                            }
+                            val assign = if (fTpe <:< TypeRepr.of[Option[?]]) {
+                                Assign(Ref(sym), readExpr.asTerm)
+                            } else {
+                                Block(
+                                    List('{ JsonHelper.skipBlanks($in) }.asTerm),
+                                    If(
+                                        '{ $in.skipIfNextAre(JsonConstants.TOKEN_NULL) }.asTerm,
+                                        Literal(UnitConstant()),
+                                        Assign(Ref(sym), readExpr.asTerm)
+                                    )
+                                )
+                            }
+                            val condition = Apply(
+                                Select.unique(Ref(keySym), "=="),
+                                List(Literal(StringConstant(fieldInfo.mappedName)))
+                            )
+                            If(condition, Block(assign :: Nil, unitVal), elseBranch)
+                        }
+
+                        // while loop body
+                        val whileBody = Block(List(
+                            '{ JsonHelper.skipBlanks($in) }.asTerm,
+                            ValDef(keySym, Some('{ JsonHelper.deserializeString($in) }.asTerm.changeOwner(keySym))),
+                            '{ JsonHelper.skipBlanks($in) }.asTerm,
+                            '{ assert($in.skipIfNextIs(ASCII.COLON), "expected ':'") }.asTerm,
+                            '{ JsonHelper.skipBlanks($in) }.asTerm,
+                            fieldMatchExpr,
+                            '{ JsonHelper.skipBlanks($in) }.asTerm,
+                            If(
+                                '{ $in.skipIfNextIs(ASCII.COMMA) }.asTerm,
+                                unitVal,
+                                Block(
+                                    List('{ assert(JsonHelper.skipObjectEnd($in), "expected '}'") }.asTerm),
+                                    Assign(Ref(continueSym), Literal(BooleanConstant(false)))
+                                )
+                            )
+                        ), unitVal)
+
+                        // Construct while(continue) { body } as a raw term
+                        // Scala 3 reflect doesn't have a WhileLike, so we build it via quoted code
+                        // and embed the body as a splice.
+                        // Actually, we can use a Block with a labeled-based while.
+                        // The simplest approach: build the while loop AST directly.
+                        val whileLoopTerm = While(
+                            Ref(continueSym),
+                            whileBody
+                        )
+
+                        // The outer if-else: empty object vs non-empty
+                        val nonEmptyBlock = Block(List(
+                            ValDef(continueSym, Some(Literal(BooleanConstant(true)))),
+                            whileLoopTerm
+                        ), unitVal)
+
+                        val outerIf = If(
+                            '{ JsonHelper.isNextToken($in, ASCII.BRACE_RIGHT) }.asTerm,
+                            unitVal,
+                            nonEmptyBlock
+                        )
+
+                        // Full body: assert object start + if-else
+                        val bodyTerm = Block(
+                            '{ assert(JsonHelper.skipObjectStart($in), "expected '{'") }.asTerm :: Nil,
+                            outerIf
+                        )
+
+                        // Build the constructor call from field vars
+                        val allParamLists = classInfo.paramLists.map(_.map { fieldInfo =>
+                            if (!fieldInfo.isTransient) {
+                                val idx = fields.indexWhere(_.nonTransientFieldIndex == fieldInfo.nonTransientFieldIndex)
+                                Ref(fieldVarDefs(idx)._1)
+                            } else {
+                                // transient field - use default
+                                genDefaultValue(fieldInfo.resolvedTpe)
+                            }
+                        })
+                        val newExpr = classInfo.genNew(allParamLists)
+
+                        // Combine: valDefs + body + constructor call
+                        Block(
+                            fieldVarDefs.map(_._2),
+                            Block(bodyTerm :: Nil, newExpr)
+                        ).asExprOf[T]
+                    }
+                    else fail(s"Cannot derive JSON deserializer for type '${tpe.show}'. Please provide a custom implicitly accessible JsonSerde for it.")
         }
 
         def genWriteCode[T: Type](tpe: TypeRepr, value: Expr[T], out: Expr[Buffer], isString: Boolean = false)(using
@@ -869,7 +1227,8 @@ object JsonMacro {
                         '{ JsonHelper.serializeString(${ value.asExprOf[String] }, $out) }
                     else if (tpe <:< TypeRepr.of[AnyVal]) {
                         val te = valueClassValueType(tpe)
-                        genWriteCode(te, Select(value.asTerm, valueClassValueSymbol(tpe)).asExpr, out, isString)
+                        te.asType match
+                            case '[t] => genWriteCode[t](te, Select(value.asTerm, valueClassValueSymbol(tpe)).asExprOf[t], out, isString)
                     } else if (tpe <:< TypeRepr.of[Option[?]]) {
                         val tpe1 = typeArg1(tpe)
                         tpe1.asType match
@@ -954,14 +1313,14 @@ object JsonMacro {
                             case '[t1] =>
                                 val tx = x.asExprOf[List[t1]]
                                 '{
-                                    JsonHelper.serializeObjectStart($out)
+                                    JsonHelper.serializeArrayStart($out)
                                     var l = $tx
                                     while (l ne Nil) {
                                         ${ genWriteCode[t1](tpe1, '{ l.head }, out) }
                                         l = l.tail
                                         if (l ne Nil) $out.writeByte(ASCII.COMMA)
                                     }
-                                    JsonHelper.serializeObjectEnd($out)
+                                    JsonHelper.serializeArrayEnd($out)
                                 }
                     }
                     else if (tpe <:< TypeRepr.of[IndexedSeq[?]]) withEncoderFor(methodKey, value, out) { (x, out) =>
@@ -970,7 +1329,7 @@ object JsonMacro {
                             case '[t1] =>
                                 val tx = x.asExprOf[IndexedSeq[t1]]
                                 '{
-                                    JsonHelper.serializeObjectStart($out)
+                                    JsonHelper.serializeArrayStart($out)
                                     val l = $tx.length
                                     if (l <= 32) {
                                         var i = 0
@@ -987,7 +1346,7 @@ object JsonMacro {
                                             if (i != $tx.length) $out.writeByte(ASCII.COMMA)
                                         }
                                     }
-                                    JsonHelper.serializeObjectEnd($out)
+                                    JsonHelper.serializeArrayEnd($out)
                                 }
                     }
                     else if (tpe <:< TypeRepr.of[scala.collection.Seq[?]]) withEncoderFor(methodKey, value, out) {
@@ -1049,7 +1408,7 @@ object JsonMacro {
                     else if (isNonAbstractScalaClass(tpe)) withEncoderFor(methodKey, value, out) { (x, out) =>
                         genWriteNonAbstractScalaClass(x, tpe, out)
                     }
-                    else '{ ??? }
+                    else fail(s"Cannot derive JSON serializer for type '${tpe.show}'. Please provide a custom implicitly accessible JsonSerde for it.")
         }
 
         val clz = '{

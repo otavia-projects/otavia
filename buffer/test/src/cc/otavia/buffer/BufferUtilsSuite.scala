@@ -381,29 +381,191 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
     }
 
+    test("long boundary values") {
+        val buffer = allocator.allocate()
+
+        // Long.MaxValue
+        BufferUtils.writeLongAsString(buffer, Long.MaxValue)
+        assert(BufferUtils.readStringAsLong(buffer) == Long.MaxValue)
+        buffer.compact()
+
+        // Long.MinValue
+        BufferUtils.writeLongAsString(buffer, Long.MinValue)
+        assert(BufferUtils.readStringAsLong(buffer) == Long.MinValue)
+        buffer.compact()
+
+        // Near boundary positive
+        BufferUtils.writeLongAsString(buffer, Long.MaxValue - 1)
+        assert(BufferUtils.readStringAsLong(buffer) == Long.MaxValue - 1)
+        buffer.compact()
+
+        // Near boundary negative
+        BufferUtils.writeLongAsString(buffer, Long.MinValue + 1)
+        assert(BufferUtils.readStringAsLong(buffer) == Long.MinValue + 1)
+        buffer.compact()
+
+        // Large positive number
+        buffer.writeBytes("9223372036854775807".getBytes(StandardCharsets.US_ASCII))
+        assert(BufferUtils.readStringAsLong(buffer) == Long.MaxValue)
+        buffer.compact()
+
+        // Large negative number
+        buffer.writeBytes("-9223372036854775808".getBytes(StandardCharsets.US_ASCII))
+        assert(BufferUtils.readStringAsLong(buffer) == Long.MinValue)
+        buffer.compact()
+
+        // Leading plus sign
+        buffer.writeBytes("+12345".getBytes(StandardCharsets.US_ASCII))
+        assert(BufferUtils.readStringAsLong(buffer) == 12345L)
+        buffer.compact()
+    }
+
+    test("long overflow detection") {
+        val buffer = allocator.allocate()
+
+        // Overflow: Long.MaxValue + 1
+        buffer.writeBytes("9223372036854775808".getBytes(StandardCharsets.US_ASCII))
+        intercept[NumberFormatException] {
+            BufferUtils.readStringAsLong(buffer)
+        }
+        buffer.compact()
+
+        // Underflow: Long.MinValue - 1
+        buffer.writeBytes("-9223372036854775809".getBytes(StandardCharsets.US_ASCII))
+        intercept[NumberFormatException] {
+            BufferUtils.readStringAsLong(buffer)
+        }
+        buffer.compact()
+
+        // Very large positive number
+        buffer.writeBytes("9999999999999999999".getBytes(StandardCharsets.US_ASCII))
+        intercept[NumberFormatException] {
+            BufferUtils.readStringAsLong(buffer)
+        }
+        buffer.compact()
+
+        // Very large negative number
+        buffer.writeBytes("-9999999999999999999".getBytes(StandardCharsets.US_ASCII))
+        intercept[NumberFormatException] {
+            BufferUtils.readStringAsLong(buffer)
+        }
+        buffer.compact()
+    }
+
     test("float") {
         val buffer = allocator.allocate()
 
-        BufferUtils.writeFloatAsString(buffer, 0.01)
+        BufferUtils.writeFloatAsString(buffer, 0.01f)
         assert(buffer.skipIfNextAre("0.01".getBytes()))
 
-        BufferUtils.writeFloatAsString(buffer, 0.1345600000015678)
+        BufferUtils.writeFloatAsString(buffer, 0.13456f)
         assert(buffer.skipIfNextAre("0.13456".getBytes()))
 
-        BufferUtils.writeFloatAsString(buffer, 0.00015678)
+        BufferUtils.writeFloatAsString(buffer, 0.00015678f)
         assert(buffer.skipIfNextAre("1.5678E-4".getBytes()))
 
-        BufferUtils.writeFloatAsString(buffer, 0.0015678)
+        BufferUtils.writeFloatAsString(buffer, 0.0015678f)
         assert(buffer.skipIfNextAre("0.0015678".getBytes()))
 
-        BufferUtils.writeFloatAsString(buffer, 0.000000000015678)
+        BufferUtils.writeFloatAsString(buffer, 0.000000000015678f)
         assert(buffer.skipIfNextAre("1.5678E-11".getBytes()))
 
-        BufferUtils.writeFloatAsString(buffer, -0.000000000015678)
+        BufferUtils.writeFloatAsString(buffer, -0.000000000015678f)
         assert(buffer.skipIfNextAre("-1.5678E-11".getBytes()))
 
-        BufferUtils.writeFloatAsString(buffer, 456789.0000000000000000123)
+        BufferUtils.writeFloatAsString(buffer, 456789.0f)
         assert(buffer.skipIfNextAre("456789.0".getBytes()))
+    }
+
+    test("float roundtrip") {
+        val testValues = Seq(
+            0.0f, -0.0f, 1.0f, -1.0f,
+            0.01f, 0.1f, 0.001f, 0.0001f,
+            123.456f, -123.456f,
+            1.0e10f, 1.0e-10f, -1.0e10f, -1.0e-10f,
+            Float.MaxValue, Float.MinValue,
+            Float.MinPositiveValue,
+            3.14159f, 2.71828f
+        )
+        for (v <- testValues) {
+            val buffer = allocator.allocate()
+            BufferUtils.writeFloatAsString(buffer, v)
+            val bytes = buffer.getBytes(0, buffer.writerOffset)
+            buffer.readerOffset(0)
+            val parsed = BufferUtils.readStringAsFloat(buffer)
+            // Use relative tolerance for floating point comparison
+            val tolerance = math.abs(v) * 1e-6f
+            val ok = if (v == 0.0f) parsed == v else math.abs(parsed - v) <= tolerance
+            assert(ok, s"roundtrip failed for $v (serialized as ${new String(bytes)}), got $parsed")
+        }
+    }
+
+    test("float parse from string") {
+        val buffer = allocator.allocate()
+
+        // Basic numbers
+        buffer.writeBytes("123.456".getBytes())
+        assert(BufferUtils.readStringAsFloat(buffer) == 123.456f)
+        buffer.compact()
+
+        // Negative numbers
+        buffer.writeBytes("-789.012".getBytes())
+        assert(BufferUtils.readStringAsFloat(buffer) == -789.012f)
+        buffer.compact()
+
+        // Scientific notation with lowercase e
+        buffer.writeBytes("1.5e3".getBytes())
+        assert(BufferUtils.readStringAsFloat(buffer) == 1500.0f)
+        buffer.compact()
+
+        // Scientific notation with uppercase E
+        buffer.writeBytes("2.5E-2".getBytes())
+        assert(BufferUtils.readStringAsFloat(buffer) == 0.025f)
+        buffer.compact()
+
+        // Scientific notation with positive exponent sign
+        buffer.writeBytes("3e+4".getBytes())
+        assert(BufferUtils.readStringAsFloat(buffer) == 30000.0f)
+        buffer.compact()
+
+        // Integer without decimal point
+        buffer.writeBytes("42".getBytes())
+        assert(BufferUtils.readStringAsFloat(buffer) == 42.0f)
+        buffer.compact()
+
+        // Very small number
+        buffer.writeBytes("0.000001".getBytes())
+        assert(BufferUtils.readStringAsFloat(buffer) == 0.000001f)
+        buffer.compact()
+
+        // Leading plus sign
+        buffer.writeBytes("+100.5".getBytes())
+        assert(BufferUtils.readStringAsFloat(buffer) == 100.5f)
+        buffer.compact()
+    }
+
+    test("float parse edge cases") {
+        val buffer = allocator.allocate()
+
+        // Zero
+        buffer.writeBytes("0".getBytes())
+        assert(BufferUtils.readStringAsFloat(buffer) == 0.0f)
+        buffer.compact()
+
+        // Negative zero
+        buffer.writeBytes("-0".getBytes())
+        assert(BufferUtils.readStringAsFloat(buffer) == -0.0f)
+        buffer.compact()
+
+        // Large exponent (infinity)
+        buffer.writeBytes("1e50".getBytes())
+        assert(BufferUtils.readStringAsFloat(buffer).isInfinity)
+        buffer.compact()
+
+        // Very negative exponent (underflow to zero)
+        buffer.writeBytes("1e-100".getBytes())
+        assert(BufferUtils.readStringAsFloat(buffer) == 0.0f)
+        buffer.compact()
     }
 
     test("double") {
@@ -429,6 +591,97 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
 
         BufferUtils.writeDoubleAsString(buffer, 456789.0000000000000000123)
         assert(buffer.skipIfNextAre("456789.0".getBytes()))
+    }
+
+    test("double roundtrip") {
+        val testValues = Seq(
+            0.0, -0.0, 1.0, -1.0,
+            0.01, 0.1, 0.001, 0.0001,
+            123.456, -123.456,
+            1.0e10, 1.0e-10, -1.0e10, -1.0e-10,
+            Double.MaxValue, Double.MinValue,
+            3.141592653589793, 2.718281828459045,
+            1.2345678901234567
+        )
+        for (v <- testValues) {
+            val buffer = allocator.allocate()
+            BufferUtils.writeDoubleAsString(buffer, v)
+            val bytes = buffer.getBytes(0, buffer.writerOffset)
+            buffer.readerOffset(0)
+            val parsed = BufferUtils.readStringAsDouble(buffer)
+            // Use relative tolerance for floating point comparison
+            val tolerance = math.abs(v) * 1e-15
+            val ok = if (v == 0.0) parsed == v else math.abs(parsed - v) <= tolerance
+            assert(ok, s"roundtrip failed for $v (serialized as ${new String(bytes)}), got $parsed")
+        }
+    }
+
+    test("double parse from string") {
+        val buffer = allocator.allocate()
+
+        // Basic numbers - use values that can be exactly represented in double
+        buffer.writeBytes("123.4567890123456".getBytes())
+        assert(BufferUtils.readStringAsDouble(buffer) == 123.4567890123456)
+        buffer.compact()
+
+        // Negative numbers
+        buffer.writeBytes("-789.0123456789".getBytes())
+        assert(BufferUtils.readStringAsDouble(buffer) == -789.0123456789)
+        buffer.compact()
+
+        // Scientific notation with lowercase e
+        buffer.writeBytes("1.5e30".getBytes())
+        assert(BufferUtils.readStringAsDouble(buffer) == 1.5e30)
+        buffer.compact()
+
+        // Scientific notation with uppercase E
+        buffer.writeBytes("2.5E-20".getBytes())
+        assert(BufferUtils.readStringAsDouble(buffer) == 2.5e-20)
+        buffer.compact()
+
+        // Scientific notation with positive exponent sign
+        buffer.writeBytes("3e+15".getBytes())
+        assert(BufferUtils.readStringAsDouble(buffer) == 3e15)
+        buffer.compact()
+
+        // Integer without decimal point
+        buffer.writeBytes("42".getBytes())
+        assert(BufferUtils.readStringAsDouble(buffer) == 42.0)
+        buffer.compact()
+
+        // Very small number
+        buffer.writeBytes("0.000000001".getBytes())
+        assert(BufferUtils.readStringAsDouble(buffer) == 1e-9)
+        buffer.compact()
+
+        // Leading plus sign
+        buffer.writeBytes("+100.5".getBytes())
+        assert(BufferUtils.readStringAsDouble(buffer) == 100.5)
+        buffer.compact()
+    }
+
+    test("double parse edge cases") {
+        val buffer = allocator.allocate()
+
+        // Zero
+        buffer.writeBytes("0".getBytes())
+        assert(BufferUtils.readStringAsDouble(buffer) == 0.0)
+        buffer.compact()
+
+        // Negative zero
+        buffer.writeBytes("-0".getBytes())
+        assert(BufferUtils.readStringAsDouble(buffer) == -0.0)
+        buffer.compact()
+
+        // Large exponent (infinity)
+        buffer.writeBytes("1e500".getBytes())
+        assert(BufferUtils.readStringAsDouble(buffer).isInfinity)
+        buffer.compact()
+
+        // Very negative exponent (underflow to zero)
+        buffer.writeBytes("1e-500".getBytes())
+        assert(BufferUtils.readStringAsDouble(buffer) == 0.0)
+        buffer.compact()
     }
 
     test("BigInt") {
@@ -885,6 +1138,275 @@ class BufferUtilsSuite extends AnyFunSuiteLike {
             assert(buffer.readableBytes == 0)
         }
 
+    }
+
+    // ==================== Previously uncovered methods ====================
+
+    test("getStringAsBoolean") {
+        val buffer = allocator.allocate()
+        buffer.writeBytes("true".getBytes(StandardCharsets.US_ASCII))
+        assert(BufferUtils.getStringAsBoolean(buffer, 0) == true)
+
+        buffer.writeBytes("false".getBytes(StandardCharsets.US_ASCII))
+        assert(BufferUtils.getStringAsBoolean(buffer, 4) == false)
+    }
+
+    test("setBooleanAsString") {
+        val buffer = allocator.allocate()
+        // Allocate space for both values
+        buffer.writerOffset(9)
+
+        BufferUtils.setBooleanAsString(buffer, 0, true)
+        assert(buffer.getByte(0) == 't')
+        assert(buffer.getByte(1) == 'r')
+        assert(buffer.getByte(2) == 'u')
+        assert(buffer.getByte(3) == 'e')
+
+        BufferUtils.setBooleanAsString(buffer, 4, false)
+        assert(buffer.getByte(4) == 'f')
+        assert(buffer.getByte(5) == 'a')
+        assert(buffer.getByte(6) == 'l')
+        assert(buffer.getByte(7) == 's')
+        assert(buffer.getByte(8) == 'e')
+    }
+
+    test("isNonEscapedAscii") {
+        // Printable ASCII that don't need escaping
+        assert(BufferUtils.isNonEscapedAscii('A'))
+        assert(BufferUtils.isNonEscapedAscii('z'))
+        assert(BufferUtils.isNonEscapedAscii('0'))
+        assert(BufferUtils.isNonEscapedAscii(' '))
+        assert(BufferUtils.isNonEscapedAscii('~'))
+
+        // Characters that need escaping
+        assert(!BufferUtils.isNonEscapedAscii('"'))
+        assert(!BufferUtils.isNonEscapedAscii('\\'))
+        assert(!BufferUtils.isNonEscapedAscii('\n'))
+        assert(!BufferUtils.isNonEscapedAscii('\t'))
+        assert(!BufferUtils.isNonEscapedAscii('\r'))
+        assert(!BufferUtils.isNonEscapedAscii('\b'))
+        assert(!BufferUtils.isNonEscapedAscii('\f'))
+
+        // Control characters
+        assert(!BufferUtils.isNonEscapedAscii(0.toChar))
+        assert(!BufferUtils.isNonEscapedAscii(1.toChar))
+        assert(!BufferUtils.isNonEscapedAscii(31.toChar))
+
+        // Non-ASCII (>= 0x80)
+        assert(!BufferUtils.isNonEscapedAscii('中'))
+        assert(!BufferUtils.isNonEscapedAscii(128.toChar))
+    }
+
+    test("getEscapedChar") {
+        val buffer = allocator.allocate()
+
+        // Plain ASCII character
+        buffer.writeByte('A')
+        assert(BufferUtils.getEscapedChar(0, buffer) == 'A')
+
+        // Escaped \n
+        buffer.writeByte('\\')
+        buffer.writeByte('n')
+        assert(BufferUtils.getEscapedChar(1, buffer) == '\n')
+
+        // Escaped \t
+        buffer.writeByte('\\')
+        buffer.writeByte('t')
+        assert(BufferUtils.getEscapedChar(3, buffer) == '\t')
+
+        // Escaped quote
+        buffer.writeByte('\\')
+        buffer.writeByte('"')
+        assert(BufferUtils.getEscapedChar(5, buffer) == '"')
+
+        // Escaped backslash
+        buffer.writeByte('\\')
+        buffer.writeByte('\\')
+        assert(BufferUtils.getEscapedChar(7, buffer) == '\\')
+
+        // Unicode escape \u0041 = 'A'
+        buffer.writeByte('\\')
+        buffer.writeByte('u')
+        buffer.writeByte('0')
+        buffer.writeByte('0')
+        buffer.writeByte('4')
+        buffer.writeByte('1')
+        assert(BufferUtils.getEscapedChar(9, buffer) == 'A')
+    }
+
+    test("readStringAsBigInt") {
+        val buffer = allocator.allocate()
+
+        // Positive
+        buffer.writeBytes("12345".getBytes(StandardCharsets.US_ASCII))
+        assert(BufferUtils.readStringAsBigInt(buffer) == BigInt(12345))
+        buffer.compact()
+
+        // Negative
+        buffer.writeBytes("-98765".getBytes(StandardCharsets.US_ASCII))
+        assert(BufferUtils.readStringAsBigInt(buffer) == BigInt(-98765))
+        buffer.compact()
+
+        // Zero
+        buffer.writeBytes("0".getBytes(StandardCharsets.US_ASCII))
+        assert(BufferUtils.readStringAsBigInt(buffer) == BigInt(0))
+        buffer.compact()
+
+        // Very large
+        buffer.writeBytes("999999999999999999999999999999".getBytes(StandardCharsets.US_ASCII))
+        assert(BufferUtils.readStringAsBigInt(buffer) == BigInt("999999999999999999999999999999"))
+        buffer.compact()
+    }
+
+    test("readStringAsBigInteger") {
+        val buffer = allocator.allocate()
+
+        buffer.writeBytes("12345678901234567890".getBytes(StandardCharsets.US_ASCII))
+        val result = BufferUtils.readStringAsBigInteger(buffer)
+        assert(result == new java.math.BigInteger("12345678901234567890"))
+        buffer.compact()
+
+        buffer.writeBytes("-42".getBytes(StandardCharsets.US_ASCII))
+        val result2 = BufferUtils.readStringAsBigInteger(buffer)
+        assert(result2 == java.math.BigInteger.valueOf(-42))
+        buffer.compact()
+    }
+
+    test("readStringAsBigDecimal") {
+        val buffer = allocator.allocate()
+
+        buffer.writeBytes("123.456".getBytes(StandardCharsets.US_ASCII))
+        assert(BufferUtils.readStringAsBigDecimal(buffer) == BigDecimal("123.456"))
+        buffer.compact()
+
+        buffer.writeBytes("-0.001".getBytes(StandardCharsets.US_ASCII))
+        assert(BufferUtils.readStringAsBigDecimal(buffer) == BigDecimal("-0.001"))
+        buffer.compact()
+
+        // Scientific notation
+        buffer.writeBytes("1.5e10".getBytes(StandardCharsets.US_ASCII))
+        assert(BufferUtils.readStringAsBigDecimal(buffer) == BigDecimal("1.5e10"))
+        buffer.compact()
+
+        // Integer
+        buffer.writeBytes("42".getBytes(StandardCharsets.US_ASCII))
+        assert(BufferUtils.readStringAsBigDecimal(buffer) == BigDecimal(42))
+        buffer.compact()
+    }
+
+    test("readStringAsJBigDecimal") {
+        val buffer = allocator.allocate()
+
+        buffer.writeBytes("99.999".getBytes(StandardCharsets.US_ASCII))
+        val result = BufferUtils.readStringAsJBigDecimal(buffer)
+        assert(result == new java.math.BigDecimal("99.999"))
+        buffer.compact()
+
+        buffer.writeBytes("-3.14e-5".getBytes(StandardCharsets.US_ASCII))
+        val result2 = BufferUtils.readStringAsJBigDecimal(buffer)
+        assert(result2.compareTo(new java.math.BigDecimal("-3.14e-5")) == 0)
+        buffer.compact()
+    }
+
+    test("writeBigDecimalAsString") {
+        val buffer = allocator.allocate()
+
+        // Simple decimal
+        BufferUtils.writeBigDecimalAsString(buffer, BigDecimal("123.456"))
+        assert(buffer.skipIfNextAre("123.456".getBytes(StandardCharsets.US_ASCII)))
+
+        // Negative decimal
+        BufferUtils.writeBigDecimalAsString(buffer, BigDecimal("-0.001"))
+        assert(buffer.skipIfNextAre("-0.001".getBytes(StandardCharsets.US_ASCII)))
+
+        // Integer as BigDecimal
+        BufferUtils.writeBigDecimalAsString(buffer, BigDecimal(42))
+        assert(buffer.skipIfNextAre("42".getBytes(StandardCharsets.US_ASCII)))
+
+        // Very large BigDecimal
+        BufferUtils.writeBigDecimalAsString(buffer, BigDecimal("99999999999999999999.9999999999"))
+        assert(buffer.skipIfNextAre("99999999999999999999.9999999999".getBytes(StandardCharsets.US_ASCII)))
+    }
+
+    test("writeJBigDecimalAsString") {
+        val buffer = allocator.allocate()
+
+        BufferUtils.writeJBigDecimalAsString(buffer, new java.math.BigDecimal("3.14159"))
+        assert(buffer.skipIfNextAre("3.14159".getBytes(StandardCharsets.US_ASCII)))
+
+        BufferUtils.writeJBigDecimalAsString(buffer, new java.math.BigDecimal("-100.5"))
+        assert(buffer.skipIfNextAre("-100.5".getBytes(StandardCharsets.US_ASCII)))
+    }
+
+    test("BigDecimal roundtrip") {
+        val testValues = Seq(
+            BigDecimal("0"),
+            BigDecimal("1"),
+            BigDecimal("-1"),
+            BigDecimal("123.456"),
+            BigDecimal("-999.999"),
+            BigDecimal("0.000000001"),
+            BigDecimal("99999999999999999999"),
+            BigDecimal("99999999999999999999.123456789")
+        )
+        for (v <- testValues) {
+            val buffer = allocator.allocate()
+            BufferUtils.writeBigDecimalAsString(buffer, v)
+            buffer.readerOffset(0)
+            val parsed = BufferUtils.readStringAsBigDecimal(buffer)
+            assert(parsed == v, s"BigDecimal roundtrip failed for $v, got $parsed")
+        }
+    }
+
+    test("JBigDecimal roundtrip") {
+        val testValues = Seq(
+            new java.math.BigDecimal("0"),
+            new java.math.BigDecimal("123.456"),
+            new java.math.BigDecimal("-999.999"),
+            new java.math.BigDecimal("99999999999999999999.123456789")
+        )
+        for (v <- testValues) {
+            val buffer = allocator.allocate()
+            BufferUtils.writeJBigDecimalAsString(buffer, v)
+            buffer.readerOffset(0)
+            val parsed = BufferUtils.readStringAsJBigDecimal(buffer)
+            assert(parsed.compareTo(v) == 0, s"JBigDecimal roundtrip failed for $v, got $parsed")
+        }
+    }
+
+    test("BigInt read/write roundtrip") {
+        val testValues = Seq(
+            BigInt(0),
+            BigInt(12345),
+            BigInt(-12345),
+            BigInt(Long.MaxValue),
+            BigInt(Long.MinValue),
+            BigInt("9999999999999999999999999999999999999999")
+        )
+        for (v <- testValues) {
+            val buffer = allocator.allocate()
+            BufferUtils.writeBigIntAsString(buffer, v)
+            buffer.readerOffset(0)
+            val parsed = BufferUtils.readStringAsBigInt(buffer)
+            assert(parsed == v, s"BigInt roundtrip failed for $v, got $parsed")
+        }
+    }
+
+    test("BigInteger read/write roundtrip") {
+        val testValues = Seq(
+            java.math.BigInteger.ZERO,
+            java.math.BigInteger.TEN,
+            java.math.BigInteger.valueOf(-42),
+            java.math.BigInteger.valueOf(Long.MaxValue),
+            new java.math.BigInteger("999999999999999999999999999999")
+        )
+        for (v <- testValues) {
+            val buffer = allocator.allocate()
+            BufferUtils.writeBigIntegerAsString(buffer, v)
+            buffer.readerOffset(0)
+            val parsed = BufferUtils.readStringAsBigInteger(buffer)
+            assert(parsed == v, s"BigInteger roundtrip failed for $v, got $parsed")
+        }
     }
 
 }

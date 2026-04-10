@@ -17,6 +17,7 @@
 package cc.otavia.json
 
 import cc.otavia.buffer.{Buffer, BufferUtils}
+import cc.otavia.buffer.utils.BufferConstants
 import cc.otavia.util.ASCII
 
 import java.math.BigInteger
@@ -150,31 +151,100 @@ private[json] object JsonHelper {
 
     final def deserializeString(in: Buffer): String = {
         skipBlanks(in)
-        assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte}")
-        val len = in.bytesBefore('\"'.toByte) // TODO: escape
-        val str = in.readCharSequence(len, StandardCharsets.UTF_8).toString
-        in.readByte
-        str
+        assert(in.skipIfNextIs(ASCII.DOUBLE_QUOTE), s"expected '\"'")
+        // 快速扫描：查找第一个 '"' 或 '\'
+        val start = in.readerOffset
+        var backslashPos = -1
+        var quotePos = -1
+        var i = start
+        val limit = start + in.readableBytes
+        while (i < limit && quotePos < 0) {
+            val b = in.getByte(i)
+            if (b == '"') quotePos = i
+            else if (b == '\\' && backslashPos < 0) backslashPos = i
+            i += 1
+        }
+        if (quotePos < 0) throw new JsonFormatException("unterminated string")
+        if (backslashPos < 0 || backslashPos > quotePos) {
+            // 快速路径：无转义，直接读取原始字节
+            val len = quotePos - in.readerOffset
+            val str = in.readCharSequence(len, StandardCharsets.UTF_8).toString
+            in.readByte // consume closing "
+            str
+        } else {
+            // 慢速路径：有转义字符，逐字符构建
+            in.readerOffset(start)
+            val sb = new StringBuilder
+            var done = false
+            while (!done && in.readableBytes > 0) {
+                val b = in.readByte
+                if (b == '"') done = true
+                else if (b == '\\') {
+                    if (in.readableBytes > 0) {
+                        val b2 = in.readByte
+                        b2 match {
+                            case '"'  => sb.append('"')
+                            case '\\' => sb.append('\\')
+                            case '/'  => sb.append('/')
+                            case 'b'  => sb.append('\b')
+                            case 'f'  => sb.append('\f')
+                            case 'n'  => sb.append('\n')
+                            case 'r'  => sb.append('\r')
+                            case 't'  => sb.append('\t')
+                            case 'u' =>
+                                val ns = BufferConstants.nibbles
+                                val ch = (ns(in.readByte & 0xff) << 12 |
+                                    ns(in.readByte & 0xff) << 8 |
+                                    ns(in.readByte & 0xff) << 4 |
+                                    ns(in.readByte & 0xff)).toChar
+                                sb.append(ch)
+                            case _ => throw new JsonFormatException(s"invalid escape: \\${b2.toChar}")
+                        }
+                    }
+                } else if (b < 0) {
+                    // UTF-8 多字节序列：回退一个字节，用 BufferUtils.readEscapedChar 读取
+                    in.readerOffset(in.readerOffset - 1)
+                    sb.append(BufferUtils.readEscapedChar(in))
+                } else {
+                    sb.append(b.toChar)
+                }
+            }
+            sb.toString
+        }
     }
 
     // math type
 
     final def serializeBigInt(bigInt: BigInt, out: Buffer): Unit = BufferUtils.writeBigIntAsString(out, bigInt)
 
-    final def serializeBigDecimal(bigDecimal: BigDecimal, out: Buffer): Unit = ???
+    final def serializeBigDecimal(bigDecimal: BigDecimal, out: Buffer): Unit =
+        BufferUtils.writeBigDecimalAsString(out, bigDecimal)
 
     final def serializeBigInteger(bigInteger: BigInteger, out: Buffer): Unit =
         BufferUtils.writeBigIntegerAsString(out, bigInteger)
 
-    final def serializeJBigDecimal(bigDecimal: java.math.BigDecimal, out: Buffer): Unit = ???
+    final def serializeJBigDecimal(bigDecimal: java.math.BigDecimal, out: Buffer): Unit =
+        BufferUtils.writeJBigDecimalAsString(out, bigDecimal)
 
-    final def deserializeBigInt(in: Buffer): BigInt = ???
+    final def deserializeBigInt(in: Buffer): BigInt = {
+        skipBlanks(in)
+        BufferUtils.readStringAsBigInt(in)
+    }
 
-    final def deserializeBigDecimal(in: Buffer): BigDecimal = ???
+    final def deserializeBigDecimal(in: Buffer): BigDecimal = {
+        skipBlanks(in)
+        BufferUtils.readStringAsBigDecimal(in)
+    }
 
-    final def deserializeBigInteger(in: Buffer): BigInteger = ???
+    final def deserializeBigInteger(in: Buffer): BigInteger = {
+        skipBlanks(in)
+        BufferUtils.readStringAsBigInteger(in)
+    }
 
-    final def deserializeJBigDecimal(in: Buffer): java.math.BigDecimal = ???
+    final def deserializeJBigDecimal(in: Buffer): java.math.BigDecimal = {
+        skipBlanks(in)
+        BufferUtils.readStringAsJBigDecimal(in)
+    }
 
     final def serializeJDuration(duration: JDuration, out: Buffer): Unit = {
         out.writeByte('\"')
@@ -395,6 +465,60 @@ private[json] object JsonHelper {
         val uuid = BufferUtils.readStringAsUUID(in)
         assert(in.skipIfNextIs('\"'), s"except \" but get ${in.readByte.toChar}")
         uuid
+    }
+
+    /** 跳过当前 JSON 值（字符串、数字、布尔、null、数组、对象） */
+    final def skipValue(in: Buffer): Unit = {
+        skipBlanks(in)
+        val b = in.getByte(in.readerOffset)
+        if (b == '"') {
+            in.readByte // consume opening "
+            skipStringContent(in)
+        } else if (b == '{') skipObject(in)
+        else if (b == '[') skipArray(in)
+        else if (b == 't') assert(in.skipIfNextAre(JsonConstants.TOKEN_TURE), "expected 'true'")
+        else if (b == 'f') assert(in.skipIfNextAre(JsonConstants.TOKEN_FALSE), "expected 'false'")
+        else if (b == 'n') assert(in.skipIfNextAre(JsonConstants.TOKEN_NULL), "expected 'null'")
+        else skipNumber(in)
+    }
+
+    private def skipStringContent(in: Buffer): Unit = {
+        while (in.readableBytes > 0) {
+            val b = in.readByte
+            if (b == '"') return
+            if (b == '\\') in.skipReadableBytes(1) // skip escaped char
+        }
+    }
+
+    private def skipObject(in: Buffer): Unit = {
+        in.readByte // consume '{'
+        var depth = 1
+        while (depth > 0 && in.readableBytes > 0) {
+            val b = in.readByte
+            if (b == '"') skipStringContent(in)
+            else if (b == '{') depth += 1
+            else if (b == '}') depth -= 1
+        }
+    }
+
+    private def skipArray(in: Buffer): Unit = {
+        in.readByte // consume '['
+        var depth = 1
+        while (depth > 0 && in.readableBytes > 0) {
+            val b = in.readByte
+            if (b == '"') skipStringContent(in)
+            else if (b == '[') depth += 1
+            else if (b == ']') depth -= 1
+        }
+    }
+
+    private def skipNumber(in: Buffer): Unit = {
+        while (in.readableBytes > 0) {
+            val c = in.getByte(in.readerOffset)
+            if ((c >= '0' && c <= '9') || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E')
+                in.skipReadableBytes(1)
+            else return
+        }
     }
 
 }
