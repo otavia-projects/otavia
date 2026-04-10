@@ -23,6 +23,16 @@ import scala.language.unsafeNulls
 
 trait BufferNumberUtils extends BufferBaseUtils {
 
+    /** Parse a variable-length decimal string at the current [[readerOffset]] as a [[Short]].
+      * Advances the [[readerOffset]] past the parsed digits (and optional leading '-').
+      *
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed short value.
+      * @throws NumberFormatException
+      *   if the string does not represent a valid short value.
+      */
     final def readStringAsShort(buffer: Buffer): Short = {
         val isNeg = buffer.skipIfNextIs('-')
         if (isNeg && !buffer.nextInRange('0', '9'))
@@ -37,6 +47,14 @@ trait BufferNumberUtils extends BufferBaseUtils {
         x.toShort
     }
 
+    /** Write the given [[Short]] as a decimal ASCII string at the current [[writerOffset]].
+      * Advances the [[writerOffset]] by the number of bytes written.
+      *
+      * @param buffer
+      *   The buffer to write to.
+      * @param short
+      *   The short value to write.
+      */
     final def writeShortAsString(buffer: Buffer, short: Short): Unit = {
         val ds = BufferConstants.digits
         val q0: Int =
@@ -66,6 +84,16 @@ trait BufferNumberUtils extends BufferBaseUtils {
         }
     }
 
+    /** Parse a variable-length decimal string at the current [[readerOffset]] as an [[Int]].
+      * Advances the [[readerOffset]] past the parsed digits (and optional leading '-').
+      *
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed int value.
+      * @throws NumberFormatException
+      *   if the string does not represent a valid int value.
+      */
     final def readStringAsInt(buffer: Buffer): Int = {
         val isNeg   = buffer.skipIfNextIs('-')
         var x: Long = 0
@@ -78,6 +106,14 @@ trait BufferNumberUtils extends BufferBaseUtils {
         ret.toInt
     }
 
+    /** Write the given [[Int]] as a decimal ASCII string at the current [[writerOffset]].
+      * Advances the [[writerOffset]] by the number of bytes written.
+      *
+      * @param buffer
+      *   The buffer to write to.
+      * @param int
+      *   The int value to write.
+      */
     final def writeIntAsString(buffer: Buffer, int: Int): Unit = if (int != Int.MinValue) {
         val ds = BufferConstants.digits
         val q0 =
@@ -90,6 +126,16 @@ trait BufferNumberUtils extends BufferBaseUtils {
         writePositiveIntDigits(q0, buffer.writerOffset, buffer, ds)
     } else buffer.writeBytes(BufferConstants.MIN_INT_BYTES)
 
+    /** Parse a variable-length decimal string at the current [[readerOffset]] as a [[Long]].
+      * Supports optional leading '+' or '-'. Advances the [[readerOffset]] past the parsed digits.
+      *
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed long value.
+      * @throws NumberFormatException
+      *   if the string does not represent a valid long value or overflows.
+      */
     final def readStringAsLong(buffer: Buffer): Long = {
         var b = buffer.readByte
         var s = -1L
@@ -120,6 +166,14 @@ trait BufferNumberUtils extends BufferBaseUtils {
         x
     }
 
+    /** Write the given [[Long]] as a decimal ASCII string at the current [[writerOffset]].
+      * Advances the [[writerOffset]] by the number of bytes written.
+      *
+      * @param buffer
+      *   The buffer to write to.
+      * @param long
+      *   The long value to write.
+      */
     final def writeLongAsString(buffer: Buffer, long: Long): Unit = {
         val ds = BufferConstants.digits
         var q0 = long
@@ -155,6 +209,18 @@ trait BufferNumberUtils extends BufferBaseUtils {
         writePositiveIntDigits(q, lastPos, buffer, ds)
     }
 
+    /** Parse a variable-length string at the current [[readerOffset]] as a [[Float]].
+      * Supports optional sign, decimal point, and scientific notation (e/E). Uses zero-allocation
+      * mantissa/exponent parsing with three-tier conversion for performance. Advances the
+      * [[readerOffset]] past the parsed characters.
+      *
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed float value.
+      * @throws NumberFormatException
+      *   if the string does not represent a valid float value.
+      */
     final def readStringAsFloat(buffer: Buffer): Float = {
         var b = buffer.readByte
         var isNeg = false
@@ -248,9 +314,15 @@ trait BufferNumberUtils extends BufferBaseUtils {
         if (isNeg) -x else x
     }
 
-    // Based on the amazing work of Raffaello Giulietti
-    // "The Schubfach way to render doubles": https://drive.google.com/file/d/1luHhyQF9zKlM8yJ1nebU0OgVYhfC6CBN/view
-    // Sources with the license are here: https://github.com/c4f7fcce9cb06515/Schubfach/blob/3c92d3c9b1fead540616c918cdfef432bca53dfa/todec/src/math/FloatToDecimal.java
+    /** Write the given [[Float]] as a decimal ASCII string at the current [[writerOffset]].
+      * Uses the Schubfach algorithm for exact float-to-decimal conversion.
+      * Advances the [[writerOffset]] by the number of bytes written.
+      *
+      * @param buffer
+      *   The buffer to write to.
+      * @param float
+      *   The float value to write.
+      */
     final def writeFloatAsString(buffer: Buffer, float: Float): Unit = {
         if (float < 0.0f) buffer.writeByte('-')
         if (float == 0.0f) buffer.writeMedium(0x302e30)
@@ -343,6 +415,18 @@ trait BufferNumberUtils extends BufferBaseUtils {
         }
     }
 
+    /** Parse a variable-length string at the current [[readerOffset]] as a [[Double]].
+      * Supports optional sign, decimal point, and scientific notation (e/E). Uses zero-allocation
+      * mantissa/exponent parsing with three-tier conversion for performance. Advances the
+      * [[readerOffset]] past the parsed characters.
+      *
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed double value.
+      * @throws NumberFormatException
+      *   if the string does not represent a valid double value.
+      */
     final def readStringAsDouble(buffer: Buffer): Double = {
         var b = buffer.readByte
         var isNeg = false
@@ -439,9 +523,15 @@ trait BufferNumberUtils extends BufferBaseUtils {
         if (isNeg) -x else x
     }
 
-    // Based on the amazing work of Raffaello Giulietti
-    // "The Schubfach way to render doubles": https://drive.google.com/file/d/1luHhyQF9zKlM8yJ1nebU0OgVYhfC6CBN/view
-    // Sources with the license are here: https://github.com/c4f7fcce9cb06515/Schubfach/blob/3c92d3c9b1fead540616c918cdfef432bca53dfa/todec/src/math/DoubleToDecimal.java
+    /** Write the given [[Double]] as a decimal ASCII string at the current [[writerOffset]].
+      * Uses the Schubfach algorithm for exact double-to-decimal conversion.
+      * Advances the [[writerOffset]] by the number of bytes written.
+      *
+      * @param buffer
+      *   The buffer to write to.
+      * @param double
+      *   The double value to write.
+      */
     final def writeDoubleAsString(buffer: Buffer, double: Double): Unit = {
         if (double < 0.0f) buffer.writeByte('-')
         if (double == 0.0f) buffer.writeMedium(0x302e30)
@@ -596,6 +686,16 @@ trait BufferNumberUtils extends BufferBaseUtils {
         }
     }
 
+    /** Parse a variable-length decimal string at the current [[readerOffset]] as a Scala [[BigInt]].
+      * Advances the [[readerOffset]] past the parsed digits (and optional leading '-').
+      *
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed BigInt value.
+      * @throws NumberFormatException
+      *   if the string contains no digits.
+      */
     final def readStringAsBigInt(buffer: Buffer): BigInt = {
         val isNeg = buffer.skipIfNextIs('-')
         val sb    = new StringBuilder
@@ -606,6 +706,16 @@ trait BufferNumberUtils extends BufferBaseUtils {
         if (isNeg) BigInt("-" + sb.toString) else BigInt(sb.toString)
     }
 
+    /** Parse a variable-length decimal string at the current [[readerOffset]] as a [[BigInteger]].
+      * Advances the [[readerOffset]] past the parsed digits (and optional leading '-').
+      *
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed BigInteger value.
+      * @throws NumberFormatException
+      *   if the string contains no digits.
+      */
     final def readStringAsBigInteger(buffer: Buffer): BigInteger = {
         val isNeg = buffer.skipIfNextIs('-')
         val sb    = new StringBuilder
@@ -616,6 +726,14 @@ trait BufferNumberUtils extends BufferBaseUtils {
         new BigInteger(if (isNeg) "-" + sb.toString else sb.toString)
     }
 
+    /** Parse a variable-length string at the current [[readerOffset]] as a Scala [[BigDecimal]].
+      * Supports decimal point and scientific notation. Advances the [[readerOffset]] past the parsed characters.
+      *
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed BigDecimal value.
+      */
     final def readStringAsBigDecimal(buffer: Buffer): BigDecimal = {
         val sb = new StringBuilder
         if (buffer.skipIfNextIs('-')) sb.append('-')
@@ -628,6 +746,14 @@ trait BufferNumberUtils extends BufferBaseUtils {
         BigDecimal(sb.toString)
     }
 
+    /** Parse a variable-length string at the current [[readerOffset]] as a [[java.math.BigDecimal]].
+      * Supports decimal point and scientific notation. Advances the [[readerOffset]] past the parsed characters.
+      *
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed BigDecimal value.
+      */
     final def readStringAsJBigDecimal(buffer: Buffer): java.math.BigDecimal = {
         val sb = new StringBuilder
         if (buffer.skipIfNextIs('-')) sb.append('-')
@@ -640,10 +766,28 @@ trait BufferNumberUtils extends BufferBaseUtils {
         new java.math.BigDecimal(sb.toString)
     }
 
+    /** Write the given [[BigInt]] as a decimal ASCII string at the current [[writerOffset]].
+      * Delegates to [[writeLongAsString]] if the value fits in a long, otherwise uses BigInteger rendering.
+      * Advances the [[writerOffset]] by the number of bytes written.
+      *
+      * @param buffer
+      *   The buffer to write to.
+      * @param bigInt
+      *   The BigInt value to write.
+      */
     final def writeBigIntAsString(buffer: Buffer, bigInt: BigInt): Unit = if (bigInt.isValidLong)
         writeLongAsString(buffer, bigInt.longValue)
     else writeBigInteger(buffer, bigInt.bigInteger, null)
 
+    /** Write the given [[BigInteger]] as a decimal ASCII string at the current [[writerOffset]].
+      * Delegates to [[writeLongAsString]] if the value fits in a long, otherwise uses recursive division.
+      * Advances the [[writerOffset]] by the number of bytes written.
+      *
+      * @param buffer
+      *   The buffer to write to.
+      * @param num
+      *   The BigInteger value to write.
+      */
     final def writeBigIntegerAsString(buffer: Buffer, num: BigInteger): Unit = writeBigInteger(buffer, num, null)
 
     private def writeBigInteger(buffer: Buffer, x: BigInteger, ss: Array[BigInteger]): Unit = {
@@ -717,12 +861,28 @@ trait BufferNumberUtils extends BufferBaseUtils {
             writeBigDecimalRemainder(buffer, qr(1), scale, block + (18 << n), n - 1, ss)
         }
 
+    /** Write the given Scala [[BigDecimal]] as a decimal ASCII string at the current [[writerOffset]].
+      * Advances the [[writerOffset]] by the number of bytes written.
+      *
+      * @param buffer
+      *   The buffer to write to.
+      * @param bigDecimal
+      *   The BigDecimal value to write.
+      */
     final def writeBigDecimalAsString(buffer: Buffer, bigDecimal: BigDecimal): Unit = {
         val bd  = bigDecimal.bigDecimal
         val exp = writeBigDecimal(buffer, bd.unscaledValue, bd.scale, 0, null)
         writeExp(buffer, exp)
     }
 
+    /** Write the given [[java.math.BigDecimal]] as a decimal ASCII string at the current [[writerOffset]].
+      * Advances the [[writerOffset]] by the number of bytes written.
+      *
+      * @param buffer
+      *   The buffer to write to.
+      * @param bigDecimal
+      *   The BigDecimal value to write.
+      */
     final def writeJBigDecimalAsString(buffer: Buffer, bigDecimal: java.math.BigDecimal): Unit = {
         val exp = writeBigDecimal(buffer, bigDecimal.unscaledValue, bigDecimal.scale, 0, null)
         writeExp(buffer, exp)

@@ -26,8 +26,20 @@ import scala.language.unsafeNulls
 
 trait BufferTimeUtils extends BufferNumberUtils {
 
+    /** Write the given [[Year]] as an ISO-8601 year string at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param year
+      *   The year value to write.
+      */
     final def writeYearAsString(buffer: Buffer, year: Year): Unit = writeYearAsString(buffer, year.getValue)
 
+    /** Write the given year as an ISO-8601 year string at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param year
+      *   The year value to write.
+      */
     final def writeYearAsString(buffer: Buffer, year: Int): Unit = {
         val ds = BufferConstants.digits
         if (year >= 0 && year < 10000) write4Digits(buffer, year, ds) else writeYearWithSign(buffer, year, ds)
@@ -49,6 +61,12 @@ trait BufferTimeUtils extends BufferNumberUtils {
         }
     }
 
+    /** Parse a variable-length year string at the current [[readerOffset]] as a [[Year]].
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed Year.
+      */
     final def readStringAsYear(buffer: Buffer): Year = Year.of(readStringAsIntYear(buffer))
 
     private def parseNon4DigitYearWithByte(buffer: Buffer, maxDigits: Int): Int = {
@@ -68,6 +86,13 @@ trait BufferTimeUtils extends BufferNumberUtils {
         year
     }
 
+    /** Parse a variable-length year string at the current [[readerOffset]] as an [[Int]].
+      * Supports 4-digit years and signed extended years.
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed year as an Int.
+      */
     final def readStringAsIntYear(buffer: Buffer): Int = {
         var year = buffer.getIntLE(buffer.readerOffset) - 0x30303030
         if (((year + 0x76767676 | year) & 0x80808080) == 0) {
@@ -77,12 +102,24 @@ trait BufferTimeUtils extends BufferNumberUtils {
         } else parseNon4DigitYearWithByte(buffer, 9)
     }
 
+    /** Write the given [[YearMonth]] as an ISO-8601 string (`yyyy-mm`) at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param ym
+      *   The YearMonth value to write.
+      */
     final def writeYearMonthAsString(buffer: Buffer, ym: YearMonth): Unit = {
         val ds = BufferConstants.digits
         writeYearAsString(buffer, ym.getYear)
         buffer.writeMediumLE(ds(ym.getMonthValue) << 8 | 0x00002d)
     }
 
+    /** Parse an ISO-8601 `yyyy-mm` string at the current [[readerOffset]] as a [[YearMonth]].
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed YearMonth.
+      */
     final def readStringAsYearMonth(buffer: Buffer): YearMonth = {
         val year = readStringAsIntYear(buffer)
         buffer.skipReadableBytes(1) // skip '-'
@@ -90,6 +127,12 @@ trait BufferTimeUtils extends BufferNumberUtils {
         YearMonth.of(year, month)
     }
 
+    /** Write the given [[Instant]] as an ISO-8601 string at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param x
+      *   The Instant value to write.
+      */
     final def writeInstantAsString(buffer: Buffer, x: Instant): Unit = {
         val epochSecond = x.getEpochSecond
         if (epochSecond < 0) writeBeforeEpochInstant(buffer, epochSecond, x.getNano)
@@ -166,6 +209,12 @@ trait BufferTimeUtils extends BufferNumberUtils {
         buffer.writeByte(0x5a)
     }
 
+    /** Parse an ISO-8601 instant string at the current [[readerOffset]] as an [[Instant]].
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed Instant.
+      */
     final def readStringAsInstant(buffer: Buffer): Instant = {
         val year = readStringAsIntYear(buffer)
         assert(buffer.skipIfNextIs('-'), s"except '-' but got ${buffer.readByte.toChar}")
@@ -225,6 +274,12 @@ trait BufferTimeUtils extends BufferNumberUtils {
              else if (isLeap(year)) -719530
              else -719531) + day) // 719528 == days 0000 to 1970)
 
+    /** Parse an ISO-8601 date string at the current [[readerOffset]] as a [[LocalDate]].
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed LocalDate.
+      */
     final def readStringAsLocalDate(buffer: Buffer): LocalDate = {
         val year = readStringAsIntYear(buffer)
         buffer.skipIfNextIs('-')
@@ -234,6 +289,12 @@ trait BufferTimeUtils extends BufferNumberUtils {
         LocalDate.of(year, month, days)
     }
 
+    /** Write the given [[LocalDate]] as an ISO-8601 date string at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param localDate
+      *   The LocalDate value to write.
+      */
     final def writeLocalDateAsString(buffer: Buffer, localDate: LocalDate): Unit = {
         val ds = BufferConstants.digits
         writeYearAsString(buffer, localDate.getYear)
@@ -243,6 +304,12 @@ trait BufferTimeUtils extends BufferNumberUtils {
         buffer.writeUnsignedMediumLE(d2 | 0x00002d) // -xx
     }
 
+    /** Write the given [[LocalTime]] as an ISO-8601 time string at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param localTime
+      *   The LocalTime value to write.
+      */
     final def writeLocalTimeAsString(buffer: Buffer, localTime: LocalTime): Unit = {
         val ds     = BufferConstants.digits
         val second = localTime.getSecond
@@ -259,6 +326,12 @@ trait BufferTimeUtils extends BufferNumberUtils {
         }
     }
 
+    /** Parse an ISO-8601 time string at the current [[readerOffset]] as a [[LocalTime]].
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed LocalTime.
+      */
     final def readStringAsLocalTime(buffer: Buffer): LocalTime = {
         var minute = 0
         var second = 0
@@ -301,12 +374,24 @@ trait BufferTimeUtils extends BufferNumberUtils {
         }
     }
 
+    /** Write the given [[LocalDateTime]] as an ISO-8601 date-time string at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param localDateTime
+      *   The LocalDateTime value to write.
+      */
     final def writeLocalDateTimeAsString(buffer: Buffer, localDateTime: LocalDateTime): Unit = {
         writeLocalDateAsString(buffer, localDateTime.toLocalDate)
         buffer.writeByte('T')
         writeLocalTimeAsString(buffer, localDateTime.toLocalTime)
     }
 
+    /** Parse an ISO-8601 date-time string at the current [[readerOffset]] as a [[LocalDateTime]].
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed LocalDateTime.
+      */
     final def readStringAsLocalDateTime(buffer: Buffer): LocalDateTime = {
         val year = readStringAsIntYear(buffer)
         buffer.skipIfNextIs('-')
@@ -339,6 +424,12 @@ trait BufferTimeUtils extends BufferNumberUtils {
         LocalDateTime.of(year, month, days, hour, minute, second, nano)
     }
 
+    /** Parse an ISO-8601 month-day string at the current [[readerOffset]] as a [[MonthDay]].
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed MonthDay.
+      */
     final def readStringAsMonthDay(buffer: Buffer): MonthDay = {
         val ps       = buffer.readUnsignedMediumLE.toLong | (buffer.readUnsignedIntLE << 24)
         val bs       = ps - 0x30302d30302d2dL
@@ -348,6 +439,12 @@ trait BufferTimeUtils extends BufferNumberUtils {
         MonthDay.of(month, day)
     }
 
+    /** Write the given [[MonthDay]] as an ISO-8601 string (`--mm-dd`) at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param monthDay
+      *   The MonthDay value to write.
+      */
     final def writeMonthDayAsString(buffer: Buffer, monthDay: MonthDay): Unit = { // "--01-01"
         val ds = BufferConstants.digits
         val d1 = ds(monthDay.getMonthValue) << 16
@@ -356,18 +453,36 @@ trait BufferTimeUtils extends BufferNumberUtils {
         buffer.writerOffset(buffer.writerOffset - 1)
     }
 
+    /** Write the given [[OffsetDateTime]] as an ISO-8601 string at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param offsetDateTime
+      *   The OffsetDateTime value to write.
+      */
     final def writeOffsetDateTimeAsString(buffer: Buffer, offsetDateTime: OffsetDateTime): Unit = {
         val ds = BufferConstants.digits
         writeLocalDateTimeAsString(buffer, offsetDateTime.toLocalDateTime)
         writeZoneOffset(buffer, offsetDateTime.getOffset)
     }
 
+    /** Write the given [[OffsetTime]] as an ISO-8601 string at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param offsetTime
+      *   The OffsetTime value to write.
+      */
     final def writeOffsetTimeAsString(buffer: Buffer, offsetTime: OffsetTime): Unit = {
         val ds = BufferConstants.digits
         writeLocalTimeAsString(buffer, offsetTime.toLocalTime)
         writeZoneOffset(buffer, offsetTime.getOffset)
     }
 
+    /** Write the given [[ZoneOffset]] as an ISO-8601 string at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param zoneOffset
+      *   The ZoneOffset value to write.
+      */
     final def writeZoneOffset(buffer: Buffer, zoneOffset: ZoneOffset): Unit = {
         val ds = BufferConstants.digits
         var y  = zoneOffset.getTotalSeconds
@@ -397,12 +512,24 @@ trait BufferTimeUtils extends BufferNumberUtils {
         }
     }
 
+    /** Parse an ISO-8601 offset date-time string at the current [[readerOffset]] as an [[OffsetDateTime]].
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed OffsetDateTime.
+      */
     final def readStringAsOffsetDateTime(buffer: Buffer): OffsetDateTime = {
         val localDateTime = readStringAsLocalDateTime(buffer)
         val offset        = readStringAsZoneOffset(buffer)
         OffsetDateTime.of(localDateTime, offset)
     }
 
+    /** Parse a zone offset string at the current [[readerOffset]] as a [[ZoneOffset]].
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed ZoneOffset.
+      */
     final def readStringAsZoneOffset(buffer: Buffer): ZoneOffset = if (buffer.skipIfNextIs('Z')) ZoneOffset.UTC
     else {
         val b = buffer.readByte
@@ -422,15 +549,33 @@ trait BufferTimeUtils extends BufferNumberUtils {
         else ZoneOffset.ofHoursMinutesSeconds(hours, minutes, seconds)
     }
 
+    /** Parse an ISO-8601 offset time string at the current [[readerOffset]] as an [[OffsetTime]].
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed OffsetTime.
+      */
     final def readStringAsOffsetTime(buffer: Buffer): OffsetTime = {
         val localTime  = readStringAsLocalTime(buffer)
         val zoneOffset = readStringAsZoneOffset(buffer)
         OffsetTime.of(localTime, zoneOffset)
     }
 
+    /** Write the given [[ZoneId]] as a string at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param zoneId
+      *   The ZoneId value to write.
+      */
     final def writeZoneIdAsString(buffer: Buffer, zoneId: ZoneId): Unit =
         buffer.writeBytes(BufferConstants.zoneIdMap(zoneId))
 
+    /** Parse a zone ID string at the current [[readerOffset]] as a [[ZoneId]].
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed ZoneId.
+      */
     final def readStringAsZoneId(buffer: Buffer): ZoneId = {
         var i            = 0
         var break        = false
@@ -448,6 +593,12 @@ trait BufferTimeUtils extends BufferNumberUtils {
         zone
     }
 
+    /** Write the given [[ZonedDateTime]] as an ISO-8601 string at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param zonedDateTime
+      *   The ZonedDateTime value to write.
+      */
     final def writeZonedDateTime(buffer: Buffer, zonedDateTime: ZonedDateTime): Unit = {
         writeLocalDateTimeAsString(buffer, zonedDateTime.toLocalDateTime)
         writeZoneOffset(buffer, zonedDateTime.getOffset)
@@ -459,6 +610,12 @@ trait BufferTimeUtils extends BufferNumberUtils {
         }
     }
 
+    /** Parse an ISO-8601 zoned date-time string at the current [[readerOffset]] as a [[ZonedDateTime]].
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed ZonedDateTime.
+      */
     final def readStringAsZonedDateTime(buffer: Buffer): ZonedDateTime = {
         val localDateTime = readStringAsLocalDateTime(buffer)
         val offset        = readStringAsZoneOffset(buffer)
@@ -469,6 +626,12 @@ trait BufferTimeUtils extends BufferNumberUtils {
         } else ZonedDateTime.of(localDateTime, offset)
     }
 
+    /** Parse a period string at the current [[readerOffset]] as a [[Period]].
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed Period.
+      */
     final def readStringAsPeriod(buffer: Buffer): Period = {
         assert(buffer.skipIfNextIs('P'), s"except 'P' but got ${buffer.readByte.toChar}")
         var year  = 0
@@ -489,6 +652,12 @@ trait BufferTimeUtils extends BufferNumberUtils {
         Period.of(year, month, days)
     }
 
+    /** Write the given [[Period]] as a string at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param period
+      *   The Period value to write.
+      */
     final def writePeriodAsString(buffer: Buffer, period: Period): Unit = {
         val years  = period.getYears
         val months = period.getMonths
@@ -512,6 +681,12 @@ trait BufferTimeUtils extends BufferNumberUtils {
         }
     }
 
+    /** Write the given [[JDuration]] as an ISO-8601 duration string at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param duration
+      *   The JDuration value to write.
+      */
     def writeJDurationAsString(buffer: Buffer, duration: JDuration): Unit = {
         val totalSecs = duration.getSeconds
         var nano      = duration.getNano
@@ -670,6 +845,12 @@ trait BufferTimeUtils extends BufferNumberUtils {
         JDuration.ofSeconds(seconds, nano.toLong)
     }
 
+    /** Write the given Scala [[Duration]] as a string at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param duration
+      *   The Duration value to write.
+      */
     final def writeDurationAsString(buffer: Buffer, duration: Duration): Unit = {
         if (duration eq Duration.Undefined) buffer.writeBytes(DurationConstants.Undefined)
         else if (duration == Duration.Inf) buffer.writeBytes(DurationConstants.Inf)

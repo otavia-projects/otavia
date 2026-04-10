@@ -23,6 +23,15 @@ import scala.language.unsafeNulls
 
 trait BufferStringUtils extends BufferBaseUtils {
 
+    /** Read an escaped character from the current [[readerOffset]], handling backslash escapes
+      * (`\n`, `\t`, `\"`, `\\`) and `\uXXXX` unicode escapes, as well as multi-byte UTF-8 sequences.
+      * Advances the [[readerOffset]] past the consumed bytes.
+      *
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The decoded character.
+      */
     final def readEscapedChar(buffer: Buffer): Char = {
         val b1 = buffer.readByte
         if (b1 >= 0) {
@@ -51,6 +60,16 @@ trait BufferStringUtils extends BufferBaseUtils {
         } else throw new IllegalStateException("illegal surrogate character")
     }
 
+    /** Get an escaped character at the given [[index]] without advancing the [[readerOffset]].
+      * Handles backslash escapes and `\uXXXX` unicode escapes, as well as multi-byte UTF-8 sequences.
+      *
+      * @param index
+      *   The absolute offset into the buffer.
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The decoded character.
+      */
     final def getEscapedChar(index: Int, buffer: Buffer): Char = {
         val b1 = buffer.getByte(index)
         if (b1 >= 0) {
@@ -80,6 +99,15 @@ trait BufferStringUtils extends BufferBaseUtils {
         } else throw new IllegalStateException("illegal surrogate character")
     }
 
+    /** Write the given character as an escaped UTF-8 byte sequence at the current [[writerOffset]].
+      * Special characters are escaped with backslash (`\n`, `\t`, `\"`, `\\`), control characters
+      * are encoded as `\uXXXX`. Advances the [[writerOffset]] by the number of bytes written.
+      *
+      * @param buffer
+      *   The buffer to write to.
+      * @param ch
+      *   The character to write.
+      */
     final def writeEscapedChar(buffer: Buffer, ch: Char): Unit = {
         if (ch < 0x80) {
             val ecs = BufferConstants.escapedChars(ch)
@@ -99,6 +127,14 @@ trait BufferStringUtils extends BufferBaseUtils {
         }
     }
 
+    /** Write the given character as a double-quoted, escaped UTF-8 byte sequence at the current [[writerOffset]].
+      * The output format is `"ch"` with proper escaping. Advances the [[writerOffset]] by the number of bytes written.
+      *
+      * @param buffer
+      *   The buffer to write to.
+      * @param ch
+      *   The character to write.
+      */
     final def writeEscapedCharWithQuote(buffer: Buffer, ch: Char): Unit = {
         if (ch < 0x80) { // 00000000 0aaaaaaa (UTF-16 char) -> 0aaaaaaa (UTF-8 byte)
             val ecs = BufferConstants.escapedChars(ch)
@@ -118,11 +154,29 @@ trait BufferStringUtils extends BufferBaseUtils {
         }
     }
 
+    /** Read an escaped string of the given length from the current [[readerOffset]] and translate
+      * escape sequences using [[String.translateEscapes]]. Advances the [[readerOffset]] by [[len]].
+      *
+      * @param buffer
+      *   The buffer to read from.
+      * @param len
+      *   The number of bytes to read.
+      * @return
+      *   The unescaped string.
+      */
     final def readEscapedString(buffer: Buffer, len: Int): String = {
         val cs = buffer.readCharSequence(len).toString
         cs.translateEscapes()
     }
 
+    /** Write the given string as an escaped UTF-8 byte sequence at the current [[writerOffset]].
+      * Special characters are escaped with backslash. Advances the [[writerOffset]] by the number of bytes written.
+      *
+      * @param buffer
+      *   The buffer to write to.
+      * @param str
+      *   The string to write.
+      */
     final def writeEscapedString(buffer: Buffer, str: String): Unit = {
         var i = 0
         while (i < str.length()) {

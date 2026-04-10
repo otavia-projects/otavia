@@ -22,6 +22,16 @@ import scala.annotation.switch
 
 trait BufferBaseUtils {
 
+    /** Parse a variable-length decimal string at the current [[readerOffset]] as a [[Byte]].
+      * Advances the [[readerOffset]] past the parsed digits (and optional leading '-').
+      *
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed byte value.
+      * @throws NumberFormatException
+      *   if the string does not represent a valid byte value.
+      */
     final def readStringAsByte(buffer: Buffer): Byte = {
         val isNeg = buffer.skipIfNextIs('-')
         if (isNeg && !buffer.nextInRange('0', '9'))
@@ -35,6 +45,12 @@ trait BufferBaseUtils {
         x.toByte
     }
 
+    /** Write the given [[Byte]] as a decimal ASCII string at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param byte
+      *   The byte value to write.
+      */
     final def writeByteAsString(buffer: Buffer, byte: Byte): Unit = {
         val q0: Int =
             if (byte >= 0) byte
@@ -47,6 +63,14 @@ trait BufferBaseUtils {
         else buffer.writeMediumLE(BufferConstants.digits(q0 - 100) << 8 | 0x31)
     }
 
+    /** Parse a `"true"` or `"false"` string at the current [[readerOffset]] as a [[Boolean]].
+      * Advances the [[readerOffset]] past the parsed characters.
+      *
+      * @param buffer
+      *   The buffer to read from.
+      * @return
+      *   The parsed boolean value.
+      */
     final def readStringAsBoolean(buffer: Buffer): Boolean = {
         val bs = buffer.readIntLE
         if (bs == 0x65757274) true                                   // e u r t
@@ -54,6 +78,15 @@ trait BufferBaseUtils {
         else throw new Exception("except 'ture' or 'false'")
     }
 
+    /** Get a `"true"` or `"false"` string at the given [[index]] as a [[Boolean]], without advancing the [[readerOffset]].
+      *
+      * @param buffer
+      *   The buffer to read from.
+      * @param index
+      *   The absolute offset into the buffer.
+      * @return
+      *   The parsed boolean value.
+      */
     final def getStringAsBoolean(buffer: Buffer, index: Int): Boolean = {
         val bs = buffer.getIntLE(index)
         if (bs == 0x65757274) true                                                // e u r t
@@ -61,6 +94,12 @@ trait BufferBaseUtils {
         else throw new Exception("except 'ture' or 'false'")
     }
 
+    /** Write `"true"` or `"false"` at the current [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param boolean
+      *   The boolean value to write.
+      */
     final def writeBooleanAsString(buffer: Buffer, boolean: Boolean): Unit =
         if (boolean) buffer.writeIntLE(0x65757274) // e u r t
         else {
@@ -68,6 +107,14 @@ trait BufferBaseUtils {
             buffer.writeByte('e')         // e
         }
 
+    /** Set `"true"` or `"false"` at the given [[index]], without modifying the [[writerOffset]].
+      * @param buffer
+      *   The buffer to write to.
+      * @param index
+      *   The absolute offset into the buffer.
+      * @param boolean
+      *   The boolean value to write.
+      */
     final def setBooleanAsString(buffer: Buffer, index: Int, boolean: Boolean): Unit =
         if (boolean) buffer.setIntLE(index, 0x65757274) // e u r t
         else {
