@@ -207,7 +207,4 @@ trait BufferBaseUtils {
         write8Digits(buffer, x - q1 * 100000000, ds)
     }
 
-    protected final def isLeap(year: Int): Boolean =
-        (year & 0x3) == 0 && (year * -1030792151 - 2061584303 > -1975684958 || (year & 0xf) == 0) // year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
-
 }

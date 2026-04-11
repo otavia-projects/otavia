@@ -264,6 +264,9 @@ trait BufferTimeUtils extends BufferNumberUtils {
         if (nano == 0) Instant.ofEpochSecond(epochSecond) else Instant.ofEpochSecond(epochSecond, nano.toLong)
     }
 
+    private def isLeap(year: Int): Boolean =
+        (year & 0x3) == 0 && (year * -1030792151 - 2061584303 > -1975684958 || (year & 0xf) == 0) // year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
+
     private def epochDay(year: Int, month: Int, day: Int): Long =
         year * 365L + ((year + 3 >> 2) - {
             val cp = year * 1374389535L
