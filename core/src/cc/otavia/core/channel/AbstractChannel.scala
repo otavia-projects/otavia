@@ -382,7 +382,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     override def isShutdown(direction: ChannelShutdownDirection): Boolean = unsafe.isShutdown(direction)
 
-    override def writableBytes: Long = ???
+    override def writableBytes: Long = 0
 
     override private[core] def closeAfterCreate(): Unit = closeTransport(newPromise())
 

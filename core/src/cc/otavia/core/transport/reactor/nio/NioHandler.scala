@@ -376,7 +376,14 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
         }
     }
 
-    override def shutdown(channel: AbstractChannel, direction: ChannelShutdownDirection): Unit = ???
+    override def shutdown(channel: AbstractChannel, direction: ChannelShutdownDirection): Unit = {
+        try {
+            channel.unsafeChannel.unsafeShutdown(direction)
+        } catch {
+            case t: Throwable =>
+                channel.executorAddress.inform(ShutdownReply(channel, direction, Some(t)))
+        }
+    }
 
     override def close(channel: AbstractChannel): Unit = {
         try {
@@ -396,8 +403,8 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
     override def wakeup(): Unit =
         selector.wakeup()
 
-    override def isCompatible(handleType: Class[? <: AbstractChannel]): Boolean = ???
-    // classOf[AbstractNioChannel[?, ?]].isAssignableFrom(handleType)
+    override def isCompatible(handleType: Class[? <: AbstractChannel]): Boolean =
+        classOf[AbstractNioUnsafeChannel[?]].isAssignableFrom(handleType)
 
     private def selectNow(): Int = selector.selectNow()
 

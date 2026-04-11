@@ -32,7 +32,7 @@ class NioServerSocketChannel(system: ActorSystem) extends AbstractServerChannel(
 
     override def localAddress: Option[SocketAddress] = Some(unsafeChannel.localAddress)
 
-    override def remoteAddress: Option[SocketAddress] = ???
+    override def remoteAddress: Option[SocketAddress] = None
 
     override protected def getTransportExtendedOption[T](option: ChannelOption[T]): T = {
         if (option == ChannelOption.SO_BACKLOG) unsafeChannel.getBacklog.asInstanceOf[T]
@@ -53,7 +53,7 @@ class NioServerSocketChannel(system: ActorSystem) extends AbstractServerChannel(
             if (socketOption != null) {
                 NioChannelOption.setOption(unsafeChannel.ch, socketOption, value)
             } else
-                super.setExtendedOption(option, value)
+                super.setTransportExtendedOption(option, value)
         }
     }
 

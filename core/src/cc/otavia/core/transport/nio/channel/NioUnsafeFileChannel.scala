@@ -56,8 +56,10 @@ class NioUnsafeFileChannel(channel: AbstractChannel) extends AbstractUnsafeChann
 
     override def unsafeClose(cause: Option[Throwable]): Unit = {
         try {
-            ch.close()
-            ch = null
+            if (ch != null) {
+                ch.close()
+                ch = null
+            }
             executorAddress.inform(ChannelClose(channel, cause))
         } catch {
             case t: Throwable =>
@@ -140,7 +142,7 @@ class NioUnsafeFileChannel(channel: AbstractChannel) extends AbstractUnsafeChann
                 } else if (length == -1) {
                     try {
                         if (position != -1) {
-                            val readLength = ch.size()
+                            val readLength = ch.size() - position
                             var remaining  = readLength
                             var pos        = position
                             var continue   = true
@@ -155,14 +157,13 @@ class NioUnsafeFileChannel(channel: AbstractChannel) extends AbstractUnsafeChann
                                     byteBuffer.clear()
                                     buffer.writerOffset(realRead)
                                     executorAddress.inform(ReadBuffer(channel, buffer, recipient = null))
-                                    if (remaining == 0) {
-                                        continue = false
-                                        executorAddress.inform(ReadCompletedEvent(channel))
-                                    }
                                 } else if (realRead == 0) {
+                                    continue = false
+                                } else {
                                     continue = false
                                 }
                             }
+                            executorAddress.inform(ReadCompletedEvent(channel))
                         } else {
                             val readLength = ch.size()
                             var remaining  = readLength
@@ -177,18 +178,17 @@ class NioUnsafeFileChannel(channel: AbstractChannel) extends AbstractUnsafeChann
                                     byteBuffer.clear()
                                     buffer.writerOffset(realRead)
                                     executorAddress.inform(ReadBuffer(channel, buffer, recipient = null))
-                                    if (remaining == 0) {
-                                        continue = false
-                                        executorAddress.inform(ReadCompletedEvent(channel))
-                                    }
                                 } else if (realRead == 0) {
+                                    continue = false
+                                } else {
                                     continue = false
                                 }
                             }
+                            executorAddress.inform(ReadCompletedEvent(channel))
                         }
                     } catch {
                         case t: Throwable =>
-                            executorAddress.inform(ReadEvent(channel, cause = Some(t)))
+                            executorAddress.inform(ReadCompletedEvent(channel, cause = Some(t)))
                     }
                 } else {
                     val cause = new UnsupportedOperationException(s"read length is $length")
@@ -201,7 +201,29 @@ class NioUnsafeFileChannel(channel: AbstractChannel) extends AbstractUnsafeChann
                 executorAddress.inform(ReadCompletedEvent(channel, cause = Some(cause)))
     }
 
-    override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit = ???
+    override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit = payload match
+        case fileRegion: FileRegion =>
+            var position = 0L
+            var remaining = fileRegion.count
+            while (remaining > 0) {
+                val written = fileRegion.transferTo(ch, position)
+                if (written < 0) throw new java.io.IOException("Failed to write file region to file channel")
+                position += written
+                remaining -= written
+            }
+            fileRegion.release
+        case buffer: RecyclablePageBuffer =>
+            var cursor = buffer
+            while (cursor != null) {
+                val buf = cursor
+                cursor = cursor.next
+                buf.next = null
+                val byteBuffer = buf.underlying
+                byteBuffer.limit(buf.writerOffset)
+                byteBuffer.position(buf.readerOffset)
+                while (byteBuffer.hasRemaining) ch.write(byteBuffer)
+                buf.close()
+            }
 
     override def unsafeConnect(remote: SocketAddress, local: Option[SocketAddress], fastOpen: Boolean): Unit =
         executorAddress.inform(ConnectReply(channel, cause = Some(new UnsupportedOperationException())))

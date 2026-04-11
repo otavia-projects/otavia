@@ -161,7 +161,14 @@ final class NioUnsafeSocketChannel(channel: AbstractChannel, ch: SocketChannel, 
     }
 
     private def unsafeFlushFileRegion(fileRegion: FileRegion): Unit = {
-        fileRegion.transferTo(ch, 0)
+        var position = 0L
+        var remaining = fileRegion.count
+        while (remaining > 0) {
+            val written = fileRegion.transferTo(ch, position)
+            if (written < 0) throw new IOException("Failed to write file region to channel")
+            position += written
+            remaining -= written
+        }
         fileRegion.release
     }
 

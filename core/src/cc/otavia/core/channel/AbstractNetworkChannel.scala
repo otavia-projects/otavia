@@ -19,6 +19,7 @@
 package cc.otavia.core.channel
 
 import cc.otavia.core.channel.ChannelOption.*
+import cc.otavia.core.channel.internal.AdaptiveBufferOffset
 import cc.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
 import cc.otavia.core.channel.internal.WriteBufferWaterMark
 import cc.otavia.core.channel.message.ReadPlanFactory
@@ -76,7 +77,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
             case CONNECT_TIMEOUT_MILLIS  => setConnectTimeoutMillis(value)
             case READ_PLAN_FACTORY       => setReadPlanFactory(value)
             case AUTO_CLOSE              => setAutoClose(value)
-            case ALLOW_HALF_CLOSURE      => allowHalfClosure = value
+            case ALLOW_HALF_CLOSURE      => setAllowHalfClosure(value)
             case _                       => setTransportExtendedOption(option, value)
     }
 
@@ -350,10 +351,10 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
             ongoingChannelPromise = null
         }
 
-        val cause = new ClosedChannelException()
+        val closeCause = cause.getOrElse(new ClosedChannelException())
 
-        this.failedFutures(cause)
-        this.failedStacks(cause)
+        this.failedFutures(closeCause)
+        this.failedStacks(closeCause)
         this.closeAdaptiveBuffers()
 
         pipeline.fireChannelInactive()
@@ -468,15 +469,22 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
 
     private def closeIfClosed(): Unit = if (!isOpen) closeTransport(newPromise())
 
-    private def totalPending: Long = -1
+    private def totalPending: Long = if (outboundQueue != null) {
+        var bytes = 0L
+        outboundQueue.foreach {
+            case offset: AdaptiveBufferOffset => bytes += offset.endIndex
+            case _: FileRegion                =>
+        }
+        bytes
+    } else -1
 
     override final def writableBytes: Long = {
         val totalPending = this.totalPending
         if (totalPending == -1) 0
         else {
-            val bytes = ???
+            val bytes = waterMarkHigh - totalPending
+            if (bytes < 0) 0 else bytes
         }
-        ???
     }
 
     private[core] def updateWritabilityIfNeeded(notify: Boolean, notifyLater: Boolean): Unit = {

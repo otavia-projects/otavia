@@ -234,7 +234,7 @@ class CombinedChannelDuplexHandler[I <: ChannelHandler, O <: ChannelHandler] ext
         if (!outboundCtx.removed) outbound.read(outboundCtx, readPlan)
         else outboundCtx.read(readPlan)
 
-    override def write(ctx: ChannelHandlerContext, msg: AnyRef): Unit = if (outboundCtx.removed)
+    override def write(ctx: ChannelHandlerContext, msg: AnyRef): Unit = if (!outboundCtx.removed)
         outbound.write(outboundCtx, msg)
     else outboundCtx.write(msg)
 

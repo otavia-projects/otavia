@@ -29,8 +29,15 @@ trait Byte2ByteEncoder extends ChannelHandler {
 
     override def write(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
         msg match
-            case buffer: AdaptiveBuffer => encode(ctx, buffer, ctx.outboundAdaptiveBuffer)
-            case _                      => ctx.write(msg)
+            case buffer: AdaptiveBuffer =>
+                encode(ctx, buffer, ctx.outboundAdaptiveBuffer)
+                if (ctx.outboundAdaptiveBuffer.readableBytes > 0) {
+                    ctx.write(ctx.outboundAdaptiveBuffer)
+                    if (ctx.outboundAdaptiveBuffer.readableBytes == 0) {
+                        ctx.outboundAdaptiveBuffer.compact()
+                    }
+                }
+            case _ => ctx.write(msg)
     }
 
     @throws[Exception]

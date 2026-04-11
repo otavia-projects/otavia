@@ -79,16 +79,17 @@ class NioUnsafeDatagramChannel(channel: AbstractChannel, ch: DatagramChannel, re
     override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit = {
         payload match
             case fileRegion: FileRegion =>
-                ???
-            case buffer: RecyclablePageBuffer => // TODO: UDP packet
+                fileRegion.transferTo(ch, 0)
+                fileRegion.release
+            case buffer: RecyclablePageBuffer =>
                 var cursor = buffer
                 while (cursor != null) {
                     val buf = cursor
                     cursor = cursor.next
                     buf.next = null
                     val byteBuffer = buf.byteBuffer
-                    byteBuffer.limit(buffer.writerOffset)
-                    byteBuffer.position(buffer.readerOffset)
+                    byteBuffer.limit(buf.writerOffset)
+                    byteBuffer.position(buf.readerOffset)
                     ch.write(byteBuffer)
                     buf.close()
                 }
@@ -115,24 +116,31 @@ class NioUnsafeDatagramChannel(channel: AbstractChannel, ch: DatagramChannel, re
         var address: SocketAddress = null
         try {
             val byteBuffer = page.byteBuffer
-            address = ch.receive(page.byteBuffer)
+            byteBuffer.clear()
+            address = ch.receive(byteBuffer)
             read = byteBuffer.position()
             if (address != null) processRead(attempted, read, 1)
             else processRead(attempted, read, 0)
         } catch {
-            case t: Throwable => unsafeClose(Some(t))
+            case t: Throwable =>
+                page.close()
+                unsafeClose(Some(t))
+                return true
         }
 
         if (read > 0) {
+            page.byteBuffer.flip()
             executorAddress.inform(
               ReadBuffer(channel, page, sender = Some(address), recipient = localAddress)
             )
             false
         } else if (read == 0) {
             page.close()
-            channel.directAllocator.recycle(page)
             false
-        } else true
+        } else {
+            page.close()
+            true
+        }
     }
 
 }

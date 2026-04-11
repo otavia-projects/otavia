@@ -524,9 +524,23 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
         handlers.zipWithIndex.find((ctx, _) => predicate(ctx)) match
             case Some((old, index)) =>
                 val newCtx = newContext(newName, newHandler)
-            // TODO
+                // Insert new context at same position
+                handlers.insert(index, newCtx)
+                resetIndices()
+                // Link new context into doubly-linked list
+                newCtx.prev = old.prev
+                newCtx.next = old.next
+                old.prev.next = newCtx
+                old.next.prev = newCtx
+                // Call handler added for new handler
+                callHandlerAdded0(newCtx)
+                // Remove old context
+                handlers.remove(index + 1)
+                resetIndices()
+                remove0(old)
+                old.handler
             case None =>
-        ???
+                throw new NoSuchElementException("No matching handler found in pipeline")
     }
 
     /** Returns the context of the first [[ChannelHandler]] in this pipeline.
@@ -986,7 +1000,9 @@ object ChannelPipelineImpl {
             abstractChannel.flushTransport()
         }
 
-        override def sendOutboundEvent(ctx: ChannelHandlerContext, event: AnyRef): Unit = ???
+        override def sendOutboundEvent(ctx: ChannelHandlerContext, event: AnyRef): Unit = {
+            // Head handler does not process outbound events, forward is a no-op at the head
+        }
 
     }
 
@@ -1012,8 +1028,10 @@ object ChannelPipelineImpl {
 
         override def channelTimeoutEvent(ctx: ChannelHandlerContext, id: Long): Unit = {} // Just swallow event
 
-        override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit =
-            cause.printStackTrace()
+        override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
+            System.err.println("An exceptionCaught() event was fired, and it reached the end of the pipeline.")
+            cause.printStackTrace(System.err)
+        }
 
         override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable, id: Long): Unit =
             ctx.channel.onInboundMessage(cause, true, id)

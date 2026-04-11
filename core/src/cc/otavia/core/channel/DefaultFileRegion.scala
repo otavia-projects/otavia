@@ -150,7 +150,7 @@ private object DefaultFileRegion {
         // See https://github.com/netty/netty/issues/8868
         val size  = region.fileChannel.size()
         val count = region.count - position
-        if (region.position + count + position > size)
+        if (region.position + count > size)
             throw new IOException(s"Underlying file size $size smaller then requested count ${region.count}")
     }
 }

@@ -29,7 +29,11 @@ class NioSocketChannel(system: ActorSystem) extends AbstractSocketChannel(system
 
     override def localAddress: Option[SocketAddress] = Some(unsafeChannel.localAddress)
 
-    override def remoteAddress: Option[SocketAddress] = ???
+    override def remoteAddress: Option[SocketAddress] =
+        try
+            val addr = unsafeChannel.ch.getRemoteAddress
+            if (addr != null) Some(addr) else None
+        catch { case _: java.io.IOException => None }
 
     override final protected def getTransportExtendedOption[T](option: ChannelOption[T]): T = {
         val socketOption = NioChannelOption.toSocketOption(option)

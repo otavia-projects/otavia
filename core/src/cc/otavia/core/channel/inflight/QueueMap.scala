@@ -171,9 +171,8 @@ class QueueMap[V <: QueueMapEntity] extends Iterator[V] {
         table(idx) match
             case null => table(idx) = entity
             case old =>
-                var tail = old
-                while (tail.hashNext ne null) tail = tail.hashNext
-                tail.hashNext = entity
+                entity.hashNext = old
+                table(idx) = entity
     }
 
     final private def resizeTable(newLen: Int): Unit = {
