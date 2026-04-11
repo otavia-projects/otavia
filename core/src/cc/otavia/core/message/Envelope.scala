@@ -17,11 +17,12 @@
 package cc.otavia.core.message
 
 import cc.otavia.core.address.Address
+import cc.otavia.core.cache.{ActorThreadIsolatedObjectPool, Poolable}
 import cc.otavia.core.util.Nextable
 
 import scala.language.unsafeNulls
 
-final private[core] class Envelope[M <: Message] extends Nextable {
+final private[core] class Envelope[M <: Message] extends Poolable {
 
     // sender message
     private var address: Address[Call] = _
@@ -58,8 +59,24 @@ final private[core] class Envelope[M <: Message] extends Nextable {
 
     def isBatchReply: Boolean = rids != null
 
+    override def recycle(): Unit = Envelope.pool.recycle(this.asInstanceOf[Envelope[Message]])
+
+    override protected def cleanInstance(): Unit = {
+        address = null
+        mid = 0
+        msg = null.asInstanceOf[M]
+        rid = 0
+        rids = null
+    }
+
 }
 
 object Envelope {
-    def apply[M <: Message](): Envelope[M] = new Envelope()
+
+    private val pool = new ActorThreadIsolatedObjectPool[Envelope[?]] {
+        override protected def newObject(): Envelope[?] = new Envelope[Nothing]
+    }
+
+    def apply[M <: Message](): Envelope[M] = pool.get().asInstanceOf[Envelope[M]]
+
 }

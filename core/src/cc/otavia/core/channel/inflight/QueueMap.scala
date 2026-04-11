@@ -34,7 +34,7 @@ class QueueMap[V <: QueueMapEntity] extends Iterator[V] {
     private var cursor: QueueMapEntity = _
 
     private final def loadFactor: Double   = 2.0
-    private final def initialCapacity: Int = 16
+    private final def initialCapacity: Int = 8
     private def newThreshold(size: Int)    = (size.toDouble * loadFactor).toInt
 
     private def index(id: Long): Int = (id & mask).toInt

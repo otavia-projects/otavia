@@ -183,9 +183,6 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
                 }
             }
             size.decrementAndGet()
-            if (size.get() == -1) {
-                println("-1")
-            }
             house.inHighPriorityQueue = true
         }
         writeLock.unlock()

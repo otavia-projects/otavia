@@ -116,11 +116,13 @@ final class HouseManager(val thread: ActorThread) {
 
     private def run0(houseQueue: HouseQueue, deadlineNanos: Long): Unit = {
         var house = houseQueue.dequeue()
+        var count = 0
         while (house != null) {
             currentRunning = house.actor
             house.run()
             currentRunning = null
-            if (deadlineNanos != Long.MaxValue && System.nanoTime() >= deadlineNanos) return
+            count += 1
+            if (deadlineNanos != Long.MaxValue && (count & 0xF) == 0 && System.nanoTime() >= deadlineNanos) return
             house = houseQueue.dequeue()
         }
     }
@@ -173,12 +175,12 @@ final class HouseManager(val thread: ActorThread) {
     def monitor(): HouseManagerMonitor = HouseManagerMonitor(
       mountingQueue.readies,
       channelsActorQueue.readies,
-      channelsActorQueue.readies,
+      actorQueue.readies,
       actorQueue.readies
     )
 
-    override def toString: String = s"mounting=${mountingQueue.readies}, server=${channelsActorQueue.readies}, " +
-        s"channels=${channelsActorQueue.readies}, state=${actorQueue.readies}"
+    override def toString: String = s"mounting=${mountingQueue.readies}, channels=${channelsActorQueue.readies}, " +
+        s"state=${actorQueue.readies}"
 
 }
 

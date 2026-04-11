@@ -28,13 +28,15 @@ private[core] class SpinLock extends AtomicReference[Thread] {
     /** Get lock, if the lock is locked by other [[Thread]], spin the current thread until get the lock. */
     final def lock(): Unit = {
         val thread = Thread.currentThread()
-        while (!this.compareAndSet(null, thread)) {} // spin until get lock
+        while (!this.compareAndSet(null, thread)) {
+            Thread.onSpinWait()
+        }
     }
 
     /** Release the lock. */
     final def unlock(): Unit = {
         assert(Thread.currentThread() == this.get(), "Unlock thread is not the lock holder")
-        this.set(null)
+        this.lazySet(null)
     }
 
     /** Check the lock whether is locked. */

@@ -73,15 +73,15 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         id
     }
 
-    private def stackEndRate: Float =
-        if (revAsks != 0) sendAsks.toFloat / revAsks.toFloat else Float.MaxValue
+    private def stackEndRate: Int =
+        if (revAsks != 0) (sendAsks * 5 / revAsks).toInt else Int.MaxValue
 
     def increaseSendCounter(): Unit = sendAsks += 1
 
     override def mountedThreadId: Int = manager.thread.index
 
     def highPriority: Boolean = (replyMailbox.size() > HIGH_PRIORITY_REPLY_SIZE) ||
-        (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE) || (stackEndRate < 0.6)
+        (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE) || (stackEndRate < 3)
 
     def inHighPriorityQueue: Boolean = _inHighPriorityQueue
 
@@ -147,7 +147,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     /** True if this house has not received [[Message]] or [[Event]] */
     def isEmpty: Boolean = askMailbox.isEmpty && noticeMailbox.isEmpty && replyMailbox.isEmpty &&
-        eventMailbox.isEmpty && exceptionMailbox.nonEmpty
+        eventMailbox.isEmpty && exceptionMailbox.isEmpty
 
     /** True if this house has received some [[Message]] or [[Event]] */
     def nonEmpty: Boolean =
@@ -169,7 +169,6 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     def putNotice(envelope: Envelope[?]): Unit = {
         if (system.isBusy && !ActorThread.currentThreadIsActorThread) {
-            System.gc()
             Thread.sleep(ActorSystem.MEMORY_OVER_SLEEP)
         }
         put(envelope, noticeMailbox)
@@ -294,8 +293,10 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
             tmpNoticeCursor = envelope.next
             envelope.deChain()
             val notice = envelope.message
-            if (dweller.batchNoticeFilter(notice)) buf.addOne(notice)
-            else {
+            if (dweller.batchNoticeFilter(notice)) {
+                buf.addOne(notice)
+                envelope.recycle()
+            } else {
                 if (buf.nonEmpty) handleBatchNotice(buf)
                 inBarrier = dweller.isBarrier(envelope.message)
                 dweller.receiveNotice(envelope)

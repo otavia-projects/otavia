@@ -126,8 +126,8 @@ abstract class Stack extends Poolable {
             uncompletedHead = iterator.head
             uncompletedTail = iterator.tail
         } else {
+            iterator.head.pre = uncompletedTail
             uncompletedTail.next = iterator.head
-            iterator.head.next = uncompletedTail
             uncompletedTail = iterator.tail
         }
         iterator.clean()

@@ -71,7 +71,10 @@ final class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
     override def recycle(): Unit = BatchAskStack.pool.recycle(this)
 
     override protected def cleanInstance(): Unit = {
-        envelopes = null
+        if (envelopes != null) {
+            envelopes.foreach(_.recycle())
+            envelopes = null
+        }
         done = false
         super.cleanInstance()
     }

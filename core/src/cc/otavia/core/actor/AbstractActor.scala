@@ -101,7 +101,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     final override private[core] def receiveNotice(envelope: Envelope[?]): Unit = {
         val notice = envelope.message.asInstanceOf[Notice]
         currentReceived = notice
-        // TODO: recycle envelope
+        envelope.recycle()
         val stack = NoticeStack[M & Notice](this) // generate a NoticeStack instance from object pool.
         stack.setNotice(notice)
         dispatchNoticeStack(stack)
@@ -121,7 +121,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentReceived = ask
         val stack = AskStack[M & Ask[? <: Reply]](this) // generate a AskStack instance from object pool.
         stack.setAsk(envelope)
-        // TODO: recycle envelope
+        envelope.recycle()
         dispatchAskStack(stack)
         currentReceived = null
     }
@@ -138,7 +138,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         if (!envelope.isBatchReply) {
             val reply   = envelope.message.asInstanceOf[Reply]
             val replyId = envelope.replyId
-            // TODO: recycle envelope
+            envelope.recycle()
             // reply future maybe has been recycled cause by time-out, or it stack has been throw an error.
             if (this.contains(replyId)) {
                 val promise = this.pop(replyId)
@@ -148,7 +148,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         } else { // reply is batch
             val reply    = envelope.message.asInstanceOf[Reply]
             val replyIds = envelope.replyIds
-            // TODO: recycle envelope
+            envelope.recycle()
             for (rid <- replyIds if contains(rid)) {
                 val promise = pop(rid)
                 if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
@@ -169,7 +169,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         if (!envelope.isBatchReply) {
             val exceptionMessage = envelope.message.asInstanceOf[ExceptionMessage]
             val replyId          = envelope.replyId
-            // TODO: recycle envelope
+            envelope.recycle()
             // reply future maybe has been recycled cause by time-out, or it stack has been throw an error.
             if (this.contains(replyId)) {
                 val promise = this.pop(replyId)
@@ -179,7 +179,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         } else { // reply is batch
             val exceptionMessage = envelope.message.asInstanceOf[ExceptionMessage]
             val replyIds         = envelope.replyIds
-            // TODO: recycle envelope
+            envelope.recycle()
             for (rid <- replyIds if contains(rid)) {
                 val promise = pop(rid)
                 if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
