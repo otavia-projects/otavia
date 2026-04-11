@@ -12,20 +12,26 @@ subsection:
     subsection:
       - title: Actor Model
         page: guide/actor_model.md
+      - title: Message Model
+        page: guide/message_model.md
+      - title: Stack Execution Model
+        page: guide/stack_model.md
       - title: Channel Pipeline
         page: guide/channel_pipeline.md
       - title: IO Model
         page: guide/io_model.md
-      - title: Actor IOC
-        page: guide/ioc.md
-      - title: Message Model
-        page: guide/message_model.md
       - title: Reactor Model
         page: guide/reactor_model.md
+      - title: Threading Model
+        page: guide/threading_model.md
+      - title: Address Model
+        page: guide/address_model.md
+      - title: Actor IOC
+        page: guide/ioc.md
+      - title: Serde Framework
+        page: guide/serde.md
       - title: SLF4A
         page: guide/slf4a.md
-      - title: Serde framework
-        page: guide/serde.md
   - title: Modules
     index: module/index.md
     directory: module
@@ -46,16 +52,26 @@ subsection:
         index: zh/guide/index.md
         directory: guide
         subsection:
+          - title: Actor 模型
+            page: zh/guide/actor_model.md
+          - title: 消息模型
+            page: zh/guide/message_model.md
+          - title: Stack 执行模型
+            page: zh/guide/stack_model.md
           - title: Channel Pipeline
             page: zh/guide/channel_pipeline.md
-          - title: IO Model
+          - title: IO 模型
             page: zh/guide/io_model.md
-          - title: Actor IOC
-            page: guide/ioc.md
-          - title: Message Model
-            page: zh/guide/message_model.md
-          - title: Reactor Model
+          - title: Reactor 模型
             page: zh/guide/reactor_model.md
+          - title: 线程模型
+            page: zh/guide/threading_model.md
+          - title: Address 模型
+            page: zh/guide/address_model.md
+          - title: Actor IoC
+            page: zh/guide/ioc.md
+          - title: Serde 框架
+            page: zh/guide/serde.md
           - title: SLF4A
             page: zh/guide/slf4a.md
       - title: 主要模块
