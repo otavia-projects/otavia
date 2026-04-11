@@ -19,24 +19,34 @@
 package cc.otavia.core.channel
 
 import org.scalatest.funsuite.AnyFunSuiteLike
+import org.scalatest.BeforeAndAfterAll
 
 import java.io.RandomAccessFile
-import java.nio.file.Path
+import java.nio.file.{Files, Path}
 import scala.language.unsafeNulls
 
-class FileRegionSuite extends AnyFunSuiteLike {
+class FileRegionSuite extends AnyFunSuiteLike with BeforeAndAfterAll {
+
+    private var testFile: Path = _
+
+    override def beforeAll(): Unit = {
+        testFile = Files.createTempFile("otavia-file-region-test", ".dat")
+        val ch = Files.write(testFile, Array.fill(1024)(1.toByte))
+    }
+
+    override def afterAll(): Unit = {
+        Files.deleteIfExists(testFile)
+    }
 
     test("create default file region") {
-        val file       = Path.of("build.sc").toFile
-        val fileRegion = DefaultFileRegion(file)
+        val fileRegion = DefaultFileRegion(testFile.toFile)
 
         assert(fileRegion.position == 0)
         assert(fileRegion.count > 0)
     }
 
     test("file region retain and release") {
-        val file       = Path.of("build.sc").toFile
-        val fileRegion = DefaultFileRegion(file)
+        val fileRegion = DefaultFileRegion(testFile.toFile)
 
         fileRegion.retain
         assert(fileRegion.refCnt == 2)
@@ -48,7 +58,7 @@ class FileRegionSuite extends AnyFunSuiteLike {
     }
 
     test("file region deallocate") {
-        val ch     = new RandomAccessFile(Path.of("build.sc").toFile, "r").getChannel
+        val ch     = new RandomAccessFile(testFile.toFile, "r").getChannel
         val region = DefaultFileRegion(ch)
 
         region.retain
