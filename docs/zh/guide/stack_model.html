@@ -1,0 +1,270 @@
+<!DOCTYPE html><html data-pathToRoot="../../../" data-rawLocation="docs/zh/guide/stack_model" data-dynamicSideMenu="false"><head><meta charset="utf-8"></meta><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"></meta><title>Stack 执行模型</title><link rel="shortcut icon" type="image/x-icon" href="../../../favicon.ico"></link><script type="text/javascript" src="../../../scripts/theme.js"></script><script type="text/javascript" src="../../../scripts/searchData.js" defer="true"></script><script type="text/javascript" src="../../../scripts/scastieConfiguration.js" defer="true"></script><link rel="stylesheet" href="../../../styles/theme/bundle.css"></link><link rel="stylesheet" href="../../../styles/theme/components/bundle.css"></link><link rel="stylesheet" href="../../../styles/theme/components/button/bundle.css"></link><link rel="stylesheet" href="../../../styles/theme/layout/bundle.css"></link><link rel="stylesheet" href="../../../styles/nord-light.css"></link><link rel="stylesheet" href="../../../styles/dotty-icons.css"></link><link rel="stylesheet" href="../../../styles/filter-bar.css"></link><link rel="stylesheet" href="../../../styles/code-snippets.css"></link><link rel="stylesheet" href="../../../styles/searchbar.css"></link><link rel="stylesheet" href="../../../styles/social-links.css"></link><link rel="stylesheet" href="../../../styles/versions-dropdown.css"></link><link rel="stylesheet" href="../../../styles/content-contributors.css"></link><link rel="stylesheet" href="../../../styles/fontawesome.css"></link><script type="text/javascript" src="../../../hljs/highlight.pack.js" defer="true"></script><script type="text/javascript" src="../../../scripts/hljs-scala3.js" defer="true"></script><script type="text/javascript" src="../../../scripts/ux.js" defer="true"></script><script type="text/javascript" src="../../../scripts/common/component.js" defer="true"></script><script type="text/javascript" src="../../../scripts/common/utils.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/FilterBar.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/DocumentableList.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/Input.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/FilterGroup.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/Filter.js" defer="true"></script><script type="text/javascript" src="../../../scripts/scaladoc-scalajs.js" defer="true"></script><script type="text/javascript" src="../../../scripts/contributors.js" defer="true"></script><script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.min.js" defer="true"></script><script type="text/javascript" src="https://d3js.org/d3.v6.min.js" defer="true"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/graphlib-dot@0.6.2/dist/graphlib-dot.min.js" defer="true"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dagre-d3/0.6.1/dagre-d3.min.js" defer="true"></script><script type="text/javascript" src="https://scastie.scala-lang.org/embedded.js" defer="true"></script><script type="text/javascript" src="../../../scripts/data.js" defer="true"></script><link rel="stylesheet" href="../../../styles/staticsitestyles.css"></link><script>var pathToRoot = "../../../";</script><meta charset="utf-8">
+<title>Hello, world!</title></head><body><div id=""><div id="header" class="body-small"><div class="header-container-left"><a href="../../../home.html" class="logo-container"><span class="project-name h300">docs</span></a><span onclick="dropdownHandler(event)" class="text-button with-arrow" id="dropdown-trigger"><a><div class="projectVersion">0.4.6-SNAPSHOT</div></a></span><div id="version-dropdown" class="dropdown-menu"></div></div><div class="header-container-right"><button id="search-toggle" class="icon-button"></button><span id="theme-toggle" class="icon-button"></span><span id="mobile-menu-toggle" class="icon-button hamburger"></span></div></div><div id="mobile-menu"><div class="mobile-menu-header body-small"><span class="mobile-menu-logo"><span class="project-name h300">docs</span></span><button id="mobile-menu-close" class="icon-button close"></button></div><div class="mobile-menu-container body-medium"><input id="mobile-scaladoc-searchbar-input" class="scaladoc-searchbar-input" type="search" placeholder="Find anything"></input><span id="mobile-theme-toggle" class="mobile-menu-item mode"></span></div></div><span id="mobile-sidebar-toggle" class="floating-button"></span><div id="leftColumn" class="body-small"><div class="switcher-container"><a id="docs-nav-button" class="switcher h100 selected" href="../../index.html">Docs</a><a id="api-nav-button" class="switcher h100 " href="../../../index.html">API</a></div><nav id="docs-nav" class="side-menu"><div class="ni n0 "><span class="nh de"><a href="../../name_from.html"><span>Name From</span></a></span></div><div class="ni n0 "><span class="nh de"><a href="../../quick_start.html"><span>Quick Start</span></a></span></div><div class="ni n0 "><span class="nh de"><a href="../../core_concept.html"><span>Core Concepts and Design</span></a></span></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../../guide/index.html"><span>Guide</span></a></span><div class="ni n1 "><span class="nh de"><a href="../../guide/actor_model.html"><span>Actor Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/message_model.html"><span>Message Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/stack_model.html"><span>Stack Execution Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/channel_pipeline.html"><span>Channel Pipeline</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/io_model.html"><span>IO Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/reactor_model.html"><span>Reactor Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/threading_model.html"><span>Threading Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/address_model.html"><span>Address Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/ioc.html"><span>Actor IOC</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/serde.html"><span>Serde Framework</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/slf4a.html"><span>SLF4A</span></a></span></div></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../../module/index.html"><span>Modules</span></a></span><div class="ni n1 "><span class="nh de"><a href="../../module/buffer.html"><span>Buffer</span></a></span></div></div><div class="ni n0 expanded"><span class="nh h100 expanded cs de"><button class="ar icon-button expanded"></button><a href="../index.html"><span>中文文档</span></a></span><div class="ni n1 "><span class="nh de"><a href="../name_from.html"><span>名称来源</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../quick_start.html"><span>快速开始</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../core_concept.html"><span>核心概念与设计</span></a></span></div><div class="ni n1 expanded"><span class="nh h100 expanded cs de"><button class="ar icon-button expanded"></button><a href="index.html"><span>详细指南</span></a></span><div class="ni n2 "><span class="nh de"><a href="actor_model.html"><span>Actor 模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="message_model.html"><span>消息模型</span></a></span></div><div class="ni n2 expanded"><span class="nh h100 selected de"><a href="#"><span>Stack 执行模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="channel_pipeline.html"><span>Channel Pipeline</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="io_model.html"><span>IO 模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="reactor_model.html"><span>Reactor 模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="threading_model.html"><span>线程模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="address_model.html"><span>Address 模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="ioc.html"><span>Actor IoC</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="serde.html"><span>Serde 框架</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="slf4a.html"><span>SLF4A</span></a></span></div></div><div class="ni n1"><span class="nh de"><button class="ar icon-button "></button><a href="../module/index.html"><span>Modules</span></a></span><div class="ni n2 "><span class="nh de"><a href="../module/buffer.html"><span>Buffer</span></a></span></div></div></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../../blog/index.html"><span>Blog</span></a></span><div class="ni n1 "><span class="nh de"><a href="../../blog/2023/05/19/hello-world-blog.html"><span>hello world blog</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../blog/2023/05/19/hello-world-blog.zh-cn.html"><span>你好世界</span></a></span></div></div></nav></div><div id="footer" class="body-small"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div id="scaladoc-searchBar"></div><div id="main"><div class="breadcrumbs container"><a href="../../index.html">docs</a>/<a href="../index.html">中文文档</a>/<a href="index.html">详细指南</a>/<a href="stack_model.html">Stack 执行模型</a></div><div id="content" class="body-medium"><div><section id="stack-执行模型">
+ <h1 class="h500"><a href="#stack-执行模型" class="anchor"></a>Stack 执行模型</h1>
+ <p>Stack 是 otavia 最具特色的创新。它取代了传统的回调和协程，使用手动管理的状态机和池化对象。</p>
+</section>
+<section id="核心概念">
+ <h2 class="h500"><a href="#核心概念" class="anchor"></a>核心概念</h2>
+</section>
+<section id="stack">
+ <h3 class="h400"><a href="#stack" class="anchor"></a>Stack</h3>
+ <p><code>Stack</code> 是管理单条消息处理生命周期的执行帧。它维护两条双向 promise 链：</p>
+ <ul>
+  <li><strong>未完成链</strong>（<code>uncompletedHead/uncompletedTail</code>）：已发出但尚未收到回复的 Ask 的 promise</li>
+  <li><strong>已完成链</strong>（<code>completedHead/completedTail</code>）：已收到回复的 promise</li>
+ </ul>
+ <p>每个 Stack 包含：</p>
+ <ul>
+  <li><code>stackState: StackState</code> — 状态机中的当前状态</li>
+  <li><code>nextState: StackState</code> — 挂起时要转换到的状态</li>
+  <li><code>actor: AbstractActor</code> — 所属 actor</li>
+ </ul>
+</section>
+<section id="stackstate">
+ <h3 class="h400"><a href="#stackstate" class="anchor"></a>StackState</h3>
+ <p>接口，包含 <code>resumable(): Boolean</code> 和 <code>id: Int</code>。用户定义的状态实现此接口（通常结合 <code>Poolable</code> 用于回收）。<code>StackState.start</code> 是单例初始状态，其 <code>resumable()</code> 返回 <code>true</code>。</p>
+</section>
+<section id="stackyield">
+ <h3 class="h400"><a href="#stackyield" class="anchor"></a>StackYield</h3>
+ <p>密封 trait，两个单例：</p>
+ <ul>
+  <li><strong><code>SUSPEND</code></strong>（<code>completed = false</code>）：Stack 被挂起，等待异步操作</li>
+  <li><strong><code>RETURN</code></strong>（<code>completed = true</code>）：Stack 完成，可被回收</li>
+ </ul>
+</section>
+<section id="suspend-和-return">
+ <h3 class="h400"><a href="#suspend-和-return" class="anchor"></a>suspend 和 return</h3>
+ <div class="snippet mono-small-block" scala-snippet="">
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>// 挂起：保存下一个状态并返回 SUSPEND
+</span><span line-number="2" class=""><span class="tooltip-container"></span>def suspend(state: StackState): StackYield = {
+</span><span line-number="3" class=""><span class="tooltip-container"></span>  this.nextState = state
+</span><span line-number="4" class=""><span class="tooltip-container"></span>  StackYield.SUSPEND
+</span><span line-number="5" class=""><span class="tooltip-container"></span>}
+</span><span line-number="6" class=""><span class="tooltip-container"></span>
+</span><span line-number="7" class=""><span class="tooltip-container"></span>// return：Stack 调用此方法完成
+</span><span line-number="8" class=""><span class="tooltip-container"></span>// 对于 NoticeStack：
+</span><span line-number="9" class=""><span class="tooltip-container"></span>stack.return()        // 返回 StackYield.RETURN
+</span><span line-number="10" class=""><span class="tooltip-container"></span>
+</span><span line-number="11" class=""><span class="tooltip-container"></span>// 对于 AskStack：
+</span><span line-number="12" class=""><span class="tooltip-container"></span>stack.return(reply)   // 发送回复给 sender，返回 StackYield.RETURN
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+</section>
+<section id="stack-类型">
+ <h2 class="h500"><a href="#stack-类型" class="anchor"></a>Stack 类型</h2>
+ <table>
+  <thead>
+   <tr>
+    <th>类型</th>
+    <th>用途</th>
+    <th>return 方法</th>
+   </tr>
+  </thead>
+  <tbody>
+   <tr>
+    <td><code>NoticeStack[N]</code></td>
+    <td>管理 Notice 执行</td>
+    <td><code>return()</code></td>
+   </tr>
+   <tr>
+    <td><code>AskStack[A]</code></td>
+    <td>管理 Ask 执行</td>
+    <td><code>return(reply)</code> 或 <code>throw(cause)</code></td>
+   </tr>
+   <tr>
+    <td><code>ChannelStack[T]</code></td>
+    <td>管理 Channel 入站消息</td>
+    <td><code>return(result)</code></td>
+   </tr>
+   <tr>
+    <td><code>BatchNoticeStack[N]</code></td>
+    <td>批量 Notice 执行</td>
+    <td><code>return()</code></td>
+   </tr>
+   <tr>
+    <td><code>BatchAskStack[A]</code></td>
+    <td>批量 Ask 执行</td>
+    <td><code>return(reply)</code> 或 <code>return(Seq[(Envelope, Reply)])</code></td>
+   </tr>
+  </tbody>
+ </table>
+</section>
+<section id="askstack">
+ <h3 class="h400"><a href="#askstack" class="anchor"></a>AskStack</h3>
+ <p><code>AskStack</code> 跟踪 Ask 消息、发送者 Address 和用于回复关联的 askId：</p>
+ <div class="snippet mono-small-block" scala-snippet="">
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>// 用户实现：
+</span><span line-number="2" class=""><span class="tooltip-container"></span>override protected def resumeAsk(stack: AskStack[MyAsk]): StackYield = {
+</span><span line-number="3" class=""><span class="tooltip-container"></span>  stack.state.id match {
+</span><span line-number="4" class=""><span class="tooltip-container"></span>    case StartState.id =&gt;
+</span><span line-number="5" class=""><span class="tooltip-container"></span>      val state = FutureState[MyReply]()
+</span><span line-number="6" class=""><span class="tooltip-container"></span>      target.ask(stack.ask.asInstanceOf[MyAsk], state.future)
+</span><span line-number="7" class=""><span class="tooltip-container"></span>      stack.suspend(state)
+</span><span line-number="8" class=""><span class="tooltip-container"></span>    case FutureState.id =&gt;
+</span><span line-number="9" class=""><span class="tooltip-container"></span>      val reply = stack.state.asInstanceOf[FutureState[MyReply]].future.getNow
+</span><span line-number="10" class=""><span class="tooltip-container"></span>      // 处理回复...
+</span><span line-number="11" class=""><span class="tooltip-container"></span>      stack.return(MyReply(...))
+</span><span line-number="12" class=""><span class="tooltip-container"></span>  }
+</span><span line-number="13" class=""><span class="tooltip-container"></span>}
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+</section>
+<section id="channelstack">
+ <h3 class="h400"><a href="#channelstack" class="anchor"></a>ChannelStack</h3>
+ <p>与其他 Stack 类型不同，<code>ChannelStack</code> 同时扩展 <code>Stack</code> 和 <code>QueueMapEntity</code>，与 Channel 的 inflight <code>QueueMap</code> 集成。ChannelStack <strong>不会</strong>被 <code>switchState</code> 回收 — 由 Channel 的 inflight 队列管理。</p>
+</section>
+<section id="future-和-promise">
+ <h2 class="h500"><a href="#future-和-promise" class="anchor"></a>Future 和 Promise</h2>
+</section>
+<section id="设计理念">
+ <h3 class="h400"><a href="#设计理念" class="anchor"></a>设计理念</h3>
+ <p><code>otavia</code> 实现了自己的 <code>Future/Promise</code> 系统，与 Scala 标准库分离。以零内存分配为目标进行设计：</p>
+ <ul>
+  <li><code>MessagePromise[R]</code> <strong>就是</strong> <code>MessageFuture[R]</code> — 同一个对象，无包装分配</li>
+  <li><code>MessagePromise</code> <strong>就是</strong> <code>FutureDispatcher</code> 中的哈希节点 — 直接拥有 <code>hashNext</code>，无包装</li>
+  <li>所有 Promise 通过 <code>ActorThreadIsolatedObjectPool</code> 池化</li>
+ </ul>
+</section>
+<section id="messagepromise--messagefuture">
+ <h3 class="h400"><a href="#messagepromise--messagefuture" class="anchor"></a>MessagePromise / MessageFuture</h3>
+ <p>用于 Actor 之间的 Ask/Reply：</p>
+ <ul>
+  <li><code>aid: Long</code> — 消息 ID（FutureDispatcher 中的哈希键）</li>
+  <li><code>tid: Long</code> — 超时注册 ID（用于取消）</li>
+  <li><code>result: AnyRef</code> / <code>error: Throwable</code> — 完成状态</li>
+  <li><code>stack: Stack</code> — 所属 Stack</li>
+ </ul>
+</section>
+<section id="channelpromise--channelfuture">
+ <h3 class="h400"><a href="#channelpromise--channelfuture" class="anchor"></a>ChannelPromise / ChannelFuture</h3>
+ <p>用于 Actor 到 Channel 的请求/响应：</p>
+ <ul>
+  <li><code>ch: Channel</code> — 关联的 channel</li>
+  <li><code>ask: AnyRef</code> — Channel 操作请求</li>
+  <li><code>callback: ChannelPromise =&gt; Unit</code> — 可选的完成回调</li>
+ </ul>
+</section>
+<section id="辅助-state">
+ <h2 class="h500"><a href="#辅助-state" class="anchor"></a>辅助 State</h2>
+</section>
+<section id="futurestate">
+ <h3 class="h400"><a href="#futurestate" class="anchor"></a>FutureState</h3>
+ <p><code>FutureState[R]</code> 组合 <code>StackState</code> 和 <code>MessageFuture[R]</code>。这是用户发送 Ask 的标准机制：</p>
+ <div class="snippet mono-small-block" scala-snippet="">
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>val state = FutureState[MyReply]()
+</span><span line-number="2" class=""><span class="tooltip-container"></span>targetAddress.ask(myAsk, state.future)
+</span><span line-number="3" class=""><span class="tooltip-container"></span>stack.suspend(state)
+</span><span line-number="4" class=""><span class="tooltip-container"></span>// 恢复时：
+</span><span line-number="5" class=""><span class="tooltip-container"></span>val reply = state.future.getNow
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+</section>
+<section id="channelfuturestate">
+ <h3 class="h400"><a href="#channelfuturestate" class="anchor"></a>ChannelFutureState</h3>
+ <p>同模式但包装 <code>ChannelFuture</code>，用于异步 channel 操作（bind、connect、register）。</p>
+</section>
+<section id="startstate">
+ <h3 class="h400"><a href="#startstate" class="anchor"></a>StartState</h3>
+ <p>单例初始状态。<code>resumable() = true</code>，确保第一个 promise 完成时立即触发恢复。</p>
+</section>
+<section id="futuredispatcher">
+ <h2 class="h500"><a href="#futuredispatcher" class="anchor"></a>FutureDispatcher</h2>
+ <p><code>FutureDispatcher</code> 是自定义的基于桶链式冲突解决的哈希表，将 <code>Long</code> 消息 ID 映射到 <code>MessagePromise</code> 实例。混入 <code>AbstractActor</code>。</p>
+ <p>设计特点：</p>
+ <ul>
+  <li><code>loadFactor = 2.0</code>（当 <code>contentSize + 1 &gt;= threshold</code> 时增长）</li>
+  <li><code>index(id) = (id &amp; mask).toInt</code> — 位掩码索引</li>
+  <li>通过 <code>MessagePromise.hashNext</code> 链表解决冲突（无包装对象）</li>
+  <li>当表增长到 4 倍初始容量但使用率 &lt; 50% 时自动缩容</li>
+ </ul>
+</section>
+<section id="状态机转换">
+ <h2 class="h500"><a href="#状态机转换" class="anchor"></a>状态机转换</h2>
+</section>
+<section id="switchstate核心转换引擎">
+ <h3 class="h400"><a href="#switchstate核心转换引擎" class="anchor"></a>switchState（核心转换引擎）</h3>
+ <p><strong>SUSPEND 路径</strong>：</p>
+ <ol>
+  <li>从 Stack 获取 <code>oldState</code>，获取 <code>nextState</code>（由 <code>suspend</code> 设置）</li>
+  <li>如果状态改变：设置新状态，回收旧状态（如果是 <code>Poolable</code>）</li>
+  <li>断言 Stack 仍有未完成的 promise</li>
+ </ol>
+ <p><strong>RETURN 路径</strong>：</p>
+ <ol>
+  <li>回收当前 state</li>
+  <li>断言 <code>stack.isDone</code></li>
+  <li>非 <code>ChannelStack</code> → 将整个 Stack 回收到对象池</li>
+ </ol>
+</section>
+<section id="handlepromisecompleted恢复逻辑">
+ <h3 class="h400"><a href="#handlepromisecompleted恢复逻辑" class="anchor"></a>handlePromiseCompleted（恢复逻辑）</h3>
+ <p>当 Reply 到达并完成 Promise 时：</p>
+ <ol>
+  <li><code>stack.moveCompletedPromise(promise)</code> — 从未完成链转移到已完成链</li>
+  <li>检查：<code>stack.state.resumable()</code> 或 <code>!stack.hasUncompletedPromise</code></li>
+  <li>如果可恢复：重新分发 Stack（如 <code>dispatchAskStack(stack)</code>）</li>
+ </ol>
+</section>
+<section id="完整-askreply-生命周期">
+ <h2 class="h500"><a href="#完整-askreply-生命周期" class="anchor"></a>完整 Ask/Reply 生命周期</h2>
+</section>
+<section id="阶段-1发送">
+ <h3 class="h400"><a href="#阶段-1发送" class="anchor"></a>阶段 1：发送</h3>
+ <div class="snippet mono-small-block">
+  <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span>ActorA.ask(myAsk) → 创建 FutureState[Reply]
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  → PhysicalAddress.packaging → 从池获取 Envelope
+</span><span line-number="3" class=""><span class="tooltip-container"></span>  → sender.attachStack(messageId, future):
+</span><span line-number="4" class=""><span class="tooltip-container"></span>      promise.stack = currentStack
+</span><span line-number="5" class=""><span class="tooltip-container"></span>      promise.id = messageId
+</span><span line-number="6" class=""><span class="tooltip-container"></span>      currentStack.addUncompletedPromise(promise)
+</span><span line-number="7" class=""><span class="tooltip-container"></span>      FutureDispatcher.push(promise)
+</span><span line-number="8" class=""><span class="tooltip-container"></span>  → houseB.putAsk(envelope)
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+</section>
+<section id="阶段-2处理">
+ <h3 class="h400"><a href="#阶段-2处理" class="anchor"></a>阶段 2：处理</h3>
+ <div class="snippet mono-small-block">
+  <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span>ActorHouseB.run() → dispatchAsks()
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  → receiveAsk → 从池获取 AskStack → setAsk → dispatchAskStack
+</span><span line-number="3" class=""><span class="tooltip-container"></span>  → resumeAsk(stack) 执行用户代码
+</span><span line-number="4" class=""><span class="tooltip-container"></span>  → stack.return(reply):
+</span><span line-number="5" class=""><span class="tooltip-container"></span>      sender.reply(reply, askId) → reply Envelope → houseA.putReply()
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+</section>
+<section id="阶段-3恢复">
+ <h3 class="h400"><a href="#阶段-3恢复" class="anchor"></a>阶段 3：恢复</h3>
+ <div class="snippet mono-small-block">
+  <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span>ActorHouseA.run() → dispatchReplies()（最高优先级！）
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  → receiveReply → 提取 reply + replyId
+</span><span line-number="3" class=""><span class="tooltip-container"></span>  → FutureDispatcher.pop(replyId) → MessagePromise
+</span><span line-number="4" class=""><span class="tooltip-container"></span>  → promise.setSuccess(reply)
+</span><span line-number="5" class=""><span class="tooltip-container"></span>  → handlePromiseCompleted(stack, promise):
+</span><span line-number="6" class=""><span class="tooltip-container"></span>      moveCompletedPromise（未完成 → 已完成）
+</span><span line-number="7" class=""><span class="tooltip-container"></span>      state.resumable() == true
+</span><span line-number="8" class=""><span class="tooltip-container"></span>      → dispatchAskStack(stack)（重新分发！）
+</span><span line-number="9" class=""><span class="tooltip-container"></span>  → resumeAsk 以新状态再次执行
+</span><span line-number="10" class=""><span class="tooltip-container"></span>  → state.future.getNow → 处理回复 → stack.return(finalReply)
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+ <p><img src="../../../images/stack_resume.drawio.svg" alt=""></p>
+</section>
+<section id="对象池化">
+ <h2 class="h500"><a href="#对象池化" class="anchor"></a>对象池化</h2>
+ <p>池化策略是积极且多层次的，旨在实现零 GC 操作：</p>
+ <ol>
+  <li><strong>线程隔离池</strong>：每个池化类型都有自己的 <code>ActorThreadIsolatedObjectPool</code>，每个线程一个 <code>SingleThreadPoolableHolder</code></li>
+  <li><strong>创建者亲和</strong>：在非创建者线程上回收的对象直接丢弃（由 GC 回收），避免跨线程池同步</li>
+  <li><strong>空闲清理</strong>：60 秒超时触发，将 30 秒未访问的池缩减到最多 10 个对象</li>
+  <li><strong>Stack 级生命周期</strong>：完成的 promise 在 <code>setState</code> 时回收。整个 Stack 通过 <code>recycleStack</code> 回收</li>
+  <li><strong>Envelope 即用即收</strong>：Envelope 在提取数据后立即回收，不持有到 Stack 生命周期结束</li>
+  <li><strong>无包装对象</strong>：<code>MessagePromise</code> = <code>MessageFuture</code> = 哈希节点（三合一）</li>
+ </ol>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#stack-执行模型">Stack 执行模型</a><ul><li><a href="#核心概念">核心概念</a><ul><li><a href="#stack">Stack</a></li><li><a href="#stackstate">StackState</a></li><li><a href="#stackyield">StackYield</a></li><li><a href="#suspend-和-return">suspend 和 return</a></li></ul></li><li><a href="#stack-类型">Stack 类型</a><ul><li><a href="#askstack">AskStack</a></li><li><a href="#channelstack">ChannelStack</a></li></ul></li><li><a href="#future-和-promise">Future 和 Promise</a><ul><li><a href="#设计理念">设计理念</a></li><li><a href="#messagepromise--messagefuture">MessagePromise / MessageFuture</a></li><li><a href="#channelpromise--channelfuture">ChannelPromise / ChannelFuture</a></li></ul></li><li><a href="#辅助-state">辅助 State</a><ul><li><a href="#futurestate">FutureState</a></li><li><a href="#channelfuturestate">ChannelFutureState</a></li><li><a href="#startstate">StartState</a></li></ul></li><li><a href="#futuredispatcher">FutureDispatcher</a></li><li><a href="#状态机转换">状态机转换</a><ul><li><a href="#switchstate核心转换引擎">switchState（核心转换引擎）</a></li><li><a href="#handlepromisecompleted恢复逻辑">handlePromiseCompleted（恢复逻辑）</a></li></ul></li><li><a href="#完整-askreply-生命周期">完整 Ask/Reply 生命周期</a><ul><li><a href="#阶段-1发送">阶段 1：发送</a></li><li><a href="#阶段-2处理">阶段 2：处理</a></li><li><a href="#阶段-3恢复">阶段 3：恢复</a></li></ul></li><li><a href="#对象池化">对象池化</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

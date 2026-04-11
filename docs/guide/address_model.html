@@ -1,0 +1,114 @@
+<!DOCTYPE html><html data-pathToRoot="../../" data-rawLocation="docs/guide/address_model" data-dynamicSideMenu="false"><head><meta charset="utf-8"></meta><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"></meta><title>Address Model</title><link rel="shortcut icon" type="image/x-icon" href="../../favicon.ico"></link><script type="text/javascript" src="../../scripts/theme.js"></script><script type="text/javascript" src="../../scripts/searchData.js" defer="true"></script><script type="text/javascript" src="../../scripts/scastieConfiguration.js" defer="true"></script><link rel="stylesheet" href="../../styles/theme/bundle.css"></link><link rel="stylesheet" href="../../styles/theme/components/bundle.css"></link><link rel="stylesheet" href="../../styles/theme/components/button/bundle.css"></link><link rel="stylesheet" href="../../styles/theme/layout/bundle.css"></link><link rel="stylesheet" href="../../styles/nord-light.css"></link><link rel="stylesheet" href="../../styles/dotty-icons.css"></link><link rel="stylesheet" href="../../styles/filter-bar.css"></link><link rel="stylesheet" href="../../styles/code-snippets.css"></link><link rel="stylesheet" href="../../styles/searchbar.css"></link><link rel="stylesheet" href="../../styles/social-links.css"></link><link rel="stylesheet" href="../../styles/versions-dropdown.css"></link><link rel="stylesheet" href="../../styles/content-contributors.css"></link><link rel="stylesheet" href="../../styles/fontawesome.css"></link><script type="text/javascript" src="../../hljs/highlight.pack.js" defer="true"></script><script type="text/javascript" src="../../scripts/hljs-scala3.js" defer="true"></script><script type="text/javascript" src="../../scripts/ux.js" defer="true"></script><script type="text/javascript" src="../../scripts/common/component.js" defer="true"></script><script type="text/javascript" src="../../scripts/common/utils.js" defer="true"></script><script type="text/javascript" src="../../scripts/components/FilterBar.js" defer="true"></script><script type="text/javascript" src="../../scripts/components/DocumentableList.js" defer="true"></script><script type="text/javascript" src="../../scripts/components/Input.js" defer="true"></script><script type="text/javascript" src="../../scripts/components/FilterGroup.js" defer="true"></script><script type="text/javascript" src="../../scripts/components/Filter.js" defer="true"></script><script type="text/javascript" src="../../scripts/scaladoc-scalajs.js" defer="true"></script><script type="text/javascript" src="../../scripts/contributors.js" defer="true"></script><script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.min.js" defer="true"></script><script type="text/javascript" src="https://d3js.org/d3.v6.min.js" defer="true"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/graphlib-dot@0.6.2/dist/graphlib-dot.min.js" defer="true"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dagre-d3/0.6.1/dagre-d3.min.js" defer="true"></script><script type="text/javascript" src="https://scastie.scala-lang.org/embedded.js" defer="true"></script><script type="text/javascript" src="../../scripts/data.js" defer="true"></script><link rel="stylesheet" href="../../styles/staticsitestyles.css"></link><script>var pathToRoot = "../../";</script><meta charset="utf-8">
+<title>Hello, world!</title></head><body><div id=""><div id="header" class="body-small"><div class="header-container-left"><a href="../../home.html" class="logo-container"><span class="project-name h300">docs</span></a><span onclick="dropdownHandler(event)" class="text-button with-arrow" id="dropdown-trigger"><a><div class="projectVersion">0.4.6-SNAPSHOT</div></a></span><div id="version-dropdown" class="dropdown-menu"></div></div><div class="header-container-right"><button id="search-toggle" class="icon-button"></button><span id="theme-toggle" class="icon-button"></span><span id="mobile-menu-toggle" class="icon-button hamburger"></span></div></div><div id="mobile-menu"><div class="mobile-menu-header body-small"><span class="mobile-menu-logo"><span class="project-name h300">docs</span></span><button id="mobile-menu-close" class="icon-button close"></button></div><div class="mobile-menu-container body-medium"><input id="mobile-scaladoc-searchbar-input" class="scaladoc-searchbar-input" type="search" placeholder="Find anything"></input><span id="mobile-theme-toggle" class="mobile-menu-item mode"></span></div></div><span id="mobile-sidebar-toggle" class="floating-button"></span><div id="leftColumn" class="body-small"><div class="switcher-container"><a id="docs-nav-button" class="switcher h100 selected" href="../index.html">Docs</a><a id="api-nav-button" class="switcher h100 " href="../../index.html">API</a></div><nav id="docs-nav" class="side-menu"><div class="ni n0 "><span class="nh de"><a href="../name_from.html"><span>Name From</span></a></span></div><div class="ni n0 "><span class="nh de"><a href="../quick_start.html"><span>Quick Start</span></a></span></div><div class="ni n0 "><span class="nh de"><a href="../core_concept.html"><span>Core Concepts and Design</span></a></span></div><div class="ni n0 expanded"><span class="nh h100 expanded cs de"><button class="ar icon-button expanded"></button><a href="index.html"><span>Guide</span></a></span><div class="ni n1 "><span class="nh de"><a href="actor_model.html"><span>Actor Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="message_model.html"><span>Message Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="stack_model.html"><span>Stack Execution Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="channel_pipeline.html"><span>Channel Pipeline</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="io_model.html"><span>IO Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="reactor_model.html"><span>Reactor Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="threading_model.html"><span>Threading Model</span></a></span></div><div class="ni n1 expanded"><span class="nh h100 selected de"><a href="#"><span>Address Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="ioc.html"><span>Actor IOC</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="serde.html"><span>Serde Framework</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="slf4a.html"><span>SLF4A</span></a></span></div></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../module/index.html"><span>Modules</span></a></span><div class="ni n1 "><span class="nh de"><a href="../module/buffer.html"><span>Buffer</span></a></span></div></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../zh/index.html"><span>中文文档</span></a></span><div class="ni n1 "><span class="nh de"><a href="../zh/name_from.html"><span>名称来源</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../zh/quick_start.html"><span>快速开始</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../zh/core_concept.html"><span>核心概念与设计</span></a></span></div><div class="ni n1"><span class="nh de"><button class="ar icon-button "></button><a href="../zh/guide/index.html"><span>详细指南</span></a></span><div class="ni n2 "><span class="nh de"><a href="../zh/guide/actor_model.html"><span>Actor 模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/message_model.html"><span>消息模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/stack_model.html"><span>Stack 执行模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/channel_pipeline.html"><span>Channel Pipeline</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/io_model.html"><span>IO 模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/reactor_model.html"><span>Reactor 模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/threading_model.html"><span>线程模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/address_model.html"><span>Address 模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/ioc.html"><span>Actor IoC</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/serde.html"><span>Serde 框架</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/slf4a.html"><span>SLF4A</span></a></span></div></div><div class="ni n1"><span class="nh de"><button class="ar icon-button "></button><a href="../zh/module/index.html"><span>Modules</span></a></span><div class="ni n2 "><span class="nh de"><a href="../zh/module/buffer.html"><span>Buffer</span></a></span></div></div></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../blog/index.html"><span>Blog</span></a></span><div class="ni n1 "><span class="nh de"><a href="../blog/2023/05/19/hello-world-blog.html"><span>hello world blog</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../blog/2023/05/19/hello-world-blog.zh-cn.html"><span>你好世界</span></a></span></div></div></nav></div><div id="footer" class="body-small"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div id="scaladoc-searchBar"></div><div id="main"><div class="breadcrumbs container"><a href="../index.html">docs</a>/<a href="index.html">Guide</a>/<a href="address_model.html">Address Model</a></div><div id="content" class="body-medium"><div><section id="address-model">
+ <h1 class="h500"><a href="#address-model" class="anchor"></a>Address Model</h1>
+ <p>Actors are isolated from each other and can only communicate through <code>Address</code> instances. The Address model provides compile-time type safety and flexible routing strategies.</p>
+</section>
+<section id="address-trait">
+ <h2 class="h500"><a href="#address-trait" class="anchor"></a>Address Trait</h2>
+ <p><code>Address[-M &lt;: Call]</code> is the root trait (contravariant in <code>M</code>). It provides the core messaging API:</p>
+ <div class="snippet mono-small-block" scala-snippet="">
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>trait Address[-M &lt;: Call] {
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  def notice(notice: M &amp; Notice): Unit
+</span><span line-number="3" class=""><span class="tooltip-container"></span>  def ask(ask: M &amp; Ask[? &lt;: Reply]): FutureState[? &lt;: Reply]
+</span><span line-number="4" class=""><span class="tooltip-container"></span>  def ask(ask: M &amp; Ask[? &lt;: Reply], future: Future[? &lt;: Reply]): Unit
+</span><span line-number="5" class=""><span class="tooltip-container"></span>  def reply(reply: Reply, replyId: Long, sender: AbstractActor[?]): Unit
+</span><span line-number="6" class=""><span class="tooltip-container"></span>}
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+ <p>The contravariance means <code>Address[Call]</code> can send any message type, while <code>Address[MyNotice]</code> can only send <code>MyNotice</code> messages.</p>
+</section>
+<section id="physicaladdress">
+ <h2 class="h500"><a href="#physicaladdress" class="anchor"></a>PhysicalAddress</h2>
+ <p><code>PhysicalAddress[M]</code> is the concrete address bound to a single <code>ActorHouse</code>. It is the base class for all address types that directly route messages to a specific actor's mailboxes.</p>
+</section>
+<section id="message-routing">
+ <h3 class="h400"><a href="#message-routing" class="anchor"></a>Message Routing</h3>
+ <p>When sending a message via <code>PhysicalAddress</code>:</p>
+ <p><strong>Ask</strong> (<code>ask</code> method):</p>
+ <ol>
+  <li><code>packaging(ask, sender)</code> — Creates an <code>Envelope</code> from the pool, sets the sender, messageId, and content</li>
+  <li><code>sender.attachStack(envelope.messageId, future)</code> — Wires the promise to the sender's current <code>Stack</code> and <code>FutureDispatcher</code></li>
+  <li><code>house.putAsk(envelope)</code> — Places into the target actor's <code>askMailbox</code></li>
+ </ol>
+ <p><strong>Notice</strong> (<code>notice</code> method):</p>
+ <ol>
+  <li>Creates an <code>Envelope</code> (no sender needed)</li>
+  <li><code>house.putNotice(envelope)</code> — Places into the target actor's <code>noticeMailbox</code></li>
+ </ol>
+ <p><strong>Reply</strong> (<code>reply</code> method):</p>
+ <ol>
+  <li>Creates an <code>Envelope</code> with a <code>replyId</code> (single) or <code>replyIds</code> (array)</li>
+  <li><code>house.putReply(envelope)</code> — Places into the sender actor's <code>replyMailbox</code></li>
+ </ol>
+</section>
+<section id="timeout-support">
+ <h3 class="h400"><a href="#timeout-support" class="anchor"></a>Timeout Support</h3>
+ <p>When sending an Ask with a timeout:</p>
+ <div class="snippet mono-small-block" scala-snippet="">
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>address.ask(myAsk, future, timeout)
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+ <p>After the ask is sent, a timer task is registered via <code>sender.timer.registerAskTimeout(...)</code>. If the timeout fires before a reply arrives, a <code>TimeoutReply</code> is delivered instead.</p>
+</section>
+<section id="actoraddress">
+ <h2 class="h500"><a href="#actoraddress" class="anchor"></a>ActorAddress</h2>
+ <p><code>ActorAddress[M]</code> is the simplest address type -- a final class extending <code>PhysicalAddress</code>. Each <code>ActorHouse</code> creates exactly one <code>ActorAddress</code> for its actor.</p>
+ <div class="snippet mono-small-block" scala-snippet="">
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>final class ActorAddress[M &lt;: Call](house: ActorHouse) extends PhysicalAddress[M]
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+</section>
+<section id="robinaddress">
+ <h2 class="h500"><a href="#robinaddress" class="anchor"></a>RobinAddress</h2>
+ <p><code>RobinAddress[M]</code> provides round-robin load balancing over an array of <code>ActorAddress</code> instances. It is created when <code>ActorSystem.buildActor</code> is called with <code>num &gt; 1</code>.</p>
+</section>
+<section id="routing-strategies">
+ <h3 class="h400"><a href="#routing-strategies" class="anchor"></a>Routing Strategies</h3>
+ <p><strong>Notice routing</strong>: Simple round-robin: <code>noticeCursor % underlying.length</code></p>
+ <p><strong>Ask routing</strong> — two modes:</p>
+ <ol>
+  <li>
+   <p><strong>Thread affinity (Load Balance mode)</strong>: When <code>sender.isLoadBalance &amp;&amp; isLB</code> is true, it routes to <code>underlying(sender.mountedThreadId)</code> -- sends to the worker on the <strong>same thread</strong>, avoiding cross-thread mailbox writes. This is the optimal path.</p></li>
+  <li>
+   <p><strong>Round-robin</strong>: Otherwise, uses <code>askCursor % underlying.length</code></p></li>
+ </ol>
+</section>
+<section id="when-robinaddress-is-created">
+ <h3 class="h400"><a href="#when-robinaddress-is-created" class="anchor"></a>When RobinAddress is Created</h3>
+ <ul>
+  <li><code>num == pool.size</code>: One actor per thread, all marked <code>isLoadBalance = true</code>. The <code>RobinAddress</code> with <code>isLB = true</code> enables thread-affinity routing.</li>
+  <li><code>num &gt; 1</code> (other): Distributes actors across selected threads with simple round-robin.</li>
+ </ul>
+</section>
+<section id="eventableaddress">
+ <h2 class="h500"><a href="#eventableaddress" class="anchor"></a>EventableAddress</h2>
+ <p><code>EventableAddress</code> is a trait with an <code>inform(event)</code> method for timer/event delivery. <code>PhysicalAddress</code> overrides this to put events into the house's <code>eventMailbox</code>.</p>
+ <p>There is also <code>ActorThreadAddress</code>, which routes events to the thread's <code>eventQueue</code> (<code>ConcurrentLinkedQueue</code>) — used for <code>ResourceTimeoutEvent</code>s that need thread-level processing.</p>
+</section>
+<section id="address-and-type-safety">
+ <h2 class="h500"><a href="#address-and-type-safety" class="anchor"></a>Address and Type Safety</h2>
+ <p>The type system ensures that you cannot send the wrong message type to an Actor:</p>
+ <div class="snippet mono-small-block" scala-snippet="">
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>case class Ping extends Notice
+</span><span line-number="2" class=""><span class="tooltip-container"></span>case class Pong extends Notice
+</span><span line-number="3" class=""><span class="tooltip-container"></span>case class AskData extends Ask[DataReply]
+</span><span line-number="4" class=""><span class="tooltip-container"></span>case class DataReply(value: String) extends Reply
+</span><span line-number="5" class=""><span class="tooltip-container"></span>
+</span><span line-number="6" class=""><span class="tooltip-container"></span>class PingActor extends StateActor[Ping | AskData]
+</span><span line-number="7" class=""><span class="tooltip-container"></span>
+</span><span line-number="8" class=""><span class="tooltip-container"></span>// Creating the actor returns a typed Address:
+</span><span line-number="9" class=""><span class="tooltip-container"></span>val address: Address[Ping | AskData] = system.buildActor[PingActor](ActorFactory[PingActor])
+</span><span line-number="10" class=""><span class="tooltip-container"></span>
+</span><span line-number="11" class=""><span class="tooltip-container"></span>// Compile-time safe:
+</span><span line-number="12" class=""><span class="tooltip-container"></span>address.notice(Ping())        // OK
+</span><span line-number="13" class=""><span class="tooltip-container"></span>address.ask(AskData())        // OK
+</span><span line-number="14" class=""><span class="tooltip-container"></span>
+</span><span line-number="15" class=""><span class="tooltip-container"></span>// Compile-time error:
+</span><span line-number="16" class=""><span class="tooltip-container"></span>// address.notice(Pong())     // Error: Pong is not Ping | AskData
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#address-model">Address Model</a><ul><li><a href="#address-trait">Address Trait</a></li><li><a href="#physicaladdress">PhysicalAddress</a><ul><li><a href="#message-routing">Message Routing</a></li><li><a href="#timeout-support">Timeout Support</a></li></ul></li><li><a href="#actoraddress">ActorAddress</a></li><li><a href="#robinaddress">RobinAddress</a><ul><li><a href="#routing-strategies">Routing Strategies</a></li><li><a href="#when-robinaddress-is-created">When RobinAddress is Created</a></li></ul></li><li><a href="#eventableaddress">EventableAddress</a></li><li><a href="#address-and-type-safety">Address and Type Safety</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

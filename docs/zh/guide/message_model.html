@@ -1,2 +1,142 @@
-<!DOCTYPE html><html data-pathToRoot="../../../"><head><meta charset="utf-8"></meta><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"></meta><title>Message Model</title><link rel="shortcut icon" type="image/x-icon" href="../../../favicon.ico"></link><script type="text/javascript" src="../../../scripts/theme.js"></script><script type="text/javascript" src="../../../scripts/searchData.js" defer="true"></script><script type="text/javascript" src="../../../scripts/scastieConfiguration.js" defer="true"></script><link rel="stylesheet" href="../../../styles/theme/bundle.css"></link><link rel="stylesheet" href="../../../styles/theme/components/bundle.css"></link><link rel="stylesheet" href="../../../styles/theme/components/button/bundle.css"></link><link rel="stylesheet" href="../../../styles/theme/layout/bundle.css"></link><link rel="stylesheet" href="../../../styles/nord-light.css"></link><link rel="stylesheet" href="../../../styles/dotty-icons.css"></link><link rel="stylesheet" href="../../../styles/filter-bar.css"></link><link rel="stylesheet" href="../../../styles/code-snippets.css"></link><link rel="stylesheet" href="../../../styles/searchbar.css"></link><link rel="stylesheet" href="../../../styles/social-links.css"></link><link rel="stylesheet" href="../../../styles/versions-dropdown.css"></link><link rel="stylesheet" href="../../../styles/content-contributors.css"></link><link rel="stylesheet" href="../../../styles/fontawesome.css"></link><script type="text/javascript" src="../../../hljs/highlight.pack.js" defer="true"></script><script type="text/javascript" src="../../../scripts/hljs-scala3.js" defer="true"></script><script type="text/javascript" src="../../../scripts/ux.js" defer="true"></script><script type="text/javascript" src="../../../scripts/common/component.js" defer="true"></script><script type="text/javascript" src="../../../scripts/common/utils.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/FilterBar.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/DocumentableList.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/Input.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/FilterGroup.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/Filter.js" defer="true"></script><script type="text/javascript" src="../../../scripts/scaladoc-scalajs.js" defer="true"></script><script type="text/javascript" src="../../../scripts/contributors.js" defer="true"></script><script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.min.js" defer="true"></script><script type="text/javascript" src="https://d3js.org/d3.v6.min.js" defer="true"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/graphlib-dot@0.6.2/dist/graphlib-dot.min.js" defer="true"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dagre-d3/0.6.1/dagre-d3.min.js" defer="true"></script><script type="text/javascript" src="https://scastie.scala-lang.org/embedded.js" defer="true"></script><script type="text/javascript" src="../../../scripts/data.js" defer="true"></script><link rel="stylesheet" href="../../../styles/staticsitestyles.css"></link><script>var pathToRoot = "../../../";</script><meta charset="utf-8">
-<title>Hello, world!</title></head><body><div id=""><div id="header" class="body-small"><div class="header-container-left"><a href="../../../home.html" class="logo-container"><span class="project-name h300">otavia</span></a><span onclick="dropdownHandler(event)" class="text-button with-arrow" id="dropdown-trigger"><a><div class="projectVersion">0.4.6-SNAPSHOT</div></a></span><div id="version-dropdown" class="dropdown-menu"></div></div><div class="header-container-right"><button id="search-toggle" class="icon-button"></button><span id="theme-toggle" class="icon-button"></span><span id="mobile-menu-toggle" class="icon-button hamburger"></span></div></div><div id="mobile-menu"><div class="mobile-menu-header body-small"><span class="mobile-menu-logo"><span class="project-name h300">otavia</span></span><button id="mobile-menu-close" class="icon-button close"></button></div><div class="mobile-menu-container body-medium"><input id="mobile-scaladoc-searchbar-input" class="scaladoc-searchbar-input" type="search" placeholder="Find anything"></input><span id="mobile-theme-toggle" class="mobile-menu-item mode"></span></div></div><span id="mobile-sidebar-toggle" class="floating-button"></span><div id="leftColumn" class="body-small"><div class="switcher-container"><a id="docs-nav-button" class="switcher h100 selected" href="../../index.html">Docs</a><a id="api-nav-button" class="switcher h100 " href="../../../index.html">API</a></div><nav id="docs-nav" class="side-menu"><div class="ni n0 "><span class="nh de"><a href="../../name_from.html"><span>Name From</span></a></span></div><div class="ni n0 "><span class="nh de"><a href="../../quick_start.html"><span>Quick Start</span></a></span></div><div class="ni n0 "><span class="nh de"><a href="../../core_concept.html"><span>Core Concepts and Design</span></a></span></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../../guide/index.html"><span>Guide</span></a></span><div class="ni n1 "><span class="nh de"><a href="../../guide/actor_model.html"><span>Actor Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/channel_pipeline.html"><span>Channel Pipeline</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/io_model.html"><span>IO Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/ioc.html"><span>Actor IOC </span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/message_model.html"><span>Message Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/reactor_model.html"><span>Reactor Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/slf4a.html"><span>SLF4A</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/serde.html"><span>Serde framework</span></a></span></div></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../../module/index.html"><span>Modules</span></a></span><div class="ni n1 "><span class="nh de"><a href="../../module/buffer.html"><span>Buffer</span></a></span></div></div><div class="ni n0 expanded"><span class="nh h100 expanded cs de"><button class="ar icon-button expanded"></button><a href="../index.html"><span>中文文档</span></a></span><div class="ni n1 "><span class="nh de"><a href="../name_from.html"><span>名称来源</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../quick_start.html"><span>快速开始</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../core_concept.html"><span>核心概念与设计</span></a></span></div><div class="ni n1 expanded"><span class="nh h100 expanded cs de"><button class="ar icon-button expanded"></button><a href="index.html"><span>Guide</span></a></span><div class="ni n2 "><span class="nh de"><a href="channel_pipeline.html"><span>Channel Pipeline</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="io_model.html"><span>IO Model</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="ioc.html"><span>Actor IOC </span></a></span></div><div class="ni n2 expanded"><span class="nh h100 selected de"><a href="#"><span>Message Model</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="reactor_model.html"><span>Reactor Model</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="slf4a.html"><span>SLF4A</span></a></span></div></div><div class="ni n1"><span class="nh de"><button class="ar icon-button "></button><a href="../module/index.html"><span>Modules</span></a></span><div class="ni n2 "><span class="nh de"><a href="../module/buffer.html"><span>Buffer</span></a></span></div></div></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../../blog/index.html"><span>Blog</span></a></span><div class="ni n1 "><span class="nh de"><a href="../../blog/2023/05/19/hello-world-blog.html"><span>hello world blog</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../blog/2023/05/19/hello-world-blog.zh-cn.html"><span>你好世界</span></a></span></div></div></nav></div><div id="footer" class="body-small"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div id="scaladoc-searchBar"></div><div id="main"><div class="breadcrumbs container"><a href="../../index.html">otavia</a>/<a href="../index.html">中文文档</a>/<a href="index.html">Guide</a>/<a href="message_model.html">Message Model</a></div><div id="content" class="body-medium"><div><p>The message model design of otavia actor.</p></div><div id="toc" class="body-small"></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+<!DOCTYPE html><html data-pathToRoot="../../../" data-rawLocation="docs/zh/guide/message_model" data-dynamicSideMenu="false"><head><meta charset="utf-8"></meta><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"></meta><title>消息模型</title><link rel="shortcut icon" type="image/x-icon" href="../../../favicon.ico"></link><script type="text/javascript" src="../../../scripts/theme.js"></script><script type="text/javascript" src="../../../scripts/searchData.js" defer="true"></script><script type="text/javascript" src="../../../scripts/scastieConfiguration.js" defer="true"></script><link rel="stylesheet" href="../../../styles/theme/bundle.css"></link><link rel="stylesheet" href="../../../styles/theme/components/bundle.css"></link><link rel="stylesheet" href="../../../styles/theme/components/button/bundle.css"></link><link rel="stylesheet" href="../../../styles/theme/layout/bundle.css"></link><link rel="stylesheet" href="../../../styles/nord-light.css"></link><link rel="stylesheet" href="../../../styles/dotty-icons.css"></link><link rel="stylesheet" href="../../../styles/filter-bar.css"></link><link rel="stylesheet" href="../../../styles/code-snippets.css"></link><link rel="stylesheet" href="../../../styles/searchbar.css"></link><link rel="stylesheet" href="../../../styles/social-links.css"></link><link rel="stylesheet" href="../../../styles/versions-dropdown.css"></link><link rel="stylesheet" href="../../../styles/content-contributors.css"></link><link rel="stylesheet" href="../../../styles/fontawesome.css"></link><script type="text/javascript" src="../../../hljs/highlight.pack.js" defer="true"></script><script type="text/javascript" src="../../../scripts/hljs-scala3.js" defer="true"></script><script type="text/javascript" src="../../../scripts/ux.js" defer="true"></script><script type="text/javascript" src="../../../scripts/common/component.js" defer="true"></script><script type="text/javascript" src="../../../scripts/common/utils.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/FilterBar.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/DocumentableList.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/Input.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/FilterGroup.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/Filter.js" defer="true"></script><script type="text/javascript" src="../../../scripts/scaladoc-scalajs.js" defer="true"></script><script type="text/javascript" src="../../../scripts/contributors.js" defer="true"></script><script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.min.js" defer="true"></script><script type="text/javascript" src="https://d3js.org/d3.v6.min.js" defer="true"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/graphlib-dot@0.6.2/dist/graphlib-dot.min.js" defer="true"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dagre-d3/0.6.1/dagre-d3.min.js" defer="true"></script><script type="text/javascript" src="https://scastie.scala-lang.org/embedded.js" defer="true"></script><script type="text/javascript" src="../../../scripts/data.js" defer="true"></script><link rel="stylesheet" href="../../../styles/staticsitestyles.css"></link><script>var pathToRoot = "../../../";</script><meta charset="utf-8">
+<title>Hello, world!</title></head><body><div id=""><div id="header" class="body-small"><div class="header-container-left"><a href="../../../home.html" class="logo-container"><span class="project-name h300">docs</span></a><span onclick="dropdownHandler(event)" class="text-button with-arrow" id="dropdown-trigger"><a><div class="projectVersion">0.4.6-SNAPSHOT</div></a></span><div id="version-dropdown" class="dropdown-menu"></div></div><div class="header-container-right"><button id="search-toggle" class="icon-button"></button><span id="theme-toggle" class="icon-button"></span><span id="mobile-menu-toggle" class="icon-button hamburger"></span></div></div><div id="mobile-menu"><div class="mobile-menu-header body-small"><span class="mobile-menu-logo"><span class="project-name h300">docs</span></span><button id="mobile-menu-close" class="icon-button close"></button></div><div class="mobile-menu-container body-medium"><input id="mobile-scaladoc-searchbar-input" class="scaladoc-searchbar-input" type="search" placeholder="Find anything"></input><span id="mobile-theme-toggle" class="mobile-menu-item mode"></span></div></div><span id="mobile-sidebar-toggle" class="floating-button"></span><div id="leftColumn" class="body-small"><div class="switcher-container"><a id="docs-nav-button" class="switcher h100 selected" href="../../index.html">Docs</a><a id="api-nav-button" class="switcher h100 " href="../../../index.html">API</a></div><nav id="docs-nav" class="side-menu"><div class="ni n0 "><span class="nh de"><a href="../../name_from.html"><span>Name From</span></a></span></div><div class="ni n0 "><span class="nh de"><a href="../../quick_start.html"><span>Quick Start</span></a></span></div><div class="ni n0 "><span class="nh de"><a href="../../core_concept.html"><span>Core Concepts and Design</span></a></span></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../../guide/index.html"><span>Guide</span></a></span><div class="ni n1 "><span class="nh de"><a href="../../guide/actor_model.html"><span>Actor Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/message_model.html"><span>Message Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/stack_model.html"><span>Stack Execution Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/channel_pipeline.html"><span>Channel Pipeline</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/io_model.html"><span>IO Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/reactor_model.html"><span>Reactor Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/threading_model.html"><span>Threading Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/address_model.html"><span>Address Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/ioc.html"><span>Actor IOC</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/serde.html"><span>Serde Framework</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../guide/slf4a.html"><span>SLF4A</span></a></span></div></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../../module/index.html"><span>Modules</span></a></span><div class="ni n1 "><span class="nh de"><a href="../../module/buffer.html"><span>Buffer</span></a></span></div></div><div class="ni n0 expanded"><span class="nh h100 expanded cs de"><button class="ar icon-button expanded"></button><a href="../index.html"><span>中文文档</span></a></span><div class="ni n1 "><span class="nh de"><a href="../name_from.html"><span>名称来源</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../quick_start.html"><span>快速开始</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../core_concept.html"><span>核心概念与设计</span></a></span></div><div class="ni n1 expanded"><span class="nh h100 expanded cs de"><button class="ar icon-button expanded"></button><a href="index.html"><span>详细指南</span></a></span><div class="ni n2 "><span class="nh de"><a href="actor_model.html"><span>Actor 模型</span></a></span></div><div class="ni n2 expanded"><span class="nh h100 selected de"><a href="#"><span>消息模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="stack_model.html"><span>Stack 执行模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="channel_pipeline.html"><span>Channel Pipeline</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="io_model.html"><span>IO 模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="reactor_model.html"><span>Reactor 模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="threading_model.html"><span>线程模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="address_model.html"><span>Address 模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="ioc.html"><span>Actor IoC</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="serde.html"><span>Serde 框架</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="slf4a.html"><span>SLF4A</span></a></span></div></div><div class="ni n1"><span class="nh de"><button class="ar icon-button "></button><a href="../module/index.html"><span>Modules</span></a></span><div class="ni n2 "><span class="nh de"><a href="../module/buffer.html"><span>Buffer</span></a></span></div></div></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../../blog/index.html"><span>Blog</span></a></span><div class="ni n1 "><span class="nh de"><a href="../../blog/2023/05/19/hello-world-blog.html"><span>hello world blog</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../../blog/2023/05/19/hello-world-blog.zh-cn.html"><span>你好世界</span></a></span></div></div></nav></div><div id="footer" class="body-small"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div id="scaladoc-searchBar"></div><div id="main"><div class="breadcrumbs container"><a href="../../index.html">docs</a>/<a href="../index.html">中文文档</a>/<a href="index.html">详细指南</a>/<a href="message_model.html">消息模型</a></div><div id="content" class="body-medium"><div><section id="消息模型">
+ <h1 class="h500"><a href="#消息模型" class="anchor"></a>消息模型</h1>
+ <p>消息是 Actor 用来通信的特殊对象，建议使用 <code>case class</code> 来定义。</p>
+</section>
+<section id="消息类型层次">
+ <h2 class="h500"><a href="#消息类型层次" class="anchor"></a>消息类型层次</h2>
+ <div class="snippet mono-small-block">
+  <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span>Message (sealed trait)
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  ├── Call (sealed trait)          — 接收时产生 Stack
+</span><span line-number="3" class=""><span class="tooltip-container"></span>  │     ├── Notice extends Call   — 即发即弃，无需回复
+</span><span line-number="4" class=""><span class="tooltip-container"></span>  │     └── Ask[R &lt;: Reply]       — 期望类型化回复
+</span><span line-number="5" class=""><span class="tooltip-container"></span>  └── Reply (trait)                — Ask 的响应
+</span><span line-number="6" class=""><span class="tooltip-container"></span>        ├── TimeoutReply           — 系统超时响应（单例）
+</span><span line-number="7" class=""><span class="tooltip-container"></span>        └── ExceptionMessage       — 将 Throwable 包装为 Reply
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+ <p><img src="../../../images/message_types.drawio.svg" alt=""></p>
+</section>
+<section id="call">
+ <h3 class="h400"><a href="#call" class="anchor"></a>Call</h3>
+ <p><code>Call</code> 代表请求消息，类似于方法调用。它有两个子类型：</p>
+ <ul>
+  <li><strong><code>Notice</code></strong>：即发即弃消息，类似于返回值为 <code>Unit</code> 的方法。不需要回复。</li>
+  <li><strong><code>Ask[R &lt;: Reply]</code></strong>：请求-响应消息，类型参数 <code>R</code> 指定期望的回复类型。</li>
+ </ul>
+</section>
+<section id="reply">
+ <h3 class="h400"><a href="#reply" class="anchor"></a>Reply</h3>
+ <p><code>Reply</code> 是 <code>Ask</code> 的响应。两个特殊的系统回复：</p>
+ <ul>
+  <li><strong><code>TimeoutReply</code></strong>：当 Ask 超时时生成的单例。</li>
+  <li><strong><code>ExceptionMessage</code></strong>：包装 <code>Throwable</code>，将异常作为回复传递。</li>
+ </ul>
+</section>
+<section id="编译时类型安全">
+ <h2 class="h500"><a href="#编译时类型安全" class="anchor"></a>编译时类型安全</h2>
+ <p><code>otavia</code> 通过 <code>Actor</code> 和 <code>Address</code> 的类型参数在编译时强制消息类型安全：</p>
+ <div class="snippet mono-small-block" scala-snippet="">
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>trait Actor[+M &lt;: Call]
+</span><span line-number="2" class=""><span class="tooltip-container"></span>trait Address[-M &lt;: Call]
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+ <p>Actor 通过 <code>M</code> 声明可接收的消息类型。对应的 <code>Address</code> 具有逆变的类型参数，只能向地址发送 <code>M</code> 类型的消息。</p>
+ <p><code>ReplyOf[A &lt;: Ask[?]]</code> 匹配类型从 <code>Ask[R]</code> 中提取回复类型 <code>R</code>，确保 <code>AskStack.return()</code> 只接受正确的回复类型。</p>
+ <div class="snippet mono-small-block" scala-snippet="">
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>// 示例：编译时类型安全的消息
+</span><span line-number="2" class=""><span class="tooltip-container"></span>case class Greet(name: String) extends Notice
+</span><span line-number="3" class=""><span class="tooltip-container"></span>case class AskName(id: Int) extends Ask[NameReply]
+</span><span line-number="4" class=""><span class="tooltip-container"></span>case class NameReply(name: String) extends Reply
+</span><span line-number="5" class=""><span class="tooltip-container"></span>
+</span><span line-number="6" class=""><span class="tooltip-container"></span>// 接收两种消息类型的 Actor
+</span><span line-number="7" class=""><span class="tooltip-container"></span>class MyActor extends StateActor[Greet | AskName] {
+</span><span line-number="8" class=""><span class="tooltip-container"></span>  override protected def resumeNotice(stack: NoticeStack[Greet]): StackYield = ???
+</span><span line-number="9" class=""><span class="tooltip-container"></span>  override protected def resumeAsk(stack: AskStack[AskName]): StackYield = ???
+</span><span line-number="10" class=""><span class="tooltip-container"></span>}
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+</section>
+<section id="双类型消息">
+ <h3 class="h400"><a href="#双类型消息" class="anchor"></a>双类型消息</h3>
+ <p>一个消息可以同时继承 <code>Notice</code> 和 <code>Ask</code>。如何处理取决于发送方式：</p>
+ <div class="snippet mono-small-block" scala-snippet="">
+  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>case class DataUpdate(data: String) extends Notice, Ask[UnitReply]
+</span><span line-number="2" class=""><span class="tooltip-container"></span>
+</span><span line-number="3" class=""><span class="tooltip-container"></span>// 作为 Notice 发送（不需要回复）：
+</span><span line-number="4" class=""><span class="tooltip-container"></span>address.notice(DataUpdate("hello"))
+</span><span line-number="5" class=""><span class="tooltip-container"></span>
+</span><span line-number="6" class=""><span class="tooltip-container"></span>// 作为 Ask 发送（需要回复）：
+</span><span line-number="7" class=""><span class="tooltip-container"></span>address.ask(DataUpdate("hello"), state.future)
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+ <p><img src="../../../images/message_model.drawio.svg" alt=""></p>
+</section>
+<section id="envelope">
+ <h2 class="h500"><a href="#envelope" class="anchor"></a>Envelope</h2>
+ <p>每条在 Actor 之间发送的消息都包装在 <code>Envelope[M &lt;: Message]</code> 中：</p>
+ <table>
+  <thead>
+   <tr>
+    <th>字段</th>
+    <th>说明</th>
+   </tr>
+  </thead>
+  <tbody>
+   <tr>
+    <td><code>address</code></td>
+    <td>发送者 Address</td>
+   </tr>
+   <tr>
+    <td><code>mid</code></td>
+    <td>唯一消息 ID（每个 Actor 单调递增）</td>
+   </tr>
+   <tr>
+    <td><code>msg</code></td>
+    <td>实际消息体</td>
+   </tr>
+   <tr>
+    <td><code>rid</code></td>
+    <td>单个 reply ID（用于单条回复）</td>
+   </tr>
+   <tr>
+    <td><code>rids</code></td>
+    <td>reply ID 数组（用于批量回复）</td>
+   </tr>
+  </tbody>
+ </table>
+ <p>Envelope 通过 <code>ActorThreadIsolatedObjectPool</code> 池化，在接收者提取消息数据后立即回收。这消除了高频消息传递带来的 GC 压力。</p>
+</section>
+<section id="event-模型">
+ <h2 class="h500"><a href="#event-模型" class="anchor"></a>Event 模型</h2>
+ <p>Event 与消息分离，代表 Actor 与运行时系统之间的交互。其类型是固定的，用户不能自定义。</p>
+</section>
+<section id="timerevent">
+ <h3 class="h400"><a href="#timerevent" class="anchor"></a>TimerEvent</h3>
+ <p>由 <code>Timer</code> 组件生成：</p>
+ <ul>
+  <li><code>TimeoutEvent</code> — 用户注册的超时（直接由开发者代码处理）</li>
+  <li><code>ChannelTimeoutEvent</code> — Channel 特定超时</li>
+  <li><code>AskTimeoutEvent</code> — Ask 超时（携带 askId 用于 FutureDispatcher 查找）</li>
+  <li><code>ResourceTimeoutEvent</code> — 缓存资源超时</li>
+ </ul>
+</section>
+<section id="reactorevent">
+ <h3 class="h400"><a href="#reactorevent" class="anchor"></a>ReactorEvent</h3>
+ <p>由每个 <code>ActorThread</code> 内的 <code>IoHandler</code> 为 IO 事件生成。被 <code>ChannelsActor</code> 封装：</p>
+ <ul>
+  <li><code>RegisterReply</code>、<code>DeregisterReply</code> — Channel 注册结果</li>
+  <li><code>BindReply</code>、<code>ConnectReply</code>、<code>DisconnectReply</code> — 网络操作结果</li>
+  <li><code>OpenReply</code>、<code>ShutdownReply</code> — 文件/关闭结果</li>
+  <li><code>ChannelClose</code> — Channel 已关闭</li>
+  <li><code>ReadBuffer</code> — UDP 读取数据（携带发送者地址）</li>
+  <li><code>AcceptedEvent</code> — 新 TCP 连接被接受</li>
+  <li><code>ReadCompletedEvent</code> — 读循环完成</li>
+  <li><code>ReadEvent</code> — 读取错误通知</li>
+ </ul>
+ <p>Event 通过 <code>EventableAddress.inform()</code> 传递到 Actor 的 <code>eventMailbox</code>。</p>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#消息模型">消息模型</a><ul><li><a href="#消息类型层次">消息类型层次</a><ul><li><a href="#call">Call</a></li><li><a href="#reply">Reply</a></li></ul></li><li><a href="#编译时类型安全">编译时类型安全</a><ul><li><a href="#双类型消息">双类型消息</a></li></ul></li><li><a href="#envelope">Envelope</a></li><li><a href="#event-模型">Event 模型</a><ul><li><a href="#timerevent">TimerEvent</a></li><li><a href="#reactorevent">ReactorEvent</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
