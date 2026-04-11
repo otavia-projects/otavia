@@ -21,9 +21,9 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
-      - run: chmod +x millw
+      - run: chmod +x mill
       - run: echo $PGP_SECRET | base64 --decode > gpg_key && gpg --import --no-tty --batch --yes gpg_key
-      - run: ./millw -i __.publishArtifacts
+      - run: ./mill -i __.publishArtifacts
       - run: gpg --passphrase=$PGP_PASSPHRASE --no-tty --pinentry-mode loopback --batch --yes -a -b build.sc
-      - run: ./millw -d mill.scalalib.PublishModule/publishAll --publishArtifacts __.publishArtifacts --sonatypeCreds $SONATYPE_USERNAME:$SONATYPE_PASSWORD  --gpgArgs --passphrase=$PGP_PASSPHRASE,--no-tty,--pinentry-mode,loopback,--batch,--yes,-a,-b --sonatypeUri https://s01.oss.sonatype.org/service/local --sonatypeSnapshotUri https://s01.oss.sonatype.org/content/repositories/snapshots --readTimeout 600000 --awaitTimeout 600000 --signed true --release true
+      - run: ./mill -d mill.scalalib.PublishModule/publishAll --publishArtifacts __.publishArtifacts --sonatypeCreds $SONATYPE_USERNAME:$SONATYPE_PASSWORD  --gpgArgs --passphrase=$PGP_PASSPHRASE,--no-tty,--pinentry-mode,loopback,--batch,--yes,-a,-b --sonatypeUri https://s01.oss.sonatype.org/service/local --sonatypeSnapshotUri https://s01.oss.sonatype.org/content/repositories/snapshots --readTimeout 600000 --awaitTimeout 600000 --signed true --release true
       - run: rm gpg_key

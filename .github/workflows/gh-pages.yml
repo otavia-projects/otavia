@@ -18,8 +18,8 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
-      - run: chmod +x millw
-      - run: ./millw docs.site
+      - run: chmod +x mill
+      - run: ./mill docs.site
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
