@@ -92,7 +92,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     def isRunning: Boolean = status.get() == RUNNING
 
-    def isWaiting: Boolean = status.get() == RUNNING
+    def isWaiting: Boolean = status.get() == WAITING
 
     def next_=(house: ActorHouse): Unit = nextHouse = house
 

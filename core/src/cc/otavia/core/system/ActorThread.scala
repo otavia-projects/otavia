@@ -163,8 +163,6 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
             // ---- Phase 1: IO (select + processSelectedKeys) ----
             val ioStartTime = System.nanoTime()
             val strategy = ioHandler.run(ioCtx)
-            val ioEndTime = System.nanoTime()
-            val ioTime = ioEndTime - ioStartTime
 
             // epoll bug detection
             if (strategy > 0) selectCnt = 0
@@ -179,16 +177,18 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
             if (refSet.nonEmpty) this.stopActors()
 
             // ---- Phase 3: Business logic (StateActor) with time budget ----
-            val deadline = computeDeadline(ioEndTime, ioTime, strategy)
+            val deadline = computeDeadline(ioStartTime, strategy)
             manager.runStateActors(deadline)
         }
 
     }
 
-    private def computeDeadline(ioEndTime: Long, ioTime: Long, strategy: Int): Long = {
+    private def computeDeadline(ioStartTime: Long, strategy: Int): Long = {
         if (ioRatio == 100) return Long.MaxValue
-        if (strategy <= 0) return ioEndTime + minActorBudgetNanos
-        ioEndTime + ioTime * (100 - ioRatio) / ioRatio
+        val ioTime = System.nanoTime() - ioStartTime
+        val now = ioStartTime + ioTime
+        if (strategy <= 0) return now + minActorBudgetNanos
+        now + ioTime * (100 - ioRatio) / ioRatio
     }
 
     private def unexpectedSelectorWakeup(selectCnt: Int): Boolean = {
