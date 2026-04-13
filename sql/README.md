@@ -1,1 +1,0 @@
-Actor database connect (adbc) specification.

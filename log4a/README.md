@@ -1,1 +1,0 @@
-Simple Logging Facade for Otavia Actor (SLF4A)

@@ -1,1 +1,0 @@
-Redis client for otavia.
