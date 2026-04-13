@@ -25,6 +25,15 @@ import cc.otavia.core.stack.helper.{ChannelFutureState, StartState}
 
 import scala.language.unsafeNulls
 
+/** Worker actor in the acceptor-worker pattern. Receives [[AcceptorActor.AcceptedChannel]] messages from an
+ *  [[AcceptorActor]] and manages the lifecycle of accepted channels (mount, initialize, register).
+ *
+ *  Override [[afterAccepted]] to handle successfully registered channels, and [[resumeAsk]] to process
+ *  [[AcceptorActor.AcceptedChannel]] alongside other message types.
+ *
+ *  @tparam M
+ *    the type of messages this actor can handle alongside [[AcceptorActor.AcceptedChannel]]
+ */
 abstract class AcceptedWorkerActor[M <: Call] extends ChannelsActor[M | AcceptedChannel] {
 
     override protected def newChannel(): Channel = throw new UnsupportedOperationException()

@@ -26,12 +26,12 @@ import cc.otavia.core.timer.Timer
 import scala.language.unsafeNulls
 import scala.reflect.{ClassTag, classTag}
 
-/** base class of IO & Actor model, it has two subclass
- *    1. [[cc.otavia.core.actor.StateActor]]: general actor
- *    1. [[cc.otavia.core.actor.ChannelsActor]]: socket group, a actor which can handle io event
+/** Base trait of the actor model. It has two concrete subclasses:
+ *    1. [[cc.otavia.core.actor.StateActor]]: pure business logic actor
+ *    1. [[cc.otavia.core.actor.ChannelsActor]]: IO-capable actor that manages Channel instances
  *
  *  @tparam M
- *    the type of message of this actor can handle
+ *    the type of messages this actor can handle
  */
 trait Actor[+M <: Call] {
 
@@ -103,8 +103,8 @@ trait Actor[+M <: Call] {
      */
     private[core] def receiveReply(envelope: Envelope[?]): Unit
 
-    /** receive exception reply message by this method, the method will be call when this actor instance receive reply
-     *  message
+    /** receive exception reply message by this method, the method will be call when this actor instance receive
+     *  exception reply message
      *  @param envelope
      *    exception reply message receive by this actor instance
      */
@@ -128,7 +128,7 @@ trait Actor[+M <: Call] {
 
     /** Receive [[Ask]] messages in bulk from other [[Actor]]s, possibly more than one sending [[Actor]].
      *
-     *  The [[ActorSystem]] call this method if and only if [[batchable]] is true. Conversely, the [[receiveBatchAsk]]
+     *  The [[ActorSystem]] call this method if and only if [[batchable]] is true. Conversely, the [[receiveAsk]]
      *  method will not be called
      *
      *  @param asks

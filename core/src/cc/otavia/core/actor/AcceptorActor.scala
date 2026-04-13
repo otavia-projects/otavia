@@ -25,6 +25,16 @@ import cc.otavia.core.message.helper.UnitReply
 import cc.otavia.core.stack.*
 import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState, StartState}
 
+/** TCP server acceptor actor implementing the acceptor-worker pattern. Binds to a [[SocketAddress]] and accepts
+ *  incoming TCP connections, then distributes them to a pool of [[AcceptedWorkerActor]] instances.
+ *
+ *  The acceptor creates a server socket channel via [[newChannel]], binds it via the [[bind]] method, and handles
+ *  accepted channels by forwarding them as [[AcceptedChannel]] messages to workers. Workers are created at mount time
+ *  using the provided [[workerFactory]].
+ *
+ *  @tparam W
+ *    the worker actor type that handles accepted channels
+ */
 abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends ChannelsActor[Bind] {
 
     private var workers: Address[MessageOf[W]] = _

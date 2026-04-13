@@ -28,37 +28,175 @@ import cc.otavia.core.timer.Timer
 import scala.concurrent.TimeoutException
 import scala.language.unsafeNulls
 
+/** The runtime kernel base class for all actors. It extends [[FutureDispatcher]] for O(1) promise lookup and implements
+ *  the [[Actor]] trait.
+ *
+ *  This class has two distinct layers:
+ *
+ *  1. '''User Programming Interface''' (protected): Override points like [[resumeAsk]], [[resumeNotice]], and
+ *     [[handleActorTimeout]] that users implement to define actor behavior.
+ *
+ *  1. '''Kernel Dispatch Engine''' (private[core] / private): The stack coroutine machinery that handles message
+ *     dispatch, promise management, state machine transitions, and object pooling. Users never interact with this layer
+ *     directly.
+ *
+ *  Users never extend this class directly — use [[StateActor]] for pure business logic or [[ChannelsActor]] for
+ *  IO-capable actors.
+ *
+ *  @tparam M
+ *    the type of messages this actor can handle
+ */
 private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher with Actor[M] {
 
     import AbstractActor.*
 
-    protected var logger: Logger = _
-    private var ctx: ActorHouse  = _
+    // =========================================================================
+    // Section 1: RUNTIME STATE
+    // =========================================================================
 
-    // current received msg
+    /** Logger for this actor instance, initialized during mount. */
+    protected var logger: Logger = _
+
+    /** The [[ActorHouse]] that manages this actor's lifecycle, mailboxes, and scheduling. */
+    private var house: ActorHouse = _
+
+    /** The message currently being processed. Set during dispatch, null otherwise.
+     *  - [[Notice]] during receiveNotice dispatch
+     *  - [[Ask]] during receiveAsk dispatch
+     *  - [[Reply]] during receiveReply dispatch
+     *  - [[Seq]] of [[Notice]] during receiveBatchNotice dispatch
+     *  - [[Seq]] of [[Envelope]] of [[Ask]] during receiveBatchAsk dispatch
+     *  - [[AnyRef]] during receiveChannelMessage (channel message)
+     */
     private[core] var currentReceived: Call | Reply | Seq[Call] | AnyRef = _
 
-    /** current stack frame for running ask or notice message */
+    /** The [[Stack]] currently being executed by the stack coroutine engine. */
     private[core] var currentStack: Stack = _
 
-    private[core] def generateSendMessageId(): Long = ctx.generateSendMessageId()
+    // =========================================================================
+    // Section 2: USER PROGRAMMING INTERFACE
+    // Override these protected methods to implement actor behavior.
+    // =========================================================================
 
-    /** self address of this actor instance */
+    /** Handle an [[Ask]] message received by this actor, or resume a suspended stack when the awaited reply arrives.
+     *
+     *  Match on [[stack.state]] to determine the current execution point:
+     *  {{{
+     *  override protected def resumeAsk(stack: AskStack[MyAsk]): StackYield =
+     *    stack.state match
+     *      case _: StartState =>
+     *        val state = FutureState[MyReply]()
+     *        address.ask(MyRequest(), state.future)
+     *        stack.suspend(state)
+     *      case state: FutureState[MyReply] =>
+     *        stack.return(state.future.getNow)
+     *  }}}
+     *
+     *  @param stack
+     *    the ask stack containing the received [[Ask]] message and current execution state
+     *  @return
+     *    [[StackYield]] — [[StackYield]] returned by [[Stack.suspend]] to yield with a state, or by
+     *    [[AskStack.return]] to complete with a reply
+     */
+    protected def resumeAsk(stack: AskStack[M & Ask[? <: Reply]]): StackYield =
+        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
+
+    /** Handle a [[Notice]] message received by this actor, or resume a suspended stack when the awaited reply arrives.
+     *
+     *  @param stack
+     *    the notice stack containing the received [[Notice]] message and current execution state
+     *  @return
+     *    [[StackYield]] — [[StackYield]] returned by [[Stack.suspend]] to yield with a state, or by
+     *    [[NoticeStack.return]] to complete
+     */
+    protected def resumeNotice(stack: NoticeStack[M & Notice]): StackYield =
+        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
+
+    /** Handle a batch of [[Notice]] messages received by this actor.
+     *
+     *  @param stack
+     *    the batch notice stack containing all received [[Notice]] messages
+     *  @return
+     *    [[StackYield]] — [[StackYield]] returned by [[Stack.suspend]] to yield with a state, or by
+     *    [[BatchNoticeStack.return]] to complete
+     */
+    protected def resumeBatchNotice(stack: BatchNoticeStack[M & Notice]): StackYield =
+        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
+
+    /** Handle a batch of [[Ask]] messages received by this actor.
+     *
+     *  @param stack
+     *    the batch ask stack containing all received [[Ask]] messages
+     *  @return
+     *    [[StackYield]] — [[StackYield]] returned by [[Stack.suspend]] to yield with a state, or by
+     *    [[BatchAskStack.return]] to complete
+     */
+    protected def resumeBatchAsk(stack: BatchAskStack[M & Ask[? <: Reply]]): StackYield =
+        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
+
+    /** Handle a user-registered timeout event.
+     *
+     *  @param timeoutEvent
+     *    the timeout event
+     */
+    protected def handleActorTimeout(timeoutEvent: TimeoutEvent): Unit = {}
+
+    // =========================================================================
+    // Section 3: USER CONFIGURATION
+    // Override these to configure actor behavior.
+    // =========================================================================
+
+    /** Whether this actor supports batch message processing. When true, the [[ActorSystem]] dispatches multiple
+     *  messages to [[receiveBatchNotice]] / [[receiveBatchAsk]] instead of individual [[receiveNotice]] /
+     *  [[receiveAsk]].
+     */
+    def batchable: Boolean = false
+
+    /** Maximum number of messages per batch. Used by the scheduling system. */
+    def maxBatchSize: Int = system.defaultMaxBatchSize
+
+    /** Filter function for batching [[Notice]] messages. Return true to include in batch. */
+    val batchNoticeFilter: Notice => Boolean = TRUE_FUNC
+
+    /** Filter function for batching [[Ask]] messages. Return true to include in batch. */
+    val batchAskFilter: Ask[?] => Boolean = TRUE_FUNC
+
+    // =========================================================================
+    // Section 4: USER UTILITIES
+    // Protected helper methods available to subclasses.
+    // =========================================================================
+
+    /** Self address of this actor instance. */
     def self: Address[M] = context.address.asInstanceOf[Address[M]]
 
-    /** This method will called by [[ActorSystem]] when actor mount to actor system, when a actor is creating, the
-     *  [[ActorSystem]] will create a [[ActorContext]]. When mount actor instance to actor system, use this method to
-     *  set system context information.
-     *
-     *  @param context
-     *    the context of this actor
+    final override def context: ActorContext = house
+
+    /** Send a [[Notice]] to self, placing it at the head of the notice mailbox (highest priority within notices).
+     *  Useful for self-triggered processing that should be handled before other pending notices.
      */
-    final private[core] def setCtx(context: ActorHouse): Unit = {
-        ctx = context
-        logger = Logger.getLogger(getClass, ctx.system)
+    protected final def noticeSelfHead(call: Notice & M): Unit = {
+        val envelope = Envelope[Notice & M]()
+        envelope.setContent(call)
+        house.address.asInstanceOf[PhysicalAddress[M]].house.putCallToHead(envelope)
     }
 
-    final override def context: ActorContext = ctx
+    // =========================================================================
+    // Section 5: KERNEL DISPATCH ENGINE
+    // All methods below are private[core] or private — internal to the framework.
+    // =========================================================================
+
+    // --- Kernel: Lifecycle wiring ---
+
+    /** This method is called by [[ActorSystem]] when the actor is mounted. Injects the [[ActorHouse]] context and
+     *  initializes the logger.
+     *
+     *  @param context
+     *    the ActorHouse managing this actor
+     */
+    final private[core] def setCtx(context: ActorHouse): Unit = {
+        house = context
+        logger = Logger.getLogger(getClass, house.system)
+    }
 
     final private[core] def mount(): Unit = try {
         this.afterMount()
@@ -66,16 +204,15 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         case t: Throwable => logger.error("afterMount error with", t)
     }
 
-    protected final def noticeSelfHead(call: Notice & M): Unit = {
-        val envelope = Envelope[Notice & M]()
-        envelope.setContent(call)
-        ctx.address.asInstanceOf[PhysicalAddress[M]].house.putCallToHead(envelope)
-    }
+    private[core] def generateSendMessageId(): Long = house.generateSendMessageId()
 
-    /** When this actor send ask message to other actor, a [[Future]] will attach to current stack
+    // --- Kernel: Future/Promise wiring ---
+
+    /** When this actor sends an ask message to another actor, this method binds the resulting [[Future]] to the
+     *  current stack so the stack can be resumed when the reply arrives.
      *
      *  @param askId
-     *    message id of ask message send to other actor
+     *    message id of the ask message sent to the other actor
      *  @param future
      *    the reply message future for this ask message
      */
@@ -87,22 +224,18 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentStack.addUncompletedPromise(promise)
         promise match
             case promise: MessagePromise[? <: Reply] =>
-                ctx.increaseSendCounter()
+                house.increaseSendCounter()
                 this.push(promise)
             case _ =>
     }
 
-    final private[core] def receiveFuture(future: Future[?]): Unit = {
-        val promise = future.promise.asInstanceOf[AbstractPromise[?]]
-        val stack   = future.promise.actorStack
-        handlePromiseCompleted(stack, promise)
-    }
+    // --- Kernel: Entry points (called by ActorHouse) ---
 
     final override private[core] def receiveNotice(envelope: Envelope[?]): Unit = {
         val notice = envelope.message.asInstanceOf[Notice]
         currentReceived = notice
         envelope.recycle()
-        val stack = NoticeStack[M & Notice](this) // generate a NoticeStack instance from object pool.
+        val stack = NoticeStack[M & Notice](this)
         stack.setNotice(notice)
         dispatchNoticeStack(stack)
         currentReceived = null
@@ -110,7 +243,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
 
     final override private[core] def receiveBatchNotice(notices: Seq[Notice]): Unit = {
         currentReceived = notices
-        val stack = BatchNoticeStack[M & Notice](this) // generate a BatchNoticeStack instance from object pool.
+        val stack = BatchNoticeStack[M & Notice](this)
         stack.setNotices(notices)
         dispatchBatchNoticeStack(stack)
         currentReceived = null
@@ -119,7 +252,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     final override private[core] def receiveAsk(envelope: Envelope[?]): Unit = {
         val ask = envelope.message.asInstanceOf[Ask[?]]
         currentReceived = ask
-        val stack = AskStack[M & Ask[? <: Reply]](this) // generate a AskStack instance from object pool.
+        val stack = AskStack[M & Ask[? <: Reply]](this)
         stack.setAsk(envelope)
         envelope.recycle()
         dispatchAskStack(stack)
@@ -128,7 +261,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
 
     final override private[core] def receiveBatchAsk(asks: Seq[Envelope[Ask[?]]]): Unit = {
         currentReceived = asks
-        val stack = BatchAskStack[M & Ask[?]](this) // generate a BatchAskStack instance from object pool.
+        val stack = BatchAskStack[M & Ask[?]](this)
         stack.setAsks(asks)
         dispatchBatchAskStack(stack)
         currentReceived = null
@@ -194,6 +327,14 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         case event: ReactorEvent        => receiveReactorEvent(event)
         case _                          =>
     }
+
+    final private[core] def receiveFuture(future: Future[?]): Unit = {
+        val promise = future.promise.asInstanceOf[AbstractPromise[?]]
+        val stack   = future.promise.actorStack
+        handlePromiseCompleted(stack, promise)
+    }
+
+    // --- Kernel: Internal dispatch ---
 
     private def dispatchNoticeStack(stack: NoticeStack[M & Notice]): Unit = {
         currentStack = stack
@@ -269,6 +410,8 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         }
     }
 
+    // --- Kernel: State machine & pooling ---
+
     final private[core] def switchState(stack: Stack, stackYield: StackYield): Unit =
         if (!stackYield.completed) {
             val oldState = stack.state
@@ -284,6 +427,12 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
             if (!stack.isInstanceOf[ChannelStack[?]]) recycleStack(stack) // recycle stack instance.
         }
 
+    final private[core] def recycleStack(stack: Stack): Unit = {
+        if (stack.hasUncompletedPromise) recycleUncompletedPromise(stack.uncompletedPromises())
+        stack.recycle()
+        if (house.isBarrier) house.cleanBarrier()
+    }
+
     private def recycleUncompletedPromise(uncompleted: PromiseIterator): Unit = while (uncompleted.hasNext) {
         val promise = uncompleted.next()
 
@@ -298,19 +447,22 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
 
     }
 
-    final private[core] def recycleStack(stack: Stack): Unit = {
-        if (stack.hasUncompletedPromise) recycleUncompletedPromise(stack.uncompletedPromises())
-        stack.recycle()
-        if (ctx.isBarrier) ctx.cleanBarrier()
+    inline private def recycleStackState(state: StackState): Unit = state match {
+        case state: Poolable => state.recycle()
+        case _               => // gc
     }
 
-    /** Exception handler when this actor received notice message or resume notice stack frame
-     *
-     *  @param e
-     *    exception
-     */
-    private[core] def handleNoticeException(stack: Stack, e: Throwable): Unit = { // TODO: refactor
+    // --- Kernel: Exception handling ---
 
+    /** Exception handler when this actor encounters an unhandled exception while processing a notice or resuming a
+     *  notice stack frame.
+     *
+     *  @param stack
+     *    the stack that caused the exception
+     *  @param e
+     *    the exception
+     */
+    private[core] def handleNoticeException(stack: Stack, e: Throwable): Unit = {
         val log = stack match
             case s: NoticeStack[?] => s"Stack with call message ${s.notice} failed at handle $currentReceived message"
             case s: BatchNoticeStack[?] =>
@@ -334,12 +486,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
                 system.shutdown()
     }
 
-    inline private def recycleStackState(state: StackState): Unit = state match {
-        case state: Poolable => state.recycle()
-        case _               => // gc
-    }
-
-    //// ============= ChannelsActor API =================
+    // --- Kernel: ChannelsActor stubs ---
 
     private[core] def dispatchChannelStack(stack: ChannelStack[?]): Unit
 
@@ -352,62 +499,10 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
 
     private[core] def receiveChannelTimeoutEvent(event: ChannelTimeoutEvent): Unit = {}
 
-    //// ================= USER API =======================
-
-    // ------------ continue interface ---------------
-
-    /** implement this method to handle ask message and resume when received reply message for this notice message
-     *
-     *  @param stack
-     *    ask message received by this actor instance, or resume frame .
-     *  @return
-     *    an option value containing the resumable [[StackState]] waited for some reply message, or `None` if the stack
-     *    frame has finished.
-     */
-    protected def resumeAsk(stack: AskStack[M & Ask[? <: Reply]]): StackYield =
-        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
-
-    /** implement this method to handle notice message and resume when received reply message for this notice message
-     *
-     *  @param stack
-     *    notice message receive by this actor instance, or resume frame .
-     *  @return
-     *    an option value containing the resumable [[StackState]] waited for some reply message, or `None` if the stack
-     *    frame has finished.
-     */
-    protected def resumeNotice(stack: NoticeStack[M & Notice]): StackYield =
-        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
-
-    /** whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to
-     *  receiveBatchXXX method
-     */
-    def batchable: Boolean = false
-
-    /** max size message for each batch, usage for schedule system */
-    def maxBatchSize: Int = system.defaultMaxBatchSize
-
-    val batchNoticeFilter: Notice => Boolean = TURE_FUNC
-
-    val batchAskFilter: Ask[?] => Boolean = TURE_FUNC
-
-    protected def resumeBatchNotice(stack: BatchNoticeStack[M & Notice]): StackYield =
-        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
-
-    protected def resumeBatchAsk(stack: BatchAskStack[M & Ask[? <: Reply]]): StackYield =
-        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
-
-    /** handle user registered timeout event.
-     *
-     *  @param timeoutEvent
-     *    event
-     */
-    protected def handleActorTimeout(timeoutEvent: TimeoutEvent): Unit = {}
-
 }
 
 private object AbstractActor {
 
-    private val TURE_FUNC: AnyRef => Boolean  = _ => true
-    private val FALSE_FUNC: AnyRef => Boolean = _ => false
+    private val TRUE_FUNC: AnyRef => Boolean = _ => true
 
 }

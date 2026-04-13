@@ -20,6 +20,15 @@ import cc.otavia.core.address.ActorAddress
 import cc.otavia.core.message.Call
 import cc.otavia.core.stack.ChannelStack
 
+/** Pure business logic actor with no IO capabilities. Scheduled in Phase 3 of the [[ActorThread]] event loop with a
+ *  time budget, ensuring fair scheduling among many business actors.
+ *
+ *  Override [[resumeAsk]] and/or [[resumeNotice]] to handle messages. Do NOT use this actor for direct network IO —
+ *  use [[ChannelsActor]] or its subclasses instead.
+ *
+ *  @tparam M
+ *    the type of messages this actor can handle
+ */
 abstract class StateActor[M <: Call] extends AbstractActor[M] {
 
     /** self address of this actor instance

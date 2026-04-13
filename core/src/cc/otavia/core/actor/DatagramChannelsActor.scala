@@ -21,6 +21,11 @@ import cc.otavia.core.message.Call
 
 import scala.language.unsafeNulls
 
+/** UDP datagram channel actor. Creates and manages datagram (UDP) channels via the system's channel factory.
+ *
+ *  @tparam M
+ *    the type of messages this actor can handle
+ */
 abstract class DatagramChannelsActor[M <: Call] extends ChannelsActor[M] {
     override protected def newChannel(): Channel = system.channelFactory.openDatagramChannel(family)
 

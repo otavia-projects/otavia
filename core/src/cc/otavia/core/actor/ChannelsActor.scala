@@ -31,6 +31,16 @@ import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
+/** IO-capable actor that manages [[Channel]] instances. Scheduled in Phase 2 of the [[ActorThread]] event loop and
+ *  always '''fully drained''' (no time budget), ensuring IO responsiveness is never starved.
+ *
+ *  In addition to the standard message handling via [[resumeAsk]] / [[resumeNotice]], ChannelsActor provides
+ *  [[resumeChannelStack]] for processing channel-level IO stacks, and lifecycle hooks like [[afterChannelClosed]] and
+ *  [[afterChannelRegistered]] for channel events.
+ *
+ *  @tparam M
+ *    the type of messages this actor can handle
+ */
 abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
     private var channelCursor                  = 0

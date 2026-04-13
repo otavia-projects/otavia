@@ -27,16 +27,25 @@ import cc.otavia.core.stack.helper.{ChannelFutureState, StartState}
 
 import java.net.{InetAddress, InetSocketAddress, SocketAddress}
 
+/** TCP socket channel actor. Provides connect operations and manages TCP socket channels.
+ *
+ *  Subclasses implement [[afterConnected]] to handle successful connections, and override [[Connect]] handling via
+ *  [[resumeAsk]]. The [[connect]] method family supports both stack-based (suspend/resume) and direct (future-based)
+ *  connection patterns.
+ *
+ *  @tparam M
+ *    the type of messages this actor can handle
+ */
 // TODO: auto release channel when the actor gc
 abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
 
     /** Request to connect to the given [[SocketAddress]]. This method return a channel which is not connected to the
      *  remote address, it only registers this channel to [[Reactor]], when register operation completes, this actor will
-     *  receive a [[ReactorEvent.RegisterReply]] event, then this actor will call [[afterChannelRegisterReplyEvent]] to
+     *  receive a [[ReactorEvent.RegisterReply]] event, then this actor will call [[afterChannelRegistered]] to
      *  handle register result and connect to remote address.
      *
      *  @param stack
-     *    remote address to connect.
+     *    the ask stack containing the [[Connect]] request.
      *  @return
      *    a [[ChannelEstablished]] which is registering to [[Reactor]].
      */
