@@ -111,11 +111,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>implement this method to handle notice message and resume when received reply message for this notice message</p>
+             <p>Handle a <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> message received by this actor, or resume a suspended stack when the awaited reply arrives.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>implement this method to handle notice message and resume when received reply message for this notice message</p>
+              <p>Handle a <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> message received by this actor, or resume a suspended stack when the awaited reply arrives.</p>
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
@@ -123,7 +123,7 @@ node5 -> node2;
                stack
               </dt>
               <dd class="body-medium">
-               <p>notice message receive by this actor instance, or resume frame .</p>
+               <p>the notice stack containing the received <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> message and current execution state</p>
               </dd>
              </dl>
              <h2 class="h200">Attributes</h2>
@@ -132,7 +132,7 @@ node5 -> node2;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>an option value containing the resumable <span data-unresolved-link="" title="Problem linking StackState: Couldn't resolve a member for the given link query">StackState</span> waited for some reply message, or <code>None</code> if the stack frame has finished.</p>
+               <p><span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> — <span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> returned by <span data-unresolved-link="" title="Problem linking Stack.suspend: Couldn't resolve a member for the given link query">Stack.suspend</span> to yield with a state, or by <span data-unresolved-link="" title="Problem linking NoticeStack.return: Couldn't resolve a member for the given link query">NoticeStack.return</span> to complete</p>
               </dd>
               <dt class="body-small">
                Definition Classes
@@ -272,11 +272,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to receiveBatchXXX method</p>
+             <p>Whether this actor supports batch message processing. When true, the <span data-unresolved-link="" title="Problem linking ActorSystem: Couldn't resolve a member for the given link query">ActorSystem</span> dispatches multiple messages to <span data-unresolved-link="">receiveBatchNotice</span> / <span data-unresolved-link="">receiveBatchAsk</span> instead of individual <span data-unresolved-link="">receiveNotice</span> / <span data-unresolved-link="">receiveAsk</span>.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to receiveBatchXXX method</p>
+              <p>Whether this actor supports batch message processing. When true, the <span data-unresolved-link="" title="Problem linking ActorSystem: Couldn't resolve a member for the given link query">ActorSystem</span> dispatches multiple messages to <span data-unresolved-link="">receiveBatchNotice</span> / <span data-unresolved-link="">receiveBatchAsk</span> instead of individual <span data-unresolved-link="">receiveNotice</span> / <span data-unresolved-link="">receiveAsk</span>.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -350,11 +350,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>max size message for each batch, usage for schedule system</p>
+             <p>Maximum number of messages per batch. Used by the scheduling system.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>max size message for each batch, usage for schedule system</p>
+              <p>Maximum number of messages per batch. Used by the scheduling system.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -572,8 +572,13 @@ node5 -> node2;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Filter function for batching <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> messages. Return true to include in batch.</p>
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Filter function for batching <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> messages. Return true to include in batch.</p>
+             </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -602,8 +607,13 @@ node5 -> node2;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Filter function for batching <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> messages. Return true to include in batch.</p>
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Filter function for batching <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> messages. Return true to include in batch.</p>
+             </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">

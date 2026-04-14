@@ -43,8 +43,23 @@
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Worker actor in the acceptor-worker pattern. Receives <a href="actor/AcceptorActor$$AcceptedChannel.html">AcceptorActor.AcceptedChannel</a> messages from an <a href="actor/AcceptorActor.html">AcceptorActor</a> and manages the lifecycle of accepted channels (mount, initialize, register).</p>
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Worker actor in the acceptor-worker pattern. Receives <a href="actor/AcceptorActor$$AcceptedChannel.html">AcceptorActor.AcceptedChannel</a> messages from an <a href="actor/AcceptorActor.html">AcceptorActor</a> and manages the lifecycle of accepted channels (mount, initialize, register).</p>
+              <p>Override <a href="actor/AcceptedWorkerActor.html#afterAccepted-fffff1e9">afterAccepted</a> to handle successfully registered channels, and <span data-unresolved-link="">resumeAsk</span> to process <a href="actor/AcceptorActor$$AcceptedChannel.html">AcceptorActor.AcceptedChannel</a> alongside other message types.</p>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               M
+              </dt>
+              <dd class="body-medium">
+               <p>the type of messages this actor can handle alongside <a href="actor/AcceptorActor$$AcceptedChannel.html">AcceptorActor.AcceptedChannel</a></p>
+              </dd>
+             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -89,8 +104,23 @@
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>TCP server acceptor actor implementing the acceptor-worker pattern. Binds to a <span data-unresolved-link="" title="Problem linking SocketAddress: Couldn't resolve a member for the given link query">SocketAddress</span> and accepts incoming TCP connections, then distributes them to a pool of <a href="actor/AcceptedWorkerActor.html">AcceptedWorkerActor</a> instances.</p>
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>TCP server acceptor actor implementing the acceptor-worker pattern. Binds to a <span data-unresolved-link="" title="Problem linking SocketAddress: Couldn't resolve a member for the given link query">SocketAddress</span> and accepts incoming TCP connections, then distributes them to a pool of <a href="actor/AcceptedWorkerActor.html">AcceptedWorkerActor</a> instances.</p>
+              <p>The acceptor creates a server socket channel via <span data-unresolved-link="">newChannel</span>, binds it via the <span data-unresolved-link="">bind</span> method, and handles accepted channels by forwarding them as <span data-unresolved-link="" title="Problem linking AcceptedChannel: Couldn't resolve a member for the given link query">AcceptedChannel</span> messages to workers. Workers are created at mount time using the provided <span data-unresolved-link="">workerFactory</span>.</p>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               W
+              </dt>
+              <dd class="body-medium">
+               <p>the worker actor type that handles accepted channels</p>
+              </dd>
+             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -199,14 +229,14 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>base class of IO &amp; Actor model, it has two subclass</p>
+             <p>Base trait of the actor model. It has two concrete subclasses:</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>base class of IO &amp; Actor model, it has two subclass</p>
+              <p>Base trait of the actor model. It has two concrete subclasses:</p>
               <ol>
-               <li><a href="actor/StateActor.html">cc.otavia.core.actor.StateActor</a>: general actor</li>
-               <li><a href="actor/ChannelsActor.html">cc.otavia.core.actor.ChannelsActor</a>: socket group, a actor which can handle io event</li>
+               <li><a href="actor/StateActor.html">cc.otavia.core.actor.StateActor</a>: pure business logic actor</li>
+               <li><a href="actor/ChannelsActor.html">cc.otavia.core.actor.ChannelsActor</a>: IO-capable actor that manages Channel instances</li>
               </ol>
              </div>
              <h2 class="h200">Type parameters</h2>
@@ -215,7 +245,7 @@
                M
               </dt>
               <dd class="body-medium">
-               <p>the type of message of this actor can handle</p>
+               <p>the type of messages this actor can handle</p>
               </dd>
              </dl>
              <h2 class="h200">Attributes</h2>
@@ -508,8 +538,23 @@
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>IO-capable actor that manages <span data-unresolved-link="" title="Problem linking Channel: Couldn't resolve a member for the given link query">Channel</span> instances. Scheduled in Phase 2 of the <span data-unresolved-link="" title="Problem linking ActorThread: Couldn't resolve a member for the given link query">ActorThread</span> event loop and always '''fully drained''' (no time budget), ensuring IO responsiveness is never starved.</p>
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>IO-capable actor that manages <span data-unresolved-link="" title="Problem linking Channel: Couldn't resolve a member for the given link query">Channel</span> instances. Scheduled in Phase 2 of the <span data-unresolved-link="" title="Problem linking ActorThread: Couldn't resolve a member for the given link query">ActorThread</span> event loop and always '''fully drained''' (no time budget), ensuring IO responsiveness is never starved.</p>
+              <p>In addition to the standard message handling via <span data-unresolved-link="">resumeAsk</span> / <span data-unresolved-link="">resumeNotice</span>, ChannelsActor provides <span data-unresolved-link="">resumeChannelStack</span> for processing channel-level IO stacks, and lifecycle hooks like <span data-unresolved-link="">afterChannelClosed</span> and <span data-unresolved-link="">afterChannelRegistered</span> for channel events.</p>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               M
+              </dt>
+              <dd class="body-medium">
+               <p>the type of messages this actor can handle</p>
+              </dd>
+             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -633,8 +678,22 @@
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>UDP datagram channel actor. Creates and manages datagram (UDP) channels via the system's channel factory.</p>
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>UDP datagram channel actor. Creates and manages datagram (UDP) channels via the system's channel factory.</p>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               M
+              </dt>
+              <dd class="body-medium">
+               <p>the type of messages this actor can handle</p>
+              </dd>
+             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -731,8 +790,23 @@
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Application entry point actor. Automatically sends command-line arguments as an <span data-unresolved-link="" title="Problem linking Args: Couldn't resolve a member for the given link query">Args</span> notice to self on mount.</p>
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Application entry point actor. Automatically sends command-line arguments as an <span data-unresolved-link="" title="Problem linking Args: Couldn't resolve a member for the given link query">Args</span> notice to self on mount.</p>
+              <p>Subclasses implement <a href="actor/MainActor.html#main0-763">main0</a> to define the application logic. Note that <a href="actor/MainActor.html#afterMount-94c">afterMount</a> is finalized to inject the args-sending behavior — override <span data-unresolved-link="">afterMount0</span> instead for custom mount-time initialization.</p>
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               args
+              </dt>
+              <dd class="body-medium">
+               <p>command-line arguments passed to the application</p>
+              </dd>
+             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -840,8 +914,23 @@
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>TCP socket channel actor. Provides connect operations and manages TCP socket channels.</p>
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>TCP socket channel actor. Provides connect operations and manages TCP socket channels.</p>
+              <p>Subclasses implement <span data-unresolved-link="">afterConnected</span> to handle successful connections, and override <span data-unresolved-link="" title="Problem linking Connect: Couldn't resolve a member for the given link query">Connect</span> handling via <span data-unresolved-link="">resumeAsk</span>. The <span data-unresolved-link="">connect</span> method family supports both stack-based (suspend/resume) and direct (future-based) connection patterns.</p>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               M
+              </dt>
+              <dd class="body-medium">
+               <p>the type of messages this actor can handle</p>
+              </dd>
+             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -949,8 +1038,23 @@
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Pure business logic actor with no IO capabilities. Scheduled in Phase 3 of the <span data-unresolved-link="" title="Problem linking ActorThread: Couldn't resolve a member for the given link query">ActorThread</span> event loop with a time budget, ensuring fair scheduling among many business actors.</p>
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Pure business logic actor with no IO capabilities. Scheduled in Phase 3 of the <span data-unresolved-link="" title="Problem linking ActorThread: Couldn't resolve a member for the given link query">ActorThread</span> event loop with a time budget, ensuring fair scheduling among many business actors.</p>
+              <p>Override <span data-unresolved-link="">resumeAsk</span> and/or <span data-unresolved-link="">resumeNotice</span> to handle messages. Do NOT use this actor for direct network IO — use <a href="actor/ChannelsActor.html">ChannelsActor</a> or its subclasses instead.</p>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               M
+              </dt>
+              <dd class="body-medium">
+               <p>the type of messages this actor can handle</p>
+              </dd>
+             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">

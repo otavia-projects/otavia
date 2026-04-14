@@ -15,10 +15,10 @@
 </div>
 <div class="cover">
  <div class="doc">
-  <p>base class of IO &amp; Actor model, it has two subclass</p>
+  <p>Base trait of the actor model. It has two concrete subclasses:</p>
   <ol>
-   <li><a href="StateActor.html">cc.otavia.core.actor.StateActor</a>: general actor</li>
-   <li><a href="ChannelsActor.html">cc.otavia.core.actor.ChannelsActor</a>: socket group, a actor which can handle io event</li>
+   <li><a href="StateActor.html">cc.otavia.core.actor.StateActor</a>: pure business logic actor</li>
+   <li><a href="ChannelsActor.html">cc.otavia.core.actor.ChannelsActor</a>: IO-capable actor that manages Channel instances</li>
   </ol>
  </div>
  <section id="attributes">
@@ -28,7 +28,7 @@
     M
    </dt>
    <dd class="body-medium">
-    <p>the type of message of this actor can handle</p>
+    <p>the type of messages this actor can handle</p>
    </dd>
   </dl>
   <h2 class="h500">Attributes</h2>

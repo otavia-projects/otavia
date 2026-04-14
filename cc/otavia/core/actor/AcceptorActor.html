@@ -14,8 +14,20 @@
  </div>
 </div>
 <div class="cover">
- <div class="doc"></div>
+ <div class="doc">
+  <p>TCP server acceptor actor implementing the acceptor-worker pattern. Binds to a <span data-unresolved-link="" title="Problem linking SocketAddress: Couldn't resolve a member for the given link query">SocketAddress</span> and accepts incoming TCP connections, then distributes them to a pool of <a href="AcceptedWorkerActor.html">AcceptedWorkerActor</a> instances.</p>
+  <p>The acceptor creates a server socket channel via <span data-unresolved-link="">newChannel</span>, binds it via the <span data-unresolved-link="">bind</span> method, and handles accepted channels by forwarding them as <span data-unresolved-link="" title="Problem linking AcceptedChannel: Couldn't resolve a member for the given link query">AcceptedChannel</span> messages to workers. Workers are created at mount time using the provided <span data-unresolved-link="">workerFactory</span>.</p>
+ </div>
  <section id="attributes">
+  <h2 class="h500">Type parameters</h2>
+  <dl class="attributes">
+   <dt class="body-small">
+    W
+   </dt>
+   <dd class="body-medium">
+    <p>the worker actor type that handles accepted channels</p>
+   </dd>
+  </dl>
   <h2 class="h500">Attributes</h2>
   <dl class="attributes">
    <dt class="body-small">
@@ -148,11 +160,24 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>implement this method to handle ask message and resume when received reply message for this notice message</p>
+             <p>Handle an <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> message received by this actor, or resume a suspended stack when the awaited reply arrives.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>implement this method to handle ask message and resume when received reply message for this notice message</p>
+              <p>Handle an <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> message received by this actor, or resume a suspended stack when the awaited reply arrives.</p>
+              <p>Match on <span data-unresolved-link="" title="Problem linking stack.state: Couldn't resolve a member for the given link query">stack.state</span> to determine the current execution point:</p>
+              <div class="snippet mono-small-block">
+               <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span>override protected def resumeAsk(stack: AskStack[MyAsk]): StackYield =
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  stack.state match
+</span><span line-number="3" class=""><span class="tooltip-container"></span>    case _: StartState =&gt;
+</span><span line-number="4" class=""><span class="tooltip-container"></span>      val state = FutureState[MyReply]()
+</span><span line-number="5" class=""><span class="tooltip-container"></span>      address.ask(MyRequest(), state.future)
+</span><span line-number="6" class=""><span class="tooltip-container"></span>      stack.suspend(state)
+</span><span line-number="7" class=""><span class="tooltip-container"></span>    case state: FutureState[MyReply] =&gt;
+</span><span line-number="8" class=""><span class="tooltip-container"></span>      stack.return(state.future.getNow)
+</span></code></pre>
+               <div class="buttons"></div>
+              </div>
              </div>
              <h2 class="h200">Value parameters</h2>
              <dl class="attributes attributes-small">
@@ -160,7 +185,7 @@ node5 -> node2;
                stack
               </dt>
               <dd class="body-medium">
-               <p>ask message received by this actor instance, or resume frame .</p>
+               <p>the ask stack containing the received <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> message and current execution state</p>
               </dd>
              </dl>
              <h2 class="h200">Attributes</h2>
@@ -169,7 +194,7 @@ node5 -> node2;
                Returns
               </dt>
               <dd class="body-medium">
-               <p>an option value containing the resumable <span data-unresolved-link="" title="Problem linking StackState: Couldn't resolve a member for the given link query">StackState</span> waited for some reply message, or <code>None</code> if the stack frame has finished.</p>
+               <p><span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> — <span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> returned by <span data-unresolved-link="" title="Problem linking Stack.suspend: Couldn't resolve a member for the given link query">Stack.suspend</span> to yield with a state, or by <span data-unresolved-link="" title="Problem linking AskStack.return: Couldn't resolve a member for the given link query">AskStack.return</span> to complete with a reply</p>
               </dd>
               <dt class="body-small">
                Definition Classes
@@ -371,11 +396,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to receiveBatchXXX method</p>
+             <p>Whether this actor supports batch message processing. When true, the <span data-unresolved-link="" title="Problem linking ActorSystem: Couldn't resolve a member for the given link query">ActorSystem</span> dispatches multiple messages to <span data-unresolved-link="">receiveBatchNotice</span> / <span data-unresolved-link="">receiveBatchAsk</span> instead of individual <span data-unresolved-link="">receiveNotice</span> / <span data-unresolved-link="">receiveAsk</span>.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to receiveBatchXXX method</p>
+              <p>Whether this actor supports batch message processing. When true, the <span data-unresolved-link="" title="Problem linking ActorSystem: Couldn't resolve a member for the given link query">ActorSystem</span> dispatches multiple messages to <span data-unresolved-link="">receiveBatchNotice</span> / <span data-unresolved-link="">receiveBatchAsk</span> instead of individual <span data-unresolved-link="">receiveNotice</span> / <span data-unresolved-link="">receiveAsk</span>.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -509,11 +534,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>max size message for each batch, usage for schedule system</p>
+             <p>Maximum number of messages per batch. Used by the scheduling system.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>max size message for each batch, usage for schedule system</p>
+              <p>Maximum number of messages per batch. Used by the scheduling system.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -634,11 +659,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>self address of this actor instance</p>
+             <p>Self address of this actor instance.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>self address of this actor instance</p>
+              <p>Self address of this actor instance.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -755,8 +780,13 @@ node5 -> node2;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Filter function for batching <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> messages. Return true to include in batch.</p>
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Filter function for batching <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> messages. Return true to include in batch.</p>
+             </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -785,8 +815,13 @@ node5 -> node2;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Filter function for batching <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> messages. Return true to include in batch.</p>
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Filter function for batching <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> messages. Return true to include in batch.</p>
+             </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -808,4 +843,4 @@ node5 -> node2;
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li><li><a href="#Inherited-fields">Inherited fields</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Type parameters</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li><li><a href="#Inherited-fields">Inherited fields</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

@@ -11,8 +11,20 @@
  </div>
 </div>
 <div class="cover">
- <div class="doc"></div>
+ <div class="doc">
+  <p>Worker actor in the acceptor-worker pattern. Receives <a href="AcceptorActor$$AcceptedChannel.html">AcceptorActor.AcceptedChannel</a> messages from an <a href="AcceptorActor.html">AcceptorActor</a> and manages the lifecycle of accepted channels (mount, initialize, register).</p>
+  <p>Override <a href="AcceptedWorkerActor.html#afterAccepted-fffff1e9">afterAccepted</a> to handle successfully registered channels, and <span data-unresolved-link="">resumeAsk</span> to process <a href="AcceptorActor$$AcceptedChannel.html">AcceptorActor.AcceptedChannel</a> alongside other message types.</p>
+ </div>
  <section id="attributes">
+  <h2 class="h500">Type parameters</h2>
+  <dl class="attributes">
+   <dt class="body-small">
+    M
+   </dt>
+   <dd class="body-medium">
+    <p>the type of messages this actor can handle alongside <a href="AcceptorActor$$AcceptedChannel.html">AcceptorActor.AcceptedChannel</a></p>
+   </dd>
+  </dl>
   <h2 class="h500">Attributes</h2>
   <dl class="attributes">
    <dt class="body-small">
@@ -315,11 +327,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to receiveBatchXXX method</p>
+             <p>Whether this actor supports batch message processing. When true, the <span data-unresolved-link="" title="Problem linking ActorSystem: Couldn't resolve a member for the given link query">ActorSystem</span> dispatches multiple messages to <span data-unresolved-link="">receiveBatchNotice</span> / <span data-unresolved-link="">receiveBatchAsk</span> instead of individual <span data-unresolved-link="">receiveNotice</span> / <span data-unresolved-link="">receiveAsk</span>.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>whether this actor is a batch actor, if override it to true, actor system will dispatch seq message to receiveBatchXXX method</p>
+              <p>Whether this actor supports batch message processing. When true, the <span data-unresolved-link="" title="Problem linking ActorSystem: Couldn't resolve a member for the given link query">ActorSystem</span> dispatches multiple messages to <span data-unresolved-link="">receiveBatchNotice</span> / <span data-unresolved-link="">receiveBatchAsk</span> instead of individual <span data-unresolved-link="">receiveNotice</span> / <span data-unresolved-link="">receiveAsk</span>.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -453,11 +465,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>max size message for each batch, usage for schedule system</p>
+             <p>Maximum number of messages per batch. Used by the scheduling system.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>max size message for each batch, usage for schedule system</p>
+              <p>Maximum number of messages per batch. Used by the scheduling system.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -578,11 +590,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>self address of this actor instance</p>
+             <p>Self address of this actor instance.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>self address of this actor instance</p>
+              <p>Self address of this actor instance.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -699,8 +711,13 @@ node5 -> node2;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Filter function for batching <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> messages. Return true to include in batch.</p>
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Filter function for batching <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> messages. Return true to include in batch.</p>
+             </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -729,8 +746,13 @@ node5 -> node2;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Filter function for batching <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> messages. Return true to include in batch.</p>
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Filter function for batching <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> messages. Return true to include in batch.</p>
+             </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -752,4 +774,4 @@ node5 -> node2;
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li><li><a href="#Inherited-fields">Inherited fields</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Type parameters</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li><li><a href="#Inherited-fields">Inherited fields</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
