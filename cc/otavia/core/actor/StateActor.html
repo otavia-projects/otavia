@@ -13,7 +13,7 @@
 <div class="cover">
  <div class="doc">
   <p>Pure business logic actor with no IO capabilities. Scheduled in Phase 3 of the <span data-unresolved-link="" title="Problem linking ActorThread: Couldn't resolve a member for the given link query">ActorThread</span> event loop with a time budget, ensuring fair scheduling among many business actors.</p>
-  <p>Override <span data-unresolved-link="">resumeAsk</span> and/or <span data-unresolved-link="">resumeNotice</span> to handle messages. Do NOT use this actor for direct network IO — use <a href="ChannelsActor.html">ChannelsActor</a> or its subclasses instead.</p>
+  <p>Override <a href="StateActor.html#resumeAsk-fffff5d6">resumeAsk</a> and/or <a href="StateActor.html#resumeNotice-763">resumeNotice</a> to handle messages. Do NOT use this actor for direct network IO — use <a href="ChannelsActor.html">ChannelsActor</a> or its subclasses instead.</p>
  </div>
  <section id="attributes">
   <h2 class="h500">Type parameters</h2>
@@ -263,7 +263,7 @@ node6 -> node0;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="batchable-0" data-f-inherited="AbstractActor">
+        <div class="documentableElement" id="batchable-0" data-f-inherited="Actor">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
@@ -278,11 +278,11 @@ node6 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Whether this actor supports batch message processing. When true, the <span data-unresolved-link="" title="Problem linking ActorSystem: Couldn't resolve a member for the given link query">ActorSystem</span> dispatches multiple messages to <span data-unresolved-link="">receiveBatchNotice</span> / <span data-unresolved-link="">receiveBatchAsk</span> instead of individual <span data-unresolved-link="">receiveNotice</span> / <span data-unresolved-link="">receiveAsk</span>.</p>
+             <p>Whether this actor supports batch message processing. When true, the <span data-unresolved-link="" title="Problem linking ActorSystem: Couldn't resolve a member for the given link query">ActorSystem</span> dispatches multiple messages in bulk rather than individually.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Whether this actor supports batch message processing. When true, the <span data-unresolved-link="" title="Problem linking ActorSystem: Couldn't resolve a member for the given link query">ActorSystem</span> dispatches multiple messages to <span data-unresolved-link="">receiveBatchNotice</span> / <span data-unresolved-link="">receiveBatchAsk</span> instead of individual <span data-unresolved-link="">receiveNotice</span> / <span data-unresolved-link="">receiveAsk</span>.</p>
+              <p>Whether this actor supports batch message processing. When true, the <span data-unresolved-link="" title="Problem linking ActorSystem: Couldn't resolve a member for the given link query">ActorSystem</span> dispatches multiple messages in bulk rather than individually.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -290,7 +290,7 @@ node6 -> node0;
                Inherited from:
               </dt>
               <dd class="body-medium">
-               <span data-unresolved-link="">AbstractActor (hidden)</span>
+               <a href="Actor.html#batchable-0">Actor</a>
               </dd>
              </dl>
             </div>
@@ -341,7 +341,7 @@ node6 -> node0;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="maxBatchSize-0" data-f-inherited="AbstractActor">
+        <div class="documentableElement" id="maxBatchSize-0" data-f-inherited="Actor">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
@@ -368,7 +368,7 @@ node6 -> node0;
                Inherited from:
               </dt>
               <dd class="body-medium">
-               <span data-unresolved-link="">AbstractActor (hidden)</span>
+               <a href="Actor.html#maxBatchSize-0">Actor</a>
               </dd>
              </dl>
             </div>
@@ -429,6 +429,253 @@ node6 -> node0;
               </dt>
               <dd class="body-medium">
                <a href="Actor.html#nice-0">Actor</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="noticeSelfHead-fffff80c" data-f-visibility="protected" data-f-keywords="final" data-f-inherited="AbstractActor">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">final protected </span></span><span class="kind"><span t="k">def </span></span><a href="StateActor.html#noticeSelfHead-fffff80c" t="n" class="documentableName ">noticeSelfHead</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">call</span>: <a href="../message/Notice.html" t="t">Notice</a><span t="k"> &amp; </span><span t="t">M</span>): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Send a <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> to self, placing it at the head of the notice mailbox (highest priority within notices). Useful for self-triggered processing that should be handled before other pending notices.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Send a <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> to self, placing it at the head of the notice mailbox (highest priority within notices). Useful for self-triggered processing that should be handled before other pending notices.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">AbstractActor (hidden)</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="resumeAsk-fffff5d6" data-f-visibility="protected" data-f-inherited="AbstractActor">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">protected </span></span><span class="kind"><span t="k">def </span></span><a href="StateActor.html#resumeAsk-fffff5d6" t="n" class="documentableName ">resumeAsk</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">stack</span>: <a href="../stack/AskStack.html" t="t">AskStack</a>[<span t="t">M</span><span t="k"> &amp; </span><a href="../message/Ask.html" t="t">Ask</a>[<span t="k">_</span><span t="k"> &lt;: </span><a href="../message/Reply.html" t="t">Reply</a>]]): <a href="../stack/StackYield.html" t="t">StackYield</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Handle an <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> message received by this actor, or resume a suspended stack when the awaited reply arrives. * Match on <span data-unresolved-link="" title="Problem linking stack.state: Couldn't resolve a member for the given link query">stack.state</span> to determine the current execution point:</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Handle an <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> message received by this actor, or resume a suspended stack when the awaited reply arrives. * Match on <span data-unresolved-link="" title="Problem linking stack.state: Couldn't resolve a member for the given link query">stack.state</span> to determine the current execution point:</p>
+              <div class="snippet mono-small-block">
+               <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span>override protected def resumeAsk(stack: AskStack[MyAsk]): StackYield =
+</span><span line-number="2" class=""><span class="tooltip-container"></span>  stack.state match
+</span><span line-number="3" class=""><span class="tooltip-container"></span>    case _: StartState =&gt;
+</span><span line-number="4" class=""><span class="tooltip-container"></span>      val state = FutureState[MyReply]()
+</span><span line-number="5" class=""><span class="tooltip-container"></span>      address.ask(MyRequest(), state.future)
+</span><span line-number="6" class=""><span class="tooltip-container"></span>      stack.suspend(state)
+</span><span line-number="7" class=""><span class="tooltip-container"></span>    case state: FutureState[MyReply] =&gt;
+</span><span line-number="8" class=""><span class="tooltip-container"></span>      stack.return(state.future.getNow)
+</span></code></pre>
+               <div class="buttons"></div>
+              </div>
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               stack
+              </dt>
+              <dd class="body-medium">
+               <p>the ask stack containing the received <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> message and current execution state</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p><span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> — <span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> returned by <span data-unresolved-link="" title="Problem linking Stack.suspend: Couldn't resolve a member for the given link query">Stack.suspend</span> to yield with a state, or by <span data-unresolved-link="" title="Problem linking AskStack.return: Couldn't resolve a member for the given link query">AskStack.return</span> to complete with a reply</p>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">AbstractActor (hidden)</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="resumeBatchAsk-fffffc2a" data-f-visibility="protected" data-f-inherited="AbstractActor">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">protected </span></span><span class="kind"><span t="k">def </span></span><a href="StateActor.html#resumeBatchAsk-fffffc2a" t="n" class="documentableName ">resumeBatchAsk</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">stack</span>: <a href="../stack/BatchAskStack.html" t="t">BatchAskStack</a>[<span t="t">M</span><span t="k"> &amp; </span><a href="../message/Ask.html" t="t">Ask</a>[<span t="k">_</span><span t="k"> &lt;: </span><a href="../message/Reply.html" t="t">Reply</a>]]): <a href="../stack/StackYield.html" t="t">StackYield</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Handle a batch of <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> messages received by this actor.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Handle a batch of <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> messages received by this actor.</p>
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               stack
+              </dt>
+              <dd class="body-medium">
+               <p>the batch ask stack containing all received <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> messages</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p><span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> — <span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> returned by <span data-unresolved-link="" title="Problem linking Stack.suspend: Couldn't resolve a member for the given link query">Stack.suspend</span> to yield with a state, or by <span data-unresolved-link="" title="Problem linking BatchAskStack.return: Couldn't resolve a member for the given link query">BatchAskStack.return</span> to complete</p>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">AbstractActor (hidden)</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="resumeBatchNotice-fffff08f" data-f-visibility="protected" data-f-inherited="AbstractActor">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">protected </span></span><span class="kind"><span t="k">def </span></span><a href="StateActor.html#resumeBatchNotice-fffff08f" t="n" class="documentableName ">resumeBatchNotice</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">stack</span>: <a href="../stack/BatchNoticeStack.html" t="t">BatchNoticeStack</a>[<span t="t">M</span><span t="k"> &amp; </span><a href="../message/Notice.html" t="t">Notice</a>]): <a href="../stack/StackYield.html" t="t">StackYield</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Handle a batch of <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> messages received by this actor.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Handle a batch of <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> messages received by this actor.</p>
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               stack
+              </dt>
+              <dd class="body-medium">
+               <p>the batch notice stack containing all received <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> messages</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p><span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> — <span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> returned by <span data-unresolved-link="" title="Problem linking Stack.suspend: Couldn't resolve a member for the given link query">Stack.suspend</span> to yield with a state, or by <span data-unresolved-link="" title="Problem linking BatchNoticeStack.return: Couldn't resolve a member for the given link query">BatchNoticeStack.return</span> to complete</p>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">AbstractActor (hidden)</span>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="resumeNotice-763" data-f-visibility="protected" data-f-inherited="AbstractActor">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">protected </span></span><span class="kind"><span t="k">def </span></span><a href="StateActor.html#resumeNotice-763" t="n" class="documentableName ">resumeNotice</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">stack</span>: <a href="../stack/NoticeStack.html" t="t">NoticeStack</a>[<span t="t">M</span><span t="k"> &amp; </span><a href="../message/Notice.html" t="t">Notice</a>]): <a href="../stack/StackYield.html" t="t">StackYield</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Handle a <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> message received by this actor, or resume a suspended stack when the awaited reply arrives.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Handle a <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> message received by this actor, or resume a suspended stack when the awaited reply arrives.</p>
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               stack
+              </dt>
+              <dd class="body-medium">
+               <p>the notice stack containing the received <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> message and current execution state</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p><span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> — <span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> returned by <span data-unresolved-link="" title="Problem linking Stack.suspend: Couldn't resolve a member for the given link query">Stack.suspend</span> to yield with a state, or by <span data-unresolved-link="" title="Problem linking NoticeStack.return: Couldn't resolve a member for the given link query">NoticeStack.return</span> to complete</p>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <span data-unresolved-link="">AbstractActor (hidden)</span>
               </dd>
              </dl>
             </div>
@@ -515,7 +762,7 @@ node6 -> node0;
          <button class="icon-button show-content expand"></button>
          <h4 class="groupHeader h200">Inherited fields</h4>
         </div>
-        <div class="documentableElement" id="batchAskFilter-0" data-f-inherited="AbstractActor">
+        <div class="documentableElement" id="batchAskFilter-0" data-f-inherited="Actor">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
@@ -542,7 +789,7 @@ node6 -> node0;
                Inherited from:
               </dt>
               <dd class="body-medium">
-               <span data-unresolved-link="">AbstractActor (hidden)</span>
+               <a href="Actor.html#batchAskFilter-0">Actor</a>
               </dd>
              </dl>
             </div>
@@ -550,7 +797,7 @@ node6 -> node0;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="batchNoticeFilter-0" data-f-inherited="AbstractActor">
+        <div class="documentableElement" id="batchNoticeFilter-0" data-f-inherited="Actor">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
@@ -570,6 +817,41 @@ node6 -> node0;
             <div class="cover">
              <div class="doc">
               <p>Filter function for batching <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> messages. Return true to include in batch.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="Actor.html#batchNoticeFilter-0">Actor</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="logger-0" data-f-visibility="protected" data-f-inherited="AbstractActor">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">protected </span></span><span class="kind"><span t="k">var </span></span><a href="StateActor.html#logger-0" t="n" class="documentableName ">logger</a>: <a href="../slf4a/Logger.html" t="t">Logger</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Logger for this actor instance, initialized during mount.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Logger for this actor instance, initialized during mount.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
