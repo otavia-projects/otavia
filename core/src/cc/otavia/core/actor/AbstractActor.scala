@@ -147,8 +147,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     // =========================================================================
 
     /** Whether this actor supports batch message processing. When true, the [[ActorSystem]] dispatches multiple
-     *  messages to [[receiveBatchNotice]] / [[receiveBatchAsk]] instead of individual [[receiveNotice]] /
-     *  [[receiveAsk]].
+     *  messages in bulk rather than individually.
      */
     def batchable: Boolean = false
 
@@ -206,6 +205,9 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
 
     private[core] def generateSendMessageId(): Long = house.generateSendMessageId()
 
+    /** Check whether the given message should act as a barrier. Delegates to the user-overridable [[isBarrierCall]]. */
+    final private[core] def isBarrier(call: Call): Boolean = isBarrierCall(call)
+
     // --- Kernel: Future/Promise wiring ---
 
     /** When this actor sends an ask message to another actor, this method binds the resulting [[Future]] to the
@@ -231,7 +233,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
 
     // --- Kernel: Entry points (called by ActorHouse) ---
 
-    final override private[core] def receiveNotice(envelope: Envelope[?]): Unit = {
+    final private[core] def receiveNotice(envelope: Envelope[?]): Unit = {
         val notice = envelope.message.asInstanceOf[Notice]
         currentReceived = notice
         envelope.recycle()
@@ -241,7 +243,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentReceived = null
     }
 
-    final override private[core] def receiveBatchNotice(notices: Seq[Notice]): Unit = {
+    final private[core] def receiveBatchNotice(notices: Seq[Notice]): Unit = {
         currentReceived = notices
         val stack = BatchNoticeStack[M & Notice](this)
         stack.setNotices(notices)
@@ -249,7 +251,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentReceived = null
     }
 
-    final override private[core] def receiveAsk(envelope: Envelope[?]): Unit = {
+    final private[core] def receiveAsk(envelope: Envelope[?]): Unit = {
         val ask = envelope.message.asInstanceOf[Ask[?]]
         currentReceived = ask
         val stack = AskStack[M & Ask[? <: Reply]](this)
@@ -259,7 +261,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentReceived = null
     }
 
-    final override private[core] def receiveBatchAsk(asks: Seq[Envelope[Ask[?]]]): Unit = {
+    final private[core] def receiveBatchAsk(asks: Seq[Envelope[Ask[?]]]): Unit = {
         currentReceived = asks
         val stack = BatchAskStack[M & Ask[?]](this)
         stack.setAsks(asks)
@@ -267,7 +269,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentReceived = null
     }
 
-    final override private[core] def receiveReply(envelope: Envelope[?]): Unit = {
+    final private[core] def receiveReply(envelope: Envelope[?]): Unit = {
         if (!envelope.isBatchReply) {
             val reply   = envelope.message.asInstanceOf[Reply]
             val replyId = envelope.replyId
@@ -298,7 +300,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentReceived = null
     }
 
-    override private[core] def receiveExceptionReply(envelope: Envelope[?]): Unit =
+    private[core] def receiveExceptionReply(envelope: Envelope[?]): Unit =
         if (!envelope.isBatchReply) {
             val exceptionMessage = envelope.message.asInstanceOf[ExceptionMessage]
             val replyId          = envelope.replyId
@@ -320,7 +322,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
             }
         }
 
-    final override private[core] def receiveEvent(event: Event): Unit = event match {
+    final private[core] def receiveEvent(event: Event): Unit = event match {
         case event: AskTimeoutEvent     => dispatchAskTimeoutEvent(event)
         case event: TimeoutEvent        => handleActorTimeout(event)
         case event: ChannelTimeoutEvent => receiveChannelTimeoutEvent(event)

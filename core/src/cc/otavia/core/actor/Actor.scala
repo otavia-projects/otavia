@@ -18,8 +18,7 @@ package cc.otavia.core.actor
 
 import cc.otavia.core.actor.Actor.*
 import cc.otavia.core.address.Address
-import cc.otavia.core.message.*
-import cc.otavia.core.reactor.Reactor
+import cc.otavia.core.message.Call
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.Timer
 
@@ -81,63 +80,15 @@ trait Actor[+M <: Call] {
     /** user actor override this to control whether restart when occur exception */
     protected def noticeExceptionStrategy: ExceptionStrategy = ExceptionStrategy.Restart
 
-    // method for receive message
-
-    /** receive notice message by this method, the method will be call when this actor instance receive notice message
-     *  @param envelope
-     *    notice message receive by this actor instance
-     */
-    private[core] def receiveNotice(envelope: Envelope[?]): Unit
-
-    /** receive ask message by this method, the method will be call when this actor instance receive ask message
+    /** Override to mark specific message types as barrier calls. When a barrier message is received, the actor
+     *  pauses processing of subsequent asks/notices until the barrier is resolved (all pending stacks complete).
+     *  This prevents message reordering within the actor.
      *
-     *  @param envelope
-     *    ask message received by this actor instance
+     *  @param call
+     *    the incoming message to check
+     *  @return
+     *    true if this message should act as a barrier
      */
-    private[core] def receiveAsk(envelope: Envelope[?]): Unit
-
-    /** receive reply message by this method, the method will be call when this actor instance receive reply message
-     *
-     *  @param envelope
-     *    reply message receive by this actor instance
-     */
-    private[core] def receiveReply(envelope: Envelope[?]): Unit
-
-    /** receive exception reply message by this method, the method will be call when this actor instance receive
-     *  exception reply message
-     *  @param envelope
-     *    exception reply message receive by this actor instance
-     */
-    private[core] def receiveExceptionReply(envelope: Envelope[?]): Unit
-
-    /** Receive IO event from [[Reactor]] or timeout event from [[Timer]]
-     *  @param event
-     *    IO/timeout event
-     */
-    private[core] def receiveEvent(event: Event): Unit
-
-    /** Receive [[Notice]] messages in bulk from other [[Actor]]s, possibly more than one sending [[Actor]].
-     *
-     *  The [[ActorSystem]] call this method if and only if [[batchable]] is true. Conversely, the [[receiveNotice]]
-     *  method will not be called
-     *
-     *  @param notices
-     *    batch notices message.
-     */
-    private[core] def receiveBatchNotice(notices: Seq[Notice]): Unit
-
-    /** Receive [[Ask]] messages in bulk from other [[Actor]]s, possibly more than one sending [[Actor]].
-     *
-     *  The [[ActorSystem]] call this method if and only if [[batchable]] is true. Conversely, the [[receiveAsk]]
-     *  method will not be called
-     *
-     *  @param asks
-     *    batch ask messages.
-     */
-    private[core] def receiveBatchAsk(asks: Seq[Envelope[Ask[?]]]): Unit
-
-    final private[core] def isBarrier(call: Call): Boolean = isBarrierCall(call)
-
     protected def isBarrierCall(call: Call): Boolean = false
 
     final def autowire[A <: Actor[?]: ClassTag](
