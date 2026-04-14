@@ -64,11 +64,10 @@ trait Actor[+M <: Call] {
     /** Actor system call this method before call restart method */
     protected def beforeRestart(): Unit = {}
 
-    /** When this actor occur not handled exception, the actor system will call this method, if user actor do not
-     *  implement this method, the actor will dead.
+    /** Called during the restart process to reset actor state. Override to clear internal state before resuming
+     *  message processing after an exception.
      */
-    protected def restart(): Unit =
-        throw new NotImplementedError(getClass.getName + ": an implementation is missing: [restart]")
+    protected def restart(): Unit = {}
 
     /** Actor system call this method after call restart */
     protected def afterRestart(): Unit = {}
