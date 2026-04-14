@@ -18,7 +18,7 @@ package cc.otavia.core.actor
 
 import cc.otavia.core.actor.Actor.*
 import cc.otavia.core.address.Address
-import cc.otavia.core.message.Call
+import cc.otavia.core.message.*
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.Timer
 
@@ -72,10 +72,6 @@ trait Actor[+M <: Call] {
     /** Actor system call this method after call restart */
     protected def afterRestart(): Unit = {}
 
-    def maxFetchPerRunning: Int = system.defaultMaxFetchPerRunning
-
-    def nice: Int = 8
-
     /** user actor override this to control whether restart when occur exception */
     protected def noticeExceptionStrategy: ExceptionStrategy = ExceptionStrategy.Restart
 
@@ -89,6 +85,35 @@ trait Actor[+M <: Call] {
      *    true if this message should act as a barrier
      */
     protected def isBarrierCall(call: Call): Boolean = false
+
+    // --- Scheduling configuration ---
+
+    def maxFetchPerRunning: Int = system.defaultMaxFetchPerRunning
+
+    def nice: Int = 8
+
+    /** Whether this actor supports batch message processing. When true, the [[ActorSystem]] dispatches multiple
+     *  messages in bulk rather than individually.
+     */
+    def batchable: Boolean = false
+
+    /** Maximum number of messages per batch. Used by the scheduling system. */
+    def maxBatchSize: Int = system.defaultMaxBatchSize
+
+    /** Filter function for batching [[Notice]] messages. Return true to include in batch. */
+    val batchNoticeFilter: Notice => Boolean = _ => true
+
+    /** Filter function for batching [[Ask]] messages. Return true to include in batch. */
+    val batchAskFilter: Ask[?] => Boolean = _ => true
+
+    // --- Timeout hook ---
+
+    /** Handle a user-registered timeout event.
+     *
+     *  @param timeoutEvent
+     *    the timeout event
+     */
+    protected def handleActorTimeout(timeoutEvent: TimeoutEvent): Unit = {}
 
     final def autowire[A <: Actor[?]: ClassTag](
         qualifier: Option[String] = None,

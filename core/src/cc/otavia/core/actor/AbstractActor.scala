@@ -31,14 +31,10 @@ import scala.language.unsafeNulls
 /** The runtime kernel base class for all actors. It extends [[FutureDispatcher]] for O(1) promise lookup and implements
  *  the [[Actor]] trait.
  *
- *  This class has two distinct layers:
- *
- *  1. '''User Programming Interface''' (protected): Override points like [[resumeAsk]], [[resumeNotice]], and
- *     [[handleActorTimeout]] that users implement to define actor behavior.
- *
- *  1. '''Kernel Dispatch Engine''' (private[core] / private): The stack coroutine machinery that handles message
- *     dispatch, promise management, state machine transitions, and object pooling. Users never interact with this layer
- *     directly.
+ *  This class contains the stack coroutine engine and kernel dispatch machinery. User-facing API (lifecycle hooks,
+ *  scheduling configuration, timeout handler, self address) lives in the [[Actor]] trait. The only user-facing methods
+ *  here are the resume methods ([[resumeAsk]], [[resumeNotice]], etc.) which cannot be moved to [[Actor]] due to the
+ *  `+M` variance constraint.
  *
  *  Users never extend this class directly — use [[StateActor]] for pure business logic or [[ChannelsActor]] for
  *  IO-capable actors.
@@ -47,8 +43,6 @@ import scala.language.unsafeNulls
  *    the type of messages this actor can handle
  */
 private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher with Actor[M] {
-
-    import AbstractActor.*
 
     // =========================================================================
     // Section 1: RUNTIME STATE
@@ -78,8 +72,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     // Override these protected methods to implement actor behavior.
     // =========================================================================
 
-    /** Handle an [[Ask]] message received by this actor, or resume a suspended stack when the awaited reply arrives.
-     *
+    /** Handle an [[Ask]] message received by this actor, or resume a suspended stack when the awaited reply arrives.     *
      *  Match on [[stack.state]] to determine the current execution point:
      *  {{{
      *  override protected def resumeAsk(stack: AskStack[MyAsk]): StackYield =
@@ -134,38 +127,14 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     protected def resumeBatchAsk(stack: BatchAskStack[M & Ask[? <: Reply]]): StackYield =
         throw new NotImplementedError(getClass.getName + ": an implementation is missing")
 
-    /** Handle a user-registered timeout event.
-     *
-     *  @param timeoutEvent
-     *    the timeout event
-     */
-    protected def handleActorTimeout(timeoutEvent: TimeoutEvent): Unit = {}
-
     // =========================================================================
-    // Section 3: USER CONFIGURATION
-    // Override these to configure actor behavior.
-    // =========================================================================
-
-    /** Whether this actor supports batch message processing. When true, the [[ActorSystem]] dispatches multiple
-     *  messages in bulk rather than individually.
-     */
-    def batchable: Boolean = false
-
-    /** Maximum number of messages per batch. Used by the scheduling system. */
-    def maxBatchSize: Int = system.defaultMaxBatchSize
-
-    /** Filter function for batching [[Notice]] messages. Return true to include in batch. */
-    val batchNoticeFilter: Notice => Boolean = TRUE_FUNC
-
-    /** Filter function for batching [[Ask]] messages. Return true to include in batch. */
-    val batchAskFilter: Ask[?] => Boolean = TRUE_FUNC
-
-    // =========================================================================
-    // Section 4: USER UTILITIES
+    // Section 3: USER UTILITIES
     // Protected helper methods available to subclasses.
     // =========================================================================
 
-    /** Self address of this actor instance. */
+    /** Self address of this actor instance. Cannot be moved to [[Actor]] trait due to Address[-M] being
+     *  contravariant, which conflicts with Actor's covariant +M.
+     */
     def self: Address[M] = context.address.asInstanceOf[Address[M]]
 
     final override def context: ActorContext = house
@@ -180,7 +149,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     }
 
     // =========================================================================
-    // Section 5: KERNEL DISPATCH ENGINE
+    // Section 4: KERNEL DISPATCH ENGINE
     // All methods below are private[core] or private — internal to the framework.
     // =========================================================================
 
@@ -500,11 +469,5 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     private[core] def receiveReactorEvent(event: ReactorEvent): Unit = {}
 
     private[core] def receiveChannelTimeoutEvent(event: ChannelTimeoutEvent): Unit = {}
-
-}
-
-private object AbstractActor {
-
-    private val TRUE_FUNC: AnyRef => Boolean = _ => true
 
 }
