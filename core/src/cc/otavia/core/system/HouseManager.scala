@@ -18,35 +18,32 @@ package cc.otavia.core.system
 
 import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.actor.Actor
-import cc.otavia.core.message.{Event, Message}
 import cc.otavia.core.slf4a.Logger
-import cc.otavia.core.system.ActorHouse.CHANNELS_ACTOR
 import cc.otavia.core.system.HouseManager.*
 import cc.otavia.core.system.monitor.HouseManagerMonitor
 
-import scala.collection.mutable
 import scala.language.unsafeNulls
 
+/** Per-[[ActorThread]] scheduler that manages three priority queues for actor house scheduling.
+ *
+ *  Queue assignment is based on actor type:
+ *    - '''mountingQueue''' (FIFO): houses awaiting initial mount (all types)
+ *    - '''channelsActorQueue''' (Priority): IO-capable actors, fully drained in Phase 2 with no time budget
+ *    - '''actorQueue''' (Priority): business logic actors, time-budgeted in Phase 3
+ *
+ *  Each [[PriorityHouseQueue]] has two sub-queues: normal priority and high priority. Houses are promoted to high
+ *  priority when they have excessive pending replies, events, or a low stack-end-rate (backpressure signal).
+ *
+ *  @param thread
+ *    the owning ActorThread
+ */
 final class HouseManager(val thread: ActorThread) {
 
     private val logger = Logger.getLogger(getClass, thread.system)
 
-    private val mountingQueue = new FIFOHouseQueue(this)
-
-    // private val serverActorQueue   = new FIFOHouseQueue(this)
+    private val mountingQueue      = new FIFOHouseQueue(this)
     private val channelsActorQueue = new PriorityHouseQueue(this)
     private val actorQueue         = new PriorityHouseQueue(this)
-
-    private var serverRuns: Long  = 0
-    private var serverTimes: Long = 0
-
-    private var channelsRuns: Long  = 0
-    private var channelsTimes: Long = 0
-
-    private var actorRuns: Long  = 0
-    private var actorTimes: Long = 0
-
-    @volatile private var runningStart: Long = Long.MaxValue
 
     private var currentRunning: Actor[?] = _
 
@@ -54,49 +51,52 @@ final class HouseManager(val thread: ActorThread) {
 
     private[core] def currentRunningActor: Actor[?] = currentRunning
 
-    def laterTasks: mutable.ArrayDeque[Runnable] = thread.laterTasks
+    def laterTasks: scala.collection.mutable.ArrayDeque[Runnable] = thread.laterTasks
 
+    /** Whether any queue has work available. Used by the IO handler to determine if it can block on select. */
     def runnable: Boolean =
-        actorQueue.nonEmpty || channelsActorQueue.nonEmpty || mountingQueue.nonEmpty // || serverActorQueue.nonEmpty
+        actorQueue.nonEmpty || channelsActorQueue.nonEmpty || mountingQueue.nonEmpty
 
+    // =========================================================================
+    // Scheduling operations
+    // =========================================================================
+
+    /** Schedule a newly created house for mounting. */
     def mount(house: ActorHouse): Unit = {
         mountingQueue.enqueue(house)
         thread.notifyThread()
     }
 
-    /** [[ActorHouse]] status: <b> WAITING -> READY
-     *  @param house
-     *    the status changed [[ActorHouse]]
+    /** Enqueue an [[ActorHouse]] that has transitioned from WAITING to READY. The house is placed into the appropriate
+     *  queue based on its actor type:
+     *    - [[cc.otavia.core.actor.StateActor]] -> actorQueue (time-budgeted in Phase 3)
+     *    - [[cc.otavia.core.actor.ChannelsActor]] / [[cc.otavia.core.actor.AcceptorActor]] -> channelsActorQueue
+     *      (fully drained in Phase 2)
      */
     def ready(house: ActorHouse): Unit = {
         if (house.actorType == ActorHouse.STATE_ACTOR) actorQueue.enqueue(house)
         else if (house.actorType >= ActorHouse.CHANNELS_ACTOR) channelsActorQueue.enqueue(house)
-        // else if (house.actorType == ActorHouse.SERVER_CHANNELS_ACTOR) serverActorQueue.enqueue(house)
 
         thread.notifyThread()
     }
 
-    /** Received [[Message]] or [[Event]] when [[ActorHouse]] status is <b> READY | RUNNING
-     *
-     *  @param house
-     *    The [[ActorHouse]] which is received [[Message]] or [[Event]]
+    /** Promote an [[ActorHouse]] to high priority when new messages arrive while it is already in READY or RUNNING
+     *  state. Only houses with pending high-priority indicators (excessive replies/events or low stack-end-rate)
+     *  are promoted.
      */
     def change(house: ActorHouse): Unit = {
         if (house.highPriority && !house.inHighPriorityQueue) {
-            // try to adjust priority
             if (house.actorType == ActorHouse.CHANNELS_ACTOR) channelsActorQueue.adjustPriority(house)
             else if (house.actorType == ActorHouse.STATE_ACTOR) actorQueue.adjustPriority(house)
         }
     }
 
-    private def adjustPriority(queue: PriorityHouseQueue, house: ActorHouse): Unit = {
-        if (queue.adjust(house)) {
-            queue.enqueue(house)
-        }
-    }
+    // =========================================================================
+    // Execution
+    // =========================================================================
 
     /** Run channels actor queue (IO pipeline work) and mounting queue. These are always drained fully as they are
-     *  part of the IO pipeline.
+     *  part of the IO pipeline and must not be starved.
      */
     def runChannelsActors(): Unit = {
         if (channelsActorQueue.available) run0(channelsActorQueue, Long.MaxValue)
@@ -137,31 +137,38 @@ final class HouseManager(val thread: ActorThread) {
         }
     }
 
-    private def stealable: Boolean = (actorQueue.readies > STEAL_REMAINING_THRESHOLD) ||
-        (((System.nanoTime() - runningStart) > STEAL_NANO_THRESHOLD) && actorQueue.nonEmpty)
+    // =========================================================================
+    // Work stealing
+    // =========================================================================
 
-    /** Steal from other [[ActorThread]] to run, this method is called by [[HouseManager.thread]] */
+    private def stealable: Boolean = actorQueue.readies > STEAL_REMAINING_THRESHOLD
+
+    /** Attempt to steal a StateActor from another [[ActorThread]]'s queue. Used for cross-thread load balancing.
+     *  Only steals from the normal-priority queue.
+     *
+     *  @return
+     *    true if a house was stolen and executed
+     */
     def trySteal(): Boolean = {
-        // find the next stealable thread
+        if (actorQueue.nonEmpty || channelsActorQueue.nonEmpty) return false
         val threads                         = thread.parent.workers
         var i                               = 1
         var continue: Boolean               = true
         var stealThread: ActorThread | Null = null
         while (i < threads.length && continue) {
-            val thread = threads((i + this.thread.index) % threads.length)
+            val candidate = threads((i + this.thread.index) % threads.length)
             i += 1
-            if (thread != null && thread.houseManager.stealable) {
+            if (candidate != null && candidate.houseManager.stealable) {
                 continue = false
-                stealThread = thread
+                stealThread = candidate
             }
         }
         if (stealThread != null) {
-            val success = stealThread.houseManager.runSteal()
-            success
+            stealThread.houseManager.runSteal()
         } else false
     }
 
-    /** Steal running by other [[ActorThread]] */
+    /** Execute one stolen house. Called by the stealing thread. */
     private def runSteal(): Boolean = {
         if (actorQueue.available) {
             val house = actorQueue.dequeue()
@@ -171,6 +178,10 @@ final class HouseManager(val thread: ActorThread) {
             } else false
         } else false
     }
+
+    // =========================================================================
+    // Monitoring
+    // =========================================================================
 
     def monitor(): HouseManagerMonitor = HouseManagerMonitor(
       mountingQueue.readies,
@@ -186,8 +197,6 @@ final class HouseManager(val thread: ActorThread) {
 
 object HouseManager {
 
-    private val STEAL_REMAINING_THRESHOLD = SystemPropertyUtil.getInt("cc.otavia.core.steal.threshold", 16)
-    private val STEAL_NANO_THRESHOLD =
-        SystemPropertyUtil.getInt("cc.otavia.core.steal.threshold.microsecond", 2 * 1000) * 1000
+    private val STEAL_REMAINING_THRESHOLD = SystemPropertyUtil.getInt("cc.otavia.core.steal.threshold", 64)
 
 }

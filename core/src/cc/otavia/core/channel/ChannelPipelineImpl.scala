@@ -1029,7 +1029,9 @@ object ChannelPipelineImpl {
         override def channelTimeoutEvent(ctx: ChannelHandlerContext, id: Long): Unit = {} // Just swallow event
 
         override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
-            System.err.println("An exceptionCaught() event was fired, and it reached the end of the pipeline.")
+            // TailHandler is the terminal handler — exceptions reaching here have no user handler to process them.
+            // Use System.err directly since we have no ActorSystem context in the companion object.
+            System.err.println(s"[${ctx.channel.getClass.getSimpleName}] An exceptionCaught() event reached the end of the pipeline: ${cause.getMessage}")
             cause.printStackTrace(System.err)
         }
 

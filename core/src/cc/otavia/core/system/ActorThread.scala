@@ -32,6 +32,17 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
+/** The central execution unit of the Otavia runtime. Each ActorThread is simultaneously the IO thread (polling the OS
+ *  selector for network/file events) and the actor execution thread (running user business logic).
+ *
+ *  Every actor is pinned to a single ActorThread for its entire lifetime. All actors on the same thread are
+ *  single-threaded with respect to each other, eliminating the need for locks on intra-thread coordination.
+ *
+ *  The event loop has three phases per iteration:
+ *    1. '''Phase 1 — IO''': Poll the selector and process IO events
+ *    2. '''Phase 2 — ChannelsActor dispatch''': Fully drain IO-capable actors and pending events (no time budget)
+ *    3. '''Phase 3 — StateActor dispatch''': Run business logic actors within a time budget
+ */
 final class ActorThread(private[core] val system: ActorSystem, private val id: Int) extends Thread() {
 
     private val channelLaterTasks: mutable.ArrayDeque[Runnable] = mutable.ArrayDeque.empty
@@ -44,8 +55,7 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
     private val referenceQueue = new ReferenceQueue[ActorAddress[?]]()
     private val refSet         = mutable.HashSet.empty[Reference[?]]
 
-    @volatile private var status: Int = ST_STARTING
-    private val lock: AnyRef          = new Object()
+    @volatile private var shuttingDown: Boolean = false
 
     private val direct = new DirectPooledPageAllocator(
       ActorSystem.PAGE_SIZE,
@@ -69,7 +79,10 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
 
     setName(s"otavia-worker-$index")
 
-    // prepare allocate buffer
+    // =========================================================================
+    // Resource management
+    // =========================================================================
+
     private[core] def prepared(): Unit = {
         prepared0(direct)
         prepared0(heap)
@@ -80,10 +93,10 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
         buffers.foreach(_.close())
     }
 
-    /** A [[BufferAllocator]] which allocate heap memory. */
+    /** Per-thread direct memory allocator. */
     def directAllocator: AbstractPooledPageAllocator = direct
 
-    /** A [[BufferAllocator]] which allocate heap memory. */
+    /** Per-thread heap memory allocator. */
     def heapAllocator: AbstractPooledPageAllocator = heap
 
     def parent: ActorThreadPool = system.pool
@@ -98,12 +111,17 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
 
     def laterTasks: mutable.ArrayDeque[Runnable] = channelLaterTasks
 
+    /** Clear all deferred channel tasks. Called during shutdown to release pending work. */
     def cleanChannelTask(): Unit = if (channelLaterTasks.nonEmpty) {
         // TODO: log warn
         channelLaterTasks.clear()
     }
 
     def actorThreadAddress: ActorThreadAddress = address
+
+    // =========================================================================
+    // Actor house management
+    // =========================================================================
 
     private[core] def createActorHouse(): ActorHouse = {
         val house = new ActorHouse(manager)
@@ -116,7 +134,9 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
         refSet.add(ref)
     }
 
-    /** Stop [[Actor]] witch need be gc. */
+    /** Poll and clear phantom references for garbage-collected actor addresses. Returns the number of references
+     *  cleared.
+     */
     private def stopActors(): Int = {
         var count    = 0
         var continue = true
@@ -131,31 +151,51 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
         count
     }
 
+    // =========================================================================
+    // Cross-thread communication
+    // =========================================================================
+
+    /** Wake this thread's IO handler from another thread. Used when a cross-thread message delivery makes an actor
+     *  house ready for processing.
+     */
     private[core] def notifyThread(): Unit = {
         if (Thread.currentThread() != this) ioHandler.wakeup()
-        // if (status == ST_WAITING) lock.synchronized(lock.notify())
     }
 
+    /** Enqueue an event for processing on this thread's Phase 2. */
     private[core] def putEvent(event: Event): Unit = {
         eventQueue.offer(event)
         notifyThread()
     }
 
+    /** Enqueue multiple events for processing on this thread's Phase 2. */
     private[core] def putEvents(events: Seq[Event]): Unit = {
         events.foreach(event => eventQueue.offer(event))
         notifyThread()
     }
 
+    // =========================================================================
+    // Lifecycle
+    // =========================================================================
+
+    /** Signal this thread to begin graceful shutdown. The event loop will exit after the current iteration completes. */
+    private[core] def shutdown(): Unit = {
+        shuttingDown = true
+        ioHandler.wakeup()
+    }
+
+    // =========================================================================
+    // Event loop
+    // =========================================================================
+
     override def run(): Unit = {
-        status = ST_RUNNING
+        prepared()
 
         val ioCtx = new IoExecutionContext {
             override def canBlock: Boolean = !manager.runnable && refSet.isEmpty && eventQueue.isEmpty
 
             override def canNotBlock: Boolean = manager.runnable || !eventQueue.isEmpty || refSet.nonEmpty
         }
-
-        prepared()
 
         var selectCnt = 0
 
@@ -164,7 +204,7 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
             val ioStartTime = System.nanoTime()
             val strategy = ioHandler.run(ioCtx)
 
-            // epoll bug detection
+            // Epoll bug detection: rebuild selector after excessive empty selects
             if (strategy > 0) selectCnt = 0
             else {
                 selectCnt += 1
@@ -179,8 +219,10 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
             // ---- Phase 3: Business logic (StateActor) with time budget ----
             val deadline = computeDeadline(ioStartTime, strategy)
             manager.runStateActors(deadline)
-        }
 
+            // ---- Phase 4: Work stealing (only when idle) ----
+            if (!shuttingDown && !manager.runnable) manager.trySteal()
+        }
     }
 
     private def computeDeadline(ioStartTime: Long, strategy: Int): Long = {
@@ -212,14 +254,6 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
         }
     }
 
-    private def suspendThread(millis: Long = 50): Unit = {
-        lock.synchronized {
-            status = ST_WAITING
-            lock.wait(millis)
-            status = ST_RUNNING
-        }
-    }
-
     private def runThreadEvent(): Boolean = {
         val run = !eventQueue.isEmpty
         while (!eventQueue.isEmpty) {
@@ -231,7 +265,7 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
 
     def monitor(): ActorThreadMonitor = ActorThreadMonitor(eventQueue.size(), manager.monitor())
 
-    private def confirmShutdown(): Boolean = false
+    private def confirmShutdown(): Boolean = shuttingDown
 
 }
 
@@ -242,7 +276,7 @@ object ActorThread {
      */
     private val ioRatio = SystemPropertyUtil.getInt("cc.otavia.actor.io.ratio", 50)
 
-    /** Minimum time budget (in microseconds) for StateActor execution when there are no IO events. Prevents actor
+    /** Minimum time budget (in nanoseconds) for StateActor execution when there are no IO events. Prevents actor
      *  starvation when the system is idle from an IO perspective.
      */
     private val minActorBudgetNanos =
@@ -254,39 +288,32 @@ object ActorThread {
     private val SELECTOR_AUTO_REBUILD_THRESHOLD =
         SystemPropertyUtil.getInt("io.otavia.selectorAutoRebuildThreshold", 512)
 
-    /** Status of [[ActorThread]]: starting to loop schedule. */
-    private val ST_STARTING: Int = 0
-
-    /** Status of [[ActorThread]]: task is running. */
-    private val ST_RUNNING: Int = 1
-
-    /** Status of [[ActorThread]]: no task to run, so thread is waiting. */
-    private val ST_WAITING: Int = 2
-
-    /** Returns a reference to the currently executing [[ActorThread]] object.
-     *
-     *  @return
-     *    the currently executing thread.
-     */
+    /** Returns the currently executing [[ActorThread]]. Throws if the current thread is not an ActorThread. */
     def currentThread(): ActorThread = Thread.currentThread().asInstanceOf[ActorThread]
 
-    /** Returns the [[ActorThread.index]] of the currently executing [[ActorThread]] object.
-     *  @return
-     *    [[ActorThread]] index
-     */
+    /** Returns the [[ActorThread.index]] of the currently executing [[ActorThread]]. */
     def currentThreadIndex: Int = currentThread().index
 
-    /** Check whether the current [[Thread]] is [[ActorThread]]. */
+    /** Check whether the current [[Thread]] is an [[ActorThread]]. */
     final def currentThreadIsActorThread: Boolean = Thread.currentThread().isInstanceOf[ActorThread]
 
+    /** Borrow the current thread's scratch [[mutable.ArrayBuffer]], cast to the requested type.
+     *  '''Warning''': Not reentrant. Only one buffer of any type may be in use at a time per thread.
+     */
     final def threadBuffer[T]: mutable.ArrayBuffer[T] = Thread.currentThread() match
         case thread: ActorThread => thread.mutableBuffer.asInstanceOf[mutable.ArrayBuffer[T]]
         case _                   => mutable.ArrayBuffer.empty[T]
 
+    /** Borrow the current thread's scratch [[mutable.HashSet]], cast to the requested type.
+     *  '''Warning''': Not reentrant. Only one set of any type may be in use at a time per thread.
+     */
     final def threadSet[T]: mutable.HashSet[T] = Thread.currentThread() match
         case thread: ActorThread => thread.mutableSet.asInstanceOf[mutable.HashSet[T]]
         case _                   => mutable.HashSet.empty[T]
 
+    /** Borrow the current thread's scratch [[mutable.HashMap]], cast to the requested type.
+     *  '''Warning''': Not reentrant. Only one map of any type may be in use at a time per thread.
+     */
     final def threadMap[K, V]: mutable.HashMap[K, V] = Thread.currentThread() match
         case thread: ActorThread => thread.mutableMap.asInstanceOf[mutable.HashMap[K, V]]
         case _                   => mutable.HashMap.empty

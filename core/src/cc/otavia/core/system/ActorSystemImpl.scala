@@ -116,9 +116,12 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
 
     override def timer: Timer = timerImpl
 
-    override def shutdown(): Unit = ???
+    override def shutdown(): Unit = {
+        logger.info(s"Shutting down ActorSystem [$name]")
+        pool.workers.foreach(_.shutdown())
+    }
 
-    override def defaultMaxFetchPerRunning: Int = ???
+    override def defaultMaxFetchPerRunning: Int = Int.MaxValue
 
     override def defaultMaxBatchSize: Int = 100000
 

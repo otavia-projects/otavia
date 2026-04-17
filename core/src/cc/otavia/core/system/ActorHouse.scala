@@ -20,68 +20,91 @@ import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.actor.*
 import cc.otavia.core.address.ActorAddress
 import cc.otavia.core.channel.AbstractChannel
-import cc.otavia.core.channel.inflight.QueueMap
 import cc.otavia.core.message.*
 import cc.otavia.core.system.ActorHouse.*
 import cc.otavia.core.util.Nextable
 
 import java.util.concurrent.atomic.AtomicInteger
-import scala.collection.mutable
 import scala.language.unsafeNulls
 
-/** House is [[cc.otavia.core.actor.AbstractActor]] instance mount point. when a actor is creating by actor system, a
- *  house is creating at the same time, and mount the actor instance to the house instance.
+/** The per-actor scheduling unit and mailbox container. Each [[AbstractActor]] is mounted to exactly one ActorHouse,
+ *  which is owned by a [[HouseManager]] on a specific [[ActorThread]].
+ *
+ *  ActorHouse serves three roles:
+ *    1. '''Scheduling state machine''': manages the lifecycle state (CREATED → MOUNTING → WAITING → READY → SCHEDULED
+ *       → RUNNING) with atomic CAS transitions
+ *    2. '''Mailbox container''': holds five separate [[MailBox]] instances with priority-ordered dispatch
+ *    3. '''[[cc.otavia.core.actor.ActorContext]] implementation''': provides runtime context to the actor
+ *
+ *  @param manager
+ *    the [[HouseManager]] that owns this house
  */
 final private[core] class ActorHouse(val manager: HouseManager) extends ActorContext {
 
-    // actor part
-    private var dweller: AbstractActor[? <: Call] = _
+    // =========================================================================
+    // Section 1: ACTOR BINDING
+    // =========================================================================
+
+    private[system] var dweller: AbstractActor[? <: Call] = _
     private var actorAddress: ActorAddress[Call]  = _
     private var dwellerId: Long                   = -1
     private var atp: Int                          = 0
-    private var inBarrier: Boolean                = false
-    private var revAsks: Long                     = 0
-    private var sendAsks: Long                    = 0
+    private[system] var inBarrier: Boolean        = false
 
     private var currentSendMessageId: Long = Long.MinValue
 
-    // dispatch part
+    /** Whether this actor uses round-robin load balancing (RobinAddress with same-thread affinity). */
     private var isLB: Boolean = false
 
-    private val noticeMailbox: MailBox    = new MailBox(this)
-    private val askMailbox: MailBox       = new MailBox(this)
-    private val replyMailbox: MailBox     = new MailBox(this)
-    private val exceptionMailbox: MailBox = new MailBox(this)
-    private val eventMailbox: MailBox     = new MailBox(this)
+    // =========================================================================
+    // Section 2: MAILBOXES
+    // =========================================================================
 
-    private var tmpAskCursor: Nextable    = _
-    private var tmpNoticeCursor: Nextable = _
+    private[system] val noticeMailbox: MailBox    = new MailBox(this)
+    private[system] val askMailbox: MailBox       = new MailBox(this)
+    private[system] val replyMailbox: MailBox     = new MailBox(this)
+    private[system] val exceptionMailbox: MailBox = new MailBox(this)
+    private[system] val eventMailbox: MailBox     = new MailBox(this)
 
-    private[system] val status: AtomicInteger = new AtomicInteger(CREATED)
+    private val dispatcher = new MailboxDispatcher(this)
+
+    // =========================================================================
+    // Section 3: SCHEDULING STATE MACHINE
+    // =========================================================================
+
+    private val status: AtomicInteger = new AtomicInteger(CREATED)
 
     @volatile private var preHouse: ActorHouse  = _
     @volatile private var nextHouse: ActorHouse = _
 
     @volatile private var _inHighPriorityQueue: Boolean = false
 
-    private var pendingChannels: QueueMap[AbstractChannel] = _
+    // =========================================================================
+    // Section 4: MESSAGE ID GENERATION
+    // =========================================================================
 
-    /** Generate a unique id for send [[Ask]] message. */
+    /** Generate a unique id for send [[Ask]] messages. Monotonically increasing per actor. */
     def generateSendMessageId(): Long = {
         val id = currentSendMessageId
         currentSendMessageId += 1
         id
     }
 
-    private def stackEndRate: Int =
-        if (revAsks != 0) (sendAsks * 5 / revAsks).toInt else Int.MaxValue
+    def increaseSendCounter(): Unit = dispatcher.increaseSendCounter()
 
-    def increaseSendCounter(): Unit = sendAsks += 1
+    // =========================================================================
+    // Section 5: ActorContext IMPLEMENTATION
+    // =========================================================================
 
     override def mountedThreadId: Int = manager.thread.index
 
+    /** Whether this house should be scheduled with high priority. High priority is triggered by:
+     *    - Excessive pending replies (> [[HIGH_PRIORITY_REPLY_SIZE]])
+     *    - Excessive pending events (> [[HIGH_PRIORITY_EVENT_SIZE]])
+     *    - Low stack-end-rate (more awaiting replies than sends — a backpressure signal)
+     */
     def highPriority: Boolean = (replyMailbox.size() > HIGH_PRIORITY_REPLY_SIZE) ||
-        (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE) || (stackEndRate < 3)
+        (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE) || (dispatcher.stackEndRate < 3)
 
     def inHighPriorityQueue: Boolean = _inHighPriorityQueue
 
@@ -89,21 +112,19 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         _inHighPriorityQueue = value
 
     def isReady: Boolean = status.get() == READY
-
     def isRunning: Boolean = status.get() == RUNNING
-
     def isWaiting: Boolean = status.get() == WAITING
 
+    // =========================================================================
+    // Section 6: DOUBLY-LINKED LIST NODE (for HouseQueue insertion)
+    // =========================================================================
+
     def next_=(house: ActorHouse): Unit = nextHouse = house
-
     def next: ActorHouse | Null = nextHouse
-
     def isTail: Boolean = nextHouse == null
 
     def pre_=(house: ActorHouse): Unit = preHouse = house
-
     def pre: ActorHouse | Null = preHouse
-
     def isHead: Boolean = preHouse == null
 
     def deChain(): Unit = {
@@ -111,13 +132,18 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         preHouse = null
     }
 
+    // =========================================================================
+    // Section 7: ACTOR BINDING (called during ActorSystem.createActor)
+    // =========================================================================
+
+    /** Bind an actor instance to this house and classify it by type. */
     def setActor(actor: AbstractActor[? <: Call]): Unit = {
         dweller = actor
         actor match
             case _: AcceptorActor[?] => atp = SERVER_CHANNELS_ACTOR
             case _: ChannelsActor[?] =>
                 atp = CHANNELS_ACTOR
-                pendingChannels = new QueueMap[AbstractChannel]()
+                dispatcher.initPendingChannels()
             case _: StateActor[?] => atp = STATE_ACTOR
             case _                => throw new IllegalStateException("")
     }
@@ -136,30 +162,49 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     override def actorId: Long = dwellerId
 
+    /** Actor type classification — determines which scheduling queue the house enters. */
     def actorType: Int = atp
+
+    // =========================================================================
+    // Section 8: BARRIER MANAGEMENT
+    // =========================================================================
 
     def cleanBarrier(): Unit = inBarrier = false
 
     def isBarrier: Boolean = inBarrier
 
-    def pendingChannel(channel: AbstractChannel): Unit =
-        if (!pendingChannels.contains(channel.entityId)) pendingChannels.append(channel)
+    // =========================================================================
+    // Section 9: CHANNEL INFLIGHT (for ChannelsActor only)
+    // =========================================================================
 
-    /** True if this house has not received [[Message]] or [[Event]] */
+    /** Register a channel as having pending outbound work. Only used for CHANNELS_ACTOR type houses. */
+    def pendingChannel(channel: AbstractChannel): Unit = dispatcher.registerPendingChannel(channel)
+
+    // =========================================================================
+    // Section 10: MAILBOX QUERIES
+    // =========================================================================
+
+    /** True if all mailboxes are empty. */
     def isEmpty: Boolean = askMailbox.isEmpty && noticeMailbox.isEmpty && replyMailbox.isEmpty &&
         eventMailbox.isEmpty && exceptionMailbox.isEmpty
 
-    /** True if this house has received some [[Message]] or [[Event]] */
+    /** True if any mailbox has messages. */
     def nonEmpty: Boolean =
         askMailbox.nonEmpty || noticeMailbox.nonEmpty || replyMailbox.nonEmpty || eventMailbox.nonEmpty || exceptionMailbox.nonEmpty
 
-    /** True if this house has received some [[Reply]] or [[Event]] */
+    /** True if barrier-relevant mailboxes (reply, event, exception) have messages. */
     private def barrierNonEmpty: Boolean = replyMailbox.nonEmpty || eventMailbox.nonEmpty || exceptionMailbox.nonEmpty
 
-    /** Call this method to async mount actor when created actor instance. */
+    // =========================================================================
+    // Section 11: LIFECYCLE TRANSITIONS
+    // =========================================================================
+
+    /** Schedule this house for mounting. Transition: CREATED → MOUNTING. */
     def mount(): Unit = if (status.compareAndSet(CREATED, MOUNTING)) manager.mount(this)
 
-    /** Mount actor by schedule system. */
+    /** Execute the mount on the owning ActorThread. Transition: MOUNTING → WAITING. Calls the actor's afterMount
+     *  hook and immediately transitions to READY if messages are already pending.
+     */
     def doMount(): Unit = {
         if (status.compareAndSet(MOUNTING, WAITING)) {
             dweller.mount()
@@ -167,6 +212,9 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         }
     }
 
+    /** Enqueue a notice message. Applies backpressure via sleep when the system is under memory pressure and the
+     *  caller is not an ActorThread.
+     */
     def putNotice(envelope: Envelope[?]): Unit = {
         if (system.isBusy && !ActorThread.currentThreadIsActorThread) {
             Thread.sleep(ActorSystem.MEMORY_OVER_SLEEP)
@@ -187,28 +235,26 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         if (status.get() == WAITING) waiting2ready()
     }
 
+    /** Place a notice at the head of the notice mailbox for priority processing. */
     private[core] def putCallToHead(envelope: Envelope[?]): Unit = {
         noticeMailbox.putHead(envelope)
     }
 
     private def waiting2ready(): Unit = if (status.compareAndSet(WAITING, READY)) manager.ready(this)
 
+    /** Transition: READY → SCHEDULED. Called by the HouseQueue during dequeue. */
     def schedule(): Unit = if (status.compareAndSet(READY, SCHEDULED)) {}
 
+    // =========================================================================
+    // Section 12: DISPATCH ENGINE
+    // =========================================================================
+
+    /** Main dispatch loop. Transition: SCHEDULED → RUNNING. Delegates to [[MailboxDispatcher]] for priority-ordered
+     *  message processing, then transitions to either READY or WAITING.
+     */
     def run(): Unit = {
         if (status.compareAndSet(SCHEDULED, RUNNING)) {
-            if (replyMailbox.nonEmpty) dispatchReplies()
-            if (exceptionMailbox.nonEmpty) dispatchExceptions()
-
-            if (!inBarrier && askMailbox.nonEmpty) dispatchAsks()
-            if (!inBarrier && noticeMailbox.nonEmpty) dispatchNotices()
-
-            if (eventMailbox.nonEmpty) dispatchEvents()
-
-            if (atp == CHANNELS_ACTOR) dispatchChannels()
-
-            runLaterTasks()
-
+            dispatcher.dispatch()
             completeRunning()
         }
     }
@@ -229,137 +275,9 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         }
     }
 
-    private def dispatchChannels(): Unit = {
-        pendingChannels.resetIterator()
-        for (channel <- pendingChannels) {
-            channel.processPendingFutures()
-            if (!channel.isPending) pendingChannels.remove(channel.entityId)
-        }
-    }
-
-    private def dispatchAsks(): Unit = if (dweller.batchable) dispatchBatchAsks() else dispatchAsks0()
-
-    private def dispatchAsks0(): Unit = {
-        if (tmpAskCursor == null) tmpAskCursor = askMailbox.getAll
-        while (tmpAskCursor != null && !inBarrier) {
-            val msg = tmpAskCursor
-            tmpAskCursor = msg.next
-            msg.deChain()
-            val envelope = msg.asInstanceOf[Envelope[Ask[?]]]
-            inBarrier = dweller.isBarrier(envelope.message)
-            revAsks += 1
-            dweller.receiveAsk(envelope)
-        }
-    }
-
-    private def dispatchBatchAsks(): Unit = {
-        if (tmpAskCursor == null) tmpAskCursor = askMailbox.getAll
-        val buf = ActorThread.threadBuffer[Envelope[Ask[?]]]
-        while (tmpAskCursor != null && !inBarrier) {
-            val envelope = tmpAskCursor.asInstanceOf[Envelope[Ask[?]]]
-            tmpAskCursor = envelope.next
-            envelope.deChain()
-            val ask = envelope.message
-            if (dweller.batchAskFilter(ask)) buf.addOne(envelope)
-            else {
-                if (buf.nonEmpty) handleBatchAsk(buf)
-                inBarrier = dweller.isBarrier(ask)
-                revAsks += 1
-                dweller.receiveAsk(envelope)
-            }
-        }
-        if (buf.nonEmpty) handleBatchAsk(buf)
-    }
-
-    private def dispatchNotices(): Unit = if (dweller.batchable) dispatchBatchNotices() else dispatchNotices0()
-
-    private def dispatchNotices0(): Unit = {
-        if (tmpNoticeCursor == null) tmpNoticeCursor = noticeMailbox.getAll
-        while (tmpNoticeCursor != null && !inBarrier) {
-            val msg = tmpNoticeCursor
-            tmpNoticeCursor = msg.next
-            msg.deChain()
-            val envelop = msg.asInstanceOf[Envelope[Notice]]
-            inBarrier = dweller.isBarrier(envelop.message)
-            dweller.receiveNotice(envelop)
-        }
-    }
-
-    private def dispatchBatchNotices(): Unit = {
-        if (tmpNoticeCursor == null) tmpNoticeCursor = noticeMailbox.getAll
-        val buf = ActorThread.threadBuffer[Notice]
-        while (tmpNoticeCursor != null && !inBarrier) {
-            val envelope = tmpNoticeCursor.asInstanceOf[Envelope[Notice]]
-            tmpNoticeCursor = envelope.next
-            envelope.deChain()
-            val notice = envelope.message
-            if (dweller.batchNoticeFilter(notice)) {
-                buf.addOne(notice)
-                envelope.recycle()
-            } else {
-                if (buf.nonEmpty) handleBatchNotice(buf)
-                inBarrier = dweller.isBarrier(envelope.message)
-                dweller.receiveNotice(envelope)
-            }
-        }
-        if (buf.nonEmpty) handleBatchNotice(buf)
-    }
-
-    private def dispatchReplies(): Unit = {
-        var cursor = replyMailbox.getAll
-        while (cursor != null) {
-            val msg = cursor
-            cursor = msg.next
-            msg.deChain()
-            dweller.receiveReply(msg.asInstanceOf[Envelope[?]])
-        }
-    }
-
-    private def dispatchExceptions(): Unit = {
-        var cursor = exceptionMailbox.getAll
-        while (cursor != null) {
-            val msg = cursor
-            cursor = msg.next
-            msg.deChain()
-            dweller.receiveExceptionReply(msg.asInstanceOf[Envelope[?]])
-        }
-    }
-
-    private def dispatchEvents(): Unit = {
-        var cursor = eventMailbox.getAll
-        while (cursor != null) {
-            val msg = cursor.asInstanceOf[Event]
-            cursor = msg.next
-            msg.deChain()
-            dweller.receiveEvent(msg)
-        }
-    }
-
-    private def handleBatchNotice(buf: mutable.ArrayBuffer[Notice]): Unit = {
-        val notices = buf.toSeq
-        buf.clear()
-        dweller.receiveBatchNotice(notices)
-    }
-
-    private def handleBatchAsk(buf: mutable.ArrayBuffer[Envelope[Ask[?]]]): Unit = {
-        val asks = buf.toSeq
-        buf.clear()
-        dweller.receiveBatchAsk(asks)
-    }
-
-    private def runLaterTasks(): Unit = {
-        if (actorType == CHANNELS_ACTOR) {
-            while (manager.laterTasks.nonEmpty) {
-                val task = manager.laterTasks.removeHead()
-                try {
-                    task.run()
-                } catch {
-                    case t: Throwable =>
-                        throw t
-                }
-            }
-        }
-    }
+    // =========================================================================
+    // Section 13: ADDRESS MANAGEMENT
+    // =========================================================================
 
     private[core] def createActorAddress[M <: Call](): ActorAddress[M] = {
         val address = new ActorAddress[M](this)
@@ -384,21 +302,22 @@ object ActorHouse {
 
     private type HOUSE_STATUS = Int
 
-    /** When [[Actor]] created and still not schedule to mount */
+    /** Actor created but not yet scheduled for mounting. */
     private val CREATED: HOUSE_STATUS = 0
 
-    /** When [[Actor]] has schedule mounting */
+    /** Actor has been scheduled for mounting on its owning ActorThread. */
     private val MOUNTING: HOUSE_STATUS = 1
 
-    /** When [[Actor]] has mounted, and not have any [[Message]] or [[Event]] to handle. */
+    /** Actor is mounted and idle — no messages or events to process. */
     private val WAITING: HOUSE_STATUS = 2
 
-    /** When [[Actor]] has some [[Message]] or [[Event]] wait to handle. */
+    /** Actor has messages or events waiting to be processed. */
     private val READY: HOUSE_STATUS = 3
 
+    /** Actor has been dequeued and is waiting for the ActorThread to execute it. */
     private val SCHEDULED: HOUSE_STATUS = 4
 
-    /** The [[ActorThread]] is running this [[Actor]] */
+    /** Actor is currently executing on the ActorThread. */
     private val RUNNING: HOUSE_STATUS = 5
 
     private val HIGH_PRIORITY_REPLY_SIZE_DEFAULT = 2
@@ -409,7 +328,7 @@ object ActorHouse {
     private val HIGH_PRIORITY_EVENT_SIZE =
         SystemPropertyUtil.getInt("cc.otavia.core.priority.event.size", HIGH_PRIORITY_EVENT_SIZE_DEFAULT)
 
-    // actor type
+    // Actor type classification — determines scheduling queue assignment
     val STATE_ACTOR           = 0
     val CHANNELS_ACTOR        = 1
     val SERVER_CHANNELS_ACTOR = 2

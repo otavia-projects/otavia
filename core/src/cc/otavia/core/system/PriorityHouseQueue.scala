@@ -192,8 +192,4 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
 
     }
 
-    def adjust(house: ActorHouse): Boolean = {
-        ???
-    }
-
 }

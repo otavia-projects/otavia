@@ -23,7 +23,6 @@ import cc.otavia.core.message.*
 import cc.otavia.core.reactor.*
 import cc.otavia.core.stack.*
 import cc.otavia.core.stack.helper.ChannelFutureState
-import cc.otavia.core.system.ActorThread
 
 import java.io.File
 import java.net.*
@@ -31,8 +30,8 @@ import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls
 
-/** IO-capable actor that manages [[Channel]] instances. Scheduled in Phase 2 of the [[ActorThread]] event loop and
- *  always '''fully drained''' (no time budget), ensuring IO responsiveness is never starved.
+/** IO-capable actor that manages [[Channel]] instances. Always fully drained during the event loop's IO phase
+ *  (no time budget), ensuring IO responsiveness is never starved.
  *
  *  In addition to the standard message handling via [[resumeAsk]] / [[resumeNotice]], ChannelsActor provides
  *  [[resumeChannelStack]] for processing channel-level IO stacks, and lifecycle hooks like [[afterChannelClosed]] and
@@ -41,13 +40,14 @@ import scala.language.unsafeNulls
  *  @tparam M
  *    the type of messages this actor can handle
  */
-abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
+abstract class ChannelsActor[M <: Call] extends AbstractActor[M] with ChannelMessageSupport {
 
     private var channelCursor                  = 0
     private var currentChannelReceived: AnyRef = _
 
     override def self: ActorAddress[M] = super.self.asInstanceOf[ActorAddress[M]]
 
+    /** Alias for [[self]] — the typed address of this IO-capable actor. */
     def address: ActorAddress[M] = self
 
     final def reactor: Reactor = system.reactor
@@ -56,13 +56,17 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
 
     private[core] def generateChannelId(): Int = { val channelId = channelCursor; channelCursor += 1; channelId }
 
-    private[core] def receiveChannelMessage(stack: ChannelStack[?]): Unit = {
+    // =========================================================================
+    // ChannelMessageSupport implementation
+    // =========================================================================
+
+    final override private[core] def receiveChannelMessage(stack: ChannelStack[?]): Unit = {
         currentChannelReceived = stack.message
         dispatchChannelStack(stack)
         currentChannelReceived = null
     }
 
-    override final private[core] def dispatchChannelStack(stack: ChannelStack[?]): Unit = {
+    final override private[core] def dispatchChannelStack(stack: ChannelStack[?]): Unit = {
         currentStack = stack
         try {
             val stackYield = resumeChannelStack(stack)
@@ -70,8 +74,8 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
             if (stackYield.completed) stack.internalChannel.processCompletedChannelStacks()
         } catch {
             case cause: Throwable =>
-                cause.printStackTrace()
-                stack.`throw`(cause) // completed stack with Exception
+                logger.error(s"Unhandled exception in channel stack for actor [${getClass.getName}]", cause)
+                stack.`throw`(cause)
                 stack.internalChannel.processCompletedChannelStacks()
         } finally currentStack = null
     }
@@ -102,6 +106,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
             case e: OpenReply => e.channel.asInstanceOf[AbstractChannel].handleChannelOpenReply(e.cause)
             case e: ShutdownReply =>
                 e.channel.asInstanceOf[AbstractNetworkChannel].handleShutdownReply(e)
+            case _ => // DisconnectReply, ReadEvent, and EMPTY_EVENT have no handler at this level
         }
     }
 
@@ -110,7 +115,11 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         channel.handleChannelTimeoutEvent(event.registerId)
     }
 
-    /** Create a new channel and set executor and init it. */
+    // =========================================================================
+    // Channel lifecycle
+    // =========================================================================
+
+    /** Create a new [[Channel]] and mount it to this actor, then initialize its pipeline via [[initChannel]]. */
     @throws[Exception]
     final protected def createChannelAndInit(): ChannelAddress = {
         val channel = newChannel()
@@ -125,6 +134,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         }
     }
 
+    /** Create a new file [[Channel]] and mount it to this actor, then initialize via [[initFileChannel]]. */
     @throws[Exception]
     final protected def createFileChannelAndInit(): ChannelAddress = {
         val channel = system.channelFactory.openFileChannel()
@@ -155,38 +165,36 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] {
         state
     }
 
-    final def inExecutor(): Boolean = Thread.currentThread() match
-        case thread: ActorThread => thread.currentRunningActor() == this
-        case _                   => false
+    // =========================================================================
+    // User-overridable hooks
+    // =========================================================================
 
-    //// =================== USER API ====================
-
+    /** Process an inbound channel message. Override this to handle decoded IO data from the channel pipeline. */
     protected def resumeChannelStack(stack: ChannelStack[AnyRef]): StackYield =
         throw new NotImplementedError(getClass.getName + ": an implementation is missing")
 
-    // Event from Reactor
-
-    /** Handle channel close event */
+    /** Called when a channel managed by this actor has been closed. */
     protected def afterChannelClosed(channel: Channel, cause: Option[Throwable]): Unit = {}
 
-    /** Handle channel register result event */
+    /** Called when a channel has completed registration with the IO reactor. */
     protected def afterChannelRegistered(event: RegisterReply): Unit = {}
 
-    // Event from Timer
-
-    // End handle event.
-
-    /** Create a new [[Channel]] */
+    /** Factory method to create a new [[Channel]] instance. Override to specify the channel type. */
     protected def newChannel(): Channel =
         throw new NotImplementedError(getClass.getName + ".newChannel: an implementation is missing")
 
+    /** Initialize the channel's pipeline with handlers. Default implementation adds the handler from
+     *  [[handler]] if present.
+     */
     @throws[Exception]
     protected def initChannel(channel: Channel): Unit = handler match
         case Some(h) => channel.pipeline.addLast(h)
         case None    =>
 
+    /** Initialize a file channel's pipeline. Default is no-op. */
     protected def initFileChannel(channel: Channel): Unit = {}
 
+    /** Optional [[ChannelInitializer]] for pipeline setup. Override to provide a default handler. */
     def handler: Option[ChannelInitializer[? <: Channel]] = None
 
 }

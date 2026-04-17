@@ -18,10 +18,9 @@ package cc.otavia.core.actor
 
 import cc.otavia.core.address.ActorAddress
 import cc.otavia.core.message.Call
-import cc.otavia.core.stack.ChannelStack
 
-/** Pure business logic actor with no IO capabilities. Scheduled in Phase 3 of the [[ActorThread]] event loop with a
- *  time budget, ensuring fair scheduling among many business actors.
+/** Pure business logic actor with no IO capabilities. Scheduled with a time budget alongside other StateActors,
+ *  ensuring fair scheduling among many business actors.
  *
  *  Override [[resumeAsk]] and/or [[resumeNotice]] to handle messages. Do NOT use this actor for direct network IO —
  *  use [[ChannelsActor]] or its subclasses instead.
@@ -31,14 +30,7 @@ import cc.otavia.core.stack.ChannelStack
  */
 abstract class StateActor[M <: Call] extends AbstractActor[M] {
 
-    /** self address of this actor instance
-     *
-     *  @return
-     *    self address
-     */
+    /** Typed self-address for this StateActor. */
     override def self: ActorAddress[M] = super.self.asInstanceOf[ActorAddress[M]]
-
-    final override private[core] def dispatchChannelStack(stack: ChannelStack[?]): Unit =
-        throw new UnsupportedOperationException("StateActor not support ChannelStack")
 
 }

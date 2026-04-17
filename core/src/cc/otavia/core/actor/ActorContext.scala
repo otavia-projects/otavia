@@ -20,22 +20,27 @@ import cc.otavia.core.address.Address
 import cc.otavia.core.message.Message
 import cc.otavia.core.system.ActorSystem
 
-/** [[Actor]] content info, the content info is created by actor system when a [[Actor]] instance is creating by actor
- *  system, and inject to [[Actor]] instance by [[Actor.setCtx]]
- */
+/** Runtime context injected into each [[Actor]] during mounting. Accessed via [[Actor.context]].
+  *
+  * Provides access to system-level services and actor identity metadata.
+  */
 trait ActorContext {
 
-    /** actor system */
+    /** The [[ActorSystem]] this actor belongs to. */
     def system: ActorSystem
 
-    /** physical address of the binding actor. */
+    /** The physical address of this actor. Use [[Actor.self]] for the typed variant. */
     def address: Address[? <: Message]
 
-    /** id distributed by actor system */
+    /** System-assigned unique ID for this actor instance. */
     def actorId: Long
 
+    /** Whether this actor uses round-robin load balancing across multiple threads.
+     *  When true, messages sent from co-located actors are routed to the same-thread instance for data locality.
+     */
     def isLoadBalance: Boolean
 
+    /** Index of the [[cc.otavia.core.system.ActorThread]] this actor is pinned to. */
     def mountedThreadId: Int
 
 }
