@@ -111,21 +111,14 @@ node3 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Returns a reference to the currently executing <a href="ActorThread.html">ActorThread</a> object.</p>
+             <p>Returns the currently executing <a href="ActorThread.html">ActorThread</a>. Throws if the current thread is not an ActorThread.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Returns a reference to the currently executing <a href="ActorThread.html">ActorThread</a> object.</p>
+              <p>Returns the currently executing <a href="ActorThread.html">ActorThread</a>. Throws if the current thread is not an ActorThread.</p>
              </div>
              <h2 class="h200">Attributes</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Returns
-              </dt>
-              <dd class="body-medium">
-               <p>the currently executing thread.</p>
-              </dd>
-             </dl>
+             <dl class="attributes attributes-small"></dl>
             </div>
            </div>
           </div>
@@ -146,21 +139,14 @@ node3 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Returns the <a href="ActorThread.html#index-0">ActorThread.index</a> of the currently executing <a href="ActorThread.html">ActorThread</a> object.</p>
+             <p>Returns the <a href="ActorThread.html#index-0">ActorThread.index</a> of the currently executing <a href="ActorThread.html">ActorThread</a>.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Returns the <a href="ActorThread.html#index-0">ActorThread.index</a> of the currently executing <a href="ActorThread.html">ActorThread</a> object.</p>
+              <p>Returns the <a href="ActorThread.html#index-0">ActorThread.index</a> of the currently executing <a href="ActorThread.html">ActorThread</a>.</p>
              </div>
              <h2 class="h200">Attributes</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Returns
-              </dt>
-              <dd class="body-medium">
-               <p><a href="ActorThread.html">ActorThread</a> index</p>
-              </dd>
-             </dl>
+             <dl class="attributes attributes-small"></dl>
             </div>
            </div>
           </div>
@@ -181,11 +167,11 @@ node3 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Check whether the current <span data-unresolved-link="" title="Problem linking Thread: Couldn't resolve a member for the given link query">Thread</span> is <a href="ActorThread.html">ActorThread</a>.</p>
+             <p>Check whether the current <span data-unresolved-link="" title="Problem linking Thread: Couldn't resolve a member for the given link query">Thread</span> is an <a href="ActorThread.html">ActorThread</a>.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Check whether the current <span data-unresolved-link="" title="Problem linking Thread: Couldn't resolve a member for the given link query">Thread</span> is <a href="ActorThread.html">ActorThread</a>.</p>
+              <p>Check whether the current <span data-unresolved-link="" title="Problem linking Thread: Couldn't resolve a member for the given link query">Thread</span> is an <a href="ActorThread.html">ActorThread</a>.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small"></dl>
@@ -196,27 +182,84 @@ node3 -> node2;
         </div>
         <div class="documentableElement" id="threadBuffer-71a" data-f-keywords="final">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="ActorThread$.html#threadBuffer-71a" t="n" class="documentableName ">threadBuffer</a>[<span t="k"></span><span data-unresolved-link="" t="t">T</span>]: <span data-unresolved-link="" t="t">ArrayBuffer</span>[<span data-unresolved-link="" t="t">T</span>]
            </div>
           </div>
          </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Borrow the current thread's scratch <span data-unresolved-link="" title="Problem linking mutable.ArrayBuffer: Couldn't resolve a member for the given link query">mutable.ArrayBuffer</span>, cast to the requested type. '''Warning''': Not reentrant. Only one buffer of any type may be in use at a time per thread.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Borrow the current thread's scratch <span data-unresolved-link="" title="Problem linking mutable.ArrayBuffer: Couldn't resolve a member for the given link query">mutable.ArrayBuffer</span>, cast to the requested type. '''Warning''': Not reentrant. Only one buffer of any type may be in use at a time per thread.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
+           </div>
+          </div>
+         </div>
         </div>
         <div class="documentableElement" id="threadMap-fffff910" data-f-keywords="final">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="ActorThread$.html#threadMap-fffff910" t="n" class="documentableName ">threadMap</a>[<span t="k"></span><span data-unresolved-link="" t="t">K</span>, <span t="k"></span><span data-unresolved-link="" t="t">V</span>]: <span data-unresolved-link="" t="t">HashMap</span>[<span data-unresolved-link="" t="t">K</span>, <span data-unresolved-link="" t="t">V</span>]
            </div>
           </div>
          </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Borrow the current thread's scratch <span data-unresolved-link="" title="Problem linking mutable.HashMap: Couldn't resolve a member for the given link query">mutable.HashMap</span>, cast to the requested type. '''Warning''': Not reentrant. Only one map of any type may be in use at a time per thread.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Borrow the current thread's scratch <span data-unresolved-link="" title="Problem linking mutable.HashMap: Couldn't resolve a member for the given link query">mutable.HashMap</span>, cast to the requested type. '''Warning''': Not reentrant. Only one map of any type may be in use at a time per thread.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
+           </div>
+          </div>
+         </div>
         </div>
         <div class="documentableElement" id="threadSet-415" data-f-keywords="final">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="ActorThread$.html#threadSet-415" t="n" class="documentableName ">threadSet</a>[<span t="k"></span><span data-unresolved-link="" t="t">T</span>]: <span data-unresolved-link="" t="t">HashSet</span>[<span data-unresolved-link="" t="t">T</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Borrow the current thread's scratch <span data-unresolved-link="" title="Problem linking mutable.HashSet: Couldn't resolve a member for the given link query">mutable.HashSet</span>, cast to the requested type. '''Warning''': Not reentrant. Only one set of any type may be in use at a time per thread.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Borrow the current thread's scratch <span data-unresolved-link="" title="Problem linking mutable.HashSet: Couldn't resolve a member for the given link query">mutable.HashSet</span>, cast to the requested type. '''Warning''': Not reentrant. Only one set of any type may be in use at a time per thread.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
            </div>
           </div>
          </div>

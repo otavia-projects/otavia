@@ -393,11 +393,12 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p><a href="actor/Actor.html">Actor</a> content info, the content info is created by actor system when a <a href="actor/Actor.html">Actor</a> instance is creating by actor system, and inject to <a href="actor/Actor.html">Actor</a> instance by <span data-unresolved-link="" title="Problem linking Actor.setCtx: Couldn't resolve a member for the given link query">Actor.setCtx</span></p>
+             <p>Runtime context injected into each <a href="actor/Actor.html">Actor</a> during mounting. Accessed via <a href="actor/Actor.html#context-0">Actor.context</a>.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p><a href="actor/Actor.html">Actor</a> content info, the content info is created by actor system when a <a href="actor/Actor.html">Actor</a> instance is creating by actor system, and inject to <a href="actor/Actor.html">Actor</a> instance by <span data-unresolved-link="" title="Problem linking Actor.setCtx: Couldn't resolve a member for the given link query">Actor.setCtx</span></p>
+              <p>Runtime context injected into each <a href="actor/Actor.html">Actor</a> during mounting. Accessed via <a href="actor/Actor.html#context-0">Actor.context</a>.</p>
+              <p>Provides access to system-level services and actor identity metadata.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -539,11 +540,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>IO-capable actor that manages <span data-unresolved-link="" title="Problem linking Channel: Couldn't resolve a member for the given link query">Channel</span> instances. Scheduled in Phase 2 of the <span data-unresolved-link="" title="Problem linking ActorThread: Couldn't resolve a member for the given link query">ActorThread</span> event loop and always '''fully drained''' (no time budget), ensuring IO responsiveness is never starved.</p>
+             <p>IO-capable actor that manages <span data-unresolved-link="" title="Problem linking Channel: Couldn't resolve a member for the given link query">Channel</span> instances. Always fully drained during the event loop's IO phase (no time budget), ensuring IO responsiveness is never starved.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>IO-capable actor that manages <span data-unresolved-link="" title="Problem linking Channel: Couldn't resolve a member for the given link query">Channel</span> instances. Scheduled in Phase 2 of the <span data-unresolved-link="" title="Problem linking ActorThread: Couldn't resolve a member for the given link query">ActorThread</span> event loop and always '''fully drained''' (no time budget), ensuring IO responsiveness is never starved.</p>
+              <p>IO-capable actor that manages <span data-unresolved-link="" title="Problem linking Channel: Couldn't resolve a member for the given link query">Channel</span> instances. Always fully drained during the event loop's IO phase (no time budget), ensuring IO responsiveness is never starved.</p>
               <p>In addition to the standard message handling via <a href="actor/ChannelsActor.html#resumeAsk-fffff5d6">resumeAsk</a> / <a href="actor/ChannelsActor.html#resumeNotice-763">resumeNotice</a>, ChannelsActor provides <span data-unresolved-link="">resumeChannelStack</span> for processing channel-level IO stacks, and lifecycle hooks like <span data-unresolved-link="">afterChannelClosed</span> and <span data-unresolved-link="">afterChannelRegistered</span> for channel events.</p>
              </div>
              <h2 class="h200">Type parameters</h2>
@@ -1039,11 +1040,11 @@
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Pure business logic actor with no IO capabilities. Scheduled in Phase 3 of the <span data-unresolved-link="" title="Problem linking ActorThread: Couldn't resolve a member for the given link query">ActorThread</span> event loop with a time budget, ensuring fair scheduling among many business actors.</p>
+             <p>Pure business logic actor with no IO capabilities. Scheduled with a time budget alongside other StateActors, ensuring fair scheduling among many business actors.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Pure business logic actor with no IO capabilities. Scheduled in Phase 3 of the <span data-unresolved-link="" title="Problem linking ActorThread: Couldn't resolve a member for the given link query">ActorThread</span> event loop with a time budget, ensuring fair scheduling among many business actors.</p>
+              <p>Pure business logic actor with no IO capabilities. Scheduled with a time budget alongside other StateActors, ensuring fair scheduling among many business actors.</p>
               <p>Override <a href="actor/StateActor.html#resumeAsk-fffff5d6">resumeAsk</a> and/or <a href="actor/StateActor.html#resumeNotice-763">resumeNotice</a> to handle messages. Do NOT use this actor for direct network IO — use <a href="actor/ChannelsActor.html">ChannelsActor</a> or its subclasses instead.</p>
              </div>
              <h2 class="h200">Type parameters</h2>

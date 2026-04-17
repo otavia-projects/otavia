@@ -12,7 +12,8 @@
 </div>
 <div class="cover">
  <div class="doc">
-  <p><a href="Actor.html">Actor</a> content info, the content info is created by actor system when a <a href="Actor.html">Actor</a> instance is creating by actor system, and inject to <a href="Actor.html">Actor</a> instance by <span data-unresolved-link="" title="Problem linking Actor.setCtx: Couldn't resolve a member for the given link query">Actor.setCtx</span></p>
+  <p>Runtime context injected into each <a href="Actor.html">Actor</a> during mounting. Accessed via <a href="Actor.html#context-0">Actor.context</a>.</p>
+  <p>Provides access to system-level services and actor identity metadata.</p>
  </div>
  <section id="attributes">
   <h2 class="h500">Attributes</h2>
@@ -93,11 +94,11 @@ node3 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>id distributed by actor system</p>
+             <p>System-assigned unique ID for this actor instance.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>id distributed by actor system</p>
+              <p>System-assigned unique ID for this actor instance.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small"></dl>
@@ -121,11 +122,11 @@ node3 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>physical address of the binding actor.</p>
+             <p>The physical address of this actor. Use <span data-unresolved-link="" title="Problem linking Actor.self: Couldn't resolve a member for the given link query">Actor.self</span> for the typed variant.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>physical address of the binding actor.</p>
+              <p>The physical address of this actor. Use <span data-unresolved-link="" title="Problem linking Actor.self: Couldn't resolve a member for the given link query">Actor.self</span> for the typed variant.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small"></dl>
@@ -136,18 +137,56 @@ node3 -> node2;
         </div>
         <div class="documentableElement" id="isLoadBalance-0">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="ActorContext.html#isLoadBalance-0" t="n" class="documentableName ">isLoadBalance</a>: <span data-unresolved-link="" t="t">Boolean</span>
            </div>
           </div>
          </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Whether this actor uses round-robin load balancing across multiple threads. When true, messages sent from co-located actors are routed to the same-thread instance for data locality.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Whether this actor uses round-robin load balancing across multiple threads. When true, messages sent from co-located actors are routed to the same-thread instance for data locality.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
+           </div>
+          </div>
+         </div>
         </div>
         <div class="documentableElement" id="mountedThreadId-0">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="ActorContext.html#mountedThreadId-0" t="n" class="documentableName ">mountedThreadId</a>: <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Index of the <a href="../system/ActorThread.html">cc.otavia.core.system.ActorThread</a> this actor is pinned to.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Index of the <a href="../system/ActorThread.html">cc.otavia.core.system.ActorThread</a> this actor is pinned to.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
            </div>
           </div>
          </div>
@@ -167,11 +206,11 @@ node3 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>actor system</p>
+             <p>The <span data-unresolved-link="" title="Problem linking ActorSystem: Couldn't resolve a member for the given link query">ActorSystem</span> this actor belongs to.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>actor system</p>
+              <p>The <span data-unresolved-link="" title="Problem linking ActorSystem: Couldn't resolve a member for the given link query">ActorSystem</span> this actor belongs to.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small"></dl>

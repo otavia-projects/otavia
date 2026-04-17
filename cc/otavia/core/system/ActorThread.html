@@ -14,7 +14,16 @@
  </div>
 </div>
 <div class="cover">
- <div class="doc"></div>
+ <div class="doc">
+  <p>The central execution unit of the Otavia runtime. Each ActorThread is simultaneously the IO thread (polling the OS selector for network/file events) and the actor execution thread (running user business logic).</p>
+  <p>Every actor is pinned to a single ActorThread for its entire lifetime. All actors on the same thread are single-threaded with respect to each other, eliminating the need for locks on intra-thread coordination.</p>
+  <p>The event loop has three phases per iteration:</p>
+  <ol>
+   <li>'''Phase 1 — IO''': Poll the selector and process IO events</li>
+   <li>'''Phase 2 — ChannelsActor dispatch''': Fully drain IO-capable actors and pending events (no time budget)</li>
+   <li>'''Phase 3 — StateActor dispatch''': Run business logic actors within a time budget</li>
+  </ol>
+ </div>
  <section id="attributes">
   <h2 class="h500">Attributes</h2>
   <dl class="attributes">
@@ -107,9 +116,28 @@ node5 -> node2;
         </div>
         <div class="documentableElement" id="cleanChannelTask-94c">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="ActorThread.html#cleanChannelTask-94c" t="n" class="documentableName ">cleanChannelTask</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Clear all deferred channel tasks. Called during shutdown to release pending work.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Clear all deferred channel tasks. Called during shutdown to release pending work.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
            </div>
           </div>
          </div>
@@ -129,11 +157,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>A <span data-unresolved-link="" title="Problem linking BufferAllocator: Couldn't resolve a member for the given link query">BufferAllocator</span> which allocate heap memory.</p>
+             <p>Per-thread direct memory allocator.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>A <span data-unresolved-link="" title="Problem linking BufferAllocator: Couldn't resolve a member for the given link query">BufferAllocator</span> which allocate heap memory.</p>
+              <p>Per-thread direct memory allocator.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small"></dl>
@@ -157,11 +185,11 @@ node5 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>A <span data-unresolved-link="" title="Problem linking BufferAllocator: Couldn't resolve a member for the given link query">BufferAllocator</span> which allocate heap memory.</p>
+             <p>Per-thread heap memory allocator.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>A <span data-unresolved-link="" title="Problem linking BufferAllocator: Couldn't resolve a member for the given link query">BufferAllocator</span> which allocate heap memory.</p>
+              <p>Per-thread heap memory allocator.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small"></dl>

@@ -15,7 +15,7 @@
 </div>
 <div class="cover">
  <div class="doc">
-  <p>IO-capable actor that manages <span data-unresolved-link="" title="Problem linking Channel: Couldn't resolve a member for the given link query">Channel</span> instances. Scheduled in Phase 2 of the <span data-unresolved-link="" title="Problem linking ActorThread: Couldn't resolve a member for the given link query">ActorThread</span> event loop and always '''fully drained''' (no time budget), ensuring IO responsiveness is never starved.</p>
+  <p>IO-capable actor that manages <span data-unresolved-link="" title="Problem linking Channel: Couldn't resolve a member for the given link query">Channel</span> instances. Always fully drained during the event loop's IO phase (no time budget), ensuring IO responsiveness is never starved.</p>
   <p>In addition to the standard message handling via <a href="ChannelsActor.html#resumeAsk-fffff5d6">resumeAsk</a> / <a href="ChannelsActor.html#resumeNotice-763">resumeNotice</a>, ChannelsActor provides <span data-unresolved-link="">resumeChannelStack</span> for processing channel-level IO stacks, and lifecycle hooks like <span data-unresolved-link="">afterChannelClosed</span> and <span data-unresolved-link="">afterChannelRegistered</span> for channel events.</p>
  </div>
  <section id="attributes">
@@ -132,27 +132,56 @@ node8 -> node0;
         </div>
         <div class="documentableElement" id="address-0">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="ChannelsActor.html#address-0" t="n" class="documentableName ">address</a>: <a href="../address/ActorAddress.html" t="t">ActorAddress</a>[<span t="t">M</span>]
            </div>
           </div>
          </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Alias for <a href="ChannelsActor.html#self-0">self</a> — the typed address of this IO-capable actor.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Alias for <a href="ChannelsActor.html#self-0">self</a> — the typed address of this IO-capable actor.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
+           </div>
+          </div>
+         </div>
         </div>
         <div class="documentableElement" id="handler-0">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="ChannelsActor.html#handler-0" t="n" class="documentableName ">handler</a>: <span data-unresolved-link="" t="t">Option</span>[<a href="../channel/ChannelInitializer.html" t="t">ChannelInitializer</a>[<span t="k">_</span><span t="k"> &lt;: </span><a href="../channel/Channel.html" t="t">Channel</a>]]
            </div>
           </div>
          </div>
-        </div>
-        <div class="documentableElement" id="inExecutor-fffff760" data-f-keywords="final">
-         <div class="documentableElement-expander">
-          <div class="header monospace mono-medium">
-           <div class="signature">
-            <span class="modifiers"><span t="k">final </span></span><span class="kind"><span t="k">def </span></span><a href="ChannelsActor.html#inExecutor-fffff760" t="n" class="documentableName ">inExecutor</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Boolean</span>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Optional <span data-unresolved-link="" title="Problem linking ChannelInitializer: Couldn't resolve a member for the given link query">ChannelInitializer</span> for pipeline setup. Override to provide a default handler.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Optional <span data-unresolved-link="" title="Problem linking ChannelInitializer: Couldn't resolve a member for the given link query">ChannelInitializer</span> for pipeline setup. Override to provide a default handler.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
            </div>
           </div>
          </div>
@@ -181,11 +210,11 @@ node8 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Self address of this actor instance. Cannot be moved to <a href="Actor.html">Actor</a> trait due to Address[-M] being contravariant, which conflicts with Actor's covariant +M.</p>
+             <p>Typed self-address. Separated from <a href="Actor.html">Actor</a> by the <code>+M</code>/<code>Address[-M]</code> variance conflict.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Self address of this actor instance. Cannot be moved to <a href="Actor.html">Actor</a> trait due to Address[-M] being contravariant, which conflicts with Actor's covariant +M.</p>
+              <p>Typed self-address. Separated from <a href="Actor.html">Actor</a> by the <code>+M</code>/<code>Address[-M]</code> variance conflict.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -500,11 +529,11 @@ node8 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Send a <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> to self, placing it at the head of the notice mailbox (highest priority within notices). Useful for self-triggered processing that should be handled before other pending notices.</p>
+             <p>Send a <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> to self, inserted at the head of the notice mailbox before all other pending notices.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Send a <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> to self, placing it at the head of the notice mailbox (highest priority within notices). Useful for self-triggered processing that should be handled before other pending notices.</p>
+              <p>Send a <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> to self, inserted at the head of the notice mailbox before all other pending notices.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
@@ -535,11 +564,12 @@ node8 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Handle an <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> message received by this actor, or resume a suspended stack when the awaited reply arrives. * Match on <span data-unresolved-link="" title="Problem linking stack.state: Couldn't resolve a member for the given link query">stack.state</span> to determine the current execution point:</p>
+             <p>Handle an <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> message. Called on initial receipt and on each resume after an awaited reply completes.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Handle an <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> message received by this actor, or resume a suspended stack when the awaited reply arrives. * Match on <span data-unresolved-link="" title="Problem linking stack.state: Couldn't resolve a member for the given link query">stack.state</span> to determine the current execution point:</p>
+              <p>Handle an <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> message. Called on initial receipt and on each resume after an awaited reply completes.</p>
+              <p>Match on <span data-unresolved-link="" title="Problem linking stack.state: Couldn't resolve a member for the given link query">stack.state</span> to distinguish initial entry from resumed execution:</p>
               <div class="snippet mono-small-block">
                <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span>override protected def resumeAsk(stack: AskStack[MyAsk]): StackYield =
 </span><span line-number="2" class=""><span class="tooltip-container"></span>  stack.state match
@@ -553,23 +583,8 @@ node8 -> node0;
                <div class="buttons"></div>
               </div>
              </div>
-             <h2 class="h200">Value parameters</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               stack
-              </dt>
-              <dd class="body-medium">
-               <p>the ask stack containing the received <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> message and current execution state</p>
-              </dd>
-             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Returns
-              </dt>
-              <dd class="body-medium">
-               <p><span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> — <span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> returned by <span data-unresolved-link="" title="Problem linking Stack.suspend: Couldn't resolve a member for the given link query">Stack.suspend</span> to yield with a state, or by <span data-unresolved-link="" title="Problem linking AskStack.return: Couldn't resolve a member for the given link query">AskStack.return</span> to complete with a reply</p>
-              </dd>
               <dt class="body-small">
                Inherited from:
               </dt>
@@ -597,29 +612,14 @@ node8 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Handle a batch of <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> messages received by this actor.</p>
+             <p>Handle a batch of <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> messages in a single stack.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Handle a batch of <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> messages received by this actor.</p>
+              <p>Handle a batch of <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> messages in a single stack.</p>
              </div>
-             <h2 class="h200">Value parameters</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               stack
-              </dt>
-              <dd class="body-medium">
-               <p>the batch ask stack containing all received <span data-unresolved-link="" title="Problem linking Ask: Couldn't resolve a member for the given link query">Ask</span> messages</p>
-              </dd>
-             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Returns
-              </dt>
-              <dd class="body-medium">
-               <p><span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> — <span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> returned by <span data-unresolved-link="" title="Problem linking Stack.suspend: Couldn't resolve a member for the given link query">Stack.suspend</span> to yield with a state, or by <span data-unresolved-link="" title="Problem linking BatchAskStack.return: Couldn't resolve a member for the given link query">BatchAskStack.return</span> to complete</p>
-              </dd>
               <dt class="body-small">
                Inherited from:
               </dt>
@@ -647,29 +647,14 @@ node8 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Handle a batch of <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> messages received by this actor.</p>
+             <p>Handle a batch of <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> messages in a single stack.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Handle a batch of <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> messages received by this actor.</p>
+              <p>Handle a batch of <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> messages in a single stack.</p>
              </div>
-             <h2 class="h200">Value parameters</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               stack
-              </dt>
-              <dd class="body-medium">
-               <p>the batch notice stack containing all received <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> messages</p>
-              </dd>
-             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Returns
-              </dt>
-              <dd class="body-medium">
-               <p><span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> — <span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> returned by <span data-unresolved-link="" title="Problem linking Stack.suspend: Couldn't resolve a member for the given link query">Stack.suspend</span> to yield with a state, or by <span data-unresolved-link="" title="Problem linking BatchNoticeStack.return: Couldn't resolve a member for the given link query">BatchNoticeStack.return</span> to complete</p>
-              </dd>
               <dt class="body-small">
                Inherited from:
               </dt>
@@ -697,29 +682,14 @@ node8 -> node0;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Handle a <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> message received by this actor, or resume a suspended stack when the awaited reply arrives.</p>
+             <p>Handle a <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> message. Called on initial receipt and on each resume.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Handle a <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> message received by this actor, or resume a suspended stack when the awaited reply arrives.</p>
+              <p>Handle a <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> message. Called on initial receipt and on each resume.</p>
              </div>
-             <h2 class="h200">Value parameters</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               stack
-              </dt>
-              <dd class="body-medium">
-               <p>the notice stack containing the received <span data-unresolved-link="" title="Problem linking Notice: Couldn't resolve a member for the given link query">Notice</span> message and current execution state</p>
-              </dd>
-             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Returns
-              </dt>
-              <dd class="body-medium">
-               <p><span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> — <span data-unresolved-link="" title="Problem linking StackYield: Couldn't resolve a member for the given link query">StackYield</span> returned by <span data-unresolved-link="" title="Problem linking Stack.suspend: Couldn't resolve a member for the given link query">Stack.suspend</span> to yield with a state, or by <span data-unresolved-link="" title="Problem linking NoticeStack.return: Couldn't resolve a member for the given link query">NoticeStack.return</span> to complete</p>
-              </dd>
               <dt class="body-small">
                Inherited from:
               </dt>
@@ -895,13 +865,8 @@ node8 -> node0;
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
-            <div class="documentableBrief doc">
-             <p>Logger for this actor instance, initialized during mount.</p>
-            </div>
             <div class="cover">
-             <div class="doc">
-              <p>Logger for this actor instance, initialized during mount.</p>
-             </div>
+             <div class="doc"></div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">

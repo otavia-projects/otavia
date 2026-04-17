@@ -14,8 +14,26 @@
  </div>
 </div>
 <div class="cover">
- <div class="doc"></div>
+ <div class="doc">
+  <p>Per-<a href="ActorThread.html">ActorThread</a> scheduler that manages three priority queues for actor house scheduling.</p>
+  <p>Queue assignment is based on actor type:</p>
+  <ul>
+   <li>'''mountingQueue''' (FIFO): houses awaiting initial mount (all types)</li>
+   <li>'''channelsActorQueue''' (Priority): IO-capable actors, fully drained in Phase 2 with no time budget</li>
+   <li>'''actorQueue''' (Priority): business logic actors, time-budgeted in Phase 3</li>
+  </ul>
+  <p>Each <a href="PriorityHouseQueue.html">PriorityHouseQueue</a> has two sub-queues: normal priority and high priority. Houses are promoted to high priority when they have excessive pending replies, events, or a low stack-end-rate (backpressure signal).</p>
+ </div>
  <section id="attributes">
+  <h2 class="h500">Value parameters</h2>
+  <dl class="attributes">
+   <dt class="body-small">
+    thread
+   </dt>
+   <dd class="body-medium">
+    <p>the owning ActorThread</p>
+   </dd>
+  </dl>
   <h2 class="h500">Attributes</h2>
   <dl class="attributes">
    <dt class="body-small">
@@ -100,22 +118,13 @@ node3 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Received <span data-unresolved-link="" title="Problem linking Message: Couldn't resolve a member for the given link query">Message</span> or <span data-unresolved-link="" title="Problem linking Event: Couldn't resolve a member for the given link query">Event</span> when <span data-unresolved-link="">ActorHouse</span> status is <b> READY | RUNNING</b></p><b> </b>
+             <p>Promote an <span data-unresolved-link="">ActorHouse</span> to high priority when new messages arrive while it is already in READY or RUNNING state. Only houses with pending high-priority indicators (excessive replies/events or low stack-end-rate) are promoted.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p><b>Received <span data-unresolved-link="" title="Problem linking Message: Couldn't resolve a member for the given link query">Message</span> or <span data-unresolved-link="" title="Problem linking Event: Couldn't resolve a member for the given link query">Event</span> when <span data-unresolved-link="">ActorHouse</span> status is <b> READY | RUNNING</b></b></p><b><b> </b></b>
+              <p>Promote an <span data-unresolved-link="">ActorHouse</span> to high priority when new messages arrive while it is already in READY or RUNNING state. Only houses with pending high-priority indicators (excessive replies/events or low stack-end-rate) are promoted.</p>
              </div>
-             <h2 class="h200"><b><b>Value parameters</b></b></h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               <b><b>house</b></b>
-              </dt>
-              <dd class="body-medium">
-               <p><b><b>The <span data-unresolved-link="">ActorHouse</span> which is received <span data-unresolved-link="" title="Problem linking Message: Couldn't resolve a member for the given link query">Message</span> or <span data-unresolved-link="" title="Problem linking Event: Couldn't resolve a member for the given link query">Event</span></b></b></p><b><b> </b></b>
-              </dd>
-             </dl>
-             <h2 class="h200"><b><b>Attributes</b></b></h2>
+             <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small"></dl>
             </div>
            </div>
@@ -126,7 +135,7 @@ node3 -> node2;
          <div class="documentableElement-expander">
           <div class="header monospace mono-medium">
            <div class="signature">
-            <b><b><span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#laterTasks-0" t="n" class="documentableName ">laterTasks</a>: <span data-unresolved-link="" t="t">ArrayDeque</span>[<span data-unresolved-link="" t="t">Runnable</span>]</b></b>
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#laterTasks-0" t="n" class="documentableName ">laterTasks</a>: <span data-unresolved-link="" t="t">ArrayDeque</span>[<span data-unresolved-link="" t="t">Runnable</span>]
            </div>
           </div>
          </div>
@@ -135,127 +144,160 @@ node3 -> node2;
          <div class="documentableElement-expander">
           <div class="header monospace mono-medium">
            <div class="signature">
-            <b><b><span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#monitor-7bb" t="n" class="documentableName ">monitor</a>(<span t="k"></span>): <a href="monitor/HouseManagerMonitor.html" t="t">HouseManagerMonitor</a></b></b>
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#monitor-7bb" t="n" class="documentableName ">monitor</a>(<span t="k"></span>): <a href="monitor/HouseManagerMonitor.html" t="t">HouseManagerMonitor</a>
            </div>
           </div>
          </div>
         </div>
         <div class="documentableElement" id="mount-dd5">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <b><b><span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#mount-dd5" t="n" class="documentableName ">mount</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">house</span>: <span t="t">ActorHouse</span>): <span data-unresolved-link="" t="t">Unit</span></b></b>
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#mount-dd5" t="n" class="documentableName ">mount</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">house</span>: <span t="t">ActorHouse</span>): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Schedule a newly created house for mounting.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Schedule a newly created house for mounting.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
            </div>
           </div>
          </div>
         </div>
         <div class="documentableElement" id="ready-dd5">
          <div class="documentableElement-expander">
-          <b><b><button class="icon-button ar show-content"></button>
-            <div class="header monospace mono-medium">
-             <div class="signature">
-              <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#ready-dd5" t="n" class="documentableName ">ready</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">house</span>: <span t="t">ActorHouse</span>): <span data-unresolved-link="" t="t">Unit</span>
-             </div>
-            </div></b></b>
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#ready-dd5" t="n" class="documentableName ">ready</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">house</span>: <span t="t">ActorHouse</span>): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
          </div>
          <div class="docs">
-          <b><b><span class="modifiers"></span>
-            <div>
-             <div class="originInfo"></div>
-             <div class="memberDocumentation">
-              <div class="documentableBrief doc">
-               <p><span data-unresolved-link="">ActorHouse</span> status: <b> WAITING -&gt; READY</b></p><b> </b>
-              </div>
-              <div class="cover">
-               <div class="doc">
-                <p><b><span data-unresolved-link="">ActorHouse</span> status: <b> WAITING -&gt; READY</b></b></p><b><b> </b></b>
-               </div>
-               <h2 class="h200"><b><b>Value parameters</b></b></h2>
-               <dl class="attributes attributes-small">
-                <dt class="body-small">
-                 <b><b>house</b></b>
-                </dt>
-                <dd class="body-medium">
-                 <p><b><b>the status changed <span data-unresolved-link="">ActorHouse</span></b></b></p><b><b> </b></b>
-                </dd>
-               </dl>
-               <h2 class="h200"><b><b>Attributes</b></b></h2>
-               <dl class="attributes attributes-small"></dl>
-              </div>
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Enqueue an <span data-unresolved-link="">ActorHouse</span> that has transitioned from WAITING to READY. The house is placed into the appropriate queue based on its actor type:</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Enqueue an <span data-unresolved-link="">ActorHouse</span> that has transitioned from WAITING to READY. The house is placed into the appropriate queue based on its actor type:</p>
+              <ul>
+               <li><a href="../actor/StateActor.html">cc.otavia.core.actor.StateActor</a> -&gt; actorQueue (time-budgeted in Phase 3)</li>
+               <li><a href="../actor/ChannelsActor.html">cc.otavia.core.actor.ChannelsActor</a> / <a href="../actor/AcceptorActor.html">cc.otavia.core.actor.AcceptorActor</a> -&gt; channelsActorQueue (fully drained in Phase 2)</li>
+              </ul>
              </div>
-            </div></b></b>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
+           </div>
+          </div>
          </div>
         </div>
         <div class="documentableElement" id="runChannelsActors-94c">
          <div class="documentableElement-expander">
-          <b><b><b><button class="icon-button ar show-content"></button>
-             <div class="header monospace mono-medium">
-              <div class="signature">
-               <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#runChannelsActors-94c" t="n" class="documentableName ">runChannelsActors</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Unit</span>
-              </div>
-             </div></b></b></b>
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#runChannelsActors-94c" t="n" class="documentableName ">runChannelsActors</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
          </div>
          <div class="docs">
-          <b><b><b><span class="modifiers"></span>
-             <div>
-              <div class="originInfo"></div>
-              <div class="memberDocumentation">
-               <div class="documentableBrief doc">
-                <p>Run channels actor queue (IO pipeline work) and mounting queue. These are always drained fully as they are part of the IO pipeline.</p>
-               </div>
-               <div class="cover">
-                <div class="doc">
-                 <p>Run channels actor queue (IO pipeline work) and mounting queue. These are always drained fully as they are part of the IO pipeline.</p>
-                </div>
-                <h2 class="h200">Attributes</h2>
-                <dl class="attributes attributes-small"></dl>
-               </div>
-              </div>
-             </div></b></b></b>
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Run channels actor queue (IO pipeline work) and mounting queue. These are always drained fully as they are part of the IO pipeline and must not be starved.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Run channels actor queue (IO pipeline work) and mounting queue. These are always drained fully as they are part of the IO pipeline and must not be starved.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
+           </div>
+          </div>
          </div>
         </div>
         <div class="documentableElement" id="runStateActors-fffffa90">
          <div class="documentableElement-expander">
-          <b><b><b><button class="icon-button ar show-content"></button>
-             <div class="header monospace mono-medium">
-              <div class="signature">
-               <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#runStateActors-fffffa90" t="n" class="documentableName ">runStateActors</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">deadlineNanos</span>: <span data-unresolved-link="" t="t">Long</span>): <span data-unresolved-link="" t="t">Unit</span>
-              </div>
-             </div></b></b></b>
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#runStateActors-fffffa90" t="n" class="documentableName ">runStateActors</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">deadlineNanos</span>: <span data-unresolved-link="" t="t">Long</span>): <span data-unresolved-link="" t="t">Unit</span>
+           </div>
+          </div>
          </div>
          <div class="docs">
-          <b><b><b><span class="modifiers"></span>
-             <div>
-              <div class="originInfo"></div>
-              <div class="memberDocumentation">
-               <div class="documentableBrief doc">
-                <p>Run state actor queue (business logic) within the given time budget. Actors that are not processed within the deadline remain in the queue for the next iteration.</p>
-               </div>
-               <div class="cover">
-                <div class="doc">
-                 <p>Run state actor queue (business logic) within the given time budget. Actors that are not processed within the deadline remain in the queue for the next iteration.</p>
-                </div>
-                <h2 class="h200">Value parameters</h2>
-                <dl class="attributes attributes-small">
-                 <dt class="body-small">
-                  deadlineNanos
-                 </dt>
-                 <dd class="body-medium">
-                  <p>the absolute time (in nanos) after which no more actors should be dequeued. <span data-unresolved-link="">Long.MaxValue</span> means no limit.</p>
-                 </dd>
-                </dl>
-                <h2 class="h200">Attributes</h2>
-                <dl class="attributes attributes-small"></dl>
-               </div>
-              </div>
-             </div></b></b></b>
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Run state actor queue (business logic) within the given time budget. Actors that are not processed within the deadline remain in the queue for the next iteration.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Run state actor queue (business logic) within the given time budget. Actors that are not processed within the deadline remain in the queue for the next iteration.</p>
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               deadlineNanos
+              </dt>
+              <dd class="body-medium">
+               <p>the absolute time (in nanos) after which no more actors should be dequeued. <span data-unresolved-link="">Long.MaxValue</span> means no limit.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
+           </div>
+          </div>
          </div>
         </div>
         <div class="documentableElement" id="runnable-0">
          <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <b><b><b><span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#runnable-0" t="n" class="documentableName ">runnable</a>: <span data-unresolved-link="" t="t">Boolean</span></b></b></b>
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#runnable-0" t="n" class="documentableName ">runnable</a>: <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Whether any queue has work available. Used by the IO handler to determine if it can block on select.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Whether any queue has work available. Used by the IO handler to determine if it can block on select.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
            </div>
           </div>
          </div>
@@ -264,81 +306,88 @@ node3 -> node2;
          <div class="documentableElement-expander">
           <div class="header monospace mono-medium">
            <div class="signature">
-            <b><b><b><span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#system-0" t="n" class="documentableName ">system</a>: <a href="ActorSystem.html" t="t">ActorSystem</a></b></b></b>
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#system-0" t="n" class="documentableName ">system</a>: <a href="ActorSystem.html" t="t">ActorSystem</a>
            </div>
           </div>
          </div>
         </div>
         <div class="documentableElement" id="toString-0" data-f-keywords="override">
          <div class="documentableElement-expander">
-          <b><b><b><button class="icon-button ar show-content"></button>
-             <div class="header monospace mono-medium">
-              <div class="signature">
-               <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#toString-0" t="n" class="documentableName ">toString</a>: <span data-unresolved-link="" t="t">String</span>
-              </div>
-             </div></b></b></b>
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#toString-0" t="n" class="documentableName ">toString</a>: <span data-unresolved-link="" t="t">String</span>
+           </div>
+          </div>
          </div>
          <div class="docs">
-          <b><b><b><span class="modifiers"></span>
-             <div>
-              <div class="originInfo"></div>
-              <div class="memberDocumentation">
-               <div class="documentableBrief doc">
-                <p>Returns a string representation of the object.</p>
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Returns a string representation of the object.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Returns a string representation of the object.</p>
+              <p>The default representation is platform dependent.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>a string representation of the object.</p>
+              </dd>
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <span data-unresolved-link="">Any</span>
                </div>
-               <div class="cover">
-                <div class="doc">
-                 <p>Returns a string representation of the object.</p>
-                 <p>The default representation is platform dependent.</p>
-                </div>
-                <h2 class="h200">Attributes</h2>
-                <dl class="attributes attributes-small">
-                 <dt class="body-small">
-                  Returns
-                 </dt>
-                 <dd class="body-medium">
-                  <p>a string representation of the object.</p>
-                 </dd>
-                 <dt class="body-small">
-                  Definition Classes
-                 </dt>
-                 <dd class="body-medium">
-                  <div>
-                   <span data-unresolved-link="">Any</span>
-                  </div>
-                 </dd>
-                </dl>
-               </div>
-              </div>
-             </div></b></b></b>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
          </div>
         </div>
         <div class="documentableElement" id="trySteal-fffff760">
          <div class="documentableElement-expander">
-          <b><b><b><button class="icon-button ar show-content"></button>
-             <div class="header monospace mono-medium">
-              <div class="signature">
-               <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#trySteal-fffff760" t="n" class="documentableName ">trySteal</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Boolean</span>
-              </div>
-             </div></b></b></b>
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#trySteal-fffff760" t="n" class="documentableName ">trySteal</a>(<span t="k"></span>): <span data-unresolved-link="" t="t">Boolean</span>
+           </div>
+          </div>
          </div>
          <div class="docs">
-          <b><b><b><span class="modifiers"></span>
-             <div>
-              <div class="originInfo"></div>
-              <div class="memberDocumentation">
-               <div class="documentableBrief doc">
-                <p>Steal from other <a href="ActorThread.html">ActorThread</a> to run, this method is called by <a href="HouseManager.html#thread-0">HouseManager.thread</a></p>
-               </div>
-               <div class="cover">
-                <div class="doc">
-                 <p>Steal from other <a href="ActorThread.html">ActorThread</a> to run, this method is called by <a href="HouseManager.html#thread-0">HouseManager.thread</a></p>
-                </div>
-                <h2 class="h200">Attributes</h2>
-                <dl class="attributes attributes-small"></dl>
-               </div>
-              </div>
-             </div></b></b></b>
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Attempt to steal a StateActor from another <a href="ActorThread.html">ActorThread</a>'s queue. Used for cross-thread load balancing. Only steals from the normal-priority queue.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Attempt to steal a StateActor from another <a href="ActorThread.html">ActorThread</a>'s queue. Used for cross-thread load balancing. Only steals from the normal-priority queue.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Returns
+              </dt>
+              <dd class="body-medium">
+               <p>true if a house was stolen and executed</p>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
          </div>
         </div>
        </div>
@@ -346,14 +395,14 @@ node3 -> node2;
       <section id="Concrete-fields">
        <div class="documentableList expand">
         <div class="documentableList-expander">
-         <b><b><b><button class="icon-button show-content expand"></button>
-            <h4 class="groupHeader h200">Concrete fields</h4></b></b></b>
+         <button class="icon-button show-content expand"></button>
+         <h4 class="groupHeader h200">Concrete fields</h4>
         </div>
         <div class="documentableElement" id="thread-0">
          <div class="documentableElement-expander">
           <div class="header monospace mono-medium">
            <div class="signature">
-            <b><b><b><span class="modifiers"></span><span class="kind"><span t="k">val </span></span><a href="HouseManager.html#thread-0" t="n" class="documentableName ">thread</a>: <a href="ActorThread.html" t="t">ActorThread</a></b></b></b>
+            <span class="modifiers"></span><span class="kind"><span t="k">val </span></span><a href="HouseManager.html#thread-0" t="n" class="documentableName ">thread</a>: <a href="ActorThread.html" t="t">ActorThread</a>
            </div>
           </div>
          </div>
@@ -365,4 +414,4 @@ node3 -> node2;
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Attributes</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Concrete-fields">Concrete fields</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Value parameters</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Concrete-fields">Concrete fields</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

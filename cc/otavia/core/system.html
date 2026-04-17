@@ -222,8 +222,20 @@
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>The central execution unit of the Otavia runtime. Each ActorThread is simultaneously the IO thread (polling the OS selector for network/file events) and the actor execution thread (running user business logic).</p>
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>The central execution unit of the Otavia runtime. Each ActorThread is simultaneously the IO thread (polling the OS selector for network/file events) and the actor execution thread (running user business logic).</p>
+              <p>Every actor is pinned to a single ActorThread for its entire lifetime. All actors on the same thread are single-threaded with respect to each other, eliminating the need for locks on intra-thread coordination.</p>
+              <p>The event loop has three phases per iteration:</p>
+              <ol>
+               <li>'''Phase 1 — IO''': Poll the selector and process IO events</li>
+               <li>'''Phase 2 — ChannelsActor dispatch''': Fully drain IO-capable actors and pending events (no time budget)</li>
+               <li>'''Phase 3 — StateActor dispatch''': Run business logic actors within a time budget</li>
+              </ol>
+             </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
@@ -843,8 +855,29 @@
           <div>
            <div class="originInfo"></div>
            <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Per-<a href="system/ActorThread.html">ActorThread</a> scheduler that manages three priority queues for actor house scheduling.</p>
+            </div>
             <div class="cover">
-             <div class="doc"></div>
+             <div class="doc">
+              <p>Per-<a href="system/ActorThread.html">ActorThread</a> scheduler that manages three priority queues for actor house scheduling.</p>
+              <p>Queue assignment is based on actor type:</p>
+              <ul>
+               <li>'''mountingQueue''' (FIFO): houses awaiting initial mount (all types)</li>
+               <li>'''channelsActorQueue''' (Priority): IO-capable actors, fully drained in Phase 2 with no time budget</li>
+               <li>'''actorQueue''' (Priority): business logic actors, time-budgeted in Phase 3</li>
+              </ul>
+              <p>Each <a href="system/PriorityHouseQueue.html">PriorityHouseQueue</a> has two sub-queues: normal priority and high priority. Houses are promoted to high priority when they have excessive pending replies, events, or a low stack-end-rate (backpressure signal).</p>
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               thread
+              </dt>
+              <dd class="body-medium">
+               <p>the owning ActorThread</p>
+              </dd>
+             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
