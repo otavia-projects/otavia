@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## AI Rules
+## Coding Agent Rules — MUST follow strictly
 
 ### Context Loading
 
@@ -11,18 +11,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Before Implementing
 
-3. **Study existing similar code.** This project follows consistent patterns. Find the closest existing implementation (e.g. new codec -> study codec-http) and follow its structure.
-4. **State assumptions explicitly.** If uncertain about requirements or approach, ask. If multiple valid approaches exist, present them -- don't pick silently.
-5. **When porting from Netty, adapt to the actor model.** Do NOT blindly copy Netty patterns. Map callbacks to Otavia's Stack/State suspend-resume pattern.
+3. **Study existing similar code first.** This project follows consistent patterns. You MUST find the closest existing implementation (e.g. new codec -> study codec-http) and follow its structure before writing any code.
+4. **Clarify before coding.** For each task, identify the success criteria upfront — expected behavior, test cases, compilation. If you are unsure about requirements, approach, or which pattern to follow, ask the user. Never silently guess or assume. If something feels wrong or ambiguous, push back — do not paper over confusion with code.
 
 ### While Implementing
 
-6. **Simplicity first.** Minimum code that solves the problem. No speculative features, no abstractions for single-use code, no error handling for impossible scenarios.
-7. **Surgical changes.** Touch only what you must. Match existing style. Don't "improve" adjacent code. Every changed line should trace to the user's request.
+5. **Minimal, surgical changes.** Write the minimum code that solves the problem — no speculative features, no abstractions for single-use code, no error handling for impossible scenarios. Touch ONLY what you must — every changed line MUST trace directly to the user's request. If your implementation can be reduced to fewer lines while preserving correctness, rewrite it. If you notice unrelated dead code, mention it — do NOT delete it unless explicitly asked.
+6. **Comments focus on code itself.** Scaladoc and inline comments MUST describe what the code does, its preconditions, and its effects. Do NOT include design rationale, decision history, comparison with alternatives, or meta-commentary about why something was written a certain way.
 
 ### After Implementing
 
-8. **Compile and test.** Run `./mill <module>.compile` after each logical change. Run `./mill <module>.test` to verify. Tests exist to verify correctness -- if tests fail due to code bugs, fix the code, not the tests. Do not modify tests to make broken code pass.
+7. **MUST compile and test after every change.** Run `./mill <module>.compile` after each logical change, then `./mill <module>.test` to verify. No exceptions. If compilation or tests fail, fix the code — NEVER modify tests to make broken code pass. Verify against the success criteria you defined before starting.
 
 ## Project Overview
 
