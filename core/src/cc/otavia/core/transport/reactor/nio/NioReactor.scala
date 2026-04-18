@@ -25,7 +25,7 @@ import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem.DEFAULT_PRINT_BANNER
 import cc.otavia.core.system.{ActorSystem, ActorThread}
 import cc.otavia.core.transport.TransportFactory
-import cc.otavia.core.transport.reactor.nio.NioReactor.{NIO_REACTOR_WORKERS, NioThreadChoicer, NioThreadFactory}
+import cc.otavia.core.transport.reactor.nio.NioReactor.{NIO_REACTOR_WORKERS, NioThreadChooser, NioThreadFactory}
 import cc.otavia.core.util.SpinLockQueue
 
 import java.util.SplittableRandom
@@ -46,7 +46,7 @@ class NioReactor(
 
     private val workers: Array[NioReactorWorker] = new Array[NioReactorWorker](NIO_REACTOR_WORKERS)
 
-    private val nioThreadChoicer = NioThreadChoicer(system.actorWorkerSize, NIO_REACTOR_WORKERS)
+    private val nioThreadChoicer = NioThreadChooser(system.actorWorkerSize, NIO_REACTOR_WORKERS)
 
     workers.indices.foreach { idx =>
         workers(idx) = new NioReactorWorker(
@@ -104,27 +104,27 @@ object NioReactor {
 
     }
 
-    private trait NioThreadChoicer {
+    private trait NioThreadChooser {
         def choice(channel: Channel): Int
     }
 
-    private object NioThreadChoicer {
+    private object NioThreadChooser {
 
-        def apply(actorThreadSize: Int, ioThreadSize: Int): NioThreadChoicer =
-            if (actorThreadSize == ioThreadSize) new OneByOneNioThreadChoicer
+        def apply(actorThreadSize: Int, ioThreadSize: Int): NioThreadChooser =
+            if (actorThreadSize == ioThreadSize) new OneByOneNioThreadChooser
             else if (ioThreadSize % actorThreadSize == 0)
-                new PreferentialNioThreadChoicer(ioThreadSize / actorThreadSize, actorThreadSize)
-            else new RandomNioThreadChoicer(ioThreadSize)
+                new PreferentialNioThreadChooser(ioThreadSize / actorThreadSize, actorThreadSize)
+            else new RandomNioThreadChooser(ioThreadSize)
 
-        private final class OneByOneNioThreadChoicer extends NioThreadChoicer {
+        private final class OneByOneNioThreadChooser extends NioThreadChooser {
             override def choice(channel: Channel): Int = channel.mountThreadId
         }
 
-        private final class RandomNioThreadChoicer(nioSize: Int) extends NioThreadChoicer {
+        private final class RandomNioThreadChooser(nioSize: Int) extends NioThreadChooser {
             override def choice(channel: Channel): Int = math.abs(channel.hashCode()) % nioSize
         }
 
-        private final class PreferentialNioThreadChoicer(factor: Int, base: Int) extends NioThreadChoicer {
+        private final class PreferentialNioThreadChooser(factor: Int, base: Int) extends NioThreadChooser {
 
             override def choice(channel: Channel): Int =
                 (math.abs(channel.hashCode()) % factor) * base + channel.mountThreadId

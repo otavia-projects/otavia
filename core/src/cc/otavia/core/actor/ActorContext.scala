@@ -36,7 +36,7 @@ trait ActorContext {
     def actorId: Long
 
     /** Whether this actor uses round-robin load balancing across multiple threads.
-     *  When true, messages sent from co-located actors are routed to the same-thread instance for data locality.
+     *  When true, messages sent from co-located actor are routed to the same-thread instance for data locality.
      */
     def isLoadBalance: Boolean
 

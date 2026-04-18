@@ -44,7 +44,7 @@ The user only needs to: define messages, match on state, call suspend/return. Ev
 - Mailbox priority dispatch (replies before asks)
 - ActorThread three-phase event loop scheduling (IO / ChannelsActor / StateActor)
 - Channel inflight management (pendingFutures / inflightFutures / pendingStacks / inflightStacks)
-- Cross-thread message delivery (synchronized MailBox.put + ioHandler.wakeup)
+- Cross-thread message delivery (synchronized Mailbox.put + ioHandler.wakeup)
 - Zero allocation for all intermediate state objects on hot paths
 
 ---
@@ -187,7 +187,7 @@ Inflight management needs both FIFO ordering (backpressure/flow control) and O(1
 - `ActorThread` -- IO thread + actor executor, three-phase event loop
 - `ActorHouse` -- per-actor mailbox container, state machine (CREATED->MOUNTING->WAITING->READY->SCHEDULED->RUNNING)
 - `HouseManager` -- priority queue scheduling, work stealing
-- `MailBox` -- five separate mailboxes per actor (reply, exception, ask, notice, event)
+- `Mailbox` -- five separate mailboxes per actor (reply, exception, ask, notice, event)
 
 ### Address (`cc.otavia.core.address`)
 - `ActorAddress` -- routes directly to ActorHouse mailboxes

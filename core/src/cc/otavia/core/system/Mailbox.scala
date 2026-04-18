@@ -20,7 +20,7 @@ import cc.otavia.core.util.{Nextable, SpinLock}
 
 import scala.language.unsafeNulls
 
-class MailBox(val house: ActorHouse) {
+class Mailbox(val house: ActorHouse) {
 
     private val lock = new SpinLock
 

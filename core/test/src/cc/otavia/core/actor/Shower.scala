@@ -14,21 +14,28 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.actors
+package cc.otavia.core.actor
 
-import cc.otavia.core.actor.{MessageOf, StateActor}
-import cc.otavia.core.actors.Shower.*
+import cc.otavia.core.actor.Actor
+import cc.otavia.core.actor.Shower.*
 import cc.otavia.core.message.Notice
-import cc.otavia.core.stack.{NoticeStack, StackState, StackYield}
 
-class ConsoleShower extends StateActor[MessageOf[Shower]] with Shower {
+import java.time.LocalDateTime
 
-    override def resumeNotice(stack: NoticeStack[ShowEvent]): StackYield = handleInfo(stack)
+trait Shower extends Actor[ShowEvent]
 
-    private def handleInfo(stack: NoticeStack[ShowEvent]): StackYield = {
-        val msg = stack.notice
-        println(s"${msg.clz.getName} ${msg.time} ${msg.thread} ${msg.msg}")
-        stack.`return`()
+object Shower {
+
+    sealed trait ShowEvent extends Notice {
+
+        val clz: Class[?]
+        val time: LocalDateTime
+        val thread: String
+        val msg: String
+
     }
+
+    final case class Info(clz: Class[?], time: LocalDateTime, thread: String, msg: String)  extends ShowEvent
+    final case class Error(clz: Class[?], time: LocalDateTime, thread: String, msg: String) extends ShowEvent
 
 }

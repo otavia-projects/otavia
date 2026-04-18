@@ -27,7 +27,7 @@ import scala.language.unsafeNulls
  *  for a variable. Although seemingly very subtle, it yields slight performance advantage over using a hash table, and
  *  it is useful when accessed frequently.
  *
- *  To take advantage of this thread-local variable, your thread must be a [[ActorThread]]. By default, all actors and
+ *  To take advantage of this thread-local variable, your thread must be a [[ActorThread]]. By default, all actor and
  *  channel are running by [[ActorThread]].
  *  @see
  *    [[java.lang.ThreadLocal]]

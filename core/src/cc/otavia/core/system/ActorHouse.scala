@@ -33,8 +33,8 @@ import scala.language.unsafeNulls
  *  ActorHouse serves three roles:
  *    1. '''Scheduling state machine''': manages the lifecycle state (CREATED → MOUNTING → WAITING → READY → SCHEDULED
  *       → RUNNING) with atomic CAS transitions
- *    2. '''Mailbox container''': holds five separate [[MailBox]] instances with priority-ordered dispatch
- *    3. '''[[cc.otavia.core.actor.ActorContext]] implementation''': provides runtime context to the actor
+ *       2. '''Mailbox container''': holds five separate [[Mailbox]] instances with priority-ordered dispatch
+ *       3. '''[[cc.otavia.core.actor.ActorContext]] implementation''': provides runtime context to the actor
  *
  *  @param manager
  *    the [[HouseManager]] that owns this house
@@ -60,11 +60,11 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     // Section 2: MAILBOXES
     // =========================================================================
 
-    private[system] val noticeMailbox: MailBox    = new MailBox(this)
-    private[system] val askMailbox: MailBox       = new MailBox(this)
-    private[system] val replyMailbox: MailBox     = new MailBox(this)
-    private[system] val exceptionMailbox: MailBox = new MailBox(this)
-    private[system] val eventMailbox: MailBox     = new MailBox(this)
+    private[system] val noticeMailbox: Mailbox    = new Mailbox(this)
+    private[system] val askMailbox: Mailbox       = new Mailbox(this)
+    private[system] val replyMailbox: Mailbox     = new Mailbox(this)
+    private[system] val exceptionMailbox: Mailbox = new Mailbox(this)
+    private[system] val eventMailbox: Mailbox     = new Mailbox(this)
 
     private val dispatcher = new MailboxDispatcher(this)
 
@@ -230,7 +230,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     def putEvent(event: Event): Unit = put(event, eventMailbox)
 
-    private def put(msg: Nextable, mailBox: MailBox): Unit = {
+    private def put(msg: Nextable, mailBox: Mailbox): Unit = {
         mailBox.put(msg)
         if (status.get() == WAITING) waiting2ready()
     }

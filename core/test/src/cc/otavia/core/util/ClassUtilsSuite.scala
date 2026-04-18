@@ -18,7 +18,7 @@ package cc.otavia.core.util
 
 import cc.otavia.common.ClassUtils
 import cc.otavia.core.actor.Actor
-import cc.otavia.core.actors.*
+import cc.otavia.core.actor.*
 import cc.otavia.core.slf4a.*
 import org.scalatest.funsuite.AnyFunSuite
 

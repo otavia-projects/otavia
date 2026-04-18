@@ -19,7 +19,7 @@ package cc.otavia.core.actor
 import cc.otavia.core.message.{ChannelTimeoutEvent, ReactorEvent}
 import cc.otavia.core.stack.ChannelStack
 
-/** Kernel-internal capability trait for actors that manage IO [[cc.otavia.core.channel.Channel]] instances.
+/** Kernel-internal capability trait for actor that manage IO [[cc.otavia.core.channel.Channel]] instances.
  *
  *  Only [[ChannelsActor]] implements this trait. It separates channel-related dispatch (reactor events, channel
  *  timeouts, channel stacks) from the core [[AbstractActor]] stack coroutine engine, ensuring that [[StateActor]]'s

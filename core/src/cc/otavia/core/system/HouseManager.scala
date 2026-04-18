@@ -28,8 +28,8 @@ import scala.language.unsafeNulls
  *
  *  Queue assignment is based on actor type:
  *    - '''mountingQueue''' (FIFO): houses awaiting initial mount (all types)
- *    - '''channelsActorQueue''' (Priority): IO-capable actors, fully drained in Phase 2 with no time budget
- *    - '''actorQueue''' (Priority): business logic actors, time-budgeted in Phase 3
+ *    - '''channelsActorQueue''' (Priority): IO-capable actor, fully drained in Phase 2 with no time budget
+ *    - '''actorQueue''' (Priority): business logic actor, time-budgeted in Phase 3
  *
  *  Each [[PriorityHouseQueue]] has two sub-queues: normal priority and high priority. Houses are promoted to high
  *  priority when they have excessive pending replies, events, or a low stack-end-rate (backpressure signal).
@@ -107,7 +107,7 @@ final class HouseManager(val thread: ActorThread) {
      *  the deadline remain in the queue for the next iteration.
      *
      *  @param deadlineNanos
-     *    the absolute time (in nanos) after which no more actors should be dequeued. [[Long.MaxValue]] means no limit.
+     *    the absolute time (in nanos) after which no more actor should be dequeued. [[Long.MaxValue]] means no limit.
      */
     def runStateActors(deadlineNanos: Long): Unit = {
         if (!actorQueue.available) return

@@ -36,13 +36,13 @@ import scala.language.unsafeNulls
 /** The central execution unit of the Otavia runtime. Each ActorThread is simultaneously the IO thread (polling the OS
  *  selector for network/file events) and the actor execution thread (running user business logic).
  *
- *  Every actor is pinned to a single ActorThread for its entire lifetime. All actors on the same thread are
+ *  Every actor is pinned to a single ActorThread for its entire lifetime. All actor on the same thread are
  *  single-threaded with respect to each other, eliminating the need for locks on intra-thread coordination.
  *
  *  The event loop has three phases per iteration:
  *    1. '''Phase 1 — IO''': Poll the selector and process IO events
- *    2. '''Phase 2 — ChannelsActor dispatch''': Fully drain IO-capable actors and pending events (no time budget)
- *    3. '''Phase 3 — StateActor dispatch''': Run business logic actors within a time budget
+ *    2. '''Phase 2 — ChannelsActor dispatch''': Fully drain IO-capable actor and pending events (no time budget)
+ *    3. '''Phase 3 — StateActor dispatch''': Run business logic actor within a time budget
  */
 final class ActorThread(private[core] val system: ActorSystem, private val id: Int) extends Thread() {
 
@@ -267,7 +267,7 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
 object ActorThread {
 
     /** IO ratio: percentage of event loop time allocated to IO. The remaining time is allocated to StateActor
-     *  execution. Default is 50 (equal time for IO and actors). Set to 100 to disable time budgeting.
+     *  execution. Default is 50 (equal time for IO and actor). Set to 100 to disable time budgeting.
      */
     private val ioRatio = SystemPropertyUtil.getInt("cc.otavia.actor.io.ratio", 50)
 

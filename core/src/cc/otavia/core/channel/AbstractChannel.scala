@@ -1,7 +1,7 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
- * This file fork from netty.
+ * This file is forked from Netty.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     private var unsafe: AbstractUnsafeChannel = _
 
     private var futureBarrier: AnyRef => Boolean = FALSE_FUNC
-    private var stackBarrier: AnyRef => Boolean  = TURE_FUNC
+    private var stackBarrier: AnyRef => Boolean  = TRUE_FUNC
     private var maxStackInflight: Int            = 1
     private var maxFutureInflight: Int           = 1
 
@@ -553,7 +553,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
 object AbstractChannel {
 
-    private val TURE_FUNC: AnyRef => Boolean  = _ => true
+    private val TRUE_FUNC: AnyRef => Boolean  = _ => true
     private val FALSE_FUNC: AnyRef => Boolean = _ => false
 
     private val SUPPORTED_CHANNEL_OPTIONS: Set[ChannelOption[?]] = Set(

@@ -14,26 +14,21 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.message
+package cc.otavia.core.actor
 
-/** Some notices classes that may be used frequently */
-object helper {
+import cc.otavia.core.actor.{MessageOf, StateActor}
+import cc.otavia.core.actor.Shower.*
+import cc.otavia.core.message.Notice
+import cc.otavia.core.stack.{NoticeStack, StackState, StackYield}
 
-    sealed trait UnitReply private () extends Reply
+class ConsoleShower extends StateActor[MessageOf[Shower]] with Shower {
 
-    object UnitReply {
+    override def resumeNotice(stack: NoticeStack[ShowEvent]): StackYield = handleInfo(stack)
 
-        private val default: UnitReply = new UnitReply {}
-        def apply(): UnitReply         = default
-
+    private def handleInfo(stack: NoticeStack[ShowEvent]): StackYield = {
+        val msg = stack.notice
+        println(s"${msg.clz.getName} ${msg.time} ${msg.thread} ${msg.msg}")
+        stack.`return`()
     }
-
-    final case class IntNotice(value: Int) extends Notice
-
-    final case class StringNotice(value: String) extends Notice
-
-    final case class ArrayNotice[@specialized T](value: Array[T]) extends Notice
-
-    final case class SeqNotice[T](value: Seq[T]) extends Notice
 
 }

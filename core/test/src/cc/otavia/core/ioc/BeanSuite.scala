@@ -16,7 +16,7 @@
 
 package cc.otavia.core.ioc
 
-import cc.otavia.core.actors.*
+import cc.otavia.core.actor.*
 import org.scalatest.funsuite.AnyFunSuite
 
 import scala.collection.mutable

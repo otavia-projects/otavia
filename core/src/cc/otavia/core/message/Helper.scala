@@ -14,28 +14,26 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.actors
+package cc.otavia.core.message
 
-import cc.otavia.core.actor.Actor
-import cc.otavia.core.actors.Shower.*
-import cc.otavia.core.message.Notice
+/** Some notices classes that may be used frequently */
+object Helper {
 
-import java.time.LocalDateTime
+    sealed trait UnitReply private () extends Reply
 
-trait Shower extends Actor[ShowEvent]
+    object UnitReply {
 
-object Shower {
-
-    sealed trait ShowEvent extends Notice {
-
-        val clz: Class[?]
-        val time: LocalDateTime
-        val thread: String
-        val msg: String
+        private val default: UnitReply = new UnitReply {}
+        def apply(): UnitReply         = default
 
     }
 
-    final case class Info(clz: Class[?], time: LocalDateTime, thread: String, msg: String)  extends ShowEvent
-    final case class Error(clz: Class[?], time: LocalDateTime, thread: String, msg: String) extends ShowEvent
+    final case class IntNotice(value: Int) extends Notice
+
+    final case class StringNotice(value: String) extends Notice
+
+    final case class ArrayNotice[@specialized T](value: Array[T]) extends Notice
+
+    final case class SeqNotice[T](value: Seq[T]) extends Notice
 
 }

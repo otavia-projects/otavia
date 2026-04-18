@@ -20,34 +20,36 @@ import org.scalatest.funsuite.AnyFunSuite
 
 import scala.util.Random
 
-class CompressionBooleanIntTest extends AnyFunSuite {
+class CompressionBooleanLongSuite extends AnyFunSuite {
 
-    test("CompressionBooleanInt") {
-        val compressionBooleanInt = new CompressionBooleanInt {}
+    test("CompressionBooleanLong") {
+        val compressionBooleanLong = new CompressionBooleanLong {}
 
-        for (idx <- 0 until 32) {
-            assert(!compressionBooleanInt.getAt(idx))
+        for (idx <- 0 until 64) {
+            assert(!compressionBooleanLong.getAt(idx))
         }
 
-        for (idx <- 0 until 32) {
-            compressionBooleanInt.setAt(idx, true)
-            assert(compressionBooleanInt.getAt(idx))
+        for (idx <- 0 until 64) {
+            compressionBooleanLong.setAt(idx, true)
+            assert(compressionBooleanLong.getAt(idx))
 
-            compressionBooleanInt.setAt(idx, false)
-            assert(!compressionBooleanInt.getAt(idx))
+            compressionBooleanLong.setAt(idx, false)
+            assert(!compressionBooleanLong.getAt(idx))
         }
 
-        0 to 500 foreach { _ =>
+        0 to 100 foreach { _ =>
             val random  = new Random(System.currentTimeMillis())
-            val shuffle = (0 until 32).map(i => (i, Random.nextBoolean()))
+            val shuffle = (0 until 64).map(i => (i, Random.nextBoolean()))
 
             for (elem <- shuffle) {
-                compressionBooleanInt.setAt(elem._1, elem._2)
+                compressionBooleanLong.setAt(elem._1, elem._2)
             }
 
             for (elem <- shuffle) {
-                assert(compressionBooleanInt.getAt(elem._1) == elem._2)
+                assert(compressionBooleanLong.getAt(elem._1) == elem._2)
             }
         }
+
     }
+
 }

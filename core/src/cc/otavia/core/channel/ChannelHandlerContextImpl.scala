@@ -1,7 +1,7 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
- * This file fork from netty.
+ * This file is forked from Netty.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -233,7 +233,7 @@ final class ChannelHandlerContextImpl(
         this
     }
 
-    def invokeChannelExceptionCaught(cause: Throwable): Unit = {
+    private[core] def invokeChannelExceptionCaught(cause: Throwable): Unit = {
         try {
             handler.channelExceptionCaught(this, cause)
             updatePendingBytesIfNeeded()
@@ -345,7 +345,7 @@ final class ChannelHandlerContextImpl(
         this
     }
 
-    def invokeChannelWritabilityChanged(): Unit = try {
+    private[core] def invokeChannelWritabilityChanged(): Unit = try {
         handler.channelWritabilityChanged(this)
         updatePendingBytesIfNeeded()
     } catch {

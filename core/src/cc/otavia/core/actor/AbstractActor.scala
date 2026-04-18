@@ -26,7 +26,7 @@ import cc.otavia.core.system.{ActorHouse, ActorSystem}
 import scala.concurrent.TimeoutException
 import scala.language.unsafeNulls
 
-/** Stack coroutine engine and kernel dispatch machinery for all actors.
+/** Stack coroutine engine and kernel dispatch machinery for all actor.
  *
  *  Extends [[FutureDispatcher]] for O(1) promise lookup by reply ID. User-facing lifecycle hooks, scheduling
  *  configuration, and DI accessors live in the [[Actor]] trait. The resume methods ([[resumeAsk]],
@@ -34,7 +34,7 @@ import scala.language.unsafeNulls
  *  trait.
  *
  *  Users never extend this class directly — use [[StateActor]] for pure business logic or [[ChannelsActor]] for
- *  IO-capable actors.
+ *  IO-capable actor.
  *
  *  @tparam M
  *    the type of messages this actor can handle
