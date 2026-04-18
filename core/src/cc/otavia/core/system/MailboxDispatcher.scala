@@ -38,12 +38,12 @@ import scala.language.unsafeNulls
 private[core] class MailboxDispatcher(private val house: ActorHouse) {
 
     // Transient cursors for batch dispatch. Survive across multiple run() calls if a dispatch doesn't fully drain.
-    private var tmpAskCursor: Nextable    = _
-    private var tmpNoticeCursor: Nextable = _
+    private var askCursor: Nextable    = _
+    private var noticeCursor: Nextable = _
 
     // Dispatch counters for priority calculation.
-    private[system] var revAsks: Long  = 0
-    private var sendAsks: Long = 0
+    private[system] var receivedAsks: Long  = 0
+    private var sentAsks: Long = 0
 
     // Channel inflight tracking for ChannelsActor dispatch.
     private var pendingChannels: QueueMap[AbstractChannel] = _
@@ -55,10 +55,10 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
     private[system] def initPendingChannels(): Unit =
         pendingChannels = new QueueMap[AbstractChannel]()
 
-    private[system] def increaseSendCounter(): Unit = sendAsks += 1
+    private[system] def increaseSendCounter(): Unit = sentAsks += 1
 
     private[system] def stackEndRate: Int =
-        if (revAsks != 0) (sendAsks * 5 / revAsks).toInt else Int.MaxValue
+        if (receivedAsks != 0) (sentAsks * 5 / receivedAsks).toInt else Int.MaxValue
 
     private[system] def registerPendingChannel(channel: AbstractChannel): Unit =
         if (!pendingChannels.contains(channel.entityId)) pendingChannels.append(channel)
@@ -67,8 +67,16 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
      *
      *  Order: replies → exceptions → asks → notices → events → channels → deferred tasks.
      *  Barrier messages block subsequent asks/notices until all pending stacks complete.
+     *
+     *  Optimization: the [[house.hasMessages]] flag gates entry into the individual mailbox checks. This replaces 5
+     *  volatile reads per dispatch with a single volatile read in the common case (actor is idle, no messages). The
+     *  flag is a hint — false positives (flag true but all mailboxes empty) cause a few wasted volatile reads; false
+     *  negatives (flag false but a mailbox is non-empty) are caught by [[ActorHouse.completeRunning]] which will
+     *  re-schedule the house.
      */
     def dispatch(): Unit = {
+        if !house.hasMessages then return
+
         if (house.replyMailbox.nonEmpty) dispatchReplies()
         if (house.exceptionMailbox.nonEmpty) dispatchExceptions()
 
@@ -80,6 +88,10 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
         if (house.actorType == CHANNELS_ACTOR) dispatchChannels()
 
         runLaterTasks()
+
+        // Clear the hint after a full dispatch cycle. If messages arrived during dispatch (concurrent put), the flag
+        // will be re-set by the producer, and completeRunning will detect nonEmpty and re-schedule this house.
+        house.clearHasMessages()
     }
 
     // =========================================================================
@@ -91,7 +103,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
         while (cursor != null) {
             val msg = cursor
             cursor = msg.next
-            msg.deChain()
+            msg.unlink()
             house.dweller.receiveReply(msg.asInstanceOf[Envelope[?]])
         }
     }
@@ -101,7 +113,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
         while (cursor != null) {
             val msg = cursor
             cursor = msg.next
-            msg.deChain()
+            msg.unlink()
             house.dweller.receiveExceptionReply(msg.asInstanceOf[Envelope[?]])
         }
     }
@@ -111,34 +123,34 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
     // =========================================================================
 
     private def dispatchAsks(): Unit =
-        if (house.dweller.batchable) dispatchBatchAsks() else dispatchAsks0()
+        if (house.dweller.batchable) dispatchBatchAsks() else dispatchIndividualAsks()
 
-    private def dispatchAsks0(): Unit = {
-        if (tmpAskCursor == null) tmpAskCursor = house.askMailbox.getAll
-        while (tmpAskCursor != null && !house.inBarrier) {
-            val msg = tmpAskCursor
-            tmpAskCursor = msg.next
-            msg.deChain()
+    private def dispatchIndividualAsks(): Unit = {
+        if (askCursor == null) askCursor = house.askMailbox.getAll
+        while (askCursor != null && !house.inBarrier) {
+            val msg = askCursor
+            askCursor = msg.next
+            msg.unlink()
             val envelope = msg.asInstanceOf[Envelope[Ask[?]]]
             house.inBarrier = house.dweller.isBarrier(envelope.message)
-            revAsks += 1
+            receivedAsks += 1
             house.dweller.receiveAsk(envelope)
         }
     }
 
     private def dispatchBatchAsks(): Unit = {
-        if (tmpAskCursor == null) tmpAskCursor = house.askMailbox.getAll
+        if (askCursor == null) askCursor = house.askMailbox.getAll
         val buf = ActorThread.threadBuffer[Envelope[Ask[?]]]
-        while (tmpAskCursor != null && !house.inBarrier) {
-            val envelope = tmpAskCursor.asInstanceOf[Envelope[Ask[?]]]
-            tmpAskCursor = envelope.next
-            envelope.deChain()
+        while (askCursor != null && !house.inBarrier) {
+            val envelope = askCursor.asInstanceOf[Envelope[Ask[?]]]
+            askCursor = envelope.next
+            envelope.unlink()
             val ask = envelope.message
             if (house.dweller.batchAskFilter(ask)) buf.addOne(envelope)
             else {
                 if (buf.nonEmpty) handleBatchAsk(buf)
                 house.inBarrier = house.dweller.isBarrier(ask)
-                revAsks += 1
+                receivedAsks += 1
                 house.dweller.receiveAsk(envelope)
             }
         }
@@ -150,14 +162,14 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
     // =========================================================================
 
     private def dispatchNotices(): Unit =
-        if (house.dweller.batchable) dispatchBatchNotices() else dispatchNotices0()
+        if (house.dweller.batchable) dispatchBatchNotices() else dispatchIndividualNotices()
 
-    private def dispatchNotices0(): Unit = {
-        if (tmpNoticeCursor == null) tmpNoticeCursor = house.noticeMailbox.getAll
-        while (tmpNoticeCursor != null && !house.inBarrier) {
-            val msg = tmpNoticeCursor
-            tmpNoticeCursor = msg.next
-            msg.deChain()
+    private def dispatchIndividualNotices(): Unit = {
+        if (noticeCursor == null) noticeCursor = house.noticeMailbox.getAll
+        while (noticeCursor != null && !house.inBarrier) {
+            val msg = noticeCursor
+            noticeCursor = msg.next
+            msg.unlink()
             val envelope = msg.asInstanceOf[Envelope[Notice]]
             house.inBarrier = house.dweller.isBarrier(envelope.message)
             house.dweller.receiveNotice(envelope)
@@ -165,12 +177,12 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
     }
 
     private def dispatchBatchNotices(): Unit = {
-        if (tmpNoticeCursor == null) tmpNoticeCursor = house.noticeMailbox.getAll
+        if (noticeCursor == null) noticeCursor = house.noticeMailbox.getAll
         val buf = ActorThread.threadBuffer[Notice]
-        while (tmpNoticeCursor != null && !house.inBarrier) {
-            val envelope = tmpNoticeCursor.asInstanceOf[Envelope[Notice]]
-            tmpNoticeCursor = envelope.next
-            envelope.deChain()
+        while (noticeCursor != null && !house.inBarrier) {
+            val envelope = noticeCursor.asInstanceOf[Envelope[Notice]]
+            noticeCursor = envelope.next
+            envelope.unlink()
             val notice = envelope.message
             if (house.dweller.batchNoticeFilter(notice)) {
                 buf.addOne(notice)
@@ -193,7 +205,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
         while (cursor != null) {
             val msg = cursor.asInstanceOf[Event]
             cursor = msg.next
-            msg.deChain()
+            msg.unlink()
             house.dweller.receiveEvent(msg)
         }
     }

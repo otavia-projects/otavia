@@ -16,18 +16,46 @@
 
 package cc.otavia.core.util
 
-import cc.otavia.core.system.ActorThread
-
 import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.locks.LockSupport
 import scala.language.unsafeNulls
 
 private[core] class SpinLock extends AtomicReference[Thread] {
 
-    /** Get lock, if the lock is locked by other [[Thread]], spin the current thread until get the lock. */
+    // Phase 1: pure spin (x86 PAUSE instruction). Covers the common case — uncontended or lightly contended lock
+    // acquisition where the holder releases within a few nanoseconds.
+    private val SPIN_THRESHOLD = 100
+
+    // Phase 2: Thread.yield(). Entered when the lock holder has been preempted by the OS scheduler or paused by a
+    // brief GC event. yield() hints the scheduler to deschedule this thread, giving the holder a chance to run and
+    // release. Beyond this threshold the holder is likely blocked by a long GC STW pause, so we switch to parking.
+    private val YIELD_THRESHOLD = 200
+
+    /** Acquire the lock using adaptive spinning with progressive backoff.
+     *
+     *  Phase 1 (spins 0..SPIN_THRESHOLD): pure spin with [[Thread.onSpinWait]] (x86 PAUSE). The vast majority of
+     *  acquisitions succeed here — the critical sections protected by SpinLock are only a few instructions (pointer
+     *  assignment + counter update), so uncontended or lightly contended CAS typically succeeds within 1-2 attempts.
+     *
+     *  Phase 2 (spins SPIN_THRESHOLD..YIELD_THRESHOLD): [[Thread.yield]] hints the OS scheduler to let the lock holder
+     *  run. Triggered when the holder is preempted by the OS (time slice exhaustion) or delayed by a brief GC pause.
+     *  Without yielding, the spinning thread burns CPU without making progress since the holder isn't on-core.
+     *
+     *  Phase 3 (spins > YIELD_THRESHOLD): [[LockSupport.parkNanos]](1μs) truly frees the CPU core. Triggered during
+     *  long GC STW pauses (10-200ms) where the lock holder is suspended at a safepoint and cannot release the lock.
+     *  Pure spinning during such pauses wastes an entire core and degrades tail latency for co-tenant workloads.
+     */
     final def lock(): Unit = {
         val thread = Thread.currentThread()
+        var spins  = 0
         while (!this.compareAndSet(null, thread)) {
-            Thread.onSpinWait()
+            spins += 1
+            if spins < SPIN_THRESHOLD then Thread.onSpinWait()
+            else if spins < YIELD_THRESHOLD then Thread.`yield`()
+            else {
+                LockSupport.parkNanos(1000L)
+                spins = YIELD_THRESHOLD // reset to avoid growing indefinitely
+            }
         }
     }
 
@@ -38,10 +66,10 @@ private[core] class SpinLock extends AtomicReference[Thread] {
     }
 
     /** Check the lock whether is locked. */
-    final def isLock: Boolean = this.get() != null
+    final def isLocked: Boolean = this.get() != null
 
     /** Check the lock whether is locked by current thread. */
-    final def isLockByMe: Boolean = Thread.currentThread() == this.get()
+    final def isHeldByCurrentThread: Boolean = Thread.currentThread() == this.get()
 
     /** Try to get lock until get the lock or spin [[timeout]] nanosecond for timeout.
      *  @param timeout

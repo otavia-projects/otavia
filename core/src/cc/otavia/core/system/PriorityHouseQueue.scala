@@ -56,7 +56,7 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
                 val oldTail = tail
                 tail = house
                 oldTail.next = tail
-                tail.pre = oldTail
+                tail.prev = oldTail
                 size.incrementAndGet()
             }
             house.inHighPriorityQueue = false
@@ -97,7 +97,7 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
                 head = null
                 tail = null
                 size.decrementAndGet()
-                house.deChain()
+                house.unlink()
                 house.schedule()
                 writeLock.unlock()
                 readLock.unlock()
@@ -105,9 +105,9 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
             } else {
                 val house = head
                 head = house.next
-                head.pre = null
+                head.prev = null
                 size.decrementAndGet()
-                house.deChain()
+                house.unlink()
                 house.schedule()
                 writeLock.unlock()
                 readLock.unlock()
@@ -116,9 +116,9 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
         } else {
             val house = head
             head = house.next
-            head.pre = null
+            head.prev = null
             size.decrementAndGet()
-            house.deChain()
+            house.unlink()
             house.schedule()
             readLock.unlock()
             house
@@ -138,7 +138,7 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
                 highHead = null
                 highTail = null
                 highSize.decrementAndGet()
-                house.deChain()
+                house.unlink()
                 house.schedule()
                 highWriteLock.unlock()
                 highReadLock.unlock()
@@ -147,7 +147,7 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
                 val house = highHead
                 highHead = house.next
                 highSize.decrementAndGet()
-                house.deChain()
+                house.unlink()
                 house.schedule()
                 highWriteLock.unlock()
                 highReadLock.unlock()
@@ -157,7 +157,7 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
             val house = highHead
             highHead = house.next
             highSize.decrementAndGet()
-            house.deChain()
+            house.unlink()
             house.schedule()
             highReadLock.unlock()
             house
@@ -168,14 +168,14 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
         readLock.lock()
         writeLock.lock()
         if (house.isReady && !house.inHighPriorityQueue) {
-            val pre  = house.pre
+            val pre  = house.prev
             val next = house.next
             if (pre != null) {
                 pre.next = next
-                if (next != null) next.pre = pre else tail = pre
+                if (next != null) next.prev = pre else tail = pre
             } else {
                 if (next != null) {
-                    next.pre = null
+                    next.prev = null
                     head = next
                 } else {
                     head = null
@@ -187,7 +187,7 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
         }
         writeLock.unlock()
         readLock.unlock()
-        house.deChain()
+        house.unlink()
         this.enqueue(house)
 
     }

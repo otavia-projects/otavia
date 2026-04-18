@@ -91,7 +91,7 @@ class FIFOHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
         size.decrementAndGet()
         house.schedule()
         readLock.unlock()
-        house.deChain()
+        house.unlink()
         house
     }
 

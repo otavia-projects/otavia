@@ -57,6 +57,13 @@ final class HouseManager(val thread: ActorThread) {
     def runnable: Boolean =
         actorQueue.nonEmpty || channelsActorQueue.nonEmpty || mountingQueue.nonEmpty
 
+    /** Whether the scheduling queue for the given actor type has other houses waiting. Used by the dispatch-loop
+     *  optimization to decide whether the current actor can re-enter dispatch without re-queueing.
+     */
+    def hasOtherReady(house: ActorHouse): Boolean =
+        if house.actorType == ActorHouse.STATE_ACTOR then actorQueue.nonEmpty
+        else channelsActorQueue.nonEmpty
+
     // =========================================================================
     // Scheduling operations
     // =========================================================================
@@ -84,7 +91,7 @@ final class HouseManager(val thread: ActorThread) {
      *  state. Only houses with pending high-priority indicators (excessive replies/events or low stack-end-rate)
      *  are promoted.
      */
-    def change(house: ActorHouse): Unit = {
+    def promotePriority(house: ActorHouse): Unit = {
         if (house.highPriority && !house.inHighPriorityQueue) {
             if (house.actorType == ActorHouse.CHANNELS_ACTOR) channelsActorQueue.adjustPriority(house)
             else if (house.actorType == ActorHouse.STATE_ACTOR) actorQueue.adjustPriority(house)
@@ -99,8 +106,8 @@ final class HouseManager(val thread: ActorThread) {
      *  part of the IO pipeline and must not be starved.
      */
     def runChannelsActors(): Unit = {
-        if (channelsActorQueue.available) run0(channelsActorQueue, Long.MaxValue)
-        if (mountingQueue.available) mount0()
+        if (channelsActorQueue.available) drainHouses(channelsActorQueue, Long.MaxValue)
+        if (mountingQueue.available) drainMountingQueue()
     }
 
     /** Run state actor queue (business logic) within the given time budget. Actors that are not processed within
@@ -111,10 +118,10 @@ final class HouseManager(val thread: ActorThread) {
      */
     def runStateActors(deadlineNanos: Long): Unit = {
         if (!actorQueue.available) return
-        run0(actorQueue, deadlineNanos)
+        drainHouses(actorQueue, deadlineNanos)
     }
 
-    private def run0(houseQueue: HouseQueue, deadlineNanos: Long): Unit = {
+    private def drainHouses(houseQueue: HouseQueue, deadlineNanos: Long): Unit = {
         var house = houseQueue.dequeue()
         var count = 0
         while (house != null) {
@@ -127,7 +134,7 @@ final class HouseManager(val thread: ActorThread) {
         }
     }
 
-    private def mount0(): Unit = {
+    private def drainMountingQueue(): Unit = {
         var house = mountingQueue.dequeue()
         while (house != null) {
             currentRunning = house.actor

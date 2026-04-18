@@ -48,13 +48,13 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     private[system] var dweller: AbstractActor[? <: Call] = _
     private var actorAddress: ActorAddress[Call]  = _
     private var dwellerId: Long                   = -1
-    private var atp: Int                          = 0
+    private var actorTypeKind: Int                          = 0
     private[system] var inBarrier: Boolean        = false
 
     private var currentSendMessageId: Long = Long.MinValue
 
     /** Whether this actor uses round-robin load balancing (RobinAddress with same-thread affinity). */
-    private var isLB: Boolean = false
+    private var loadBalanced: Boolean = false
 
     // =========================================================================
     // Section 2: MAILBOXES
@@ -68,13 +68,28 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     private val dispatcher = new MailboxDispatcher(this)
 
+    /** Aggregated hint flag for mailbox occupancy. Replaces 5 volatile reads in the dispatch fast-path with a single
+     *  volatile read.
+     *
+     *  Write side: set to true by any thread in [[put]] via lazySet (unordered, lowest overhead — a store-store
+     *  barrier only). The write may be delayed relative to other threads' reads, but this is safe because:
+     *    - If the flag reads false but a mailbox is non-empty, [[completeRunning]] will detect it via the full
+     *      [[nonEmpty]] check and re-transition the house to READY.
+     *    - If the flag reads true but all mailboxes are empty, [[MailboxDispatcher.dispatch]] performs a few cheap
+     *      volatile reads on individual mailbox counts and finds nothing — a benign false positive.
+     *
+     *  Read side: checked by the owning ActorThread in [[MailboxDispatcher.dispatch]] and [[run]] before incurring
+     *  the cost of 5 individual mailbox nonEmpty checks.
+     */
+    @volatile private var _hasMessages: Boolean = false
+
     // =========================================================================
     // Section 3: SCHEDULING STATE MACHINE
     // =========================================================================
 
     private val status: AtomicInteger = new AtomicInteger(CREATED)
 
-    @volatile private var preHouse: ActorHouse  = _
+    @volatile private var prevHouse: ActorHouse  = _
     @volatile private var nextHouse: ActorHouse = _
 
     @volatile private var _inHighPriorityQueue: Boolean = false
@@ -123,13 +138,13 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     def next: ActorHouse | Null = nextHouse
     def isTail: Boolean = nextHouse == null
 
-    def pre_=(house: ActorHouse): Unit = preHouse = house
-    def pre: ActorHouse | Null = preHouse
-    def isHead: Boolean = preHouse == null
+    def prev_=(house: ActorHouse): Unit = prevHouse = house
+    def prev: ActorHouse | Null = prevHouse
+    def isHead: Boolean = prevHouse == null
 
-    def deChain(): Unit = {
+    def unlink(): Unit = {
         nextHouse = null
-        preHouse = null
+        prevHouse = null
     }
 
     // =========================================================================
@@ -140,19 +155,19 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     def setActor(actor: AbstractActor[? <: Call]): Unit = {
         dweller = actor
         actor match
-            case _: AcceptorActor[?] => atp = SERVER_CHANNELS_ACTOR
+            case _: AcceptorActor[?] => actorTypeKind = SERVER_CHANNELS_ACTOR
             case _: ChannelsActor[?] =>
-                atp = CHANNELS_ACTOR
+                actorTypeKind = CHANNELS_ACTOR
                 dispatcher.initPendingChannels()
-            case _: StateActor[?] => atp = STATE_ACTOR
+            case _: StateActor[?] => actorTypeKind = STATE_ACTOR
             case _                => throw new IllegalStateException("")
     }
 
     def setActorId(id: Long): Unit = dwellerId = id
 
-    def setLB(boolean: Boolean): Unit = isLB = boolean
+    def setLoadBalanced(boolean: Boolean): Unit = loadBalanced = boolean
 
-    override def isLoadBalance: Boolean = isLB
+    override def isLoadBalance: Boolean = loadBalanced
 
     def actor: AbstractActor[? <: Call] = this.dweller
 
@@ -163,13 +178,13 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     override def actorId: Long = dwellerId
 
     /** Actor type classification — determines which scheduling queue the house enters. */
-    def actorType: Int = atp
+    def actorType: Int = actorTypeKind
 
     // =========================================================================
     // Section 8: BARRIER MANAGEMENT
     // =========================================================================
 
-    def cleanBarrier(): Unit = inBarrier = false
+    def clearBarrier(): Unit = inBarrier = false
 
     def isBarrier: Boolean = inBarrier
 
@@ -192,6 +207,14 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     def nonEmpty: Boolean =
         askMailbox.nonEmpty || noticeMailbox.nonEmpty || replyMailbox.nonEmpty || eventMailbox.nonEmpty || exceptionMailbox.nonEmpty
 
+    /** Single-read hint for mailbox occupancy — see [[_hasMessages]] for semantics. */
+    def hasMessages: Boolean = _hasMessages
+
+    /** Clear the aggregated hint after a dispatch cycle that drained all mailboxes. Only called by the owning
+     *  ActorThread. A subsequent [[put]] from any thread will re-set the flag.
+     */
+    def clearHasMessages(): Unit = _hasMessages = false
+
     /** True if barrier-relevant mailboxes (reply, event, exception) have messages. */
     private def barrierNonEmpty: Boolean = replyMailbox.nonEmpty || eventMailbox.nonEmpty || exceptionMailbox.nonEmpty
 
@@ -208,7 +231,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     def doMount(): Unit = {
         if (status.compareAndSet(MOUNTING, WAITING)) {
             dweller.mount()
-            if (this.nonEmpty) waiting2ready()
+            if (this.hasMessages && this.nonEmpty) waitingToReady()
         }
     }
 
@@ -230,17 +253,19 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     def putEvent(event: Event): Unit = put(event, eventMailbox)
 
-    private def put(msg: Nextable, mailBox: Mailbox): Unit = {
-        mailBox.put(msg)
-        if (status.get() == WAITING) waiting2ready()
+    private def put(msg: Nextable, mailbox: Mailbox): Unit = {
+        mailbox.put(msg)
+        _hasMessages = true // relaxed write is sufficient — see _hasMessages scaladoc
+        if (status.get() == WAITING) waitingToReady()
     }
 
     /** Place a notice at the head of the notice mailbox for priority processing. */
     private[core] def putCallToHead(envelope: Envelope[?]): Unit = {
         noticeMailbox.putHead(envelope)
+        _hasMessages = true
     }
 
-    private def waiting2ready(): Unit = if (status.compareAndSet(WAITING, READY)) manager.ready(this)
+    private def waitingToReady(): Unit = if (status.compareAndSet(WAITING, READY)) manager.ready(this)
 
     /** Transition: READY → SCHEDULED. Called by the HouseQueue during dequeue. */
     def schedule(): Unit = if (status.compareAndSet(READY, SCHEDULED)) {}
@@ -249,14 +274,43 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     // Section 12: DISPATCH ENGINE
     // =========================================================================
 
-    /** Main dispatch loop. Transition: SCHEDULED → RUNNING. Delegates to [[MailboxDispatcher]] for priority-ordered
-     *  message processing, then transitions to either READY or WAITING.
+    /** Main dispatch entry point. Transition: SCHEDULED → RUNNING.
+     *
+     *  Dispatch-loop optimization: after draining mailboxes, if new messages have arrived during dispatch and no
+     *  other actors on this thread's scheduling queue are waiting, the house re-enters dispatch immediately instead
+     *  of going through the full state machine cycle (RUNNING → READY → enqueue → dequeue → SCHEDULED → RUNNING).
+     *  This eliminates 3 CAS operations + 1 SpinLock-protected queue enqueue/dequeue per batch for continuously
+     *  busy actors.
+     *
+     *  The guard `!manager.hasOtherReady(this)` prevents starvation: when other actors are waiting in the thread's
+     *  scheduling queue, this house must surrender and go through normal re-scheduling to give them a chance to run.
      */
     def run(): Unit = {
         if (status.compareAndSet(SCHEDULED, RUNNING)) {
             dispatcher.dispatch()
-            completeRunning()
+            dispatchLoop()
         }
+    }
+
+    /** Try to re-dispatch without leaving the RUNNING state. Falls through to [[completeRunning]] (full state
+     *  machine transition) when other actors are waiting or this actor enters a barrier.
+     */
+    private def dispatchLoop(): Unit = {
+        var continue = true
+        while continue do
+            if inBarrier then
+                // Barrier blocks ask/notice dispatch — must exit loop for state machine transition
+                continue = false
+            else if !hasMessages then
+                // No new messages arrived during dispatch — idle, exit for state machine transition
+                continue = false
+            else if manager.hasOtherReady(this) then
+                // Other actors are waiting — surrender to prevent starvation
+                continue = false
+            else
+                // Messages arrived and no competition — re-dispatch in-place
+                dispatcher.dispatch()
+        completeRunning()
     }
 
     private def completeRunning(): Unit = {
@@ -264,13 +318,13 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
             if (nonEmpty) {
                 if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
             } else {
-                if (status.compareAndSet(RUNNING, WAITING) && nonEmpty) waiting2ready()
+                if (status.compareAndSet(RUNNING, WAITING) && nonEmpty) waitingToReady()
             }
         } else {
             if (barrierNonEmpty) {
                 if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
             } else {
-                if (status.compareAndSet(RUNNING, WAITING) && barrierNonEmpty) waiting2ready()
+                if (status.compareAndSet(RUNNING, WAITING) && barrierNonEmpty) waitingToReady()
             }
         }
     }

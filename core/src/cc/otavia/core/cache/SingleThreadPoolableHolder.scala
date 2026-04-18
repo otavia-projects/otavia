@@ -34,7 +34,7 @@ final class SingleThreadPoolableHolder[T <: Poolable](val maxSize: Int = ActorSy
         val poolable = head
         head = poolable.next
         count -= 1
-        poolable.deChain()
+        poolable.unlink()
         poolable.asInstanceOf[T]
     } else if (count == 1) {
         val poolable = head
@@ -74,7 +74,7 @@ final class SingleThreadPoolableHolder[T <: Poolable](val maxSize: Int = ActorSy
                 tail = tail.next
                 c -= 1
             }
-            tail.cleanNext()
+            tail.clearNext()
             count = keep
         }
     }

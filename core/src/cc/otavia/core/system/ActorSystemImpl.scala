@@ -151,7 +151,7 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
         val house = thread.createActorHouse()
         house.setActor(actor)
         house.setActorId(generator.getAndIncrement())
-        house.setLB(lb)
+        house.setLoadBalanced(lb)
         actor.setCtx(house)
 
         house.address

@@ -59,7 +59,7 @@ class SpinLockQueue[T <: Nextable] {
                 if (size.get() == 1) tail = null
                 size.decrementAndGet()
                 lock.unlock()
-                value.deChain()
+                value.unlink()
                 value.asInstanceOf[T]
             }
         }

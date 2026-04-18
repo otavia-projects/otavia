@@ -35,7 +35,7 @@ private[core] class PromiseIterator private () extends Iterator[AbstractPromise[
     override def next(): AbstractPromise[?] = {
         val promise = head
         head = promise.next.asInstanceOf[AbstractPromise[?] | Null]
-        promise.deChain()
+        promise.unlink()
         promise
     }
 

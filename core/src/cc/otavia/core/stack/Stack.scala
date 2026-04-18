@@ -79,7 +79,7 @@ abstract class Stack extends Poolable {
         // step 1: remove it from uncompleted chain
         val pre  = completed.pre
         val next = completed.next
-        completed.deChain()
+        completed.unlink()
         pre match
             case null =>
                 next match
@@ -92,7 +92,7 @@ abstract class Stack extends Poolable {
             case preNode: AbstractPromise[?] =>
                 next match
                     case null =>
-                        preNode.cleanNext()
+                        preNode.clearNext()
                         uncompletedTail = preNode
                     case nextNode: AbstractPromise[?] =>
                         preNode.next = nextNode

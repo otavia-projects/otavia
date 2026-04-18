@@ -376,7 +376,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     final private[core] def recycleStack(stack: Stack): Unit = {
         if (stack.hasUncompletedPromise) recycleUncompletedPromise(stack.uncompletedPromises())
         stack.recycle()
-        if (house.isBarrier) house.cleanBarrier()
+        if (house.isBarrier) house.clearBarrier()
     }
 
     private def recycleUncompletedPromise(uncompleted: PromiseIterator): Unit = while (uncompleted.hasNext) {
@@ -384,7 +384,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         promise match
             case promise: ChannelPromise =>
                 promise.setStack(null)
-                promise.deChain()
+                promise.unlink()
             case promise: MessagePromise[?] =>
                 this.pop(promise.id)
                 promise.recycle()
