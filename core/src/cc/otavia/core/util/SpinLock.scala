@@ -23,8 +23,6 @@ import scala.language.unsafeNulls
 
 private[core] class SpinLock extends AtomicReference[Thread] {
 
-//    private val holder = new AtomicReference[Thread](null)
-
     /** Get lock, if the lock is locked by other [[Thread]], spin the current thread until get the lock. */
     final def lock(): Unit = {
         val thread = Thread.currentThread()

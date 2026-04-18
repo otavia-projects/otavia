@@ -17,14 +17,12 @@
 package cc.otavia.core.util
 
 import java.util.concurrent.atomic.AtomicInteger
-import scala.collection.mutable
 import scala.language.unsafeNulls
 
 class SpinLockQueue[T <: Nextable] {
 
-    private val readLock  = new SpinLock()
-    private val writeLock = new SpinLock()
-    private val size      = new AtomicInteger(0)
+    private val lock = new SpinLock()
+    private val size = new AtomicInteger(0)
 
     @volatile private var head: T | Null = _
     @volatile private var tail: T | Null = _
@@ -36,58 +34,35 @@ class SpinLockQueue[T <: Nextable] {
     def length: Int = size.get()
 
     def enqueue(instance: T): Unit = {
-        writeLock.lock()
+        lock.lock()
         if (size.get() == 0) {
-            readLock.lock()
             head = instance
             tail = instance
-            size.incrementAndGet()
-            writeLock.unlock()
-            readLock.unlock()
         } else {
             tail.next = instance
             tail = instance
-            size.incrementAndGet()
-            writeLock.unlock()
         }
+        size.incrementAndGet()
+        lock.unlock()
     }
 
     final def dequeue(): T | Null = {
         if (size.get() == 0) null
-        else dequeue0()
-    }
-
-    final private def dequeue0(): T | Null = {
-        if (size.get() == 0) {
-            null
-        } else if (size.get() == 1) {
-            writeLock.lock()
-            readLock.lock()
-            if (size.get() == 1) {
+        else {
+            lock.lock()
+            if (size.get() == 0) {
+                lock.unlock()
+                null
+            } else {
                 val value = head
-                head = null
-                tail = null
+                head = value.next.asInstanceOf[T]
+                if (size.get() == 1) tail = null
                 size.decrementAndGet()
-                writeLock.unlock()
-                readLock.unlock()
-                value
-            } else { // size.get() > 1
-                writeLock.unlock()
-                dequeue00()
+                lock.unlock()
+                value.deChain()
+                value.asInstanceOf[T]
             }
-        } else {
-            readLock.lock()
-            dequeue00()
         }
-    }
-
-    final private inline def dequeue00(): T = {
-        val value = head
-        head = value.next.asInstanceOf[T]
-        size.decrementAndGet()
-        readLock.unlock()
-        value.deChain()
-        value.asInstanceOf[T]
     }
 
 }

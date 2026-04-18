@@ -18,89 +18,96 @@ package cc.otavia.core.system
 
 import cc.otavia.core.util.{Nextable, SpinLock}
 
-import java.util.concurrent.atomic.AtomicLong
 import scala.language.unsafeNulls
 
-class MailBox(val house: ActorHouse) { // extends SpinLock
+class MailBox(val house: ActorHouse) {
+
+    private val lock = new SpinLock
 
     private var head: Nextable = _
     private var tail: Nextable = _
 
     @volatile private var count: Int = 0
 
-    def put(obj: Nextable): Unit = this.synchronized {
-        // lock()
+    def put(obj: Nextable): Unit = {
+        lock.lock()
+        try {
+            val oldTail = tail
+            if (oldTail == null) {
+                head = obj
+                tail = obj
+            } else {
+                tail = obj
+                oldTail.next = tail
+            }
+            count += 1
+        } finally lock.unlock()
+    }
 
-        val oldTail = tail
-        if (oldTail == null) {
+    def putHead(obj: Nextable): Unit = {
+        lock.lock()
+        try {
+            val old = head
             head = obj
-            tail = obj
-        } else {
-            tail = obj
-            oldTail.next = tail
-        }
-        count += 1
-
-        // unlock()
+            obj.next = old
+            count += 1
+        } finally lock.unlock()
     }
 
-    def putHead(obj: Nextable): Unit = this.synchronized {
-        val old = head
-        head = obj
-        obj.next = old
-        count += 1
+    def get[T <: Nextable](): T = {
+        lock.lock()
+        try {
+            var obj: Nextable = null
+            if (count == 1) {
+                obj = head
+                head = null
+                tail = null
+            } else {
+                obj = head
+                head = obj.next
+                obj.deChain()
+            }
+            count -= 1
+
+            obj.asInstanceOf[T]
+        } finally lock.unlock()
     }
 
-    def get[T <: Nextable](): T = this.synchronized {
-        var obj: Nextable = null
-        // lock()
-        if (count == 1) {
-            obj = head
-            head = null
-            tail = null
-        } else {
-            obj = head
-            head = obj.next
-            obj.deChain()
-        }
-        count -= 1
-        // unlock()
-
-        obj.asInstanceOf[T]
+    def getChain(max: Int): Nextable = {
+        lock.lock()
+        try {
+            var obj: Nextable = null
+            if (count <= max) {
+                obj = head
+                head = null
+                tail = null
+                count = 0
+            } else {
+                obj = head
+                var i      = 0
+                var cursor = head
+                while (i < max - 1) {
+                    cursor = cursor.next
+                    i += 1
+                }
+                val chainTail = cursor
+                head = cursor.next
+                chainTail.next = null
+                count -= max
+            }
+            obj
+        } finally lock.unlock()
     }
 
-    def getChain(max: Int): Nextable = this.synchronized {
-        var obj: Nextable = null
-        // lock()
-        if (count <= max) {
-            obj = head
+    def getAll: Nextable = {
+        lock.lock()
+        try {
+            val obj = head
             head = null
             tail = null
             count = 0
-            // unlock()
-        } else {
-            obj = head
-            var i      = 0
-            var cursor = head
-            while (i < max - 1) {
-                cursor = cursor.next
-                i += 1
-            }
-            val chainTail = cursor
-            head = cursor.next
-            chainTail.next = null
-            count -= max
-            // unlock()
-        }
-        obj
-    }
-
-    def getAll: Nextable = this.synchronized {
-        val obj = head
-        head = null
-        tail = null
-        count = 0
-        obj
+            obj
+        } finally lock.unlock()
     }
 
     def size(): Int = count

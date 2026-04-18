@@ -29,6 +29,7 @@ import cc.otavia.core.system.monitor.ActorThreadMonitor
 import java.lang.ref.*
 import java.util.SplittableRandom
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
@@ -50,6 +51,7 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
     private val manager = new HouseManager(this)
 
     private val eventQueue                  = new ConcurrentLinkedQueue[Event]()
+    private val eventQueueSize              = new AtomicInteger(0)
     private val address: ActorThreadAddress = new ActorThreadAddress(this)
 
     private val referenceQueue = new ReferenceQueue[ActorAddress[?]]()
@@ -165,12 +167,14 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
     /** Enqueue an event for processing on this thread's Phase 2. */
     private[core] def putEvent(event: Event): Unit = {
         eventQueue.offer(event)
+        eventQueueSize.incrementAndGet()
         notifyThread()
     }
 
     /** Enqueue multiple events for processing on this thread's Phase 2. */
     private[core] def putEvents(events: Seq[Event]): Unit = {
         events.foreach(event => eventQueue.offer(event))
+        eventQueueSize.addAndGet(events.size)
         notifyThread()
     }
 
@@ -192,9 +196,9 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
         prepared()
 
         val ioCtx = new IoExecutionContext {
-            override def canBlock: Boolean = !manager.runnable && refSet.isEmpty && eventQueue.isEmpty
+            override def canBlock: Boolean = !manager.runnable && refSet.isEmpty && eventQueueSize.get() == 0
 
-            override def canNotBlock: Boolean = manager.runnable || !eventQueue.isEmpty || refSet.nonEmpty
+            override def canNotBlock: Boolean = manager.runnable || eventQueueSize.get() > 0 || refSet.nonEmpty
         }
 
         var selectCnt = 0
@@ -217,7 +221,8 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
             if (refSet.nonEmpty) this.stopActors()
 
             // ---- Phase 3: Business logic (StateActor) with time budget ----
-            val deadline = computeDeadline(ioStartTime, strategy)
+            val now = System.nanoTime()
+            val deadline = computeDeadline(ioStartTime, now, strategy)
             manager.runStateActors(deadline)
 
             // ---- Phase 4: Work stealing (only when idle) ----
@@ -225,10 +230,9 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
         }
     }
 
-    private def computeDeadline(ioStartTime: Long, strategy: Int): Long = {
+    private def computeDeadline(ioStartTime: Long, now: Long, strategy: Int): Long = {
         if (ioRatio == 100) return Long.MaxValue
-        val ioTime = System.nanoTime() - ioStartTime
-        val now = ioStartTime + ioTime
+        val ioTime = now - ioStartTime
         if (strategy <= 0) return now + minActorBudgetNanos
         now + ioTime * (100 - ioRatio) / ioRatio
     }
@@ -244,26 +248,17 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
         } else false
     }
 
-    private def runLaterTasks(): Unit = {
-        while (channelLaterTasks.nonEmpty) {
-            val task = channelLaterTasks.removeHead()
-            try task.run()
-            catch {
-                case t: Throwable => t.printStackTrace()
-            }
-        }
-    }
-
     private def runThreadEvent(): Boolean = {
-        val run = !eventQueue.isEmpty
-        while (!eventQueue.isEmpty) {
+        val run = eventQueueSize.get() > 0
+        while (eventQueueSize.get() > 0) {
             val event = eventQueue.poll().asInstanceOf[ResourceTimeoutEvent]
+            eventQueueSize.decrementAndGet()
             event.cache.parent.handleTimeout(event.registerId, event.cache)
         }
         run
     }
 
-    def monitor(): ActorThreadMonitor = ActorThreadMonitor(eventQueue.size(), manager.monitor())
+    def monitor(): ActorThreadMonitor = ActorThreadMonitor(eventQueueSize.get(), manager.monitor())
 
     private def confirmShutdown(): Boolean = shuttingDown
 

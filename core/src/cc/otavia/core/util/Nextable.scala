@@ -18,7 +18,7 @@ package cc.otavia.core.util
 
 private[core] trait Nextable {
 
-    @volatile private var n: Nextable | Null = _
+    private var n: Nextable | Null = _
 
     /** Set the next object of this object. */
     def next_=(next: Nextable): Unit = n = next

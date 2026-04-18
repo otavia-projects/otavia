@@ -26,7 +26,7 @@ private[core] abstract class FutureDispatcher {
 
     import FutureDispatcher.*
 
-    private var table: Array[MessagePromise[?]] = _
+    private var table: Array[MessagePromise[?]] = new Array[MessagePromise[?]](tableSizeFor(initialCapacity))
     private var mask: Int                       = tableSizeFor(initialCapacity) - 1
 
     private var threshold: Int = newThreshold(tableSizeFor(initialCapacity))
@@ -41,16 +41,13 @@ private[core] abstract class FutureDispatcher {
     inline private def index(id: Long): Int = (id & mask).toInt
 
     inline private def findNode(id: Long): MessagePromise[?] = {
-        if (table ne null) {
-            table(index(id)) match
-                case null    => null
-                case promise => promise.findNode(id)
-        } else null
+        table(index(id)) match
+            case null    => null
+            case promise => promise.findNode(id)
     }
 
     final protected def push(promise: MessagePromise[?]): Unit = {
-        if (table eq null) table = new Array[MessagePromise[?]](tableSizeFor(initialCapacity))
-        else if (contentSize + 1 >= threshold) resizeTable(table.length * 2)
+        if (contentSize + 1 >= threshold) resizeTable(table.length * 2)
         put0(promise)
     }
 
@@ -87,7 +84,7 @@ private[core] abstract class FutureDispatcher {
                 }
                 cursor
 
-        if (table.length >= initialCapacity * 4 && contentSize < table.length / 2) { // shrinkage the hash table
+        if (table.length >= initialCapacity * 4 && contentSize < table.length / 4) { // shrinkage the hash table
             resizeTable(table.length / 2)
         }
         promise
