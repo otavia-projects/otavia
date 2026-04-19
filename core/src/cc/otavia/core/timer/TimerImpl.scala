@@ -38,7 +38,13 @@ import scala.language.unsafeNulls
 /** Default implementation of [[Timer]] */
 final class TimerImpl(private[timer] val system: ActorSystem) extends Timer {
 
-    private val hashedWheelTimer = new HashedWheelTimer(system, new TimerThreadFactory())
+    private val hashedWheelTimer = new HashedWheelTimer(
+      system,
+      new TimerThreadFactory(),
+      system.config.timer.tickDurationMs,
+      TimeUnit.MILLISECONDS,
+      system.config.timer.ticksPerWheel
+    )
     private val taskManager      = new TimerTaskManager(this)
 
     private val nextId = new AtomicLong(Timer.INVALID_TIMEOUT_REGISTER_ID + 1)

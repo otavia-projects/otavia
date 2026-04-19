@@ -16,12 +16,11 @@
 
 package cc.otavia.core.cache
 
-import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.util.Nextable
 
 import scala.language.unsafeNulls
 
-final class SingleThreadPoolableHolder[T <: Poolable](val maxSize: Int = ActorSystem.DEFAULT_POOL_HOLDER_MAX_SIZE)
+final class SingleThreadPoolableHolder[T <: Poolable](val maxSize: Int = 256)
     extends PoolableHolder[T] {
 
     private var count: Int      = 0

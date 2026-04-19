@@ -16,7 +16,6 @@
 
 package cc.otavia.core.system
 
-import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.actor.*
 import cc.otavia.core.address.ActorAddress
 import cc.otavia.core.channel.AbstractChannel
@@ -250,7 +249,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
      */
     def putNotice(envelope: Envelope[?]): Unit = {
         if (system.isBusy && !ActorThread.currentThreadIsActorThread) {
-            Thread.sleep(ActorSystem.MEMORY_OVER_SLEEP)
+            Thread.sleep(system.config.system.memoryOverSleepMs)
         }
         put(envelope, noticeMailbox)
     }
@@ -264,7 +263,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     def putReply(envelope: Envelope[?]): Unit = {
         replyMailbox.put(envelope)
         _hasMessages = true
-        if (replyMailbox.size() > HIGH_PRIORITY_REPLY_SIZE) _highPriority = true
+        if (replyMailbox.size() > manager.thread.system.config.priority.highPriorityReplySize) _highPriority = true
         if (status.get() == WAITING) waitingToReady()
     }
 
@@ -275,7 +274,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     def putEvent(event: Event): Unit = {
         eventMailbox.put(event)
         _hasMessages = true
-        if (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE) _highPriority = true
+        if (eventMailbox.size() > manager.thread.system.config.priority.highPriorityEventSize) _highPriority = true
         if (status.get() == WAITING) waitingToReady()
     }
 
@@ -347,8 +346,10 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     private def completeRunning(): Unit = {
         if (!inBarrier) {
             if (nonEmpty) {
-                _highPriority = (replyMailbox.size() > HIGH_PRIORITY_REPLY_SIZE) ||
-                    (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE) ||
+                val replyThreshold = manager.thread.system.config.priority.highPriorityReplySize
+                val eventThreshold = manager.thread.system.config.priority.highPriorityEventSize
+                _highPriority = (replyMailbox.size() > replyThreshold) ||
+                    (eventMailbox.size() > eventThreshold) ||
                     (dweller.pendingPromiseCount == 0)
                 if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
             } else {
@@ -360,8 +361,10 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
             }
         } else {
             if (barrierNonEmpty) {
-                _highPriority = (replyMailbox.size() > HIGH_PRIORITY_REPLY_SIZE) ||
-                    (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE) ||
+                val replyThreshold = manager.thread.system.config.priority.highPriorityReplySize
+                val eventThreshold = manager.thread.system.config.priority.highPriorityEventSize
+                _highPriority = (replyMailbox.size() > replyThreshold) ||
+                    (eventMailbox.size() > eventThreshold) ||
                     (dweller.pendingPromiseCount == 0)
                 if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
             } else {
@@ -415,14 +418,6 @@ object ActorHouse {
 
     /** Actor is currently executing on the ActorThread. */
     private val RUNNING: HOUSE_STATUS = 5
-
-    private val HIGH_PRIORITY_REPLY_SIZE_DEFAULT = 2
-    private val HIGH_PRIORITY_REPLY_SIZE =
-        SystemPropertyUtil.getInt("cc.otavia.core.priority.reply.size", HIGH_PRIORITY_REPLY_SIZE_DEFAULT)
-
-    private val HIGH_PRIORITY_EVENT_SIZE_DEFAULT = 4
-    private val HIGH_PRIORITY_EVENT_SIZE =
-        SystemPropertyUtil.getInt("cc.otavia.core.priority.event.size", HIGH_PRIORITY_EVENT_SIZE_DEFAULT)
 
     // Actor type classification — determines scheduling queue assignment
     val STATE_ACTOR           = 0

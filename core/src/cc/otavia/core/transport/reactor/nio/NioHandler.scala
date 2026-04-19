@@ -19,7 +19,7 @@
 package cc.otavia.core.transport.reactor.nio
 
 import cc.otavia.buffer.pool.RecyclablePageBuffer
-import cc.otavia.common.{SystemPropertyUtil, ThrowableUtil}
+import cc.otavia.common.ThrowableUtil
 import cc.otavia.core.channel.*
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.message.*
@@ -76,7 +76,7 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
             } catch {
                 case e: IOException => throw new ChannelException(s"failed to open a new selector $e")
             }
-        if (DISABLE_KEY_SET_OPTIMIZATION) SelectorTuple(unwrappedSelector)
+        if (sys.config.reactor.noKeySetOptimization) SelectorTuple(unwrappedSelector)
         else {
             Try {
                 Class.forName("sun.nio.ch.SelectorImpl", false, Platform.getSystemClassLoader)
@@ -461,19 +461,9 @@ object NioHandler {
         def apply(unwrappedSelector: Selector): SelectorTuple = SelectorTuple(unwrappedSelector, unwrappedSelector)
     }
 
-    private val CLEANUP_INTERVAL = 256 // XXX Hard-coded value, but won't need customization.+
+    private val CLEANUP_INTERVAL = 256 // XXX Hard-coded value, but won't need customization.
 
-    private val DISABLE_KEY_SET_OPTIMIZATION =
-        SystemPropertyUtil.getBoolean("io.netty5.noKeySetOptimization", false)
-
-    private val MIN_PREMATURE_SELECTOR_RETURNS  = 3
-    private var SELECTOR_AUTO_REBUILD_THRESHOLD = 0
-
-    private var selectorAutoRebuildThreshold: Int =
-        SystemPropertyUtil.getInt("io.netty5.selectorAutoRebuildThreshold", 512)
-    if (selectorAutoRebuildThreshold < MIN_PREMATURE_SELECTOR_RETURNS) selectorAutoRebuildThreshold = 0
-
-    SELECTOR_AUTO_REBUILD_THRESHOLD = selectorAutoRebuildThreshold
+    private val MIN_PREMATURE_SELECTOR_RETURNS = 3
 
     private def nioUnsafe(handle: Channel): NioUnsafeChannel = handle.unsafeChannel match
         case unsafe: AbstractNioUnsafeChannel[?] => unsafe

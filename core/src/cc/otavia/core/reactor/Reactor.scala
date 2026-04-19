@@ -66,8 +66,6 @@ trait Reactor {
 
 object Reactor {
 
-    val DEFAULT_MAX_TASKS_PER_RUN: Int = ActorSystem.DEFAULT_MAX_TASKS_PER_RUN
-
     abstract sealed class Command extends Nextable {
         def channel: AbstractChannel
     }

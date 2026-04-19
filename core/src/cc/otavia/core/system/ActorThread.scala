@@ -17,7 +17,6 @@
 package cc.otavia.core.system
 
 import cc.otavia.buffer.pool.{AbstractPooledPageAllocator, DirectPooledPageAllocator, HeapPooledPageAllocator}
-import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.actor.Actor
 import cc.otavia.core.address.{ActorAddress, ActorThreadAddress}
 import cc.otavia.core.message.{Event, ResourceTimeoutEvent}
@@ -60,15 +59,15 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
     @volatile private var shuttingDown: Boolean = false
 
     private val direct = new DirectPooledPageAllocator(
-      ActorSystem.PAGE_SIZE,
-      ActorSystem.ALLOCATOR_MIN_CACHE_SIZE,
-      ActorSystem.ALLOCATOR_MAX_CACHE_SIZE
+      system.config.buffer.pageSize,
+      system.config.buffer.minCache,
+      system.config.buffer.maxCache
     )
 
     private val heap = new HeapPooledPageAllocator(
-      ActorSystem.PAGE_SIZE,
-      ActorSystem.ALLOCATOR_MIN_CACHE_SIZE,
-      ActorSystem.ALLOCATOR_MAX_CACHE_SIZE
+      system.config.buffer.pageSize,
+      system.config.buffer.minCache,
+      system.config.buffer.maxCache
     )
 
     private val mutableBuffer: mutable.ArrayBuffer[AnyRef]  = mutable.ArrayBuffer.empty
@@ -231,15 +230,17 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
     }
 
     private def computeDeadline(ioStartTime: Long, now: Long, strategy: Int): Long = {
+        val ioRatio = system.config.scheduler.ioRatio
         if (ioRatio == 100) return Long.MaxValue
         val ioTime = now - ioStartTime
-        if (strategy <= 0) return now + minActorBudgetNanos
+        if (strategy <= 0) return now + system.config.scheduler.minBudgetMicros * 1000L
         now + ioTime * (100 - ioRatio) / ioRatio
     }
 
     private def unexpectedSelectorWakeup(selectCnt: Int): Boolean = {
+        val threshold = system.config.reactor.selectorAutoRebuildThreshold
         if (Thread.interrupted()) true
-        else if (SELECTOR_AUTO_REBUILD_THRESHOLD > 0 && selectCnt >= SELECTOR_AUTO_REBUILD_THRESHOLD) {
+        else if (threshold > 0 && selectCnt >= threshold) {
             ioHandler match {
                 case nio: NioHandler => nio.rebuildSelector()
                 case _               =>
@@ -265,23 +266,6 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
 }
 
 object ActorThread {
-
-    /** IO ratio: percentage of event loop time allocated to IO. The remaining time is allocated to StateActor
-     *  execution. Default is 50 (equal time for IO and actor). Set to 100 to disable time budgeting.
-     */
-    private val ioRatio = SystemPropertyUtil.getInt("cc.otavia.actor.io.ratio", 50)
-
-    /** Minimum time budget (in nanoseconds) for StateActor execution when there are no IO events. Prevents actor
-     *  starvation when the system is idle from an IO perspective.
-     */
-    private val minActorBudgetNanos =
-        SystemPropertyUtil.getInt("cc.otavia.actor.min.budget.microsecond", 500) * 1000L
-
-    /** The number of consecutive premature Selector returns before rebuilding the Selector to work around the
-     *  epoll 100% CPU bug. Set to 0 to disable auto-rebuild.
-     */
-    private val SELECTOR_AUTO_REBUILD_THRESHOLD =
-        SystemPropertyUtil.getInt("io.otavia.selectorAutoRebuildThreshold", 512)
 
     /** Returns the currently executing [[ActorThread]]. Throws if the current thread is not an ActorThread. */
     def currentThread(): ActorThread = Thread.currentThread().asInstanceOf[ActorThread]

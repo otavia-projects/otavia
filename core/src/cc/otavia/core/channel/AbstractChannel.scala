@@ -51,8 +51,8 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     private var futureBarrier: AnyRef => Boolean = FALSE_FUNC
     private var stackBarrier: AnyRef => Boolean  = TRUE_FUNC
-    private var maxStackInflight: Int            = 1
-    private var maxFutureInflight: Int           = 1
+    private var maxStackInflight: Int            = system.config.channel.maxStackInflight
+    private var maxFutureInflight: Int           = system.config.channel.maxFutureInflight
 
     // outbound futures which is written to channel and waiting channel reply
     private[core] val inflightFutures: QueueMap[ChannelPromise] = new QueueMap[ChannelPromise]()
@@ -154,7 +154,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
             val stack = inflightStacks.first
             if (stack.hasResult) {
                 this.write(stack.result, stack.messageId)
-                if (channelOutboundAdaptiveBuffer.readableBytes > ActorSystem.PAGE_SIZE * 4) this.flush()
+                if (channelOutboundAdaptiveBuffer.readableBytes > system.config.buffer.pageSize * 4) this.flush()
             }
             actor.recycleStack(inflightStacks.pop())
         }

@@ -16,10 +16,8 @@
 
 package cc.otavia.core.system
 
-import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.actor.Actor
 import cc.otavia.core.slf4a.Logger
-import cc.otavia.core.system.HouseManager.*
 import cc.otavia.core.system.monitor.HouseManagerMonitor
 
 import scala.language.unsafeNulls
@@ -155,7 +153,8 @@ final class HouseManager(val thread: ActorThread) {
      */
     private def stealableBy(thiefIdleCount: Int): Boolean = {
         val r = actorQueue.readies
-        r > STEAL_FLOOR && thiefIdleCount * r >= STEAL_AGGRESSION
+        r > thread.system.config.scheduler.stealFloor &&
+        thiefIdleCount * r >= thread.system.config.scheduler.stealAggression
     }
 
     /** Attempt to steal a StateActor from another [[ActorThread]]'s queue. Used as a safety net for extreme load
@@ -215,19 +214,5 @@ final class HouseManager(val thread: ActorThread) {
 
     override def toString: String = s"mounting=${mountingQueue.readies}, channels=${channelsActorQueue.readies}, " +
         s"state=${actorQueue.readies}"
-
-}
-
-object HouseManager {
-
-    /** Minimum victim queue depth to consider stealing. Below this threshold the owner thread will self-drain quickly,
-     *  and the CPU cache cost of cross-thread execution outweighs the benefit.
-     */
-    private val STEAL_FLOOR = SystemPropertyUtil.getInt("cc.otavia.core.steal.floor", 32)
-
-    /** Product threshold for the adaptive steal condition: `idleCount × readies >= STEAL_AGGRESSION`.
-     *  Higher values make stealing more conservative (require more idle iterations or deeper backlog).
-     */
-    private val STEAL_AGGRESSION = SystemPropertyUtil.getInt("cc.otavia.core.steal.aggression", 128)
 
 }

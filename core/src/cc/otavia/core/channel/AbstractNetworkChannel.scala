@@ -39,12 +39,12 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
 
     import AbstractNetworkChannel.*
 
-    private var connectTimeoutMillis: Int      = DEFAULT_CONNECT_TIMEOUT
+    private var connectTimeoutMillis: Int      = system.config.channel.connectTimeoutMs
     private var connectTimeoutRegisterId: Long = Timer.INVALID_TIMEOUT_REGISTER_ID
 
     // writeBufferWaterMark
-    private var waterMarkLow: Int  = WriteBufferWaterMark.DEFAULT_LOW_WATER_MARK
-    private var waterMarkHigh: Int = WriteBufferWaterMark.DEFAULT_HIGH_WATER_MARK
+    private var waterMarkLow: Int  = system.config.channel.writeWaterMarkLow
+    private var waterMarkHigh: Int = system.config.channel.writeWaterMarkHigh
 
     override protected def getExtendedOption[T](option: ChannelOption[T]): T = option match
         case AUTO_READ               => autoRead

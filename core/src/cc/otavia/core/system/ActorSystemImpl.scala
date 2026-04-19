@@ -20,6 +20,7 @@ import cc.otavia.core.actor.*
 import cc.otavia.core.address.*
 import cc.otavia.core.cache.ThreadLocal
 import cc.otavia.core.channel.ChannelFactory
+import cc.otavia.core.config.OtaviaConfig
 import cc.otavia.core.ioc.{BeanDefinition, BeanManager, Module}
 import cc.otavia.core.message.Call
 import cc.otavia.core.slf4a.Logger
@@ -35,8 +36,10 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.MILLISECONDS
 import scala.language.unsafeNulls
 
-final private[core] class ActorSystemImpl(val name: String, val actorThreadFactory: ActorThreadFactory)
-    extends ActorSystem {
+final private[core] class ActorSystemImpl(val config: OtaviaConfig) extends ActorSystem {
+
+    val name: String                            = config.name
+    private val actorThreadFactory: ActorThreadFactory = new ActorThreadFactory.DefaultActorThreadFactory
 
     actorThreadFactory.setSystem(this)
 
@@ -62,7 +65,7 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
     private val actorThreadPool: ActorThreadPool = new DefaultActorThreadPool(
       this,
       actorThreadFactory,
-      ActorSystem.ACTOR_THREAD_POOL_SIZE
+      config.system.actorThreadPoolSize
     )
 
     private val memoryMXBean: MemoryMXBean = ManagementFactory.getMemoryMXBean
@@ -71,8 +74,8 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
 
     private var memoryMonitor: Timeout = _
 
-    if (ActorSystem.MEMORY_MONITOR) {
-        val duration = ActorSystem.MEMORY_MONITOR_DURATION * 100
+    if (config.system.memoryMonitor) {
+        val duration = config.system.memoryMonitorDurationMs
         memoryMonitor =
             timer.internalTimer.newTimeout(_ => calculateBusy(), duration, MILLISECONDS, duration, MILLISECONDS)
     }
@@ -80,12 +83,12 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
     private val systemMonitorTask      = new SystemMonitorTask(this)
     private var systemMonitor: Timeout = _
 
-    if (ActorSystem.SYSTEM_MONITOR) {
-        val duration = ActorSystem.SYSTEM_MONITOR_DURATION * 100
+    if (config.system.systemMonitor) {
+        val duration = config.system.systemMonitorDurationMs
         systemMonitor = timer.internalTimer.newTimeout(_ => doMonitor(), duration, MILLISECONDS, duration, MILLISECONDS)
     }
 
-    if (ActorSystem.PRINT_BANNER) {
+    if (config.system.printBanner) {
         println(s"${Console.YELLOW}${SystemInfo.logo()}${Console.RESET}")
         println(SystemInfo.info())
         println("\n")
@@ -121,9 +124,9 @@ final private[core] class ActorSystemImpl(val name: String, val actorThreadFacto
         pool.workers.foreach(_.shutdown())
     }
 
-    override def defaultMaxFetchPerRunning: Int = Int.MaxValue
+    override def defaultMaxFetchPerRunning: Int = config.system.maxFetchPerRunning
 
-    override def defaultMaxBatchSize: Int = 100000
+    override def defaultMaxBatchSize: Int       = config.system.maxBatchSize
 
     // format: off
     override def buildActor[A <: Actor[? <: Call]](factory: ActorFactory[A], num: Int = 1,

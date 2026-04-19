@@ -16,16 +16,13 @@
 
 package cc.otavia.core.transport.reactor.nio
 
-import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.channel.Channel
 import cc.otavia.core.reactor.*
-import cc.otavia.core.reactor.Reactor.Command.*
-import cc.otavia.core.reactor.Reactor.{Command, DEFAULT_MAX_TASKS_PER_RUN}
+import cc.otavia.core.reactor.Reactor.Command
 import cc.otavia.core.slf4a.Logger
-import cc.otavia.core.system.ActorSystem.DEFAULT_PRINT_BANNER
 import cc.otavia.core.system.{ActorSystem, ActorThread}
 import cc.otavia.core.transport.TransportFactory
-import cc.otavia.core.transport.reactor.nio.NioReactor.{NIO_REACTOR_WORKERS, NioThreadChooser, NioThreadFactory}
+import cc.otavia.core.transport.reactor.nio.NioReactor.{NioThreadChooser, NioThreadFactory}
 import cc.otavia.core.util.SpinLockQueue
 
 import java.util.SplittableRandom
@@ -36,7 +33,7 @@ import scala.language.unsafeNulls
 class NioReactor(
     val system: ActorSystem,
     val transportFactory: TransportFactory,
-    val maxTasksPerRun: Int = DEFAULT_MAX_TASKS_PER_RUN
+    val maxTasksPerRun: Int = -1  // -1 means use config default
 ) extends AtomicInteger
     with Reactor {
 
@@ -44,22 +41,25 @@ class NioReactor(
 
     private val threadFactory = new NioThreadFactory()
 
-    private val workers: Array[NioReactorWorker] = new Array[NioReactorWorker](NIO_REACTOR_WORKERS)
+    private val actualMaxTasksPerRun = if (maxTasksPerRun > 0) maxTasksPerRun else system.config.reactor.maxTasksPerRun
+    private val nioWorkers = system.config.reactor.nioWorkerSize
 
-    private val nioThreadChoicer = NioThreadChooser(system.actorWorkerSize, NIO_REACTOR_WORKERS)
+    private val workers: Array[NioReactorWorker] = new Array[NioReactorWorker](nioWorkers)
+
+    private val nioThreadChoicer = NioThreadChooser(system.actorWorkerSize, nioWorkers)
 
     workers.indices.foreach { idx =>
         workers(idx) = new NioReactorWorker(
           LoopExecutor(threadFactory),
           system,
-          maxTasksPerRun,
+          actualMaxTasksPerRun,
           new IoHandlerFactory {
               override def newHandler: IoHandler = new NioHandler(system)
           }
         )
     }
 
-    override def submit(command: Command): Unit = {
+    override def submit(command: Reactor.Command): Unit = {
         val idx    = nioThreadChoicer.choice(command.channel)
         val worker = workers(idx)
         worker.submitCommand(command)
@@ -68,15 +68,6 @@ class NioReactor(
 }
 
 object NioReactor {
-
-    private val DEFAULT_NIO_REACTOR_WORKERS = Runtime.getRuntime.availableProcessors()
-    val NIO_REACTOR_WORKERS: Int = {
-        if (SystemPropertyUtil.get("cc.otavia.nio.worker.size").nonEmpty)
-            SystemPropertyUtil.getInt("cc.otavia.nio.worker.size", DEFAULT_NIO_REACTOR_WORKERS)
-        else if (SystemPropertyUtil.get("cc.otavia.nio.worker.ratio").nonEmpty)
-            (SystemPropertyUtil.getFloat("cc.otavia.nio.worker.ratio", 1.0) * DEFAULT_NIO_REACTOR_WORKERS).toInt
-        else Runtime.getRuntime.availableProcessors()
-    }
 
     final private class NioThreadFactory extends ThreadFactory {
 
