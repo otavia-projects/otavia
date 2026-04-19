@@ -370,11 +370,14 @@ node3 -> node2;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Attempt to steal a StateActor from another <a href="ActorThread.html">ActorThread</a>'s queue. Used for cross-thread load balancing. Only steals from the normal-priority queue.</p>
+             <p>Attempt to steal a StateActor from another <a href="ActorThread.html">ActorThread</a>'s queue. Used as a safety net for extreme load imbalance — the primary scheduling model keeps actors on their owning thread for CPU cache locality.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Attempt to steal a StateActor from another <a href="ActorThread.html">ActorThread</a>'s queue. Used for cross-thread load balancing. Only steals from the normal-priority queue.</p>
+              <p>Attempt to steal a StateActor from another <a href="ActorThread.html">ActorThread</a>'s queue. Used as a safety net for extreme load imbalance — the primary scheduling model keeps actors on their owning thread for CPU cache locality.</p>
+              <p>'''Idle tracking:''' <span data-unresolved-link="">idleCount</span> is incremented each call (each idle event-loop iteration). It is reset when the owning thread has work. This ensures only genuinely idle threads attempt stealing.</p>
+              <p>'''Victim selection:''' random starting index distributes multiple idle thieves across different victims. The actual dequeue uses <a href="PriorityHouseQueue.html#stealDequeue-bc9">PriorityHouseQueue.stealDequeue</a> (tryLock-based, no spinning) so that a contended victim is skipped instantly without delaying either the thief or the victim.</p>
+              <p>'''Steal condition:''' see <span data-unresolved-link="">stealableBy</span> — combines <span data-unresolved-link="">idleCount</span> with victim queue depth.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">

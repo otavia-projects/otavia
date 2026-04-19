@@ -184,16 +184,62 @@
 </section>
 <section id="工作窃取">
  <h2 class="h500"><a href="#工作窃取" class="anchor"></a>工作窃取</h2>
- <p>当线程自身队列空闲时，尝试从其他线程窃取：</p>
+ <p>当线程自身队列为空时，作为极端负载不均衡的安全兜底，尝试从其他线程窃取。主调度模型保持 actor 在挂载线程上执行以利用 CPU 缓存——窃取仅在线程真正空闲且另一线程确实过载时激活。</p>
+</section>
+<section id="空闲检测">
+ <h3 class="h400"><a href="#空闲检测" class="anchor"></a>空闲检测</h3>
+ <p>线程追踪连续事件循环迭代中三个队列均为空的次数（<code>idleCount</code>）。每当线程有工作时该计数器重置为 0。负载稳定但不太高的线程不会积累空闲迭代，因此不会窃取。</p>
+</section>
+<section id="自适应窃取条件">
+ <h3 class="h400"><a href="#自适应窃取条件" class="anchor"></a>自适应窃取条件</h3>
+ <p>窃取决策结合窃取者的 <code>idleCount</code> 与受害者的队列深度（<code>readies</code>）：</p>
+ <div class="snippet mono-small-block">
+  <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span>readies &gt; STEAL_FLOOR  且  idleCount × readies &gt;= STEAL_AGGRESSION
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+ <p>将窃取激进程度与不均衡严重程度关联：</p>
+ <table>
+  <thead>
+   <tr>
+    <th>受害者积压</th>
+    <th>窃取者所需连续空闲次数</th>
+    <th>原因</th>
+   </tr>
+  </thead>
+  <tbody>
+   <tr>
+    <td>128+</td>
+    <td>1</td>
+    <td>严重危机，立即响应</td>
+   </tr>
+   <tr>
+    <td>64+</td>
+    <td>2</td>
+    <td>中等积压，确认空闲</td>
+   </tr>
+   <tr>
+    <td>32+</td>
+    <td>4</td>
+    <td>轻度积压，保守策略</td>
+   </tr>
+   <tr>
+    <td>&lt; 32</td>
+    <td>永不窃取</td>
+    <td>自行排空快，缓存代价不值得</td>
+   </tr>
+  </tbody>
+ </table>
+ <p>默认值：<code>STEAL_FLOOR = 32</code>、<code>STEAL_AGGRESSION = 128</code>（可通过 <code>cc.otavia.core.steal.floor</code> 和 <code>cc.otavia.core.steal.aggression</code> 配置）。</p>
+</section>
+<section id="窃取机制">
+ <h3 class="h400"><a href="#窃取机制" class="anchor"></a>窃取机制</h3>
  <ol>
-  <li>从 <code>(1 + thisThread.index) % length</code> 开始轮询其他线程（轮询偏移避免所有空闲线程都瞄准 thread 0）</li>
-  <li>窃取条件（任一）： 
-   <ul>
-    <li>目标 <code>actorQueue.readies &gt; 16</code>（严重积压）</li>
-    <li>目标运行时间 &gt; 2000μs 且有待处理 actor（线程卡住）</li>
-   </ul></li>
+  <li>随机选择起始位置，扫描所有其他线程</li>
+  <li>使用 <code>tryLock</code> 尝试获取目标队列锁——锁争用时立即跳过下一个候选，不自旋等待</li>
   <li>每次只窃取 <strong>1 个</strong> ActorHouse 运行</li>
   <li>只窃取 StateActor（ChannelsActor 绑定了线程的 <code>IoHandler</code>）</li>
+  <li>执行完毕后，被窃取的 actor 回到原线程的队列（actor 固定在挂载线程上）</li>
  </ol>
 </section>
 <section id="线程池">
@@ -234,4 +280,4 @@
 <section id="关键设计无上下文切换">
  <h2 class="h500"><a href="#关键设计无上下文切换" class="anchor"></a>关键设计：无上下文切换</h2>
  <p><code>ActorThread</code> 直接在其线程上运行 actor。当 Stack 挂起（等待回复）时，它交出控制权。回复作为消息到达邮箱，当 house 被重新调度时，Stack 在<strong>同一线程</strong>上恢复。没有线程上下文切换 — 一切都在所属的 <code>ActorThread</code> 上进行。</p>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#线程模型">线程模型</a><ul><li><a href="#actorthread-主循环">ActorThread 主循环</a><ul><li><a href="#phase-1-io">Phase 1: IO</a></li><li><a href="#phase-2-io-pipeline">Phase 2: IO Pipeline</a></li><li><a href="#phase-3-business">Phase 3: Business</a></li><li><a href="#线程通知">线程通知</a></li></ul></li><li><a href="#housemanager">HouseManager</a><ul><li><a href="#路由">路由</a></li></ul></li><li><a href="#priorityhousequeue">PriorityHouseQueue</a><ul><li><a href="#spinlock-实现">SpinLock 实现</a></li></ul></li><li><a href="#actorhouse-状态机">ActorHouse 状态机</a><ul><li><a href="#五个邮箱">五个邮箱</a></li><li><a href="#调度顺序">调度顺序</a></li><li><a href="#高优先级条件">高优先级条件</a></li></ul></li><li><a href="#工作窃取">工作窃取</a></li><li><a href="#线程池">线程池</a><ul><li><a href="#actor-放置策略">Actor 放置策略</a></li></ul></li><li><a href="#内存保护">内存保护</a></li><li><a href="#关键设计无上下文切换">关键设计：无上下文切换</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#线程模型">线程模型</a><ul><li><a href="#actorthread-主循环">ActorThread 主循环</a><ul><li><a href="#phase-1-io">Phase 1: IO</a></li><li><a href="#phase-2-io-pipeline">Phase 2: IO Pipeline</a></li><li><a href="#phase-3-business">Phase 3: Business</a></li><li><a href="#线程通知">线程通知</a></li></ul></li><li><a href="#housemanager">HouseManager</a><ul><li><a href="#路由">路由</a></li></ul></li><li><a href="#priorityhousequeue">PriorityHouseQueue</a><ul><li><a href="#spinlock-实现">SpinLock 实现</a></li></ul></li><li><a href="#actorhouse-状态机">ActorHouse 状态机</a><ul><li><a href="#五个邮箱">五个邮箱</a></li><li><a href="#调度顺序">调度顺序</a></li><li><a href="#高优先级条件">高优先级条件</a></li></ul></li><li><a href="#工作窃取">工作窃取</a><ul><li><a href="#空闲检测">空闲检测</a></li><li><a href="#自适应窃取条件">自适应窃取条件</a></li><li><a href="#窃取机制">窃取机制</a></li></ul></li><li><a href="#线程池">线程池</a><ul><li><a href="#actor-放置策略">Actor 放置策略</a></li></ul></li><li><a href="#内存保护">内存保护</a></li><li><a href="#关键设计无上下文切换">关键设计：无上下文切换</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

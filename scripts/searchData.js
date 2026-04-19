@@ -1685,6 +1685,7 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"docs","t":"docs","d":"","k":"s
 {"l":"cc/otavia/core/system/PriorityHouseQueue.html#","e":false,"i":"","n":"PriorityHouseQueue","t":"PriorityHouseQueue(manager: HouseManager) extends HouseQueue","d":"cc.otavia.core.system","k":"class","x":""},
 {"l":"cc/otavia/core/system/PriorityHouseQueue.html#available-0","e":false,"i":"","n":"available","t":"available: Boolean","d":"cc.otavia.core.system.PriorityHouseQueue","k":"def","x":""},
 {"l":"cc/otavia/core/system/PriorityHouseQueue.html#readies-0","e":false,"i":"","n":"readies","t":"readies: Int","d":"cc.otavia.core.system.PriorityHouseQueue","k":"def","x":""},
+{"l":"cc/otavia/core/system/PriorityHouseQueue.html#stealDequeue-bc9","e":false,"i":"","n":"stealDequeue","t":"stealDequeue(): ActorHouse | Null","d":"cc.otavia.core.system.PriorityHouseQueue","k":"def","x":""},
 {"l":"cc/otavia/core/system/SystemInfo$.html#","e":false,"i":"","n":"SystemInfo","t":"SystemInfo","d":"cc.otavia.core.system","k":"object","x":""},
 {"l":"cc/otavia/core/system/SystemInfo$.html#info-665","e":false,"i":"","n":"info","t":"info(): String","d":"cc.otavia.core.system.SystemInfo","k":"def","x":""},
 {"l":"cc/otavia/core/system/SystemInfo$.html#logo-665","e":false,"i":"","n":"logo","t":"logo(): String","d":"cc.otavia.core.system.SystemInfo","k":"def","x":""},

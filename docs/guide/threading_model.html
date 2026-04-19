@@ -184,16 +184,62 @@
 </section>
 <section id="work-stealing">
  <h2 class="h500"><a href="#work-stealing" class="anchor"></a>Work Stealing</h2>
- <p>When a thread's own queues are empty, it attempts to steal from other threads:</p>
+ <p>When a thread's own queues are empty, it attempts to steal from other threads as a safety net for extreme load imbalance. The primary scheduling model keeps actors on their owning thread for CPU cache locality — stealing only activates when a thread is genuinely idle and another thread is genuinely overwhelmed.</p>
+</section>
+<section id="idle-detection">
+ <h3 class="h400"><a href="#idle-detection" class="anchor"></a>Idle Detection</h3>
+ <p>A thread tracks consecutive event-loop iterations where all three queues were empty (<code>idleCount</code>). This counter resets to 0 whenever the thread has work. A thread with moderate but steady load never accumulates idle iterations and never steals.</p>
+</section>
+<section id="adaptive-steal-condition">
+ <h3 class="h400"><a href="#adaptive-steal-condition" class="anchor"></a>Adaptive Steal Condition</h3>
+ <p>The steal decision combines the thief's <code>idleCount</code> with the victim's queue depth (<code>readies</code>):</p>
+ <div class="snippet mono-small-block">
+  <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span>readies &gt; STEAL_FLOOR  AND  idleCount × readies &gt;= STEAL_AGGRESSION
+</span></code></pre>
+  <div class="buttons"></div>
+ </div>
+ <p>This ties aggressiveness to imbalance severity:</p>
+ <table>
+  <thead>
+   <tr>
+    <th>Victim backlog</th>
+    <th>Thief idle iterations needed</th>
+    <th>Rationale</th>
+   </tr>
+  </thead>
+  <tbody>
+   <tr>
+    <td>128+</td>
+    <td>1</td>
+    <td>Severe crisis — immediate response</td>
+   </tr>
+   <tr>
+    <td>64+</td>
+    <td>2</td>
+    <td>Moderate backlog — confirm idleness</td>
+   </tr>
+   <tr>
+    <td>32+</td>
+    <td>4</td>
+    <td>Mild backlog — conservative</td>
+   </tr>
+   <tr>
+    <td>&lt; 32</td>
+    <td>never</td>
+    <td>Self-drains quickly; cache cost outweighs benefit</td>
+   </tr>
+  </tbody>
+ </table>
+ <p>Defaults: <code>STEAL_FLOOR = 32</code>, <code>STEAL_AGGRESSION = 128</code> (configurable via <code>cc.otavia.core.steal.floor</code> and <code>cc.otavia.core.steal.aggression</code>).</p>
+</section>
+<section id="steal-mechanics">
+ <h3 class="h400"><a href="#steal-mechanics" class="anchor"></a>Steal Mechanics</h3>
  <ol>
-  <li>Iterates other threads starting from <code>(1 + thisThread.index) % length</code> (round-robin offset prevents all idle threads targeting thread 0)</li>
-  <li>Steal conditions (any): 
-   <ul>
-    <li>Target <code>actorQueue.readies &gt; 16</code> (severe backlog)</li>
-    <li>Target running time is greater than 2000 microseconds with pending actors (stuck thread)</li>
-   </ul></li>
+  <li>Picks a random starting index and scans all other threads</li>
+  <li>Uses <code>tryLock</code> on the victim's queue — if contended, skips to next candidate without spinning</li>
   <li>Steals ONE house from the victim's <code>actorQueue</code> and runs it inline</li>
   <li>Only state actors are stolen (<code>ChannelsActor</code>s are bound to their thread's <code>IoHandler</code>)</li>
+  <li>After execution, the stolen house re-enters the victim's queue (actors are pinned to their owning thread)</li>
  </ol>
 </section>
 <section id="thread-pool">
@@ -234,4 +280,4 @@
 <section id="key-design-no-context-switches">
  <h2 class="h500"><a href="#key-design-no-context-switches" class="anchor"></a>Key Design: No Context Switches</h2>
  <p>An <code>ActorThread</code> runs actors directly on its thread. When a <code>Stack</code> suspends (waiting for a reply), it returns control. The reply arrives as a message in the mailbox, and when the house is re-scheduled, the Stack resumes on the <strong>same thread</strong>. There are no thread context switches — everything stays on the owning <code>ActorThread</code>.</p>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#threading-model">Threading Model</a><ul><li><a href="#actorthread-main-loop">ActorThread Main Loop</a><ul><li><a href="#phase-1-io">Phase 1: IO</a></li><li><a href="#phase-2-io-pipeline">Phase 2: IO Pipeline</a></li><li><a href="#phase-3-business">Phase 3: Business</a></li><li><a href="#thread-notification">Thread Notification</a></li></ul></li><li><a href="#housemanager">HouseManager</a><ul><li><a href="#routing">Routing</a></li></ul></li><li><a href="#priorityhousequeue">PriorityHouseQueue</a><ul><li><a href="#spinlock-implementation">SpinLock Implementation</a></li></ul></li><li><a href="#actorhouse-state-machine">ActorHouse State Machine</a><ul><li><a href="#five-mailboxes">Five Mailboxes</a></li><li><a href="#dispatch-order">Dispatch Order</a></li><li><a href="#high-priority-conditions">High Priority Conditions</a></li></ul></li><li><a href="#work-stealing">Work Stealing</a></li><li><a href="#thread-pool">Thread Pool</a><ul><li><a href="#actor-placement">Actor Placement</a></li></ul></li><li><a href="#memory-protection">Memory Protection</a></li><li><a href="#key-design-no-context-switches">Key Design: No Context Switches</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#threading-model">Threading Model</a><ul><li><a href="#actorthread-main-loop">ActorThread Main Loop</a><ul><li><a href="#phase-1-io">Phase 1: IO</a></li><li><a href="#phase-2-io-pipeline">Phase 2: IO Pipeline</a></li><li><a href="#phase-3-business">Phase 3: Business</a></li><li><a href="#thread-notification">Thread Notification</a></li></ul></li><li><a href="#housemanager">HouseManager</a><ul><li><a href="#routing">Routing</a></li></ul></li><li><a href="#priorityhousequeue">PriorityHouseQueue</a><ul><li><a href="#spinlock-implementation">SpinLock Implementation</a></li></ul></li><li><a href="#actorhouse-state-machine">ActorHouse State Machine</a><ul><li><a href="#five-mailboxes">Five Mailboxes</a></li><li><a href="#dispatch-order">Dispatch Order</a></li><li><a href="#high-priority-conditions">High Priority Conditions</a></li></ul></li><li><a href="#work-stealing">Work Stealing</a><ul><li><a href="#idle-detection">Idle Detection</a></li><li><a href="#adaptive-steal-condition">Adaptive Steal Condition</a></li><li><a href="#steal-mechanics">Steal Mechanics</a></li></ul></li><li><a href="#thread-pool">Thread Pool</a><ul><li><a href="#actor-placement">Actor Placement</a></li></ul></li><li><a href="#memory-protection">Memory Protection</a></li><li><a href="#key-design-no-context-switches">Key Design: No Context Switches</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

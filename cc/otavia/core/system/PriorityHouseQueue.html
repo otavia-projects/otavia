@@ -15,7 +15,7 @@
   <p>A priority-aware MPSC house queue with two sub-queues: high-priority and normal-priority.</p>
   <p>'''Dequeue order:''' high-priority sub-queue is always drained before the normal sub-queue (strict priority). This guarantees that actors that can immediately push the system forward (reply/event backlogs, or no downstream blocking — see <span data-unresolved-link="">ActorHouse._highPriority</span>) are always served before normal actors.</p>
   <p>'''Priority is determined at enqueue time.''' The <span data-unresolved-link="">ActorHouse._highPriority</span> cached flag is read once when the house enters the queue (via <span data-unresolved-link="">ActorHouse.waitingToReady</span> → <a href="HouseManager.html#ready-dd5">HouseManager.ready</a> → <a href="PriorityHouseQueue.html#enqueue-dd5">enqueue</a>). A house that becomes high-priority while already queued will be correctly prioritized on its next enqueue (after <span data-unresolved-link="">ActorHouse.completeRunning</span> re-evaluates the flag).</p>
-  <p>'''Concurrency model:''' SpinLock-based MPSC. Multiple producer threads can enqueue concurrently; only the owning ActorThread dequeues. Each sub-queue has independent read/write lock pairs to avoid cross-priority contention.</p>
+  <p>'''Concurrency model:''' SpinLock-based MPSC. Multiple producer threads can enqueue concurrently; the owning ActorThread dequeues via <a href="PriorityHouseQueue.html#dequeue-bc9">dequeue</a>. Other threads may attempt opportunistic steals via <a href="PriorityHouseQueue.html#stealDequeue-bc9">stealDequeue</a>, which uses <span data-unresolved-link="" title="Problem linking SpinLock.tryLock: Couldn't resolve a member for the given link query">SpinLock.tryLock</span> to avoid spinning on the owner's lock. Each sub-queue has independent read/write lock pairs to avoid cross-priority contention.</p>
   <p>'''Schedule() outside lock:''' the READY → SCHEDULED CAS in <span data-unresolved-link="">ActorHouse.schedule</span> is performed after releasing the queue lock. This is safe because no other thread can change the house state between unlock and schedule: the house is in READY state, removed from the queue, and no lifecycle transition is possible until schedule() fires.</p>
  </div>
  <section id="attributes">
@@ -229,6 +229,35 @@ node4 -> node3;
           <div class="header monospace mono-medium">
            <div class="signature">
             <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="PriorityHouseQueue.html#readies-0" t="n" class="documentableName ">readies</a>: <span data-unresolved-link="" t="t">Int</span>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="stealDequeue-bc9">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="PriorityHouseQueue.html#stealDequeue-bc9" t="n" class="documentableName ">stealDequeue</a>(<span t="k"></span>): <span t="t">ActorHouse</span><span t="k"> | </span><span data-unresolved-link="" t="t">Null</span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Opportunistic dequeue for cross-thread stealing. Uses <span data-unresolved-link="" title="Problem linking SpinLock.tryLock(): Couldn't resolve a member for the given link query">SpinLock.tryLock()</span> instead of <span data-unresolved-link="" title="Problem linking SpinLock.lock(): Couldn't resolve a member for the given link query">SpinLock.lock()</span> to avoid the stealing thread spinning on the owning thread's lock. Returns null immediately if the lock is contended.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Opportunistic dequeue for cross-thread stealing. Uses <span data-unresolved-link="" title="Problem linking SpinLock.tryLock(): Couldn't resolve a member for the given link query">SpinLock.tryLock()</span> instead of <span data-unresolved-link="" title="Problem linking SpinLock.lock(): Couldn't resolve a member for the given link query">SpinLock.lock()</span> to avoid the stealing thread spinning on the owning thread's lock. Returns null immediately if the lock is contended.</p>
+              <p>Only handles the size &gt; 1 case. When size == 1, the dequeue path requires acquiring both readLock and writeLock (to null out the tail pointer). Skipping this case is acceptable because the steal threshold (64+) guarantees the queue is deep when stealing is attempted.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
            </div>
           </div>
          </div>
