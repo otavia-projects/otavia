@@ -1,283 +1,101 @@
-<!DOCTYPE html><html data-pathToRoot="../../" data-rawLocation="docs/guide/threading_model" data-dynamicSideMenu="false"><head><meta charset="utf-8"></meta><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"></meta><title>Threading Model</title><link rel="shortcut icon" type="image/x-icon" href="../../favicon.ico"></link><script type="text/javascript" src="../../scripts/theme.js"></script><script type="text/javascript" src="../../scripts/searchData.js" defer="true"></script><script type="text/javascript" src="../../scripts/scastieConfiguration.js" defer="true"></script><link rel="stylesheet" href="../../styles/theme/bundle.css"></link><link rel="stylesheet" href="../../styles/theme/components/bundle.css"></link><link rel="stylesheet" href="../../styles/theme/components/button/bundle.css"></link><link rel="stylesheet" href="../../styles/theme/layout/bundle.css"></link><link rel="stylesheet" href="../../styles/nord-light.css"></link><link rel="stylesheet" href="../../styles/dotty-icons.css"></link><link rel="stylesheet" href="../../styles/filter-bar.css"></link><link rel="stylesheet" href="../../styles/code-snippets.css"></link><link rel="stylesheet" href="../../styles/searchbar.css"></link><link rel="stylesheet" href="../../styles/social-links.css"></link><link rel="stylesheet" href="../../styles/versions-dropdown.css"></link><link rel="stylesheet" href="../../styles/content-contributors.css"></link><link rel="stylesheet" href="../../styles/fontawesome.css"></link><script type="text/javascript" src="../../hljs/highlight.pack.js" defer="true"></script><script type="text/javascript" src="../../scripts/hljs-scala3.js" defer="true"></script><script type="text/javascript" src="../../scripts/ux.js" defer="true"></script><script type="text/javascript" src="../../scripts/common/component.js" defer="true"></script><script type="text/javascript" src="../../scripts/common/utils.js" defer="true"></script><script type="text/javascript" src="../../scripts/components/FilterBar.js" defer="true"></script><script type="text/javascript" src="../../scripts/components/DocumentableList.js" defer="true"></script><script type="text/javascript" src="../../scripts/components/Input.js" defer="true"></script><script type="text/javascript" src="../../scripts/components/FilterGroup.js" defer="true"></script><script type="text/javascript" src="../../scripts/components/Filter.js" defer="true"></script><script type="text/javascript" src="../../scripts/scaladoc-scalajs.js" defer="true"></script><script type="text/javascript" src="../../scripts/contributors.js" defer="true"></script><script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.min.js" defer="true"></script><script type="text/javascript" src="https://d3js.org/d3.v6.min.js" defer="true"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/graphlib-dot@0.6.2/dist/graphlib-dot.min.js" defer="true"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dagre-d3/0.6.1/dagre-d3.min.js" defer="true"></script><script type="text/javascript" src="https://scastie.scala-lang.org/embedded.js" defer="true"></script><script type="text/javascript" src="../../scripts/data.js" defer="true"></script><link rel="stylesheet" href="../../styles/staticsitestyles.css"></link><script>var pathToRoot = "../../";</script><meta charset="utf-8">
-<title>Hello, world!</title></head><body><div id=""><div id="header" class="body-small"><div class="header-container-left"><a href="../../home.html" class="logo-container"><span class="project-name h300">docs</span></a><span onclick="dropdownHandler(event)" class="text-button with-arrow" id="dropdown-trigger"><a><div class="projectVersion">0.5.0-SNAPSHOT</div></a></span><div id="version-dropdown" class="dropdown-menu"></div></div><div class="header-container-right"><button id="search-toggle" class="icon-button"></button><span id="theme-toggle" class="icon-button"></span><span id="mobile-menu-toggle" class="icon-button hamburger"></span></div></div><div id="mobile-menu"><div class="mobile-menu-header body-small"><span class="mobile-menu-logo"><span class="project-name h300">docs</span></span><button id="mobile-menu-close" class="icon-button close"></button></div><div class="mobile-menu-container body-medium"><input id="mobile-scaladoc-searchbar-input" class="scaladoc-searchbar-input" type="search" placeholder="Find anything"></input><span id="mobile-theme-toggle" class="mobile-menu-item mode"></span></div></div><span id="mobile-sidebar-toggle" class="floating-button"></span><div id="leftColumn" class="body-small"><div class="switcher-container"><a id="docs-nav-button" class="switcher h100 selected" href="../index.html">Docs</a><a id="api-nav-button" class="switcher h100 " href="../../index.html">API</a></div><nav id="docs-nav" class="side-menu"><div class="ni n0 "><span class="nh de"><a href="../name_from.html"><span>Name From</span></a></span></div><div class="ni n0 "><span class="nh de"><a href="../quick_start.html"><span>Quick Start</span></a></span></div><div class="ni n0 "><span class="nh de"><a href="../core_concept.html"><span>Core Concepts and Design</span></a></span></div><div class="ni n0 expanded"><span class="nh h100 expanded cs de"><button class="ar icon-button expanded"></button><a href="index.html"><span>Guide</span></a></span><div class="ni n1 "><span class="nh de"><a href="actor_model.html"><span>Actor Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="message_model.html"><span>Message Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="stack_model.html"><span>Stack Execution Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="channel_pipeline.html"><span>Channel Pipeline</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="io_model.html"><span>IO Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="reactor_model.html"><span>Reactor Model</span></a></span></div><div class="ni n1 expanded"><span class="nh h100 selected de"><a href="#"><span>Threading Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="address_model.html"><span>Address Model</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="ioc.html"><span>Actor IOC</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="serde.html"><span>Serde Framework</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="slf4a.html"><span>SLF4A</span></a></span></div></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../module/index.html"><span>Modules</span></a></span><div class="ni n1 "><span class="nh de"><a href="../module/buffer.html"><span>Buffer</span></a></span></div></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../zh/index.html"><span>中文文档</span></a></span><div class="ni n1 "><span class="nh de"><a href="../zh/name_from.html"><span>名称来源</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../zh/quick_start.html"><span>快速开始</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../zh/core_concept.html"><span>核心概念与设计</span></a></span></div><div class="ni n1"><span class="nh de"><button class="ar icon-button "></button><a href="../zh/guide/index.html"><span>详细指南</span></a></span><div class="ni n2 "><span class="nh de"><a href="../zh/guide/actor_model.html"><span>Actor 模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/message_model.html"><span>消息模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/stack_model.html"><span>Stack 执行模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/channel_pipeline.html"><span>Channel Pipeline</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/io_model.html"><span>IO 模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/reactor_model.html"><span>Reactor 模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/threading_model.html"><span>线程模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/address_model.html"><span>Address 模型</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/ioc.html"><span>Actor IoC</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/serde.html"><span>Serde 框架</span></a></span></div><div class="ni n2 "><span class="nh de"><a href="../zh/guide/slf4a.html"><span>SLF4A</span></a></span></div></div><div class="ni n1"><span class="nh de"><button class="ar icon-button "></button><a href="../zh/module/index.html"><span>Modules</span></a></span><div class="ni n2 "><span class="nh de"><a href="../zh/module/buffer.html"><span>Buffer</span></a></span></div></div></div><div class="ni n0"><span class="nh de"><button class="ar icon-button "></button><a href="../blog/index.html"><span>Blog</span></a></span><div class="ni n1 "><span class="nh de"><a href="../blog/2023/05/19/hello-world-blog.html"><span>hello world blog</span></a></span></div><div class="ni n1 "><span class="nh de"><a href="../blog/2023/05/19/hello-world-blog.zh-cn.html"><span>你好世界</span></a></span></div></div></nav></div><div id="footer" class="body-small"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div id="scaladoc-searchBar"></div><div id="main"><div class="breadcrumbs container"><a href="../index.html">docs</a>/<a href="index.html">Guide</a>/<a href="threading_model.html">Threading Model</a></div><div id="content" class="body-medium"><div><section id="threading-model">
- <h1 class="h500"><a href="#threading-model" class="anchor"></a>Threading Model</h1>
- <p><code>otavia</code> uses an <code>ActorThread</code>-per-CPU model. Each <code>ActorThread</code> is an independent OS thread running its own event loop, with dedicated buffer pools and scheduling queues.</p>
-</section>
-<section id="actorthread-main-loop">
- <h2 class="h500"><a href="#actorthread-main-loop" class="anchor"></a>ActorThread Main Loop</h2>
- <p>Each <code>ActorThread</code> runs a three-phase loop:</p>
- <div class="snippet mono-small-block">
-  <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span>while (!confirmShutdown()) {
-</span><span line-number="2" class=""><span class="tooltip-container"></span>    Phase 1: IO              ── ioHandler.run(ioCtx)
-</span><span line-number="3" class=""><span class="tooltip-container"></span>    Phase 2: IO Pipeline     ── manager.runChannelsActors()
-</span><span line-number="4" class=""><span class="tooltip-container"></span>                               ── runThreadEvent()
-</span><span line-number="5" class=""><span class="tooltip-container"></span>                               ── stopActors()
-</span><span line-number="6" class=""><span class="tooltip-container"></span>    Phase 3: Business        ── manager.runStateActors(deadline)
-</span><span line-number="7" class=""><span class="tooltip-container"></span>}
-</span></code></pre>
-  <div class="buttons"></div>
- </div>
-</section>
-<section id="phase-1-io">
- <h3 class="h400"><a href="#phase-1-io" class="anchor"></a>Phase 1: IO</h3>
- <p>Executes NIO select and processes ready keys. The <code>ioCtx.canBlock</code> is true only when there are no runnable actors, no pending events, and no phantom refs to clean.</p>
- <p>After each IO cycle, a <code>selectCnt</code> counter tracks consecutive empty wakeups. When it hits 512 (configurable), the Selector is rebuilt to work around the JDK epoll 100% CPU bug.</p>
-</section>
-<section id="phase-2-io-pipeline">
- <h3 class="h400"><a href="#phase-2-io-pipeline" class="anchor"></a>Phase 2: IO Pipeline</h3>
- <p>Runs to completion with no time budget:</p>
- <ol>
-  <li><strong><code>manager.runChannelsActors()</code></strong>: Fully drains the <code>channelsActorQueue</code> and <code>mountingQueue</code></li>
-  <li><strong><code>runThreadEvent()</code></strong>: Polls the <code>ConcurrentLinkedQueue[Event]</code> for timer/resource timeout events</li>
-  <li><strong><code>stopActors()</code></strong>: Drains the <code>ReferenceQueue</code> for phantom-referenced actors that have been garbage collected</li>
- </ol>
-</section>
-<section id="phase-3-business">
- <h3 class="h400"><a href="#phase-3-business" class="anchor"></a>Phase 3: Business</h3>
- <p>State actors run subject to a nanosecond <code>deadline</code>:</p>
- <ul>
-  <li><code>ioRatio == 100</code>: No deadline (unlimited)</li>
-  <li>No IO events: <code>deadline = now + 500μs</code> (minimum budget)</li>
-  <li>Default (<code>ioRatio == 50</code>): <code>actorTime = ioTime * (100 - ioRatio) / ioRatio</code></li>
- </ul>
- <p>The deadline is checked every 16th actor (<code>count &amp; 0xF == 0</code>) to amortize <code>System.nanoTime()</code> syscall overhead.</p>
-</section>
-<section id="thread-notification">
- <h3 class="h400"><a href="#thread-notification" class="anchor"></a>Thread Notification</h3>
- <p>When a message arrives for an actor on a different thread, <code>notifyThread()</code> calls <code>ioHandler.wakeup()</code> to interrupt any blocking <code>select()</code>.</p>
-</section>
-<section id="housemanager">
- <h2 class="h500"><a href="#housemanager" class="anchor"></a>HouseManager</h2>
- <p>Each <code>ActorThread</code> has a <code>HouseManager</code> that manages three scheduling queues:</p>
- <table>
-  <thead>
-   <tr>
-    <th>Queue</th>
-    <th>Type</th>
-    <th>Purpose</th>
-    <th>Time Budget</th>
-   </tr>
-  </thead>
-  <tbody>
-   <tr>
-    <td><code>mountingQueue</code></td>
-    <td>FIFOHouseQueue</td>
-    <td>Actors awaiting mount</td>
-    <td>Unlimited</td>
-   </tr>
-   <tr>
-    <td><code>channelsActorQueue</code></td>
-    <td>PriorityHouseQueue</td>
-    <td>IO pipeline actors</td>
-    <td>Unlimited</td>
-   </tr>
-   <tr>
-    <td><code>actorQueue</code></td>
-    <td>PriorityHouseQueue</td>
-    <td>State actors (business logic)</td>
-    <td>Subject to deadline</td>
-   </tr>
-  </tbody>
- </table>
-</section>
-<section id="routing">
- <h3 class="h400"><a href="#routing" class="anchor"></a>Routing</h3>
- <p>When an ActorHouse transitions to READY, <code>HouseManager.ready()</code> routes it:</p>
- <ul>
-  <li><code>STATE_ACTOR</code> → <code>actorQueue</code></li>
-  <li><code>CHANNELS_ACTOR</code> / <code>SERVER_CHANNELS_ACTOR</code> → <code>channelsActorQueue</code></li>
- </ul>
-</section>
-<section id="priorityhousequeue">
- <h2 class="h500"><a href="#priorityhousequeue" class="anchor"></a>PriorityHouseQueue</h2>
- <p>A dual-queue design with separate linked lists for normal and high priority, each protected by its own <code>SpinLock</code>:</p>
- <ul>
-  <li><strong>Dequeue</strong>: Always checks high-priority queue first (strict priority)</li>
-  <li><strong>SpinLock</strong>: Based on <code>AtomicReference[Thread]</code>, CAS for lock, <code>lazySet(null)</code> for unlock</li>
- </ul>
-</section>
-<section id="spinlock-implementation">
- <h3 class="h400"><a href="#spinlock-implementation" class="anchor"></a>SpinLock Implementation</h3>
- <div class="snippet mono-small-block" scala-snippet="">
-  <pre><code class="language-scala"><span line-number="1" class=""><span class="tooltip-container"></span>class SpinLock extends AtomicReference[Thread] {
-</span><span line-number="2" class=""><span class="tooltip-container"></span>  def lock(): Unit = {
-</span><span line-number="3" class=""><span class="tooltip-container"></span>    while (!compareAndSet(null, Thread.currentThread())) {
-</span><span line-number="4" class=""><span class="tooltip-container"></span>      Thread.onSpinWait()
-</span><span line-number="5" class=""><span class="tooltip-container"></span>    }
-</span><span line-number="6" class=""><span class="tooltip-container"></span>  }
-</span><span line-number="7" class=""><span class="tooltip-container"></span>  def unlock(): Unit = {
-</span><span line-number="8" class=""><span class="tooltip-container"></span>    lazySet(null)  // cheaper than volatile write
-</span><span line-number="9" class=""><span class="tooltip-container"></span>  }
-</span><span line-number="10" class=""><span class="tooltip-container"></span>}
-</span></code></pre>
-  <div class="buttons"></div>
- </div>
-</section>
-<section id="actorhouse-state-machine">
- <h2 class="h500"><a href="#actorhouse-state-machine" class="anchor"></a>ActorHouse State Machine</h2>
- <p>Each Actor is wrapped in an <code>ActorHouse</code> with six states, with transitions via CAS:</p>
- <div class="snippet mono-small-block">
-  <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span>CREATED(0) → MOUNTING(1) → WAITING(2) → READY(3) → SCHEDULED(4) → RUNNING(5)
-</span></code></pre>
-  <div class="buttons"></div>
- </div>
- <p>After <code>run()</code> completes:</p>
- <ul>
-  <li><strong>Not in barrier</strong>: Has more messages → READY (re-enqueue); empty → WAITING</li>
-  <li><strong>In barrier</strong>: Has reply/event → READY; waiting for barrier → WAITING (only accepts replies/events)</li>
- </ul>
-</section>
-<section id="five-mailboxes">
- <h3 class="h400"><a href="#five-mailboxes" class="anchor"></a>Five Mailboxes</h3>
- <table>
-  <thead>
-   <tr>
-    <th>Mailbox</th>
-    <th>Purpose</th>
-   </tr>
-  </thead>
-  <tbody>
-   <tr>
-    <td><code>replyMailbox</code></td>
-    <td>Reply messages (highest priority)</td>
-   </tr>
-   <tr>
-    <td><code>exceptionMailbox</code></td>
-    <td>Exception replies</td>
-   </tr>
-   <tr>
-    <td><code>askMailbox</code></td>
-    <td>Incoming Ask messages</td>
-   </tr>
-   <tr>
-    <td><code>noticeMailbox</code></td>
-    <td>Incoming Notice messages</td>
-   </tr>
-   <tr>
-    <td><code>eventMailbox</code></td>
-    <td>Timer/Reactor events</td>
-   </tr>
-  </tbody>
- </table>
-</section>
-<section id="dispatch-order">
- <h3 class="h400"><a href="#dispatch-order" class="anchor"></a>Dispatch Order</h3>
- <p>Messages are dispatched in strict priority order:</p>
- <ol>
-  <li>Replies (resume suspended Stacks)</li>
-  <li>Exceptions (also release barriers)</li>
-  <li>Asks (if not in barrier)</li>
-  <li>Notices (if not in barrier)</li>
-  <li>Events (always, regardless of barrier)</li>
-  <li>Channel futures (ChannelsActor only)</li>
-  <li>Later tasks (ChannelsActor only)</li>
- </ol>
-</section>
-<section id="high-priority-conditions">
- <h3 class="h400"><a href="#high-priority-conditions" class="anchor"></a>High Priority Conditions</h3>
- <p>An Actor becomes high priority when any of the following is true:</p>
- <ul>
-  <li><code>replyMailbox.size() &gt; 2</code> — reply backlog; each reply completes a future and may unblock a suspended stack</li>
-  <li><code>eventMailbox.size() &gt; 4</code> — event backlog; system events need timely processing</li>
-  <li><code>pendingPromiseCount == 0</code> — no downstream blocking; this actor has no outstanding asks waiting for replies, so no stack is suspended due to downstream dependencies. Scheduling this actor will not encounter such blocking</li>
- </ul>
-</section>
-<section id="work-stealing">
- <h2 class="h500"><a href="#work-stealing" class="anchor"></a>Work Stealing</h2>
- <p>When a thread's own queues are empty, it attempts to steal from other threads as a safety net for extreme load imbalance. The primary scheduling model keeps actors on their owning thread for CPU cache locality — stealing only activates when a thread is genuinely idle and another thread is genuinely overwhelmed.</p>
-</section>
-<section id="idle-detection">
- <h3 class="h400"><a href="#idle-detection" class="anchor"></a>Idle Detection</h3>
- <p>A thread tracks consecutive event-loop iterations where all three queues were empty (<code>idleCount</code>). This counter resets to 0 whenever the thread has work. A thread with moderate but steady load never accumulates idle iterations and never steals.</p>
-</section>
-<section id="adaptive-steal-condition">
- <h3 class="h400"><a href="#adaptive-steal-condition" class="anchor"></a>Adaptive Steal Condition</h3>
- <p>The steal decision combines the thief's <code>idleCount</code> with the victim's queue depth (<code>readies</code>):</p>
- <div class="snippet mono-small-block">
-  <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span>readies &gt; STEAL_FLOOR  AND  idleCount × readies &gt;= STEAL_AGGRESSION
-</span></code></pre>
-  <div class="buttons"></div>
- </div>
- <p>This ties aggressiveness to imbalance severity:</p>
- <table>
-  <thead>
-   <tr>
-    <th>Victim backlog</th>
-    <th>Thief idle iterations needed</th>
-    <th>Rationale</th>
-   </tr>
-  </thead>
-  <tbody>
-   <tr>
-    <td>128+</td>
-    <td>1</td>
-    <td>Severe crisis — immediate response</td>
-   </tr>
-   <tr>
-    <td>64+</td>
-    <td>2</td>
-    <td>Moderate backlog — confirm idleness</td>
-   </tr>
-   <tr>
-    <td>32+</td>
-    <td>4</td>
-    <td>Mild backlog — conservative</td>
-   </tr>
-   <tr>
-    <td>&lt; 32</td>
-    <td>never</td>
-    <td>Self-drains quickly; cache cost outweighs benefit</td>
-   </tr>
-  </tbody>
- </table>
- <p>Defaults: <code>STEAL_FLOOR = 32</code>, <code>STEAL_AGGRESSION = 128</code> (configurable via <code>cc.otavia.core.steal.floor</code> and <code>cc.otavia.core.steal.aggression</code>).</p>
-</section>
-<section id="steal-mechanics">
- <h3 class="h400"><a href="#steal-mechanics" class="anchor"></a>Steal Mechanics</h3>
- <ol>
-  <li>Picks a random starting index and scans all other threads</li>
-  <li>Uses <code>tryLock</code> on the victim's queue — if contended, skips to next candidate without spinning</li>
-  <li>Steals ONE house from the victim's <code>actorQueue</code> and runs it inline</li>
-  <li>Only state actors are stolen (<code>ChannelsActor</code>s are bound to their thread's <code>IoHandler</code>)</li>
-  <li>After execution, the stolen house re-enters the victim's queue (actors are pinned to their owning thread)</li>
- </ol>
-</section>
-<section id="thread-pool">
- <h2 class="h500"><a href="#thread-pool" class="anchor"></a>Thread Pool</h2>
- <p><code>DefaultActorThreadPool</code> creates <code>availableProcessors</code> threads by default (configurable via <code>cc.otavia.actor.worker.size</code> or <code>cc.otavia.actor.worker.ratio</code>).</p>
-</section>
-<section id="actor-placement">
- <h3 class="h400"><a href="#actor-placement" class="anchor"></a>Actor Placement</h3>
- <p>When creating an actor, the thread pool selects threads via <code>TilingThreadSelector</code> (atomic round-robin):</p>
- <table>
-  <thead>
-   <tr>
-    <th><code>num</code></th>
-    <th>Strategy</th>
-   </tr>
-  </thead>
-  <tbody>
-   <tr>
-    <td>1</td>
-    <td>Single actor on one thread → returns <code>ActorAddress</code></td>
-   </tr>
-   <tr>
-    <td><code>pool.size</code></td>
-    <td>One actor per thread, all marked <code>isLoadBalance</code> → returns <code>RobinAddress</code> with thread affinity</td>
-   </tr>
-   <tr>
-    <td>Other</td>
-    <td>Distributes across <code>num</code> threads → returns <code>RobinAddress</code> with round-robin</td>
-   </tr>
-  </tbody>
- </table>
- <p>IO actors (<code>ChannelsActor</code>) are placed via a separate <code>ioSelector</code> to distribute IO actors across threads.</p>
-</section>
-<section id="memory-protection">
- <h2 class="h500"><a href="#memory-protection" class="anchor"></a>Memory Protection</h2>
- <p>An optional memory monitor checks heap usage every 100 ms. When usage exceeds 90% or free heap is below 100 MB, <code>busy = true</code> is set, causing Notice delivery to sleep for 40 ms as back-pressure.</p>
-</section>
-<section id="key-design-no-context-switches">
- <h2 class="h500"><a href="#key-design-no-context-switches" class="anchor"></a>Key Design: No Context Switches</h2>
- <p>An <code>ActorThread</code> runs actors directly on its thread. When a <code>Stack</code> suspends (waiting for a reply), it returns control. The reply arrives as a message in the mailbox, and when the house is re-scheduled, the Stack resumes on the <strong>same thread</strong>. There are no thread context switches — everything stays on the owning <code>ActorThread</code>.</p>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#threading-model">Threading Model</a><ul><li><a href="#actorthread-main-loop">ActorThread Main Loop</a><ul><li><a href="#phase-1-io">Phase 1: IO</a></li><li><a href="#phase-2-io-pipeline">Phase 2: IO Pipeline</a></li><li><a href="#phase-3-business">Phase 3: Business</a></li><li><a href="#thread-notification">Thread Notification</a></li></ul></li><li><a href="#housemanager">HouseManager</a><ul><li><a href="#routing">Routing</a></li></ul></li><li><a href="#priorityhousequeue">PriorityHouseQueue</a><ul><li><a href="#spinlock-implementation">SpinLock Implementation</a></li></ul></li><li><a href="#actorhouse-state-machine">ActorHouse State Machine</a><ul><li><a href="#five-mailboxes">Five Mailboxes</a></li><li><a href="#dispatch-order">Dispatch Order</a></li><li><a href="#high-priority-conditions">High Priority Conditions</a></li></ul></li><li><a href="#work-stealing">Work Stealing</a><ul><li><a href="#idle-detection">Idle Detection</a></li><li><a href="#adaptive-steal-condition">Adaptive Steal Condition</a></li><li><a href="#steal-mechanics">Steal Mechanics</a></li></ul></li><li><a href="#thread-pool">Thread Pool</a><ul><li><a href="#actor-placement">Actor Placement</a></li></ul></li><li><a href="#memory-protection">Memory Protection</a></li><li><a href="#key-design-no-context-switches">Key Design: No Context Switches</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+<!doctype html><html lang=en dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-guide/threading_model" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.0"><title data-rh=true>Threading Model | Otavia</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://otavia.cc/img/otavia-social-card.jpg /><meta data-rh=true name=twitter:image content=https://otavia.cc/img/otavia-social-card.jpg /><meta data-rh=true property=og:url content=https://otavia.cc/docs/guide/threading_model /><meta data-rh=true property=og:locale content=en /><meta data-rh=true property=og:locale:alternate content=zh_CN /><meta data-rh=true name=docusaurus_locale content=en /><meta data-rh=true name=docsearch:language content=en /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="Threading Model | Otavia"/><meta data-rh=true name=description content="otavia uses an ActorThread-per-CPU model. Each ActorThread is an independent OS thread running its own event loop, with dedicated buffer pools and scheduling queues."/><meta data-rh=true property=og:description content="otavia uses an ActorThread-per-CPU model. Each ActorThread is an independent OS thread running its own event loop, with dedicated buffer pools and scheduling queues."/><link data-rh=true rel=icon href=/img/logo.drawio.svg /><link data-rh=true rel=canonical href=https://otavia.cc/docs/guide/threading_model /><link data-rh=true rel=alternate href=https://otavia.cc/docs/guide/threading_model hreflang=en /><link data-rh=true rel=alternate href=https://otavia.cc/zh-CN/docs/guide/threading_model hreflang=zh-CN /><link data-rh=true rel=alternate href=https://otavia.cc/docs/guide/threading_model hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://otavia.cc/docs/guide/threading_model","name":"Threading Model","position":1}]}</script><link rel=alternate type=application/rss+xml href=/blog/rss.xml title="Otavia RSS Feed"><link rel=alternate type=application/atom+xml href=/blog/atom.xml title="Otavia Atom Feed"><link rel=stylesheet href=/assets/css/styles.a806383c.css /><script src=/assets/js/runtime~main.634f1409.js defer></script><script src=/assets/js/main.698777d5.js defer></script></head><body><svg style="display: none;"><defs>
+<symbol id=theme-svg-external-link viewBox="0 0 24 24"><path fill=currentColor d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||"light"),document.documentElement.setAttribute("data-theme-choice",t||"light")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><div role=region aria-label="Skip to main content"><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>Skip to main content</a></div><nav aria-label=Main class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/><div class=navbar__logo><img src=/img/logo.drawio.svg alt="Otavia Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/img/logo.drawio.svg alt="Otavia Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">Otavia</b></a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/docs/intro>Documentation</a><a href=/api/index.html class="navbar__item navbar__link" target=_blank>API</a><a class="navbar__item navbar__link" href=/blog>Blog</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href=https://github.com/otavia-projects/otavia target=_blank rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a><div class="navbar__item dropdown dropdown--hoverable dropdown--right"><a href=# aria-haspopup=true aria-expanded=false role=button class=navbar__link><svg viewBox="0 0 24 24" width=20 height=20 aria-hidden=true class=iconLanguage_nlXk><path fill=currentColor d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>English</a><ul class=dropdown__menu><li><a href=/docs/guide/threading_model target=_self rel="noopener noreferrer" class="dropdown__link dropdown__link--active" lang=en>English</a><li><a href=/zh-CN/docs/guide/threading_model target=_self rel="noopener noreferrer" class=dropdown__link lang=zh-CN>简体中文</a></ul></div><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/docs/intro><span title=Introduction class=linkLabel_WmDU>Introduction</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/docs/quick_start><span title="Quick Start" class=linkLabel_WmDU>Quick Start</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/docs/core_concept><span title="Core Concepts and Design" class=linkLabel_WmDU>Core Concepts and Design</span></a><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role=button aria-expanded=true href=/docs/guide/actor_model><span title=Guide class=categoryLinkLabel_W154>Guide</span></a></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/docs/guide/actor_model><span title="Actor Model" class=linkLabel_WmDU>Actor Model</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/docs/guide/message_model><span title="Message Model" class=linkLabel_WmDU>Message Model</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/docs/guide/stack_model><span title="Stack Execution Model" class=linkLabel_WmDU>Stack Execution Model</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/docs/guide/channel_pipeline><span title="Channel Pipeline" class=linkLabel_WmDU>Channel Pipeline</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/docs/guide/io_model><span title="IO Model" class=linkLabel_WmDU>IO Model</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/docs/guide/reactor_model><span title="Reactor Model" class=linkLabel_WmDU>Reactor Model</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/docs/guide/threading_model><span title="Threading Model" class=linkLabel_WmDU>Threading Model</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/docs/guide/address_model><span title="Address Model" class=linkLabel_WmDU>Address Model</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/docs/guide/ioc><span title="Actor IOC" class=linkLabel_WmDU>Actor IOC</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/docs/guide/serde><span title="Serde Framework" class=linkLabel_WmDU>Serde Framework</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/docs/guide/slf4a><span title=SLF4A class=linkLabel_WmDU>SLF4A</span></a></ul><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role=button aria-expanded=false href=/docs/module><span title=Modules class=categoryLinkLabel_W154>Modules</span></a></div></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label=Breadcrumbs><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label="Home page" class=breadcrumbs__link href=/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><span class=breadcrumbs__link>Guide</span><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>Threading Model</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>Threading Model</h1></header>
+<p><code>otavia</code> uses an <code>ActorThread</code>-per-CPU model. Each <code>ActorThread</code> is an independent OS thread running its own event loop, with dedicated buffer pools and scheduling queues.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=actorthread-main-loop>ActorThread Main Loop<a href=#actorthread-main-loop class=hash-link aria-label="Direct link to ActorThread Main Loop" title="Direct link to ActorThread Main Loop" translate=no>​</a></h2>
+<p>Each <code>ActorThread</code> runs a three-phase loop:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-text codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">while (!confirmShutdown()) {</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    Phase 1: IO              ── ioHandler.run(ioCtx)</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    Phase 2: IO Pipeline     ── manager.runChannelsActors()</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">                               ── runThreadEvent()</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">                               ── stopActors()</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    Phase 3: Business        ── manager.runStateActors(deadline)</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">}</span><br/></div></code></pre></div></div>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=phase-1-io>Phase 1: IO<a href=#phase-1-io class=hash-link aria-label="Direct link to Phase 1: IO" title="Direct link to Phase 1: IO" translate=no>​</a></h3>
+<p>Executes NIO select and processes ready keys. The <code>ioCtx.canBlock</code> is true only when there are no runnable actors, no pending events, and no phantom refs to clean.</p>
+<p>After each IO cycle, a <code>selectCnt</code> counter tracks consecutive empty wakeups. When it hits 512 (configurable), the Selector is rebuilt to work around the JDK epoll 100% CPU bug.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=phase-2-io-pipeline>Phase 2: IO Pipeline<a href=#phase-2-io-pipeline class=hash-link aria-label="Direct link to Phase 2: IO Pipeline" title="Direct link to Phase 2: IO Pipeline" translate=no>​</a></h3>
+<p>Runs to completion with no time budget:</p>
+<ol>
+<li class=""><strong><code>manager.runChannelsActors()</code></strong>: Fully drains the <code>channelsActorQueue</code> and <code>mountingQueue</code></li>
+<li class=""><strong><code>runThreadEvent()</code></strong>: Polls the <code>ConcurrentLinkedQueue[Event]</code> for timer/resource timeout events</li>
+<li class=""><strong><code>stopActors()</code></strong>: Drains the <code>ReferenceQueue</code> for phantom-referenced actors that have been garbage collected</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=phase-3-business>Phase 3: Business<a href=#phase-3-business class=hash-link aria-label="Direct link to Phase 3: Business" title="Direct link to Phase 3: Business" translate=no>​</a></h3>
+<p>State actors run subject to a nanosecond <code>deadline</code>:</p>
+<ul>
+<li class=""><code>ioRatio == 100</code>: No deadline (unlimited)</li>
+<li class="">No IO events: <code>deadline = now + 500μs</code> (minimum budget)</li>
+<li class="">Default (<code>ioRatio == 50</code>): <code>actorTime = ioTime * (100 - ioRatio) / ioRatio</code></li>
+</ul>
+<p>The deadline is checked every 16th actor (<code>count & 0xF == 0</code>) to amortize <code>System.nanoTime()</code> syscall overhead.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=thread-notification>Thread Notification<a href=#thread-notification class=hash-link aria-label="Direct link to Thread Notification" title="Direct link to Thread Notification" translate=no>​</a></h3>
+<p>When a message arrives for an actor on a different thread, <code>notifyThread()</code> calls <code>ioHandler.wakeup()</code> to interrupt any blocking <code>select()</code>.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=housemanager>HouseManager<a href=#housemanager class=hash-link aria-label="Direct link to HouseManager" title="Direct link to HouseManager" translate=no>​</a></h2>
+<p>Each <code>ActorThread</code> has a <code>HouseManager</code> that manages three scheduling queues:</p>
+<table><thead><tr><th>Queue<th>Type<th>Purpose<th>Time Budget<tbody><tr><td><code>mountingQueue</code><td>FIFOHouseQueue<td>Actors awaiting mount<td>Unlimited<tr><td><code>channelsActorQueue</code><td>PriorityHouseQueue<td>IO pipeline actors<td>Unlimited<tr><td><code>actorQueue</code><td>PriorityHouseQueue<td>State actors (business logic)<td>Subject to deadline</table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=routing>Routing<a href=#routing class=hash-link aria-label="Direct link to Routing" title="Direct link to Routing" translate=no>​</a></h3>
+<p>When an ActorHouse transitions to READY, <code>HouseManager.ready()</code> routes it:</p>
+<ul>
+<li class=""><code>STATE_ACTOR</code> → <code>actorQueue</code></li>
+<li class=""><code>CHANNELS_ACTOR</code> / <code>SERVER_CHANNELS_ACTOR</code> → <code>channelsActorQueue</code></li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=priorityhousequeue>PriorityHouseQueue<a href=#priorityhousequeue class=hash-link aria-label="Direct link to PriorityHouseQueue" title="Direct link to PriorityHouseQueue" translate=no>​</a></h2>
+<p>A dual-queue design with separate linked lists for normal and high priority, each protected by its own <code>SpinLock</code>:</p>
+<ul>
+<li class=""><strong>Dequeue</strong>: Always checks high-priority queue first (strict priority)</li>
+<li class=""><strong>SpinLock</strong>: Based on <code>AtomicReference[Thread]</code>, CAS for lock, <code>lazySet(null)</code> for unlock</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=spinlock-implementation>SpinLock Implementation<a href=#spinlock-implementation class=hash-link aria-label="Direct link to SpinLock Implementation" title="Direct link to SpinLock Implementation" translate=no>​</a></h3>
+<div class="language-scala codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-scala codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token keyword" style=color:#00009f>class</span><span class="token plain"> SpinLock </span><span class="token keyword" style=color:#00009f>extends</span><span class="token plain"> AtomicReference</span><span class="token punctuation" style=color:#393A34>[</span><span class="token plain">Thread</span><span class="token punctuation" style=color:#393A34>]</span><span class="token plain"> </span><span class="token punctuation" style=color:#393A34>{</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  </span><span class="token keyword" style=color:#00009f>def</span><span class="token plain"> lock</span><span class="token punctuation" style=color:#393A34>(</span><span class="token punctuation" style=color:#393A34>)</span><span class="token operator" style=color:#393A34>:</span><span class="token plain"> </span><span class="token builtin">Unit</span><span class="token plain"> </span><span class="token operator" style=color:#393A34>=</span><span class="token plain"> </span><span class="token punctuation" style=color:#393A34>{</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    </span><span class="token keyword" style=color:#00009f>while</span><span class="token plain"> </span><span class="token punctuation" style=color:#393A34>(</span><span class="token operator" style=color:#393A34>!</span><span class="token plain">compareAndSet</span><span class="token punctuation" style=color:#393A34>(</span><span class="token keyword" style=color:#00009f>null</span><span class="token punctuation" style=color:#393A34>,</span><span class="token plain"> Thread</span><span class="token punctuation" style=color:#393A34>.</span><span class="token plain">currentThread</span><span class="token punctuation" style=color:#393A34>(</span><span class="token punctuation" style=color:#393A34>)</span><span class="token punctuation" style=color:#393A34>)</span><span class="token punctuation" style=color:#393A34>)</span><span class="token plain"> </span><span class="token punctuation" style=color:#393A34>{</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">      Thread</span><span class="token punctuation" style=color:#393A34>.</span><span class="token plain">onSpinWait</span><span class="token punctuation" style=color:#393A34>(</span><span class="token punctuation" style=color:#393A34>)</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    </span><span class="token punctuation" style=color:#393A34>}</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  </span><span class="token punctuation" style=color:#393A34>}</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  </span><span class="token keyword" style=color:#00009f>def</span><span class="token plain"> unlock</span><span class="token punctuation" style=color:#393A34>(</span><span class="token punctuation" style=color:#393A34>)</span><span class="token operator" style=color:#393A34>:</span><span class="token plain"> </span><span class="token builtin">Unit</span><span class="token plain"> </span><span class="token operator" style=color:#393A34>=</span><span class="token plain"> </span><span class="token punctuation" style=color:#393A34>{</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    lazySet</span><span class="token punctuation" style=color:#393A34>(</span><span class="token keyword" style=color:#00009f>null</span><span class="token punctuation" style=color:#393A34>)</span><span class="token plain">  </span><span class="token comment" style=color:#999988;font-style:italic>// cheaper than volatile write</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  </span><span class="token punctuation" style=color:#393A34>}</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token punctuation" style=color:#393A34>}</span><br/></div></code></pre></div></div>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=actorhouse-state-machine>ActorHouse State Machine<a href=#actorhouse-state-machine class=hash-link aria-label="Direct link to ActorHouse State Machine" title="Direct link to ActorHouse State Machine" translate=no>​</a></h2>
+<p>Each Actor is wrapped in an <code>ActorHouse</code> with six states, with transitions via CAS:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-text codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">CREATED(0) → MOUNTING(1) → WAITING(2) → READY(3) → SCHEDULED(4) → RUNNING(5)</span><br/></div></code></pre></div></div>
+<p>After <code>run()</code> completes:</p>
+<ul>
+<li class=""><strong>Not in barrier</strong>: Has more messages → READY (re-enqueue); empty → WAITING</li>
+<li class=""><strong>In barrier</strong>: Has reply/event → READY; waiting for barrier → WAITING (only accepts replies/events)</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=five-mailboxes>Five Mailboxes<a href=#five-mailboxes class=hash-link aria-label="Direct link to Five Mailboxes" title="Direct link to Five Mailboxes" translate=no>​</a></h3>
+<table><thead><tr><th>Mailbox<th>Purpose<tbody><tr><td><code>replyMailbox</code><td>Reply messages (highest priority)<tr><td><code>exceptionMailbox</code><td>Exception replies<tr><td><code>askMailbox</code><td>Incoming Ask messages<tr><td><code>noticeMailbox</code><td>Incoming Notice messages<tr><td><code>eventMailbox</code><td>Timer/Reactor events</table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=dispatch-order>Dispatch Order<a href=#dispatch-order class=hash-link aria-label="Direct link to Dispatch Order" title="Direct link to Dispatch Order" translate=no>​</a></h3>
+<p>Messages are dispatched in strict priority order:</p>
+<ol>
+<li class="">Replies (resume suspended Stacks)</li>
+<li class="">Exceptions (also release barriers)</li>
+<li class="">Asks (if not in barrier)</li>
+<li class="">Notices (if not in barrier)</li>
+<li class="">Events (always, regardless of barrier)</li>
+<li class="">Channel futures (ChannelsActor only)</li>
+<li class="">Later tasks (ChannelsActor only)</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=high-priority-conditions>High Priority Conditions<a href=#high-priority-conditions class=hash-link aria-label="Direct link to High Priority Conditions" title="Direct link to High Priority Conditions" translate=no>​</a></h3>
+<p>An Actor becomes high priority when any of the following is true:</p>
+<ul>
+<li class=""><code>replyMailbox.size() > 2</code> — reply backlog; each reply completes a future and may unblock a suspended stack</li>
+<li class=""><code>eventMailbox.size() > 4</code> — event backlog; system events need timely processing</li>
+<li class=""><code>pendingPromiseCount == 0</code> — no downstream blocking; this actor has no outstanding asks waiting for replies, so no stack is suspended due to downstream dependencies. Scheduling this actor will not encounter such blocking</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=work-stealing>Work Stealing<a href=#work-stealing class=hash-link aria-label="Direct link to Work Stealing" title="Direct link to Work Stealing" translate=no>​</a></h2>
+<p>When a thread's own queues are empty, it attempts to steal from other threads as a safety net for extreme load imbalance. The primary scheduling model keeps actors on their owning thread for CPU cache locality — stealing only activates when a thread is genuinely idle and another thread is genuinely overwhelmed.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=idle-detection>Idle Detection<a href=#idle-detection class=hash-link aria-label="Direct link to Idle Detection" title="Direct link to Idle Detection" translate=no>​</a></h3>
+<p>A thread tracks consecutive event-loop iterations where all three queues were empty (<code>idleCount</code>). This counter resets to 0 whenever the thread has work. A thread with moderate but steady load never accumulates idle iterations and never steals.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=adaptive-steal-condition>Adaptive Steal Condition<a href=#adaptive-steal-condition class=hash-link aria-label="Direct link to Adaptive Steal Condition" title="Direct link to Adaptive Steal Condition" translate=no>​</a></h3>
+<p>The steal decision combines the thief's <code>idleCount</code> with the victim's queue depth (<code>readies</code>):</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-text codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">readies > STEAL_FLOOR  AND  idleCount × readies >= STEAL_AGGRESSION</span><br/></div></code></pre></div></div>
+<p>This ties aggressiveness to imbalance severity:</p>
+<table><thead><tr><th>Victim backlog<th>Thief idle iterations needed<th>Rationale<tbody><tr><td>128+<td>1<td>Severe crisis — immediate response<tr><td>64+<td>2<td>Moderate backlog — confirm idleness<tr><td>32+<td>4<td>Mild backlog — conservative<tr><td>&lt; 32<td>never<td>Self-drains quickly; cache cost outweighs benefit</table>
+<p>Defaults: <code>STEAL_FLOOR = 32</code>, <code>STEAL_AGGRESSION = 128</code> (configurable via <code>cc.otavia.core.steal.floor</code> and <code>cc.otavia.core.steal.aggression</code>).</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=steal-mechanics>Steal Mechanics<a href=#steal-mechanics class=hash-link aria-label="Direct link to Steal Mechanics" title="Direct link to Steal Mechanics" translate=no>​</a></h3>
+<ol>
+<li class="">Picks a random starting index and scans all other threads</li>
+<li class="">Uses <code>tryLock</code> on the victim's queue — if contended, skips to next candidate without spinning</li>
+<li class="">Steals ONE house from the victim's <code>actorQueue</code> and runs it inline</li>
+<li class="">Only state actors are stolen (<code>ChannelsActor</code>s are bound to their thread's <code>IoHandler</code>)</li>
+<li class="">After execution, the stolen house re-enters the victim's queue (actors are pinned to their owning thread)</li>
+</ol>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=thread-pool>Thread Pool<a href=#thread-pool class=hash-link aria-label="Direct link to Thread Pool" title="Direct link to Thread Pool" translate=no>​</a></h2>
+<p><code>DefaultActorThreadPool</code> creates <code>availableProcessors</code> threads by default (configurable via <code>cc.otavia.actor.worker.size</code> or <code>cc.otavia.actor.worker.ratio</code>).</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=actor-placement>Actor Placement<a href=#actor-placement class=hash-link aria-label="Direct link to Actor Placement" title="Direct link to Actor Placement" translate=no>​</a></h3>
+<p>When creating an actor, the thread pool selects threads via <code>TilingThreadSelector</code> (atomic round-robin):</p>
+<table><thead><tr><th><code>num</code><th>Strategy<tbody><tr><td>1<td>Single actor on one thread → returns <code>ActorAddress</code><tr><td><code>pool.size</code><td>One actor per thread, all marked <code>isLoadBalance</code> → returns <code>RobinAddress</code> with thread affinity<tr><td>Other<td>Distributes across <code>num</code> threads → returns <code>RobinAddress</code> with round-robin</table>
+<p>IO actors (<code>ChannelsActor</code>) are placed via a separate <code>ioSelector</code> to distribute IO actors across threads.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=memory-protection>Memory Protection<a href=#memory-protection class=hash-link aria-label="Direct link to Memory Protection" title="Direct link to Memory Protection" translate=no>​</a></h2>
+<p>An optional memory monitor checks heap usage every 100 ms. When usage exceeds 90% or free heap is below 100 MB, <code>busy = true</code> is set, causing Notice delivery to sleep for 40 ms as back-pressure.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=key-design-no-context-switches>Key Design: No Context Switches<a href=#key-design-no-context-switches class=hash-link aria-label="Direct link to Key Design: No Context Switches" title="Direct link to Key Design: No Context Switches" translate=no>​</a></h2>
+<p>An <code>ActorThread</code> runs actors directly on its thread. When a <code>Stack</code> suspends (waiting for a reply), it returns control. The reply arrives as a message in the mailbox, and when the house is re-scheduled, the Stack resumes on the <strong>same thread</strong>. There are no thread context switches — everything stays on the owning <code>ActorThread</code>.</div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href=https://github.com/otavia-projects/otavia/tree/main/website/docs/guide/threading_model.md target=_blank rel="noopener noreferrer" class=theme-edit-this-page><svg fill=currentColor height=20 width=20 viewBox="0 0 40 40" class=iconEdit_Z9Sw aria-hidden=true><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"/></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href=/docs/guide/reactor_model><div class=pagination-nav__sublabel>Previous</div><div class=pagination-nav__label>Reactor Model</div></a><a class="pagination-nav__link pagination-nav__link--next" href=/docs/guide/address_model><div class=pagination-nav__sublabel>Next</div><div class=pagination-nav__label>Address Model</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href=#actorthread-main-loop class="table-of-contents__link toc-highlight">ActorThread Main Loop</a><ul><li><a href=#phase-1-io class="table-of-contents__link toc-highlight">Phase 1: IO</a><li><a href=#phase-2-io-pipeline class="table-of-contents__link toc-highlight">Phase 2: IO Pipeline</a><li><a href=#phase-3-business class="table-of-contents__link toc-highlight">Phase 3: Business</a><li><a href=#thread-notification class="table-of-contents__link toc-highlight">Thread Notification</a></ul><li><a href=#housemanager class="table-of-contents__link toc-highlight">HouseManager</a><ul><li><a href=#routing class="table-of-contents__link toc-highlight">Routing</a></ul><li><a href=#priorityhousequeue class="table-of-contents__link toc-highlight">PriorityHouseQueue</a><ul><li><a href=#spinlock-implementation class="table-of-contents__link toc-highlight">SpinLock Implementation</a></ul><li><a href=#actorhouse-state-machine class="table-of-contents__link toc-highlight">ActorHouse State Machine</a><ul><li><a href=#five-mailboxes class="table-of-contents__link toc-highlight">Five Mailboxes</a><li><a href=#dispatch-order class="table-of-contents__link toc-highlight">Dispatch Order</a><li><a href=#high-priority-conditions class="table-of-contents__link toc-highlight">High Priority Conditions</a></ul><li><a href=#work-stealing class="table-of-contents__link toc-highlight">Work Stealing</a><ul><li><a href=#idle-detection class="table-of-contents__link toc-highlight">Idle Detection</a><li><a href=#adaptive-steal-condition class="table-of-contents__link toc-highlight">Adaptive Steal Condition</a><li><a href=#steal-mechanics class="table-of-contents__link toc-highlight">Steal Mechanics</a></ul><li><a href=#thread-pool class="table-of-contents__link toc-highlight">Thread Pool</a><ul><li><a href=#actor-placement class="table-of-contents__link toc-highlight">Actor Placement</a></ul><li><a href=#memory-protection class="table-of-contents__link toc-highlight">Memory Protection</a><li><a href=#key-design-no-context-switches class="table-of-contents__link toc-highlight">Key Design: No Context Switches</a></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class=footer__title>Docs</div><ul class="footer__items clean-list"><li class=footer__item><a class=footer__link-item href=/docs/quick_start>Quick Start</a><li class=footer__item><a class=footer__link-item href=/docs/core_concept>Core Concepts</a></ul></div><div class="theme-layout-footer-column col footer__col"><div class=footer__title>Community</div><ul class="footer__items clean-list"><li class=footer__item><a href=https://github.com/otavia-projects/otavia/issues target=_blank rel="noopener noreferrer" class=footer__link-item>GitHub Issues<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a><li class=footer__item><a href=https://github.com/otavia-projects/otavia/discussions target=_blank rel="noopener noreferrer" class=footer__link-item>GitHub Discussions<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a></ul></div><div class="theme-layout-footer-column col footer__col"><div class=footer__title>More</div><ul class="footer__items clean-list"><li class=footer__item><a class=footer__link-item href=/blog>Blog</a><li class=footer__item><a href=https://github.com/otavia-projects/otavia target=_blank rel="noopener noreferrer" class=footer__link-item>GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a></ul></div></div><div class="footer__bottom text--center"><div class=footer__copyright>Copyright © 2026 Yan Kun and Otavia Project. Built with Docusaurus.</div></div></div></footer></div></body>

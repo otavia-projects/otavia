@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+    <channel>
+        <title>Otavia Blog</title>
+        <link>https://otavia.cc/blog</link>
+        <description>Otavia Blog</description>
+        <lastBuildDate>Fri, 19 May 2023 00:00:00 GMT</lastBuildDate>
+        <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+        <generator>https://github.com/jpmonette/feed</generator>
+        <language>en</language>
+        <item>
+            <title><![CDATA[Hello World Blog]]></title>
+            <link>https://otavia.cc/blog/hello-world-blog</link>
+            <guid>https://otavia.cc/blog/hello-world-blog</guid>
+            <pubDate>Fri, 19 May 2023 00:00:00 GMT</pubDate>
+            <description><![CDATA[This is a hello world blog!]]></description>
+            <content:encoded><![CDATA[<p>This is a <code>hello world</code> blog!</p>
+<p><img decoding="async" loading="lazy" alt="programming_model" src="https://otavia.cc/assets/images/programming_model.drawio-09e7bf269b378118172665db723e5ddc.svg" class="img_ev3q"></p>]]></content:encoded>
+            <category>otavia</category>
+            <category>release</category>
+        </item>
+    </channel>
+</rss>

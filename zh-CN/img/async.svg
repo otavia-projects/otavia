@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <path d="M30 70 Q50 30 70 70" fill="none" stroke="#2e8555" stroke-width="4"/>
+  <polygon points="70,70 65,60 75,62" fill="#2e8555"/>
+  <text x="50" y="85" font-size="12" text-anchor="middle" fill="#2e8555" font-family="Arial">async</text>
+</svg>

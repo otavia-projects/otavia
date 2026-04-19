@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://otavia.cc/zh-CN/blog</id>
+    <title>Otavia Blog</title>
+    <updated>2023-05-19T00:00:00.000Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://otavia.cc/zh-CN/blog"/>
+    <subtitle>Otavia Blog</subtitle>
+    <icon>https://otavia.cc/zh-CN/img/logo.drawio.svg</icon>
+    <entry>
+        <title type="html"><![CDATA[你好世界博客]]></title>
+        <id>https://otavia.cc/zh-CN/blog/hello-world-blog</id>
+        <link href="https://otavia.cc/zh-CN/blog/hello-world-blog"/>
+        <updated>2023-05-19T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[这是一个 hello world 博客!]]></summary>
+        <content type="html"><![CDATA[<p>这是一个 <code>hello world</code> 博客!</p>
+<p><img decoding="async" loading="lazy" alt="programming_model" src="https://otavia.cc/zh-CN/assets/images/programming_model.drawio-09e7bf269b378118172665db723e5ddc.svg" class="img_ev3q"></p>]]></content>
+        <author>
+            <name>Yan Kun</name>
+            <uri>https://github.com/yankun1992</uri>
+        </author>
+        <category label="otavia" term="otavia"/>
+        <category label="release" term="release"/>
+    </entry>
+</feed>

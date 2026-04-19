@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkotavia_docs=self.webpackChunkotavia_docs||[]).push([["710"],{3129(a){a.exports=JSON.parse('{"tags":[{"label":"otavia","permalink":"/zh-CN/blog/tags/otavia","count":1},{"label":"release","permalink":"/zh-CN/blog/tags/release","count":1}]}')}}]);

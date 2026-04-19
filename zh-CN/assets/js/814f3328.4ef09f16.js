@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkotavia_docs=self.webpackChunkotavia_docs||[]).push([["833"],{5513(e){e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"\u4F60\u597D\u4E16\u754C\u535A\u5BA2","permalink":"/zh-CN/blog/hello-world-blog","unlisted":false,"date":"2023-05-19T00:00:00.000Z"}]}')}}]);
