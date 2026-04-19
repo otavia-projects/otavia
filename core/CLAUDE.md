@@ -41,7 +41,7 @@ The user only needs to: define messages, match on state, call suspend/return. Ev
 - Object pool allocation/recycling of Stacks, Envelopes, Promises, States
 - Envelope packaging, message ID generation
 - Promise creation, attaching to Stack, waking up on completion
-- Mailbox priority dispatch (replies before asks)
+- Mailbox priority dispatch (replies before asks) and scheduling priority (reply backlog, event backlog, leaf-actor detection)
 - ActorThread three-phase event loop scheduling (IO / ChannelsActor / StateActor)
 - Channel inflight management (pendingFutures / inflightFutures / pendingStacks / inflightStacks)
 - Cross-thread message delivery (synchronized Mailbox.put + ioHandler.wakeup)
@@ -185,8 +185,9 @@ Inflight management needs both FIFO ordering (backpressure/flow control) and O(1
 ### System (`cc.otavia.core.system`)
 - `ActorSystem` / `ActorSystemImpl` -- top-level system, actor creation with pool sizing
 - `ActorThread` -- IO thread + actor executor, three-phase event loop
-- `ActorHouse` -- per-actor mailbox container, state machine (CREATED->MOUNTING->WAITING->READY->SCHEDULED->RUNNING)
-- `HouseManager` -- priority queue scheduling, work stealing
+- `ActorHouse` -- per-actor mailbox container, state machine (CREATED->MOUNTING->WAITING->READY->SCHEDULED->RUNNING), cached `_highPriority` flag for scheduling priority
+- `HouseManager` -- priority queue scheduling (high/normal sub-queues), work stealing
+- `PriorityHouseQueue` -- dual sub-queue (high drained before normal), SpinLock-based MPSC
 - `Mailbox` -- five separate mailboxes per actor (reply, exception, ask, notice, event)
 
 ### Address (`cc.otavia.core.address`)

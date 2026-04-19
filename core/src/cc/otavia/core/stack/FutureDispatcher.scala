@@ -90,6 +90,15 @@ private[core] abstract class FutureDispatcher {
         promise
     }
 
+    /** Number of outstanding [[MessagePromise]] instances in the dispatch table. Each represents an ask sent by this
+     *  actor that has not yet received a reply. When this count is zero, no stack in this actor is suspended waiting
+     *  for downstream replies — scheduling this actor will not encounter downstream blocking.
+     *
+     *  Only accessed by the owning ActorThread (both [[push]] and [[pop]] happen during dispatch), so no
+     *  synchronization is needed.
+     */
+    private[core] final def pendingPromiseCount: Int = contentSize
+
     final protected def contains(id: Long): Boolean = findNode(id) ne null
 
     private final def resizeTable(newLen: Int): Unit = {

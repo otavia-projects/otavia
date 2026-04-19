@@ -65,10 +65,6 @@ StateActor 在纳秒级 `deadline` 约束下运行：
 - `STATE_ACTOR` → `actorQueue`
 - `CHANNELS_ACTOR` / `SERVER_CHANNELS_ACTOR` → `channelsActorQueue`
 
-### 优先级调整
-
-当消息到达 house 已在队列中，`change()` 检查 house 是否变为高优先级。如果是，通过 `adjustPriority()` 从普通子队列转移到高优先级子队列。
-
 ## PriorityHouseQueue
 
 双队列设计，普通和高优先级各有独立的链表，各自有 `SpinLock` 保护：
@@ -127,9 +123,9 @@ CREATED(0) → MOUNTING(1) → WAITING(2) → READY(3) → SCHEDULED(4) → RUNN
 ### 高优先级条件
 
 Actor 在以下任一条件下变为高优先级：
-- `replyMailbox.size() > 2`
-- `eventMailbox.size() > 4`
-- `stackEndRate < 3`（发送了很多 Ask 但收到很少 Reply — 瓶颈）
+- `replyMailbox.size() > 2`——reply 积压，每条 reply 可完成一个 future 并可能解除挂起栈的阻塞
+- `eventMailbox.size() > 4`——event 积压，系统事件需要及时处理
+- `pendingPromiseCount == 0`——无下游阻塞，该 actor 没有等待回复的 ask，没有 stack 因等待下游而挂起，调度它不会遇到下游阻塞
 
 ## 工作窃取
 

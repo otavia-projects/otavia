@@ -31,8 +31,9 @@ import scala.language.unsafeNulls
  *    - '''channelsActorQueue''' (Priority): IO-capable actor, fully drained in Phase 2 with no time budget
  *    - '''actorQueue''' (Priority): business logic actor, time-budgeted in Phase 3
  *
- *  Each [[PriorityHouseQueue]] has two sub-queues: normal priority and high priority. Houses are promoted to high
- *  priority when they have excessive pending replies, events, or a low stack-end-rate (backpressure signal).
+ *  Each [[PriorityHouseQueue]] has two sub-queues: normal priority and high priority. Houses are classified as high
+ *  priority based on three signals (see [[ActorHouse._highPriority]]): reply backlog, event backlog, and no downstream
+ *  blocking (no pending promises). Priority is determined at enqueue time; there is no mid-queue promotion.
  *
  *  @param thread
  *    the owning ActorThread
@@ -85,17 +86,6 @@ final class HouseManager(val thread: ActorThread) {
         else if (house.actorType >= ActorHouse.CHANNELS_ACTOR) channelsActorQueue.enqueue(house)
 
         thread.notifyThread()
-    }
-
-    /** Promote an [[ActorHouse]] to high priority when new messages arrive while it is already in READY or RUNNING
-     *  state. Only houses with pending high-priority indicators (excessive replies/events or low stack-end-rate)
-     *  are promoted.
-     */
-    def promotePriority(house: ActorHouse): Unit = {
-        if (house.highPriority && !house.inHighPriorityQueue) {
-            if (house.actorType == ActorHouse.CHANNELS_ACTOR) channelsActorQueue.adjustPriority(house)
-            else if (house.actorType == ActorHouse.STATE_ACTOR) actorQueue.adjustPriority(house)
-        }
     }
 
     // =========================================================================

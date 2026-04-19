@@ -68,8 +68,8 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     private val dispatcher = new MailboxDispatcher(this)
 
-    /** Aggregated hint flag for mailbox occupancy. Replaces 5 volatile reads in the dispatch fast-path with a single
-     *  volatile read.
+    /** Aggregated hint flag for mailbox occupancy. Checked by the owning ActorThread as a fast-path before incurring
+     *  the cost of 5 individual mailbox [[nonEmpty]] checks.
      *
      *  Write side: set to true by any thread in [[put]] via lazySet (unordered, lowest overhead — a store-store
      *  barrier only). The write may be delayed relative to other threads' reads, but this is safe because:
@@ -83,16 +83,42 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
      */
     @volatile private var _hasMessages: Boolean = false
 
+    /** Cached high-priority scheduling flag. High priority means "scheduling this actor now will efficiently push the
+     *  system forward." Three independent signals contribute to this decision:
+     *
+     *    1. '''Reply backlog''' ([[replyMailbox]] size > [[HIGH_PRIORITY_REPLY_SIZE]]): each reply in the mailbox
+     *       corresponds to exactly one completable [[MessagePromise]] — processing it completes a future, which may
+     *       unblock a suspended [[Stack]] and release pooled resources (promise, stack state). When replies accumulate,
+     *       prioritizing this actor directly reduces end-to-end latency across the actor graph.
+     *
+     *    2. '''Event backlog''' ([[eventMailbox]] size > [[HIGH_PRIORITY_EVENT_SIZE]]): system events (timer
+     *       expirations, channel lifecycle) need timely processing to maintain system responsiveness.
+     *
+     *    3. '''No downstream blocking''' ([[dweller.pendingPromiseCount]] == 0): this actor has zero outstanding
+     *       asks awaiting replies. No [[Stack]] is suspended waiting for a downstream actor, so scheduling this actor
+     *       will never encounter a "suspend on downstream reply" stall — every CPU cycle goes to business logic
+     *       progress. A middleman actor that has received all its downstream replies also satisfies this condition:
+     *       its stacks can resume immediately, making it equally productive as a leaf actor.
+     *
+     *  '''Update protocol:'''
+     *    - '''Any thread (producer):''' set to true in [[putReply]] / [[putEvent]] when the mailbox exceeds its
+     *      threshold. This is a monotonically increasing write (only true ← true or false ← true), so concurrent
+     *      writes from different threads are safe without additional synchronization.
+     *    - '''Owning thread only:''' recompute all three conditions in [[completeRunning]] and set to true or false.
+     *      This is the only path that can clear the flag, and it runs single-threaded, so no write-write conflict
+     *      with producer threads. A race where a producer sets true while the owner clears to false is benign: the
+     *      producer's message is already in the mailbox, so the [[nonEmpty]] check in [[completeRunning]] will detect
+     *      it and re-schedule the house.
+     */
+    @volatile private var _highPriority: Boolean = false
+
     // =========================================================================
     // Section 3: SCHEDULING STATE MACHINE
     // =========================================================================
 
     private val status: AtomicInteger = new AtomicInteger(CREATED)
 
-    @volatile private var prevHouse: ActorHouse  = _
     @volatile private var nextHouse: ActorHouse = _
-
-    @volatile private var _inHighPriorityQueue: Boolean = false
 
     // =========================================================================
     // Section 4: MESSAGE ID GENERATION
@@ -105,46 +131,30 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         id
     }
 
-    def increaseSendCounter(): Unit = dispatcher.increaseSendCounter()
-
     // =========================================================================
     // Section 5: ActorContext IMPLEMENTATION
     // =========================================================================
 
     override def mountedThreadId: Int = manager.thread.index
 
-    /** Whether this house should be scheduled with high priority. High priority is triggered by:
-     *    - Excessive pending replies (> [[HIGH_PRIORITY_REPLY_SIZE]])
-     *    - Excessive pending events (> [[HIGH_PRIORITY_EVENT_SIZE]])
-     *    - Low stack-end-rate (more awaiting replies than sends — a backpressure signal)
+    /** Whether this house should be scheduled with high priority. See [[_highPriority]] for the caching protocol
+     *  and the three contributing signals.
      */
-    def highPriority: Boolean = (replyMailbox.size() > HIGH_PRIORITY_REPLY_SIZE) ||
-        (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE) || (dispatcher.stackEndRate < 3)
-
-    def inHighPriorityQueue: Boolean = _inHighPriorityQueue
-
-    def inHighPriorityQueue_=(value: Boolean): Unit =
-        _inHighPriorityQueue = value
+    def highPriority: Boolean = _highPriority
 
     def isReady: Boolean = status.get() == READY
     def isRunning: Boolean = status.get() == RUNNING
     def isWaiting: Boolean = status.get() == WAITING
 
     // =========================================================================
-    // Section 6: DOUBLY-LINKED LIST NODE (for HouseQueue insertion)
+    // Section 6: SINGLY-LINKED LIST NODE (for HouseQueue insertion)
     // =========================================================================
 
     def next_=(house: ActorHouse): Unit = nextHouse = house
     def next: ActorHouse | Null = nextHouse
-    def isTail: Boolean = nextHouse == null
-
-    def prev_=(house: ActorHouse): Unit = prevHouse = house
-    def prev: ActorHouse | Null = prevHouse
-    def isHead: Boolean = prevHouse == null
 
     def unlink(): Unit = {
         nextHouse = null
-        prevHouse = null
     }
 
     // =========================================================================
@@ -247,11 +257,27 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     def putAsk(envelope: Envelope[?]): Unit = put(envelope, askMailbox)
 
-    def putReply(envelope: Envelope[?]): Unit = put(envelope, replyMailbox)
+    /** Deposit a reply and eagerly update the cached priority flag if the reply mailbox exceeds its threshold.
+     *  Each reply corresponds to exactly one completable future — processing it may unblock a suspended stack and
+     *  release pooled resources.
+     */
+    def putReply(envelope: Envelope[?]): Unit = {
+        replyMailbox.put(envelope)
+        _hasMessages = true
+        if (replyMailbox.size() > HIGH_PRIORITY_REPLY_SIZE) _highPriority = true
+        if (status.get() == WAITING) waitingToReady()
+    }
 
     def putException(envelope: Envelope[?]): Unit = put(envelope, exceptionMailbox)
 
-    def putEvent(event: Event): Unit = put(event, eventMailbox)
+    /** Deposit an event and eagerly update the cached priority flag if the event mailbox exceeds its threshold.
+     */
+    def putEvent(event: Event): Unit = {
+        eventMailbox.put(event)
+        _hasMessages = true
+        if (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE) _highPriority = true
+        if (status.get() == WAITING) waitingToReady()
+    }
 
     private def put(msg: Nextable, mailbox: Mailbox): Unit = {
         mailbox.put(msg)
@@ -313,17 +339,33 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         completeRunning()
     }
 
+    /** Recompute the cached priority flag from all three signals, then transition out of RUNNING.
+     *
+     *  The recompute reads mailbox sizes and the actor's pendingPromiseCount — all owned by this thread, so these are
+     *  plain reads with no synchronization cost. See [[_highPriority]] for signal definitions.
+     */
     private def completeRunning(): Unit = {
         if (!inBarrier) {
             if (nonEmpty) {
+                _highPriority = (replyMailbox.size() > HIGH_PRIORITY_REPLY_SIZE) ||
+                    (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE) ||
+                    (dweller.pendingPromiseCount == 0)
                 if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
             } else {
+                // All mailboxes empty. Preserve the no-downstream-blocking signal: if this actor has no outstanding
+                // promises, the next wake-up (via putAsk/putNotice) should still route it to the high-priority
+                // sub-queue without waiting for a full dispatch cycle to re-evaluate.
+                _highPriority = dweller.pendingPromiseCount == 0
                 if (status.compareAndSet(RUNNING, WAITING) && nonEmpty) waitingToReady()
             }
         } else {
             if (barrierNonEmpty) {
+                _highPriority = (replyMailbox.size() > HIGH_PRIORITY_REPLY_SIZE) ||
+                    (eventMailbox.size() > HIGH_PRIORITY_EVENT_SIZE) ||
+                    (dweller.pendingPromiseCount == 0)
                 if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
             } else {
+                _highPriority = dweller.pendingPromiseCount == 0
                 if (status.compareAndSet(RUNNING, WAITING) && barrierNonEmpty) waitingToReady()
             }
         }

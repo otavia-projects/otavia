@@ -144,7 +144,6 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentStack.addUncompletedPromise(promise)
         promise match
             case promise: MessagePromise[? <: Reply] =>
-                house.increaseSendCounter()
                 this.push(promise)
             case _ =>
     }

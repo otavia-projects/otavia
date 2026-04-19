@@ -41,9 +41,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
     private var askCursor: Nextable    = _
     private var noticeCursor: Nextable = _
 
-    // Dispatch counters for priority calculation.
-    private[system] var receivedAsks: Long  = 0
-    private var sentAsks: Long = 0
+    // Dispatch counters — reserved for future use if needed.
 
     // Channel inflight tracking for ChannelsActor dispatch.
     private var pendingChannels: QueueMap[AbstractChannel] = _
@@ -54,11 +52,6 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
 
     private[system] def initPendingChannels(): Unit =
         pendingChannels = new QueueMap[AbstractChannel]()
-
-    private[system] def increaseSendCounter(): Unit = sentAsks += 1
-
-    private[system] def stackEndRate: Int =
-        if (receivedAsks != 0) (sentAsks * 5 / receivedAsks).toInt else Int.MaxValue
 
     private[system] def registerPendingChannel(channel: AbstractChannel): Unit =
         if (!pendingChannels.contains(channel.entityId)) pendingChannels.append(channel)
@@ -133,7 +126,6 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
             msg.unlink()
             val envelope = msg.asInstanceOf[Envelope[Ask[?]]]
             house.inBarrier = house.dweller.isBarrier(envelope.message)
-            receivedAsks += 1
             house.dweller.receiveAsk(envelope)
         }
     }
@@ -150,7 +142,6 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
             else {
                 if (buf.nonEmpty) handleBatchAsk(buf)
                 house.inBarrier = house.dweller.isBarrier(ask)
-                receivedAsks += 1
                 house.dweller.receiveAsk(envelope)
             }
         }

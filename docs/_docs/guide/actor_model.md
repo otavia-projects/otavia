@@ -72,12 +72,12 @@ After `run()` completes, `completeRunning()` transitions to:
 
 ### High Priority
 
-An Actor becomes high priority when:
-- Reply mailbox has more than 2 messages
-- Event mailbox has more than 4 messages
-- `stackEndRate` (sent/received ratio) is less than 3 (waiting on many replies)
+An Actor becomes high priority when any of these conditions is true:
+- Reply mailbox has more than 2 messages — each reply completes a future, potentially unblocking a suspended stack and releasing pooled resources
+- Event mailbox has more than 4 messages — system events (timer expirations, channel lifecycle) need timely processing
+- `pendingPromiseCount == 0` — this actor currently has no outstanding asks waiting for replies from other actors, meaning no stack is suspended due to downstream blocking. Scheduling this actor will not encounter such blocking — CPU time converts directly to business flow progress
 
-High-priority actors are placed in a separate sub-queue and always processed before normal-priority actors.
+The high-priority flag (`_highPriority`) is cached on `ActorHouse` rather than recomputed on each access. It is eagerly set to `true` by any thread in `putReply`/`putEvent` when mailbox thresholds are exceeded, and fully re-evaluated by the owning thread in `completeRunning` after each dispatch cycle. Priority is determined at enqueue time; there is no mid-queue promotion. High-priority actors are placed in a separate sub-queue and always processed before normal-priority actors.
 
 ## Barrier Mechanism
 

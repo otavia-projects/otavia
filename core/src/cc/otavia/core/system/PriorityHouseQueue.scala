@@ -21,16 +21,34 @@ import cc.otavia.core.util.{Nextable, SpinLock}
 import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
 
+/** A priority-aware MPSC house queue with two sub-queues: high-priority and normal-priority.
+ *
+ *  '''Dequeue order:''' high-priority sub-queue is always drained before the normal sub-queue (strict priority). This
+ *  guarantees that actors that can immediately push the system forward (reply/event backlogs, or no downstream
+ *  blocking — see [[ActorHouse._highPriority]]) are always served before normal actors.
+ *
+ *  '''Priority is determined at enqueue time.''' The [[ActorHouse._highPriority]] cached flag is read once when the
+ *  house enters the queue (via [[ActorHouse.waitingToReady]] → [[HouseManager.ready]] → [[enqueue]]). A house that
+ *  becomes high-priority while already queued will be correctly prioritized on its next enqueue (after
+ *  [[ActorHouse.completeRunning]] re-evaluates the flag).
+ *
+ *  '''Concurrency model:''' SpinLock-based MPSC. Multiple producer threads can enqueue concurrently; only the owning
+ *  ActorThread dequeues. Each sub-queue has independent read/write lock pairs to avoid cross-priority contention.
+ *
+ *  '''Schedule() outside lock:''' the READY → SCHEDULED CAS in [[ActorHouse.schedule]] is performed after releasing
+ *  the queue lock. This is safe because no other thread can change the house state between unlock and schedule: the
+ *  house is in READY state, removed from the queue, and no lifecycle transition is possible until schedule() fires.
+ */
 class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
 
-    // for normal priority actor house
+    // Normal-priority sub-queue (SpinLock-based MPSC singly-linked list)
     private val readLock                   = new SpinLock()
     private val writeLock                  = new SpinLock()
     private val size                       = new AtomicInteger(0)
     @volatile private var head: ActorHouse = _
     @volatile private var tail: ActorHouse = _
 
-    // for high priority actor house
+    // High-priority sub-queue (SpinLock-based MPSC singly-linked list)
     private val highReadLock                   = new SpinLock()
     private val highWriteLock                  = new SpinLock()
     private val highSize                       = new AtomicInteger(0)
@@ -56,10 +74,8 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
                 val oldTail = tail
                 tail = house
                 oldTail.next = tail
-                tail.prev = oldTail
                 size.incrementAndGet()
             }
-            house.inHighPriorityQueue = false
             writeLock.unlock()
         } else {
             highWriteLock.lock()
@@ -73,7 +89,6 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
                 oldTail.next = highTail
                 highSize.incrementAndGet()
             }
-            house.inHighPriorityQueue = true
             highWriteLock.unlock()
         }
     }
@@ -97,30 +112,25 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
                 head = null
                 tail = null
                 size.decrementAndGet()
-                house.unlink()
-                house.schedule()
                 writeLock.unlock()
                 readLock.unlock()
+                house.schedule()
                 house
             } else {
                 val house = head
                 head = house.next
-                head.prev = null
                 size.decrementAndGet()
-                house.unlink()
-                house.schedule()
                 writeLock.unlock()
                 readLock.unlock()
+                house.schedule()
                 house
             }
         } else {
             val house = head
             head = house.next
-            head.prev = null
             size.decrementAndGet()
-            house.unlink()
-            house.schedule()
             readLock.unlock()
+            house.schedule()
             house
         }
     }
@@ -138,58 +148,27 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
                 highHead = null
                 highTail = null
                 highSize.decrementAndGet()
-                house.unlink()
-                house.schedule()
                 highWriteLock.unlock()
                 highReadLock.unlock()
+                house.schedule()
                 house
             } else {
                 val house = highHead
                 highHead = house.next
                 highSize.decrementAndGet()
-                house.unlink()
-                house.schedule()
                 highWriteLock.unlock()
                 highReadLock.unlock()
+                house.schedule()
                 house
             }
         } else {
             val house = highHead
             highHead = house.next
             highSize.decrementAndGet()
-            house.unlink()
-            house.schedule()
             highReadLock.unlock()
+            house.schedule()
             house
         }
-    }
-
-    def adjustPriority(house: ActorHouse): Unit = {
-        readLock.lock()
-        writeLock.lock()
-        if (house.isReady && !house.inHighPriorityQueue) {
-            val pre  = house.prev
-            val next = house.next
-            if (pre != null) {
-                pre.next = next
-                if (next != null) next.prev = pre else tail = pre
-            } else {
-                if (next != null) {
-                    next.prev = null
-                    head = next
-                } else {
-                    head = null
-                    tail = null
-                }
-            }
-            size.decrementAndGet()
-            house.inHighPriorityQueue = true
-        }
-        writeLock.unlock()
-        readLock.unlock()
-        house.unlink()
-        this.enqueue(house)
-
     }
 
 }

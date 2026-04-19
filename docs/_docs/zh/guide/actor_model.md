@@ -76,11 +76,11 @@ CREATED(0) → MOUNTING(1) → WAITING(2) → READY(3) → SCHEDULED(4) → RUNN
 ### 高优先级
 
 Actor 在以下任一条件下变为高优先级：
-- 回复邮箱中消息数超过 2 条
-- 事件邮箱中消息数超过 4 条
-- `stackEndRate`（发送/接收比）小于 3（正在等待大量回复）
+- 回复邮箱中消息数超过 2 条——每条 reply 对应一个可完成的 future，可能解除一个挂起栈的阻塞并释放池化资源
+- 事件邮箱中消息数超过 4 条——系统事件（定时器到期、channel 生命周期）需要及时处理
+- `pendingPromiseCount == 0`——该 actor 当前没有等待其他 actor 回复的 ask，即没有 stack 因为等待下游而挂起。调度此 actor 不会遇到下游阻塞，CPU 时间直接转化为业务流推进
 
-高优先级 Actor 会被放入独立的子队列，始终在普通优先级 actor 之前处理。
+高优先级标志（`_highPriority`）缓存在 `ActorHouse` 上，而非每次访问时重新计算。任何线程在 `putReply`/`putEvent` 中当邮箱超过阈值时会主动设为 `true`，owning 线程在每次 dispatch 结束后的 `completeRunning` 中完整重算三个条件。优先级在入队时确定，不做中途提升。高优先级 Actor 会被放入独立的子队列，始终在普通优先级 actor 之前处理。
 
 ## Barrier 机制
 

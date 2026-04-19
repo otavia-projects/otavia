@@ -65,10 +65,6 @@ When an ActorHouse transitions to READY, `HouseManager.ready()` routes it:
 - `STATE_ACTOR` → `actorQueue`
 - `CHANNELS_ACTOR` / `SERVER_CHANNELS_ACTOR` → `channelsActorQueue`
 
-### Priority Adjustment
-
-When a message arrives while a house is already in a queue, `change()` checks if the house has become high priority. If so, it relocates the house from the normal to the high-priority sub-queue via `adjustPriority()`.
-
 ## PriorityHouseQueue
 
 A dual-queue design with separate linked lists for normal and high priority, each protected by its own `SpinLock`:
@@ -127,9 +123,9 @@ Messages are dispatched in strict priority order:
 ### High Priority Conditions
 
 An Actor becomes high priority when any of the following is true:
-- `replyMailbox.size() > 2`
-- `eventMailbox.size() > 4`
-- `stackEndRate < 3` (sent many Asks but received few Replies — bottleneck)
+- `replyMailbox.size() > 2` — reply backlog; each reply completes a future and may unblock a suspended stack
+- `eventMailbox.size() > 4` — event backlog; system events need timely processing
+- `pendingPromiseCount == 0` — no downstream blocking; this actor has no outstanding asks waiting for replies, so no stack is suspended due to downstream dependencies. Scheduling this actor will not encounter such blocking
 
 ## Work Stealing
 
