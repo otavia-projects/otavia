@@ -353,111 +353,57 @@ object `sql-postgres-driver` extends OtaviaModule {
 
 }
 
-trait SiteModule extends ScalaModule {
+// Documentation module - generates Scaladoc API documentation
+// User documentation is managed by Docusaurus in website/
+object docs extends OtaviaModule {
 
-    private val RE = "(.*)<a href=\"(.*?)\" class=\"logo-container\">(.*)".r
+    def moduleDeps: Seq[PublishModule] = Seq(
+        buffer, core, serde, handler, codec, testkit,
+        `serde-json`, `codec-http`, `codec-redis`, sql, log4a
+    )
 
-    def projectName: String
+    // Generate Scaladoc to Task.dest/api
+    override def docJar = Task {
+        val apiPath = Task.dest / "api"
+        os.makeDir.all(apiPath)
 
-    def projectVersion: String
-
-    def projectUrl: String
-
-    def docSource = Task.Source(moduleDir)
-
-    private def replace(child: Path): Unit = {
-        val content: String = os.read(child)
-        val end             = content.indexOf("\" class=\"logo-container\">")
-        if (end != -1) {
-            var start = end - 1
-            while (content(start) != '\"') start -= 1
-
-            os.remove(child)
-            os.write(child, content.substring(0, start))
-            os.write.append(child, content.substring(start, end) + "home.html")
-            os.write.append(child, content.substring(end, content.length))
-        }
-    }
-
-    def site = Task {
-
-        val compileCp = Seq(
-          "-classpath",
-          compileClasspath().iterator
-              .filter(_.path.ext != "pom")
-              .map(_.path)
-              .mkString(java.io.File.pathSeparator)
+        val files = Lib.findSourceFiles(
+            Task.traverse(moduleDeps)(_.docSources)().flatten,
+            Seq("tasty")
         )
 
-        val docs = Task.dest / "docs"
-        for {
-            child <- os.walk(docSource().path) if os.isFile(child)
-        } {
-            val fileName = child.toNIO.toString.toLowerCase.trim
-            if (fileName.endsWith(".md")) {
-                val content = os.read(child)
-                val newCtx  = content.replaceAll("([(\"]).*/_assets/images/", "$1images/")
-                os.write(docs / child.subRelativeTo(docSource().path), newCtx, createFolders = true)
-            } else os.copy.over(child, docs / child.subRelativeTo(docSource().path), createFolders = true)
-        }
+        val compileCp = Seq(
+            "-classpath",
+            compileClasspath().iterator
+                .filter(_.path.ext != "pom")
+                .map(_.path)
+                .mkString(java.io.File.pathSeparator)
+        )
 
-        val files = Lib.findSourceFiles(Task.traverse(moduleDeps)(_.docSources)().flatten, Seq("tasty"))
-
-        val javadocDir = Task.dest / "_site"
-        os.makeDir.all(javadocDir)
-
-        // format: off
         val options = Seq(
-            "-d", javadocDir.toNIO.toString,
-            "-siteroot", docs.toNIO.toString,
-            "-project-version", projectVersion,
-            "-project", projectName,
-            // "-project-logo", "docs/_assets/images/logo.drawio.svg",
+            "-d", apiPath.toString,
+            "-project", "Otavia",
+            "-project-version", ProjectInfo.version,
             "-project-footer", "Copyright (c) 2022, Yan Kun/Otavia Project",
-            "-source-links:docs=github://otavia-projects/otavia/main#docs",
-            s"-social-links:github::$projectUrl"
-        ) ++ scalaDocPluginClasspath().map(pluginPathRef => s"-Xplugin:${pluginPathRef.path}")
-        // format: on
+            s"-social-links:github::${ProjectInfo.projectUrl}",
+            "-source-links:*=github://otavia-projects/otavia/main#src/main/scala"
+        )
 
-        if (
-          jvmWorker()
-              .worker()
-              .docJar(
-                scalaVersion(),
-                scalaOrganization(),
-                scalaDocClasspath(),
-                scalacPluginClasspath(),
-                None,
-                options ++ compileCp ++ scalaDocOptions() ++ files.map(_.toString)
-              )
-        ) {
-            replace(javadocDir / "index.html")
-            for (child <- os.walk(javadocDir / "cc") if child.toNIO.toString.endsWith(".html")) replace(child)
-            for (child <- os.walk(javadocDir / "docs") if child.toNIO.toString.endsWith(".html")) replace(child)
+        val success = jvmWorker().worker().docJar(
+            scalaVersion(),
+            scalaOrganization(),
+            scalaDocClasspath(),
+            scalacPluginClasspath(),
+            None,
+            options ++ compileCp ++ scalaDocOptions() ++ files.map(_.toString)
+        )
 
-            os.copy.over(docs / "home.html", javadocDir / "home.html")
-            os.copy.over(docs / "CNAME", javadocDir / "CNAME")
-            // os.remove.all.apply(docs)
-            Result.Success(PathRef(javadocDir))
-        } else {
-            os.remove.all.apply(docs)
-            Result.Failure("doc generation failed")
+        if (!success) {
+            throw new Exception("Scaladoc generation failed")
         }
+
+        PathRef(apiPath)
     }
-
-}
-
-object docs extends SiteModule {
-
-    def scalaVersion = ProjectInfo.scalaVersion
-
-    def moduleDeps: Seq[PublishModule] = Seq(buffer, core, serde, handler, codec, testkit)
-
-    def projectName: String = "otavia"
-
-    def projectVersion: String = ProjectInfo.version
-
-    def projectUrl: String = ProjectInfo.projectUrl
 
 }
 
