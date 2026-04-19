@@ -22,7 +22,7 @@
    <li>'''channelsActorQueue''' (Priority): IO-capable actor, fully drained in Phase 2 with no time budget</li>
    <li>'''actorQueue''' (Priority): business logic actor, time-budgeted in Phase 3</li>
   </ul>
-  <p>Each <a href="PriorityHouseQueue.html">PriorityHouseQueue</a> has two sub-queues: normal priority and high priority. Houses are promoted to high priority when they have excessive pending replies, events, or a low stack-end-rate (backpressure signal).</p>
+  <p>Each <a href="PriorityHouseQueue.html">PriorityHouseQueue</a> has two sub-queues: normal priority and high priority. Houses are classified as high priority based on three signals (see <span data-unresolved-link="">ActorHouse._highPriority</span>): reply backlog, event backlog, and no downstream blocking (no pending promises). Priority is determined at enqueue time; there is no mid-queue promotion.</p>
  </div>
  <section id="attributes">
   <h2 class="h500">Value parameters</h2>
@@ -169,34 +169,6 @@ node3 -> node2;
             <div class="cover">
              <div class="doc">
               <p>Schedule a newly created house for mounting.</p>
-             </div>
-             <h2 class="h200">Attributes</h2>
-             <dl class="attributes attributes-small"></dl>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
-        <div class="documentableElement" id="promotePriority-dd5">
-         <div class="documentableElement-expander">
-          <button class="icon-button ar show-content"></button>
-          <div class="header monospace mono-medium">
-           <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HouseManager.html#promotePriority-dd5" t="n" class="documentableName ">promotePriority</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">house</span>: <span t="t">ActorHouse</span>): <span data-unresolved-link="" t="t">Unit</span>
-           </div>
-          </div>
-         </div>
-         <div class="docs">
-          <span class="modifiers"></span>
-          <div>
-           <div class="originInfo"></div>
-           <div class="memberDocumentation">
-            <div class="documentableBrief doc">
-             <p>Promote an <span data-unresolved-link="">ActorHouse</span> to high priority when new messages arrive while it is already in READY or RUNNING state. Only houses with pending high-priority indicators (excessive replies/events or low stack-end-rate) are promoted.</p>
-            </div>
-            <div class="cover">
-             <div class="doc">
-              <p>Promote an <span data-unresolved-link="">ActorHouse</span> to high priority when new messages arrive while it is already in READY or RUNNING state. Only houses with pending high-priority indicators (excessive replies/events or low stack-end-rate) are promoted.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small"></dl>

@@ -88,10 +88,6 @@
   <li><code>CHANNELS_ACTOR</code> / <code>SERVER_CHANNELS_ACTOR</code> → <code>channelsActorQueue</code></li>
  </ul>
 </section>
-<section id="priority-adjustment">
- <h3 class="h400"><a href="#priority-adjustment" class="anchor"></a>Priority Adjustment</h3>
- <p>When a message arrives while a house is already in a queue, <code>change()</code> checks if the house has become high priority. If so, it relocates the house from the normal to the high-priority sub-queue via <code>adjustPriority()</code>.</p>
-</section>
 <section id="priorityhousequeue">
  <h2 class="h500"><a href="#priorityhousequeue" class="anchor"></a>PriorityHouseQueue</h2>
  <p>A dual-queue design with separate linked lists for normal and high priority, each protected by its own <code>SpinLock</code>:</p>
@@ -181,9 +177,9 @@
  <h3 class="h400"><a href="#high-priority-conditions" class="anchor"></a>High Priority Conditions</h3>
  <p>An Actor becomes high priority when any of the following is true:</p>
  <ul>
-  <li><code>replyMailbox.size() &gt; 2</code></li>
-  <li><code>eventMailbox.size() &gt; 4</code></li>
-  <li><code>stackEndRate &lt; 3</code> (sent many Asks but received few Replies — bottleneck)</li>
+  <li><code>replyMailbox.size() &gt; 2</code> — reply backlog; each reply completes a future and may unblock a suspended stack</li>
+  <li><code>eventMailbox.size() &gt; 4</code> — event backlog; system events need timely processing</li>
+  <li><code>pendingPromiseCount == 0</code> — no downstream blocking; this actor has no outstanding asks waiting for replies, so no stack is suspended due to downstream dependencies. Scheduling this actor will not encounter such blocking</li>
  </ul>
 </section>
 <section id="work-stealing">
@@ -238,4 +234,4 @@
 <section id="key-design-no-context-switches">
  <h2 class="h500"><a href="#key-design-no-context-switches" class="anchor"></a>Key Design: No Context Switches</h2>
  <p>An <code>ActorThread</code> runs actors directly on its thread. When a <code>Stack</code> suspends (waiting for a reply), it returns control. The reply arrives as a message in the mailbox, and when the house is re-scheduled, the Stack resumes on the <strong>same thread</strong>. There are no thread context switches — everything stays on the owning <code>ActorThread</code>.</p>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#threading-model">Threading Model</a><ul><li><a href="#actorthread-main-loop">ActorThread Main Loop</a><ul><li><a href="#phase-1-io">Phase 1: IO</a></li><li><a href="#phase-2-io-pipeline">Phase 2: IO Pipeline</a></li><li><a href="#phase-3-business">Phase 3: Business</a></li><li><a href="#thread-notification">Thread Notification</a></li></ul></li><li><a href="#housemanager">HouseManager</a><ul><li><a href="#routing">Routing</a></li><li><a href="#priority-adjustment">Priority Adjustment</a></li></ul></li><li><a href="#priorityhousequeue">PriorityHouseQueue</a><ul><li><a href="#spinlock-implementation">SpinLock Implementation</a></li></ul></li><li><a href="#actorhouse-state-machine">ActorHouse State Machine</a><ul><li><a href="#five-mailboxes">Five Mailboxes</a></li><li><a href="#dispatch-order">Dispatch Order</a></li><li><a href="#high-priority-conditions">High Priority Conditions</a></li></ul></li><li><a href="#work-stealing">Work Stealing</a></li><li><a href="#thread-pool">Thread Pool</a><ul><li><a href="#actor-placement">Actor Placement</a></li></ul></li><li><a href="#memory-protection">Memory Protection</a></li><li><a href="#key-design-no-context-switches">Key Design: No Context Switches</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#threading-model">Threading Model</a><ul><li><a href="#actorthread-main-loop">ActorThread Main Loop</a><ul><li><a href="#phase-1-io">Phase 1: IO</a></li><li><a href="#phase-2-io-pipeline">Phase 2: IO Pipeline</a></li><li><a href="#phase-3-business">Phase 3: Business</a></li><li><a href="#thread-notification">Thread Notification</a></li></ul></li><li><a href="#housemanager">HouseManager</a><ul><li><a href="#routing">Routing</a></li></ul></li><li><a href="#priorityhousequeue">PriorityHouseQueue</a><ul><li><a href="#spinlock-implementation">SpinLock Implementation</a></li></ul></li><li><a href="#actorhouse-state-machine">ActorHouse State Machine</a><ul><li><a href="#five-mailboxes">Five Mailboxes</a></li><li><a href="#dispatch-order">Dispatch Order</a></li><li><a href="#high-priority-conditions">High Priority Conditions</a></li></ul></li><li><a href="#work-stealing">Work Stealing</a></li><li><a href="#thread-pool">Thread Pool</a><ul><li><a href="#actor-placement">Actor Placement</a></li></ul></li><li><a href="#memory-protection">Memory Protection</a></li><li><a href="#key-design-no-context-switches">Key Design: No Context Switches</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

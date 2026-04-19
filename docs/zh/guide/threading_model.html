@@ -88,10 +88,6 @@
   <li><code>CHANNELS_ACTOR</code> / <code>SERVER_CHANNELS_ACTOR</code> → <code>channelsActorQueue</code></li>
  </ul>
 </section>
-<section id="优先级调整">
- <h3 class="h400"><a href="#优先级调整" class="anchor"></a>优先级调整</h3>
- <p>当消息到达 house 已在队列中，<code>change()</code> 检查 house 是否变为高优先级。如果是，通过 <code>adjustPriority()</code> 从普通子队列转移到高优先级子队列。</p>
-</section>
 <section id="priorityhousequeue">
  <h2 class="h500"><a href="#priorityhousequeue" class="anchor"></a>PriorityHouseQueue</h2>
  <p>双队列设计，普通和高优先级各有独立的链表，各自有 <code>SpinLock</code> 保护：</p>
@@ -181,9 +177,9 @@
  <h3 class="h400"><a href="#高优先级条件" class="anchor"></a>高优先级条件</h3>
  <p>Actor 在以下任一条件下变为高优先级：</p>
  <ul>
-  <li><code>replyMailbox.size() &gt; 2</code></li>
-  <li><code>eventMailbox.size() &gt; 4</code></li>
-  <li><code>stackEndRate &lt; 3</code>（发送了很多 Ask 但收到很少 Reply — 瓶颈）</li>
+  <li><code>replyMailbox.size() &gt; 2</code>——reply 积压，每条 reply 可完成一个 future 并可能解除挂起栈的阻塞</li>
+  <li><code>eventMailbox.size() &gt; 4</code>——event 积压，系统事件需要及时处理</li>
+  <li><code>pendingPromiseCount == 0</code>——无下游阻塞，该 actor 没有等待回复的 ask，没有 stack 因等待下游而挂起，调度它不会遇到下游阻塞</li>
  </ul>
 </section>
 <section id="工作窃取">
@@ -238,4 +234,4 @@
 <section id="关键设计无上下文切换">
  <h2 class="h500"><a href="#关键设计无上下文切换" class="anchor"></a>关键设计：无上下文切换</h2>
  <p><code>ActorThread</code> 直接在其线程上运行 actor。当 Stack 挂起（等待回复）时，它交出控制权。回复作为消息到达邮箱，当 house 被重新调度时，Stack 在<strong>同一线程</strong>上恢复。没有线程上下文切换 — 一切都在所属的 <code>ActorThread</code> 上进行。</p>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#线程模型">线程模型</a><ul><li><a href="#actorthread-主循环">ActorThread 主循环</a><ul><li><a href="#phase-1-io">Phase 1: IO</a></li><li><a href="#phase-2-io-pipeline">Phase 2: IO Pipeline</a></li><li><a href="#phase-3-business">Phase 3: Business</a></li><li><a href="#线程通知">线程通知</a></li></ul></li><li><a href="#housemanager">HouseManager</a><ul><li><a href="#路由">路由</a></li><li><a href="#优先级调整">优先级调整</a></li></ul></li><li><a href="#priorityhousequeue">PriorityHouseQueue</a><ul><li><a href="#spinlock-实现">SpinLock 实现</a></li></ul></li><li><a href="#actorhouse-状态机">ActorHouse 状态机</a><ul><li><a href="#五个邮箱">五个邮箱</a></li><li><a href="#调度顺序">调度顺序</a></li><li><a href="#高优先级条件">高优先级条件</a></li></ul></li><li><a href="#工作窃取">工作窃取</a></li><li><a href="#线程池">线程池</a><ul><li><a href="#actor-放置策略">Actor 放置策略</a></li></ul></li><li><a href="#内存保护">内存保护</a></li><li><a href="#关键设计无上下文切换">关键设计：无上下文切换</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#线程模型">线程模型</a><ul><li><a href="#actorthread-主循环">ActorThread 主循环</a><ul><li><a href="#phase-1-io">Phase 1: IO</a></li><li><a href="#phase-2-io-pipeline">Phase 2: IO Pipeline</a></li><li><a href="#phase-3-business">Phase 3: Business</a></li><li><a href="#线程通知">线程通知</a></li></ul></li><li><a href="#housemanager">HouseManager</a><ul><li><a href="#路由">路由</a></li></ul></li><li><a href="#priorityhousequeue">PriorityHouseQueue</a><ul><li><a href="#spinlock-实现">SpinLock 实现</a></li></ul></li><li><a href="#actorhouse-状态机">ActorHouse 状态机</a><ul><li><a href="#五个邮箱">五个邮箱</a></li><li><a href="#调度顺序">调度顺序</a></li><li><a href="#高优先级条件">高优先级条件</a></li></ul></li><li><a href="#工作窃取">工作窃取</a></li><li><a href="#线程池">线程池</a><ul><li><a href="#actor-放置策略">Actor 放置策略</a></li></ul></li><li><a href="#内存保护">内存保护</a></li><li><a href="#关键设计无上下文切换">关键设计：无上下文切换</a></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
