@@ -226,7 +226,7 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
             manager.runStateActors(deadline)
 
             // ---- Phase 4: Work stealing (only when idle) ----
-            if (!shuttingDown && !manager.runnable) manager.trySteal()
+            if (!shuttingDown) manager.trySteal()
         }
     }
 

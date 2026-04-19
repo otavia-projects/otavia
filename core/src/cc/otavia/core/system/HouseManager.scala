@@ -138,43 +138,69 @@ final class HouseManager(val thread: ActorThread) {
     // Work stealing
     // =========================================================================
 
-    private def stealable: Boolean = actorQueue.readies > STEAL_REMAINING_THRESHOLD
+    /** Consecutive event-loop iterations where all three queues were empty. Reset to 0 when the thread has work.
+     *  Used as the thief-side input to the adaptive steal condition (see [[stealableBy]]).
+     */
+    private var idleCount: Int = 0
 
-    /** Attempt to steal a StateActor from another [[ActorThread]]'s queue. Used for cross-thread load balancing.
-     *  Only steals from the normal-priority queue.
+    /** Whether this victim's queue is backlogged enough for a thief with the given [[idleCount]] to attempt stealing.
+     *
+     *  Adaptive steal condition: `readies > STEAL_FLOOR && idleCount × readies >= STEAL_AGGRESSION`
+     *
+     *  This ties the thief's idleness to the victim's backlog severity:
+     *    - Severe backlog (high readies) → few idle iterations needed (fast response to crisis)
+     *    - Moderate backlog → more idle iterations required (conservative, avoids stealing from a thread
+     *      that will self-drain shortly)
+     *    - Below STEAL_FLOOR → never steal (CPU cache cost of cross-thread execution outweighs benefit)
+     */
+    private def stealableBy(thiefIdleCount: Int): Boolean = {
+        val r = actorQueue.readies
+        r > STEAL_FLOOR && thiefIdleCount * r >= STEAL_AGGRESSION
+    }
+
+    /** Attempt to steal a StateActor from another [[ActorThread]]'s queue. Used as a safety net for extreme load
+     *  imbalance — the primary scheduling model keeps actors on their owning thread for CPU cache locality.
+     *
+     *  '''Idle tracking:''' [[idleCount]] is incremented each call (each idle event-loop iteration). It is reset when
+     *  the owning thread has work. This ensures only genuinely idle threads attempt stealing.
+     *
+     *  '''Victim selection:''' random starting index distributes multiple idle thieves across different victims. The
+     *  actual dequeue uses [[PriorityHouseQueue.stealDequeue]] (tryLock-based, no spinning) so that a contended victim
+     *  is skipped instantly without delaying either the thief or the victim.
+     *
+     *  '''Steal condition:''' see [[stealableBy]] — combines [[idleCount]] with victim queue depth.
      *
      *  @return
      *    true if a house was stolen and executed
      */
     def trySteal(): Boolean = {
-        if (actorQueue.nonEmpty || channelsActorQueue.nonEmpty) return false
-        val threads                         = thread.parent.workers
-        var i                               = 1
-        var continue: Boolean               = true
-        var stealThread: ActorThread | Null = null
-        while (i < threads.length && continue) {
-            val candidate = threads((i + this.thread.index) % threads.length)
-            i += 1
-            if (candidate != null && candidate.houseManager.stealable) {
-                continue = false
-                stealThread = candidate
+        if (runnable) { idleCount = 0; return false }
+        idleCount += 1
+
+        val threads = thread.parent.workers
+        val n       = threads.length
+        if (n <= 1) return false
+
+        val start = thread.random.nextInt(n)
+        var i     = 0
+        while (i < n) {
+            val idx = (start + i) % n
+            if (idx != thread.index) {
+                val candidate = threads(idx)
+                if (candidate != null && candidate.houseManager.stealableBy(idleCount)) {
+                    val house = candidate.houseManager.stealDequeue()
+                    if (house != null) {
+                        house.run()
+                        return true
+                    }
+                }
             }
+            i += 1
         }
-        if (stealThread != null) {
-            stealThread.houseManager.runSteal()
-        } else false
+        false
     }
 
-    /** Execute one stolen house. Called by the stealing thread. */
-    private def runSteal(): Boolean = {
-        if (actorQueue.available) {
-            val house = actorQueue.dequeue()
-            if (house != null) {
-                house.run()
-                true
-            } else false
-        } else false
-    }
+    private def stealDequeue(): ActorHouse | Null = actorQueue.stealDequeue()
 
     // =========================================================================
     // Monitoring
@@ -194,6 +220,14 @@ final class HouseManager(val thread: ActorThread) {
 
 object HouseManager {
 
-    private val STEAL_REMAINING_THRESHOLD = SystemPropertyUtil.getInt("cc.otavia.core.steal.threshold", 64)
+    /** Minimum victim queue depth to consider stealing. Below this threshold the owner thread will self-drain quickly,
+     *  and the CPU cache cost of cross-thread execution outweighs the benefit.
+     */
+    private val STEAL_FLOOR = SystemPropertyUtil.getInt("cc.otavia.core.steal.floor", 32)
+
+    /** Product threshold for the adaptive steal condition: `idleCount × readies >= STEAL_AGGRESSION`.
+     *  Higher values make stealing more conservative (require more idle iterations or deeper backlog).
+     */
+    private val STEAL_AGGRESSION = SystemPropertyUtil.getInt("cc.otavia.core.steal.aggression", 128)
 
 }

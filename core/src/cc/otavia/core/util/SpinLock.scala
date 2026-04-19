@@ -65,6 +65,12 @@ private[core] class SpinLock extends AtomicReference[Thread] {
         this.lazySet(null)
     }
 
+    /** Try to acquire the lock with a single CAS attempt. Returns immediately regardless of success. Unlike [[lock]],
+     *  this method never spins — suitable for opportunistic acquisitions where contention should result in immediate
+     *  fallback rather than waiting.
+     */
+    final def tryLock(): Boolean = compareAndSet(null, Thread.currentThread())
+
     /** Check the lock whether is locked. */
     final def isLocked: Boolean = this.get() != null
 

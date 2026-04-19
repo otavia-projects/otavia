@@ -32,8 +32,10 @@ import scala.language.unsafeNulls
  *  becomes high-priority while already queued will be correctly prioritized on its next enqueue (after
  *  [[ActorHouse.completeRunning]] re-evaluates the flag).
  *
- *  '''Concurrency model:''' SpinLock-based MPSC. Multiple producer threads can enqueue concurrently; only the owning
- *  ActorThread dequeues. Each sub-queue has independent read/write lock pairs to avoid cross-priority contention.
+ *  '''Concurrency model:''' SpinLock-based MPSC. Multiple producer threads can enqueue concurrently; the owning
+ *  ActorThread dequeues via [[dequeue]]. Other threads may attempt opportunistic steals via [[stealDequeue]], which
+ *  uses [[SpinLock.tryLock]] to avoid spinning on the owner's lock. Each sub-queue has independent read/write lock
+ *  pairs to avoid cross-priority contention.
  *
  *  '''Schedule() outside lock:''' the READY → SCHEDULED CAS in [[ActorHouse.schedule]] is performed after releasing
  *  the queue lock. This is safe because no other thread can change the house state between unlock and schedule: the
@@ -97,6 +99,41 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
         if (highSize.get() > 0) dequeuePriority()
         else if (size.get() > 0) dequeueNormal()
         else null
+    }
+
+    /** Opportunistic dequeue for cross-thread stealing. Uses [[SpinLock.tryLock()]] instead of [[SpinLock.lock()]] to
+     *  avoid the stealing thread spinning on the owning thread's lock. Returns null immediately if the lock is contended.
+     *
+     *  Only handles the size > 1 case. When size == 1, the dequeue path requires acquiring both readLock and writeLock
+     *  (to null out the tail pointer). Skipping this case is acceptable because the steal threshold (64+) guarantees the
+     *  queue is deep when stealing is attempted.
+     */
+    def stealDequeue(): ActorHouse | Null = {
+        // Try high-priority sub-queue first (consistent with dequeue contract)
+        if (highSize.get() > 1 && highReadLock.tryLock()) {
+            if (highSize.get() > 1) {
+                val house = highHead
+                highHead = house.next
+                highSize.decrementAndGet()
+                highReadLock.unlock()
+                house.schedule()
+                return house
+            }
+            highReadLock.unlock()
+        }
+        // Try normal-priority sub-queue
+        if (size.get() > 1 && readLock.tryLock()) {
+            if (size.get() > 1) {
+                val house = head
+                head = house.next
+                size.decrementAndGet()
+                readLock.unlock()
+                house.schedule()
+                return house
+            }
+            readLock.unlock()
+        }
+        null
     }
 
     private def dequeueNormal(): ActorHouse | Null = {

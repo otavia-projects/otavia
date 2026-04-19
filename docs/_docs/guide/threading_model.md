@@ -129,14 +129,38 @@ An Actor becomes high priority when any of the following is true:
 
 ## Work Stealing
 
-When a thread's own queues are empty, it attempts to steal from other threads:
+When a thread's own queues are empty, it attempts to steal from other threads as a safety net for extreme load imbalance. The primary scheduling model keeps actors on their owning thread for CPU cache locality — stealing only activates when a thread is genuinely idle and another thread is genuinely overwhelmed.
 
-1. Iterates other threads starting from `(1 + thisThread.index) % length` (round-robin offset prevents all idle threads targeting thread 0)
-2. Steal conditions (any):
-   - Target `actorQueue.readies > 16` (severe backlog)
-   - Target running time is greater than 2000 microseconds with pending actors (stuck thread)
+### Idle Detection
+
+A thread tracks consecutive event-loop iterations where all three queues were empty (`idleCount`). This counter resets to 0 whenever the thread has work. A thread with moderate but steady load never accumulates idle iterations and never steals.
+
+### Adaptive Steal Condition
+
+The steal decision combines the thief's `idleCount` with the victim's queue depth (`readies`):
+
+```
+readies > STEAL_FLOOR  AND  idleCount × readies >= STEAL_AGGRESSION
+```
+
+This ties aggressiveness to imbalance severity:
+
+| Victim backlog | Thief idle iterations needed | Rationale |
+|----------------|------------------------------|-----------|
+| 128+ | 1 | Severe crisis — immediate response |
+| 64+ | 2 | Moderate backlog — confirm idleness |
+| 32+ | 4 | Mild backlog — conservative |
+| < 32 | never | Self-drains quickly; cache cost outweighs benefit |
+
+Defaults: `STEAL_FLOOR = 32`, `STEAL_AGGRESSION = 128` (configurable via `cc.otavia.core.steal.floor` and `cc.otavia.core.steal.aggression`).
+
+### Steal Mechanics
+
+1. Picks a random starting index and scans all other threads
+2. Uses `tryLock` on the victim's queue — if contended, skips to next candidate without spinning
 3. Steals ONE house from the victim's `actorQueue` and runs it inline
 4. Only state actors are stolen (`ChannelsActor`s are bound to their thread's `IoHandler`)
+5. After execution, the stolen house re-enters the victim's queue (actors are pinned to their owning thread)
 
 ## Thread Pool
 
