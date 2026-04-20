@@ -57,13 +57,13 @@ class Mailbox(val house: ActorHouse) {
     def get[T <: Nextable](): T = {
         lock.lock()
         try {
-            var obj: Nextable = null
+            if (count == 0) return null.asInstanceOf[T]
+
+            val obj = head
             if (count == 1) {
-                obj = head
                 head = null
                 tail = null
             } else {
-                obj = head
                 head = obj.next
                 obj.unlink()
             }

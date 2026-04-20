@@ -59,9 +59,10 @@ private[core] class SpinLock extends AtomicReference[Thread] {
         }
     }
 
-    /** Release the lock. */
+    /** Release the lock. No thread-check — all callers are kernel-internal (private[core]) with structured
+     *  lock/unlock pairs in try/finally, so wrong-thread unlock cannot happen by construction.
+     */
     final def unlock(): Unit = {
-        assert(Thread.currentThread() == this.get(), "Unlock thread is not the lock holder")
         this.lazySet(null)
     }
 

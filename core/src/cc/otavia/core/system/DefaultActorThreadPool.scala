@@ -58,8 +58,4 @@ class DefaultActorThreadPool(
 
     override def workers: Array[ActorThread] = threads
 
-    override def busiest: Option[ActorThread] = {
-        ???
-    }
-
 }
