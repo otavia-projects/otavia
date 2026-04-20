@@ -1696,7 +1696,6 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"docs","t":"docs","d":"","k":"s
 {"l":"cc/otavia/core/system/ActorThreadFactory$$DefaultActorThreadFactory.html#","e":false,"i":"","n":"DefaultActorThreadFactory","t":"DefaultActorThreadFactory extends ActorThreadFactory","d":"cc.otavia.core.system.ActorThreadFactory","k":"class","x":""},
 {"l":"cc/otavia/core/system/ActorThreadPool.html#","e":false,"i":"","n":"ActorThreadPool","t":"ActorThreadPool","d":"cc.otavia.core.system","k":"trait","x":""},
 {"l":"cc/otavia/core/system/ActorThreadPool.html#actorThreadFactory-0","e":false,"i":"","n":"actorThreadFactory","t":"actorThreadFactory: ActorThreadFactory","d":"cc.otavia.core.system.ActorThreadPool","k":"def","x":""},
-{"l":"cc/otavia/core/system/ActorThreadPool.html#busiest-0","e":false,"i":"","n":"busiest","t":"busiest: Option[ActorThread]","d":"cc.otavia.core.system.ActorThreadPool","k":"def","x":""},
 {"l":"cc/otavia/core/system/ActorThreadPool.html#isInit-0","e":false,"i":"","n":"isInit","t":"isInit: Boolean","d":"cc.otavia.core.system.ActorThreadPool","k":"def","x":""},
 {"l":"cc/otavia/core/system/ActorThreadPool.html#next-fffff321","e":false,"i":"","n":"next","t":"next(channels: Boolean = ...): ActorThread","d":"cc.otavia.core.system.ActorThreadPool","k":"def","x":""},
 {"l":"cc/otavia/core/system/ActorThreadPool.html#nextThreadId-ffffff27","e":false,"i":"","n":"nextThreadId","t":"nextThreadId(): Int","d":"cc.otavia.core.system.ActorThreadPool","k":"def","x":""},
