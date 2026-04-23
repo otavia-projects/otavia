@@ -208,7 +208,7 @@ final class HouseManager(val thread: ActorThread) {
     def monitor(): HouseManagerMonitor = HouseManagerMonitor(
       mountingQueue.readies,
       channelsActorQueue.readies,
-      actorQueue.readies,
+      channelsActorQueue.readies,
       actorQueue.readies
     )
 
