@@ -238,8 +238,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
             val tasks = house.manager.laterTasks
             while (tasks.nonEmpty) {
                 val task = tasks.removeHead()
-                try task.run()
-                catch { case t: Throwable => throw t }
+                task.run()
             }
         }
     }
