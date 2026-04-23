@@ -1949,7 +1949,7 @@ pages = [{"l":"index.html#","e":false,"i":"","n":"docs","t":"docs","d":"","k":"s
 {"l":"cc/otavia/core/util/CompressionBooleanLong.html#toBinaryString-665","e":false,"i":"","n":"toBinaryString","t":"toBinaryString(): String","d":"cc.otavia.core.util.CompressionBooleanLong","k":"def","x":""},
 {"l":"cc/otavia/core/util/NettyCompatibleError.html#","e":false,"i":"","n":"NettyCompatibleError","t":"NettyCompatibleError(msg: String) extends Error","d":"cc.otavia.core.util","k":"class","x":""},
 {"l":"cc/otavia/core/util/NettyCompatibleError.html#<init>-fffffe3d","e":false,"i":"","n":"this","t":"this()","d":"cc.otavia.core.util.NettyCompatibleError","k":"def","x":""},
-{"l":"cc/otavia/core/util/SpinLockQueue.html#","e":false,"i":"","n":"SpinLockQueue","t":"SpinLockQueue[T <: Nextable]","d":"cc.otavia.core.util","k":"class","x":""},
+{"l":"cc/otavia/core/util/SpinLockQueue.html#","e":false,"i":"","n":"SpinLockQueue","t":"SpinLockQueue[T <: Nextable](config: SpinLockConfig = ...)","d":"cc.otavia.core.util","k":"class","x":""},
 {"l":"cc/otavia/core/util/SpinLockQueue.html#dequeue-738","e":false,"i":"","n":"dequeue","t":"dequeue(): T | Null","d":"cc.otavia.core.util.SpinLockQueue","k":"def","x":""},
 {"l":"cc/otavia/core/util/SpinLockQueue.html#enqueue-fffffa84","e":false,"i":"","n":"enqueue","t":"enqueue(instance: T): Unit","d":"cc.otavia.core.util.SpinLockQueue","k":"def","x":""},
 {"l":"cc/otavia/core/util/SpinLockQueue.html#isEmpty-0","e":false,"i":"","n":"isEmpty","t":"isEmpty: Boolean","d":"cc.otavia.core.util.SpinLockQueue","k":"def","x":""},
