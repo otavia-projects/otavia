@@ -17,12 +17,13 @@
 package cc.otavia.core.system
 
 import cc.otavia.core.util.{Nextable, SpinLock}
+import cc.otavia.core.config.SpinLockConfig
 
 import scala.language.unsafeNulls
 
 class Mailbox(val house: ActorHouse) {
 
-    private val lock = new SpinLock
+    private val lock = new SpinLock(house.manager.thread.system.config.spinLock)
 
     private var head: Nextable = _
     private var tail: Nextable = _

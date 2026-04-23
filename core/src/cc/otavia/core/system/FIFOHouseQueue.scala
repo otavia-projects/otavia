@@ -17,6 +17,7 @@
 package cc.otavia.core.system
 
 import cc.otavia.core.util.{Nextable, SpinLock}
+import cc.otavia.core.config.SpinLockConfig
 
 import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
@@ -24,8 +25,9 @@ import scala.language.unsafeNulls
 // MPSC
 class FIFOHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
 
-    private val readLock                   = new SpinLock()
-    private val writeLock                  = new SpinLock()
+    private val spinLockConfig             = manager.thread.system.config.spinLock
+    private val readLock                   = new SpinLock(spinLockConfig)
+    private val writeLock                  = new SpinLock(spinLockConfig)
     private val size                       = new AtomicInteger(0)
     @volatile private var head: ActorHouse = _
     @volatile private var tail: ActorHouse = _

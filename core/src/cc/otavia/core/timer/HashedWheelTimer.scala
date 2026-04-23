@@ -289,8 +289,8 @@ class HashedWheelTimer(
         } else d
     }
 
-    private[timer] val timeouts          = new SpinLockQueue[HashedWheelTimeout]()
-    private[timer] val cancelledTimeouts = new SpinLockQueue[HashedWheelTimeout]()
+    private[timer] val timeouts          = new SpinLockQueue[HashedWheelTimeout](system.config.spinLock)
+    private[timer] val cancelledTimeouts = new SpinLockQueue[HashedWheelTimeout](system.config.spinLock)
 
     private val pendingTimeouts = new AtomicLong(0)
 

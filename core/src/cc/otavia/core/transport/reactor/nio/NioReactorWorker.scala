@@ -39,7 +39,7 @@ final class NioReactorWorker(
 
     private val logger: Logger = Logger.getLogger(getClass, system)
 
-    private val commandQueue = new SpinLockQueue[Command]()
+    private val commandQueue = new SpinLockQueue[Command](system.config.spinLock)
 
     private var thread: Thread = _
 

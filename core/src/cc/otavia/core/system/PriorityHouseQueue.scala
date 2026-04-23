@@ -17,6 +17,7 @@
 package cc.otavia.core.system
 
 import cc.otavia.core.util.{Nextable, SpinLock}
+import cc.otavia.core.config.SpinLockConfig
 
 import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
@@ -43,16 +44,18 @@ import scala.language.unsafeNulls
  */
 class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
 
+    private val spinLockConfig = manager.thread.system.config.spinLock
+
     // Normal-priority sub-queue (SpinLock-based MPSC singly-linked list)
-    private val readLock                   = new SpinLock()
-    private val writeLock                  = new SpinLock()
+    private val readLock                   = new SpinLock(spinLockConfig)
+    private val writeLock                  = new SpinLock(spinLockConfig)
     private val size                       = new AtomicInteger(0)
     @volatile private var head: ActorHouse = _
     @volatile private var tail: ActorHouse = _
 
     // High-priority sub-queue (SpinLock-based MPSC singly-linked list)
-    private val highReadLock                   = new SpinLock()
-    private val highWriteLock                  = new SpinLock()
+    private val highReadLock                   = new SpinLock(spinLockConfig)
+    private val highWriteLock                  = new SpinLock(spinLockConfig)
     private val highSize                       = new AtomicInteger(0)
     @volatile private var highHead: ActorHouse = _
     @volatile private var highTail: ActorHouse = _

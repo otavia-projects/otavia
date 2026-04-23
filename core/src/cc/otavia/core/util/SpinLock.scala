@@ -16,20 +16,18 @@
 
 package cc.otavia.core.util
 
+import cc.otavia.core.config.SpinLockConfig
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.LockSupport
 import scala.language.unsafeNulls
 
-private[core] class SpinLock extends AtomicReference[Thread] {
+private[core] class SpinLock(config: SpinLockConfig = SpinLockConfig()) extends AtomicReference[Thread] {
 
-    // Phase 1: pure spin (x86 PAUSE instruction). Covers the common case — uncontended or lightly contended lock
-    // acquisition where the holder releases within a few nanoseconds.
-    private val SPIN_THRESHOLD = 100
+    private val spinThreshold = config.spinThreshold
 
-    // Phase 2: Thread.yield(). Entered when the lock holder has been preempted by the OS scheduler or paused by a
-    // brief GC event. yield() hints the scheduler to deschedule this thread, giving the holder a chance to run and
-    // release. Beyond this threshold the holder is likely blocked by a long GC STW pause, so we switch to parking.
-    private val YIELD_THRESHOLD = 200
+    private val yieldThreshold = config.yieldThreshold
+
+    private val parkNanos = config.parkNanos
 
     /** Acquire the lock using adaptive spinning with progressive backoff.
      *
@@ -50,11 +48,11 @@ private[core] class SpinLock extends AtomicReference[Thread] {
         var spins  = 0
         while (!this.compareAndSet(null, thread)) {
             spins += 1
-            if spins < SPIN_THRESHOLD then Thread.onSpinWait()
-            else if spins < YIELD_THRESHOLD then Thread.`yield`()
+            if spins < spinThreshold then Thread.onSpinWait()
+            else if spins < yieldThreshold then Thread.`yield`()
             else {
-                LockSupport.parkNanos(1000L)
-                spins = YIELD_THRESHOLD // reset to avoid growing indefinitely
+                LockSupport.parkNanos(parkNanos)
+                spins = yieldThreshold // reset to avoid growing indefinitely
             }
         }
     }

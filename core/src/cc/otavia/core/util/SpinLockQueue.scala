@@ -16,12 +16,13 @@
 
 package cc.otavia.core.util
 
+import cc.otavia.core.config.SpinLockConfig
 import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
 
-class SpinLockQueue[T <: Nextable] {
+class SpinLockQueue[T <: Nextable](config: SpinLockConfig = SpinLockConfig()) {
 
-    private val lock = new SpinLock()
+    private val lock = new SpinLock(config)
     private val size = new AtomicInteger(0)
 
     @volatile private var head: T | Null = _
