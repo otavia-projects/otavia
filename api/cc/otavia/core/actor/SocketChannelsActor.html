@@ -10,7 +10,7 @@
 </div>
 <div class="main-signature mono-small-block">
  <div class="signature">
-  <span class="signature-short"><span class="modifiers"><span t="k">abstract </span></span><span class="kind"><span t="k">class </span></span><a href="SocketChannelsActor.html" t="n" class="documentableName ">SocketChannelsActor</a>[<span t="k"></span><span data-unresolved-link="" t="t">M</span><span t="k"> &lt;: </span><a href="../message/Call.html" t="t">Call</a>]<span t="k"> extends </span><a href="ChannelsActor.html" t="t">ChannelsActor</a>[<span t="t">M</span>]</span><span class="signature-long"></span>
+  <span class="signature-short"><span class="modifiers"><span t="k">abstract </span></span><span class="kind"><span t="k">class </span></span><a href="SocketChannelsActor.html" t="n" class="documentableName ">SocketChannelsActor</a>[<span t="k"></span><span data-unresolved-link="" t="t">M</span><span t="k"> &lt;: </span><a href="../message/Call.html" t="t">Call</a>]<span t="k"> extends </span><a href="ChannelsActor.html" t="t">ChannelsActor</a>[<span t="t">M</span>]<span t="k">, </span></span><span class="signature-long"><a href="AutoCleanable.html" t="t">AutoCleanable</a></span>
  </div>
 </div>
 <div class="cover">
@@ -50,9 +50,10 @@ node2 [id=node2, label="<span style=\"color: #FFFFFF;\">class <span data-unresol
 node3 [id=node3, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Any</span></span>", class="class vertex"];
 node4 [id=node4, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Matchable</span></span>", class="trait vertex"];
 node5 [id=node5, label="<span style=\"color: #FFFFFF;\">trait <a href=\"Actor.html\" t=\"n\">Actor</a>[<span t=\"t\">M</span>]</span>", class="trait vertex"];
-node6 [id=node6, label="<span style=\"color: #FFFFFF;\">class <a href=\"../../http/client/HttpClient.html\" t=\"n\">HttpClient</a></span>", class="class vertex"];
-node7 [id=node7, label="<span style=\"color: #FFFFFF;\">class <a href=\"../../redis/Client.html\" t=\"n\">Client</a></span>", class="class vertex"];
-node8 [id=node8, label="<span style=\"color: #FFFFFF;\">class <a href=\"../../sql/Connection.html\" t=\"n\">Connection</a></span>", class="class vertex"];
+node6 [id=node6, label="<span style=\"color: #FFFFFF;\">trait <a href=\"AutoCleanable.html\" t=\"n\">AutoCleanable</a></span>", class="trait vertex"];
+node7 [id=node7, label="<span style=\"color: #FFFFFF;\">class <a href=\"../../http/client/HttpClient.html\" t=\"n\">HttpClient</a></span>", class="class vertex"];
+node8 [id=node8, label="<span style=\"color: #FFFFFF;\">class <a href=\"../../redis/Client.html\" t=\"n\">Client</a></span>", class="class vertex"];
+node9 [id=node9, label="<span style=\"color: #FFFFFF;\">class <a href=\"../../sql/Connection.html\" t=\"n\">Connection</a></span>", class="class vertex"];
 
 
  node0 -> node1;
@@ -62,9 +63,11 @@ node2 -> node4;
 node4 -> node3;
 node1 -> node5;
 node5 -> node2;
-node6 -> node0;
+node0 -> node6;
+node6 -> node2;
 node7 -> node0;
 node8 -> node0;
+node9 -> node0;
 
 }
 </script>
@@ -75,6 +78,9 @@ node8 -> node0;
    </dt>
    <dd class="body-medium">
     <div class="mono-small-block supertypes">
+     <div>
+      trait <a href="AutoCleanable.html" t="n">AutoCleanable</a>
+     </div>
      <div>
       class <a href="ChannelsActor.html" t="n">ChannelsActor</a>[<span t="t">M</span>]
      </div>
@@ -89,7 +95,7 @@ node8 -> node0;
      </div>
      <div>
       class <span data-unresolved-link="" t="n">Any</span>
-     </div><span></span>
+     </div><span class="show-all-code show-content text-button h100">Show all</span>
     </div>
    </dd>
    <dt class="body-small">
@@ -124,6 +130,51 @@ node8 -> node0;
       <div class="member-group-header">
        <h3 data-togglable="Value members" class="h400">Value members</h3>
       </div>
+      <section id="Concrete-methods">
+       <div class="documentableList expand">
+        <div class="documentableList-expander">
+         <button class="icon-button show-content expand"></button>
+         <h4 class="groupHeader h200">Concrete methods</h4>
+        </div>
+        <div class="documentableElement" id="cleaner-fffff3fb" data-f-keywords="override">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="SocketChannelsActor.html#cleaner-fffff3fb" t="n" class="documentableName ">cleaner</a>(<span t="k"></span>): <a href="ActorCleaner.html" t="t">ActorCleaner</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>if restart method throw NotImplementedError, actor system will call this method and mark the actor instance dead, and release is resource.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>if restart method throw NotImplementedError, actor system will call this method and mark the actor instance dead, and release is resource.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="AutoCleanable.html">AutoCleanable</a>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+      </section>
       <section id="Inherited-methods">
        <div class="documentableList expand">
         <div class="documentableList-expander">
@@ -921,4 +972,4 @@ node8 -> node0;
    </div>
   </div>
  </div>
-</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Type parameters</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Inherited-methods">Inherited methods</a></li><li><a href="#Inherited-fields">Inherited fields</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#attributes">Type parameters</a></li><li><a href="#members-list">Members list</a><ul><li><a href="#Value-members">Value members</a><ul><li><a href="#Concrete-methods">Concrete methods</a></li><li><a href="#Inherited-methods">Inherited methods</a></li><li><a href="#Inherited-fields">Inherited fields</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><a href="https://github.com/otavia-projects/otavia"><button class="icon-button gh"></button></a><div class="text">Copyright (c) 2022, Yan Kun/Otavia Project</div></div><div class="text-mobile">Copyright (c) 2022, Yan Kun/Otavia Project</div></div></div></div></body></html>

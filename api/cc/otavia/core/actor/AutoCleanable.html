@@ -27,12 +27,20 @@
 node1 [id=node1, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Object</span></span>", class="class vertex"];
 node2 [id=node2, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Any</span></span>", class="class vertex"];
 node3 [id=node3, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Matchable</span></span>", class="trait vertex"];
+node4 [id=node4, label="<span style=\"color: #FFFFFF;\">class <a href=\"SocketChannelsActor.html\" t=\"n\">SocketChannelsActor</a>[<span t=\"t\">M</span>]</span>", class="class vertex"];
+node5 [id=node5, label="<span style=\"color: #FFFFFF;\">class <a href=\"../../http/client/HttpClient.html\" t=\"n\">HttpClient</a></span>", class="class vertex"];
+node6 [id=node6, label="<span style=\"color: #FFFFFF;\">class <a href=\"../../redis/Client.html\" t=\"n\">Client</a></span>", class="class vertex"];
+node7 [id=node7, label="<span style=\"color: #FFFFFF;\">class <a href=\"../../sql/Connection.html\" t=\"n\">Connection</a></span>", class="class vertex"];
 
 
  node0 -> node1;
 node1 -> node2;
 node1 -> node3;
 node3 -> node2;
+node4 -> node0;
+node5 -> node4;
+node6 -> node4;
+node7 -> node4;
 
 }
 </script>
@@ -51,6 +59,25 @@ node3 -> node2;
      </div>
      <div>
       class <span data-unresolved-link="" t="n">Any</span>
+     </div><span></span>
+    </div>
+   </dd>
+   <dt class="body-small">
+    Known subtypes
+   </dt>
+   <dd class="body-medium">
+    <div class="mono-small-block subtypes">
+     <div>
+      class <a href="SocketChannelsActor.html" t="n">SocketChannelsActor</a>[<span t="t">M</span>]
+     </div>
+     <div>
+      class <a href="../../http/client/HttpClient.html" t="n">HttpClient</a>
+     </div>
+     <div>
+      class <a href="../../redis/Client.html" t="n">Client</a>
+     </div>
+     <div>
+      class <a href="../../sql/Connection.html" t="n">Connection</a>
      </div><span></span>
     </div>
    </dd>

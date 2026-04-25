@@ -39,6 +39,7 @@ node3 [id=node3, label="<span style=\"color: #FFFFFF;\">class <span data-unresol
 node4 [id=node4, label="<span style=\"color: #FFFFFF;\">class <span data-unresolved-link=\"\" t=\"n\">Any</span></span>", class="class vertex"];
 node5 [id=node5, label="<span style=\"color: #FFFFFF;\">trait <span data-unresolved-link=\"\" t=\"n\">Matchable</span></span>", class="trait vertex"];
 node6 [id=node6, label="<span style=\"color: #FFFFFF;\">trait <a href=\"../../core/actor/Actor.html\" t=\"n\">Actor</a>[<a href=\"HttpClientRequest.html\" t=\"t\">HttpClientRequest</a><span t=\"k\"> | </span><a href=\"../../core/actor/SocketChannelsActor$$Connect.html\" t=\"t\">Connect</a>]</span>", class="trait vertex"];
+node7 [id=node7, label="<span style=\"color: #FFFFFF;\">trait <a href=\"../../core/actor/AutoCleanable.html\" t=\"n\">AutoCleanable</a></span>", class="trait vertex"];
 
 
  node0 -> node1;
@@ -49,6 +50,8 @@ node3 -> node5;
 node5 -> node4;
 node2 -> node6;
 node6 -> node3;
+node1 -> node7;
+node7 -> node3;
 
 }
 </script>
@@ -61,6 +64,9 @@ node6 -> node3;
     <div class="mono-small-block supertypes">
      <div>
       class <a href="../../core/actor/SocketChannelsActor.html" t="n">SocketChannelsActor</a>[<a href="HttpClientRequest.html" t="t">HttpClientRequest</a><span t="k"> | </span><a href="../../core/actor/SocketChannelsActor$$Connect.html" t="t">Connect</a>]
+     </div>
+     <div>
+      trait <a href="../../core/actor/AutoCleanable.html" t="n">AutoCleanable</a>
      </div>
      <div>
       class <a href="../../core/actor/ChannelsActor.html" t="n">ChannelsActor</a>[<a href="HttpClientRequest.html" t="t">HttpClientRequest</a><span t="k"> | </span><a href="../../core/actor/SocketChannelsActor$$Connect.html" t="t">Connect</a>]
@@ -265,6 +271,49 @@ node6 -> node3;
               </dt>
               <dd class="body-medium">
                <a href="../../core/actor/Actor.html#batchable-0">Actor</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" id="cleaner-fffff3fb" data-f-keywords="override" data-f-inherited="SocketChannelsActor">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="HttpClient.html#cleaner-fffff3fb" t="n" class="documentableName ">cleaner</a>(<span t="k"></span>): <a href="../../core/actor/ActorCleaner.html" t="t">ActorCleaner</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>if restart method throw NotImplementedError, actor system will call this method and mark the actor instance dead, and release is resource.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>if restart method throw NotImplementedError, actor system will call this method and mark the actor instance dead, and release is resource.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="../../core/actor/SocketChannelsActor.html#cleaner-fffff3fb">SocketChannelsActor</a> -&gt; <a href="../../core/actor/AutoCleanable.html">AutoCleanable</a>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../../core/actor/SocketChannelsActor.html#cleaner-fffff3fb">SocketChannelsActor</a>
               </dd>
              </dl>
             </div>
