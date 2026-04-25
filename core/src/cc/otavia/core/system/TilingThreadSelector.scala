@@ -29,6 +29,8 @@ class TilingThreadSelector(private val threads: Array[ActorThread]) extends Thre
     }
 
     override def select(num: Int): Seq[ActorThread] = {
+        require(num > 0, "num must be positive")
+
         val mod = num % threads.length
         val fac = num / threads.length
 

@@ -28,7 +28,7 @@ class RobinAddress[M <: Call](val underlying: Array[ActorAddress[M]], val loadBa
 
     override def notice(notice: M & Notice): Unit = {
         val index = noticeCursor % underlying.length
-        noticeCursor += 1
+        noticeCursor = (noticeCursor + 1) & Int.MaxValue
         underlying(index).notice(notice)
     }
 
@@ -56,7 +56,7 @@ class RobinAddress[M <: Call](val underlying: Array[ActorAddress[M]], val loadBa
             underlying(sender.context.mountedThreadId)
         } else {
             val index = askCursor % underlying.length
-            askCursor += 1
+            askCursor = (askCursor + 1) & Int.MaxValue
             underlying(index)
         }
     }

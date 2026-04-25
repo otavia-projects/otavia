@@ -252,9 +252,12 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
     private def runThreadEvent(): Boolean = {
         val run = eventQueueSize.get() > 0
         while (eventQueueSize.get() > 0) {
-            val event = eventQueue.poll().asInstanceOf[ResourceTimeoutEvent]
-            eventQueueSize.decrementAndGet()
-            event.cache.parent.handleTimeout(event.registerId, event.cache)
+            eventQueue.poll() match
+                case event: ResourceTimeoutEvent =>
+                    eventQueueSize.decrementAndGet()
+                    event.cache.parent.handleTimeout(event.registerId, event.cache)
+                case _ =>
+                    eventQueueSize.decrementAndGet()
         }
         run
     }

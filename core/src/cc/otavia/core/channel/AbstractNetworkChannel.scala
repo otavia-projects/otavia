@@ -427,6 +427,7 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
                         pipeline.removeLast()
                     } catch {
                         case t: Throwable =>
+                            logger.warn("Failed to remove a handler during channel deregistration.", t)
                     }
                 }
             }

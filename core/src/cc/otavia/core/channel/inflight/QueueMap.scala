@@ -33,7 +33,7 @@ class QueueMap[V <: QueueMapEntity] extends Iterator[V] {
 
     private var cursor: QueueMapEntity = _
 
-    private final def loadFactor: Double   = 2.0
+    private final def loadFactor: Double   = 0.75
     private final def initialCapacity: Int = 8
     private def newThreshold(size: Int)    = (size.toDouble * loadFactor).toInt
 
@@ -72,7 +72,9 @@ class QueueMap[V <: QueueMapEntity] extends Iterator[V] {
         contentSize += 1
     }
 
-    final private[core] def pop(): V = if (contentSize == 1) {
+    final private[core] def pop(): V = if (contentSize == 0) {
+        throw new NoSuchElementException("QueueMap is empty")
+    } else if (contentSize == 1) {
         val entity = hd
         hd = null
         tl = null
@@ -89,6 +91,8 @@ class QueueMap[V <: QueueMapEntity] extends Iterator[V] {
 
     final private[core] def remove(id: Long): V = {
         val entity = remove0(id)
+
+        if (entity == null) throw new NoSuchElementException(s"QueueMap has no entity with id $id")
 
         val pre  = entity.queueEarlier
         val next = entity.queueLater

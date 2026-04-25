@@ -163,13 +163,18 @@ class ActorSystemConfigBuilder {
 
     private[config] def build(): ActorSystemConfig = {
         val defaultCpus = Runtime.getRuntime.availableProcessors()
-        val poolSize = _actorThreadPoolSize
+        val rawPoolSize = _actorThreadPoolSize
             .orElse(SysPropResolver.intOpt("cc.otavia.actor.worker.size"))
             .orElse(
                 SysPropResolver.floatOpt("cc.otavia.actor.worker.ratio")
                     .map(r => (r * defaultCpus).toInt)
             )
             .getOrElse(defaultCpus)
+        val poolSize =
+            if (rawPoolSize < 1) {
+                Report.report(s"cc.otavia.actor.worker.size can't set $rawPoolSize, it must >= 1, set $defaultCpus default")
+                defaultCpus
+            } else rawPoolSize
 
         val durationMs = _memoryMonitorDurationMs
             .orElse(SysPropResolver.intOpt("cc.otavia.system.memory.monitor.duration"))
@@ -277,20 +282,50 @@ class SchedulerConfigBuilder {
     def stealFloor(value: Int): this.type = { _stealFloor = Some(value); this }
     def stealAggression(value: Int): this.type = { _stealAggression = Some(value); this }
 
-    private[config] def build(): SchedulerConfig = SchedulerConfig(
-        ioRatio = _ioRatio
+    private[config] def build(): SchedulerConfig = {
+        val rawIoRatio = _ioRatio
             .orElse(SysPropResolver.intOpt("cc.otavia.actor.io.ratio"))
-            .getOrElse(50),
-        minBudgetMicros = _minBudgetMicros
+            .getOrElse(50)
+        val ioRatio =
+            if (rawIoRatio <= 0 || rawIoRatio > 100) {
+                Report.report(s"cc.otavia.actor.io.ratio can't set $rawIoRatio, it must in (0, 100], set 50 default")
+                50
+            } else rawIoRatio
+
+        val rawMinBudget = _minBudgetMicros
             .orElse(SysPropResolver.intOpt("cc.otavia.actor.min.budget.microsecond"))
-            .getOrElse(500),
-        stealFloor = _stealFloor
+            .getOrElse(500)
+        val minBudgetMicros =
+            if (rawMinBudget < 1) {
+                Report.report(s"cc.otavia.actor.min.budget.microsecond can't set $rawMinBudget, it must >= 1, set 500 default")
+                500
+            } else rawMinBudget
+
+        val rawStealFloor = _stealFloor
             .orElse(SysPropResolver.intOpt("cc.otavia.core.steal.floor"))
-            .getOrElse(32),
-        stealAggression = _stealAggression
+            .getOrElse(32)
+        val stealFloor =
+            if (rawStealFloor < 1) {
+                Report.report(s"cc.otavia.core.steal.floor can't set $rawStealFloor, it must >= 1, set 32 default")
+                32
+            } else rawStealFloor
+
+        val rawStealAggression = _stealAggression
             .orElse(SysPropResolver.intOpt("cc.otavia.core.steal.aggression"))
             .getOrElse(128)
-    )
+        val stealAggression =
+            if (rawStealAggression <= stealFloor) {
+                Report.report(s"cc.otavia.core.steal.aggression can't set $rawStealAggression, it must > stealFloor($stealFloor), set 128 default")
+                128
+            } else rawStealAggression
+
+        SchedulerConfig(
+            ioRatio = ioRatio,
+            minBudgetMicros = minBudgetMicros,
+            stealFloor = stealFloor,
+            stealAggression = stealAggression
+        )
+    }
 }
 
 // --- ReactorConfig ---
@@ -308,13 +343,18 @@ class ReactorConfigBuilder {
 
     private[config] def build(): ReactorConfig = {
         val defaultCpus = Runtime.getRuntime.availableProcessors()
-        val nioSize = _nioWorkerSize
+        val rawNioSize = _nioWorkerSize
             .orElse(SysPropResolver.intOpt("cc.otavia.nio.worker.size"))
             .orElse(
                 SysPropResolver.floatOpt("cc.otavia.nio.worker.ratio")
                     .map(r => (r * defaultCpus).toInt)
             )
             .getOrElse(defaultCpus)
+        val nioSize =
+            if (rawNioSize < 1) {
+                Report.report(s"cc.otavia.nio.worker.size can't set $rawNioSize, it must >= 1, set $defaultCpus default")
+                defaultCpus
+            } else rawNioSize
 
         ReactorConfig(
             maxTasksPerRun = _maxTasksPerRun
@@ -350,14 +390,24 @@ class ChannelConfigBuilder {
     def maxStackInflight(value: Int): this.type = { _maxStackInflight = Some(value); this }
     def maxMessagesPerRead(value: Int): this.type = { _maxMessagesPerRead = Some(value); this }
 
-    private[config] def build(): ChannelConfig = ChannelConfig(
-        connectTimeoutMs   = _connectTimeoutMs.getOrElse(30000),
-        writeWaterMarkLow  = _writeWaterMarkLow.getOrElse(32768),
-        writeWaterMarkHigh = _writeWaterMarkHigh.getOrElse(65536),
-        maxFutureInflight  = _maxFutureInflight.getOrElse(1),
-        maxStackInflight   = _maxStackInflight.getOrElse(1),
-        maxMessagesPerRead = _maxMessagesPerRead.getOrElse(16)
-    )
+    private[config] def build(): ChannelConfig = {
+        val rawLow  = _writeWaterMarkLow.getOrElse(32768)
+        val rawHigh = _writeWaterMarkHigh.getOrElse(65536)
+        val (writeWaterMarkLow, writeWaterMarkHigh) =
+            if (rawLow < 1 || rawHigh < 1 || rawLow >= rawHigh) {
+                Report.report(s"cc.otavia.channel.writeWaterMark[$rawLow, $rawHigh] invalid, must satisfy 1 <= low < high, set [32768, 65536] default")
+                (32768, 65536)
+            } else (rawLow, rawHigh)
+
+        ChannelConfig(
+            connectTimeoutMs   = _connectTimeoutMs.getOrElse(30000),
+            writeWaterMarkLow  = writeWaterMarkLow,
+            writeWaterMarkHigh = writeWaterMarkHigh,
+            maxFutureInflight  = _maxFutureInflight.getOrElse(1),
+            maxStackInflight   = _maxStackInflight.getOrElse(1),
+            maxMessagesPerRead = _maxMessagesPerRead.getOrElse(16)
+        )
+    }
 }
 
 // --- TimerConfig ---
@@ -369,10 +419,23 @@ class TimerConfigBuilder {
     def tickDurationMs(value: Long): this.type = { _tickDurationMs = Some(value); this }
     def ticksPerWheel(value: Int): this.type = { _ticksPerWheel = Some(value); this }
 
-    private[config] def build(): TimerConfig = TimerConfig(
-        tickDurationMs = _tickDurationMs.getOrElse(100L),
-        ticksPerWheel  = _ticksPerWheel.getOrElse(512)
-    )
+    private[config] def build(): TimerConfig = {
+        val rawTickDuration = _tickDurationMs.getOrElse(100L)
+        val tickDurationMs =
+            if (rawTickDuration < 1) {
+                Report.report(s"cc.otavia.timer.tickDurationMs can't set $rawTickDuration, it must >= 1, set 100 default")
+                100L
+            } else rawTickDuration
+
+        val rawTicksPerWheel = _ticksPerWheel.getOrElse(512)
+        val ticksPerWheel =
+            if (rawTicksPerWheel < 1) {
+                Report.report(s"cc.otavia.timer.ticksPerWheel can't set $rawTicksPerWheel, it must >= 1, set 512 default")
+                512
+            } else rawTicksPerWheel
+
+        TimerConfig(tickDurationMs = tickDurationMs, ticksPerWheel = ticksPerWheel)
+    }
 }
 
 // --- SpinLockConfig ---
@@ -402,8 +465,21 @@ class PriorityConfigBuilder {
     def highPriorityReplySize(value: Int): this.type = { _highPriorityReplySize = Some(value); this }
     def highPriorityEventSize(value: Int): this.type = { _highPriorityEventSize = Some(value); this }
 
-    private[config] def build(): PriorityConfig = PriorityConfig(
-        highPriorityReplySize = _highPriorityReplySize.getOrElse(2),
-        highPriorityEventSize = _highPriorityEventSize.getOrElse(4)
-    )
+    private[config] def build(): PriorityConfig = {
+        val rawReplySize = _highPriorityReplySize.getOrElse(2)
+        val highPriorityReplySize =
+            if (rawReplySize < 1) {
+                Report.report(s"cc.otavia.priority.highPriorityReplySize can't set $rawReplySize, it must >= 1, set 2 default")
+                2
+            } else rawReplySize
+
+        val rawEventSize = _highPriorityEventSize.getOrElse(4)
+        val highPriorityEventSize =
+            if (rawEventSize < 1) {
+                Report.report(s"cc.otavia.priority.highPriorityEventSize can't set $rawEventSize, it must >= 1, set 4 default")
+                4
+            } else rawEventSize
+
+        PriorityConfig(highPriorityReplySize = highPriorityReplySize, highPriorityEventSize = highPriorityEventSize)
+    }
 }

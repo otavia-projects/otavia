@@ -184,6 +184,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentReceived = asks
         val stack = BatchAskStack[M & Ask[?]](this)
         stack.setAsks(asks)
+        asks.foreach(_.recycle())
         dispatchBatchAskStack(stack)
         currentReceived = null
     }

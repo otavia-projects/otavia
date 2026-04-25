@@ -358,7 +358,9 @@ class HashedWheelTimer(
                     }
                 }
                 if (interrupted) Thread.currentThread().interrupt()
-            } catch { case _: Throwable => }
+            } catch {
+                case t: Throwable => logger.warn("Exception while stopping timer worker thread.", t)
+            }
             worker.unprocessedTimeouts()
         } else Set.empty
     }

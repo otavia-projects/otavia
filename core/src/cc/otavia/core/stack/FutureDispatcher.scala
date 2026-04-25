@@ -33,7 +33,7 @@ private[core] abstract class FutureDispatcher {
 
     private var contentSize: Int = 0
 
-    private final def loadFactor: Double   = 2.0
+    private final def loadFactor: Double   = 0.75
     private final def initialCapacity: Int = 16
 
     private def newThreshold(size: Int) = (size.toDouble * loadFactor).toInt
