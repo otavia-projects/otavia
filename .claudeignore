@@ -1,0 +1,35 @@
+# Build artifacts
+.claude/
+out/
+dist/
+target/
+
+# Mill build directories
+.**/out/
+.**/metals/
+.**/.bloop/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# Dependencies
+**/node_modules/
+
+# Documentation build
+website/i18n/
+website/build/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
