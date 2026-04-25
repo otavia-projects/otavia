@@ -1,5 +1,5 @@
 <div align=center>
-<img src="docs/_assets/images/logo.drawio.svg" alt="otavia" width="200">
+<img src="website/static/img/logo.drawio.svg" alt="otavia" width="200">
 </div>
 <h1 align=center>Otavia</h1>
 
@@ -10,13 +10,12 @@ Write concurrent programs as if they were single-threaded — no locks, no callb
 </p>
 
 <p align=center>
-
-![GitHub](https://img.shields.io/github/license/otavia-projects/otavia)
-[![GitHub Pages](https://github.com/otavia-projects/otavia/actions/workflows/gh-pages.yml/badge.svg)](https://otavia-projects.github.io/otavia/home.html)
-![Static Badge](https://img.shields.io/badge/JDK-17%2B-blue)
-![Static Badge](https://img.shields.io/badge/Scala-3.3-blue)
-[![Unit Tests](https://github.com/otavia-projects/otavia/actions/workflows/unittest.yml/badge.svg)](https://github.com/otavia-projects/otavia/actions/workflows/unittest.yml)
-![Maven Central](https://img.shields.io/maven-central/v/cc.otavia/otavia-runtime_3)
+<img src="https://img.shields.io/github/license/otavia-projects/otavia" alt="GitHub">
+<a href="https://otavia-projects.github.io/otavia/home.html"><img src="https://github.com/otavia-projects/otavia/actions/workflows/gh-pages.yml/badge.svg" alt="GitHub Pages"></a>
+<img src="https://img.shields.io/badge/JDK-17%2B-blue" alt="JDK 17+">
+<img src="https://img.shields.io/badge/Scala-3.3-blue" alt="Scala 3.3">
+<a href="https://github.com/otavia-projects/otavia/actions/workflows/unittest.yml"><img src="https://github.com/otavia-projects/otavia/actions/workflows/unittest.yml/badge.svg" alt="Unit Tests"></a>
+<img src="https://img.shields.io/maven-central/v/cc.otavia/otavia-runtime_3" alt="Maven Central">
 </p>
 
 <p align=center>
