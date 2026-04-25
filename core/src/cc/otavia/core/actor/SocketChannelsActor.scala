@@ -36,8 +36,14 @@ import java.net.{InetAddress, InetSocketAddress, SocketAddress}
  *  @tparam M
  *    the type of messages this actor can handle
  */
-// TODO: auto release channel when the actor gc
-abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] {
+abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] with AutoCleanable {
+
+    override def cleaner(): ActorCleaner = new ActorCleaner {
+        override protected def clean(): Unit = {
+            for (channel <- activeChannels) channel.close(ChannelFuture())
+            activeChannels.clear()
+        }
+    }
 
     /** Request to connect to the given [[SocketAddress]]. This method return a channel which is not connected to the
      *  remote address, it only registers this channel to [[Reactor]], when register operation completes, this actor will

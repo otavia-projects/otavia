@@ -47,8 +47,8 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
     private val channelInboundAdaptiveBuffer: AdaptiveBuffer  = AdaptiveBuffer(channel.directAllocator)
     private val channelOutboundAdaptiveBuffer: AdaptiveBuffer = AdaptiveBuffer(channel.directAllocator)
 
-    private val head = new ChannelHandlerContextImpl(this, HEAD_NAME, HEAD_HANDLER)
-    private val tail = new ChannelHandlerContextImpl(this, TAIL_NAME, TAIL_HANDLER)
+    private val head = new ChannelHandlerContextImpl(this, HEAD_NAME, new HeadHandler(channel))
+    private val tail = new ChannelHandlerContextImpl(this, TAIL_NAME, new TailHandler(logger))
 
     head.next = tail
     tail.prev = head
@@ -205,10 +205,10 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
                     else {
                         val newCtx = newContext(name, handler)
                         if (newCtx.isBufferHandlerContext) {
-                            assert(
-                              ctx.isBufferHandlerContext,
-                              s"buffered handler $handler can't add after no buffered handler ${ctx.handler}"
-                            )
+                            if (!ctx.isBufferHandlerContext)
+                                throw new IllegalStateException(
+                                  s"buffered handler $handler can't add after no buffered handler ${ctx.handler}"
+                                )
                             setAdaptiveBuffer(newCtx, channel.heapAllocator)
                         }
                         handlers.insert(index, newCtx)
@@ -236,10 +236,10 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
                     val newCtx = newContext(name, handler)
                     if (newCtx.isBufferHandlerContext) {
                         val before = handlers(index)
-                        assert(
-                          before.isBufferHandlerContext,
-                          s"buffered handler $handler can't add after no buffered handler ${before.handler}"
-                        )
+                        if (!before.isBufferHandlerContext)
+                            throw new IllegalStateException(
+                              s"buffered handler $handler can't add after no buffered handler ${before.handler}"
+                            )
                         setAdaptiveBuffer(newCtx, channel.heapAllocator)
                     }
                     handlers.insert(index + 1, newCtx)
@@ -837,8 +837,7 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
      *    the new [[pendingOutboundBytes]].
      */
     private def pendingOutboundBytesUpdated(pendingOutboundBytes: Long): Unit = {
-        val abstractChannel = channel.asInstanceOf[AbstractNetworkChannel]
-        abstractChannel.updateWritabilityIfNeeded(true, false)
+        channel.onPendingOutboundBytesChanged()
     }
 
     /** The number of the outbound bytes that are buffered / queued in this [[ChannelPipeline]]. This number will affect
@@ -916,13 +915,12 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
 
 object ChannelPipelineImpl {
 
-    private final class HeadHandler extends ChannelHandler {
+    private final class HeadHandler(ch: AbstractChannel) extends ChannelHandler {
 
         override def isBufferHandler: Boolean = true
 
         override def bind(ctx: ChannelHandlerContext, local: SocketAddress, future: ChannelFuture): ChannelFuture = {
-            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
-            abstractChannel.bindTransport(local, future.promise)
+            ch.bindTransport(local, future.promise)
             future
         }
 
@@ -932,8 +930,7 @@ object ChannelPipelineImpl {
             local: Option[SocketAddress],
             future: ChannelFuture
         ): ChannelFuture = {
-            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
-            abstractChannel.connectTransport(remote, local, future.promise)
+            ch.connectTransport(remote, local, future.promise)
             future
         }
 
@@ -944,20 +941,17 @@ object ChannelPipelineImpl {
             attrs: Seq[FileAttribute[?]],
             future: ChannelFuture
         ): ChannelFuture = {
-            val abstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
-            abstractChannel.openTransport(path, options, attrs, future.promise)
+            ch.openTransport(path, options, attrs, future.promise)
             future
         }
 
         override def disconnect(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
-            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
-            abstractChannel.disconnectTransport(future.promise)
+            ch.disconnectTransport(future.promise)
             future
         }
 
         override def close(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
-            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
-            abstractChannel.closeTransport(future.promise)
+            ch.closeTransport(future.promise)
             future
         }
 
@@ -966,38 +960,32 @@ object ChannelPipelineImpl {
             direction: ChannelShutdownDirection,
             future: ChannelFuture
         ): ChannelFuture = {
-            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
-            abstractChannel.shutdownTransport(direction, future.promise)
+            ch.shutdownTransport(direction, future.promise)
             future
         }
 
         override def register(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
-            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
-            abstractChannel.registerTransport(future.promise)
+            ch.registerTransport(future.promise)
             future
         }
 
         override def deregister(ctx: ChannelHandlerContext, future: ChannelFuture): ChannelFuture = {
-            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
-            abstractChannel.deregisterTransport(future.promise)
+            ch.deregisterTransport(future.promise)
             future
         }
 
         override def read(ctx: ChannelHandlerContext, readPlan: ReadPlan): Unit = {
-            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
-            abstractChannel.readTransport(readPlan)
+            ch.readTransport(readPlan)
         }
 
         override def write(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
-            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
-            abstractChannel.writeTransport(msg)
+            ch.writeTransport(msg)
         }
 
         override def write(ctx: ChannelHandlerContext, msg: AnyRef, msgId: Long): Unit = write(ctx, msg)
 
         override def flush(ctx: ChannelHandlerContext): Unit = {
-            val abstractChannel: AbstractChannel = ctx.channel.asInstanceOf[AbstractChannel]
-            abstractChannel.flushTransport()
+            ch.flushTransport()
         }
 
         override def sendOutboundEvent(ctx: ChannelHandlerContext, event: AnyRef): Unit = {
@@ -1006,7 +994,7 @@ object ChannelPipelineImpl {
 
     }
 
-    private final class TailHandler extends ChannelHandler {
+    private final class TailHandler(logger: Logger) extends ChannelHandler {
 
         override def channelRegistered(ctx: ChannelHandlerContext): Unit = {} // Just swallow event
 
@@ -1029,10 +1017,10 @@ object ChannelPipelineImpl {
         override def channelTimeoutEvent(ctx: ChannelHandlerContext, id: Long): Unit = {} // Just swallow event
 
         override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
-            // TailHandler is the terminal handler — exceptions reaching here have no user handler to process them.
-            // Use System.err directly since we have no ActorSystem context in the companion object.
-            System.err.println(s"[${ctx.channel.getClass.getSimpleName}] An exceptionCaught() event reached the end of the pipeline: ${cause.getMessage}")
-            cause.printStackTrace(System.err)
+            logger.warn(
+              s"[${ctx.channel.getClass.getSimpleName}] An exceptionCaught() event reached the end of the pipeline.",
+              cause
+            )
         }
 
         override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable, id: Long): Unit =
@@ -1050,9 +1038,6 @@ object ChannelPipelineImpl {
 
     private val HEAD_NAME = generateName0(classOf[HeadHandler])
     private val TAIL_NAME = generateName0(classOf[TailHandler])
-
-    private val HEAD_HANDLER = new HeadHandler
-    private val TAIL_HANDLER = new TailHandler
 
     final val DEFAULT_READ_PLAN: ReadPlan = new FixedReadPlan(Int.MaxValue, 4096)
 

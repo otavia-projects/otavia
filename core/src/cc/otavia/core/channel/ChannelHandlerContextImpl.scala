@@ -158,7 +158,6 @@ final class ChannelHandlerContextImpl(
             val next = this.next
             prev.next = next
             next.prev = prev
-            // TODO
         }
     }
 
@@ -170,7 +169,6 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeChannelRegistered(): Unit = try {
         handler.channelRegistered(this)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
     }
@@ -183,7 +181,6 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeChannelUnregistered(): Unit = try {
         handler.channelUnregistered(this)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
     }
@@ -196,7 +193,6 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeChannelActive(): Unit = try {
         handler.channelActive(this)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
     }
@@ -209,7 +205,6 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeChannelInactive(): Unit = try {
         handler.channelInactive(this)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
     }
@@ -222,7 +217,6 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeChannelShutdown(direction: ChannelShutdownDirection): Unit = try {
         handler.channelShutdown(this, direction)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
     }
@@ -236,7 +230,6 @@ final class ChannelHandlerContextImpl(
     private[core] def invokeChannelExceptionCaught(cause: Throwable): Unit = {
         try {
             handler.channelExceptionCaught(this, cause)
-            updatePendingBytesIfNeeded()
         } catch {
             case error: Throwable =>
                 logger.debug(
@@ -262,7 +255,6 @@ final class ChannelHandlerContextImpl(
     def invokeChannelExceptionCaught(cause: Throwable, id: Long): Unit = {
         try {
             handler.channelExceptionCaught(this, cause, id)
-            updatePendingBytesIfNeeded()
         } catch {
             case t: Throwable => invokeChannelExceptionCaught(t)
         }
@@ -276,7 +268,6 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeChannelInboundEvent(event: AnyRef): Unit = try {
         handler.channelInboundEvent(this, event)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
     }
@@ -307,7 +298,6 @@ final class ChannelHandlerContextImpl(
     private[core] def invokeChannelRead(msg: AnyRef): Unit = {
         try {
             handler.channelRead(this, msg)
-            updatePendingBytesIfNeeded()
         } catch {
             case t: Throwable => invokeChannelExceptionCaught(t)
         }
@@ -322,7 +312,6 @@ final class ChannelHandlerContextImpl(
     private[core] def invokeChannelRead(msg: AnyRef, id: Long): Unit = {
         try {
             handler.channelRead(this, msg, id)
-            updatePendingBytesIfNeeded()
         } catch { case t: Throwable => invokeChannelExceptionCaught(t) }
     }
 
@@ -334,7 +323,6 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeChannelReadComplete(): Unit = try {
         handler.channelReadComplete(this)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
     }
@@ -347,7 +335,6 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeChannelWritabilityChanged(): Unit = try {
         handler.channelWritabilityChanged(this)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => invokeChannelExceptionCaught(t)
     }
@@ -360,7 +347,6 @@ final class ChannelHandlerContextImpl(
 
     private def invokeRead(readPlan: ReadPlan): Unit = try {
         handler.read(this, readPlan)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => handleOutboundHandlerException(t, false)
     }
@@ -393,7 +379,6 @@ final class ChannelHandlerContextImpl(
 
     private[core] def invokeBind(local: SocketAddress, future: ChannelFuture): Unit = try {
         handler.bind(this, local, future)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => future.promise.setFailure(handleOutboundHandlerException(t, false))
     }
@@ -407,7 +392,6 @@ final class ChannelHandlerContextImpl(
     private def invokeConnect(remote: SocketAddress, local: Option[SocketAddress], future: ChannelFuture): Unit =
         try {
             handler.connect(this, remote, local, future)
-            updatePendingBytesIfNeeded()
         } catch {
             case t: Throwable => future.promise.setFailure(handleOutboundHandlerException(t, false))
         }
@@ -430,7 +414,6 @@ final class ChannelHandlerContextImpl(
         future: ChannelFuture
     ): Unit = try {
         handler.open(this, path, options, attrs, future)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => future.promise.setFailure(handleOutboundHandlerException(t, false))
     }
@@ -443,7 +426,6 @@ final class ChannelHandlerContextImpl(
 
     private def invokeDisconnect(future: ChannelFuture): Unit = try {
         handler.disconnect(this, future)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => future.promise.setFailure(handleOutboundHandlerException(t, false))
     }
@@ -456,7 +438,6 @@ final class ChannelHandlerContextImpl(
 
     private def invokeClose(future: ChannelFuture): Unit = try {
         handler.close(this, future)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => future.promise.setFailure(handleOutboundHandlerException(t, true))
     }
@@ -469,7 +450,6 @@ final class ChannelHandlerContextImpl(
 
     private def invokeShutdown(direction: ChannelShutdownDirection, future: ChannelFuture): Unit = try {
         handler.shutdown(this, direction, future)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => future.promise.setFailure(handleOutboundHandlerException(t, true))
     }
@@ -483,7 +463,6 @@ final class ChannelHandlerContextImpl(
     private def invokeRegister(future: ChannelFuture): Unit = {
         try {
             handler.register(this, future)
-            updatePendingBytesIfNeeded()
         } catch {
             case t: Throwable => future.promise.setFailure(handleOutboundHandlerException(t, false))
         }
@@ -497,7 +476,6 @@ final class ChannelHandlerContextImpl(
 
     private def invokeDeregister(future: ChannelFuture): Unit = try {
         handler.deregister(this, future)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => future.promise.setFailure(handleOutboundHandlerException(t, false))
     }
@@ -556,7 +534,6 @@ final class ChannelHandlerContextImpl(
 
     private def invokeSendOutboundEvent(event: AnyRef): Unit = try {
         handler.sendOutboundEvent(this, event)
-        updatePendingBytesIfNeeded()
     } catch {
         case t: Throwable => handleOutboundHandlerException(t, false)
     }

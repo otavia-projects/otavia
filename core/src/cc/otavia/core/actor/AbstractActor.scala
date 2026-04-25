@@ -301,6 +301,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
                 logger.error(s"Unhandled exception in ask stack for actor [${this.getClass.getName}]", cause)
                 stack.`throw`(ExceptionMessage(cause))
                 recycleStack(stack)
+                handleAskException(stack, cause)
         } finally currentStack = null
     }
 
@@ -312,6 +313,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
             case cause: Throwable =>
                 stack.`throw`(ExceptionMessage(cause))
                 recycleStack(stack)
+                handleAskException(stack, cause)
         } finally currentStack = null
     }
 
@@ -408,6 +410,27 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
                 s"Stack with call message ${s.notices} failed at handle $currentReceived message"
             case _ => ""
         noticeExceptionStrategy match
+            case ExceptionStrategy.Restart =>
+                logger.error(log, e)
+                try {
+                    beforeRestart()
+                    restart()
+                    afterRestart()
+                } catch {
+                    case exception: Exception =>
+                        logger.error("Fatal error on restart", exception)
+                        system.shutdown()
+                }
+            case ExceptionStrategy.Ignore => logger.error(log, e)
+            case ExceptionStrategy.ShutdownSystem =>
+                logger.error(log, e)
+                system.shutdown()
+    }
+
+    /** Apply the configured [[askExceptionStrategy]] when an ask-type stack throws. */
+    private def handleAskException(stack: Stack, e: Throwable): Unit = {
+        val log = s"Stack with ask message failed at handle $currentReceived message"
+        askExceptionStrategy match
             case ExceptionStrategy.Restart =>
                 logger.error(log, e)
                 try {

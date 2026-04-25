@@ -20,6 +20,7 @@ package cc.otavia.core.channel
 
 import cc.otavia.core.actor.ChannelsActor
 import cc.otavia.core.channel.{Channel, ChannelHandler}
+import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.ChannelFuture
 
 /** A special [[ChannelHandler]] which offers an easy way to initialize a [[Channel]] once it was registered to its
@@ -39,7 +40,6 @@ import cc.otavia.core.stack.ChannelFuture
  */
 abstract class ChannelInitializer[C <: Channel] extends ChannelHandler {
 
-    // TODO: inject actor logger, and reuse this object.
     override def isSharable: Boolean = true
 
     /** This method will be called once the [[Channel]] was registered. After the method returns this instance will be
@@ -56,7 +56,8 @@ abstract class ChannelInitializer[C <: Channel] extends ChannelHandler {
 
     /** Handle the [[Throwable]] by logging and closing the [[Channel]]. Sub-classes may override this. */
     override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
-        // TODO: logger.warn
+        Logger.getLogger(getClass, ctx.channel.system)
+            .warn(s"Exception in channel initializer, closing channel: ${cause.getMessage}", cause)
         ctx.close(ChannelFuture()) // ignore close future
     }
 

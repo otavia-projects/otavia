@@ -63,7 +63,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     // inbound stack to wait actor running
     private val pendingStacks: QueueMap[ChannelStack[?]] = new QueueMap[ChannelStack[?]]()
 
-    private var channelMsgId: Long = ChannelInflight.INVALID_CHANNEL_MESSAGE_ID
+    private var channelMsgId: Long = 0
 
     protected var ongoingChannelPromise: ChannelPromise = _
 
@@ -126,7 +126,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     override def generateMessageId: Long = { channelMsgId += 1; channelMsgId }
 
     override private[core] def onInboundMessage(msg: AnyRef, exception: Boolean): Unit = {
-        if (maxFutureInflight == 1 && inflightFutures.size == 1) {
+        if (inflightFutures.size == 1 && pendingFutures.isEmpty) {
             val promise = inflightFutures.pop()
             if (!exception) promise.setSuccess(msg) else promise.setFailure(msg.asInstanceOf[Throwable])
         } else {
@@ -222,10 +222,12 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     final protected def failedStacks(cause: Throwable): Unit = {
         while (inflightStacks.nonEmpty) {
             val stack = inflightStacks.pop()
+            stack.`throw`(cause)
             actor.recycleStack(stack)
         }
         while (pendingStacks.nonEmpty) {
             val stack = pendingStacks.pop()
+            stack.`throw`(cause)
             actor.recycleStack(stack)
         }
     }
@@ -513,6 +515,11 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     private[core] def registerTransport(promise: ChannelPromise): Unit
 
     private[core] def deregisterTransport(promise: ChannelPromise): Unit
+
+    /** Called when the pipeline's pendingOutboundBytes changes. Override in subclasses to react (e.g. update
+     *  writability). Default is no-op.
+     */
+    private[core] def onPendingOutboundBytesChanged(): Unit = {}
 
     private[core] def readTransport(readPlan: ReadPlan): Unit = {
         mountedThread.ioHandler.read(this, readPlan)

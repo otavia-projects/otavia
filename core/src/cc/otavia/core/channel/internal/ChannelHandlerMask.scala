@@ -18,7 +18,6 @@
 
 package cc.otavia.core.channel.internal
 
-import cc.otavia.core.cache.ActorThreadLocal
 import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.channel.{ChannelHandler, ChannelHandlerContext, ChannelShutdownDirection, Skip}
 import cc.otavia.core.stack.ChannelFuture
@@ -28,7 +27,6 @@ import java.net.SocketAddress
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import scala.annotation.StaticAnnotation
-import scala.collection.mutable
 import scala.language.unsafeNulls
 
 object ChannelHandlerMask {
@@ -75,21 +73,16 @@ object ChannelHandlerMask {
             MASK_READ | MASK_WRITE | MASK_FLUSH | MASK_SEND_OUTBOUND_EVENT | MASK_PENDING_OUTBOUND_BYTES |
             MASK_WRITE_ID | MASK_OPEN
 
-    private val MASKS = new ActorThreadLocal[mutable.HashMap[Class[? <: ChannelHandler], Int]] {
-        override protected def initialValue(): mutable.HashMap[Class[_ <: ChannelHandler], Int] = mutable.HashMap.empty
-    }
+    private val MASKS = new java.util.concurrent.ConcurrentHashMap[Class[? <: ChannelHandler], Integer]()
 
     def mask(clazz: Class[? <: ChannelHandler]): Int = {
-        // Try to obtain the mask from the cache first. If this fails calculate it and put it in the cache for fast
-        // lookup in the future.
-        val map       = MASKS.get()
-        var mask: Int = 0
-        if (!map.contains(clazz)) {
-            mask = mask0(clazz)
-            map.put(clazz, mask)
-        } else mask = map(clazz)
-
-        mask
+        val cached = MASKS.get(clazz)
+        if (cached != null) cached.intValue()
+        else {
+            val m = mask0(clazz)
+            MASKS.put(clazz, Integer.valueOf(m))
+            m
+        }
     }
 
     private def mask0(handlerType: Class[? <: ChannelHandler]): Int = {

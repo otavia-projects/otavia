@@ -499,6 +499,9 @@ abstract class AbstractNetworkChannel(system: ActorSystem) extends AbstractChann
         }
     }
 
+    override private[core] def onPendingOutboundBytesChanged(): Unit =
+        updateWritabilityIfNeeded(true, false)
+
     private def fireChannelWritabilityChangedIfNeeded(notify: Boolean, later: Boolean): Unit = if (notify) {
         if (later) invokeLater(() => pipeline.fireChannelWritabilityChanged())
         else

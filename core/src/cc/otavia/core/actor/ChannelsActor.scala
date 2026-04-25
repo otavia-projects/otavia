@@ -28,6 +28,7 @@ import java.io.File
 import java.net.*
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
+import scala.collection.mutable
 import scala.language.unsafeNulls
 
 /** IO-capable actor that manages [[Channel]] instances. Always fully drained during the event loop's IO phase
@@ -44,6 +45,8 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] with ChannelMes
 
     private var channelCursor                  = 0
     private var currentChannelReceived: AnyRef = _
+
+    protected val activeChannels = mutable.HashSet.empty[Channel]
 
     override def self: ActorAddress[M] = super.self.asInstanceOf[ActorAddress[M]]
 
@@ -91,6 +94,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] with ChannelMes
                     .handleChannelDeregisterReply(e.firstInactive, e.isOpen, e.cause)
             case e: ChannelClose =>
                 e.channel.asInstanceOf[AbstractChannel].handleChannelClose(e.cause)
+                activeChannels.remove(e.channel)
                 afterChannelClosed(e.channel, e.cause)
             case e: AcceptedEvent => e.channel.asInstanceOf[AbstractChannel].handleChannelAcceptedEvent(e)
             case e: ReadCompletedEvent =>
@@ -126,12 +130,13 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] with ChannelMes
         channel.mount(this)
         try {
             initChannel(channel)
-            channel
         } catch {
             case cause: Throwable =>
                 channel.closeAfterCreate()
                 throw cause
         }
+        activeChannels.add(channel)
+        channel
     }
 
     /** Create a new file [[Channel]] and mount it to this actor, then initialize via [[initFileChannel]]. */
@@ -141,12 +146,13 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] with ChannelMes
         channel.mount(this)
         try {
             initFileChannel(channel)
-            channel
         } catch {
             case cause: Throwable =>
                 channel.closeAfterCreate()
                 throw cause
         }
+        activeChannels.add(channel)
+        channel
     }
 
     final protected def openFile(path: Path, opts: Seq[OpenOption], attrs: Seq[FileAttribute[?]]): StackState = {

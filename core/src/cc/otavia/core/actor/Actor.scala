@@ -75,6 +75,11 @@ trait Actor[+M <: Call] {
     /** user actor override this to control whether restart when occur exception */
     protected def noticeExceptionStrategy: ExceptionStrategy = ExceptionStrategy.Restart
 
+    /** Strategy for handling exceptions thrown during Ask processing. Unlike Notice, the caller always receives the
+     *  exception via [[ExceptionMessage]]. This strategy controls what happens to the actor itself.
+     */
+    protected def askExceptionStrategy: ExceptionStrategy = ExceptionStrategy.Ignore
+
     /** Override to mark specific message types as barrier calls. When a barrier message is received, the actor
      *  pauses processing of subsequent asks/notices until the barrier is resolved (all pending stacks complete).
      *  This prevents message reordering within the actor.

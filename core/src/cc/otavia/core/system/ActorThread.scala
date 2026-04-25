@@ -45,6 +45,8 @@ import scala.language.unsafeNulls
  */
 final class ActorThread(private[core] val system: ActorSystem, private val id: Int) extends Thread() {
 
+    private val logger = cc.otavia.core.slf4a.Logger.getLogger(getClass, system)
+
     private val channelLaterTasks: mutable.ArrayDeque[Runnable] = mutable.ArrayDeque.empty
 
     private val manager = new HouseManager(this)
@@ -114,7 +116,7 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
 
     /** Clear all deferred channel tasks. Called during shutdown to release pending work. */
     def cleanChannelTask(): Unit = if (channelLaterTasks.nonEmpty) {
-        // TODO: log warn
+        logger.warn(s"Dropping ${channelLaterTasks.size} pending channel tasks during shutdown")
         channelLaterTasks.clear()
     }
 
