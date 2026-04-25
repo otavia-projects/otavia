@@ -206,8 +206,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
     // =========================================================================
 
     private def dispatchChannels(): Unit = {
-        pendingChannels.resetIterator()
-        for (channel <- pendingChannels) {
+        pendingChannels.foreachEntity { channel =>
             channel.processPendingFutures()
             if (!channel.isPending) pendingChannels.remove(channel.entityId)
         }

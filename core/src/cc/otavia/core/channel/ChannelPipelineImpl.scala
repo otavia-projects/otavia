@@ -576,135 +576,19 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
     /** Converts this pipeline into an [[Map]] whose keys are handler names and whose values are handlers. */
     override def toMap: Map[String, ChannelHandler] = handlers.map(ctx => ctx.name -> ctx.handler).toMap
 
-    override def fireChannelRegistered(): this.type = {
-        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_REGISTERED)
-        try {
-            ctx.handler.channelRegistered(ctx)
-        } catch {
-            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
-        }
-        this
-    }
-
-    override def fireChannelUnregistered(): this.type = {
-        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_UNREGISTERED)
-        try {
-            ctx.handler.channelUnregistered(ctx)
-        } catch {
-            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
-        }
-        this
-    }
-
-    override def fireChannelActive(): this.type = {
-        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_ACTIVE)
-        try {
-            ctx.handler.channelActive(ctx)
-        } catch {
-            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
-        }
-        this
-    }
-
-    override def fireChannelInactive(): this.type = {
-        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_INACTIVE)
-        try {
-            ctx.handler.channelInactive(ctx)
-        } catch {
-            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
-        }
-        this
-    }
-
-    override def fireChannelShutdown(direction: ChannelShutdownDirection): this.type = {
-        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_SHUTDOWN)
-        try {
-            ctx.handler.channelShutdown(ctx, direction)
-        } catch {
-            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
-        }
-        this
-    }
-
-    override def fireChannelExceptionCaught(cause: Throwable): this.type = {
-        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_EXCEPTION_CAUGHT)
-        try {
-            ctx.handler.channelExceptionCaught(ctx, cause)
-        } catch {
-            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
-        }
-        this
-    }
-
-    override def fireChannelExceptionCaught(cause: Throwable, id: Long): ChannelPipelineImpl.this.type = {
-        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_EXCEPTION_CAUGHT_ID)
-        try {
-            ctx.handler.channelExceptionCaught(ctx, cause, id)
-        } catch {
-            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
-        }
-        this
-    }
-
-    override def fireChannelInboundEvent(event: AnyRef): this.type = {
-        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_INBOUND_EVENT)
-        try {
-            ctx.handler.channelInboundEvent(ctx, event)
-        } catch {
-            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
-        }
-        this
-    }
-
-    override def fireChannelTimeoutEvent(id: Long): this.type = {
-        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_TIMEOUT_EVENT)
-        try {
-            ctx.handler.channelTimeoutEvent(ctx, id)
-        } catch {
-            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
-        }
-        this
-    }
-
-    override def fireChannelRead(msg: AnyRef): this.type = {
-        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_READ)
-        try {
-            ctx.handler.channelRead(ctx, msg)
-        } catch {
-            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
-        }
-        this
-    }
-
-    override def fireChannelRead(msg: AnyRef, msgId: Long): this.type = {
-        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_READ_ID)
-        try {
-            ctx.handler.channelRead(ctx, msg, msgId)
-        } catch {
-            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
-        }
-        this
-    }
-
-    override def fireChannelReadComplete(): this.type = {
-        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_READ_COMPLETE)
-        try {
-            ctx.handler.channelReadComplete(ctx)
-        } catch {
-            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
-        }
-        this
-    }
-
-    override def fireChannelWritabilityChanged(): this.type = {
-        val ctx = findContextInbound(0, ChannelHandlerMask.MASK_CHANNEL_WRITABILITY_CHANGED)
-        try {
-            ctx.handler.channelWritabilityChanged(ctx)
-        } catch {
-            case t: Throwable => ctx.invokeChannelExceptionCaught(t)
-        }
-        this
-    }
+    override def fireChannelRegistered(): this.type                = { head.fireChannelRegistered(); this }
+    override def fireChannelUnregistered(): this.type              = { head.fireChannelUnregistered(); this }
+    override def fireChannelActive(): this.type                    = { head.fireChannelActive(); this }
+    override def fireChannelInactive(): this.type                  = { head.fireChannelInactive(); this }
+    override def fireChannelShutdown(direction: ChannelShutdownDirection): this.type = { head.fireChannelShutdown(direction); this }
+    override def fireChannelExceptionCaught(cause: Throwable): this.type             = { head.fireChannelExceptionCaught(cause); this }
+    override def fireChannelExceptionCaught(cause: Throwable, id: Long): this.type   = { head.fireChannelExceptionCaught(cause, id); this }
+    override def fireChannelInboundEvent(event: AnyRef): this.type = { head.fireChannelInboundEvent(event); this }
+    override def fireChannelTimeoutEvent(id: Long): this.type     = { head.fireChannelTimeoutEvent(id); this }
+    override def fireChannelRead(msg: AnyRef): this.type          = { head.fireChannelRead(msg); this }
+    override def fireChannelRead(msg: AnyRef, msgId: Long): this.type = { head.fireChannelRead(msg, msgId); this }
+    override def fireChannelReadComplete(): this.type             = { head.fireChannelReadComplete(); this }
+    override def fireChannelWritabilityChanged(): this.type       = { head.fireChannelWritabilityChanged(); this }
 
     override def flush(): this.type = {
         val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_FLUSH)
@@ -886,18 +770,6 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
             this.executionMask |= handler.executionMask
         }
     }
-
-    private def findContextInbound(from: Int, mask: Int): ChannelHandlerContextImpl =
-        if ((this.executionMask & mask) != 0) {
-            var cursor                         = from
-            var ctx: ChannelHandlerContextImpl = null
-            while {
-                ctx = if (cursor < handlers.length) handlers(cursor) else tail
-                cursor += 1
-                (ctx.executionMask & mask) == 0
-            } do ()
-            ctx
-        } else tail
 
     private def findContextOutbound(from: Int, mask: Int): ChannelHandlerContextImpl =
         if ((this.executionMask & mask) != 0) {

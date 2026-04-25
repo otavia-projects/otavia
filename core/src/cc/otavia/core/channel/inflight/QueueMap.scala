@@ -18,7 +18,7 @@ package cc.otavia.core.channel.inflight
 
 import scala.language.unsafeNulls
 
-class QueueMap[V <: QueueMapEntity] extends Iterator[V] {
+class QueueMap[V <: QueueMapEntity] {
 
     import QueueMap.*
 
@@ -31,8 +31,6 @@ class QueueMap[V <: QueueMapEntity] extends Iterator[V] {
 
     private var barrier: Boolean = false
 
-    private var cursor: QueueMapEntity = _
-
     private final def loadFactor: Double   = 0.75
     private final def initialCapacity: Int = 8
     private def newThreshold(size: Int)    = (size.toDouble * loadFactor).toInt
@@ -42,21 +40,20 @@ class QueueMap[V <: QueueMapEntity] extends Iterator[V] {
     def isBarrierMode: Boolean              = barrier
     def setBarrierMode(mode: Boolean): Unit = barrier = mode
 
-    override def hasNext: Boolean = cursor != null && !barrier
-
-    override def next(): V = {
-        val v = cursor
-        cursor = cursor.queueLater
-        v.asInstanceOf[V]
+    def foreachEntity(f: V => Unit): Unit = {
+        var current = hd
+        while (current != null) {
+            val next = current.queueLater
+            f(current.asInstanceOf[V])
+            current = next
+        }
     }
 
-    def resetIterator(): Unit = cursor = hd
+    def size: Int = contentSize
 
-    override def size: Int = contentSize
+    def isEmpty: Boolean = contentSize == 0
 
-    override def isEmpty: Boolean = contentSize == 0
-
-    override def nonEmpty: Boolean = contentSize != 0
+    def nonEmpty: Boolean = contentSize != 0
 
     final private[core] def append(v: V): Unit = {
         if (contentSize == 0) {

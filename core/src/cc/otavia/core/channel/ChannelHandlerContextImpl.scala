@@ -287,11 +287,7 @@ final class ChannelHandlerContextImpl(
 
     override def fireChannelRead(msg: AnyRef): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_READ)
-        try {
-            ctx.handler.channelRead(ctx, msg)
-        } catch {
-            case t: Throwable => invokeChannelExceptionCaught(t)
-        }
+        ctx.invokeChannelRead(msg)
         this
     }
 
