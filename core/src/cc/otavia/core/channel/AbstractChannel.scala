@@ -126,7 +126,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     override def generateMessageId: Long = { channelMsgId += 1; channelMsgId }
 
     override private[core] def onInboundMessage(msg: AnyRef, exception: Boolean): Unit = {
-        if (inflightFutures.size == 1 && pendingFutures.isEmpty) {
+        if (inflightFutures.nonEmpty) {
             val promise = inflightFutures.pop()
             if (!exception) promise.setSuccess(msg) else promise.setFailure(msg.asInstanceOf[Throwable])
         } else {

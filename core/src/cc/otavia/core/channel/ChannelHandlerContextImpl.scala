@@ -562,27 +562,6 @@ final class ChannelHandlerContextImpl(
         }
     }
 
-    private def saveCurrentPendingBytesIfNeededInbound(): Boolean =
-        saveCurrentPendingBytesIfNeeded() match
-            case Some(value) =>
-                logger.error(ThrowableUtil.stackTraceToString(value))
-                false
-            case None => true
-
-    inline private def saveCurrentPendingBytesIfNeededOutbound(): Option[IllegalStateException] =
-        saveCurrentPendingBytesIfNeeded()
-
-    private def saveCurrentPendingBytesIfNeeded(): Option[IllegalStateException] =
-        if (!handlesPendingOutboundBytes(executionMask)) {
-            assert(currentPendingBytes == 0)
-            None
-        } else if (currentPendingBytes == -1) {
-            var ret: Option[IllegalStateException] = None
-            try { currentPendingBytes = pendingOutboundBytes() }
-            catch { case e: IllegalStateException => ret = Some(e) }
-            ret
-        } else None
-
     override def toString: String = name
 
 }
