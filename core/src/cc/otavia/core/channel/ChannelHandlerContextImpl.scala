@@ -524,7 +524,7 @@ final class ChannelHandlerContextImpl(
      *  @param event
      */
     override def sendOutboundEvent(event: AnyRef): Unit = {
-        val ctx = findContextInbound(ChannelHandlerMask.MASK_SEND_OUTBOUND_EVENT)
+        val ctx = findContextOutbound(ChannelHandlerMask.MASK_SEND_OUTBOUND_EVENT)
         ctx.invokeSendOutboundEvent(event)
     }
 

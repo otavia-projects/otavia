@@ -76,13 +76,14 @@ class QueueMap[V <: QueueMapEntity] {
         hd = null
         tl = null
         remove0(entity.entityId)
+        entity.cleanEntity()
         entity.asInstanceOf[V]
     } else {
         val entity = hd
         hd = entity.queueLater
         hd.queueEarlier = null
-        entity.queueLater = null
         remove0(entity.entityId)
+        entity.cleanEntity()
         entity.asInstanceOf[V]
     }
 

@@ -77,12 +77,16 @@ final private[core] class ChannelPromise extends AbstractPromise[AnyRef] with Ch
         } else recycle()
     }
 
-    override def setSuccess(result: AnyRef): Unit = {
+    override def setSuccess(result: AnyRef): Unit = if (isDone) {
+        throw new IllegalStateException("ChannelPromise already completed")
+    } else {
         this.result = result
         this.completed()
     }
 
-    override def setFailure(cause: Throwable): Unit = {
+    override def setFailure(cause: Throwable): Unit = if (isDone) {
+        throw new IllegalStateException("ChannelPromise already completed")
+    } else {
         error = cause
         this.completed()
     }
