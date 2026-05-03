@@ -24,7 +24,7 @@ import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.ChannelFuture
 
 /** A special [[ChannelHandler]] which offers an easy way to initialize a [[Channel]] once it was registered to its
- *  [[ChannelsActor]]. Implementations are most often used in the context of [[ChannelsActor.handler]], to setup the
+ *  [[ChannelsActor]]. Implementations are most often used in the context of [[ChannelsActor.channelInitializer]], to setup the
  *  [[ChannelPipeline]] of a [[Channel]].
  *
  *  {{{

@@ -43,30 +43,24 @@ import scala.language.unsafeNulls
  */
 abstract class ChannelsActor[M <: Call] extends AbstractActor[M] with ChannelMessageSupport {
 
-    private var channelCursor                  = 0
-    private var currentChannelReceived: AnyRef = _
+    private var channelIdSeq = 0
 
     protected val activeChannels = mutable.HashSet.empty[Channel]
 
     override def self: ActorAddress[M] = super.self.asInstanceOf[ActorAddress[M]]
 
-    /** Alias for [[self]] — the typed address of this IO-capable actor. */
-    def address: ActorAddress[M] = self
-
     final def reactor: Reactor = system.reactor
 
-    protected def family: ProtocolFamily = StandardProtocolFamily.INET
+    protected def protocolFamily: ProtocolFamily = StandardProtocolFamily.INET
 
-    private[core] def generateChannelId(): Int = { val channelId = channelCursor; channelCursor += 1; channelId }
+    private[core] def generateChannelId(): Int = { val channelId = channelIdSeq; channelIdSeq += 1; channelId }
 
     // =========================================================================
     // ChannelMessageSupport implementation
     // =========================================================================
 
     final override private[core] def receiveChannelMessage(stack: ChannelStack[?]): Unit = {
-        currentChannelReceived = stack.message
         dispatchChannelStack(stack)
-        currentChannelReceived = null
     }
 
     final override private[core] def dispatchChannelStack(stack: ChannelStack[?]): Unit = {
@@ -190,10 +184,10 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] with ChannelMes
         throw new NotImplementedError(getClass.getName + ".newChannel: an implementation is missing")
 
     /** Initialize the channel's pipeline with handlers. Default implementation adds the handler from
-     *  [[handler]] if present.
+     *  [[channelInitializer]] if present.
      */
     @throws[Exception]
-    protected def initChannel(channel: Channel): Unit = handler match
+    protected def initChannel(channel: Channel): Unit = channelInitializer match
         case Some(h) => channel.pipeline.addLast(h)
         case None    =>
 
@@ -201,7 +195,7 @@ abstract class ChannelsActor[M <: Call] extends AbstractActor[M] with ChannelMes
     protected def initFileChannel(channel: Channel): Unit = {}
 
     /** Optional [[ChannelInitializer]] for pipeline setup. Override to provide a default handler. */
-    def handler: Option[ChannelInitializer[? <: Channel]] = None
+    def channelInitializer: Option[ChannelInitializer[? <: Channel]] = None
 
 }
 

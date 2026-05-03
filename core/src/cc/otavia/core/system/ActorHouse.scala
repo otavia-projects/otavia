@@ -176,7 +176,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     def setLoadBalanced(boolean: Boolean): Unit = loadBalanced = boolean
 
-    override def isLoadBalance: Boolean = loadBalanced
+    override def isLoadBalanced: Boolean = loadBalanced
 
     def actor: AbstractActor[? <: Call] = this.dweller
 

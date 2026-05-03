@@ -24,7 +24,7 @@ import java.lang.ref.{PhantomReference, ReferenceQueue}
 class AddressPhantomReference(referent: ActorAddress[?], queue: ReferenceQueue[ActorAddress[?]])
     extends PhantomReference[ActorAddress[?]](referent, queue) {
 
-    private val actorCleaner: ActorCleaner = referent.house.actor.asInstanceOf[AutoCleanable].cleaner()
+    private val actorCleaner: ActorCleaner = referent.house.actor.asInstanceOf[AutoCleanable].createCleaner()
 
     override def clear(): Unit = {
         actorCleaner.run()

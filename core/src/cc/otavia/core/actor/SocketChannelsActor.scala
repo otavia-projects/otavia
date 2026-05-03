@@ -38,7 +38,7 @@ import java.net.{InetAddress, InetSocketAddress, SocketAddress}
  */
 abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] with AutoCleanable {
 
-    override def cleaner(): ActorCleaner = new ActorCleaner {
+    override def createCleaner(): ActorCleaner = new ActorCleaner {
         override protected def clean(): Unit = {
             for (channel <- activeChannels) channel.close(ChannelFuture())
             activeChannels.clear()
@@ -65,9 +65,13 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] with Auto
                 channel.connect(remote, stack.ask.local, state.future)
                 stack.suspend(state)
             case connectState: ChannelFutureState =>
-                val ch = connectState.future.channel
-                afterConnected(ch)
-                stack.`return`(ChannelEstablished(ch.id))
+                if (connectState.future.isSuccess) {
+                    val ch = connectState.future.channel
+                    afterConnected(ch)
+                    stack.`return`(ChannelEstablished(ch.id))
+                } else {
+                    stack.`throw`(ExceptionMessage(connectState.future.causeUnsafe))
+                }
     }
 
     final protected def connect(connect: Connect): ChannelFutureState = {
@@ -90,17 +94,17 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] with Auto
         state
     }
 
-    final protected def connect(remote: SocketAddress, l: Option[SocketAddress], fu: ChannelFuture): ChannelFuture = {
+    final protected def connect(remote: SocketAddress, local: Option[SocketAddress], future: ChannelFuture): ChannelFuture = {
         val channel = createChannelAndInit()
-        channel.connect(remote, l, fu)
-        fu
+        channel.connect(remote, local, future)
+        future
     }
 
     override protected def isBarrierCall(call: Call): Boolean = call.isInstanceOf[Connect]
 
     protected def afterConnected(channel: ChannelAddress): Unit = {}
 
-    override protected def newChannel(): Channel = system.channelFactory.openSocketChannel(family)
+    override protected def newChannel(): Channel = system.channelFactory.openSocketChannel(protocolFamily)
 
 }
 

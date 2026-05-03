@@ -52,7 +52,7 @@ class RobinAddress[M <: Call](val underlying: Array[ActorAddress[M]], val loadBa
     }
 
     final private def getAddress(using sender: AbstractActor[? <: Call]): Address[M] = {
-        if (sender.context.isLoadBalance && loadBalanced) {
+        if (sender.context.isLoadBalanced && loadBalanced) {
             underlying(sender.context.mountedThreadId)
         } else {
             val index = askCursor % underlying.length

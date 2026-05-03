@@ -31,7 +31,7 @@ class Connection(
     url: String,
     info: Map[String, String],
     driverName: Option[String] = None,
-    override val family: ProtocolFamily = StandardProtocolFamily.INET
+    override val protocolFamily: ProtocolFamily = StandardProtocolFamily.INET
 ) extends SocketChannelsActor[Connection.MSG] {
 
     private var channel: ChannelAddress        = _

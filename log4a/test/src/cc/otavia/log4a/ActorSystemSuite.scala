@@ -32,7 +32,7 @@ object ActorSystemSuite {
 
     class Main(args: Array[String]) extends MainActor(args) {
 
-        override def main0(stack: NoticeStack[MainActor.Args]): StackYield = {
+        override def handleArgs(stack: NoticeStack[MainActor.Args]): StackYield = {
             logger.info("main actor running")
             stack.`return`()
         }

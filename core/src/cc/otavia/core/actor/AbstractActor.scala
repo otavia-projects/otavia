@@ -104,7 +104,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     protected final def noticeSelfHead(call: Notice & M): Unit = {
         val envelope = Envelope[Notice & M]()
         envelope.setContent(call)
-        house.address.asInstanceOf[PhysicalAddress[M]].house.putCallToHead(envelope)
+        house.putCallToHead(envelope)
     }
 
     /** Whether the calling thread is this actor's executor and this actor is currently running on it. */
@@ -116,7 +116,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     // =========================================================================
 
     /** Inject the [[ActorHouse]] context and initialize the logger. Called once during actor creation. */
-    final private[core] def setCtx(context: ActorHouse): Unit = {
+    final private[core] def setHouse(context: ActorHouse): Unit = {
         house = context
         logger = Logger.getLogger(getClass, house.system)
     }
@@ -189,57 +189,38 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentReceived = null
     }
 
-    final private[core] def receiveReply(envelope: Envelope[?]): Unit = {
+    final private[core] def receiveReply(envelope: Envelope[?]): Unit = receiveReply(envelope, false)
+
+    private[core] def receiveExceptionReply(envelope: Envelope[?]): Unit = receiveReply(envelope, true)
+
+    private def receiveReply(envelope: Envelope[?], isException: Boolean): Unit = {
+        val reply = envelope.message.asInstanceOf[Reply]
         if (!envelope.isBatchReply) {
-            val reply   = envelope.message.asInstanceOf[Reply]
             val replyId = envelope.replyId
             envelope.recycle()
-            // The promise may have been removed due to timeout or a prior error — drop the reply in that case.
             if (this.contains(replyId)) {
                 val promise = this.pop(replyId)
                 if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
-                receiveReply0(reply, promise)
+                completePromise(reply, promise, isException)
             }
         } else {
-            val reply    = envelope.message.asInstanceOf[Reply]
             val replyIds = envelope.replyIds
             envelope.recycle()
             for (rid <- replyIds if contains(rid)) {
                 val promise = pop(rid)
                 if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
-                receiveReply0(reply, promise)
+                completePromise(reply, promise, isException)
             }
         }
     }
 
-    private def receiveReply0(reply: Reply, promise: MessagePromise[?], exception: Boolean = false): Unit = {
+    private def completePromise(reply: Reply, promise: MessagePromise[?], isException: Boolean): Unit = {
         currentReceived = reply
-        if (exception) promise.setFailure(reply.asInstanceOf[ExceptionMessage]) else promise.setSuccess(reply)
+        if (isException) promise.setFailure(reply.asInstanceOf[ExceptionMessage]) else promise.setSuccess(reply)
         val stack = promise.actorStack
         handlePromiseCompleted(stack, promise)
         currentReceived = null
     }
-
-    private[core] def receiveExceptionReply(envelope: Envelope[?]): Unit =
-        if (!envelope.isBatchReply) {
-            val exceptionMessage = envelope.message.asInstanceOf[ExceptionMessage]
-            val replyId          = envelope.replyId
-            envelope.recycle()
-            if (this.contains(replyId)) {
-                val promise = this.pop(replyId)
-                if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
-                receiveReply0(exceptionMessage, promise, true)
-            }
-        } else {
-            val exceptionMessage = envelope.message.asInstanceOf[ExceptionMessage]
-            val replyIds         = envelope.replyIds
-            envelope.recycle()
-            for (rid <- replyIds if contains(rid)) {
-                val promise = pop(rid)
-                if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
-                receiveReply0(exceptionMessage, promise, true)
-            }
-        }
 
     /** Route an [[Event]] from the event mailbox to the appropriate handler. Channel-specific events
      *  ([[ReactorEvent]], [[ChannelTimeoutEvent]]) are forwarded to [[ChannelMessageSupport]] when the actor
@@ -247,7 +228,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
      */
     final private[core] def receiveEvent(event: Event): Unit = event match {
         case event: AskTimeoutEvent     => dispatchAskTimeoutEvent(event)
-        case event: TimeoutEvent        => handleActorTimeout(event)
+        case event: TimeoutEvent        => onActorTimeout(event)
         case event: ChannelTimeoutEvent =>
             this match
                 case support: ChannelMessageSupport => support.receiveChannelTimeoutEvent(event)
@@ -400,14 +381,14 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     // Kernel: exception handling
     // =========================================================================
 
-    /** Apply the configured [[noticeExceptionStrategy]] when a notice-type stack throws. */
+    /** Apply the configured [[exceptionStrategy]] when a notice-type stack throws. */
     private[core] def handleNoticeException(stack: Stack, e: Throwable): Unit = {
         val log = stack match
             case s: NoticeStack[?] => s"Stack with call message ${s.notice} failed at handle $currentReceived message"
             case s: BatchNoticeStack[?] =>
                 s"Stack with call message ${s.notices} failed at handle $currentReceived message"
             case _ => ""
-        noticeExceptionStrategy match
+        exceptionStrategy match
             case ExceptionStrategy.Restart =>
                 logger.error(log, e)
                 try {

@@ -38,7 +38,7 @@ object ClientSSL {
                 private val handler                  = sslCtx.newHandler()
                 private var client: Address[Connect] = _
 
-                override def main0(stack: NoticeStack[MainActor.Args]): StackYield = {
+                override def handleArgs(stack: NoticeStack[MainActor.Args]): StackYield = {
                     stack.state match
                         case state: StartState =>
                             client = system.buildActor(() =>

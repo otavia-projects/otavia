@@ -28,7 +28,7 @@ import java.util.Locale
 import scala.language.unsafeNulls
 
 class HttpServer(
-    override val workerNumber: Int = 8,
+    override val numWorkers: Int = 8,
     routers: Seq[Router],
     serverName: String = "otavia-http",
     sslCtx: Option[SslContext] = None

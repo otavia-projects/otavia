@@ -37,15 +37,15 @@ import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState, StartState}
  */
 abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends ChannelsActor[Bind] {
 
-    private var workers: Address[MessageOf[W]] = _
+    private var workerAddress: Address[MessageOf[W]] = _
 
     /** Number of worker. */
-    protected def workerNumber: Int = 1
+    protected def numWorkers: Int = 1
 
     protected def workerFactory: WorkerFactory[W]
 
     override def afterMount(): Unit = {
-        workers = system.buildActor(workerFactory, workerNumber)
+        workerAddress = system.buildActor(workerFactory, numWorkers)
     }
 
     override protected def initChannel(channel: Channel): Unit = {
@@ -54,7 +54,7 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
         channel.setOption(ChannelOption.CHANNEL_STACK_HEAD_OF_LINE, false)
     }
 
-    final override protected def newChannel(): Channel = system.channelFactory.openServerSocketChannel(family)
+    final override protected def newChannel(): Channel = system.channelFactory.openServerSocketChannel(protocolFamily)
 
     final protected def bind(stack: AskStack[Bind]): StackYield = {
         stack.state match
@@ -66,30 +66,28 @@ abstract class AcceptorActor[W <: AcceptedWorkerActor[? <: Call]] extends Channe
             case bindState: ChannelFutureState =>
                 if (bindState.future.isSuccess) {
                     val channel = bindState.future.channel
-                    afterBind(channel)
+                    afterBound(channel)
                     stack.`return`(ChannelEstablished(channel.id))
                 } else {
                     stack.`throw`(ExceptionMessage(bindState.future.causeUnsafe))
                 }
     }
 
-    protected def afterBind(channel: ChannelAddress): Unit = {
+    protected def afterBound(channel: ChannelAddress): Unit = {
         // default do nothing
     }
 
     override def resumeAsk(stack: AskStack[Bind]): StackYield = bind(stack)
 
-    override def resumeChannelStack(stack: ChannelStack[AnyRef]): StackYield = {
-        stack match
-            case _: ChannelStack[?] if stack.message.isInstanceOf[Channel] =>
-                handleAcceptedStack(stack.asInstanceOf[ChannelStack[Channel]])
-    }
+    override def resumeChannelStack(stack: ChannelStack[AnyRef]): StackYield =
+        if (stack.message.isInstanceOf[Channel]) handleAcceptedStack(stack.asInstanceOf[ChannelStack[Channel]])
+        else stack.`return`()
 
     private def handleAcceptedStack(stack: ChannelStack[Channel]): StackYield = {
         stack.state match
             case _: StartState =>
                 val state = FutureState[UnitReply]()
-                workers.ask(AcceptedChannel(stack.message), state.future)
+                workerAddress.ask(AcceptedChannel(stack.message), state.future)
                 stack.suspend(state)
             case state: FutureState[?] if state.id == 0 =>
                 if (state.future.isSuccess) stack.`return`()

@@ -73,7 +73,7 @@ trait Actor[+M <: Call] {
     protected def afterRestart(): Unit = {}
 
     /** user actor override this to control whether restart when occur exception */
-    protected def noticeExceptionStrategy: ExceptionStrategy = ExceptionStrategy.Restart
+    protected def exceptionStrategy: ExceptionStrategy = ExceptionStrategy.Restart
 
     /** Override to mark specific message types as barrier calls. When a barrier message is received, the actor
      *  pauses processing of subsequent asks/notices until the barrier is resolved (all pending stacks complete).
@@ -113,7 +113,7 @@ trait Actor[+M <: Call] {
      *  @param timeoutEvent
      *    the timeout event
      */
-    protected def handleActorTimeout(timeoutEvent: TimeoutEvent): Unit = {}
+    protected def onActorTimeout(timeoutEvent: TimeoutEvent): Unit = {}
 
     final def autowire[A <: Actor[?]: ClassTag](
         qualifier: Option[String] = None,
@@ -128,8 +128,8 @@ trait Actor[+M <: Call] {
 object Actor {
 
     opaque type MessageType = Byte
-    val NOTICE_TYPE: MessageType = 0
-    val ASK_TYPE: MessageType    = 1
-    val REPLY_TYPE: MessageType  = 2
+    val NoticeType: MessageType = 0
+    val AskType: MessageType    = 1
+    val ReplyType: MessageType  = 2
 
 }

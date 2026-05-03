@@ -155,14 +155,14 @@ final private[core] class ActorSystemImpl(val config: OtaviaConfig) extends Acto
         house.setActor(actor)
         house.setActorId(generator.getAndIncrement())
         house.setLoadBalanced(lb)
-        actor.setCtx(house)
+        actor.setHouse(house)
 
         house.address
     }
 
     private def createActor(factory: ActorFactory[?], num: Int): (Address[?], Class[?]) = {
         if (num == 1) {
-            val actor   = factory.create().asInstanceOf[AbstractActor[? <: Call]]
+            val actor   = factory.newActor().asInstanceOf[AbstractActor[? <: Call]]
             val isIO    = actor.isInstanceOf[ChannelsActor[?]]
             val thread  = pool.next(isIO)
             val address = setActorContext(actor, thread)
@@ -170,14 +170,14 @@ final private[core] class ActorSystemImpl(val config: OtaviaConfig) extends Acto
             (address, actor.getClass)
         } else if (num == pool.size) {
             val address = pool.workers.map { thread =>
-                val actor = factory.create().asInstanceOf[AbstractActor[? <: Call]]
+                val actor = factory.newActor().asInstanceOf[AbstractActor[? <: Call]]
                 setActorContext(actor, thread, true)
             }
             val clz = address.head.house.actor.getClass
             (new RobinAddress[Call](address.asInstanceOf[Array[ActorAddress[Call]]], true), clz)
         } else if (num > 1) {
             val range   = (0 until num).toArray
-            val actors  = range.map(_ => factory.create().asInstanceOf[AbstractActor[? <: Call]])
+            val actors  = range.map(_ => factory.newActor().asInstanceOf[AbstractActor[? <: Call]])
             val isIO    = actors.head.isInstanceOf[ChannelsActor[?]]
             val threads = pool.nexts(num, isIO)
             val address = range.map { index =>

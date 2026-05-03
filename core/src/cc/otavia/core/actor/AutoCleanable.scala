@@ -20,8 +20,8 @@ trait AutoCleanable {
     this: AbstractActor[?] =>
 
     /** if restart method throw NotImplementedError, actor system will call this method and mark the actor instance
-     *  dead, and release is resource.
+     *  dead, and release its resource.
      */
-    def cleaner(): ActorCleaner
+    def createCleaner(): ActorCleaner
 
 }

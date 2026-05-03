@@ -22,9 +22,4 @@ trait ActorFactory[A <: Actor[? <: Call]] {
 
     def newActor(): A
 
-    private[core] final def create(): A = {
-        val instance = newActor()
-        instance
-    }
-
 }

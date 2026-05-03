@@ -31,7 +31,7 @@ import cc.otavia.core.stack.{AskStack, NoticeStack, StackState, StackYield}
 abstract class MainActor(val args: Array[String] = Array.empty) extends StateActor[Args] {
 
     final override def afterMount(): Unit = {
-        afterMount0()
+        onMount()
         self.notice(Args(args))
         logger.info(s"Send main args ${args.mkString("[", ", ", "]")} to main actor [${getClass.getName}]")
     }
@@ -39,12 +39,12 @@ abstract class MainActor(val args: Array[String] = Array.empty) extends StateAct
     /** Replacement for [[afterMount]] since it is finalized in [[MainActor]]. Override this for custom mount-time
      *  initialization.
      */
-    protected def afterMount0(): Unit = {}
+    protected def onMount(): Unit = {}
 
-    final override def resumeNotice(stack: NoticeStack[Args]): StackYield = main0(stack)
+    final override def resumeNotice(stack: NoticeStack[Args]): StackYield = handleArgs(stack)
 
     /** Application entry point. Called when the [[Args]] notice is received. */
-    def main0(stack: NoticeStack[Args]): StackYield
+    def handleArgs(stack: NoticeStack[Args]): StackYield
 
 }
 

@@ -38,7 +38,7 @@ trait ActorContext {
     /** Whether this actor uses round-robin load balancing across multiple threads.
      *  When true, messages sent from co-located actor are routed to the same-thread instance for data locality.
      */
-    def isLoadBalance: Boolean
+    def isLoadBalanced: Boolean
 
     /** Index of the [[cc.otavia.core.system.ActorThread]] this actor is pinned to. */
     def mountedThreadId: Int
