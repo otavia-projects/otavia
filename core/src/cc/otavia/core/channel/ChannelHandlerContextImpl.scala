@@ -52,17 +52,18 @@ final class ChannelHandlerContextImpl(
 
     private var idx: Int = -1
 
-    protected[channel] var next: ChannelHandlerContextImpl = _
-    protected[channel] var prev: ChannelHandlerContextImpl = _
-
     private var inboundAdaptive: AdaptiveBuffer  = _
     private var outboundAdaptive: AdaptiveBuffer = _
 
     private[channel] def setInboundAdaptiveBuffer(inboundAdaptiveBuffer: AdaptiveBuffer): Unit =
         inboundAdaptive = inboundAdaptiveBuffer
 
+    private[channel] def getInboundAdaptive: AdaptiveBuffer = inboundAdaptive
+
     private[channel] def setOutboundAdaptiveBuffer(outboundAdaptiveBuffer: AdaptiveBuffer): Unit =
         outboundAdaptive = outboundAdaptiveBuffer
+
+    private[channel] def getOutboundAdaptive: AdaptiveBuffer = outboundAdaptive
 
     def index: Int = idx
 
@@ -86,12 +87,7 @@ final class ChannelHandlerContextImpl(
     override def inflightStacks[T <: AnyRef]: QueueMap[ChannelStack[T]] = pipeline.inflightStacks
 
     private def findContextInbound(mask: Int): ChannelHandlerContextImpl = if (!removed) {
-        var ctx = this
-        while {
-            ctx = ctx.next
-            (ctx.executionMask & mask) == 0
-        } do ()
-        ctx
+        pipeline.findNextInbound(idx + 1, mask)
     } else {
         throw IllegalStateException(
           s"handler $handler has been removed from pipeline, " +
@@ -100,12 +96,7 @@ final class ChannelHandlerContextImpl(
     }
 
     private def findContextOutbound(mask: Int): ChannelHandlerContextImpl = if (!removed) {
-        var ctx = this
-        while {
-            ctx = ctx.prev
-            (ctx.executionMask & mask) == 0
-        } do ()
-        ctx
+        pipeline.findNextOutbound(idx - 1, mask)
     } else {
         throw IllegalStateException(
           s"handler $handler has been removed from pipeline, " +
@@ -150,16 +141,6 @@ final class ChannelHandlerContextImpl(
     /** Return `true` if the [[ChannelHandler]] which belongs to this context was removed from the [[ChannelPipeline]].
      */
     override def isRemoved: Boolean = removed
-
-    def remove(relink: Boolean): Unit = {
-        assert(handlerState == REMOVE_COMPLETE)
-        if (relink) {
-            val prev = this.prev
-            val next = this.next
-            prev.next = next
-            next.prev = prev
-        }
-    }
 
     override def fireChannelRegistered(): this.type = {
         val ctx = findContextInbound(ChannelHandlerMask.MASK_CHANNEL_REGISTERED)
@@ -513,7 +494,7 @@ final class ChannelHandlerContextImpl(
     }
 
     private def write0(msg: AnyRef, flush: Boolean, msgId: Long): Unit = {
-        val next = findContextOutbound(if (flush) MASK_WRITE | MASK_FLUSH else MASK_WRITE)
+        val next = findContextOutbound(if (flush) MASK_WRITE_ID | MASK_FLUSH else MASK_WRITE_ID)
         if (flush) next.invokeWriteAndFlush(msg, msgId) else next.invokeWrite(msg, msgId)
     }
 

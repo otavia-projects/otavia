@@ -175,7 +175,7 @@ object ChannelHandlerMask {
         try {
             skip = handlerType.getMethod(methodName, paramTypes*).isAnnotationPresent(classOf[Skip])
         } catch {
-            case _: Throwable =>
+            case _: NoSuchMethodException =>
         }
         skip
     }

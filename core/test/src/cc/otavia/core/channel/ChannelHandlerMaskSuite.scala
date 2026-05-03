@@ -16,6 +16,8 @@
 
 package cc.otavia.core.channel
 
+import cc.otavia.core.channel.ChannelHandlerMaskSuite.*
+import cc.otavia.core.channel.internal.ChannelHandlerMask
 import cc.otavia.core.channel.{ChannelHandlerContext, Skip}
 import cc.otavia.core.stack.ChannelFuture
 import org.scalatest.funsuite.AnyFunSuiteLike
@@ -71,6 +73,38 @@ class ChannelHandlerMaskSuite extends AnyFunSuiteLike {
               )
               .isAnnotationPresent(classOf[Skip])
         )
+    }
+
+    test("default handler mask has no inbound/outbound bits set") {
+        // All methods on ChannelHandler trait have @Skip, so mask should have all bits cleared
+        val m = ChannelHandlerMask.mask(classOf[ChannelHandler])
+        assert((m & ChannelHandlerMask.MASK_CHANNEL_READ) == 0)
+        assert((m & ChannelHandlerMask.MASK_CHANNEL_ACTIVE) == 0)
+        assert((m & ChannelHandlerMask.MASK_WRITE) == 0)
+        assert((m & ChannelHandlerMask.MASK_FLUSH) == 0)
+        assert((m & ChannelHandlerMask.MASK_BIND) == 0)
+        assert((m & ChannelHandlerMask.MASK_CONNECT) == 0)
+    }
+
+    test("handler overriding channelRead has MASK_CHANNEL_READ set") {
+        val m = ChannelHandlerMask.mask(classOf[TestHandler])
+        assert((m & ChannelHandlerMask.MASK_CHANNEL_READ) != 0)
+        // channelActive has @Skip in TestHandler
+        assert((m & ChannelHandlerMask.MASK_CHANNEL_ACTIVE) == 0)
+    }
+
+    test("isInbound and isOutbound correct") {
+        // Default handler: all @Skip → not inbound, not outbound
+        assert(!ChannelHandlerMask.isInbound(classOf[ChannelHandler]))
+        assert(!ChannelHandlerMask.isOutbound(classOf[ChannelHandler]))
+        // TestHandler overrides channelRead → is inbound
+        assert(ChannelHandlerMask.isInbound(classOf[TestHandler]))
+    }
+
+    test("mask is cached (same class same value)") {
+        val m1 = ChannelHandlerMask.mask(classOf[TestHandler])
+        val m2 = ChannelHandlerMask.mask(classOf[TestHandler])
+        assert(m1 == m2)
     }
 
 }

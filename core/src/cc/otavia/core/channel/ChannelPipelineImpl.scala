@@ -47,11 +47,8 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
     private val channelInboundAdaptiveBuffer: AdaptiveBuffer  = AdaptiveBuffer(channel.directAllocator)
     private val channelOutboundAdaptiveBuffer: AdaptiveBuffer = AdaptiveBuffer(channel.directAllocator)
 
-    private val head = new ChannelHandlerContextImpl(this, HEAD_NAME, new HeadHandler(channel))
-    private val tail = new ChannelHandlerContextImpl(this, TAIL_NAME, new TailHandler(logger))
-
-    head.next = tail
-    tail.prev = head
+    private[channel] val head = new ChannelHandlerContextImpl(this, HEAD_NAME, new HeadHandler(channel))
+    private[channel] val tail = new ChannelHandlerContextImpl(this, TAIL_NAME, new TailHandler(logger))
 
     head.setInboundAdaptiveBuffer(channelInboundAdaptiveBuffer)
 
@@ -60,7 +57,7 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
 
     private val touch: Boolean = true
 
-    private final val handlers = new mutable.ArrayBuffer[ChannelHandlerContextImpl](4)
+    private[channel] final val handlers = new mutable.ArrayBuffer[ChannelHandlerContextImpl](4)
 
     private var _pendingOutboundBytes: Long = 0
 
@@ -155,11 +152,6 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
 
         handlers.insert(0, newCtx)
         resetIndices()
-        val nextCtx = head.next
-        newCtx.prev = head
-        newCtx.next = nextCtx
-        head.next = newCtx
-        nextCtx.prev = newCtx
 
         callHandlerAdded0(newCtx)
         this
@@ -183,11 +175,6 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
 
         handlers.addOne(newCtx)
         resetIndices()
-        val prevCtx = tail.prev
-        newCtx.prev = prevCtx
-        newCtx.next = tail
-        prevCtx.next = newCtx
-        tail.prev = newCtx
 
         callHandlerAdded0(newCtx)
         this
@@ -213,10 +200,6 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
                         }
                         handlers.insert(index, newCtx)
                         resetIndices()
-                        newCtx.prev = ctx.prev
-                        newCtx.next = ctx
-                        ctx.prev.next = newCtx
-                        ctx.prev = newCtx
                         callHandlerAdded0(newCtx)
                     }
                 case None => throw new NoSuchElementException(baseName)
@@ -244,10 +227,6 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
                     }
                     handlers.insert(index + 1, newCtx)
                     resetIndices()
-                    newCtx.prev = ctx
-                    newCtx.next = ctx.next
-                    ctx.next.prev = newCtx
-                    ctx.next = newCtx
                     callHandlerAdded0(newCtx)
                 case None => throw new NoSuchElementException(baseName)
         }
@@ -271,8 +250,6 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
             } catch {
                 case t2: Throwable =>
                     logger.warn(s"Failed to remove a handler: ${ctx.name}", t2)
-            } finally {
-                ctx.remove(true)
             }
 
             if (removed) {
@@ -347,9 +324,7 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
     override def remove[T <: ChannelHandler](handlerType: Class[T]): Option[T] =
         removeIfExists(ctx => handlerType.isAssignableFrom(ctx.handler.getClass))
 
-    private def remove0(ctx: ChannelHandlerContextImpl): Unit = try {
-        callHandlerRemoved0(ctx)
-    } finally { ctx.remove(true) }
+    private def remove0(ctx: ChannelHandlerContextImpl): Unit = callHandlerRemoved0(ctx)
 
     override def context(handler: ChannelHandler): Option[ChannelHandlerContext] = handlers.find(_.handler == handler)
 
@@ -524,23 +499,45 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
         handlers.zipWithIndex.find((ctx, _) => predicate(ctx)) match
             case Some((old, index)) =>
                 val newCtx = newContext(newName, newHandler)
-                // Insert new context at same position
+                handleReplaceBuffers(newCtx, old)
                 handlers.insert(index, newCtx)
                 resetIndices()
-                // Link new context into doubly-linked list
-                newCtx.prev = old.prev
-                newCtx.next = old.next
-                old.prev.next = newCtx
-                old.next.prev = newCtx
-                // Call handler added for new handler
                 callHandlerAdded0(newCtx)
-                // Remove old context
-                handlers.remove(index + 1)
+                if (newCtx.isRemoved) {
+                    // callHandlerAdded0 failed and removed newCtx; old is still in handlers
+                    throw new ChannelPipelineException(
+                      s"${newHandler.getClass.getName}.handlerAdded() has thrown an exception; replacement failed."
+                    )
+                }
+                // Find old by reference (safe even if indices shifted)
+                val oldIndex = handlers.indexWhere(_ eq old)
+                handlers.remove(oldIndex)
                 resetIndices()
-                remove0(old)
+                callHandlerRemoved0(old)
                 old.handler
             case None =>
                 throw new NoSuchElementException("No matching handler found in pipeline")
+    }
+
+    private def handleReplaceBuffers(newCtx: ChannelHandlerContextImpl, old: ChannelHandlerContextImpl): Unit = {
+        if (newCtx.isBufferHandlerContext && !old.isBufferHandlerContext)
+            throw new IllegalStateException(
+              s"Cannot replace non-buffer handler ${old.handler} with buffer handler ${newCtx.handler}"
+            )
+        if (!newCtx.isBufferHandlerContext && old.isBufferHandlerContext)
+            throw new IllegalStateException(
+              s"Cannot replace buffer handler ${old.handler} with non-buffer handler ${newCtx.handler}"
+            )
+        if (newCtx.isBufferHandlerContext) {
+            if (old.hasInboundAdaptive && newCtx.hasInboundAdaptive)
+                newCtx.setInboundAdaptiveBuffer(old.getInboundAdaptive)
+            else if (newCtx.hasInboundAdaptive)
+                newCtx.setInboundAdaptiveBuffer(AdaptiveBuffer(channel.heapAllocator))
+            if (old.hasOutboundAdaptive && newCtx.hasOutboundAdaptive)
+                newCtx.setOutboundAdaptiveBuffer(old.getOutboundAdaptive)
+            else if (newCtx.hasOutboundAdaptive)
+                setHeadAdaptiveBuffer(newCtx)
+        }
     }
 
     /** Returns the context of the first [[ChannelHandler]] in this pipeline.
@@ -576,102 +573,115 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
     /** Converts this pipeline into an [[Map]] whose keys are handler names and whose values are handlers. */
     override def toMap: Map[String, ChannelHandler] = handlers.map(ctx => ctx.name -> ctx.handler).toMap
 
-    override def fireChannelRegistered(): this.type                = { head.fireChannelRegistered(); this }
-    override def fireChannelUnregistered(): this.type              = { head.fireChannelUnregistered(); this }
-    override def fireChannelActive(): this.type                    = { head.fireChannelActive(); this }
-    override def fireChannelInactive(): this.type                  = { head.fireChannelInactive(); this }
-    override def fireChannelShutdown(direction: ChannelShutdownDirection): this.type = { head.fireChannelShutdown(direction); this }
-    override def fireChannelExceptionCaught(cause: Throwable): this.type             = { head.fireChannelExceptionCaught(cause); this }
-    override def fireChannelExceptionCaught(cause: Throwable, id: Long): this.type   = { head.fireChannelExceptionCaught(cause, id); this }
-    override def fireChannelInboundEvent(event: AnyRef): this.type = { head.fireChannelInboundEvent(event); this }
-    override def fireChannelTimeoutEvent(id: Long): this.type     = { head.fireChannelTimeoutEvent(id); this }
-    override def fireChannelRead(msg: AnyRef): this.type          = { head.fireChannelRead(msg); this }
-    override def fireChannelRead(msg: AnyRef, msgId: Long): this.type = { head.fireChannelRead(msg, msgId); this }
-    override def fireChannelReadComplete(): this.type             = { head.fireChannelReadComplete(); this }
-    override def fireChannelWritabilityChanged(): this.type       = { head.fireChannelWritabilityChanged(); this }
+    override def fireChannelRegistered(): this.type =
+        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_REGISTERED).invokeChannelRegistered(); this }
+    override def fireChannelUnregistered(): this.type =
+        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_UNREGISTERED).invokeChannelUnregistered(); this }
+    override def fireChannelActive(): this.type =
+        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_ACTIVE).invokeChannelActive(); this }
+    override def fireChannelInactive(): this.type =
+        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_INACTIVE).invokeChannelInactive(); this }
+    override def fireChannelShutdown(direction: ChannelShutdownDirection): this.type =
+        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_SHUTDOWN).invokeChannelShutdown(direction); this }
+    override def fireChannelExceptionCaught(cause: Throwable): this.type =
+        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_EXCEPTION_CAUGHT).invokeChannelExceptionCaught(cause); this }
+    override def fireChannelExceptionCaught(cause: Throwable, id: Long): this.type =
+        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_EXCEPTION_CAUGHT_ID).invokeChannelExceptionCaught(cause, id); this }
+    override def fireChannelInboundEvent(event: AnyRef): this.type =
+        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_INBOUND_EVENT).invokeChannelInboundEvent(event); this }
+    override def fireChannelTimeoutEvent(id: Long): this.type =
+        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_TIMEOUT_EVENT).invokeChannelTimeoutEvent(id); this }
+    override def fireChannelRead(msg: AnyRef): this.type =
+        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_READ).invokeChannelRead(msg); this }
+    override def fireChannelRead(msg: AnyRef, msgId: Long): this.type =
+        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_READ_ID).invokeChannelRead(msg, msgId); this }
+    override def fireChannelReadComplete(): this.type =
+        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_READ_COMPLETE).invokeChannelReadComplete(); this }
+    override def fireChannelWritabilityChanged(): this.type =
+        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_WRITABILITY_CHANGED).invokeChannelWritabilityChanged(); this }
 
     override def flush(): this.type = {
-        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_FLUSH)
+        val ctx = findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_FLUSH)
         ctx.handler.flush(ctx)
         this
     }
 
     override def read(readPlan: ReadPlan): this.type = {
-        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_READ)
+        val ctx = findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_READ)
         ctx.handler.read(ctx, readPlan)
         this
     }
 
     override def read(): this.type = {
-        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_READ)
+        val ctx = findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_READ)
         ctx.handler.read(ctx, AutoReadPlan)
         this
     }
 
     override def bind(local: SocketAddress, future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_BIND)
+        val ctx = findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_BIND)
         ctx.handler.bind(ctx, local, future)
     }
 
     override def connect(remote: SocketAddress, local: Option[SocketAddress], future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_CONNECT)
+        val ctx = findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_CONNECT)
         ctx.handler.connect(ctx, remote, local, future)
     }
 
     override def open(ph: Path, opts: Seq[OpenOption], as: Seq[FileAttribute[?]], fu: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_OPEN)
+        val ctx = findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_OPEN)
         ctx.handler.open(ctx, ph, opts, as, fu)
     }
 
     override def disconnect(future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_DISCONNECT)
+        val ctx = findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_DISCONNECT)
         ctx.handler.disconnect(ctx, future)
     }
 
     override def close(future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_CLOSE)
+        val ctx = findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_CLOSE)
         ctx.handler.close(ctx, future)
     }
 
     override def shutdown(direction: ChannelShutdownDirection, future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_SHUTDOWN)
+        val ctx = findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_SHUTDOWN)
         ctx.handler.shutdown(ctx, direction, future)
     }
 
     override def register(future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_REGISTER)
+        val ctx = findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_REGISTER)
         ctx.handler.register(ctx, future)
     }
 
     override def deregister(future: ChannelFuture): ChannelFuture = {
         assertInExecutor()
-        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_DEREGISTER)
+        val ctx = findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_DEREGISTER)
         ctx.handler.deregister(ctx, future)
     }
 
     override def write(msg: AnyRef): Unit = {
         assertInExecutor()
-        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_WRITE)
+        val ctx = findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_WRITE)
         ctx.handler.write(ctx, msg)
     }
 
     override def write(msg: AnyRef, msgId: Long): Unit = {
         assertInExecutor()
-        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_WRITE_ID)
+        val ctx = findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_WRITE_ID)
         ctx.handler.write(ctx, msg, msgId)
     }
 
     override def writeAndFlush(msg: AnyRef): Unit = {
         assertInExecutor()
         val ctx =
-            findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_WRITE | ChannelHandlerMask.MASK_FLUSH)
+            findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_WRITE | ChannelHandlerMask.MASK_FLUSH)
         ctx.handler.write(ctx, msg)
         ctx.handler.flush(ctx)
     }
@@ -679,7 +689,7 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
     override def writeAndFlush(msg: AnyRef, msgId: Long): Unit = {
         assertInExecutor()
         val ctx =
-            findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_WRITE_ID | ChannelHandlerMask.MASK_FLUSH)
+            findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_WRITE_ID | ChannelHandlerMask.MASK_FLUSH)
         ctx.handler.write(ctx, msg, msgId)
         ctx.handler.flush(ctx)
     }
@@ -692,7 +702,7 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
      */
     override def sendOutboundEvent(event: AnyRef): Unit = {
         assertInExecutor()
-        val ctx = findContextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_SEND_OUTBOUND_EVENT)
+        val ctx = findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_SEND_OUTBOUND_EVENT)
         ctx.handler.sendOutboundEvent(ctx, event)
     }
 
@@ -771,16 +781,25 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
         }
     }
 
-    private def findContextOutbound(from: Int, mask: Int): ChannelHandlerContextImpl =
+    private[channel] def findNextInbound(from: Int, mask: Int): ChannelHandlerContextImpl = {
+        var i = from
+        while (i < handlers.length) {
+            val ctx = handlers(i)
+            if ((ctx.executionMask & mask) != 0) return ctx
+            i += 1
+        }
+        tail
+    }
+
+    private[channel] def findNextOutbound(from: Int, mask: Int): ChannelHandlerContextImpl =
         if ((this.executionMask & mask) != 0) {
-            var cursor                         = from
-            var ctx: ChannelHandlerContextImpl = null
-            while {
-                ctx = if (cursor > -1) handlers(cursor) else head
-                cursor -= 1
-                (ctx.executionMask & mask) == 0
-            } do ()
-            ctx
+            var i = from
+            while (i >= 0) {
+                val ctx = handlers(i)
+                if ((ctx.executionMask & mask) != 0) return ctx
+                i -= 1
+            }
+            head
         } else head
 
 }

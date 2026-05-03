@@ -303,6 +303,7 @@ trait ChannelHandler {
      *  @return
      *    the number of buffered / queued bytes.
      */
+    @Skip
     def pendingOutboundBytes(ctx: ChannelHandlerContext): Long = 0
 
     def isBufferHandler: Boolean = false
