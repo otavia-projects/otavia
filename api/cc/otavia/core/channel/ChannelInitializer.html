@@ -12,7 +12,7 @@
 </div>
 <div class="cover">
  <div class="doc">
-  <p>A special <a href="ChannelHandler.html">ChannelHandler</a> which offers an easy way to initialize a <a href="Channel.html">Channel</a> once it was registered to its <span data-unresolved-link="" title="Problem linking ChannelsActor: Couldn't resolve a member for the given link query">ChannelsActor</span>. Implementations are most often used in the context of <span data-unresolved-link="" title="Problem linking ChannelsActor.handler: Couldn't resolve a member for the given link query">ChannelsActor.handler</span>, to setup the <a href="ChannelPipeline.html">ChannelPipeline</a> of a <a href="Channel.html">Channel</a>.</p>
+  <p>A special <a href="ChannelHandler.html">ChannelHandler</a> which offers an easy way to initialize a <a href="Channel.html">Channel</a> once it was registered to its <span data-unresolved-link="" title="Problem linking ChannelsActor: Couldn't resolve a member for the given link query">ChannelsActor</span>. Implementations are most often used in the context of <span data-unresolved-link="" title="Problem linking ChannelsActor.channelInitializer: Couldn't resolve a member for the given link query">ChannelsActor.channelInitializer</span>, to setup the <a href="ChannelPipeline.html">ChannelPipeline</a> of a <a href="Channel.html">Channel</a>.</p>
   <div class="snippet mono-small-block">
    <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span><span class="hideable">    </span>class MyChannelInitializer extends ChannelInitializer[Channel] {
 </span><span line-number="2" class=""><span class="tooltip-container"></span><span class="hideable">    </span>    override protected def initChannel(ch: Channel): Unit = {

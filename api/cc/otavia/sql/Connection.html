@@ -10,7 +10,7 @@
 </div>
 <div class="main-signature mono-small-block">
  <div class="signature">
-  <span class="signature-short"><span class="modifiers"></span><span class="kind"><span t="k">class </span></span><a href="Connection.html" t="n" class="documentableName ">Connection</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">url</span>: <span data-unresolved-link="" t="t">String</span>, <span t="k"></span><span data-unresolved-link="" t="n">info</span>: <span data-unresolved-link="" t="t">Map</span>[<span data-unresolved-link="" t="t">String</span>, <span data-unresolved-link="" t="t">String</span>], <span t="k"></span><span data-unresolved-link="" t="n">driverName</span>: <span data-unresolved-link="" t="t">Option</span>[<span data-unresolved-link="" t="t">String</span>] = ..., <span t="k">val </span><span data-unresolved-link="" t="n">family</span>: <span data-unresolved-link="" t="t">ProtocolFamily</span> = ...)<span t="k"> extends </span><a href="../core/actor/SocketChannelsActor.html" t="t">SocketChannelsActor</a>[<a href="Connection$.html#MSG-0" t="t">MSG</a>]</span><span class="signature-long"></span>
+  <span class="signature-short"><span class="modifiers"></span><span class="kind"><span t="k">class </span></span><a href="Connection.html" t="n" class="documentableName ">Connection</a>(<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">url</span>: <span data-unresolved-link="" t="t">String</span>, <span t="k"></span><span data-unresolved-link="" t="n">info</span>: <span data-unresolved-link="" t="t">Map</span>[<span data-unresolved-link="" t="t">String</span>, <span data-unresolved-link="" t="t">String</span>], <span t="k"></span><span data-unresolved-link="" t="n">driverName</span>: <span data-unresolved-link="" t="t">Option</span>[<span data-unresolved-link="" t="t">String</span>] = ..., <span t="k">val </span><span data-unresolved-link="" t="n">protocolFamily</span>: <span data-unresolved-link="" t="t">ProtocolFamily</span> = ...)<span t="k"> extends </span><a href="../core/actor/SocketChannelsActor.html" t="t">SocketChannelsActor</a>[<a href="Connection$.html#MSG-0" t="t">MSG</a>]</span><span class="signature-long"></span>
  </div>
 </div>
 <div class="cover">
@@ -174,41 +174,6 @@ node7 -> node3;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="address-0" data-f-inherited="ChannelsActor">
-         <div class="documentableElement-expander">
-          <button class="icon-button ar show-content"></button>
-          <div class="header monospace mono-medium">
-           <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Connection.html#address-0" t="n" class="documentableName ">address</a>: <a href="../core/address/ActorAddress.html" t="t">ActorAddress</a>[<a href="Connection$.html#MSG-0" t="t">MSG</a>]
-           </div>
-          </div>
-         </div>
-         <div class="docs">
-          <span class="modifiers"></span>
-          <div>
-           <div class="originInfo"></div>
-           <div class="memberDocumentation">
-            <div class="documentableBrief doc">
-             <p>Alias for <a href="../core/actor/ChannelsActor.html#self-0">self</a> — the typed address of this IO-capable actor.</p>
-            </div>
-            <div class="cover">
-             <div class="doc">
-              <p>Alias for <a href="../core/actor/ChannelsActor.html#self-0">self</a> — the typed address of this IO-capable actor.</p>
-             </div>
-             <h2 class="h200">Attributes</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Inherited from:
-              </dt>
-              <dd class="body-medium">
-               <a href="../core/actor/ChannelsActor.html#address-0">ChannelsActor</a>
-              </dd>
-             </dl>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
         <div class="documentableElement" id="autowire-32a" data-f-keywords="final" data-f-inherited="Actor">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -304,12 +269,12 @@ node7 -> node3;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="cleaner-fffff3fb" data-f-keywords="override" data-f-inherited="SocketChannelsActor">
+        <div class="documentableElement" id="channelInitializer-0" data-f-inherited="ChannelsActor">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="Connection.html#cleaner-fffff3fb" t="n" class="documentableName ">cleaner</a>(<span t="k"></span>): <a href="../core/actor/ActorCleaner.html" t="t">ActorCleaner</a>
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Connection.html#channelInitializer-0" t="n" class="documentableName ">channelInitializer</a>: <span data-unresolved-link="" t="t">Option</span>[<a href="../core/channel/ChannelInitializer.html" t="t">ChannelInitializer</a>[<span t="k">_</span><span t="k"> &lt;: </span><a href="../core/channel/Channel.html" t="t">Channel</a>]]
            </div>
           </div>
          </div>
@@ -319,27 +284,19 @@ node7 -> node3;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>if restart method throw NotImplementedError, actor system will call this method and mark the actor instance dead, and release is resource.</p>
+             <p>Optional <span data-unresolved-link="" title="Problem linking ChannelInitializer: Couldn't resolve a member for the given link query">ChannelInitializer</span> for pipeline setup. Override to provide a default handler.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>if restart method throw NotImplementedError, actor system will call this method and mark the actor instance dead, and release is resource.</p>
+              <p>Optional <span data-unresolved-link="" title="Problem linking ChannelInitializer: Couldn't resolve a member for the given link query">ChannelInitializer</span> for pipeline setup. Override to provide a default handler.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
-               Definition Classes
-              </dt>
-              <dd class="body-medium">
-               <div>
-                <a href="../core/actor/SocketChannelsActor.html#cleaner-fffff3fb">SocketChannelsActor</a> -&gt; <a href="../core/actor/AutoCleanable.html">AutoCleanable</a>
-               </div>
-              </dd>
-              <dt class="body-small">
                Inherited from:
               </dt>
               <dd class="body-medium">
-               <a href="../core/actor/SocketChannelsActor.html#cleaner-fffff3fb">SocketChannelsActor</a>
+               <a href="../core/actor/ChannelsActor.html#channelInitializer-0">ChannelsActor</a>
               </dd>
              </dl>
             </div>
@@ -390,12 +347,12 @@ node7 -> node3;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="handler-0" data-f-inherited="ChannelsActor">
+        <div class="documentableElement" id="createCleaner-fffff3fb" data-f-keywords="override" data-f-inherited="SocketChannelsActor">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="Connection.html#handler-0" t="n" class="documentableName ">handler</a>: <span data-unresolved-link="" t="t">Option</span>[<a href="../core/channel/ChannelInitializer.html" t="t">ChannelInitializer</a>[<span t="k">_</span><span t="k"> &lt;: </span><a href="../core/channel/Channel.html" t="t">Channel</a>]]
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">def </span></span><a href="Connection.html#createCleaner-fffff3fb" t="n" class="documentableName ">createCleaner</a>(<span t="k"></span>): <a href="../core/actor/ActorCleaner.html" t="t">ActorCleaner</a>
            </div>
           </div>
          </div>
@@ -405,19 +362,27 @@ node7 -> node3;
            <div class="originInfo"></div>
            <div class="memberDocumentation">
             <div class="documentableBrief doc">
-             <p>Optional <span data-unresolved-link="" title="Problem linking ChannelInitializer: Couldn't resolve a member for the given link query">ChannelInitializer</span> for pipeline setup. Override to provide a default handler.</p>
+             <p>if restart method throw NotImplementedError, actor system will call this method and mark the actor instance dead, and release its resource.</p>
             </div>
             <div class="cover">
              <div class="doc">
-              <p>Optional <span data-unresolved-link="" title="Problem linking ChannelInitializer: Couldn't resolve a member for the given link query">ChannelInitializer</span> for pipeline setup. Override to provide a default handler.</p>
+              <p>if restart method throw NotImplementedError, actor system will call this method and mark the actor instance dead, and release its resource.</p>
              </div>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
               <dt class="body-small">
+               Definition Classes
+              </dt>
+              <dd class="body-medium">
+               <div>
+                <a href="../core/actor/SocketChannelsActor.html#createCleaner-fffff3fb">SocketChannelsActor</a> -&gt; <a href="../core/actor/AutoCleanable.html">AutoCleanable</a>
+               </div>
+              </dd>
+              <dt class="body-small">
                Inherited from:
               </dt>
               <dd class="body-medium">
-               <a href="../core/actor/ChannelsActor.html#handler-0">ChannelsActor</a>
+               <a href="../core/actor/SocketChannelsActor.html#createCleaner-fffff3fb">SocketChannelsActor</a>
               </dd>
              </dl>
             </div>
@@ -777,11 +742,11 @@ node7 -> node3;
          <button class="icon-button show-content expand"></button>
          <h4 class="groupHeader h200">Concrete fields</h4>
         </div>
-        <div class="documentableElement" id="family-0" data-f-keywords="override">
+        <div class="documentableElement" id="protocolFamily-0" data-f-keywords="override">
          <div class="documentableElement-expander">
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">val </span></span><a href="Connection.html#family-0" t="n" class="documentableName ">family</a>: <span data-unresolved-link="" t="t">ProtocolFamily</span>
+            <span class="modifiers"><span t="k">override </span></span><span class="kind"><span t="k">val </span></span><a href="Connection.html#protocolFamily-0" t="n" class="documentableName ">protocolFamily</a>: <span data-unresolved-link="" t="t">ProtocolFamily</span>
            </div>
           </div>
          </div>

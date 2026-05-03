@@ -200,41 +200,6 @@ node6 -> node3;
           </div>
          </div>
         </div>
-        <div class="documentableElement" id="address-0" data-f-inherited="ChannelsActor">
-         <div class="documentableElement-expander">
-          <button class="icon-button ar show-content"></button>
-          <div class="header monospace mono-medium">
-           <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HttpServerWorker.html#address-0" t="n" class="documentableName ">address</a>: <a href="../../core/address/ActorAddress.html" t="t">ActorAddress</a>[<span data-unresolved-link="" t="t">Nothing</span><span t="k"> | </span><a href="../../core/actor/AcceptorActor$$AcceptedChannel.html" t="t">AcceptedChannel</a>]
-           </div>
-          </div>
-         </div>
-         <div class="docs">
-          <span class="modifiers"></span>
-          <div>
-           <div class="originInfo"></div>
-           <div class="memberDocumentation">
-            <div class="documentableBrief doc">
-             <p>Alias for <a href="../../core/actor/ChannelsActor.html#self-0">self</a> — the typed address of this IO-capable actor.</p>
-            </div>
-            <div class="cover">
-             <div class="doc">
-              <p>Alias for <a href="../../core/actor/ChannelsActor.html#self-0">self</a> — the typed address of this IO-capable actor.</p>
-             </div>
-             <h2 class="h200">Attributes</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Inherited from:
-              </dt>
-              <dd class="body-medium">
-               <a href="../../core/actor/ChannelsActor.html#address-0">ChannelsActor</a>
-              </dd>
-             </dl>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
         <div class="documentableElement" id="autowire-32a" data-f-keywords="final" data-f-inherited="Actor">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -330,6 +295,41 @@ node6 -> node3;
           </div>
          </div>
         </div>
+        <div class="documentableElement" id="channelInitializer-0" data-f-inherited="ChannelsActor">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HttpServerWorker.html#channelInitializer-0" t="n" class="documentableName ">channelInitializer</a>: <span data-unresolved-link="" t="t">Option</span>[<a href="../../core/channel/ChannelInitializer.html" t="t">ChannelInitializer</a>[<span t="k">_</span><span t="k"> &lt;: </span><a href="../../core/channel/Channel.html" t="t">Channel</a>]]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Optional <span data-unresolved-link="" title="Problem linking ChannelInitializer: Couldn't resolve a member for the given link query">ChannelInitializer</span> for pipeline setup. Override to provide a default handler.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Optional <span data-unresolved-link="" title="Problem linking ChannelInitializer: Couldn't resolve a member for the given link query">ChannelInitializer</span> for pipeline setup. Override to provide a default handler.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Inherited from:
+              </dt>
+              <dd class="body-medium">
+               <a href="../../core/actor/ChannelsActor.html#channelInitializer-0">ChannelsActor</a>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
         <div class="documentableElement" id="context-0" data-f-keywords="final,override" data-f-inherited="AbstractActor">
          <div class="documentableElement-expander">
           <button class="icon-button ar show-content"></button>
@@ -401,41 +401,6 @@ node6 -> node3;
               </dt>
               <dd class="body-medium">
                <a href="../../core/actor/AcceptedWorkerActor.html#handleAccepted-fffff5d6">AcceptedWorkerActor</a>
-              </dd>
-             </dl>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
-        <div class="documentableElement" id="handler-0" data-f-inherited="ChannelsActor">
-         <div class="documentableElement-expander">
-          <button class="icon-button ar show-content"></button>
-          <div class="header monospace mono-medium">
-           <div class="signature">
-            <span class="modifiers"></span><span class="kind"><span t="k">def </span></span><a href="HttpServerWorker.html#handler-0" t="n" class="documentableName ">handler</a>: <span data-unresolved-link="" t="t">Option</span>[<a href="../../core/channel/ChannelInitializer.html" t="t">ChannelInitializer</a>[<span t="k">_</span><span t="k"> &lt;: </span><a href="../../core/channel/Channel.html" t="t">Channel</a>]]
-           </div>
-          </div>
-         </div>
-         <div class="docs">
-          <span class="modifiers"></span>
-          <div>
-           <div class="originInfo"></div>
-           <div class="memberDocumentation">
-            <div class="documentableBrief doc">
-             <p>Optional <span data-unresolved-link="" title="Problem linking ChannelInitializer: Couldn't resolve a member for the given link query">ChannelInitializer</span> for pipeline setup. Override to provide a default handler.</p>
-            </div>
-            <div class="cover">
-             <div class="doc">
-              <p>Optional <span data-unresolved-link="" title="Problem linking ChannelInitializer: Couldn't resolve a member for the given link query">ChannelInitializer</span> for pipeline setup. Override to provide a default handler.</p>
-             </div>
-             <h2 class="h200">Attributes</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Inherited from:
-              </dt>
-              <dd class="body-medium">
-               <a href="../../core/actor/ChannelsActor.html#handler-0">ChannelsActor</a>
               </dd>
              </dl>
             </div>
