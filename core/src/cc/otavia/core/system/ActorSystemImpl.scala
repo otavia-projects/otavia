@@ -21,7 +21,7 @@ import cc.otavia.core.address.*
 import cc.otavia.core.cache.ThreadLocal
 import cc.otavia.core.channel.ChannelFactory
 import cc.otavia.core.config.OtaviaConfig
-import cc.otavia.core.ioc.{BeanDefinition, BeanManager, Module}
+import cc.otavia.core.ioc.{BeanDefinition, BeanRegistry, DuplicateModuleException, Module, ModuleDependencyException}
 import cc.otavia.core.message.Call
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.monitor.{ReactorMonitor, SystemMonitor, SystemMonitorTask, ThreadMonitor}
@@ -53,7 +53,9 @@ final private[core] class ActorSystemImpl(val config: OtaviaConfig) extends Acto
 
     private val generator = new AtomicLong(1)
 
-    private val beanManager = new BeanManager(this)
+    private val beanRegistry = new BeanRegistry(this)
+
+    private val loadedModules = mutable.HashMap[String, Module]()
 
     private val totals = new AtomicLong(0)
 
@@ -104,6 +106,8 @@ final private[core] class ActorSystemImpl(val config: OtaviaConfig) extends Acto
 
     loadEarlyModules()
 
+    beanRegistry.freeze()
+
     private def loadEarlyModules(): Unit = while (!earlyModules.isEmpty) {
         val module = earlyModules.poll()
         this.loadModule(module)
@@ -136,7 +140,7 @@ final private[core] class ActorSystemImpl(val config: OtaviaConfig) extends Acto
         val actorFactory   = factory.asInstanceOf[ActorFactory[?]]
         val (address, clz) = createActor(actorFactory, num)
 
-        if (global) beanManager.register(clz, address, qualifier, primary)
+        if (global) beanRegistry.register(clz, address, qualifier, primary)
 
         mountActor(address)
 
@@ -193,7 +197,7 @@ final private[core] class ActorSystemImpl(val config: OtaviaConfig) extends Acto
 
     override private[core] def registerGlobalActor(definition: BeanDefinition): Unit = {
         val (address, clz) = createActor(definition.factory, definition.num)
-        beanManager.register(clz, address, definition.qualifier, definition.primary)
+        beanRegistry.register(clz, address, definition.qualifier, definition.primary)
         mountActor(address)
     }
 
@@ -201,37 +205,53 @@ final private[core] class ActorSystemImpl(val config: OtaviaConfig) extends Acto
         if (!initialize) {
             earlyModules.add(module)
         } else {
-            logger.debug(s"Loading module $module")
-            module.setSystem(this)
-            val unmount = new ArrayBuffer[Address[?]](module.definitions.length)
-            module.definitions.foreach { definition =>
-                val (address, clz) = createActor(definition.factory, definition.num)
-                unmount.addOne(address)
-                beanManager.register(clz, address, definition.qualifier, definition.primary)
-            }
-            unmount.foreach {
-                case address: ActorAddress[?] => address.house.mount()
-                case robinAddress: RobinAddress[?] =>
-                    robinAddress.underlying.foreach { addr =>
-                        addr.house.mount()
-                    }
+            logger.debug(s"Loading module [${module.name}]")
+
+            if (loadedModules.contains(module.name))
+                throw DuplicateModuleException(module.name, loadedModules(module.name).getClass.getName)
+
+            for (depName <- module.dependencies) {
+                if (!loadedModules.contains(depName))
+                    throw ModuleDependencyException(module.name, depName, loadedModules.keys.toSeq)
             }
 
-            module.onLoaded(this)
-            logger.debug(s"Module $module load success!")
+            val wasFrozen = beanRegistry.isFrozen
+            if wasFrozen then beanRegistry.unfreeze()
+
+            try {
+                module.setSystem(this)
+                val unmount = new ArrayBuffer[Address[?]](module.definitions.length)
+                module.definitions.foreach { definition =>
+                    val (address, clz) = createActor(definition.factory, definition.num)
+                    unmount.addOne(address)
+                    beanRegistry.register(clz, address, definition.qualifier, definition.primary)
+                }
+                unmount.foreach {
+                    case address: ActorAddress[?] => address.house.mount()
+                    case robinAddress: RobinAddress[?] =>
+                        robinAddress.underlying.foreach { addr =>
+                            addr.house.mount()
+                        }
+                }
+
+                module.onLoaded(this)
+                loadedModules(module.name) = module
+                logger.debug(s"Module [${module.name}] load success!")
+            } finally {
+                if wasFrozen then beanRegistry.freeze()
+            }
         }
     } catch {
-        case t: Throwable => logger.error(s"Load module $module occur error with ", t)
+        case t: Throwable => logger.error(s"Load module [${module.name}] occur error with ", t)
     }
 
     override def getAddress[M <: Call](
         clz: Class[? <: Actor[?]],
-        qualifier: Option[String],
-        remote: Option[String]
+        qualifier: Option[String]
     ): Address[M] = {
         val address = qualifier match
-            case Some(value) => beanManager.getBean(value, clz)
-            case None        => beanManager.getBean(clz)
+            case Some(value) => beanRegistry.getBean(value, clz)
+            case None        => beanRegistry.getBean(clz)
 
         address.asInstanceOf[Address[M]]
     }
@@ -246,7 +266,7 @@ final private[core] class ActorSystemImpl(val config: OtaviaConfig) extends Acto
 
     override def monitor(): SystemMonitor = {
         val threadMonitor = ThreadMonitor(timer.monitor(), ReactorMonitor(), pool.workers.map(_.monitor()))
-        SystemMonitor(name, pool.size, beanManager.count, threadMonitor)
+        SystemMonitor(name, pool.size, beanRegistry.count, threadMonitor)
     }
 
     override private[core] def channelFactory: ChannelFactory = chFactory

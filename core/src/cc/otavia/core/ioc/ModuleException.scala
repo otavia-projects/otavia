@@ -14,25 +14,19 @@
  * limitations under the License.
  */
 
-package cc.otavia.log4a
+package cc.otavia.core.ioc
 
-import cc.otavia.core.ioc.{AbstractModule, BeanDefinition}
+class ModuleException(message: String) extends IllegalStateException(message)
 
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+class ModuleDependencyException(
+    val module: String,
+    val missing: String,
+    val loaded: Seq[String]
+) extends ModuleException(
+        s"Module [$module] depends on [$missing], which has not been loaded. Loaded modules: [${loaded.mkString(", ")}]"
+    )
 
-class Log4aModule extends AbstractModule {
-
-    override def name: String = "log4a"
-
-    private val beans = new ArrayBuffer[BeanDefinition]()
-
-    override def definitions: Seq[BeanDefinition] = beans.toSeq
-
-    def addDefinition(definition: BeanDefinition): Unit = {
-        beans.addOne(definition)
-    }
-
-    override def toString: String = "Log4a"
-
-}
+class DuplicateModuleException(
+    val name: String,
+    val existingClass: String
+) extends ModuleException(s"Module [$name] is already loaded (from [$existingClass])")

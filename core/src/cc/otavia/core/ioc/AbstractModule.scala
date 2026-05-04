@@ -34,23 +34,32 @@ abstract class AbstractModule extends Module {
 
     override def loaded: Boolean = ld
 
-    override def addListener(listener: ModuleListener): Unit = {
-        if (!ld) listeners.add(listener)
+    override def addListener(listener: ModuleListener): Unit = this.synchronized {
+        if !ld then listeners.add(listener)
         else callback(listener)
     }
 
     override private[core] def onLoaded(system: ActorSystem): Unit = {
-        ld = true
-        while (!listeners.isEmpty) {
-            val listener = listeners.poll()
-            callback(listener)
+        val toNotify = this.synchronized {
+            ld = true
+            val drained = new java.util.ArrayList[ModuleListener]()
+            var l = listeners.poll()
+            while l != null do
+                drained.add(l)
+                l = listeners.poll()
+            drained
         }
+        while (!toNotify.isEmpty) callback(toNotify.remove(0))
     }
 
-    private final def callback(listener: ModuleListener): Unit = try {
+    private def callback(listener: ModuleListener): Unit = try {
         listener.onLoaded(system)
     } catch {
         case e: Throwable =>
+            System.err.println(
+                s"[IoC] ModuleListener [${listener.getClass.getName}] failed in onLoaded: ${e.getMessage}"
+            )
+            e.printStackTrace(System.err)
     }
 
 }

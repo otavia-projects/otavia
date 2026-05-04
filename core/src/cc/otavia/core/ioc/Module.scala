@@ -20,6 +20,12 @@ import cc.otavia.core.system.ActorSystem
 
 trait Module {
 
+    /** Unique module identifier for dependency declaration and deduplication. */
+    def name: String
+
+    /** Names of modules that must be loaded before this one. */
+    def dependencies: Seq[String] = Seq.empty
+
     protected def system: ActorSystem
 
     private[core] def setSystem(sys: ActorSystem): Unit
