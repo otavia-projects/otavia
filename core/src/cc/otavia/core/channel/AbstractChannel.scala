@@ -150,6 +150,39 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     }
 
     final private[core] def processCompletedChannelStacks(): Unit = {
+        drainCompletedStacks()
+        this.flush()
+        if (pendingStacks.nonEmpty) processPendingStacks()
+    }
+
+    final private[core] def processPendingStacks(): Unit = {
+        var progress = true
+        while (progress) {
+            progress = false
+
+            // phase 1: promote pending stacks into inflight
+            if (pendingStacks.nonEmpty) {
+                if (stackBarrier(pendingStacks.first.message)) {
+                    if (inflightStacks.isEmpty) { processPendingStack(); progress = true }
+                } else {
+                    while (
+                      pendingStacks.nonEmpty &&
+                      inflightStacks.size < maxStackInflight &&
+                      !stackBarrier(pendingStacks.first.message)
+                    ) processPendingStack()
+                    progress = true
+                }
+            }
+
+            // phase 2: drain completed inflight stacks
+            if (drainCompletedStacks()) progress = true
+        }
+        this.flush()
+    }
+
+    /** @return true if any stack was drained */
+    private def drainCompletedStacks(): Boolean = {
+        var drained = false
         while (inflightStacks.nonEmpty && inflightStacks.first.isDone) {
             val stack = inflightStacks.first
             if (stack.hasResult) {
@@ -157,23 +190,10 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
                 if (channelOutboundAdaptiveBuffer.readableBytes > system.config.buffer.pageSize * 4) this.flush()
             }
             actor.recycleStack(inflightStacks.pop())
+            drained = true
         }
-        this.flush()
-
-        if (pendingStacks.nonEmpty) processPendingStacks()
+        drained
     }
-
-    final private[core] def processPendingStacks(): Unit =
-        if (pendingStacks.nonEmpty && stackBarrier(pendingStacks.first.message)) {
-            if (inflightStacks.isEmpty) processPendingStack()
-        } else if (pendingStacks.nonEmpty && !stackBarrier(pendingStacks.first.message)) {
-            while (
-              pendingStacks.nonEmpty &&
-              inflightStacks.size < maxStackInflight &&
-              !stackBarrier(pendingStacks.first.message)
-            ) processPendingStack()
-            processCompletedChannelStacks()
-        }
 
     private def processPendingStack(): Unit = {
         val stack = pendingStacks.pop()
@@ -209,6 +229,7 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
         }
 
     final protected def failedFutures(cause: Throwable): Unit = {
+        inflightFutures.setBarrierMode(false)
         while (inflightFutures.nonEmpty) {
             val promise = inflightFutures.pop()
             promise.setFailure(cause)
