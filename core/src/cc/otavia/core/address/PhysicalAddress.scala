@@ -31,8 +31,8 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
 
     private[core] val house: ActorHouse
 
-    private def packaging[T <: Message](message: T, sender: AbstractActor[?]): Envelope[T] = {
-        val envelope = Envelope[T]()
+    private def packaging(message: Message, sender: AbstractActor[?]): Envelope = {
+        val envelope = Envelope()
         envelope.setSender(sender.self.asInstanceOf[Address[Call]])
         envelope.setMessageId(sender.generateSendMessageId())
         envelope.setContent(message)
@@ -68,7 +68,7 @@ abstract class PhysicalAddress[M <: Call] extends Address[M] {
     }
 
     override def notice(notice: M & Notice): Unit = {
-        val envelope = Envelope[Notice]()
+        val envelope = Envelope()
         envelope.setContent(notice)
         house.putNotice(envelope)
     }

@@ -102,7 +102,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
 
     /** Send a [[Notice]] to self, inserted at the head of the notice mailbox before all other pending notices. */
     protected final def noticeSelfHead(call: Notice & M): Unit = {
-        val envelope = Envelope[Notice & M]()
+        val envelope = Envelope()
         envelope.setContent(call)
         house.putCallToHead(envelope)
     }
@@ -152,7 +152,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     // Kernel: mailbox entry points (called by ActorHouse)
     // =========================================================================
 
-    final private[core] def receiveNotice(envelope: Envelope[?]): Unit = {
+    final private[core] def receiveNotice(envelope: Envelope): Unit = {
         val notice = envelope.message.asInstanceOf[Notice]
         currentReceived = notice
         envelope.recycle()
@@ -170,7 +170,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentReceived = null
     }
 
-    final private[core] def receiveAsk(envelope: Envelope[?]): Unit = {
+    final private[core] def receiveAsk(envelope: Envelope): Unit = {
         val ask = envelope.message.asInstanceOf[Ask[?]]
         currentReceived = ask
         val stack = AskStack[M & Ask[? <: Reply]](this)
@@ -180,7 +180,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentReceived = null
     }
 
-    final private[core] def receiveBatchAsk(asks: Seq[Envelope[Ask[?]]]): Unit = {
+    final private[core] def receiveBatchAsk(asks: Seq[Envelope]): Unit = {
         currentReceived = asks
         val stack = BatchAskStack[M & Ask[?]](this)
         stack.setAsks(asks)
@@ -189,11 +189,11 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentReceived = null
     }
 
-    final private[core] def receiveReply(envelope: Envelope[?]): Unit = receiveReply(envelope, false)
+    final private[core] def receiveReply(envelope: Envelope): Unit = receiveReply(envelope, false)
 
-    private[core] def receiveExceptionReply(envelope: Envelope[?]): Unit = receiveReply(envelope, true)
+    private[core] def receiveExceptionReply(envelope: Envelope): Unit = receiveReply(envelope, true)
 
-    private def receiveReply(envelope: Envelope[?], isException: Boolean): Unit = {
+    private def receiveReply(envelope: Envelope, isException: Boolean): Unit = {
         val reply = envelope.message.asInstanceOf[Reply]
         if (!envelope.isBatchReply) {
             val replyId = envelope.replyId

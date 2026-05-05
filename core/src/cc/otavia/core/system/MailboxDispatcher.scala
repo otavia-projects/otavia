@@ -97,7 +97,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
             val msg = cursor
             cursor = msg.next
             msg.unlink()
-            house.dweller.receiveReply(msg.asInstanceOf[Envelope[?]])
+            house.dweller.receiveReply(msg.asInstanceOf[Envelope])
         }
     }
 
@@ -107,7 +107,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
             val msg = cursor
             cursor = msg.next
             msg.unlink()
-            house.dweller.receiveExceptionReply(msg.asInstanceOf[Envelope[?]])
+            house.dweller.receiveExceptionReply(msg.asInstanceOf[Envelope])
         }
     }
 
@@ -124,20 +124,20 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
             val msg = askCursor
             askCursor = msg.next
             msg.unlink()
-            val envelope = msg.asInstanceOf[Envelope[Ask[?]]]
-            house.inBarrier = house.dweller.isBarrier(envelope.message)
+            val envelope = msg.asInstanceOf[Envelope]
+            house.inBarrier = house.dweller.isBarrier(envelope.message.asInstanceOf[Call])
             house.dweller.receiveAsk(envelope)
         }
     }
 
     private def dispatchBatchAsks(): Unit = {
         if (askCursor == null) askCursor = house.askMailbox.getAll
-        val buf = ActorThread.threadBuffer[Envelope[Ask[?]]]
+        val buf = ActorThread.threadBuffer[Envelope]
         while (askCursor != null && !house.inBarrier) {
-            val envelope = askCursor.asInstanceOf[Envelope[Ask[?]]]
+            val envelope = askCursor.asInstanceOf[Envelope]
             askCursor = envelope.next
             envelope.unlink()
-            val ask = envelope.message
+            val ask = envelope.message.asInstanceOf[Ask[?]]
             if (house.dweller.batchAskFilter(ask)) buf.addOne(envelope)
             else {
                 if (buf.nonEmpty) handleBatchAsk(buf)
@@ -161,8 +161,8 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
             val msg = noticeCursor
             noticeCursor = msg.next
             msg.unlink()
-            val envelope = msg.asInstanceOf[Envelope[Notice]]
-            house.inBarrier = house.dweller.isBarrier(envelope.message)
+            val envelope = msg.asInstanceOf[Envelope]
+            house.inBarrier = house.dweller.isBarrier(envelope.message.asInstanceOf[Call])
             house.dweller.receiveNotice(envelope)
         }
     }
@@ -171,16 +171,16 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
         if (noticeCursor == null) noticeCursor = house.noticeMailbox.getAll
         val buf = ActorThread.threadBuffer[Notice]
         while (noticeCursor != null && !house.inBarrier) {
-            val envelope = noticeCursor.asInstanceOf[Envelope[Notice]]
+            val envelope = noticeCursor.asInstanceOf[Envelope]
             noticeCursor = envelope.next
             envelope.unlink()
-            val notice = envelope.message
+            val notice = envelope.message.asInstanceOf[Notice]
             if (house.dweller.batchNoticeFilter(notice)) {
                 buf.addOne(notice)
                 envelope.recycle()
             } else {
                 if (buf.nonEmpty) handleBatchNotice(buf)
-                house.inBarrier = house.dweller.isBarrier(envelope.message)
+                house.inBarrier = house.dweller.isBarrier(envelope.message.asInstanceOf[Call])
                 house.dweller.receiveNotice(envelope)
             }
         }
@@ -222,7 +222,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
         house.dweller.receiveBatchNotice(notices)
     }
 
-    private def handleBatchAsk(buf: mutable.ArrayBuffer[Envelope[Ask[?]]]): Unit = {
+    private def handleBatchAsk(buf: mutable.ArrayBuffer[Envelope]): Unit = {
         val asks = buf.toSeq
         buf.clear()
         house.dweller.receiveBatchAsk(asks)

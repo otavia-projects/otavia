@@ -22,14 +22,17 @@ import cc.otavia.core.util.Nextable
 
 import scala.language.unsafeNulls
 
-final private[core] class Envelope[M <: Message] extends Poolable {
+/** Object-pooled wrapper that carries a [[Message]] through the mailbox system, bundling the sender address, payload,
+ *  message ID, and optional reply IDs.
+ */
+final private[core] class Envelope extends Poolable {
 
     // sender message
     private var address: Address[Call] = _
 
     // payload
-    private var mid: Long = 0
-    private var msg: M    = _
+    private var mid: Long    = 0
+    private var msg: Message = _
 
     // reply info
     private var rid: Long         = 0 // reply id if is
@@ -39,7 +42,7 @@ final private[core] class Envelope[M <: Message] extends Poolable {
 
     def setMessageId(id: Long): Unit = this.mid = id
 
-    def setContent(msg: M): Unit = this.msg = msg
+    def setContent(msg: Message): Unit = this.msg = msg
 
     def setReplyId(id: Long): Unit = this.rid = id
 
@@ -47,9 +50,7 @@ final private[core] class Envelope[M <: Message] extends Poolable {
 
     def sender: Address[Call] = address
 
-    def content: Message = msg
-
-    def message: M = msg
+    def message: Message = msg
 
     def messageId: Long = mid
 
@@ -59,12 +60,12 @@ final private[core] class Envelope[M <: Message] extends Poolable {
 
     def isBatchReply: Boolean = rids != null
 
-    override def recycle(): Unit = Envelope.pool.recycle(this.asInstanceOf[Envelope[Message]])
+    override def recycle(): Unit = Envelope.pool.recycle(this)
 
     override protected def cleanInstance(): Unit = {
         address = null
         mid = 0
-        msg = null.asInstanceOf[M]
+        msg = null
         rid = 0
         rids = null
     }
@@ -73,10 +74,10 @@ final private[core] class Envelope[M <: Message] extends Poolable {
 
 object Envelope {
 
-    private val pool = new ActorThreadIsolatedObjectPool[Envelope[?]] {
-        override protected def newObject(): Envelope[?] = new Envelope[Nothing]
+    private val pool = new ActorThreadIsolatedObjectPool[Envelope] {
+        override protected def newObject(): Envelope = new Envelope
     }
 
-    def apply[M <: Message](): Envelope[M] = pool.get().asInstanceOf[Envelope[M]]
+    def apply(): Envelope = pool.get()
 
 }

@@ -33,7 +33,7 @@ final class AskStack[A <: Ask[? <: Reply]] private () extends Stack {
     private var sender: Address[Call] = _
     private var askId: Long           = 0 // ask message id
 
-    private[core] def setAsk(envelope: Envelope[?]): Unit = {
+    private[core] def setAsk(envelope: Envelope): Unit = {
         sender = envelope.sender
         askId = envelope.messageId
         call = envelope.message.asInstanceOf[Call]

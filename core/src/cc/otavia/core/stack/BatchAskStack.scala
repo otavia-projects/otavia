@@ -26,12 +26,12 @@ import scala.language.unsafeNulls
 
 final class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
 
-    private var envelopes: Seq[Envelope[Ask[?]]] = _
+    private var envelopes: Seq[Envelope] = _
     private var done: Boolean                    = false
 
-    private[core] def setAsks(envelopes: Seq[Envelope[Ask[?]]]): Unit = this.envelopes = envelopes
+    private[core] def setAsks(envelopes: Seq[Envelope]): Unit = this.envelopes = envelopes
 
-    def asks: Seq[Envelope[A]] = envelopes.asInstanceOf[Seq[Envelope[A]]]
+    def asks: Seq[Envelope] = envelopes
 
     def `return`(ret: ReplyOf[A]): StackYield = {
         val none = end(ret)
@@ -39,7 +39,7 @@ final class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
         none
     }
 
-    def `return`(rets: Seq[(Envelope[A], ReplyOf[A])]): StackYield = {
+    def `return`(rets: Seq[(Envelope, ReplyOf[A])]): StackYield = {
         done = true
         for ((envelope, ret) <- rets) envelope.sender.reply(ret, envelope.messageId, runtimeActor)
         StackYield.RETURN

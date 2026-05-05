@@ -247,27 +247,27 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     /** Enqueue a notice message. Applies backpressure via sleep when the system is under memory pressure and the
      *  caller is not an ActorThread.
      */
-    def putNotice(envelope: Envelope[?]): Unit = {
+    def putNotice(envelope: Envelope): Unit = {
         if (system.isBusy && !ActorThread.currentThreadIsActorThread) {
             Thread.sleep(system.config.system.memoryOverSleepMs)
         }
         put(envelope, noticeMailbox)
     }
 
-    def putAsk(envelope: Envelope[?]): Unit = put(envelope, askMailbox)
+    def putAsk(envelope: Envelope): Unit = put(envelope, askMailbox)
 
     /** Deposit a reply and eagerly update the cached priority flag if the reply mailbox exceeds its threshold.
      *  Each reply corresponds to exactly one completable future — processing it may unblock a suspended stack and
      *  release pooled resources.
      */
-    def putReply(envelope: Envelope[?]): Unit = {
+    def putReply(envelope: Envelope): Unit = {
         replyMailbox.put(envelope)
         _hasMessages = true
         if (replyMailbox.size() > manager.thread.system.config.priority.highPriorityReplySize) _highPriority = true
         if (status.get() == WAITING) waitingToReady()
     }
 
-    def putException(envelope: Envelope[?]): Unit = put(envelope, exceptionMailbox)
+    def putException(envelope: Envelope): Unit = put(envelope, exceptionMailbox)
 
     /** Deposit an event and eagerly update the cached priority flag if the event mailbox exceeds its threshold.
      */
@@ -285,7 +285,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     }
 
     /** Place a notice at the head of the notice mailbox for priority processing. */
-    private[core] def putCallToHead(envelope: Envelope[?]): Unit = {
+    private[core] def putCallToHead(envelope: Envelope): Unit = {
         noticeMailbox.putHead(envelope)
         _hasMessages = true
     }
