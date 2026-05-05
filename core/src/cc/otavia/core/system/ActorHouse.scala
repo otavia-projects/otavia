@@ -23,6 +23,7 @@ import cc.otavia.core.message.*
 import cc.otavia.core.system.ActorHouse.*
 import cc.otavia.core.util.Nextable
 
+import java.lang.invoke.{MethodHandles, VarHandle}
 import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
 
@@ -51,6 +52,9 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     private[system] var inBarrier: Boolean        = false
 
     private var currentSendMessageId: Long = Long.MinValue
+
+    private var highPriorityReplySize: Int = _
+    private var highPriorityEventSize: Int = _
 
     /** Whether this actor uses round-robin load balancing (RobinAddress with same-thread affinity). */
     private var loadBalanced: Boolean = false
@@ -163,6 +167,8 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     /** Bind an actor instance to this house and classify it by type. */
     def setActor(actor: AbstractActor[? <: Call]): Unit = {
         dweller = actor
+        highPriorityReplySize = manager.thread.system.config.priority.highPriorityReplySize
+        highPriorityEventSize = manager.thread.system.config.priority.highPriorityEventSize
         actor match
             case _: AcceptorActor[?] => actorTypeKind = SERVER_CHANNELS_ACTOR
             case _: ChannelsActor[?] =>
@@ -262,8 +268,8 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
      */
     def putReply(envelope: Envelope): Unit = {
         replyMailbox.put(envelope)
-        _hasMessages = true
-        if (replyMailbox.size() > manager.thread.system.config.priority.highPriorityReplySize) _highPriority = true
+        HAS_MESSAGES_HANDLE.setRelease(this, true)
+        if (replyMailbox.size() > highPriorityReplySize) _highPriority = true
         if (status.get() == WAITING) waitingToReady()
     }
 
@@ -273,21 +279,21 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
      */
     def putEvent(event: Event): Unit = {
         eventMailbox.put(event)
-        _hasMessages = true
-        if (eventMailbox.size() > manager.thread.system.config.priority.highPriorityEventSize) _highPriority = true
+        HAS_MESSAGES_HANDLE.setRelease(this, true)
+        if (eventMailbox.size() > highPriorityEventSize) _highPriority = true
         if (status.get() == WAITING) waitingToReady()
     }
 
     private def put(msg: Nextable, mailbox: Mailbox): Unit = {
         mailbox.put(msg)
-        _hasMessages = true // relaxed write is sufficient — see _hasMessages scaladoc
+        HAS_MESSAGES_HANDLE.setRelease(this, true)
         if (status.get() == WAITING) waitingToReady()
     }
 
     /** Place a notice at the head of the notice mailbox for priority processing. */
     private[core] def putCallToHead(envelope: Envelope): Unit = {
         noticeMailbox.putHead(envelope)
-        _hasMessages = true
+        HAS_MESSAGES_HANDLE.setRelease(this, true)
     }
 
     private def waitingToReady(): Unit = if (status.compareAndSet(WAITING, READY)) manager.ready(this)
@@ -346,10 +352,8 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     private def completeRunning(): Unit = {
         if (!inBarrier) {
             if (nonEmpty) {
-                val replyThreshold = manager.thread.system.config.priority.highPriorityReplySize
-                val eventThreshold = manager.thread.system.config.priority.highPriorityEventSize
-                _highPriority = (replyMailbox.size() > replyThreshold) ||
-                    (eventMailbox.size() > eventThreshold) ||
+                _highPriority = (replyMailbox.size() > highPriorityReplySize) ||
+                    (eventMailbox.size() > highPriorityEventSize) ||
                     (dweller.pendingPromiseCount == 0)
                 if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
             } else {
@@ -361,10 +365,8 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
             }
         } else {
             if (barrierNonEmpty) {
-                val replyThreshold = manager.thread.system.config.priority.highPriorityReplySize
-                val eventThreshold = manager.thread.system.config.priority.highPriorityEventSize
-                _highPriority = (replyMailbox.size() > replyThreshold) ||
-                    (eventMailbox.size() > eventThreshold) ||
+                _highPriority = (replyMailbox.size() > highPriorityReplySize) ||
+                    (eventMailbox.size() > highPriorityEventSize) ||
                     (dweller.pendingPromiseCount == 0)
                 if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
             } else {
@@ -398,6 +400,11 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 }
 
 object ActorHouse {
+
+    private val HAS_MESSAGES_HANDLE: VarHandle = {
+        val lookup = MethodHandles.privateLookupIn(classOf[ActorHouse], MethodHandles.lookup())
+        lookup.findVarHandle(classOf[ActorHouse], "_hasMessages", classOf[Boolean])
+    }
 
     private type HOUSE_STATUS = Int
 

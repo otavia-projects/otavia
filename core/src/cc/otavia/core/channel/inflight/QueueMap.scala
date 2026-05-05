@@ -29,6 +29,8 @@ class QueueMap[V <: QueueMapEntity] {
 
     private var contentSize: Int = 0
 
+    private var threshold: Int = newThreshold(tableSizeFor(initialCapacity))
+
     private var barrier: Boolean = false
 
     private final def loadFactor: Double   = 0.75
@@ -56,6 +58,7 @@ class QueueMap[V <: QueueMapEntity] {
     def nonEmpty: Boolean = contentSize != 0
 
     final private[core] def append(v: V): Unit = {
+        if (contentSize + 1 >= threshold) resizeTable(table.length * 2)
         if (contentSize == 0) {
             hd = v
             tl = v
@@ -92,25 +95,16 @@ class QueueMap[V <: QueueMapEntity] {
 
         if (entity == null) throw new NoSuchElementException(s"QueueMap has no entity with id $id")
 
-        val pre  = entity.queueEarlier
-        val next = entity.queueLater
+        unlinkEntity(entity)
+        entity.asInstanceOf[V]
+    }
 
-        entity.cleanEntity()
+    /** Remove entity by id, returning null if not found instead of throwing. */
+    final private[core] def tryRemove(id: Long): V | Null = {
+        val entity = remove0(id)
+        if (entity == null) return null
 
-        if (pre != null && next != null) {
-            pre.queueLater = next
-            next.queueEarlier = pre
-        } else if (pre == null && next == null) {
-            hd = null
-            tl = null
-        } else if (pre == null) {
-            hd = next
-            hd.queueEarlier = null
-        } else {
-            tl = pre
-            tl.queueLater = null
-        }
-
+        unlinkEntity(entity)
         entity.asInstanceOf[V]
     }
 
@@ -181,6 +175,7 @@ class QueueMap[V <: QueueMapEntity] {
         val oldTable = table
         table = new Array[QueueMapEntity](newLen)
         mask = newLen - 1
+        threshold = newThreshold(table.length)
 
         for (node <- oldTable) {
             var cursor = node
@@ -190,6 +185,27 @@ class QueueMap[V <: QueueMapEntity] {
                 entity.hashNext = null
                 put0(entity)
             }
+        }
+    }
+
+    private def unlinkEntity(entity: QueueMapEntity): Unit = {
+        val pre  = entity.queueEarlier
+        val next = entity.queueLater
+
+        entity.cleanEntity()
+
+        if (pre != null && next != null) {
+            pre.queueLater = next
+            next.queueEarlier = pre
+        } else if (pre == null && next == null) {
+            hd = null
+            tl = null
+        } else if (pre == null) {
+            hd = next
+            hd.queueEarlier = null
+        } else {
+            tl = pre
+            tl.queueLater = null
         }
     }
 

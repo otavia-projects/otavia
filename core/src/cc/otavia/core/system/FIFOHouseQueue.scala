@@ -46,13 +46,13 @@ class FIFOHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
             readLock.lock()
             head = house
             tail = house
-            size.incrementAndGet()
+            size.lazySet(1)
             writeLock.unlock()
             readLock.unlock()
         } else {
             tail.next = house
             tail = house
-            size.incrementAndGet()
+            size.lazySet(size.get() + 1)
             writeLock.unlock()
         }
     }
@@ -72,7 +72,7 @@ class FIFOHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
                 val house = head
                 head = null
                 tail = null
-                size.decrementAndGet()
+                size.lazySet(0)
                 house.schedule()
                 writeLock.unlock()
                 readLock.unlock()
@@ -90,7 +90,7 @@ class FIFOHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
     final private inline def dequeue00(): ActorHouse = {
         val house = head
         head = house.next.asInstanceOf[ActorHouse]
-        size.decrementAndGet()
+        size.lazySet(size.get() - 1)
         house.schedule()
         readLock.unlock()
         house.unlink()

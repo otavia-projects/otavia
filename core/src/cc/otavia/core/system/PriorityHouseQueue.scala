@@ -74,12 +74,12 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
             if (size.get() == 0) {
                 head = house
                 tail = house
-                size.incrementAndGet()
+                size.lazySet(1)
             } else {
                 val oldTail = tail
                 tail = house
                 oldTail.next = tail
-                size.incrementAndGet()
+                size.lazySet(size.get() + 1)
             }
             writeLock.unlock()
         } else {
@@ -87,12 +87,12 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
             if (highSize.get() == 0) {
                 highHead = house
                 highTail = house
-                highSize.incrementAndGet()
+                highSize.lazySet(1)
             } else {
                 val oldTail = highTail
                 highTail = house
                 oldTail.next = highTail
-                highSize.incrementAndGet()
+                highSize.lazySet(highSize.get() + 1)
             }
             highWriteLock.unlock()
         }
@@ -117,8 +117,9 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
             if (highSize.get() > 1) {
                 val house = highHead
                 highHead = house.next
-                highSize.decrementAndGet()
+                highSize.lazySet(highSize.get() - 1)
                 highReadLock.unlock()
+                house.unlink()
                 house.schedule()
                 return house
             }
@@ -129,8 +130,9 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
             if (size.get() > 1) {
                 val house = head
                 head = house.next
-                size.decrementAndGet()
+                size.lazySet(size.get() - 1)
                 readLock.unlock()
+                house.unlink()
                 house.schedule()
                 return house
             }
@@ -151,25 +153,28 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
                 val house = head
                 head = null
                 tail = null
-                size.decrementAndGet()
+                size.lazySet(0)
                 writeLock.unlock()
                 readLock.unlock()
+                house.unlink()
                 house.schedule()
                 house
             } else {
                 val house = head
                 head = house.next
-                size.decrementAndGet()
+                size.lazySet(size.get() - 1)
                 writeLock.unlock()
                 readLock.unlock()
+                house.unlink()
                 house.schedule()
                 house
             }
         } else {
             val house = head
             head = house.next
-            size.decrementAndGet()
+            size.lazySet(size.get() - 1)
             readLock.unlock()
+            house.unlink()
             house.schedule()
             house
         }
@@ -187,25 +192,28 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
                 val house = highHead
                 highHead = null
                 highTail = null
-                highSize.decrementAndGet()
+                highSize.lazySet(0)
                 highWriteLock.unlock()
                 highReadLock.unlock()
+                house.unlink()
                 house.schedule()
                 house
             } else {
                 val house = highHead
                 highHead = house.next
-                highSize.decrementAndGet()
+                highSize.lazySet(highSize.get() - 1)
                 highWriteLock.unlock()
                 highReadLock.unlock()
+                house.unlink()
                 house.schedule()
                 house
             }
         } else {
             val house = highHead
             highHead = house.next
-            highSize.decrementAndGet()
+            highSize.lazySet(highSize.get() - 1)
             highReadLock.unlock()
+            house.unlink()
             house.schedule()
             house
         }

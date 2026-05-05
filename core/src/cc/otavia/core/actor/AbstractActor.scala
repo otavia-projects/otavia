@@ -198,18 +198,20 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         if (!envelope.isBatchReply) {
             val replyId = envelope.replyId
             envelope.recycle()
-            if (this.contains(replyId)) {
-                val promise = this.pop(replyId)
+            val promise = this.pop(replyId)
+            if (promise != null) {
                 if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
                 completePromise(reply, promise, isException)
             }
         } else {
             val replyIds = envelope.replyIds
             envelope.recycle()
-            for (rid <- replyIds if contains(rid)) {
+            for (rid <- replyIds) {
                 val promise = pop(rid)
-                if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
-                completePromise(reply, promise, isException)
+                if (promise != null) {
+                    if (promise.canTimeout) system.timer.cancelTimerTask(promise.timeoutId)
+                    completePromise(reply, promise, isException)
+                }
             }
         }
     }
