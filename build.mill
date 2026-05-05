@@ -34,7 +34,11 @@ object ProjectInfo {
     def repository              = github.browsableRepository.get
     def licenses                = Seq(License.`Apache-2.0`)
     def author                  = Seq("Yan Kun <yan_kun_1992@foxmail.com>")
-    def version                 = "0.5.0-SNAPSHOT" // -SNAPSHOT
+    private val snapshotVersion = "0.5.0-SNAPSHOT"
+    def version: String =
+      val output = os.proc("git", "tag", "--points-at", "HEAD").call().out.trim()
+      if output.nonEmpty then output.linesIterator.next().stripPrefix("v")
+      else snapshotVersion
     def scalaVersion            = "3.3.7"
     def scoverageVersion        = "1.4.0"
     def buildTool               = "mill"
