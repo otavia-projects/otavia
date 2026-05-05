@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  COURSIER_REPOSITORIES: central|https://s01.oss.sonatype.org/content/repositories/snapshots|jitpack|https://corporate.com/repo
-
 jobs:
   test:
     runs-on: ubuntu-22.04
@@ -27,11 +24,6 @@ jobs:
     needs: test
     if: github.event_name == 'push'
     runs-on: ubuntu-22.04
-    env:
-      PGP_SECRET: ${{ secrets.PGP_SECRET }}
-      PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-      SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-      SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -41,8 +33,9 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
       - run: chmod +x mill
-      - run: echo $PGP_SECRET | base64 --decode > gpg_key && gpg --import --no-tty --batch --yes gpg_key
-      - run: ./mill -i __.publishArtifacts
-      - run: gpg --passphrase=$PGP_PASSPHRASE --no-tty --pinentry-mode loopback --batch --yes -a -b build.mill
-      - run: ./mill -d mill.scalalib.PublishModule/publishAll --publishArtifacts __.publishArtifacts --sonatypeCreds $SONATYPE_USERNAME:$SONATYPE_PASSWORD --gpgArgs --passphrase=$PGP_PASSPHRASE,--no-tty,--pinentry-mode,loopback,--batch,--yes,-a,-b --sonatypeUri https://s01.oss.sonatype.org/service/local --sonatypeSnapshotUri https://s01.oss.sonatype.org/content/repositories/snapshots --readTimeout 600000 --awaitTimeout 600000 --signed true --release false
-      - run: rm gpg_key
+      - run: ./mill mill.javalib.SonatypeCentralPublishModule/
+        env:
+          MILL_PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          MILL_PGP_SECRET_BASE64: ${{ secrets.PGP_SECRET }}
+          MILL_SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          MILL_SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}

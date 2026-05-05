@@ -19,7 +19,7 @@
 
 package build
 
-import mill.*, api.*, scalalib.*, publish.*
+import mill.*, api.*, scalalib.*, publish.*, mill.javalib.SonatypeCentralPublishModule
 import mill.contrib.buildinfo.BuildInfo
 import mill.contrib.jmh.JmhModule
 import os.Path
@@ -64,7 +64,7 @@ object ProjectInfo {
 
 }
 
-object common extends ScalaModule with BuildInfo with PublishModule {
+object common extends ScalaModule with BuildInfo with SonatypeCentralPublishModule {
 
     def scalaVersion         = ProjectInfo.scalaVersion
     def buildInfoPackageName = "cc.otavia"
@@ -103,7 +103,7 @@ object common extends ScalaModule with BuildInfo with PublishModule {
 
 }
 
-trait OtaviaModule extends ScalaModule with PublishModule {
+trait OtaviaModule extends ScalaModule with SonatypeCentralPublishModule {
 
     def scalaVersion                = ProjectInfo.scalaVersion
     def publishVersion   = ProjectInfo.version
@@ -171,7 +171,7 @@ object testkit extends OtaviaModule {
 
 object handler extends OtaviaModule {
 
-    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+    def moduleDeps: Seq[SonatypeCentralPublishModule] = scala.Seq(core, codec)
     def artifactName                   = "otavia-handler"
 
     object test extends ScalaTests with TestModule.ScalaTest {
@@ -184,7 +184,7 @@ object handler extends OtaviaModule {
 
 object codec extends OtaviaModule {
 
-    def moduleDeps: Seq[PublishModule] = scala.Seq(core)
+    def moduleDeps: Seq[SonatypeCentralPublishModule] = scala.Seq(core)
     def artifactName                   = "otavia-codec"
 
     object test extends ScalaTests with TestModule.ScalaTest {
@@ -198,7 +198,7 @@ object codec extends OtaviaModule {
 object `codec-http` extends OtaviaModule {
 
     def artifactName                   = "otavia-codec-http"
-    def moduleDeps: Seq[PublishModule] = scala.Seq(codec, serde, `serde-json`, handler)
+    def moduleDeps: Seq[SonatypeCentralPublishModule] = scala.Seq(codec, serde, `serde-json`, handler)
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
@@ -211,7 +211,7 @@ object `codec-http` extends OtaviaModule {
 object sql extends OtaviaModule {
 
     def artifactName                   = "otavia-sql"
-    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, serde)
+    def moduleDeps: Seq[SonatypeCentralPublishModule] = scala.Seq(core, codec, serde)
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
@@ -224,7 +224,7 @@ object sql extends OtaviaModule {
 object `codec-redis` extends OtaviaModule {
 
     def artifactName        = "otavia-codec-redis"
-    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec, serde)
+    def moduleDeps: Seq[SonatypeCentralPublishModule] = scala.Seq(core, codec, serde)
 
     object test extends ScalaTests with TestModule.ScalaTest {
 
@@ -237,55 +237,55 @@ object `codec-redis` extends OtaviaModule {
 object `codec-socks` extends OtaviaModule {
 
     def artifactName        = "otavia-codec-socks"
-    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+    def moduleDeps: Seq[SonatypeCentralPublishModule] = scala.Seq(core, codec)
 
 }
 
 object `codec-haproxy` extends OtaviaModule {
 
     def artifactName        = "otavia-codec-haproxy"
-    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+    def moduleDeps: Seq[SonatypeCentralPublishModule] = scala.Seq(core, codec)
 
 }
 
 object `codec-mqtt` extends OtaviaModule {
 
     def artifactName        = "otavia-codec-mqtt"
-    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+    def moduleDeps: Seq[SonatypeCentralPublishModule] = scala.Seq(core, codec)
 
 }
 
 object `codec-memcache` extends OtaviaModule {
 
     def artifactName        = "otavia-codec-memcache"
-    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+    def moduleDeps: Seq[SonatypeCentralPublishModule] = scala.Seq(core, codec)
 
 }
 
 object `codec-smtp` extends OtaviaModule {
 
     def artifactName        = "otavia-codec-smtp"
-    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+    def moduleDeps: Seq[SonatypeCentralPublishModule] = scala.Seq(core, codec)
 
 }
 
 object `codec-kafka` extends OtaviaModule {
 
     def artifactName        = "otavia-codec-kafka"
-    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+    def moduleDeps: Seq[SonatypeCentralPublishModule] = scala.Seq(core, codec)
 
 }
 
 object `codec-dns` extends OtaviaModule {
 
     def artifactName        = "otavia-codec-dns"
-    def moduleDeps: Seq[PublishModule] = scala.Seq(core, codec)
+    def moduleDeps: Seq[SonatypeCentralPublishModule] = scala.Seq(core, codec)
 
 }
 
 object log4a extends OtaviaModule {
 
-    def moduleDeps: Seq[PublishModule] = scala.Seq(core)
+    def moduleDeps: Seq[SonatypeCentralPublishModule] = scala.Seq(core)
     def artifactName        = "otavia-log4a"
     def mvnDeps                        = Seq(ProjectInfo.xml)
 
@@ -361,7 +361,7 @@ object `sql-postgres-driver` extends OtaviaModule {
 // User documentation is managed by Docusaurus in website/
 object docs extends OtaviaModule {
 
-    def moduleDeps: Seq[PublishModule] = Seq(
+    def moduleDeps: Seq[SonatypeCentralPublishModule] = Seq(
         buffer, core, serde, handler, codec, testkit,
         `serde-json`, `codec-http`, `codec-redis`, sql, log4a
     )
