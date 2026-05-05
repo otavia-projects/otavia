@@ -19,11 +19,11 @@ package cc.otavia.core.channel.handler
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.{ChannelHandler, ChannelHandlerContext, ChannelInflight, FileRegion}
 
-/** channel io transport --> Byte2ByteDecoder --> Byte2MessageDecoder --> Message2MessageDecoder --> channel inflight
+/** channel io transport --> ByteToByteDecoder --> ByteToMessageDecoder --> MessageToMessageDecoder --> channel inflight
  *
- *  channel io transport <-- Byte2ByteEncoder <-- Message2ByteEncoder <-- Message2MessageEncoder <-- channel inflight
+ *  channel io transport <-- ByteToByteEncoder <-- MessageToByteEncoder <-- MessageToMessageEncoder <-- channel inflight
  */
-trait Message2ByteEncoder extends ChannelHandler {
+trait MessageToByteEncoder extends ChannelHandler {
 
     final override def hasOutboundAdaptive: Boolean = true
 

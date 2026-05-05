@@ -20,7 +20,7 @@ package cc.otavia.handler.codec.bytes
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContext
-import cc.otavia.handler.codec.ByteToMessageDecoder
+import cc.otavia.core.channel.handler.ByteToMessageDecoder
 
 class ByteArrayDecoder extends ByteToMessageDecoder {
 

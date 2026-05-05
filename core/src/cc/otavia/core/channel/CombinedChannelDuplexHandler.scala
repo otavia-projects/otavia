@@ -27,7 +27,7 @@ import cc.otavia.core.stack.ChannelFuture
 import java.net.SocketAddress
 
 /** Combines the inbound handling of one [[ChannelHandler]] with the outbound handling of another [[ChannelHandler]]. */
-class CombinedChannelDuplexHandler[I <: ChannelHandler, O <: ChannelHandler] extends ChannelHandlerAdapter {
+class CombinedChannelDuplexHandler[I <: ChannelHandler, O <: ChannelHandler] extends ChannelHandler {
 
     private var inboundCtx: CombinedChannelDuplexHandler.CombinedChannelHandlerContext  = _
     private var outboundCtx: CombinedChannelDuplexHandler.CombinedChannelHandlerContext = _

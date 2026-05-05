@@ -57,7 +57,7 @@ Beyond the core runtime, `otavia` contains an extensive ecosystem of modules. Fo
 
 - **CPS transformation** ([otavia-async](https://github.com/otavia-projects/otavia-async)): `async/await` syntax based on Scala 3 metaprogramming.
 - **Buffer**: High-performance buffer management ported from Netty, featuring `AdaptiveBuffer` as a replacement for `CompositeBuffer`.
-- **Codec**: Common `ChannelHandler` abstractions (`Byte2ByteXXcoder`, `Byte2MessageDecoder`, `Message2ByteEncoder`, `Message2MessageXXcoder`).
+- **Codec**: Common `ChannelHandler` abstractions (`ByteToByteXXcoder`, `ByteToMessageDecoder`, `MessageToByteEncoder`, `MessageToMessageXXcoder`).
 - **Serde**: A unified serialization/deserialization framework that works directly with `Buffer` for zero-copy performance. See [Serde Framework](./guide/serde).
 - **SQL**: A standard API for Actor access to relational databases, referencing the JDBC design.
 - **SLF4A**: Asynchronous logging framework referencing SLF4J design. See [SLF4A](./guide/slf4a).

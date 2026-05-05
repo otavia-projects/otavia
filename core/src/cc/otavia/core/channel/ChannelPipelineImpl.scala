@@ -939,14 +939,12 @@ object ChannelPipelineImpl {
             override protected def initialValue(): mutable.HashMap[Class[?], String] = collection.mutable.HashMap.empty
         }
 
-    private def checkMultiplicity(handler: ChannelHandler): Unit = handler match {
-        case h: ChannelHandlerAdapter =>
-            if (!h.isSharable && h.added)
-                throw new RuntimeException(
-                  s"${h.getClass.getName} is not a @Sharable handler, so can't be added or removed multiple times."
-                )
-            h.added = true
-        case _ =>
+    private def checkMultiplicity(handler: ChannelHandler): Unit = {
+        if (!handler.isSharable && handler.added)
+            throw new RuntimeException(
+              s"${handler.getClass.getName} is not a @Sharable handler, so can't be added or removed multiple times."
+            )
+        handler.added = true
     }
 
 }

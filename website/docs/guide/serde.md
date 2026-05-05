@@ -39,16 +39,16 @@ Protocol Buffers serialization/deserialization with efficient binary encoding di
 
 ## Integration with Channel Pipeline
 
-Serde integrates naturally with the codec module's `Message2ByteEncoder` and `Byte2MessageDecoder`:
+Serde integrates naturally with the codec module's `MessageToByteEncoder` and `ByteToMessageDecoder`:
 
 ```scala
-class MyEncoder(serde: Serde[MyMessage]) extends Message2ByteEncoder[MyMessage] {
+class MyEncoder(serde: Serde[MyMessage]) extends MessageToByteEncoder[MyMessage] {
   override protected def encode(ctx: ChannelHandlerContext, msg: MyMessage, out: AdaptiveBuffer): Unit = {
     serde.serialize(out, msg)
   }
 }
 
-class MyDecoder(serde: Serde[MyMessage]) extends Byte2MessageDecoder[MyMessage] {
+class MyDecoder(serde: Serde[MyMessage]) extends ByteToMessageDecoder[MyMessage] {
   override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): MyMessage = {
     serde.deserialize(input)
   }

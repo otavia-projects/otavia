@@ -1,8 +1,6 @@
 /*
  * Copyright 2022 Yan Kun <yan_kun_1992@foxmail.com>
  *
- * This file is forked from Netty.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,8 +14,16 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.channel
+package cc.otavia.core.channel.handler
 
-abstract class ChannelHandlerAdapter extends ChannelHandler {
-    private[core] var added: Boolean = _
+import cc.otavia.core.channel.ChannelHandler
+
+/** channel io transport --> ByteToByteDecoder --> ByteToMessageDecoder --> MessageToMessageDecoder --> channel inflight
+ *
+ *  channel io transport <-- ByteToByteEncoder <-- MessageToByteEncoder <-- MessageToMessageEncoder <-- channel inflight
+ */
+trait MessageToMessageEncoder extends ChannelHandler {
+
+    final override def hasOutboundAdaptive: Boolean = false
+
 }

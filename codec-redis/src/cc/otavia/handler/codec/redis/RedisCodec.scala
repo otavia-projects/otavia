@@ -18,14 +18,14 @@ package cc.otavia.handler.codec.redis
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContext
-import cc.otavia.handler.codec.*
+import cc.otavia.core.channel.handler.{ByteToMessageDecoder, MessageToByteEncoder}
 import cc.otavia.redis.cmd.*
 import cc.otavia.redis.serde.RedisSerde
 import cc.otavia.redis.serde.impl.{AuthSerde, OKSerde, SelectSerde}
 
 import scala.collection.mutable
 
-class RedisCodec extends ByteToMessageCodec {
+class RedisCodec extends ByteToMessageDecoder with MessageToByteEncoder {
 
     private val responseSerdeQueue: mutable.Queue[(Long, RedisSerde[?])] = mutable.Queue.empty
 

@@ -16,4 +16,14 @@
 
 package cc.otavia.core.channel.handler
 
-trait Message2MessageCodec extends Message2MessageEncoder, Message2MessageDecoder
+import cc.otavia.core.channel.ChannelHandler
+
+/** channel io transport --> ByteToByteDecoder --> ByteToMessageDecoder --> MessageToMessageDecoder --> channel inflight
+ *
+ *  channel io transport <-- ByteToByteEncoder <-- MessageToByteEncoder <-- MessageToMessageEncoder <-- channel inflight
+ */
+trait MessageToMessageDecoder extends ChannelHandler {
+
+    final override def hasInboundAdaptive: Boolean = false
+
+}

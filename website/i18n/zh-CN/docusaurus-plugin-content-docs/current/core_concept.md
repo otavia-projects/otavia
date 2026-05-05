@@ -56,7 +56,7 @@ title: 核心概念与设计
 
 - **CPS 变换** ([otavia-async](https://github.com/otavia-projects/otavia-async))：基于 Scala 3 元编程工具实现的 `async/await` 语法。
 - **Buffer**: 从 Netty 移植的高性能 buffer 管理，引入 `AdaptiveBuffer` 替代 `CompositeBuffer`。
-- **Codec**: 常用 `ChannelHandler` 抽象类（`Byte2ByteXXcoder`、`Byte2MessageDecoder`、`Message2ByteEncoder`、`Message2MessageXXcoder`）。
+- **Codec**: 常用 `ChannelHandler` 抽象类（`ByteToByteXXcoder`、`ByteToMessageDecoder`、`MessageToByteEncoder`、`MessageToMessageXXcoder`）。
 - **Serde**: 统一的序列化/反序列化框架，直接与 `Buffer` 协作实现零拷贝性能。详见 [Serde 框架](guide/serde.md)。
 - **SQL**: Actor 访问关系型数据库的标准，参考了 JDBC 的设计。
 - **SLF4A**: 参考 SLF4J 设计的异步日志框架。详见 [SLF4A](guide/slf4a.md)。

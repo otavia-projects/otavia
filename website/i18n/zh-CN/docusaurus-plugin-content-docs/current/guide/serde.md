@@ -38,16 +38,16 @@ trait Serde[T] {
 
 ## 与 Channel Pipeline 集成
 
-Serde 自然地与 codec 模块的 `Message2ByteEncoder` 和 `Byte2MessageDecoder` 集成：
+Serde 自然地与 codec 模块的 `MessageToByteEncoder` 和 `ByteToMessageDecoder` 集成：
 
 ```scala
-class MyEncoder(serde: Serde[MyMessage]) extends Message2ByteEncoder[MyMessage] {
+class MyEncoder(serde: Serde[MyMessage]) extends MessageToByteEncoder[MyMessage] {
   override protected def encode(ctx: ChannelHandlerContext, msg: MyMessage, out: AdaptiveBuffer): Unit = {
     serde.serialize(out, msg)
   }
 }
 
-class MyDecoder(serde: Serde[MyMessage]) extends Byte2MessageDecoder[MyMessage] {
+class MyDecoder(serde: Serde[MyMessage]) extends ByteToMessageDecoder[MyMessage] {
   override protected def decode(ctx: ChannelHandlerContext, input: AdaptiveBuffer): MyMessage = {
     serde.deserialize(input)
   }

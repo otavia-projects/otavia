@@ -23,7 +23,7 @@ import cc.otavia.common.SystemPropertyUtil
 import cc.otavia.core.cache.{ActorThreadIsolatedObjectPool, ActorThreadLocal}
 import cc.otavia.core.channel.ChannelHandlerContext
 import cc.otavia.core.slf4a.{Logger, LoggerFactory}
-import cc.otavia.handler.codec.ByteToByteCodec
+import cc.otavia.core.channel.handler.ByteToByteCodec
 
 import java.nio.ByteBuffer
 import java.util.regex.Pattern

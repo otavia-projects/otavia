@@ -20,7 +20,7 @@ package cc.otavia.handler.codec.base64
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContext
-import cc.otavia.handler.codec.ByteToByteEncoder
+import cc.otavia.core.channel.handler.ByteToByteEncoder
 
 class Base64Encoder(private val breakLines: Boolean, private val dialect: Base64Dialect) extends ByteToByteEncoder {
 

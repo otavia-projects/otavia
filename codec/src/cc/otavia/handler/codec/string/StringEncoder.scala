@@ -20,7 +20,7 @@ package cc.otavia.handler.codec.string
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.ChannelHandlerContext
-import cc.otavia.handler.codec.MessageToByteEncoder
+import cc.otavia.core.channel.handler.MessageToByteEncoder
 
 import java.nio.charset.{Charset, StandardCharsets}
 import scala.language.unsafeNulls

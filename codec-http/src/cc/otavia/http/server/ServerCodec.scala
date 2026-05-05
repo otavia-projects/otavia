@@ -26,7 +26,7 @@ import cc.otavia.core.slf4a.{Logger, LoggerFactory}
 import cc.otavia.core.stack.ChannelFuture
 import cc.otavia.core.system.ActorThread
 import cc.otavia.core.timer.{TimeoutTrigger, Timer}
-import cc.otavia.handler.codec.ByteToMessageCodec
+import cc.otavia.core.channel.handler.{ByteToMessageDecoder, MessageToByteEncoder}
 import cc.otavia.http.*
 import cc.otavia.http.server.*
 import cc.otavia.http.server.Router.*
@@ -41,7 +41,7 @@ import scala.collection.mutable
 import scala.language.unsafeNulls
 
 class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array[Byte]], val serverName: Array[Byte])
-    extends ByteToMessageCodec {
+    extends ByteToMessageDecoder with MessageToByteEncoder {
 
     import ServerCodec.*
 

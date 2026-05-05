@@ -61,6 +61,8 @@ trait ChannelHandler {
      */
     def isSharable: Boolean = false
 
+    private[core] var added: Boolean = _
+
     /** The [[Channel]] of the [[ChannelHandlerContext]] was registered with its [[cc.otavia.core.actor.ChannelsActor]]
      */
     @Skip

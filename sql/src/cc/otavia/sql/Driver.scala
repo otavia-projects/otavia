@@ -18,9 +18,9 @@ package cc.otavia.sql
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.core.channel.Channel
-import cc.otavia.core.channel.handler.{Byte2MessageDecoder, Message2ByteEncoder}
+import cc.otavia.core.channel.handler.{ByteToMessageDecoder, MessageToByteEncoder}
 
-abstract class Driver(val options: ConnectOptions) extends Byte2MessageDecoder with Message2ByteEncoder {
+abstract class Driver(val options: ConnectOptions) extends ByteToMessageDecoder with MessageToByteEncoder {
 
     protected def checkDecodePacket(buffer: Buffer): Boolean
 

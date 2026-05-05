@@ -23,7 +23,7 @@ import cc.otavia.core.channel.ChannelHandlerContext
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.ChannelFuture
 import cc.otavia.core.timer.Timer
-import cc.otavia.handler.codec.ByteToMessageCodec
+import cc.otavia.core.channel.handler.{ByteToMessageDecoder, MessageToByteEncoder}
 import cc.otavia.handler.ssl.SslHandshakeCompletion
 import cc.otavia.http.*
 
@@ -32,7 +32,7 @@ import java.nio.charset.StandardCharsets
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-class ClientCodec(httpVersion: HttpVersion, isSsl: Boolean) extends ByteToMessageCodec {
+class ClientCodec(httpVersion: HttpVersion, isSsl: Boolean) extends ByteToMessageDecoder with MessageToByteEncoder {
 
     import ClientCodec.*
 
