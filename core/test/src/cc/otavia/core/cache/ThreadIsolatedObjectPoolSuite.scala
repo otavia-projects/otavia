@@ -33,7 +33,7 @@ class ThreadIsolatedObjectPoolSuite extends ThreadIsolatedObjectPool[EmptyPoolOb
     test("get pool object") {
         val instance = this.get()
 
-        assert(instance.notInChain)
+        assert(instance.next == null)
 
         instance.state = 1
         instance.recycle()

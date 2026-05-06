@@ -138,7 +138,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     /** Bind a [[Future]] from an outgoing ask to the current stack, so the stack resumes when the reply arrives. */
     private[core] def attachStack(askId: Long, future: Future[?]): Unit = {
         val promise = future.promise.asInstanceOf[AbstractPromise[?]]
-        assert(promise.notInChain, "The Future has been used, can't be use again!")
+        assert(promise.next == null, "The Future has been used, can't be use again!")
         promise.setStack(currentStack)
         promise.setId(askId)
         currentStack.addUncompletedPromise(promise)

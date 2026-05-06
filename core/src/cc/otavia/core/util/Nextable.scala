@@ -27,9 +27,4 @@ private[core] trait Nextable {
 
     def clearNext(): Unit = n = null
 
-    def isTail: Boolean = n == null
-
-    /** true if and only if this object is not in any chain */
-    def notInChain: Boolean = n == null
-
 }
