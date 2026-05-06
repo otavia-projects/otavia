@@ -126,25 +126,25 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
     override def generateMessageId: Long = { channelMsgId += 1; channelMsgId }
 
     override private[core] def onInboundMessage(msg: AnyRef, exception: Boolean): Unit = {
-        if (inflightFutures.nonEmpty) {
-            val promise = inflightFutures.pop()
-            if (!exception) promise.setSuccess(msg) else promise.setFailure(msg.asInstanceOf[Throwable])
-        } else {
+        if (inflightFutures.isEmpty) {
             val stack = ChannelStack(this, msg, msgId = generateMessageId)
             pendingStacks.append(stack)
             processPendingStacks()
+        } else {
+            val promise = inflightFutures.pop()
+            if (!exception) promise.setSuccess(msg) else promise.setFailure(msg.asInstanceOf[Throwable])
         }
         if (pendingFutures.nonEmpty) processPendingFutures()
     }
 
     override private[core] def onInboundMessage(msg: AnyRef, exception: Boolean, id: Long): Unit = {
         val promise = inflightFutures.tryRemove(id)
-        if (promise != null) {
-            if (!exception) promise.setSuccess(msg) else promise.setFailure(msg.asInstanceOf[Throwable])
-        } else {
+        if (promise == null) {
             val stack = ChannelStack(this, msg, id)
             pendingStacks.append(stack)
             processPendingStacks()
+        } else {
+            if (!exception) promise.setSuccess(msg) else promise.setFailure(msg.asInstanceOf[Throwable])
         }
         if (pendingFutures.nonEmpty) processPendingFutures()
     }
@@ -197,12 +197,12 @@ abstract class AbstractChannel(val system: ActorSystem) extends Channel, Channel
 
     private def processPendingStack(): Unit = {
         val stack = pendingStacks.pop()
-        inflightStacks.append(stack)
         executor.receiveChannelMessage(stack)
         if (stack.isDone && !stackHeadOfLine) {
-            inflightStacks.remove(stack.entityId)
             if (stack.hasResult) this.writeAndFlush(stack.result, stack.messageId)
             actor.recycleStack(stack)
+        } else {
+            inflightStacks.append(stack)
         }
     }
 
