@@ -46,12 +46,20 @@ object LoggerFactory {
      *  @return
      *    a [[Logger]] instance
      */
-    def getLogger(clz: Class[?], system: ActorSystem): Logger = {
-        val logger = getLogger(clz.getName, system)
-        logger
-    }
+    def getLogger(clz: Class[?], system: ActorSystem): Logger =
+        getLogger(clz.getName, system)
 
-    /** Return a [[logger]] named according to the name parameter using the statically bound [[ILoggerFactory]]
+    /** Return a logger named corresponding to the class passed as parameter, using [[ActorSystem.global]].
+     *
+     *  @param clz
+     *    the returned logger will be named after clazz
+     *  @return
+     *    a [[Logger]] instance
+     */
+    def getLogger(clz: Class[?]): Logger =
+        getLogger(clz.getName, ActorSystem.global)
+
+    /** Return a [[Logger]] named according to the name parameter using the statically bound [[ILoggerFactory]]
      *  instance.
      *
      *  @param name
@@ -65,6 +73,16 @@ object LoggerFactory {
         val iLoggerFactory = getILoggerFactory
         iLoggerFactory.getLogger(name, system)
     }
+
+    /** Return a [[Logger]] named according to the name parameter, using [[ActorSystem.global]].
+     *
+     *  @param name
+     *    The name of the logger.
+     *  @return
+     *    a [[Logger]] instance
+     */
+    def getLogger(name: String): Logger =
+        getLogger(name, ActorSystem.global)
 
     private[slf4a] val UNINITIALIZED               = 0
     private[slf4a] val ONGOING_INITIALIZATION      = 1

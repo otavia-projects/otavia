@@ -36,6 +36,7 @@ trait ILoggerFactory {
      *  @return
      *    a [[Logger]] instance
      */
-    def getLogger(name: String, system: ActorSystem): Logger = ???
+    def getLogger(name: String, system: ActorSystem): Logger =
+        throw new AbstractMethodError(s"getLogger($name, system) not implemented")
 
 }

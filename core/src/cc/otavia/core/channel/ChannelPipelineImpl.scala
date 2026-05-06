@@ -27,7 +27,7 @@ import cc.otavia.core.channel.inflight.QueueMap
 import cc.otavia.core.channel.internal.ChannelHandlerMask
 import cc.otavia.core.channel.message.FixedReadPlanFactory.FixedReadPlan
 import cc.otavia.core.channel.message.{AutoReadPlan, FixedReadPlanFactory, ReadPlan}
-import cc.otavia.core.slf4a.Logger
+import cc.otavia.core.slf4a.{Logger, LoggerFactory}
 import cc.otavia.core.stack.{ChannelFuture, ChannelPromise, ChannelStack}
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.util.Resource
@@ -48,7 +48,7 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
     private val channelOutboundAdaptiveBuffer: AdaptiveBuffer = AdaptiveBuffer(channel.directAllocator)
 
     private[channel] val head = new ChannelHandlerContextImpl(this, HEAD_NAME, new HeadHandler(channel))
-    private[channel] val tail = new ChannelHandlerContextImpl(this, TAIL_NAME, new TailHandler(logger))
+    private[channel] val tail = new ChannelHandlerContextImpl(this, TAIL_NAME, new TailHandler)
 
     head.setInboundAdaptiveBuffer(channelInboundAdaptiveBuffer)
 
@@ -808,6 +808,8 @@ object ChannelPipelineImpl {
 
     private final class HeadHandler(ch: AbstractChannel) extends ChannelHandler {
 
+        private val logger = LoggerFactory.getLogger(getClass)
+
         override def isBufferHandler: Boolean = true
 
         override def bind(ctx: ChannelHandlerContext, local: SocketAddress, future: ChannelFuture): ChannelFuture = {
@@ -885,7 +887,9 @@ object ChannelPipelineImpl {
 
     }
 
-    private final class TailHandler(logger: Logger) extends ChannelHandler {
+    private final class TailHandler extends ChannelHandler {
+
+        private val logger = LoggerFactory.getLogger(getClass)
 
         override def channelRegistered(ctx: ChannelHandlerContext): Unit = {} // Just swallow event
 

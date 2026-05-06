@@ -55,11 +55,54 @@ object MessageFormatter {
     }
 
     def format(formatter: String, arg1: Any, arg2: Any): String = {
-        ???
+        val sbuf = new lang.StringBuilder(formatter.length + 40)
+        val j    = formatter.indexOf(DELIM_STR)
+        if (j == -1) {
+            sbuf.append(formatter)
+            sbuf.append(' ')
+            objectAppend(sbuf, arg1)
+            sbuf.append(' ')
+            objectAppend(sbuf, arg2)
+            sbuf.toString
+        } else {
+            sbuf.append(formatter, 0, j)
+            objectAppend(sbuf, arg1)
+            val k = formatter.indexOf(DELIM_STR, j + 2)
+            if (k == -1) {
+                sbuf.append(formatter, j + 2, formatter.length)
+                sbuf.append(' ')
+                objectAppend(sbuf, arg2)
+            } else {
+                sbuf.append(formatter, j + 2, k)
+                objectAppend(sbuf, arg2)
+                sbuf.append(formatter, k + 2, formatter.length)
+            }
+            sbuf.toString
+        }
     }
 
     def format(formatter: String, seq: Seq[Any]): String = {
-        ???
+        val sbuf       = new lang.StringBuilder(formatter.length + seq.length * 20)
+        var searchFrom = 0
+        var i          = 0
+        while (i < seq.length) {
+            val j = formatter.indexOf(DELIM_STR, searchFrom)
+            if (j == -1) {
+                sbuf.append(formatter, searchFrom, formatter.length)
+                while (i < seq.length) {
+                    sbuf.append(' ')
+                    objectAppend(sbuf, seq(i))
+                    i += 1
+                }
+                return sbuf.toString
+            }
+            sbuf.append(formatter, searchFrom, j)
+            objectAppend(sbuf, seq(i))
+            searchFrom = j + 2
+            i += 1
+        }
+        sbuf.append(formatter, searchFrom, formatter.length)
+        sbuf.toString
     }
 
     private def primaryArrayAppend[@specialized T](sbuf: lang.StringBuilder, a: Array[T]): Unit = {
