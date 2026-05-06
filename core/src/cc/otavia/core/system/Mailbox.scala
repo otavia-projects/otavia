@@ -66,7 +66,7 @@ class Mailbox(val house: ActorHouse) {
                 tail = null
             } else {
                 head = obj.next
-                obj.unlink()
+                obj.clearNext()
             }
             count -= 1
 

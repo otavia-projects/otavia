@@ -35,6 +35,8 @@ abstract class AbstractPromise[V] extends Promise[V] with Future[V] with Poolabl
 
     private var p: AbstractPromise[?] = _
 
+    protected var _completed: Boolean = false
+
     def setTimeoutId(id: Long): Unit = tid = id
 
     def timeoutId: Long = tid
@@ -47,21 +49,21 @@ abstract class AbstractPromise[V] extends Promise[V] with Future[V] with Poolabl
     final def id: Long              = aid
     final def setId(id: Long): Unit = aid = id
 
-    override def isSuccess: Boolean = result ne null
+    override def isDone: Boolean   = _completed
+    override def isSuccess: Boolean = _completed && error == null
+    override def isFailed: Boolean  = _completed && error != null
 
-    override def isFailed: Boolean = error ne null
-
-    override def getNow: V = if (result == null && error == null) throw new IllegalStateException("not completed yet")
+    override def getNow: V = if (!_completed) throw new IllegalStateException("not completed yet")
     else if (error != null) throw error
     else result.asInstanceOf[V]
 
-    override def cause: Option[Throwable] = if (result == null && error == null)
+    override def cause: Option[Throwable] = if (!_completed)
         throw new IllegalStateException("not completed yet")
     else Option(error)
 
-    override def causeUnsafe: Throwable = if (result == null && error == null)
+    override def causeUnsafe: Throwable = if (!_completed)
         throw new IllegalStateException("not completed yet")
-    else if (result != null) throw new IllegalStateException("the future is success")
+    else if (error == null) throw new IllegalStateException("the future is success")
     else error
 
     override protected def cleanInstance(): Unit = {
@@ -70,15 +72,20 @@ abstract class AbstractPromise[V] extends Promise[V] with Future[V] with Poolabl
         tid = Timer.INVALID_TIMEOUT_REGISTER_ID
         result = null
         error = null
+        _completed = false
         p = null
     }
 
     /** Set the pre object of this object. */
     final private[core] def pre_=(promise: AbstractPromise[?]): Unit = p = promise
 
+    /** Clear the pre pointer. Only used for neighbor patching in doubly-linked list operations. */
     final private[core] def cleanPre(): Unit = p = null
 
     /** Get the pre object of this object. */
     final private[core] def pre: AbstractPromise[?] = p
+
+    /** Clear both pre and next pointers, fully detaching this promise from any chain. */
+    private[core] def unlink(): Unit = { clearNext(); p = null }
 
 }

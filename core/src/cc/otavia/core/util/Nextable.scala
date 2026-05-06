@@ -32,6 +32,4 @@ private[core] trait Nextable {
     /** true if and only if this object is not in any chain */
     def notInChain: Boolean = n == null
 
-    def unlink(): Unit = n = null
-
 }

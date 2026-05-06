@@ -48,6 +48,7 @@ private[core] abstract class FutureDispatcher {
 
     final protected def push(promise: MessagePromise[?]): Unit = {
         if (contentSize + 1 >= threshold) resizeTable(table.length * 2)
+        contentSize += 1
         put0(promise)
     }
 
@@ -84,7 +85,7 @@ private[core] abstract class FutureDispatcher {
                 }
                 cursor
 
-        if (table.length >= initialCapacity * 4 && contentSize < table.length / 4) { // shrinkage the hash table
+        if (table.length >= initialCapacity * 4 && contentSize < table.length / 8) { // shrinkage the hash table
             resizeTable(table.length / 2)
         }
         promise

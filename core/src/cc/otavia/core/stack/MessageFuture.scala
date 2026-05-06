@@ -59,8 +59,8 @@ final private[core] class MessagePromise[R <: Reply]() extends AbstractPromise[R
         super.cleanInstance()
     }
 
-    override def setSuccess(result: AnyRef): Unit = this.result = result
+    override def setSuccess(result: AnyRef): Unit = { this.result = result; _completed = true }
 
-    override def setFailure(cause: Throwable): Unit = error = cause
+    override def setFailure(cause: Throwable): Unit = { error = cause; _completed = true }
 
 }

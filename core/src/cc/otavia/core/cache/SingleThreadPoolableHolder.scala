@@ -33,7 +33,7 @@ final class SingleThreadPoolableHolder[T <: Poolable](val maxSize: Int = 256)
         val poolable = head
         head = poolable.next
         count -= 1
-        poolable.unlink()
+        poolable.clearNext()
         poolable.asInstanceOf[T]
     } else if (count == 1) {
         val poolable = head

@@ -96,7 +96,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
         while (cursor != null) {
             val msg = cursor
             cursor = msg.next
-            msg.unlink()
+            msg.clearNext()
             house.dweller.receiveReply(msg.asInstanceOf[Envelope])
         }
     }
@@ -106,7 +106,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
         while (cursor != null) {
             val msg = cursor
             cursor = msg.next
-            msg.unlink()
+            msg.clearNext()
             house.dweller.receiveExceptionReply(msg.asInstanceOf[Envelope])
         }
     }
@@ -123,7 +123,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
         while (askCursor != null && !house.inBarrier) {
             val msg = askCursor
             askCursor = msg.next
-            msg.unlink()
+            msg.clearNext()
             val envelope = msg.asInstanceOf[Envelope]
             house.inBarrier = house.dweller.isBarrier(envelope.message.asInstanceOf[Call])
             house.dweller.receiveAsk(envelope)
@@ -136,7 +136,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
         while (askCursor != null && !house.inBarrier) {
             val envelope = askCursor.asInstanceOf[Envelope]
             askCursor = envelope.next
-            envelope.unlink()
+            envelope.clearNext()
             val ask = envelope.message.asInstanceOf[Ask[?]]
             if (house.dweller.batchAskFilter(ask)) buf.addOne(envelope)
             else {
@@ -160,7 +160,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
         while (noticeCursor != null && !house.inBarrier) {
             val msg = noticeCursor
             noticeCursor = msg.next
-            msg.unlink()
+            msg.clearNext()
             val envelope = msg.asInstanceOf[Envelope]
             house.inBarrier = house.dweller.isBarrier(envelope.message.asInstanceOf[Call])
             house.dweller.receiveNotice(envelope)
@@ -173,7 +173,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
         while (noticeCursor != null && !house.inBarrier) {
             val envelope = noticeCursor.asInstanceOf[Envelope]
             noticeCursor = envelope.next
-            envelope.unlink()
+            envelope.clearNext()
             val notice = envelope.message.asInstanceOf[Notice]
             if (house.dweller.batchNoticeFilter(notice)) {
                 buf.addOne(notice)
@@ -196,7 +196,7 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
         while (cursor != null) {
             val msg = cursor.asInstanceOf[Event]
             cursor = msg.next
-            msg.unlink()
+            msg.clearNext()
             house.dweller.receiveEvent(msg)
         }
     }

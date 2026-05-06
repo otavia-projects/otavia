@@ -161,7 +161,10 @@ abstract class Stack extends Poolable {
         completedTail = null
         while (completedHead != null) {
             val promise = completedHead
-            completedHead = promise.next.asInstanceOf[AbstractPromise[?]]
+            completedHead = promise.next match
+                case p: AbstractPromise[?] => p
+                case _                    => null
+            promise.unlink()
             promise.recycle()
         }
     }
@@ -170,8 +173,12 @@ abstract class Stack extends Poolable {
         uncompletedTail = null
         while (uncompletedHead != null) {
             val promise = uncompletedHead
-            uncompletedHead = promise.next.asInstanceOf[AbstractPromise[?]]
-            uncompletedHead.cleanPre()
+            uncompletedHead = promise.next match
+                case p: AbstractPromise[?] =>
+                    p.cleanPre()
+                    p
+                case _ => null
+            promise.unlink()
             promise.recycle()
         }
     }

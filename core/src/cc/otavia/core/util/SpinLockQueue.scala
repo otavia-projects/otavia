@@ -60,7 +60,7 @@ class SpinLockQueue[T <: Nextable](config: SpinLockConfig = SpinLockConfig()) {
                 if (size.get() == 1) tail = null
                 size.decrementAndGet()
                 lock.unlock()
-                value.unlink()
+                value.clearNext()
                 value.asInstanceOf[T]
             }
         }

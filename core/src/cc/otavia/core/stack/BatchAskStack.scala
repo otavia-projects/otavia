@@ -54,7 +54,13 @@ final class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
     private def end(ret: Reply, exception: Boolean = false): StackYield = {
         for ((sender, envs) <- envelopes.groupBy(_.sender)) {
             if (envs.length > 1) {
-                val replyIds = envs.map(_.messageId).toArray
+                val replyIds = new Array[Long](envs.length)
+                var i = 0
+                val iter = envs.iterator
+                while (iter.hasNext) {
+                    replyIds(i) = iter.next().messageId
+                    i += 1
+                }
                 if (exception) sender.`throw`(ret.asInstanceOf[ExceptionMessage], replyIds, runtimeActor)
                 else sender.reply(ret, replyIds, runtimeActor)
             } else {

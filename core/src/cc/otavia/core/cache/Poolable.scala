@@ -39,7 +39,7 @@ trait Poolable extends Nextable {
 
     /** Clean all fields of this instance. */
     final def clean(): Unit = {
-        this.unlink()
+        this.clearNext()
         this.cleanInstance()
     }
 

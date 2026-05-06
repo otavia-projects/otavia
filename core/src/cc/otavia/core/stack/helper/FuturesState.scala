@@ -24,10 +24,10 @@ import scala.language.unsafeNulls
 
 class FuturesState[R <: Reply] private () extends StackState with Poolable {
 
-    private var stateId: Int               = 0
-    private var fus: Seq[MessageFuture[R]] = _
+    private var stateId: Int                       = 0
+    private var fus: Array[MessageFuture[R]]       = _
 
-    def futures: Seq[MessageFuture[R]] = fus
+    def futures: Array[MessageFuture[R]] = fus
 
     override def id: Int = stateId
 
@@ -46,7 +46,7 @@ object FuturesState {
         val state = pool.get().asInstanceOf[FuturesState[R]]
         state.stateId = stateId
 
-        state.fus = (0 until length).map { i => MessageFuture() }
+        state.fus = Array.tabulate(length)(_ => MessageFuture())
 
         state
     }
