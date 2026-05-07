@@ -16,8 +16,8 @@
 
 package cc.otavia.core.stack.helper
 
-import cc.otavia.core.cache.*
 import cc.otavia.core.message.Reply
+import cc.otavia.core.pool.*
 import cc.otavia.core.stack.{MessageFuture, StackState}
 
 import scala.language.unsafeNulls
@@ -55,7 +55,7 @@ object FutureState {
         state
     }
 
-    private val pool = new ActorThreadIsolatedObjectPool[FutureState[?]] {
+    private val pool = new ThreadLocalObjectPool[FutureState[?]] {
 
         override protected def newObject(): FutureState[?] = new FutureState()
 

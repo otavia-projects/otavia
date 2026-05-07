@@ -27,7 +27,7 @@ abstract class AbstractILoggerFactory extends ILoggerFactory {
 
     override def getLogger(name: String, system: ActorSystem): AbstractLogger = {
         val logger = getLogger0(name, system)
-        
+
         if (!loaded) {
             system.loadModule(module)
             loaded = true

@@ -35,8 +35,9 @@ class NioDatagramChannel(system: ActorSystem) extends AbstractDatagramChannel(sy
     override def localAddress: Option[SocketAddress] = Some(unsafeChannel.localAddress)
 
     override def remoteAddress: Option[SocketAddress] =
-        if (unsafeChannel.isConnected) try Some(unsafeChannel.ch.getRemoteAddress)
-        catch { case _: java.io.IOException => None }
+        if (unsafeChannel.isConnected)
+            try Some(unsafeChannel.ch.getRemoteAddress)
+            catch { case _: java.io.IOException => None }
         else None
 
     override final protected def getTransportExtendedOption[T](option: ChannelOption[T]): T = {

@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.cache
+package cc.otavia.core.pool
 
-import cc.otavia.core.cache.ActorThreadLocalBoxed.ValueBox
+import cc.otavia.core.pool.PaddedActorThreadLocal.ValueBox
 import cc.otavia.core.system.ActorThread
 
-abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
+abstract class PaddedActorThreadLocal[V] extends IndexedThreadLocal[V] {
 
     private var variables: Array[ValueBox[V]] = _ // Use boxed objects to avoid cpu cache false sharing.
 
     private def valueBox(index: Int): ValueBox[V] = variables(index) // .asInstanceOf[ValueBox[V]]
 
-    override private[cache] def doInitial(len: Int): Unit = {
+    override private[pool] def doInitial(len: Int): Unit = {
         val arr = new Array[ValueBox[V]](len)
         arr.indices.foreach { index =>
             val box: ValueBox[V] = ValueBox()
@@ -46,7 +46,7 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
         val box   = valueBox(index)
         if (box.isEmpty) initializeValue(box)
         else {
-            updateGetTime(index)
+            updateLastGetTime(index)
             box.getValue
         }
     }
@@ -54,7 +54,7 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
     final def getIfExists: V | Null = {
         val index = threadIndex()
         val box   = valueBox(index)
-        if (box.nonEmpty) updateGetTime(index)
+        if (box.nonEmpty) updateLastGetTime(index)
         box.get
     }
 
@@ -62,7 +62,7 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
         val index = threadIndex()
         val box   = valueBox(index)
         if (box.isEmpty) initialTimer()
-        updateSetTime()
+        updateLastSetTime()
         box.set(value)
     }
 
@@ -86,7 +86,7 @@ abstract class ActorThreadLocalBoxed[V] extends ThreadLocal[V] {
 
 }
 
-object ActorThreadLocalBoxed {
+object PaddedActorThreadLocal {
 
     private class ValueBox[V] {
 
@@ -109,7 +109,5 @@ object ActorThreadLocalBoxed {
     private object ValueBox {
         def apply[V](): ValueBox[V] = new ValueBox()
     }
-
-    private val EMPTY_ARRAY: Array[ValueBox[?]] = Array.empty
 
 }

@@ -46,8 +46,8 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] with Auto
     }
 
     /** Request to connect to the given [[SocketAddress]]. This method return a channel which is not connected to the
-     *  remote address, it only registers this channel to [[Reactor]], when register operation completes, this actor will
-     *  receive a [[ReactorEvent.RegisterReply]] event, then this actor will call [[afterChannelRegistered]] to
+     *  remote address, it only registers this channel to [[Reactor]], when register operation completes, this actor
+     *  will receive a [[ReactorEvent.RegisterReply]] event, then this actor will call [[afterChannelRegistered]] to
      *  handle register result and connect to remote address.
      *
      *  @param stack
@@ -94,7 +94,11 @@ abstract class SocketChannelsActor[M <: Call] extends ChannelsActor[M] with Auto
         state
     }
 
-    final protected def connect(remote: SocketAddress, local: Option[SocketAddress], future: ChannelFuture): ChannelFuture = {
+    final protected def connect(
+        remote: SocketAddress,
+        local: Option[SocketAddress],
+        future: ChannelFuture
+    ): ChannelFuture = {
         val channel = createChannelAndInit()
         channel.connect(remote, local, future)
         future

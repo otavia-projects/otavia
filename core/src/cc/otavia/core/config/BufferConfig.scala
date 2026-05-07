@@ -19,8 +19,8 @@ package cc.otavia.core.config
 /** Buffer allocation configuration.
  *
  *  @param pageSize
- *    Page size in bytes for buffer allocation. Must be a power of 2 and one of {1024, 2048, 4096, 8192, 16384}.
- *    Default is 4096 (4KB). Larger pages reduce allocation overhead but increase memory consumption for small buffers.
+ *    Page size in bytes for buffer allocation. Must be a power of 2 and one of {1024, 2048, 4096, 8192, 16384}. Default
+ *    is 4096 (4KB). Larger pages reduce allocation overhead but increase memory consumption for small buffers.
  *  @param minCache
  *    Minimum number of pages cached per-thread allocator. Ensures a baseline of cached pages to avoid allocation
  *    thrashing. Must be at least 1. Default is 8.
@@ -29,7 +29,7 @@ package cc.otavia.core.config
  *    greater than or equal to minCache. Default is 10240.
  */
 case class BufferConfig(
-    pageSize: Int  = 4096,
-    minCache: Int  = 8,
-    maxCache: Int  = 10240
+    pageSize: Int = 4096,
+    minCache: Int = 8,
+    maxCache: Int = 10240
 )

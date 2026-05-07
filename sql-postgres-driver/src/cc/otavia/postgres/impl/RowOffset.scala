@@ -16,7 +16,7 @@
 
 package cc.otavia.postgres.impl
 
-import cc.otavia.core.cache.{ActorThreadIsolatedObjectPool, Poolable, ThreadLocalTimer}
+import cc.otavia.core.pool.{ThreadLocalObjectPool, Poolable, ThreadLocalTimer}
 import cc.otavia.core.timer.TimeoutTrigger
 
 import java.util.concurrent.TimeUnit
@@ -50,7 +50,7 @@ object RowOffset {
         rowOffset
     }
 
-    private val pool: ActorThreadIsolatedObjectPool[RowOffset] = new ActorThreadIsolatedObjectPool[RowOffset] {
+    private val pool: ThreadLocalObjectPool[RowOffset] = new ThreadLocalObjectPool[RowOffset] {
 
         override protected def newObject(): RowOffset = new RowOffset
 

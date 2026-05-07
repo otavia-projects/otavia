@@ -22,26 +22,26 @@ package cc.otavia.core.config
  *    Default TCP connect timeout in milliseconds. Applied when no explicit timeout is set on the connect operation.
  *    Default is 30000ms (30 seconds).
  *  @param writeWaterMarkLow
- *    Low watermark for write buffer in bytes. When the write buffer size drops below this threshold after being
- *    above the high watermark, the channel becomes writable again. Default is 32768 (32KB).
+ *    Low watermark for write buffer in bytes. When the write buffer size drops below this threshold after being above
+ *    the high watermark, the channel becomes writable again. Default is 32768 (32KB).
  *  @param writeWaterMarkHigh
- *    High watermark for write buffer in bytes. When the write buffer size exceeds this threshold, the channel
- *    becomes non-writable, triggering backpressure. Default is 65536 (64KB).
+ *    High watermark for write buffer in bytes. When the write buffer size exceeds this threshold, the channel becomes
+ *    non-writable, triggering backpressure. Default is 65536 (64KB).
  *  @param maxFutureInflight
- *    Maximum number of pipelined requests (ChannelFutures) that can be in-flight without waiting for responses.
- *    Enables high-performance pipelined protocols like Redis pipeline and HTTP/2 multiplexing. Default is 1.
+ *    Maximum number of pipelined requests (ChannelFutures) that can be in-flight without waiting for responses. Enables
+ *    high-performance pipelined protocols like Redis pipeline and HTTP/2 multiplexing. Default is 1.
  *  @param maxStackInflight
- *    Maximum number of inbound server requests (ChannelStacks) that can be processed concurrently per channel.
- *    Default is 1.
+ *    Maximum number of inbound server requests (ChannelStacks) that can be processed concurrently per channel. Default
+ *    is 1.
  *  @param maxMessagesPerRead
- *    Maximum number of messages to read per read loop iteration for server channels. Controls read batching.
- *    Default is 16.
+ *    Maximum number of messages to read per read loop iteration for server channels. Controls read batching. Default is
+ *    16.
  */
 case class ChannelConfig(
-    connectTimeoutMs: Int   = 30000,
-    writeWaterMarkLow: Int  = 32768,
+    connectTimeoutMs: Int = 30000,
+    writeWaterMarkLow: Int = 32768,
     writeWaterMarkHigh: Int = 65536,
-    maxFutureInflight: Int  = 1,
-    maxStackInflight: Int   = 1,
+    maxFutureInflight: Int = 1,
+    maxStackInflight: Int = 1,
     maxMessagesPerRead: Int = 16
 )

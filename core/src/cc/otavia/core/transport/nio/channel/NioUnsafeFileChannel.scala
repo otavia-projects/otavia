@@ -20,7 +20,7 @@ package cc.otavia.core.transport.nio.channel
 
 import cc.otavia.buffer.pool.RecyclablePageBuffer
 import cc.otavia.core.channel.message.{FileReadPlan, MaxMessagesReadPlanFactory, ReadPlan}
-import cc.otavia.core.channel.{AbstractChannel, AbstractUnsafeChannel, Channel, ChannelShutdownDirection, FileRegion}
+import cc.otavia.core.channel.*
 import cc.otavia.core.message.*
 
 import java.net.SocketAddress
@@ -203,7 +203,7 @@ class NioUnsafeFileChannel(channel: AbstractChannel) extends AbstractUnsafeChann
 
     override def unsafeFlush(payload: FileRegion | RecyclablePageBuffer): Unit = payload match
         case fileRegion: FileRegion =>
-            var position = 0L
+            var position  = 0L
             var remaining = fileRegion.count
             while (remaining > 0) {
                 val written = fileRegion.transferTo(ch, position)

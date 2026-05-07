@@ -60,21 +60,21 @@ import scala.language.unsafeNulls
  *    Scheduling priority thresholds: mailbox sizes that trigger high priority.
  */
 case class OtaviaConfig(
-    name: String                                         = s"ActorSystem:${InetAddress.getLocalHost.getHostName}",
-    system: ActorSystemConfig                            = ActorSystemConfig(),
-    buffer: BufferConfig                                 = BufferConfig(),
-    scheduler: SchedulerConfig                           = SchedulerConfig(),
-    reactor: ReactorConfig                               = ReactorConfig(),
-    channel: ChannelConfig                               = ChannelConfig(),
-    timer: TimerConfig                                   = TimerConfig(),
-    spinLock: SpinLockConfig                             = SpinLockConfig(),
-    priority: PriorityConfig                             = PriorityConfig(),
+    name: String = s"ActorSystem:${InetAddress.getLocalHost.getHostName}",
+    system: ActorSystemConfig = ActorSystemConfig(),
+    buffer: BufferConfig = BufferConfig(),
+    scheduler: SchedulerConfig = SchedulerConfig(),
+    reactor: ReactorConfig = ReactorConfig(),
+    channel: ChannelConfig = ChannelConfig(),
+    timer: TimerConfig = TimerConfig(),
+    spinLock: SpinLockConfig = SpinLockConfig(),
+    priority: PriorityConfig = PriorityConfig(),
     private val moduleConfigs: Map[Class[?], ModuleConfig] = Map.empty
 ) {
 
     /** Type-safe retrieval of a module config.
- *
- *  @tparam M
+     *
+     *  @tparam M
      *    The module config type.
      *  @param clazz
      *    The class of the module config to retrieve.
@@ -85,8 +85,8 @@ case class OtaviaConfig(
         moduleConfigs.get(clazz).asInstanceOf[Option[M]]
 
     /** Type-safe retrieval of a module config with a default fallback.
- *
- *  @tparam M
+     *
+     *  @tparam M
      *    The module config type.
      *  @param clazz
      *    The class of the module config to retrieve.

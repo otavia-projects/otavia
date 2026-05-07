@@ -16,8 +16,8 @@
 
 package cc.otavia.core.system
 
-import cc.otavia.core.util.{Nextable, SpinLock}
 import cc.otavia.core.config.SpinLockConfig
+import cc.otavia.core.util.{Nextable, SpinLock}
 
 import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
@@ -25,8 +25,8 @@ import scala.language.unsafeNulls
 /** A priority-aware MPSC house queue with two sub-queues: high-priority and normal-priority.
  *
  *  '''Dequeue order:''' high-priority sub-queue is always drained before the normal sub-queue (strict priority). This
- *  guarantees that actors that can immediately push the system forward (reply/event backlogs, or no downstream
- *  blocking — see [[ActorHouse._highPriority]]) are always served before normal actors.
+ *  guarantees that actors that can immediately push the system forward (reply/event backlogs, or no downstream blocking
+ *  — see [[ActorHouse._highPriority]]) are always served before normal actors.
  *
  *  '''Priority is determined at enqueue time.''' The [[ActorHouse._highPriority]] cached flag is read once when the
  *  house enters the queue (via [[ActorHouse.waitingToReady]] → [[HouseManager.ready]] → [[enqueue]]). A house that
@@ -38,9 +38,9 @@ import scala.language.unsafeNulls
  *  uses [[SpinLock.tryLock]] to avoid spinning on the owner's lock. Each sub-queue has independent read/write lock
  *  pairs to avoid cross-priority contention.
  *
- *  '''Schedule() outside lock:''' the READY → SCHEDULED CAS in [[ActorHouse.schedule]] is performed after releasing
- *  the queue lock. This is safe because no other thread can change the house state between unlock and schedule: the
- *  house is in READY state, removed from the queue, and no lifecycle transition is possible until schedule() fires.
+ *  '''Schedule() outside lock:''' the READY → SCHEDULED CAS in [[ActorHouse.schedule]] is performed after releasing the
+ *  queue lock. This is safe because no other thread can change the house state between unlock and schedule: the house
+ *  is in READY state, removed from the queue, and no lifecycle transition is possible until schedule() fires.
  */
 class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
 
@@ -105,11 +105,12 @@ class PriorityHouseQueue(manager: HouseManager) extends HouseQueue(manager) {
     }
 
     /** Opportunistic dequeue for cross-thread stealing. Uses [[SpinLock.tryLock()]] instead of [[SpinLock.lock()]] to
-     *  avoid the stealing thread spinning on the owning thread's lock. Returns null immediately if the lock is contended.
+     *  avoid the stealing thread spinning on the owning thread's lock. Returns null immediately if the lock is
+     *  contended.
      *
      *  Only handles the size > 1 case. When size == 1, the dequeue path requires acquiring both readLock and writeLock
-     *  (to null out the tail pointer). Skipping this case is acceptable because the steal threshold (64+) guarantees the
-     *  queue is deep when stealing is attempted.
+     *  (to null out the tail pointer). Skipping this case is acceptable because the steal threshold (64+) guarantees
+     *  the queue is deep when stealing is attempted.
      */
     def stealDequeue(): ActorHouse | Null = {
         // Try high-priority sub-queue first (consistent with dequeue contract)

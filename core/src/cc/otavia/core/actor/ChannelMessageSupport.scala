@@ -25,13 +25,14 @@ import cc.otavia.core.stack.ChannelStack
  *  timeouts, channel stacks) from the core [[AbstractActor]] stack coroutine engine, ensuring that [[StateActor]]'s
  *  inheritance chain remains free of IO concerns.
  *
- *  All methods are [[private[core]]] — they are invisible to user code and only called by the kernel dispatch machinery.
+ *  All methods are [[private[core]]] — they are invisible to user code and only called by the kernel dispatch
+ *  machinery.
  */
 private[core] trait ChannelMessageSupport {
 
-    /** Dispatch a channel stack for processing by the actor's [[resumeChannelStack]] logic. Called by the kernel when
-     *  a channel's inflight mechanism produces a [[ChannelStack]] for actor processing, or when a suspended channel
-     *  stack is resumed after a promise completion.
+    /** Dispatch a channel stack for processing by the actor's [[resumeChannelStack]] logic. Called by the kernel when a
+     *  channel's inflight mechanism produces a [[ChannelStack]] for actor processing, or when a suspended channel stack
+     *  is resumed after a promise completion.
      *
      *  @param stack
      *    the channel stack to dispatch

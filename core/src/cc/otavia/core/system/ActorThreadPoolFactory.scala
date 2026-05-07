@@ -20,6 +20,4 @@ trait ActorThreadPoolFactory {
     def newThreadPool(): ActorThreadPool
 }
 
-object ActorThreadPoolFactory {
-
-}
+object ActorThreadPoolFactory {}

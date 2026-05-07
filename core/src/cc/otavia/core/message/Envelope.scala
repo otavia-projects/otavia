@@ -17,7 +17,7 @@
 package cc.otavia.core.message
 
 import cc.otavia.core.address.Address
-import cc.otavia.core.cache.{ActorThreadIsolatedObjectPool, Poolable}
+import cc.otavia.core.pool.{Poolable, ThreadLocalObjectPool}
 import cc.otavia.core.util.Nextable
 
 import scala.language.unsafeNulls
@@ -74,7 +74,7 @@ final private[core] class Envelope extends Poolable {
 
 object Envelope {
 
-    private val pool = new ActorThreadIsolatedObjectPool[Envelope] {
+    private val pool = new ThreadLocalObjectPool[Envelope] {
         override protected def newObject(): Envelope = new Envelope
     }
 

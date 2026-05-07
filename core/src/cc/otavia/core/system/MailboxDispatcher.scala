@@ -26,11 +26,11 @@ import cc.otavia.core.util.Nextable
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-/** Message dispatch engine for an [[ActorHouse]]. Handles priority-ordered dispatch of all mailbox contents:
- *  replies → exceptions → asks → notices → events → channels → deferred tasks.
+/** Message dispatch engine for an [[ActorHouse]]. Handles priority-ordered dispatch of all mailbox contents: replies →
+ *  exceptions → asks → notices → events → channels → deferred tasks.
  *
- *  Supports both individual and batch dispatch modes, barrier semantics, and transient cursors that survive
- *  across multiple [[run]] calls when a dispatch doesn't fully drain.
+ *  Supports both individual and batch dispatch modes, barrier semantics, and transient cursors that survive across
+ *  multiple [[run]] calls when a dispatch doesn't fully drain.
  *
  *  @param house
  *    the owning ActorHouse, providing access to mailboxes, the actor, and scheduling state
@@ -58,8 +58,8 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
 
     /** Dispatch all pending messages in strict priority order.
      *
-     *  Order: replies → exceptions → asks → notices → events → channels → deferred tasks.
-     *  Barrier messages block subsequent asks/notices until all pending stacks complete.
+     *  Order: replies → exceptions → asks → notices → events → channels → deferred tasks. Barrier messages block
+     *  subsequent asks/notices until all pending stacks complete.
      *
      *  Optimization: the [[house.hasMessages]] flag gates entry into the individual mailbox checks. This replaces 5
      *  volatile reads per dispatch with a single volatile read in the common case (actor is idle, no messages). The

@@ -18,7 +18,7 @@ package cc.otavia.http.client
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.buffer.pool.AdaptiveBuffer
-import cc.otavia.core.cache.ActorThreadLocal
+import cc.otavia.core.pool.ActorThreadLocal
 import cc.otavia.core.channel.ChannelHandlerContext
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.ChannelFuture

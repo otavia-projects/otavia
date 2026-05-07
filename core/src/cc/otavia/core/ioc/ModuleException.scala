@@ -23,7 +23,7 @@ class ModuleDependencyException(
     val missing: String,
     val loaded: Seq[String]
 ) extends ModuleException(
-        s"Module [$module] depends on [$missing], which has not been loaded. Loaded modules: [${loaded.mkString(", ")}]"
+      s"Module [$module] depends on [$missing], which has not been loaded. Loaded modules: [${loaded.mkString(", ")}]"
     )
 
 class DuplicateModuleException(

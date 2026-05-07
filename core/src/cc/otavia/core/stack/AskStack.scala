@@ -18,11 +18,9 @@ package cc.otavia.core.stack
 
 import cc.otavia.core.actor.*
 import cc.otavia.core.address.Address
-import cc.otavia.core.cache.*
 import cc.otavia.core.message.*
-import cc.otavia.core.timer.Timer
+import cc.otavia.core.pool.*
 
-import java.util.concurrent.TimeUnit
 import scala.language.unsafeNulls
 
 final class AskStack[A <: Ask[? <: Reply]] private () extends Stack {
@@ -75,7 +73,7 @@ final class AskStack[A <: Ask[? <: Reply]] private () extends Stack {
 
 object AskStack {
 
-    private val stackPool = new ActorThreadIsolatedObjectPool[AskStack[? <: Ask[?]]] {
+    private val stackPool = new ThreadLocalObjectPool[AskStack[? <: Ask[?]]] {
         override protected def newObject(): AskStack[? <: Ask[?]] = new AskStack[Nothing]()
     }
 

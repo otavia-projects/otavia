@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.cache
+package cc.otavia.core.pool
 
-final class ThreadLocalTimer(override val parent: ThreadLocal[?]) extends ResourceTimer(parent) {
+import cc.otavia.core.timer.Timer
 
-    private var recentlyGet: Long = System.currentTimeMillis()
-    private var recentlySet: Long = System.currentTimeMillis()
+abstract class ResourceTimer(val parent: TimeoutResource) {
 
-    def recentlyGetTime: Long = recentlyGet
-    def updateGetTime(): Unit = recentlyGet = System.currentTimeMillis()
+    private var rid: Long      = Timer.INVALID_TIMEOUT_REGISTER_ID
+    private val initTime: Long = System.nanoTime()
 
-    def recentlySetTime: Long = recentlySet
-    def updateSetTime(): Unit = recentlySet = System.currentTimeMillis()
+    final def registerId: Long = rid
+
+    final def updateRegisterId(id: Long): Unit = rid = id
+
+    final def initialTime: Long = initTime
 
 }

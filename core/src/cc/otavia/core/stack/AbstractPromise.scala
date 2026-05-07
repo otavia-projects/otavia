@@ -16,7 +16,7 @@
 
 package cc.otavia.core.stack
 
-import cc.otavia.core.cache.Poolable
+import cc.otavia.core.pool.Poolable
 import cc.otavia.core.timer.Timer
 
 import scala.annotation.tailrec
@@ -49,7 +49,7 @@ abstract class AbstractPromise[V] extends Promise[V] with Future[V] with Poolabl
     final def id: Long              = aid
     final def setId(id: Long): Unit = aid = id
 
-    override def isDone: Boolean   = _completed
+    override def isDone: Boolean    = _completed
     override def isSuccess: Boolean = _completed && error == null
     override def isFailed: Boolean  = _completed && error != null
 

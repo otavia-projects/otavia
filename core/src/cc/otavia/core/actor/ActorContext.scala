@@ -21,9 +21,9 @@ import cc.otavia.core.message.Message
 import cc.otavia.core.system.ActorSystem
 
 /** Runtime context injected into each [[Actor]] during mounting. Accessed via [[Actor.context]].
-  *
-  * Provides access to system-level services and actor identity metadata.
-  */
+ *
+ *  Provides access to system-level services and actor identity metadata.
+ */
 trait ActorContext {
 
     /** The [[ActorSystem]] this actor belongs to. */
@@ -35,8 +35,8 @@ trait ActorContext {
     /** System-assigned unique ID for this actor instance. */
     def actorId: Long
 
-    /** Whether this actor uses round-robin load balancing across multiple threads.
-     *  When true, messages sent from co-located actor are routed to the same-thread instance for data locality.
+    /** Whether this actor uses round-robin load balancing across multiple threads. When true, messages sent from
+     *  co-located actor are routed to the same-thread instance for data locality.
      */
     def isLoadBalanced: Boolean
 

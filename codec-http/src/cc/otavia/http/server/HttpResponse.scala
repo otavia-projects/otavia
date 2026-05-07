@@ -16,7 +16,7 @@
 
 package cc.otavia.http.server
 
-import cc.otavia.core.cache.ActorThreadLocal
+import cc.otavia.core.pool.ActorThreadLocal
 import cc.otavia.core.message.Reply
 import cc.otavia.http.{HttpHeaderKey, HttpHeaderValue}
 

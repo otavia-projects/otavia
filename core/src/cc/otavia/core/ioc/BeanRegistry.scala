@@ -138,8 +138,7 @@ object BeanRegistry {
                             if primaries.length == 1 then primaries(0).address
                             else if primaries.isEmpty then
                                 throw AmbiguousResolutionException(name, entries.map(_.name).toSeq)
-                            else
-                                throw AmbiguousResolutionException(name, primaries.map(_.name).toSeq)
+                            else throw AmbiguousResolutionException(name, primaries.map(_.name).toSeq)
                         case None =>
                             throw BeanNotFoundException(name, None, byClass.keys.toSeq)
         }
@@ -150,9 +149,9 @@ object BeanRegistry {
                     if clz.isAssignableFrom(entry.clz) then entry.address
                     else
                         throw BeanNotFoundException(
-                            clz.getName,
-                            Some(qualifier),
-                            byClass.keys.toSeq
+                          clz.getName,
+                          Some(qualifier),
+                          byClass.keys.toSeq
                         )
                 case None =>
                     throw BeanNotFoundException(clz.getName, Some(qualifier), byClass.keys.toSeq)
@@ -165,9 +164,9 @@ object BeanRegistry {
         val Empty: FrozenSnapshot = new FrozenSnapshot(Map.empty, Map.empty, Map.empty)
 
         def build(registrations: Seq[Registration]): FrozenSnapshot = {
-            val byClass     = Map.newBuilder[String, BeanEntry]
-            val byQual      = Map.newBuilder[String, BeanEntry]
-            val bySuper     = mutable.HashMap[String, mutable.ArrayBuffer[BeanEntry]]()
+            val byClass = Map.newBuilder[String, BeanEntry]
+            val byQual  = Map.newBuilder[String, BeanEntry]
+            val bySuper = mutable.HashMap[String, mutable.ArrayBuffer[BeanEntry]]()
 
             for reg <- registrations do
                 val entry = BeanEntry(reg.clz, reg.address, reg.qualifier, reg.primary)

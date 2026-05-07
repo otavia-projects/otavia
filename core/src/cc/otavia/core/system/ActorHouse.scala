@@ -31,10 +31,10 @@ import scala.language.unsafeNulls
  *  which is owned by a [[HouseManager]] on a specific [[ActorThread]].
  *
  *  ActorHouse serves three roles:
- *    1. '''Scheduling state machine''': manages the lifecycle state (CREATED → MOUNTING → WAITING → READY → SCHEDULED
- *       → RUNNING) with atomic CAS transitions
- *       2. '''Mailbox container''': holds five separate [[Mailbox]] instances with priority-ordered dispatch
- *       3. '''[[cc.otavia.core.actor.ActorContext]] implementation''': provides runtime context to the actor
+ *    1. '''Scheduling state machine''': manages the lifecycle state (CREATED → MOUNTING → WAITING → READY → SCHEDULED →
+ *       RUNNING) with atomic CAS transitions 2. '''Mailbox container''': holds five separate [[Mailbox]] instances with
+ *       priority-ordered dispatch 3. '''[[cc.otavia.core.actor.ActorContext]] implementation''': provides runtime
+ *       context to the actor
  *
  *  @param manager
  *    the [[HouseManager]] that owns this house
@@ -46,10 +46,10 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     // =========================================================================
 
     private[system] var dweller: AbstractActor[? <: Call] = _
-    private var actorAddress: ActorAddress[Call]  = _
-    private var dwellerId: Long                   = -1
-    private var actorTypeKind: Int                          = 0
-    private[system] var inBarrier: Boolean        = false
+    private var actorAddress: ActorAddress[Call]          = _
+    private var dwellerId: Long                           = -1
+    private var actorTypeKind: Int                        = 0
+    private[system] var inBarrier: Boolean                = false
 
     private var currentSendMessageId: Long = Long.MinValue
 
@@ -74,15 +74,15 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     /** Aggregated hint flag for mailbox occupancy. Checked by the owning ActorThread as a fast-path before incurring
      *  the cost of 5 individual mailbox [[nonEmpty]] checks.
      *
-     *  Write side: set to true by any thread in [[put]] via lazySet (unordered, lowest overhead — a store-store
-     *  barrier only). The write may be delayed relative to other threads' reads, but this is safe because:
+     *  Write side: set to true by any thread in [[put]] via lazySet (unordered, lowest overhead — a store-store barrier
+     *  only). The write may be delayed relative to other threads' reads, but this is safe because:
      *    - If the flag reads false but a mailbox is non-empty, [[completeRunning]] will detect it via the full
      *      [[nonEmpty]] check and re-transition the house to READY.
      *    - If the flag reads true but all mailboxes are empty, [[MailboxDispatcher.dispatch]] performs a few cheap
      *      volatile reads on individual mailbox counts and finds nothing — a benign false positive.
      *
-     *  Read side: checked by the owning ActorThread in [[MailboxDispatcher.dispatch]] and [[run]] before incurring
-     *  the cost of 5 individual mailbox nonEmpty checks.
+     *  Read side: checked by the owning ActorThread in [[MailboxDispatcher.dispatch]] and [[run]] before incurring the
+     *  cost of 5 individual mailbox nonEmpty checks.
      */
     @volatile private var _hasMessages: Boolean = false
 
@@ -94,22 +94,22 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
      *       unblock a suspended [[Stack]] and release pooled resources (promise, stack state). When replies accumulate,
      *       prioritizing this actor directly reduces end-to-end latency across the actor graph.
      *
-     *    2. '''Event backlog''' ([[eventMailbox]] size > [[HIGH_PRIORITY_EVENT_SIZE]]): system events (timer
-     *       expirations, channel lifecycle) need timely processing to maintain system responsiveness.
+     *  2. '''Event backlog''' ([[eventMailbox]] size > [[HIGH_PRIORITY_EVENT_SIZE]]): system events (timer expirations,
+     *  channel lifecycle) need timely processing to maintain system responsiveness.
      *
-     *    3. '''No downstream blocking''' ([[dweller.pendingPromiseCount]] == 0): this actor has zero outstanding
-     *       asks awaiting replies. No [[Stack]] is suspended waiting for a downstream actor, so scheduling this actor
-     *       will never encounter a "suspend on downstream reply" stall — every CPU cycle goes to business logic
-     *       progress. A middleman actor that has received all its downstream replies also satisfies this condition:
-     *       its stacks can resume immediately, making it equally productive as a leaf actor.
+     *  3. '''No downstream blocking''' ([[dweller.pendingPromiseCount]] == 0): this actor has zero outstanding asks
+     *  awaiting replies. No [[Stack]] is suspended waiting for a downstream actor, so scheduling this actor will never
+     *  encounter a "suspend on downstream reply" stall — every CPU cycle goes to business logic progress. A middleman
+     *  actor that has received all its downstream replies also satisfies this condition: its stacks can resume
+     *  immediately, making it equally productive as a leaf actor.
      *
      *  '''Update protocol:'''
      *    - '''Any thread (producer):''' set to true in [[putReply]] / [[putEvent]] when the mailbox exceeds its
-     *      threshold. This is a monotonically increasing write (only true ← true or false ← true), so concurrent
-     *      writes from different threads are safe without additional synchronization.
+     *      threshold. This is a monotonically increasing write (only true ← true or false ← true), so concurrent writes
+     *      from different threads are safe without additional synchronization.
      *    - '''Owning thread only:''' recompute all three conditions in [[completeRunning]] and set to true or false.
-     *      This is the only path that can clear the flag, and it runs single-threaded, so no write-write conflict
-     *      with producer threads. A race where a producer sets true while the owner clears to false is benign: the
+     *      This is the only path that can clear the flag, and it runs single-threaded, so no write-write conflict with
+     *      producer threads. A race where a producer sets true while the owner clears to false is benign: the
      *      producer's message is already in the mailbox, so the [[nonEmpty]] check in [[completeRunning]] will detect
      *      it and re-schedule the house.
      */
@@ -140,12 +140,12 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     override def mountedThreadId: Int = manager.thread.index
 
-    /** Whether this house should be scheduled with high priority. See [[_highPriority]] for the caching protocol
-     *  and the three contributing signals.
+    /** Whether this house should be scheduled with high priority. See [[_highPriority]] for the caching protocol and
+     *  the three contributing signals.
      */
     def highPriority: Boolean = _highPriority
 
-    def isReady: Boolean = status.get() == READY
+    def isReady: Boolean   = status.get() == READY
     def isRunning: Boolean = status.get() == RUNNING
     def isWaiting: Boolean = status.get() == WAITING
 
@@ -154,7 +154,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     // =========================================================================
 
     def next_=(house: ActorHouse): Unit = nextHouse = house
-    def next: ActorHouse | Null = nextHouse
+    def next: ActorHouse | Null         = nextHouse
 
     def unlink(): Unit = {
         nextHouse = null
@@ -240,8 +240,8 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     /** Schedule this house for mounting. Transition: CREATED → MOUNTING. */
     def mount(): Unit = if (status.compareAndSet(CREATED, MOUNTING)) manager.mount(this)
 
-    /** Execute the mount on the owning ActorThread. Transition: MOUNTING → WAITING. Calls the actor's afterMount
-     *  hook and immediately transitions to READY if messages are already pending.
+    /** Execute the mount on the owning ActorThread. Transition: MOUNTING → WAITING. Calls the actor's afterMount hook
+     *  and immediately transitions to READY if messages are already pending.
      */
     def doMount(): Unit = {
         if (status.compareAndSet(MOUNTING, WAITING)) {
@@ -250,8 +250,8 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         }
     }
 
-    /** Enqueue a notice message. Applies backpressure via sleep when the system is under memory pressure and the
-     *  caller is not an ActorThread.
+    /** Enqueue a notice message. Applies backpressure via sleep when the system is under memory pressure and the caller
+     *  is not an ActorThread.
      */
     def putNotice(envelope: Envelope): Unit = {
         if (system.isBusy && !ActorThread.currentThreadIsActorThread) {
@@ -262,9 +262,9 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     def putAsk(envelope: Envelope): Unit = put(envelope, askMailbox)
 
-    /** Deposit a reply and eagerly update the cached priority flag if the reply mailbox exceeds its threshold.
-     *  Each reply corresponds to exactly one completable future — processing it may unblock a suspended stack and
-     *  release pooled resources.
+    /** Deposit a reply and eagerly update the cached priority flag if the reply mailbox exceeds its threshold. Each
+     *  reply corresponds to exactly one completable future — processing it may unblock a suspended stack and release
+     *  pooled resources.
      */
     def putReply(envelope: Envelope): Unit = {
         replyMailbox.put(envelope)
@@ -275,8 +275,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     def putException(envelope: Envelope): Unit = put(envelope, exceptionMailbox)
 
-    /** Deposit an event and eagerly update the cached priority flag if the event mailbox exceeds its threshold.
-     */
+    /** Deposit an event and eagerly update the cached priority flag if the event mailbox exceeds its threshold. */
     def putEvent(event: Event): Unit = {
         eventMailbox.put(event)
         HAS_MESSAGES_HANDLE.setRelease(this, true)
@@ -307,11 +306,10 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     /** Main dispatch entry point. Transition: SCHEDULED → RUNNING.
      *
-     *  Dispatch-loop optimization: after draining mailboxes, if new messages have arrived during dispatch and no
-     *  other actors on this thread's scheduling queue are waiting, the house re-enters dispatch immediately instead
-     *  of going through the full state machine cycle (RUNNING → READY → enqueue → dequeue → SCHEDULED → RUNNING).
-     *  This eliminates 3 CAS operations + 1 SpinLock-protected queue enqueue/dequeue per batch for continuously
-     *  busy actors.
+     *  Dispatch-loop optimization: after draining mailboxes, if new messages have arrived during dispatch and no other
+     *  actors on this thread's scheduling queue are waiting, the house re-enters dispatch immediately instead of going
+     *  through the full state machine cycle (RUNNING → READY → enqueue → dequeue → SCHEDULED → RUNNING). This
+     *  eliminates 3 CAS operations + 1 SpinLock-protected queue enqueue/dequeue per batch for continuously busy actors.
      *
      *  The guard `!manager.hasOtherReady(this)` prevents starvation: when other actors are waiting in the thread's
      *  scheduling queue, this house must surrender and go through normal re-scheduling to give them a chance to run.
@@ -323,8 +321,8 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         }
     }
 
-    /** Try to re-dispatch without leaving the RUNNING state. Falls through to [[completeRunning]] (full state
-     *  machine transition) when other actors are waiting or this actor enters a barrier.
+    /** Try to re-dispatch without leaving the RUNNING state. Falls through to [[completeRunning]] (full state machine
+     *  transition) when other actors are waiting or this actor enters a barrier.
      */
     private def dispatchLoop(): Unit = {
         var continue = true

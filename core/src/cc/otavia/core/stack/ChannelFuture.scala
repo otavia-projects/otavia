@@ -17,10 +17,10 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.actor.{AbstractActor, ChannelsActor}
-import cc.otavia.core.cache.ActorThreadIsolatedObjectPool
 import cc.otavia.core.channel.inflight.QueueMapEntity
 import cc.otavia.core.channel.{Channel, ChannelAddress}
 import cc.otavia.core.message.ReactorEvent
+import cc.otavia.core.pool.ThreadLocalObjectPool
 import cc.otavia.core.timer.Timer
 
 import scala.collection.mutable
@@ -36,7 +36,7 @@ trait ChannelFuture extends Future[AnyRef] {
 
 object ChannelFuture {
 
-    private[stack] val pool = new ActorThreadIsolatedObjectPool[ChannelPromise] {
+    private[stack] val pool = new ThreadLocalObjectPool[ChannelPromise] {
         override protected def newObject(): ChannelPromise = new ChannelPromise()
     }
 

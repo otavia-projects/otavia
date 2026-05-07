@@ -17,8 +17,6 @@
 package cc.otavia.core.timer
 
 import cc.otavia.core.channel.Channel
-import cc.otavia.core.message.TimerEvent
-import cc.otavia.core.channel.Channel
 import cc.otavia.core.message.{ChannelTimeoutEvent, TimerEvent}
 
 import scala.language.unsafeNulls

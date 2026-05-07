@@ -17,8 +17,8 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.actor.AbstractActor
-import cc.otavia.core.cache.ActorThreadIsolatedObjectPool
 import cc.otavia.core.message.{Call, Notice}
+import cc.otavia.core.pool.ThreadLocalObjectPool
 
 import scala.language.unsafeNulls
 
@@ -51,7 +51,7 @@ final class NoticeStack[N <: Notice] private () extends Stack {
 
 object NoticeStack {
 
-    private val stackPool = new ActorThreadIsolatedObjectPool[NoticeStack[? <: Notice]] {
+    private val stackPool = new ThreadLocalObjectPool[NoticeStack[? <: Notice]] {
         override protected def newObject(): NoticeStack[? <: Notice] = new NoticeStack[Nothing]()
     }
 

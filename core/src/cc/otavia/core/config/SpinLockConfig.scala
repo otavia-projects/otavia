@@ -19,25 +19,24 @@ package cc.otavia.core.config
 /** Spin lock tuning configuration.
  *
  *  Spin locks use adaptive spinning with progressive backoff through three phases:
- *  1. Pure spin with [[Thread.onSpinWait]] (x86 PAUSE instruction)
- *  2. [[Thread.yield]] to hint the OS scheduler
- *  3. [[LockSupport.parkNanos]] to truly free the CPU core
+ *    1. Pure spin with [[Thread.onSpinWait]] (x86 PAUSE instruction) 2. [[Thread.yield]] to hint the OS scheduler 3.
+ *       [[LockSupport.parkNanos]] to truly free the CPU core
  *
  *  The critical sections protected by spin locks are typically only a few instructions (pointer assignment + counter
  *  update), so uncontended or lightly contended CAS usually succeeds within 1-2 attempts.
  *
  *  @param spinThreshold
- *    Number of spin iterations in Phase 1 before switching to yield. Covers the common case of uncontended or
- *    lightly contended lock acquisition. Default is 100.
+ *    Number of spin iterations in Phase 1 before switching to yield. Covers the common case of uncontended or lightly
+ *    contended lock acquisition. Default is 100.
  *  @param yieldThreshold
- *    Number of spin iterations before switching from yield to park. Entered when the lock holder has been preempted
- *    by the OS scheduler or paused by a brief GC event. Default is 200.
+ *    Number of spin iterations before switching from yield to park. Entered when the lock holder has been preempted by
+ *    the OS scheduler or paused by a brief GC event. Default is 200.
  *  @param parkNanos
  *    Duration in nanoseconds to park in Phase 3. Triggered during long GC STW pauses (10-200ms) where the lock holder
  *    is suspended at a safepoint. Default is 1000ns (1μs).
  */
 case class SpinLockConfig(
-    spinThreshold: Int  = 100,
+    spinThreshold: Int = 100,
     yieldThreshold: Int = 200,
-    parkNanos: Long     = 1000
+    parkNanos: Long = 1000
 )

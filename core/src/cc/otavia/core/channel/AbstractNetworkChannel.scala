@@ -19,9 +19,8 @@
 package cc.otavia.core.channel
 
 import cc.otavia.core.channel.ChannelOption.*
-import cc.otavia.core.channel.internal.AdaptiveBufferOffset
 import cc.otavia.core.channel.ChannelShutdownDirection.{Inbound, Outbound}
-import cc.otavia.core.channel.internal.WriteBufferWaterMark
+import cc.otavia.core.channel.internal.{AdaptiveBufferOffset, WriteBufferWaterMark}
 import cc.otavia.core.channel.message.ReadPlanFactory
 import cc.otavia.core.message.*
 import cc.otavia.core.stack.{ChannelPromise, Promise}
@@ -30,7 +29,12 @@ import cc.otavia.core.timer.{TimeoutTrigger, Timer}
 import cc.otavia.internal.Platform
 
 import java.net.{InetSocketAddress, SocketAddress}
-import java.nio.channels.{AlreadyConnectedException, ClosedChannelException, ConnectionPendingException, NotYetConnectedException}
+import java.nio.channels.{
+    AlreadyConnectedException,
+    ClosedChannelException,
+    ConnectionPendingException,
+    NotYetConnectedException
+}
 import java.nio.file.attribute.FileAttribute
 import java.nio.file.{OpenOption, Path}
 import scala.language.unsafeNulls

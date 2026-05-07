@@ -14,22 +14,26 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.cache
+package cc.otavia.core.pool
 
 import cc.otavia.core.util.Nextable
 
 import scala.language.unsafeNulls
 
-/** An object which can be pooled */
+/** An object which can be pooled.
+ *
+ *  Extends [[Nextable]] for intrusive linked-list storage inside [[PerThreadPool]]. The `next` pointer avoids wrapper
+ *  allocation in the pool's free-list, and [[clean()]] calls [[clearNext()]] to detach the node when recycling.
+ */
 trait Poolable extends Nextable {
 
     private var thread: Thread = _
 
     /** The [[Thread]] which created this instance. */
-    private[core] def creator: Thread = thread
+    private[core] def creatorThread: Thread = thread
 
     /** Set the creator [[Thread]]. */
-    private[core] def creator(t: Thread): Unit = thread = t
+    private[core] def creatorThread_=(t: Thread): Unit = thread = t
 
     /** Recycle this instance. */
     def recycle(): Unit

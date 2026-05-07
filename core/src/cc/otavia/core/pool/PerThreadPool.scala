@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.cache
+package cc.otavia.core.pool
 
 import cc.otavia.core.util.Nextable
 
 import scala.language.unsafeNulls
 
-final class SingleThreadPoolableHolder[T <: Poolable](val maxSize: Int = 256)
-    extends PoolableHolder[T] {
+final class PerThreadPool[T <: Poolable](val maxSize: Int = 256) extends PoolableHolder[T] {
 
-    private var count: Int      = 0
+    private var count: Int     = 0
     private var head: Nextable = _
     private var tail: Nextable = _
 

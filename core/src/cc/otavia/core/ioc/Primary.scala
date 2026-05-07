@@ -16,6 +16,7 @@
 
 package cc.otavia.core.ioc
 
-/** If the actor address that requires automatic injection has multiple implementations, the subclass with the Primary Annotation is preferred
-  */
+/** If the actor address that requires automatic injection has multiple implementations, the subclass with the Primary
+ *  Annotation is preferred
+ */
 class Primary extends scala.annotation.StaticAnnotation

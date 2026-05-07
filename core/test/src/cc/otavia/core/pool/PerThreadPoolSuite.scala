@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.cache
+package cc.otavia.core.pool
 
 import org.scalatest.funsuite.AnyFunSuite
 
-class SingleThreadPoolableHolderSuite extends AnyFunSuite {
+class PerThreadPoolSuite extends AnyFunSuite {
 
-    import SingleThreadPoolableHolderSuite.*
+    import PerThreadPoolSuite.*
 
     test("pop push clean") {
-        val holder = new SingleThreadPoolableHolder[EmptyPoolable]()
+        val holder = new PerThreadPool[EmptyPoolable]()
 
         0 until 10_000 foreach { _ => holder.push(new EmptyPoolable) }
 
@@ -42,7 +42,7 @@ class SingleThreadPoolableHolderSuite extends AnyFunSuite {
 
 }
 
-object SingleThreadPoolableHolderSuite {
+object PerThreadPoolSuite {
     class EmptyPoolable extends Poolable {
 
         override protected def cleanInstance(): Unit = {}

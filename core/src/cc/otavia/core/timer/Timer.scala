@@ -18,9 +18,9 @@ package cc.otavia.core.timer
 
 import cc.otavia.core.actor.{AbstractActor, Actor}
 import cc.otavia.core.address.{Address, EventableAddress}
-import cc.otavia.core.cache.{ResourceTimer, TimeoutResource}
 import cc.otavia.core.channel.Channel
 import cc.otavia.core.message.TimeoutReply
+import cc.otavia.core.pool.{ResourceTimer, TimeoutResource}
 import cc.otavia.core.stack.MessageFuture
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.system.monitor.TimerMonitor

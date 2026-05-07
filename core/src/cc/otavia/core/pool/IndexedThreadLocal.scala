@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.cache
+package cc.otavia.core.pool
 
 import cc.otavia.core.system.ActorThread
-import cc.otavia.core.timer.{TimeoutTrigger, Timer}
+import cc.otavia.core.timer.TimeoutTrigger
 
 import scala.language.unsafeNulls
 
@@ -34,7 +34,7 @@ import scala.language.unsafeNulls
  *  @tparam V
  *    the type of the thread-local variable
  */
-abstract class ThreadLocal[V] extends TimeoutResource {
+abstract class IndexedThreadLocal[V] extends TimeoutResource {
 
     private var initial: Boolean                           = false
     private var threadLocalTimers: Array[ThreadLocalTimer] = _
@@ -44,7 +44,7 @@ abstract class ThreadLocal[V] extends TimeoutResource {
     private final def initialIfNot(thread: ActorThread): Unit =
         if (initial) {} else syncInit(thread) // Reducing cpu branch prediction errors.
 
-    private[cache] final def threadIndex(): Int = {
+    private[pool] final def threadIndex(): Int = {
         val thread = ActorThread.currentThread()
         initialIfNot(thread)
         thread.index
@@ -66,7 +66,7 @@ abstract class ThreadLocal[V] extends TimeoutResource {
         }
     }
 
-    private[cache] def doInitial(len: Int): Unit
+    private[pool] def doInitial(len: Int): Unit
 
     /** Returns true if the thread local variable has been initial, otherwise false. */
     final def isInitial: Boolean = initial
@@ -77,9 +77,9 @@ abstract class ThreadLocal[V] extends TimeoutResource {
     /** Returns the current value for the current thread */
     def get(): V
 
-    final private[cache] def updateGetTime(index: Int): Unit = if (isSupportTimeout) {
+    final private[pool] def updateLastGetTime(index: Int): Unit = if (isSupportTimeout) {
         val threadLocalTimer = threadLocalTimers(index)
-        threadLocalTimer.updateGetTime()
+        threadLocalTimer.updateLastGetTime()
     }
 
     /** Returns the current value for the current thread if it exists, null otherwise. */
@@ -88,9 +88,9 @@ abstract class ThreadLocal[V] extends TimeoutResource {
     /** Set the value for the current thread. */
     def set(v: V): Unit
 
-    private[cache] def updateSetTime(): Unit = if (isSupportTimeout) {
+    private[pool] def updateLastSetTime(): Unit = if (isSupportTimeout) {
         val threadLocalTimer = threadLocalTimers(ActorThread.currentThread().index)
-        threadLocalTimer.updateSetTime()
+        threadLocalTimer.updateLastSetTime()
     }
 
     /** Returns true if and only if this thread-local variable is set. */
@@ -139,8 +139,4 @@ abstract class ThreadLocal[V] extends TimeoutResource {
 
 }
 
-object ThreadLocal {
-
-    val EMPTY: Array[AnyRef] = Array.empty
-
-}
+object IndexedThreadLocal

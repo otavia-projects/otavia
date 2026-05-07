@@ -198,8 +198,9 @@ final class NioHandler(val selectorProvider: SelectorProvider, val selectStrateg
             case e: Error =>
                 e.printStackTrace()
                 throw e
-            case t: Throwable => handleLoopException(t)
-            0
+            case t: Throwable =>
+                handleLoopException(t)
+                0
         }
     }
 

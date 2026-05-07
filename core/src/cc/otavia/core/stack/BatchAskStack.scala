@@ -18,8 +18,8 @@ package cc.otavia.core.stack
 
 import cc.otavia.core.actor.AbstractActor
 import cc.otavia.core.address.Address
-import cc.otavia.core.cache.ActorThreadIsolatedObjectPool
 import cc.otavia.core.message.*
+import cc.otavia.core.pool.ThreadLocalObjectPool
 import cc.otavia.core.system.ActorThread
 
 import scala.language.unsafeNulls
@@ -27,7 +27,7 @@ import scala.language.unsafeNulls
 final class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
 
     private var envelopes: Seq[Envelope] = _
-    private var done: Boolean                    = false
+    private var done: Boolean            = false
 
     private[core] def setAsks(envelopes: Seq[Envelope]): Unit = this.envelopes = envelopes
 
@@ -55,8 +55,8 @@ final class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
         for ((sender, envs) <- envelopes.groupBy(_.sender)) {
             if (envs.length > 1) {
                 val replyIds = new Array[Long](envs.length)
-                var i = 0
-                val iter = envs.iterator
+                var i        = 0
+                val iter     = envs.iterator
                 while (iter.hasNext) {
                     replyIds(i) = iter.next().messageId
                     i += 1
@@ -89,7 +89,7 @@ final class BatchAskStack[A <: Ask[? <: Reply]] extends Stack {
 
 object BatchAskStack {
 
-    private val pool = new ActorThreadIsolatedObjectPool[BatchAskStack[?]] {
+    private val pool = new ThreadLocalObjectPool[BatchAskStack[?]] {
         override protected def newObject(): BatchAskStack[?] = new BatchAskStack[Nothing]
     }
 

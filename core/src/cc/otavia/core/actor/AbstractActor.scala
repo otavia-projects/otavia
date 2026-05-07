@@ -17,8 +17,8 @@
 package cc.otavia.core.actor
 
 import cc.otavia.core.address.*
-import cc.otavia.core.cache.Poolable
 import cc.otavia.core.message.*
+import cc.otavia.core.pool.Poolable
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.*
 import cc.otavia.core.system.{ActorHouse, ActorSystem}
@@ -29,9 +29,8 @@ import scala.language.unsafeNulls
 /** Stack coroutine engine and kernel dispatch machinery for all actor.
  *
  *  Extends [[FutureDispatcher]] for O(1) promise lookup by reply ID. User-facing lifecycle hooks, scheduling
- *  configuration, and DI accessors live in the [[Actor]] trait. The resume methods ([[resumeAsk]],
- *  [[resumeNotice]], etc.) remain here because the `+M` variance on [[Actor]] prevents them from appearing in the
- *  trait.
+ *  configuration, and DI accessors live in the [[Actor]] trait. The resume methods ([[resumeAsk]], [[resumeNotice]],
+ *  etc.) remain here because the `+M` variance on [[Actor]] prevents them from appearing in the trait.
  *
  *  Users never extend this class directly — use [[StateActor]] for pure business logic or [[ChannelsActor]] for
  *  IO-capable actor.
@@ -224,22 +223,21 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
         currentReceived = null
     }
 
-    /** Route an [[Event]] from the event mailbox to the appropriate handler. Channel-specific events
-     *  ([[ReactorEvent]], [[ChannelTimeoutEvent]]) are forwarded to [[ChannelMessageSupport]] when the actor
-     *  implements it.
+    /** Route an [[Event]] from the event mailbox to the appropriate handler. Channel-specific events ([[ReactorEvent]],
+     *  [[ChannelTimeoutEvent]]) are forwarded to [[ChannelMessageSupport]] when the actor implements it.
      */
     final private[core] def receiveEvent(event: Event): Unit = event match {
-        case event: AskTimeoutEvent     => dispatchAskTimeoutEvent(event)
-        case event: TimeoutEvent        => onActorTimeout(event)
+        case event: AskTimeoutEvent => dispatchAskTimeoutEvent(event)
+        case event: TimeoutEvent    => onActorTimeout(event)
         case event: ChannelTimeoutEvent =>
             this match
                 case support: ChannelMessageSupport => support.receiveChannelTimeoutEvent(event)
                 case _                              =>
-        case event: ReactorEvent        =>
+        case event: ReactorEvent =>
             this match
                 case support: ChannelMessageSupport => support.receiveReactorEvent(event)
                 case _                              =>
-        case _                          =>
+        case _ =>
     }
 
     final private[core] def receiveFuture(future: Future[?]): Unit = {
@@ -316,8 +314,8 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     // Kernel: promise completion → stack resume
     // =========================================================================
 
-    /** Move a completed promise onto the stack's completed chain and re-dispatch the stack if it is resumable or
-     *  has no remaining uncompleted promises. Channel stacks are dispatched through [[ChannelMessageSupport]].
+    /** Move a completed promise onto the stack's completed chain and re-dispatch the stack if it is resumable or has no
+     *  remaining uncompleted promises. Channel stacks are dispatched through [[ChannelMessageSupport]].
      */
     private def handlePromiseCompleted(stack: Stack, promise: AbstractPromise[?]): Unit = {
         stack.moveCompletedPromise(promise)
@@ -331,7 +329,7 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
                     this match
                         case support: ChannelMessageSupport => support.dispatchChannelStack(stack)
                         case _                              =>
-                case _                      =>
+                case _ =>
         }
     }
 

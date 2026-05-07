@@ -31,4 +31,5 @@ enum ChannelShutdownDirection {
 
     /** The outbound direction of a [[Channel]] was or should be shutdown. */
     case Outbound
+
 }

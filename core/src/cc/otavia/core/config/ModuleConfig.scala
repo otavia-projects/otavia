@@ -40,8 +40,8 @@ package cc.otavia.core.config
 trait ModuleConfig {
 
     /** System property prefix for all properties in this module config.
- *
- *  Used for backward compatibility when reading system properties as fallback.
+     *
+     *  Used for backward compatibility when reading system properties as fallback.
      */
     def propertyPrefix: String
 

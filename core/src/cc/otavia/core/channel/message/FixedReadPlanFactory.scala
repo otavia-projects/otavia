@@ -33,7 +33,7 @@ class FixedReadPlanFactory(val bufferSize: Int = 2048, maxMessagesPerRead: Int =
 
     override protected def newMaxMessagePlan(maxMessagesPerRead: Int): FixedReadPlan =
         new FixedReadPlan(maxMessagesPerRead, bufferSize)
-        
+
 }
 
 object FixedReadPlanFactory {

@@ -35,6 +35,7 @@ object SelectStrategy {
 
     /** Indicates the IO loop to poll for new events without blocking. */
     val BUSY_WAIT: Int = -3
+
 }
 
 trait SelectStrategy {

@@ -23,16 +23,16 @@ class BeanNotFoundException(
     val qualifier: Option[String],
     val registeredTypes: Seq[String]
 ) extends BeanResolutionException(
-        s"No bean registered for [$requestedType]${qualifier.map(q => s" with qualifier [$q]").getOrElse("")}." +
-            s" Registered beans: [${registeredTypes.mkString(", ")}]"
+      s"No bean registered for [$requestedType]${qualifier.map(q => s" with qualifier [$q]").getOrElse("")}." +
+          s" Registered beans: [${registeredTypes.mkString(", ")}]"
     )
 
 class AmbiguousResolutionException(
     val requestedType: String,
     val candidates: Seq[String]
 ) extends BeanResolutionException(
-        s"Ambiguous resolution for [$requestedType]. Candidates: [${candidates.mkString(", ")}]." +
-            " Mark one as primary or use a qualifier."
+      s"Ambiguous resolution for [$requestedType]. Candidates: [${candidates.mkString(", ")}]." +
+          " Mark one as primary or use a qualifier."
     )
 
 class DuplicateRegistrationException(
@@ -40,7 +40,7 @@ class DuplicateRegistrationException(
     val existingAddress: String,
     val newAddress: String
 ) extends BeanResolutionException(
-        s"Duplicate registration for [$beanClass]. Existing: [$existingAddress], new: [$newAddress]"
+      s"Duplicate registration for [$beanClass]. Existing: [$existingAddress], new: [$newAddress]"
     )
 
 class DuplicateQualifierException(
@@ -48,5 +48,5 @@ class DuplicateQualifierException(
     val existingBean: String,
     val newBean: String
 ) extends BeanResolutionException(
-        s"Duplicate qualifier [$qualifier]. Used by both [$existingBean] and [$newBean]"
+      s"Duplicate qualifier [$qualifier]. Used by both [$existingBean] and [$newBean]"
     )

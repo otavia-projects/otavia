@@ -33,7 +33,7 @@ import scala.language.unsafeNulls
 class NioReactor(
     val system: ActorSystem,
     val transportFactory: TransportFactory,
-    val maxTasksPerRun: Int = -1  // -1 means use config default
+    val maxTasksPerRun: Int = -1 // -1 means use config default
 ) extends AtomicInteger
     with Reactor {
 
@@ -42,7 +42,7 @@ class NioReactor(
     private val threadFactory = new NioThreadFactory()
 
     private val actualMaxTasksPerRun = if (maxTasksPerRun > 0) maxTasksPerRun else system.config.reactor.maxTasksPerRun
-    private val nioWorkers = system.config.reactor.nioWorkerSize
+    private val nioWorkers           = system.config.reactor.nioWorkerSize
 
     private val workers: Array[NioReactorWorker] = new Array[NioReactorWorker](nioWorkers)
 

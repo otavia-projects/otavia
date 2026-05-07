@@ -20,8 +20,8 @@ package cc.otavia.core.channel
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.core.channel.CombinedChannelDuplexHandler.*
-import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.channel.internal.{ChannelHandlerMask, DelegatingChannelHandlerContext}
+import cc.otavia.core.channel.message.ReadPlan
 import cc.otavia.core.stack.ChannelFuture
 
 import java.net.SocketAddress

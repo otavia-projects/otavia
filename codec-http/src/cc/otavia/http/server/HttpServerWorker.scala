@@ -18,7 +18,7 @@ package cc.otavia.http.server
 
 import cc.otavia.core.actor.AcceptedWorkerActor
 import cc.otavia.core.actor.AcceptorActor.AcceptedChannel
-import cc.otavia.core.cache.ActorThreadLocal
+import cc.otavia.core.pool.ActorThreadLocal
 import cc.otavia.core.channel.{Channel, ChannelAddress, ChannelOption}
 import cc.otavia.core.message.Reply
 import cc.otavia.core.stack.helper.{ChannelFutureState, FutureState, StartState}

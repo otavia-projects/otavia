@@ -17,8 +17,8 @@
 package cc.otavia.core.timer
 
 import cc.otavia.core.address.EventableAddress
-import cc.otavia.core.cache.ResourceTimer
 import cc.otavia.core.channel.Channel
+import cc.otavia.core.pool.ResourceTimer
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.{InternalTimer, Timeout, TimeoutTrigger}
 

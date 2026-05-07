@@ -17,7 +17,7 @@
 package cc.otavia.core.ioc
 
 /** mark a actor class auto create [[num]] instance by actor ioc system
-  * @param num
-  *   number of instance to create
-  */
+ *  @param num
+ *    number of instance to create
+ */
 class Component(num: Int = 1) extends scala.annotation.StaticAnnotation

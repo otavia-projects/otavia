@@ -17,6 +17,7 @@
 package cc.otavia.core.util
 
 import cc.otavia.core.config.SpinLockConfig
+
 import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls
 

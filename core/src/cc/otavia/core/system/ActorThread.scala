@@ -22,8 +22,8 @@ import cc.otavia.core.address.{ActorAddress, ActorThreadAddress}
 import cc.otavia.core.message.{Event, ResourceTimeoutEvent}
 import cc.otavia.core.reactor.IoExecutionContext
 import cc.otavia.core.system.ActorThread.*
-import cc.otavia.core.transport.reactor.nio.NioHandler
 import cc.otavia.core.system.monitor.ActorThreadMonitor
+import cc.otavia.core.transport.reactor.nio.NioHandler
 
 import java.lang.ref.*
 import java.util.SplittableRandom
@@ -39,9 +39,9 @@ import scala.language.unsafeNulls
  *  single-threaded with respect to each other, eliminating the need for locks on intra-thread coordination.
  *
  *  The event loop has three phases per iteration:
- *    1. '''Phase 1 — IO''': Poll the selector and process IO events
- *    2. '''Phase 2 — ChannelsActor dispatch''': Fully drain IO-capable actor and pending events (no time budget)
- *    3. '''Phase 3 — StateActor dispatch''': Run business logic actor within a time budget
+ *    1. '''Phase 1 — IO''': Poll the selector and process IO events 2. '''Phase 2 — ChannelsActor dispatch''': Fully
+ *       drain IO-capable actor and pending events (no time budget) 3. '''Phase 3 — StateActor dispatch''': Run business
+ *       logic actor within a time budget
  */
 final class ActorThread(private[core] val system: ActorSystem, private val id: Int) extends Thread() {
 
@@ -183,7 +183,8 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
     // Lifecycle
     // =========================================================================
 
-    /** Signal this thread to begin graceful shutdown. The event loop will exit after the current iteration completes. */
+    /** Signal this thread to begin graceful shutdown. The event loop will exit after the current iteration completes.
+     */
     private[core] def shutdown(): Unit = {
         shuttingDown = true
         ioHandler.wakeup()
@@ -207,7 +208,7 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
         while (!confirmShutdown()) {
             // ---- Phase 1: IO (select + processSelectedKeys) ----
             val ioStartTime = System.nanoTime()
-            val strategy = ioHandler.run(ioCtx)
+            val strategy    = ioHandler.run(ioCtx)
 
             // Epoll bug detection: rebuild selector after excessive empty selects
             if (strategy > 0) selectCnt = 0
@@ -222,7 +223,7 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
             if (refSet.nonEmpty) this.stopActors()
 
             // ---- Phase 3: Business logic (StateActor) with time budget ----
-            val now = System.nanoTime()
+            val now      = System.nanoTime()
             val deadline = computeDeadline(ioStartTime, now, strategy)
             manager.runStateActors(deadline)
 
@@ -257,7 +258,7 @@ final class ActorThread(private[core] val system: ActorSystem, private val id: I
             eventQueue.poll() match
                 case event: ResourceTimeoutEvent =>
                     eventQueueSize.decrementAndGet()
-                    event.cache.parent.handleTimeout(event.registerId, event.cache)
+                    event.resourceTimer.parent.handleTimeout(event.registerId, event.resourceTimer)
                 case _ =>
                     eventQueueSize.decrementAndGet()
         }
@@ -281,22 +282,22 @@ object ActorThread {
     /** Check whether the current [[Thread]] is an [[ActorThread]]. */
     final def currentThreadIsActorThread: Boolean = Thread.currentThread().isInstanceOf[ActorThread]
 
-    /** Borrow the current thread's scratch [[mutable.ArrayBuffer]], cast to the requested type.
-     *  '''Warning''': Not reentrant. Only one buffer of any type may be in use at a time per thread.
+    /** Borrow the current thread's scratch [[mutable.ArrayBuffer]], cast to the requested type. '''Warning''': Not
+     *  reentrant. Only one buffer of any type may be in use at a time per thread.
      */
     final def threadBuffer[T]: mutable.ArrayBuffer[T] = Thread.currentThread() match
         case thread: ActorThread => thread.mutableBuffer.asInstanceOf[mutable.ArrayBuffer[T]]
         case _                   => mutable.ArrayBuffer.empty[T]
 
-    /** Borrow the current thread's scratch [[mutable.HashSet]], cast to the requested type.
-     *  '''Warning''': Not reentrant. Only one set of any type may be in use at a time per thread.
+    /** Borrow the current thread's scratch [[mutable.HashSet]], cast to the requested type. '''Warning''': Not
+     *  reentrant. Only one set of any type may be in use at a time per thread.
      */
     final def threadSet[T]: mutable.HashSet[T] = Thread.currentThread() match
         case thread: ActorThread => thread.mutableSet.asInstanceOf[mutable.HashSet[T]]
         case _                   => mutable.HashSet.empty[T]
 
-    /** Borrow the current thread's scratch [[mutable.HashMap]], cast to the requested type.
-     *  '''Warning''': Not reentrant. Only one map of any type may be in use at a time per thread.
+    /** Borrow the current thread's scratch [[mutable.HashMap]], cast to the requested type. '''Warning''': Not
+     *  reentrant. Only one map of any type may be in use at a time per thread.
      */
     final def threadMap[K, V]: mutable.HashMap[K, V] = Thread.currentThread() match
         case thread: ActorThread => thread.mutableMap.asInstanceOf[mutable.HashMap[K, V]]

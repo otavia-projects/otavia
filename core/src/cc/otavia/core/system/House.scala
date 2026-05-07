@@ -17,7 +17,7 @@
 package cc.otavia.core.system
 
 import cc.otavia.core.actor.Actor
-import cc.otavia.core.message.{Ask, Event, Message, Notice, Reply}
+import cc.otavia.core.message.*
 
 /** House is [[Actor]] instance mount point. when a actor is creating by actor system, a house is creating at the same
  *  time, and mount the actor instance to the house instance.
@@ -37,6 +37,4 @@ private[core] trait House {
 
 }
 
-object House {
-    
-}
+object House {}

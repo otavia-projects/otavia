@@ -22,8 +22,8 @@ import cc.otavia.core.message.Call
 /** Pure business logic actor with no IO capabilities. Scheduled with a time budget alongside other StateActors,
  *  ensuring fair scheduling among many business actor.
  *
- *  Override [[resumeAsk]] and/or [[resumeNotice]] to handle messages. Do NOT use this actor for direct network IO —
- *  use [[ChannelsActor]] or its subclasses instead.
+ *  Override [[resumeAsk]] and/or [[resumeNotice]] to handle messages. Do NOT use this actor for direct network IO — use
+ *  [[ChannelsActor]] or its subclasses instead.
  *
  *  @tparam M
  *    the type of messages this actor can handle

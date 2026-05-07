@@ -16,8 +16,8 @@
 
 package cc.otavia.core.stack
 
-import cc.otavia.core.cache.ActorThreadIsolatedObjectPool
 import cc.otavia.core.message.Reply
+import cc.otavia.core.pool.ThreadLocalObjectPool
 
 import scala.annotation.tailrec
 import scala.language.unsafeNulls
@@ -33,7 +33,7 @@ sealed trait MessageFuture[+R <: Reply] extends Future[R] {
 
 object MessageFuture {
 
-    private[stack] val pool = new ActorThreadIsolatedObjectPool[MessagePromise[?]] {
+    private[stack] val pool = new ThreadLocalObjectPool[MessagePromise[?]] {
         override protected def newObject(): MessagePromise[?] = new MessagePromise[Nothing]()
     }
 

@@ -43,7 +43,7 @@ abstract class AbstractModule extends Module {
         val toNotify = this.synchronized {
             ld = true
             val drained = new java.util.ArrayList[ModuleListener]()
-            var l = listeners.poll()
+            var l       = listeners.poll()
             while l != null do
                 drained.add(l)
                 l = listeners.poll()
@@ -57,7 +57,7 @@ abstract class AbstractModule extends Module {
     } catch {
         case e: Throwable =>
             System.err.println(
-                s"[IoC] ModuleListener [${listener.getClass.getName}] failed in onLoaded: ${e.getMessage}"
+              s"[IoC] ModuleListener [${listener.getClass.getName}] failed in onLoaded: ${e.getMessage}"
             )
             e.printStackTrace(System.err)
     }

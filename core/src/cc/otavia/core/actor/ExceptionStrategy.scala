@@ -17,7 +17,9 @@
 package cc.otavia.core.actor
 
 enum ExceptionStrategy {
+
     case Restart
     case Ignore
     case ShutdownSystem
+
 }

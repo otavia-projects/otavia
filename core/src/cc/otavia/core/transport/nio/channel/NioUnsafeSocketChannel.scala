@@ -161,7 +161,7 @@ final class NioUnsafeSocketChannel(channel: AbstractChannel, ch: SocketChannel, 
     }
 
     private def unsafeFlushFileRegion(fileRegion: FileRegion): Unit = {
-        var position = 0L
+        var position  = 0L
         var remaining = fileRegion.count
         while (remaining > 0) {
             val written = fileRegion.transferTo(ch, position)

@@ -16,7 +16,7 @@
 
 package cc.otavia.core.stack
 
-import cc.otavia.core.cache.ActorThreadLocal
+import cc.otavia.core.pool.ActorThreadLocal
 import cc.otavia.core.stack.PromiseIterator.threadLocal
 
 import scala.language.unsafeNulls

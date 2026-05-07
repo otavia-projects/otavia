@@ -199,10 +199,12 @@ Inflight management needs both FIFO ordering (backpressure/flow control) and O(1
 - `HashedWheelTimer` -- 100ms tick, 512 slots, dedicated thread
 - `Timeout` / `TimeoutTrigger` -- FixTime, DelayTime, DelayPeriod, FirstTimePeriod modes
 
-### Cache (`cc.otavia.core.cache`)
-- `Poolable` -- base trait for object-pooled instances
-- `ActorThreadIsolatedObjectPool` -- per-actor-thread pool, drops cross-thread recycles
+### Pool (`cc.otavia.core.pool`)
+- `Poolable` -- base trait for object-pooled instances (extends Nextable for intrusive linked-list)
+- `ThreadLocalObjectPool` -- per-actor-thread pool, drops cross-thread recycles, with idle cleanup
 - `ActorThreadLocal[V]` -- array-indexed O(1) thread-local via ActorThread.index
+- `IndexedThreadLocal[V]` -- base class for array-indexed thread-local variables
+- `PerThreadPool` -- bounded LIFO holder for pooled objects
 
 ### IoC (`cc.otavia.core.ioc`)
 - `BeanManager` -- ConcurrentHashMap storage, qualifier/supertype lookup
@@ -214,7 +216,7 @@ Inflight management needs both FIFO ordering (backpressure/flow control) and O(1
 ```
 cc.otavia.core.actor          -- actor hierarchy and lifecycle
 cc.otavia.core.address        -- address types and routing
-cc.otavia.core.cache          -- object pooling and thread-locals
+cc.otavia.core.pool            -- object pooling and thread-locals
 cc.otavia.core.channel        -- channel pipeline, handler, inflight, socket, udp
 cc.otavia.core.ioc            -- IoC/DI container
 cc.otavia.core.message        -- Notice, Ask, Reply message types

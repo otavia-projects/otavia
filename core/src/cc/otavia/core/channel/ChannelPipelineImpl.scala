@@ -21,12 +21,12 @@ package cc.otavia.core.channel
 import cc.otavia.buffer.pool.{AdaptiveBuffer, PooledPageAllocator}
 import cc.otavia.common.ClassUtils
 import cc.otavia.core.actor.ChannelsActor
-import cc.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
 import cc.otavia.core.channel.ChannelPipelineImpl.*
 import cc.otavia.core.channel.inflight.QueueMap
 import cc.otavia.core.channel.internal.ChannelHandlerMask
 import cc.otavia.core.channel.message.FixedReadPlanFactory.FixedReadPlan
 import cc.otavia.core.channel.message.{AutoReadPlan, FixedReadPlanFactory, ReadPlan}
+import cc.otavia.core.pool.ActorThreadLocal
 import cc.otavia.core.slf4a.{Logger, LoggerFactory}
 import cc.otavia.core.stack.{ChannelFuture, ChannelPromise, ChannelStack}
 import cc.otavia.core.system.ActorSystem
@@ -573,32 +573,46 @@ final class ChannelPipelineImpl(override val channel: AbstractChannel) extends C
     /** Converts this pipeline into an [[Map]] whose keys are handler names and whose values are handlers. */
     override def toMap: Map[String, ChannelHandler] = handlers.map(ctx => ctx.name -> ctx.handler).toMap
 
-    override def fireChannelRegistered(): this.type =
-        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_REGISTERED).invokeChannelRegistered(); this }
-    override def fireChannelUnregistered(): this.type =
-        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_UNREGISTERED).invokeChannelUnregistered(); this }
-    override def fireChannelActive(): this.type =
-        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_ACTIVE).invokeChannelActive(); this }
-    override def fireChannelInactive(): this.type =
-        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_INACTIVE).invokeChannelInactive(); this }
-    override def fireChannelShutdown(direction: ChannelShutdownDirection): this.type =
-        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_SHUTDOWN).invokeChannelShutdown(direction); this }
-    override def fireChannelExceptionCaught(cause: Throwable): this.type =
-        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_EXCEPTION_CAUGHT).invokeChannelExceptionCaught(cause); this }
-    override def fireChannelExceptionCaught(cause: Throwable, id: Long): this.type =
-        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_EXCEPTION_CAUGHT_ID).invokeChannelExceptionCaught(cause, id); this }
-    override def fireChannelInboundEvent(event: AnyRef): this.type =
-        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_INBOUND_EVENT).invokeChannelInboundEvent(event); this }
-    override def fireChannelTimeoutEvent(id: Long): this.type =
-        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_TIMEOUT_EVENT).invokeChannelTimeoutEvent(id); this }
-    override def fireChannelRead(msg: AnyRef): this.type =
-        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_READ).invokeChannelRead(msg); this }
-    override def fireChannelRead(msg: AnyRef, msgId: Long): this.type =
-        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_READ_ID).invokeChannelRead(msg, msgId); this }
-    override def fireChannelReadComplete(): this.type =
-        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_READ_COMPLETE).invokeChannelReadComplete(); this }
-    override def fireChannelWritabilityChanged(): this.type =
-        { findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_WRITABILITY_CHANGED).invokeChannelWritabilityChanged(); this }
+    override def fireChannelRegistered(): this.type = {
+        findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_REGISTERED).invokeChannelRegistered(); this
+    }
+    override def fireChannelUnregistered(): this.type = {
+        findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_UNREGISTERED).invokeChannelUnregistered(); this
+    }
+    override def fireChannelActive(): this.type = {
+        findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_ACTIVE).invokeChannelActive(); this
+    }
+    override def fireChannelInactive(): this.type = {
+        findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_INACTIVE).invokeChannelInactive(); this
+    }
+    override def fireChannelShutdown(direction: ChannelShutdownDirection): this.type = {
+        findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_SHUTDOWN).invokeChannelShutdown(direction); this
+    }
+    override def fireChannelExceptionCaught(cause: Throwable): this.type = {
+        findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_EXCEPTION_CAUGHT).invokeChannelExceptionCaught(cause); this
+    }
+    override def fireChannelExceptionCaught(cause: Throwable, id: Long): this.type = {
+        findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_EXCEPTION_CAUGHT_ID).invokeChannelExceptionCaught(cause, id);
+        this
+    }
+    override def fireChannelInboundEvent(event: AnyRef): this.type = {
+        findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_INBOUND_EVENT).invokeChannelInboundEvent(event); this
+    }
+    override def fireChannelTimeoutEvent(id: Long): this.type = {
+        findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_TIMEOUT_EVENT).invokeChannelTimeoutEvent(id); this
+    }
+    override def fireChannelRead(msg: AnyRef): this.type = {
+        findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_READ).invokeChannelRead(msg); this
+    }
+    override def fireChannelRead(msg: AnyRef, msgId: Long): this.type = {
+        findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_READ_ID).invokeChannelRead(msg, msgId); this
+    }
+    override def fireChannelReadComplete(): this.type = {
+        findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_READ_COMPLETE).invokeChannelReadComplete(); this
+    }
+    override def fireChannelWritabilityChanged(): this.type = {
+        findNextInbound(0, ChannelHandlerMask.MASK_CHANNEL_WRITABILITY_CHANGED).invokeChannelWritabilityChanged(); this
+    }
 
     override def flush(): this.type = {
         val ctx = findNextOutbound(handlers.length - 1, ChannelHandlerMask.MASK_FLUSH)

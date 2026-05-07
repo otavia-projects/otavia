@@ -17,7 +17,6 @@
 package cc.otavia.core.channel
 
 import cc.otavia.core.transport.TransportFactory
-import cc.otavia.core.transport.TransportFactory
 
 import java.net.ProtocolFamily
 

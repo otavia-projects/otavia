@@ -16,8 +16,8 @@
 
 package cc.otavia.core.system
 
-import cc.otavia.core.util.{Nextable, SpinLock}
 import cc.otavia.core.config.SpinLockConfig
+import cc.otavia.core.util.{Nextable, SpinLock}
 
 import java.util.concurrent.atomic.AtomicInteger
 import scala.language.unsafeNulls

@@ -19,8 +19,8 @@ package cc.otavia.core.message
 /** The base type of all data exchanged between actors. Every value sent to or received from an actor must be a
  *  [[Message]]. The message hierarchy defines the communication patterns:
  *    1. [[Call]] — triggers stack coroutine execution in the receiving actor
- *       a. [[Notice]] — fire-and-forget, no reply expected
- *       b. [[Ask]][R] — request-response, expects a [[Reply]] of type [[R]]
+ *       a. [[Notice]] — fire-and-forget, no reply expected b. [[Ask]][R] — request-response, expects a [[Reply]] of
+ *          type [[R]]
  *    1. [[Reply]] — the response to an [[Ask]]
  */
 sealed trait Message extends Serializable

@@ -64,8 +64,8 @@ trait Actor[+M <: Call] {
     /** Actor system call this method before call restart method */
     protected def beforeRestart(): Unit = {}
 
-    /** Called during the restart process to reset actor state. Override to clear internal state before resuming
-     *  message processing after an exception.
+    /** Called during the restart process to reset actor state. Override to clear internal state before resuming message
+     *  processing after an exception.
      */
     protected def restart(): Unit = {}
 
@@ -75,9 +75,9 @@ trait Actor[+M <: Call] {
     /** user actor override this to control whether restart when occur exception */
     protected def exceptionStrategy: ExceptionStrategy = ExceptionStrategy.Restart
 
-    /** Override to mark specific message types as barrier calls. When a barrier message is received, the actor
-     *  pauses processing of subsequent asks/notices until the barrier is resolved (all pending stacks complete).
-     *  This prevents message reordering within the actor.
+    /** Override to mark specific message types as barrier calls. When a barrier message is received, the actor pauses
+     *  processing of subsequent asks/notices until the barrier is resolved (all pending stacks complete). This prevents
+     *  message reordering within the actor.
      *
      *  @param call
      *    the incoming message to check

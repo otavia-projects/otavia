@@ -18,7 +18,7 @@ package cc.otavia.http.server
 
 import cc.otavia.buffer.Buffer
 import cc.otavia.common.SystemPropertyUtil
-import cc.otavia.core.cache.ActorThreadLocal
+import cc.otavia.core.pool.ActorThreadLocal
 import cc.otavia.core.system.ActorThread
 import cc.otavia.http.HttpMethod.*
 import cc.otavia.http.server.Router.*

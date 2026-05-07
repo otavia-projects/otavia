@@ -16,7 +16,6 @@
 
 package cc.otavia.core.system
 
-
 abstract class ActorThreadFactory {
 
     def system: ActorSystem

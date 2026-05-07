@@ -18,19 +18,19 @@ package cc.otavia.core.config
 
 /** Actor scheduling priority configuration.
  *
- *  The actor scheduler uses a three-signal model to determine whether an actor should be scheduled with high
- *  priority. High-priority actors are dispatched before normal-priority actors, reducing latency for actors
- *  that need prompt attention.
+ *  The actor scheduler uses a three-signal model to determine whether an actor should be scheduled with high priority.
+ *  High-priority actors are dispatched before normal-priority actors, reducing latency for actors that need prompt
+ *  attention.
  *
  *  @param highPriorityReplySize
- *    Reply mailbox size threshold to boost scheduling priority. When an actor's reply mailbox contains more than
- *    this many messages, the actor is scheduled with high priority. Each reply corresponds to a completable
+ *    Reply mailbox size threshold to boost scheduling priority. When an actor's reply mailbox contains more than this
+ *    many messages, the actor is scheduled with high priority. Each reply corresponds to a completable
  *    [[cc.otavia.core.channel.MessagePromise]] — processing it completes a future and may unblock suspended stacks.
  *    Default is 2.
  *  @param highPriorityEventSize
- *    Event mailbox size threshold to boost scheduling priority. When an actor's event mailbox contains more than
- *    this many messages, the actor is scheduled with high priority. System events (timer expirations, channel
- *    lifecycle) need timely processing to maintain system responsiveness. Default is 4.
+ *    Event mailbox size threshold to boost scheduling priority. When an actor's event mailbox contains more than this
+ *    many messages, the actor is scheduled with high priority. System events (timer expirations, channel lifecycle)
+ *    need timely processing to maintain system responsiveness. Default is 4.
  */
 case class PriorityConfig(
     highPriorityReplySize: Int = 2,

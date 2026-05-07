@@ -24,8 +24,8 @@ import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.stack.ChannelFuture
 
 /** A special [[ChannelHandler]] which offers an easy way to initialize a [[Channel]] once it was registered to its
- *  [[ChannelsActor]]. Implementations are most often used in the context of [[ChannelsActor.channelInitializer]], to setup the
- *  [[ChannelPipeline]] of a [[Channel]].
+ *  [[ChannelsActor]]. Implementations are most often used in the context of [[ChannelsActor.channelInitializer]], to
+ *  setup the [[ChannelPipeline]] of a [[Channel]].
  *
  *  {{{
  *      class MyChannelInitializer extends ChannelInitializer[Channel] {
@@ -56,7 +56,8 @@ abstract class ChannelInitializer[C <: Channel] extends ChannelHandler {
 
     /** Handle the [[Throwable]] by logging and closing the [[Channel]]. Sub-classes may override this. */
     override def channelExceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
-        Logger.getLogger(getClass, ctx.channel.system)
+        Logger
+            .getLogger(getClass, ctx.channel.system)
             .warn(s"Exception in channel initializer, closing channel: ${cause.getMessage}", cause)
         ctx.close(ChannelFuture()) // ignore close future
     }

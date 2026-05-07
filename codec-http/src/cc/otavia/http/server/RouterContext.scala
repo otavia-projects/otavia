@@ -16,7 +16,7 @@
 
 package cc.otavia.http.server
 
-import cc.otavia.core.cache.ActorThreadLocal
+import cc.otavia.core.pool.ActorThreadLocal
 import cc.otavia.http.HttpMethod
 
 import scala.collection.mutable

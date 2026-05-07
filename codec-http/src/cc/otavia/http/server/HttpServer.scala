@@ -17,7 +17,7 @@
 package cc.otavia.http.server
 
 import cc.otavia.core.actor.AcceptorActor
-import cc.otavia.core.cache.{ActorThreadLocal, ResourceTimer}
+import cc.otavia.core.pool.{ActorThreadLocal, ResourceTimer}
 import cc.otavia.core.timer.TimeoutTrigger
 import cc.otavia.handler.ssl.SslContext
 

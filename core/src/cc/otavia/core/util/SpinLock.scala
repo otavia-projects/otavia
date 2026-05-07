@@ -17,6 +17,7 @@
 package cc.otavia.core.util
 
 import cc.otavia.core.config.SpinLockConfig
+
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.LockSupport
 import scala.language.unsafeNulls
@@ -57,8 +58,8 @@ private[core] class SpinLock(config: SpinLockConfig = SpinLockConfig()) extends 
         }
     }
 
-    /** Release the lock. No thread-check — all callers are kernel-internal (private[core]) with structured
-     *  lock/unlock pairs in try/finally, so wrong-thread unlock cannot happen by construction.
+    /** Release the lock. No thread-check — all callers are kernel-internal (private[core]) with structured lock/unlock
+     *  pairs in try/finally, so wrong-thread unlock cannot happen by construction.
      */
     final def unlock(): Unit = {
         this.lazySet(null)

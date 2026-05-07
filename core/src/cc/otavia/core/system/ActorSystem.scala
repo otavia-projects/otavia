@@ -18,11 +18,11 @@ package cc.otavia.core.system
 
 import cc.otavia.core.actor.{Actor, ActorFactory, MessageOf}
 import cc.otavia.core.address.Address
-import cc.otavia.core.cache.ThreadLocal
 import cc.otavia.core.channel.ChannelFactory
 import cc.otavia.core.config.OtaviaConfig
 import cc.otavia.core.ioc.{BeanDefinition, Module}
 import cc.otavia.core.message.*
+import cc.otavia.core.pool.IndexedThreadLocal
 import cc.otavia.core.reactor.Reactor
 import cc.otavia.core.system.monitor.SystemMonitor
 import cc.otavia.core.timer.Timer
@@ -100,7 +100,7 @@ trait ActorSystem {
 
     private[core] def gc(): Unit
 
-    private[core] def registerLongLifeThreadLocal(threadLocal: ThreadLocal[?]): Unit
+    private[core] def registerLongLifeThreadLocal(threadLocal: IndexedThreadLocal[?]): Unit
 
 }
 

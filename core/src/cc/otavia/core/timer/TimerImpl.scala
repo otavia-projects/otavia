@@ -16,15 +16,10 @@
 
 package cc.otavia.core.timer
 
-import cc.otavia.core.address.EventableAddress
-import cc.otavia.core.cache.ResourceTimer
-import cc.otavia.core.channel.Channel
-import cc.otavia.core.slf4a.Logger
-import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.address.{Address, EventableAddress}
-import cc.otavia.core.cache.ResourceTimer
 import cc.otavia.core.channel.Channel
 import cc.otavia.core.message.{AskTimeoutEvent, ChannelTimeoutEvent, ResourceTimeoutEvent, TimeoutEvent}
+import cc.otavia.core.pool.ResourceTimer
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.system.monitor.TimerMonitor
@@ -45,7 +40,7 @@ final class TimerImpl(private[timer] val system: ActorSystem) extends Timer {
       TimeUnit.MILLISECONDS,
       system.config.timer.ticksPerWheel
     )
-    private val taskManager      = new TimerTaskManager(this)
+    private val taskManager = new TimerTaskManager(this)
 
     private val nextId = new AtomicLong(Timer.INVALID_TIMEOUT_REGISTER_ID + 1)
 

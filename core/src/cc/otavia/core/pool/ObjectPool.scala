@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.cache
+package cc.otavia.core.pool
 
 import scala.language.unsafeNulls
 
@@ -24,19 +24,19 @@ import scala.language.unsafeNulls
  */
 abstract class ObjectPool[T <: Poolable] {
 
-    /** Creates a new Object which has been set [[Poolable.creator]] by the current thread.
+    /** Creates a new Object which has been set [[Poolable.creatorThread]] by the current thread.
      *  @return
      *    a new [[Poolable]] object.
      */
-    protected final def newInstance(): T = {
+    protected final def create(): T = {
         val instance = newObject()
-        instance.creator(Thread.currentThread())
+        instance.creatorThread = Thread.currentThread()
         instance
     }
 
     /** Used by user to define how to create a new [[Poolable]] object.
      *  @return
-     *    a object which has not been set [[Poolable.creator]].
+     *    a object which has not been set [[Poolable.creatorThread]].
      */
     protected def newObject(): T
 

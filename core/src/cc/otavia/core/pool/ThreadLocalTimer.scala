@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.cache
+package cc.otavia.core.pool
 
-trait PoolableHolder[T <: Poolable] {
+final class ThreadLocalTimer(override val parent: IndexedThreadLocal[?]) extends ResourceTimer(parent) {
 
-    def size: Int
+    private var lastGet: Long = System.currentTimeMillis()
+    private var lastSet: Long = System.currentTimeMillis()
 
-    def maxSize: Int
+    def lastGetTime: Long         = lastGet
+    def updateLastGetTime(): Unit = lastGet = System.currentTimeMillis()
 
-    def pop(): T | Null
-
-    def push(poolable: T): Unit
+    def lastSetTime: Long         = lastSet
+    def updateLastSetTime(): Unit = lastSet = System.currentTimeMillis()
 
 }

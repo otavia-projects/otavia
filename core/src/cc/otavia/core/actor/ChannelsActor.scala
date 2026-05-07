@@ -31,8 +31,8 @@ import java.nio.file.{OpenOption, Path}
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-/** IO-capable actor that manages [[Channel]] instances. Always fully drained during the event loop's IO phase
- *  (no time budget), ensuring IO responsiveness is never starved.
+/** IO-capable actor that manages [[Channel]] instances. Always fully drained during the event loop's IO phase (no time
+ *  budget), ensuring IO responsiveness is never starved.
  *
  *  In addition to the standard message handling via [[resumeAsk]] / [[resumeNotice]], ChannelsActor provides
  *  [[resumeChannelStack]] for processing channel-level IO stacks, and lifecycle hooks like [[afterChannelClosed]] and

@@ -108,7 +108,7 @@ trait ChannelState extends CompressionBooleanLong {
 
     protected final def opened_=(value: Boolean): Unit = set(ST_OPENED, value)
     protected final def opened: Boolean                = get(ST_OPENED)
-    
+
     /** Set the [[Channel]] inbound head-of-line
      *  @param value
      *    head-of-line

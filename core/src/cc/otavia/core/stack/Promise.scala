@@ -16,8 +16,8 @@
 
 package cc.otavia.core.stack
 
-import cc.otavia.core.cache.Poolable
 import cc.otavia.core.message.ExceptionMessage
+import cc.otavia.core.pool.Poolable
 
 /** Promise is an object which can be completed with a value or failed with an exception.
  *

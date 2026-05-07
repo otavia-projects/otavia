@@ -18,11 +18,11 @@ package cc.otavia.core.system
 
 import cc.otavia.core.actor.*
 import cc.otavia.core.address.*
-import cc.otavia.core.cache.ThreadLocal
 import cc.otavia.core.channel.ChannelFactory
 import cc.otavia.core.config.OtaviaConfig
 import cc.otavia.core.ioc.{BeanDefinition, BeanRegistry, DuplicateModuleException, Module, ModuleDependencyException}
 import cc.otavia.core.message.Call
+import cc.otavia.core.pool.IndexedThreadLocal
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.monitor.{ReactorMonitor, SystemMonitor, SystemMonitorTask, ThreadMonitor}
 import cc.otavia.core.timer.{Timeout, Timer, TimerImpl}
@@ -38,7 +38,7 @@ import scala.language.unsafeNulls
 
 final private[core] class ActorSystemImpl(val config: OtaviaConfig) extends ActorSystem {
 
-    val name: String                            = config.name
+    val name: String                                   = config.name
     private val actorThreadFactory: ActorThreadFactory = new ActorThreadFactory.DefaultActorThreadFactory
 
     actorThreadFactory.setSystem(this)
@@ -100,7 +100,7 @@ final private[core] class ActorSystemImpl(val config: OtaviaConfig) extends Acto
 
     private val gcTime = new AtomicLong(System.currentTimeMillis())
 
-    private val threadLocals: mutable.Set[ThreadLocal[?]] = mutable.HashSet.empty
+    private val threadLocals: mutable.Set[IndexedThreadLocal[?]] = mutable.HashSet.empty
 
     initialize = true
 
@@ -130,7 +130,7 @@ final private[core] class ActorSystemImpl(val config: OtaviaConfig) extends Acto
 
     override def defaultMaxFetchPerRunning: Int = config.system.maxFetchPerRunning
 
-    override def defaultMaxBatchSize: Int       = config.system.maxBatchSize
+    override def defaultMaxBatchSize: Int = config.system.maxBatchSize
 
     // format: off
     override def buildActor[A <: Actor[? <: Call]](factory: ActorFactory[A], num: Int = 1,
@@ -282,7 +282,7 @@ final private[core] class ActorSystemImpl(val config: OtaviaConfig) extends Acto
         else busy = false
     }
 
-    override private[core] def registerLongLifeThreadLocal(threadLocal: ThreadLocal[?]): Unit =
+    override private[core] def registerLongLifeThreadLocal(threadLocal: IndexedThreadLocal[?]): Unit =
         threadLocals.addOne(threadLocal)
 
     override private[core] def gc(): Unit = {

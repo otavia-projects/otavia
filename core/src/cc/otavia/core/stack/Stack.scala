@@ -17,7 +17,7 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.actor.AbstractActor
-import cc.otavia.core.cache.Poolable
+import cc.otavia.core.pool.Poolable
 import cc.otavia.core.util.Nextable
 
 import scala.language.unsafeNulls
@@ -163,7 +163,7 @@ abstract class Stack extends Poolable {
             val promise = completedHead
             completedHead = promise.next match
                 case p: AbstractPromise[?] => p
-                case _                    => null
+                case _                     => null
             promise.unlink()
             promise.recycle()
         }

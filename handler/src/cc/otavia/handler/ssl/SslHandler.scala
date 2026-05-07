@@ -20,7 +20,7 @@ package cc.otavia.handler.ssl
 
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.common.SystemPropertyUtil
-import cc.otavia.core.cache.{ActorThreadIsolatedObjectPool, ActorThreadLocal}
+import cc.otavia.core.pool.{ThreadLocalObjectPool, ActorThreadLocal}
 import cc.otavia.core.channel.ChannelHandlerContext
 import cc.otavia.core.slf4a.{Logger, LoggerFactory}
 import cc.otavia.core.channel.handler.ByteToByteCodec

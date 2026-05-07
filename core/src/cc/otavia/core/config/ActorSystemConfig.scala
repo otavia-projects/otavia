@@ -23,8 +23,8 @@ import scala.language.unsafeNulls
  *  @param actorThreadPoolSize
  *    Number of ActorThread worker threads. Defaults to available processors.
  *  @param memoryMonitor
- *    Enable heap memory pressure monitoring. When enabled, the system tracks heap usage and marks itself as "busy"
- *    when memory is over 90% utilized.
+ *    Enable heap memory pressure monitoring. When enabled, the system tracks heap usage and marks itself as "busy" when
+ *    memory is over 90% utilized.
  *  @param memoryMonitorDurationMs
  *    Interval in milliseconds between memory monitor checks. Default is 2000ms.
  *  @param memoryOverSleepMs
@@ -45,19 +45,19 @@ import scala.language.unsafeNulls
  *  @param maxFetchPerRunning
  *    Maximum number of messages fetched per actor run. Controls how many messages are dequeued before yielding.
  *  @param poolHolderMaxSize
- *    Maximum number of pooled objects per [[cc.otavia.core.cache.SingleThreadPoolableHolder]]. Controls memory vs
- *    allocation overhead tradeoff for object pools.
+ *    Maximum number of pooled objects per [[cc.otavia.core.pool.PerThreadPool]]. Controls memory vs allocation overhead
+ *    tradeoff for object pools.
  */
 case class ActorSystemConfig(
-    actorThreadPoolSize: Int     = Runtime.getRuntime.availableProcessors(),
-    memoryMonitor: Boolean       = true,
+    actorThreadPoolSize: Int = Runtime.getRuntime.availableProcessors(),
+    memoryMonitor: Boolean = true,
     memoryMonitorDurationMs: Int = 2000,
-    memoryOverSleepMs: Int       = 40,
-    systemMonitor: Boolean       = false,
+    memoryOverSleepMs: Int = 40,
+    systemMonitor: Boolean = false,
     systemMonitorDurationMs: Int = 1000,
-    printBanner: Boolean         = true,
-    aggressiveGC: Boolean        = true,
-    maxBatchSize: Int            = 100000,
-    maxFetchPerRunning: Int      = Int.MaxValue,
-    poolHolderMaxSize: Int       = 256
+    printBanner: Boolean = true,
+    aggressiveGC: Boolean = true,
+    maxBatchSize: Int = 100000,
+    maxFetchPerRunning: Int = Int.MaxValue,
+    poolHolderMaxSize: Int = 256
 )

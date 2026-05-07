@@ -28,12 +28,12 @@ package cc.otavia.core.config
  *    Minimum victim queue depth to consider work stealing. Below this threshold the owner thread will self-drain
  *    quickly, and the CPU cache cost of cross-thread execution outweighs the benefit. Default is 32.
  *  @param stealAggression
- *    Product threshold for the adaptive steal condition: `idleCount × readies >= stealAggression`. Higher values
- *    make stealing more conservative (require more idle iterations or deeper backlog). Default is 128.
+ *    Product threshold for the adaptive steal condition: `idleCount × readies >= stealAggression`. Higher values make
+ *    stealing more conservative (require more idle iterations or deeper backlog). Default is 128.
  */
 case class SchedulerConfig(
-    ioRatio: Int          = 50,
-    minBudgetMicros: Int  = 500,
-    stealFloor: Int       = 32,
-    stealAggression: Int  = 128
+    ioRatio: Int = 50,
+    minBudgetMicros: Int = 500,
+    stealFloor: Int = 32,
+    stealAggression: Int = 128
 )

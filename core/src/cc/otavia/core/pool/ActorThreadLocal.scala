@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.cache
+package cc.otavia.core.pool
 
-import cc.otavia.core.cache.ActorThreadLocal.UNSET
+import cc.otavia.core.pool.ActorThreadLocal.UNSET
 
-abstract class ActorThreadLocal[V <: AnyRef] extends ThreadLocal[V] {
+abstract class ActorThreadLocal[V <: AnyRef] extends IndexedThreadLocal[V] {
 
     private var variables: Array[AnyRef] = _
 
@@ -29,7 +29,7 @@ abstract class ActorThreadLocal[V <: AnyRef] extends ThreadLocal[V] {
         v
     }
 
-    override private[cache] def doInitial(len: Int): Unit = {
+    override private[pool] def doInitial(len: Int): Unit = {
         val arr = new Array[AnyRef](len)
         arr.indices.foreach { index => arr(index) = UNSET }
         variables = arr
@@ -38,7 +38,7 @@ abstract class ActorThreadLocal[V <: AnyRef] extends ThreadLocal[V] {
     final override def get(): V = {
         val index = threadIndex()
         if (variables(index) != UNSET) {
-            updateGetTime(index)
+            updateLastGetTime(index)
             variables(index).asInstanceOf[V]
         } else initializeValue(index)
     }
@@ -48,7 +48,7 @@ abstract class ActorThreadLocal[V <: AnyRef] extends ThreadLocal[V] {
         if (variables(index) == UNSET) {
             null
         } else {
-            updateGetTime(index)
+            updateLastGetTime(index)
             variables(index).asInstanceOf[V]
         }
     }
@@ -56,7 +56,7 @@ abstract class ActorThreadLocal[V <: AnyRef] extends ThreadLocal[V] {
     override def set(v: V): Unit = {
         val index = threadIndex()
         if (variables(index) == UNSET) initialTimer()
-        updateSetTime()
+        updateLastSetTime()
         variables(index) = v
     }
 

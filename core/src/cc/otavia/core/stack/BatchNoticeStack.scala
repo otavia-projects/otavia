@@ -17,8 +17,8 @@
 package cc.otavia.core.stack
 
 import cc.otavia.core.actor.AbstractActor
-import cc.otavia.core.cache.ActorThreadIsolatedObjectPool
 import cc.otavia.core.message.Notice
+import cc.otavia.core.pool.ThreadLocalObjectPool
 
 import scala.language.unsafeNulls
 
@@ -50,7 +50,7 @@ class BatchNoticeStack[N <: Notice] private () extends Stack {
 
 object BatchNoticeStack {
 
-    private val pool = new ActorThreadIsolatedObjectPool[BatchNoticeStack[?]] {
+    private val pool = new ThreadLocalObjectPool[BatchNoticeStack[?]] {
         override protected def newObject(): BatchNoticeStack[?] = new BatchNoticeStack[Nothing]()
     }
 

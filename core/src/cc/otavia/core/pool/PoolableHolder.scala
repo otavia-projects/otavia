@@ -14,19 +14,16 @@
  * limitations under the License.
  */
 
-package cc.otavia.core.cache
+package cc.otavia.core.pool
 
-import cc.otavia.core.timer.Timer
+trait PoolableHolder[T <: Poolable] {
 
-abstract class ResourceTimer(val parent: TimeoutResource) {
+    def size: Int
 
-    private var rid: Long      = Timer.INVALID_TIMEOUT_REGISTER_ID
-    private val initTime: Long = System.nanoTime()
+    def maxSize: Int
 
-    final def registerId: Long = rid
+    def pop(): T | Null
 
-    final def updateRegisterId(id: Long): Unit = rid = id
-
-    final def initialTime: Long = initTime
+    def push(poolable: T): Unit
 
 }

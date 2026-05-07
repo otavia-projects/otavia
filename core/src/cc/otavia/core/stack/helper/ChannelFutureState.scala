@@ -16,7 +16,7 @@
 
 package cc.otavia.core.stack.helper
 
-import cc.otavia.core.cache.{ActorThreadIsolatedObjectPool, Poolable}
+import cc.otavia.core.pool.{Poolable, ThreadLocalObjectPool}
 import cc.otavia.core.stack.{ChannelFuture, StackState}
 
 import scala.language.unsafeNulls
@@ -54,7 +54,7 @@ object ChannelFutureState {
         state
     }
 
-    private val pool = new ActorThreadIsolatedObjectPool[ChannelFutureState] {
+    private val pool = new ThreadLocalObjectPool[ChannelFutureState] {
         override protected def newObject(): ChannelFutureState = new ChannelFutureState()
     }
 

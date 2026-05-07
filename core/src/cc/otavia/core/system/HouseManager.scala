@@ -76,8 +76,8 @@ final class HouseManager(val thread: ActorThread) {
     /** Enqueue an [[ActorHouse]] that has transitioned from WAITING to READY. The house is placed into the appropriate
      *  queue based on its actor type:
      *    - [[cc.otavia.core.actor.StateActor]] -> actorQueue (time-budgeted in Phase 3)
-     *    - [[cc.otavia.core.actor.ChannelsActor]] / [[cc.otavia.core.actor.AcceptorActor]] -> channelsActorQueue
-     *      (fully drained in Phase 2)
+     *    - [[cc.otavia.core.actor.ChannelsActor]] / [[cc.otavia.core.actor.AcceptorActor]] -> channelsActorQueue (fully
+     *      drained in Phase 2)
      */
     def ready(house: ActorHouse): Unit = {
         if (house.actorType == ActorHouse.STATE_ACTOR) actorQueue.enqueue(house)
@@ -90,16 +90,16 @@ final class HouseManager(val thread: ActorThread) {
     // Execution
     // =========================================================================
 
-    /** Run channels actor queue (IO pipeline work) and mounting queue. These are always drained fully as they are
-     *  part of the IO pipeline and must not be starved.
+    /** Run channels actor queue (IO pipeline work) and mounting queue. These are always drained fully as they are part
+     *  of the IO pipeline and must not be starved.
      */
     def runChannelsActors(): Unit = {
         if (channelsActorQueue.available) drainHouses(channelsActorQueue, Long.MaxValue)
         if (mountingQueue.available) drainMountingQueue()
     }
 
-    /** Run state actor queue (business logic) within the given time budget. Actors that are not processed within
-     *  the deadline remain in the queue for the next iteration.
+    /** Run state actor queue (business logic) within the given time budget. Actors that are not processed within the
+     *  deadline remain in the queue for the next iteration.
      *
      *  @param deadlineNanos
      *    the absolute time (in nanos) after which no more actor should be dequeued. [[Long.MaxValue]] means no limit.
@@ -117,7 +117,7 @@ final class HouseManager(val thread: ActorThread) {
             house.run()
             currentRunning = null
             count += 1
-            if (deadlineNanos != Long.MaxValue && (count & 0xF) == 0 && System.nanoTime() >= deadlineNanos) return
+            if (deadlineNanos != Long.MaxValue && (count & 0xf) == 0 && System.nanoTime() >= deadlineNanos) return
             house = houseQueue.dequeue()
         }
     }
@@ -136,8 +136,8 @@ final class HouseManager(val thread: ActorThread) {
     // Work stealing
     // =========================================================================
 
-    /** Consecutive event-loop iterations where all three queues were empty. Reset to 0 when the thread has work.
-     *  Used as the thief-side input to the adaptive steal condition (see [[stealableBy]]).
+    /** Consecutive event-loop iterations where all three queues were empty. Reset to 0 when the thread has work. Used
+     *  as the thief-side input to the adaptive steal condition (see [[stealableBy]]).
      */
     private var idleCount: Int = 0
 
@@ -147,8 +147,8 @@ final class HouseManager(val thread: ActorThread) {
      *
      *  This ties the thief's idleness to the victim's backlog severity:
      *    - Severe backlog (high readies) → few idle iterations needed (fast response to crisis)
-     *    - Moderate backlog → more idle iterations required (conservative, avoids stealing from a thread
-     *      that will self-drain shortly)
+     *    - Moderate backlog → more idle iterations required (conservative, avoids stealing from a thread that will
+     *      self-drain shortly)
      *    - Below STEAL_FLOOR → never steal (CPU cache cost of cross-thread execution outweighs benefit)
      */
     private def stealableBy(thiefIdleCount: Int): Boolean = {

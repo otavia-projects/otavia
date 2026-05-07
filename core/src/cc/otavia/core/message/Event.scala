@@ -17,8 +17,8 @@
 package cc.otavia.core.message
 
 import cc.otavia.buffer.pool.RecyclablePageBuffer
-import cc.otavia.core.cache.ResourceTimer
 import cc.otavia.core.channel.{Channel, ChannelShutdownDirection}
+import cc.otavia.core.pool.ResourceTimer
 import cc.otavia.core.util.Nextable
 
 import java.net.SocketAddress
@@ -37,7 +37,7 @@ case class ChannelTimeoutEvent(registerId: Long, channel: Channel) extends Timer
 
 case class AskTimeoutEvent(registerId: Long, askId: Long) extends TimerEvent
 
-case class ResourceTimeoutEvent(registerId: Long, cache: ResourceTimer) extends TimerEvent
+case class ResourceTimeoutEvent(registerId: Long, resourceTimer: ResourceTimer) extends TimerEvent
 
 /** channel event for [[cc.otavia.core.actor.ChannelsActor]] */
 sealed abstract class ReactorEvent extends Event

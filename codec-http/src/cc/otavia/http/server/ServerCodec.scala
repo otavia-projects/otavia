@@ -19,7 +19,7 @@ package cc.otavia.http.server
 import cc.otavia.buffer.pool.AdaptiveBuffer
 import cc.otavia.buffer.{Buffer, BufferUtils}
 import cc.otavia.common.SystemPropertyUtil
-import cc.otavia.core.cache.{ActorThreadLocal, ThreadLocal}
+import cc.otavia.core.pool.{ActorThreadLocal, IndexedThreadLocal}
 import cc.otavia.core.channel
 import cc.otavia.core.channel.{ChannelHandlerContext, DefaultFileRegion}
 import cc.otavia.core.slf4a.{Logger, LoggerFactory}
@@ -40,7 +40,7 @@ import java.util.concurrent.TimeUnit
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-class ServerCodec(val routerMatcher: RouterMatcher, val dates: ThreadLocal[Array[Byte]], val serverName: Array[Byte])
+class ServerCodec(val routerMatcher: RouterMatcher, val dates: IndexedThreadLocal[Array[Byte]], val serverName: Array[Byte])
     extends ByteToMessageDecoder with MessageToByteEncoder {
 
     import ServerCodec.*
