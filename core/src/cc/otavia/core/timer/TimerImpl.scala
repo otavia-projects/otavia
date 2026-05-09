@@ -16,7 +16,7 @@
 
 package cc.otavia.core.timer
 
-import cc.otavia.core.address.{Address, EventableAddress}
+import cc.otavia.core.address.EventableAddress
 import cc.otavia.core.channel.Channel
 import cc.otavia.core.message.{AskTimeoutEvent, ChannelTimeoutEvent, ResourceTimeoutEvent, TimeoutEvent}
 import cc.otavia.core.pool.ResourceTimer
@@ -24,10 +24,9 @@ import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.system.monitor.TimerMonitor
 import cc.otavia.core.timer.Timer.*
-import cc.otavia.core.timer.{HashedWheelTimer, Timer, TimerTask}
 
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
-import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, ThreadFactory, TimeUnit}
 import scala.language.unsafeNulls
 
 /** Default implementation of [[Timer]] */
@@ -40,6 +39,7 @@ final class TimerImpl(private[timer] val system: ActorSystem) extends Timer {
       TimeUnit.MILLISECONDS,
       system.config.timer.ticksPerWheel
     )
+
     private val taskManager = new TimerTaskManager(this)
 
     private val nextId = new AtomicLong(Timer.INVALID_TIMEOUT_REGISTER_ID + 1)
@@ -61,7 +61,7 @@ final class TimerImpl(private[timer] val system: ActorSystem) extends Timer {
     ): Long = {
         val (delay, period, delayUnit, periodUnit) = extract(trigger)
         logger.trace(s"register timeout trigger with delay: $delay $delayUnit period: $period $periodUnit")
-        if (delay <= 0 && period < 0) {
+        if (delay <= 0 && period <= 0) {
             val registerId = nextRegisterId()
             address.inform(TimeoutEvent(registerId, attach))
             registerId
@@ -73,7 +73,7 @@ final class TimerImpl(private[timer] val system: ActorSystem) extends Timer {
 
     override def registerChannelTimeout(trigger: TimeoutTrigger, channel: Channel): Long = {
         val (delay, period, delayUnit, periodUnit) = extract(trigger)
-        if (delay <= 0 && period < 0) {
+        if (delay <= 0 && period <= 0) {
             val registerId = nextRegisterId()
             channel.executorAddress.inform(ChannelTimeoutEvent(registerId, channel))
             registerId
@@ -89,7 +89,7 @@ final class TimerImpl(private[timer] val system: ActorSystem) extends Timer {
         askId: Long
     ): Long = {
         val (delay, period, delayUnit, periodUnit) = extract(trigger)
-        if (delay <= 0 && period < 0) {
+        if (delay <= 0 && period <= 0) {
             val registerId = nextRegisterId()
             sender.inform(AskTimeoutEvent(registerId, askId))
             registerId
@@ -105,7 +105,7 @@ final class TimerImpl(private[timer] val system: ActorSystem) extends Timer {
         resource: ResourceTimer
     ): Long = {
         val (delay, period, delayUnit, periodUnit) = extract(trigger)
-        if (delay <= 0 && period < 0) {
+        if (delay <= 0 && period <= 0) {
             val registerId = nextRegisterId()
             address.inform(ResourceTimeoutEvent(registerId, resource))
             registerId
@@ -117,15 +117,14 @@ final class TimerImpl(private[timer] val system: ActorSystem) extends Timer {
 
     // extract (delay, period, delayUnit, periodUnit)
     inline private def extract(trigger: TimeoutTrigger): (Long, Long, TimeUnit, TimeUnit) = trigger match
-        case TimeoutTrigger.FixTime(date) =>
-            (date.getTime - System.currentTimeMillis(), -1, TimeUnit.MILLISECONDS, TimeUnit.MILLISECONDS)
+        case TimeoutTrigger.FixTime(nanos) =>
+            (nanos - System.nanoTime(), -1, TimeUnit.NANOSECONDS, TimeUnit.MILLISECONDS)
         case TimeoutTrigger.DelayTime(delay, unit) =>
             (delay, -1, unit, TimeUnit.MILLISECONDS)
         case TimeoutTrigger.DelayPeriod(delay, period, delayUnit, periodUnit) =>
             (delay, period, delayUnit, periodUnit)
         case TimeoutTrigger.FirstTimePeriod(first, period, periodUnit) =>
-            val delay = first.getTime - System.currentTimeMillis()
-            (delay, period, TimeUnit.MILLISECONDS, periodUnit)
+            (first - System.nanoTime(), period, TimeUnit.NANOSECONDS, periodUnit)
 
     private def handle(
         timerTask: TimeoutTask,
@@ -134,10 +133,11 @@ final class TimerImpl(private[timer] val system: ActorSystem) extends Timer {
         delayUnit: TimeUnit,
         periodUnit: TimeUnit
     ): Long = {
-        if (delay <= 0 && period > 0)
-            timerTask.setHandle(hashedWheelTimer.newTimeout(timerTask, 0, periodUnit))
-        else // delay > 0, period
-            timerTask.setHandle(hashedWheelTimer.newTimeout(timerTask, delay, delayUnit))
+        val d = if (delay < 0) 0 else delay
+        val handle =
+            if (period > 0) hashedWheelTimer.newTimeout(timerTask, d, delayUnit, period, periodUnit)
+            else hashedWheelTimer.newTimeout(timerTask, d, delayUnit)
+        timerTask.setHandle(handle)
         timerTask.registerId
     }
 

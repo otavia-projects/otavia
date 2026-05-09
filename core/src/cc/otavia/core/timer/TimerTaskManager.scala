@@ -19,6 +19,7 @@ package cc.otavia.core.timer
 import cc.otavia.core.address.EventableAddress
 import cc.otavia.core.channel.Channel
 import cc.otavia.core.pool.ResourceTimer
+import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.system.ActorSystem
 import cc.otavia.core.timer.{InternalTimer, Timeout, TimeoutTrigger}
 
@@ -27,6 +28,8 @@ import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 class TimerTaskManager(val timer: Timer) {
 
     private val registeredTasks = new ConcurrentHashMap[Long, TimeoutTask]()
+
+    private val logger: Logger = Logger.getLogger(getClass, timer.system)
 
     final def system: ActorSystem = timer.system
 
@@ -90,27 +93,28 @@ class TimerTaskManager(val timer: Timer) {
             timerTask.timeout.cancel
 
     def update(trigger: TimeoutTrigger, registerId: Long): Unit = {
-        registeredTasks.remove(registerId) match
+        registeredTasks.get(registerId) match
             case task: TimeoutTask =>
-                val nettyTimer: InternalTimer = task.timeout.timer
-                task.timeout.cancel // cancel old timer task
-                registeredTasks.put(registerId, task)
+                val oldHandle = task.timeout
+                oldHandle.cancel
+                val internalTimer = oldHandle.timer
                 trigger match
-                    case TimeoutTrigger.FixTime(date) =>
-                        updateTimeoutTrigger(nettyTimer, task, date.getTime - System.currentTimeMillis())
+                    case TimeoutTrigger.FixTime(nanos) =>
+                        updateTimeoutTrigger(internalTimer, task, nanos - System.nanoTime())
                     case TimeoutTrigger.DelayTime(delay, unit) =>
-                        updateTimeoutTrigger(nettyTimer, task, delay, delayUnit = unit)
+                        updateTimeoutTrigger(internalTimer, task, delay, delayUnit = unit)
                     case TimeoutTrigger.DelayPeriod(delay, period, delayUnit, periodUnit) =>
-                        updateTimeoutTrigger(nettyTimer, task, delay, period, delayUnit, periodUnit)
+                        updateTimeoutTrigger(internalTimer, task, delay, period, delayUnit, periodUnit)
                     case TimeoutTrigger.FirstTimePeriod(first, period, unit) =>
-                        val delay = first.getTime - System.currentTimeMillis()
-                        updateTimeoutTrigger(nettyTimer, task, delay, period, periodUnit = unit)
+                        val delay = first - System.nanoTime()
+                        updateTimeoutTrigger(internalTimer, task, delay, period, periodUnit = unit)
             case _ =>
-                println(s"Timer task register id $registerId is not registered in system timer.")
+                if (logger.isWarnEnabled)
+                    logger.warn(s"Timer task register id $registerId is not registered in system timer.")
     }
 
     private def updateTimeoutTrigger(
-        nettyTimer: InternalTimer,
+        internalTimer: InternalTimer,
         task: TimeoutTask,
         delay: Long,
         period: Long = -1,
@@ -118,7 +122,10 @@ class TimerTaskManager(val timer: Timer) {
         periodUnit: TimeUnit = TimeUnit.MILLISECONDS
     ): Unit = {
         task.update(period, periodUnit)
-        val handle: Timeout = nettyTimer.newTimeout(task, if (delay < 0) 0 else delay, delayUnit).nn
+        val d = if (delay < 0) 0 else delay
+        val handle: Timeout =
+            if (period > 0) internalTimer.newTimeout(task, d, delayUnit, period, periodUnit).nn
+            else internalTimer.newTimeout(task, d, delayUnit).nn
         task.setHandle(handle)
     }
 

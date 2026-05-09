@@ -21,8 +21,7 @@ import cc.otavia.core.message.{TimeoutEvent, TimerEvent}
 import cc.otavia.core.slf4a.Logger
 import cc.otavia.core.timer.{InternalTimer, Timeout, TimerTask}
 
-import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
-import scala.beans.BeanProperty
+import java.util.concurrent.TimeUnit
 import scala.language.unsafeNulls
 
 private[timer] abstract class TimeoutTask(val manager: TimerTaskManager) extends TimerTask {
@@ -37,7 +36,7 @@ private[timer] abstract class TimeoutTask(val manager: TimerTaskManager) extends
 
     protected var periodUnit: TimeUnit = TimeUnit.MILLISECONDS
 
-    @volatile protected var handle: Timeout = _
+    protected var handle: Timeout = _
 
     def setAddress(address: EventableAddress): Unit = this.address = address
 
@@ -67,15 +66,11 @@ private[timer] abstract class TimeoutTask(val manager: TimerTaskManager) extends
     }
 
     override def run(timeout: Timeout): Unit = this.synchronized {
+        // Only process if this timeout is still the current handle (not replaced by update)
+        if (timeout ne handle) return
         logger.trace(s"task[${this}] timeout")
         address.inform(newEvent())
-        if (period > 0) {
-            val timer: InternalTimer = timeout.timer
-            val newTimeout           = timer.newTimeout(this, period, periodUnit).nn
-            this.setHandle(newTimeout)
-        } else {
-            parent.remove(id)
-        }
+        if (period <= 0) parent.remove(id)
     }
 
     protected def newEvent(): TimerEvent

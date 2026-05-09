@@ -39,10 +39,10 @@ import scala.language.unsafeNulls
  *
  *  You can increase or decrease the accuracy of the execution timing by specifying smaller or larger tick duration in
  *  the constructor. In most network applications, I/O timeout does not need to be accurate. Therefore, the default tick
- *  duration is 100 milliseconds and you will not need to try different configurations in most cases.
+ *  duration is 100 milliseconds, and you will not need to try different configurations in most cases.
  *  ===Ticks per Wheel (Wheel Size)===
  *  [[HashedWheelTimer]] maintains a data structure called 'wheel'. To put simply, a wheel is a hash table of
- *  [[TimerTask]]s whose hash function is 'dead line of the task'. The default number of ticks per wheel (i.e. the size
+ *  [[TimerTask]]s whose hash function is 'deadline of the task'. The default number of ticks per wheel (i.e. the size
  *  of the wheel) is 512. You could specify a larger value if you are going to schedule a lot of timeouts.
  *  ===Do not create many instances.===
  *  [[HashedWheelTimer]] creates a new thread whenever it is instantiated and started. Therefore, you should make sure
@@ -53,221 +53,20 @@ import scala.language.unsafeNulls
  *  Lauck's paper, <a href="https://cseweb.ucsd.edu/users/varghese/PAPERS/twheel.ps.Z">'Hashed and Hierarchical Timing
  *  Wheels: data structures to efficiently implement a timer facility'</a>. More comprehensive slides are located <a
  *  href="https://www.cse.wustl.edu/~cdgill/courses/cs6874/TimingWheels.ppt">here</a>.
- *
- *  @constructor
- *    Creates a new [[HashedWheelTimer]].
- *  @param system
- *    [[ActorSystem]] of the [[HashedWheelTimer]] belong.
- *  @param threadFactory
- *    a [[ThreadFactory]] that creates a background [[Thread]] which is dedicated to [[TimerTask]] execution.
- *  @param tickDuration
- *    the duration between tick
- *  @param unit
- *    the time unit of the [[tickDuration]]
- *  @param ticksPerWheel
- *    the size of the wheel
- *  @param leakDetection
- *    `true` if leak detection should be enabled always, if false it will only be enabled if the worker thread is not a
- *    daemon thread.
- *  @param maxPendingTimeouts
- *    The maximum number of pending timeouts after which call to [[newTimeout]] will result in
- *    [[java.util.concurrent.RejectedExecutionException]] being thrown. No maximum pending timeouts limit is assumed if
- *    this value is 0 or negative.
- *  @param taskExecutor
- *    The [[Executor]] that is used to execute the submitted [[TimerTask]]s. The caller is responsible to shutdown the
- *    [[Executor]] once it is not needed anymore.
- *  @throws NullPointerException
- *    if either of [[threadFactory]] and [[unit]] is null
- *  @throws IllegalArgumentException
- *    if either of [[tickDuration]] and [[ticksPerWheel]] is &lt;= 0
  */
 class HashedWheelTimer(
     val system: ActorSystem,
-    threadFactory: ThreadFactory,
-    val tickDuration: Long,
-    unit: TimeUnit,
-    val ticksPerWheel: Int,
-    leakDetection: Boolean,
-    maxPendingTimeouts: Long,
-    private val taskExecutor: Executor
+    threadFactory: ThreadFactory = Executors.defaultThreadFactory(),
+    val tickDuration: Long = 100,
+    unit: TimeUnit = MILLISECONDS,
+    val ticksPerWheel: Int = 512,
+    leakDetection: Boolean = true,
+    maxPendingTimeouts: Long = -1,
+    private val taskExecutor: Executor = ImmediateExecutor
 ) extends AtomicInteger
     with InternalTimer {
 
     private[timer] val logger: Logger = Logger.getLogger(getClass, system)
-
-    /** Creates a new [[HashedWheelTimer]].
-     *
-     *  @param system
-     *    [[ActorSystem]] of the [[HashedWheelTimer]] belong.
-     *  @param threadFactory
-     *    a [[ThreadFactory]] that creates a background [[Thread]] which is dedicated to [[TimerTask]] execution.
-     *  @param tickDuration
-     *    the duration between tick
-     *  @param unit
-     *    the time unit of the [[tickDuration]]
-     *  @param ticksPerWheel
-     *    the size of the wheel
-     *  @param leakDetection
-     *    `true` if leak detection should be enabled always, if false it will only be enabled if the worker thread is
-     *    not a daemon thread.
-     *  @param maxPendingTimeouts
-     *    The maximum number of pending timeouts after which call to [[newTimeout]] will result in
-     *    [[java.util.concurrent.RejectedExecutionException]] being thrown. No maximum pending timeouts limit is assumed
-     *    if this value is 0 or negative.
-     *  @throws NullPointerException
-     *    if either of [[threadFactory]] and [[unit]] is null
-     *  @throws IllegalArgumentException
-     *    if either of [[tickDuration]] and [[ticksPerWheel]] is &lt;= 0
-     */
-    def this(
-        system: ActorSystem,
-        threadFactory: ThreadFactory,
-        tickDuration: Long,
-        unit: TimeUnit,
-        ticksPerWheel: Int,
-        leakDetection: Boolean,
-        maxPendingTimeouts: Long
-    ) = this(
-      system,
-      threadFactory,
-      tickDuration,
-      unit: TimeUnit,
-      ticksPerWheel,
-      leakDetection,
-      maxPendingTimeouts,
-      ImmediateExecutor
-    )
-
-    /** Creates a new [[HashedWheelTimer]].
-     *
-     *  @param system
-     *    [[ActorSystem]] of the [[HashedWheelTimer]] belong.
-     *  @param threadFactory
-     *    a [[ThreadFactory]] that creates a background [[Thread]] which is dedicated to [[TimerTask]] execution.
-     *  @param tickDuration
-     *    the duration between tick
-     *  @param unit
-     *    the time unit of the [[tickDuration]]
-     *  @param ticksPerWheel
-     *    the size of the wheel
-     *  @param leakDetection
-     *    `true` if leak detection should be enabled always, if false it will only be enabled if the worker thread is
-     *    not a daemon thread.
-     *  @throws NullPointerException
-     *    if either of [[threadFactory]] and [[unit]] is null
-     *  @throws IllegalArgumentException
-     *    if either of [[tickDuration]] and [[ticksPerWheel]] is &lt;= 0
-     */
-    def this(
-        system: ActorSystem,
-        threadFactory: ThreadFactory,
-        tickDuration: Long,
-        unit: TimeUnit,
-        ticksPerWheel: Int,
-        leakDetection: Boolean
-    ) = this(system, threadFactory, tickDuration, unit: TimeUnit, ticksPerWheel, leakDetection, -1)
-
-    /** Creates a new [[HashedWheelTimer]].
-     *
-     *  @param system
-     *    [[ActorSystem]] of the [[HashedWheelTimer]] belong.
-     *  @param threadFactory
-     *    a [[ThreadFactory]] that creates a background [[Thread]] which is dedicated to [[TimerTask]] execution.
-     *  @param tickDuration
-     *    the duration between tick
-     *  @param unit
-     *    the time unit of the [[tickDuration]]
-     *  @param ticksPerWheel
-     *    the size of the wheel
-     *  @throws NullPointerException
-     *    if either of [[threadFactory]] and [[unit]] is null
-     *  @throws IllegalArgumentException
-     *    if either of [[tickDuration]] and [[ticksPerWheel]] is &lt;= 0
-     */
-    def this(
-        system: ActorSystem,
-        threadFactory: ThreadFactory,
-        tickDuration: Long,
-        unit: TimeUnit,
-        ticksPerWheel: Int
-    ) = this(system, threadFactory, tickDuration, unit: TimeUnit, ticksPerWheel, true)
-
-    /** Creates a new [[HashedWheelTimer]].
-     *
-     *  @param system
-     *    [[ActorSystem]] of the [[HashedWheelTimer]] belong.
-     *  @param threadFactory
-     *    a [[ThreadFactory]] that creates a background [[Thread]] which is dedicated to [[TimerTask]] execution.
-     *  @param tickDuration
-     *    the duration between tick
-     *  @param unit
-     *    the time unit of the [[tickDuration]]
-     *  @throws NullPointerException
-     *    if either of [[threadFactory]] and [[unit]] is null
-     *  @throws IllegalArgumentException
-     *    if either of [[tickDuration]] and [[ticksPerWheel]] is &lt;= 0
-     */
-    def this(system: ActorSystem, threadFactory: ThreadFactory, tickDuration: Long, unit: TimeUnit) =
-        this(system, threadFactory, tickDuration, unit: TimeUnit, 512)
-
-    /** Creates a new [[HashedWheelTimer]].
-     *
-     *  @param system
-     *    [[ActorSystem]] of the [[HashedWheelTimer]] belong.
-     *  @param threadFactory
-     *    a [[ThreadFactory]] that creates a background [[Thread]] which is dedicated to [[TimerTask]] execution.
-     *  @throws NullPointerException
-     *    if either of [[threadFactory]] and [[unit]] is null
-     *  @throws IllegalArgumentException
-     *    if either of [[tickDuration]] and [[ticksPerWheel]] is &lt;= 0
-     */
-    def this(system: ActorSystem, threadFactory: ThreadFactory) = this(system, threadFactory, 100, MILLISECONDS)
-
-    /** Creates a new [[HashedWheelTimer]].
-     *
-     *  @param system
-     *    [[ActorSystem]] of the [[HashedWheelTimer]] belong.
-     *  @param tickDuration
-     *    the duration between tick
-     *  @param unit
-     *    the time unit of the [[tickDuration]]
-     *  @param ticksPerWheel
-     *    the size of the wheel
-     *  @throws NullPointerException
-     *    if either of [[threadFactory]] and [[unit]] is null
-     *  @throws IllegalArgumentException
-     *    if either of [[tickDuration]] and [[ticksPerWheel]] is &lt;= 0
-     */
-    def this(system: ActorSystem, tickDuration: Long, unit: TimeUnit, ticksPerWheel: Int) =
-        this(system, Executors.defaultThreadFactory(), tickDuration, unit, ticksPerWheel)
-
-    /** Creates a new [[HashedWheelTimer]].
-     *
-     *  @param system
-     *    [[ActorSystem]] of the [[HashedWheelTimer]] belong.
-     *  @param tickDuration
-     *    the duration between tick
-     *  @param unit
-     *    the time unit of the [[tickDuration]]
-     *  @throws NullPointerException
-     *    if either of [[threadFactory]] and [[unit]] is null
-     *  @throws IllegalArgumentException
-     *    if either of [[tickDuration]] and [[ticksPerWheel]] is &lt;= 0
-     */
-    def this(system: ActorSystem, tickDuration: Long, unit: TimeUnit) =
-        this(system, Executors.defaultThreadFactory(), tickDuration, unit)
-
-    /** Creates a new [[HashedWheelTimer]] with the default thread factory [[Executors.defaultThreadFactory()]], default
-     *  tick duration, and default number of ticks per wheel.
-     *
-     *  @param system
-     *    [[ActorSystem]] of the [[HashedWheelTimer]] belong.
-     *  @throws NullPointerException
-     *    if either of [[threadFactory]] and [[unit]] is null
-     *  @throws IllegalArgumentException
-     *    if either of [[tickDuration]] and [[ticksPerWheel]] is &lt;= 0
-     */
-    def this(system: ActorSystem) = this(system, Executors.defaultThreadFactory())
 
     private final val worker       = new Worker(this)
     private final val workerThread = threadFactory.newThread(worker)
@@ -295,13 +94,13 @@ class HashedWheelTimer(
     private val pendingTimeouts = new AtomicLong(0)
 
     override def newTimeout(task: TimerTask, delay: Long, unit: TimeUnit): Timeout = {
-        assert(delay > 0, "delay must large than 0")
+        assert(delay >= 0, "delay must be non-negative")
 
         newTimeout0(task, unit.toNanos(delay), 0)
     }
 
     override def newTimeout(task: TimerTask, delay: Long, unit: TimeUnit, period: Long, punit: TimeUnit): Timeout = {
-        assert(delay > 0, "delay must large than 0")
+        assert(delay >= 0, "delay must be non-negative")
         assert(period > 0, "period must large than 0")
 
         newTimeout0(task, unit.toNanos(delay), punit.toNanos(period))
@@ -655,12 +454,12 @@ object HashedWheelTimer {
                 while (timeout != null) {
                     var next = timeout.nextNode
                     if (timeout.isCancelled) next = removeLong(timeout)
-                    else if (timeout.remainingRounds <= LONG_DEADLINE) {
+                    else if (timeout.remainingRounds <= 0) {
                         next = removeLong(timeout)
                         expire0(timeout)
-                    } else if (timeout.remainingRounds - LONG_DEADLINE < LONG_DEADLINE) { // move to short lifetime queue
-                        next = remove(timeout)
-                        timeout.remainingRounds -= LONG_DEADLINE
+                    } else if (timeout.remainingRounds < LONG_DEADLINE) {
+                        next = removeLong(timeout)
+                        timeout.remainingRounds -= 0
                         addTimeout(timeout)
                     } else timeout.remainingRounds -= LONG_DEADLINE
 
@@ -727,10 +526,10 @@ object HashedWheelTimer {
                 timeout = next
             }
 
-            // handle old lifetime queue
+            // handle long lifetime queue
             timeout = longHead
             while (timeout != null) {
-                val next = remove(timeout)
+                val next = removeLong(timeout)
                 if (!timeout.isCancelled && (!timeout.isExpired || (timeout.isExpired && timeout.periodic))) {
                     set.add(timeout)
                 }

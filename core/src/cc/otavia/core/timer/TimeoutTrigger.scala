@@ -16,17 +16,19 @@
 
 package cc.otavia.core.timer
 
-import java.util.Date
 import java.util.concurrent.TimeUnit
 
 sealed trait TimeoutTrigger
 
 object TimeoutTrigger {
 
-    case class FixTime(date: Date) extends TimeoutTrigger
+    /** Fire at an absolute nanoTime deadline (from [[System.nanoTime()]]). */
+    case class FixTime(nanos: Long) extends TimeoutTrigger
 
+    /** Fire once after the specified delay. */
     case class DelayTime(delay: Long, unit: TimeUnit = TimeUnit.MILLISECONDS) extends TimeoutTrigger
 
+    /** Fire first after `delay`, then repeatedly every `period`. */
     case class DelayPeriod(
         delay: Long,
         period: Long,
@@ -34,7 +36,8 @@ object TimeoutTrigger {
         periodUnit: TimeUnit = TimeUnit.MILLISECONDS
     ) extends TimeoutTrigger
 
-    case class FirstTimePeriod(first: Date, period: Long, periodUnit: TimeUnit = TimeUnit.MILLISECONDS)
+    /** Fire first at the absolute nanoTime deadline `first`, then repeatedly every `period`. */
+    case class FirstTimePeriod(first: Long, period: Long, periodUnit: TimeUnit = TimeUnit.MILLISECONDS)
         extends TimeoutTrigger
 
 }
