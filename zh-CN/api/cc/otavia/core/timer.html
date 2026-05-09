@@ -34,7 +34,7 @@
           <button class="icon-button ar show-content"></button>
           <div class="header monospace mono-medium">
            <div class="signature">
-            <span class="signature-short"><span class="modifiers"></span><span class="kind"><span t="k">class </span></span><a href="timer/HashedWheelTimer.html" t="n" class="documentableName ">HashedWheelTimer</a>(<span t="k"></span><span t="k">val </span><span data-unresolved-link="" t="n">system</span>: <a href="system/ActorSystem.html" t="t">ActorSystem</a>, <span t="k"></span><span data-unresolved-link="" t="n">threadFactory</span>: <span data-unresolved-link="" t="t">ThreadFactory</span>, <span t="k">val </span><span data-unresolved-link="" t="n">tickDuration</span>: <span data-unresolved-link="" t="t">Long</span>, <span t="k"></span><span data-unresolved-link="" t="n">unit</span>: <span data-unresolved-link="" t="t">TimeUnit</span>, <span t="k">val </span><span data-unresolved-link="" t="n">ticksPerWheel</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k"></span><span data-unresolved-link="" t="n">leakDetection</span>: <span data-unresolved-link="" t="t">Boolean</span>, <span t="k"></span><span data-unresolved-link="" t="n">maxPendingTimeouts</span>: <span data-unresolved-link="" t="t">Long</span>, <span t="k"></span><span data-unresolved-link="" t="n">taskExecutor</span>: <span data-unresolved-link="" t="t">Executor</span>)<span t="k"> extends </span><span data-unresolved-link="" t="t">AtomicInteger</span><span t="k">, </span></span><span class="signature-long"><a href="timer/InternalTimer.html" t="t">InternalTimer</a></span>
+            <span class="signature-short"><span class="modifiers"></span><span class="kind"><span t="k">class </span></span><a href="timer/HashedWheelTimer.html" t="n" class="documentableName ">HashedWheelTimer</a>(<span t="k"></span><span t="k">val </span><span data-unresolved-link="" t="n">system</span>: <a href="system/ActorSystem.html" t="t">ActorSystem</a>, <span t="k"></span><span data-unresolved-link="" t="n">threadFactory</span>: <span data-unresolved-link="" t="t">ThreadFactory</span> = ..., <span t="k">val </span><span data-unresolved-link="" t="n">tickDuration</span>: <span data-unresolved-link="" t="t">Long</span> = ..., <span t="k"></span><span data-unresolved-link="" t="n">unit</span>: <span data-unresolved-link="" t="t">TimeUnit</span> = ..., <span t="k">val </span><span data-unresolved-link="" t="n">ticksPerWheel</span>: <span data-unresolved-link="" t="t">Int</span> = ..., <span t="k"></span><span data-unresolved-link="" t="n">leakDetection</span>: <span data-unresolved-link="" t="t">Boolean</span> = ..., <span t="k"></span><span data-unresolved-link="" t="n">maxPendingTimeouts</span>: <span data-unresolved-link="" t="t">Long</span> = ..., <span t="k"></span><span data-unresolved-link="" t="n">taskExecutor</span>: <span data-unresolved-link="" t="t">Executor</span> = ...)<span t="k"> extends </span><span data-unresolved-link="" t="t">AtomicInteger</span><span t="k">, </span></span><span class="signature-long"><a href="timer/InternalTimer.html" t="t">InternalTimer</a></span>
            </div>
           </div>
          </div>
@@ -49,82 +49,10 @@
             <div class="cover">
              <div class="doc">
               <p>A <a href="timer/InternalTimer.html">InternalTimer</a> optimized for approximated I/O timeout scheduling. ===Tick Duration=== As described with 'approximated', this timer does not execute the scheduled <a href="timer/TimerTask.html">TimerTask</a> on time. <a href="timer/HashedWheelTimer.html">HashedWheelTimer</a>, on every tick, will check if there are any <a href="timer/TimerTask.html">TimerTask</a>s behind the schedule and execute them.</p>
-              <p>You can increase or decrease the accuracy of the execution timing by specifying smaller or larger tick duration in the constructor. In most network applications, I/O timeout does not need to be accurate. Therefore, the default tick duration is 100 milliseconds and you will not need to try different configurations in most cases. ===Ticks per Wheel (Wheel Size)=== <a href="timer/HashedWheelTimer.html">HashedWheelTimer</a> maintains a data structure called 'wheel'. To put simply, a wheel is a hash table of <a href="timer/TimerTask.html">TimerTask</a>s whose hash function is 'dead line of the task'. The default number of ticks per wheel (i.e. the size of the wheel) is 512. You could specify a larger value if you are going to schedule a lot of timeouts. ===Do not create many instances.=== <a href="timer/HashedWheelTimer.html">HashedWheelTimer</a> creates a new thread whenever it is instantiated and started. Therefore, you should make sure to create only one instance and share it across your application. One of the common mistakes, that makes your application unresponsive, is to create a new instance for every connection. ===Implementation Details=== <a href="timer/HashedWheelTimer.html">HashedWheelTimer</a> is based on <a href="https://cseweb.ucsd.edu/users/varghese/">George Varghese</a> and Tony Lauck's paper, <a href="https://cseweb.ucsd.edu/users/varghese/PAPERS/twheel.ps.Z">'Hashed and Hierarchical Timing Wheels: data structures to efficiently implement a timer facility'</a>. More comprehensive slides are located <a href="https://www.cse.wustl.edu/~cdgill/courses/cs6874/TimingWheels.ppt">here</a>.</p>
+              <p>You can increase or decrease the accuracy of the execution timing by specifying smaller or larger tick duration in the constructor. In most network applications, I/O timeout does not need to be accurate. Therefore, the default tick duration is 100 milliseconds, and you will not need to try different configurations in most cases. ===Ticks per Wheel (Wheel Size)=== <a href="timer/HashedWheelTimer.html">HashedWheelTimer</a> maintains a data structure called 'wheel'. To put simply, a wheel is a hash table of <a href="timer/TimerTask.html">TimerTask</a>s whose hash function is 'deadline of the task'. The default number of ticks per wheel (i.e. the size of the wheel) is 512. You could specify a larger value if you are going to schedule a lot of timeouts. ===Do not create many instances.=== <a href="timer/HashedWheelTimer.html">HashedWheelTimer</a> creates a new thread whenever it is instantiated and started. Therefore, you should make sure to create only one instance and share it across your application. One of the common mistakes, that makes your application unresponsive, is to create a new instance for every connection. ===Implementation Details=== <a href="timer/HashedWheelTimer.html">HashedWheelTimer</a> is based on <a href="https://cseweb.ucsd.edu/users/varghese/">George Varghese</a> and Tony Lauck's paper, <a href="https://cseweb.ucsd.edu/users/varghese/PAPERS/twheel.ps.Z">'Hashed and Hierarchical Timing Wheels: data structures to efficiently implement a timer facility'</a>. More comprehensive slides are located <a href="https://www.cse.wustl.edu/~cdgill/courses/cs6874/TimingWheels.ppt">here</a>.</p>
              </div>
-             <h2 class="h200">Value parameters</h2>
-             <dl class="attributes attributes-small">
-              <dt class="body-small">
-               leakDetection
-              </dt>
-              <dd class="body-medium">
-               <p><code>true</code> if leak detection should be enabled always, if false it will only be enabled if the worker thread is not a daemon thread.</p>
-              </dd>
-              <dt class="body-small">
-               maxPendingTimeouts
-              </dt>
-              <dd class="body-medium">
-               <p>The maximum number of pending timeouts after which call to <a href="timer/HashedWheelTimer.html#newTimeout-df7">newTimeout</a> will result in <span data-unresolved-link="">java.util.concurrent.RejectedExecutionException</span> being thrown. No maximum pending timeouts limit is assumed if this value is 0 or negative.</p>
-              </dd>
-              <dt class="body-small">
-               system
-              </dt>
-              <dd class="body-medium">
-               <p><span data-unresolved-link="" title="Problem linking ActorSystem: Couldn't resolve a member for the given link query">ActorSystem</span> of the <a href="timer/HashedWheelTimer.html">HashedWheelTimer</a> belong.</p>
-              </dd>
-              <dt class="body-small">
-               taskExecutor
-              </dt>
-              <dd class="body-medium">
-               <p>The <span data-unresolved-link="" title="Problem linking Executor: Couldn't resolve a member for the given link query">Executor</span> that is used to execute the submitted <a href="timer/TimerTask.html">TimerTask</a>s. The caller is responsible to shutdown the <span data-unresolved-link="" title="Problem linking Executor: Couldn't resolve a member for the given link query">Executor</span> once it is not needed anymore.</p>
-              </dd>
-              <dt class="body-small">
-               threadFactory
-              </dt>
-              <dd class="body-medium">
-               <p>a <span data-unresolved-link="" title="Problem linking ThreadFactory: Couldn't resolve a member for the given link query">ThreadFactory</span> that creates a background <span data-unresolved-link="" title="Problem linking Thread: Couldn't resolve a member for the given link query">Thread</span> which is dedicated to <a href="timer/TimerTask.html">TimerTask</a> execution.</p>
-              </dd>
-              <dt class="body-small">
-               tickDuration
-              </dt>
-              <dd class="body-medium">
-               <p>the duration between tick</p>
-              </dd>
-              <dt class="body-small">
-               ticksPerWheel
-              </dt>
-              <dd class="body-medium">
-               <p>the size of the wheel</p>
-              </dd>
-              <dt class="body-small">
-               unit
-              </dt>
-              <dd class="body-medium">
-               <p>the time unit of the <a href="timer/HashedWheelTimer.html#tickDuration-0">tickDuration</a></p>
-              </dd>
-             </dl>
              <h2 class="h200">Attributes</h2>
              <dl class="attributes attributes-small">
-              <dt class="body-small">
-               Throws
-              </dt>
-              <dd class="body-medium">
-               <div>
-                <div>
-                 <span data-unresolved-link="">IllegalArgumentException</span>
-                 <p>if either of <a href="timer/HashedWheelTimer.html#tickDuration-0">tickDuration</a> and <a href="timer/HashedWheelTimer.html#ticksPerWheel-0">ticksPerWheel</a> is &lt;= 0</p>
-                </div>
-                <div>
-                 <span data-unresolved-link="">NullPointerException</span>
-                 <p>if either of <span data-unresolved-link="">threadFactory</span> and <span data-unresolved-link="">unit</span> is null</p>
-                </div>
-               </div>
-              </dd>
-              <dt class="body-small">
-               Constructor
-              </dt>
-              <dd class="body-medium">
-               <p>Creates a new <a href="timer/HashedWheelTimer.html">HashedWheelTimer</a>.</p>
-              </dd>
               <dt class="body-small">
                Companion
               </dt>
