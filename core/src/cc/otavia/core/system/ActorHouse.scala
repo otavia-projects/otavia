@@ -32,14 +32,14 @@ import scala.language.unsafeNulls
  *
  *  ActorHouse serves three roles:
  *    1. '''Scheduling state machine''': manages the lifecycle state (CREATED → MOUNTING → WAITING → READY → SCHEDULED →
- *       RUNNING) with atomic CAS transitions 2. '''Mailbox container''': holds five separate [[Mailbox]] instances with
+ *       RUNNING) with atomic CAS transitions 2. '''Mailbox container''': holds separate [[Mailbox]] instances with
  *       priority-ordered dispatch 3. '''[[cc.otavia.core.actor.ActorContext]] implementation''': provides runtime
  *       context to the actor
  *
  *  @param manager
  *    the [[HouseManager]] that owns this house
  */
-final private[core] class ActorHouse(val manager: HouseManager) extends ActorContext {
+final private[core] class ActorHouse(val manager: HouseManager) extends ActorContext with MailboxDispatcher {
 
     // =========================================================================
     // Section 1: ACTOR BINDING
@@ -63,13 +63,10 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     // Section 2: MAILBOXES
     // =========================================================================
 
-    private[system] val noticeMailbox: Mailbox    = new Mailbox(this)
-    private[system] val askMailbox: Mailbox       = new Mailbox(this)
-    private[system] val replyMailbox: Mailbox     = new Mailbox(this)
-    private[system] val exceptionMailbox: Mailbox = new Mailbox(this)
-    private[system] val eventMailbox: Mailbox     = new Mailbox(this)
-
-    private val dispatcher = new MailboxDispatcher(this)
+    private[system] val noticeMailbox: Mailbox = new Mailbox(this)
+    private[system] val askMailbox: Mailbox    = new Mailbox(this)
+    private[system] val replyMailbox: Mailbox  = new Mailbox(this)
+    private[system] var eventMailbox: Mailbox  = _
 
     /** Aggregated hint flag for mailbox occupancy. Checked by the owning ActorThread as a fast-path before incurring
      *  the cost of 5 individual mailbox [[nonEmpty]] checks.
@@ -173,7 +170,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
             case _: AcceptorActor[?] => actorTypeKind = SERVER_CHANNELS_ACTOR
             case _: ChannelsActor[?] =>
                 actorTypeKind = CHANNELS_ACTOR
-                dispatcher.initPendingChannels()
+                initPendingChannels()
             case _: StateActor[?] => actorTypeKind = STATE_ACTOR
             case _                => throw new IllegalStateException("")
     }
@@ -208,7 +205,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     // =========================================================================
 
     /** Register a channel as having pending outbound work. Only used for CHANNELS_ACTOR type houses. */
-    def pendingChannel(channel: AbstractChannel): Unit = dispatcher.registerPendingChannel(channel)
+    def pendingChannel(channel: AbstractChannel): Unit = registerPendingChannel(channel)
 
     // =========================================================================
     // Section 10: MAILBOX QUERIES
@@ -216,11 +213,11 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
 
     /** True if all mailboxes are empty. */
     def isEmpty: Boolean = askMailbox.isEmpty && noticeMailbox.isEmpty && replyMailbox.isEmpty &&
-        eventMailbox.isEmpty && exceptionMailbox.isEmpty
+        (eventMailbox == null || eventMailbox.isEmpty)
 
     /** True if any mailbox has messages. */
     def nonEmpty: Boolean =
-        askMailbox.nonEmpty || noticeMailbox.nonEmpty || replyMailbox.nonEmpty || eventMailbox.nonEmpty || exceptionMailbox.nonEmpty
+        askMailbox.nonEmpty || noticeMailbox.nonEmpty || replyMailbox.nonEmpty || (eventMailbox != null && eventMailbox.nonEmpty)
 
     /** Single-read hint for mailbox occupancy — see [[_hasMessages]] for semantics. */
     def hasMessages: Boolean = _hasMessages
@@ -231,7 +228,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
     def clearHasMessages(): Unit = _hasMessages = false
 
     /** True if barrier-relevant mailboxes (reply, event, exception) have messages. */
-    private def barrierNonEmpty: Boolean = replyMailbox.nonEmpty || eventMailbox.nonEmpty || exceptionMailbox.nonEmpty
+    private def barrierNonEmpty: Boolean = replyMailbox.nonEmpty || (eventMailbox != null && eventMailbox.nonEmpty)
 
     // =========================================================================
     // Section 11: LIFECYCLE TRANSITIONS
@@ -273,13 +270,17 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         if (status.get() == WAITING) waitingToReady()
     }
 
-    def putException(envelope: Envelope): Unit = put(envelope, exceptionMailbox)
+    def putException(envelope: Envelope): Unit = {
+        envelope.setException(true)
+        put(envelope, replyMailbox)
+    }
 
     /** Deposit an event and eagerly update the cached priority flag if the event mailbox exceeds its threshold. */
     def putEvent(event: Event): Unit = {
+        if (eventMailbox == null) eventMailbox = new Mailbox(this)
         eventMailbox.put(event)
         HAS_MESSAGES_HANDLE.setRelease(this, true)
-        if (eventMailbox.size() > highPriorityEventSize) _highPriority = true
+        if (eventMailbox != null && eventMailbox.size() > highPriorityEventSize) _highPriority = true
         if (status.get() == WAITING) waitingToReady()
     }
 
@@ -316,7 +317,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
      */
     def run(): Unit = {
         if (status.compareAndSet(SCHEDULED, RUNNING)) {
-            dispatcher.dispatch()
+            dispatch()
             dispatchLoop()
         }
     }
@@ -338,7 +339,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
                 continue = false
             else
                 // Messages arrived and no competition — re-dispatch in-place
-                dispatcher.dispatch()
+                dispatch()
         completeRunning()
     }
 
@@ -351,7 +352,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         if (!inBarrier) {
             if (nonEmpty) {
                 _highPriority = (replyMailbox.size() > highPriorityReplySize) ||
-                    (eventMailbox.size() > highPriorityEventSize) ||
+                    (eventMailbox != null && eventMailbox.size() > highPriorityEventSize) ||
                     (dweller.pendingPromiseCount == 0)
                 if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
             } else {
@@ -364,7 +365,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         } else {
             if (barrierNonEmpty) {
                 _highPriority = (replyMailbox.size() > highPriorityReplySize) ||
-                    (eventMailbox.size() > highPriorityEventSize) ||
+                    (eventMailbox != null && eventMailbox.size() > highPriorityEventSize) ||
                     (dweller.pendingPromiseCount == 0)
                 if (status.compareAndSet(RUNNING, READY)) manager.ready(this)
             } else {
@@ -392,7 +393,7 @@ final private[core] class ActorHouse(val manager: HouseManager) extends ActorCon
         actorAddress = address
     }
 
-    override def toString: String = s"events=${eventMailbox.size()}, notices=${noticeMailbox.size()}, " +
+    override def toString: String = s"events=${if (eventMailbox != null) eventMailbox.size() else 0}, notices=${noticeMailbox.size()}, " +
         s"asks=${askMailbox.size()}, replies=${replyMailbox.size()}"
 
 }

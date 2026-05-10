@@ -38,6 +38,8 @@ final private[core] class Envelope extends Poolable {
     private var rid: Long         = 0 // reply id if is
     private var rids: Array[Long] = _
 
+    private var exception: Boolean = false
+
     def setSender(address: Address[Call]): Unit = this.address = address
 
     def setMessageId(id: Long): Unit = this.mid = id
@@ -60,6 +62,10 @@ final private[core] class Envelope extends Poolable {
 
     def isBatchReply: Boolean = rids != null
 
+    def setException(flag: Boolean): Unit = this.exception = flag
+
+    def isExceptionReply: Boolean = exception
+
     override def recycle(): Unit = Envelope.pool.recycle(this)
 
     override protected def cleanInstance(): Unit = {
@@ -68,6 +74,7 @@ final private[core] class Envelope extends Poolable {
         msg = null
         rid = 0
         rids = null
+        exception = false
     }
 
 }

@@ -26,28 +26,23 @@ import cc.otavia.core.util.Nextable
 import scala.collection.mutable
 import scala.language.unsafeNulls
 
-/** Message dispatch engine for an [[ActorHouse]]. Handles priority-ordered dispatch of all mailbox contents: replies →
- *  exceptions → asks → notices → events → channels → deferred tasks.
+/** Message dispatch engine mixed into [[ActorHouse]]. Handles priority-ordered dispatch of all mailbox contents: replies
+ *  (including exceptions) → asks → notices → events → channels → deferred tasks.
  *
  *  Supports both individual and batch dispatch modes, barrier semantics, and transient cursors that survive across
  *  multiple [[run]] calls when a dispatch doesn't fully drain.
- *
- *  @param house
- *    the owning ActorHouse, providing access to mailboxes, the actor, and scheduling state
  */
-private[core] class MailboxDispatcher(private val house: ActorHouse) {
+private[core] trait MailboxDispatcher { this: ActorHouse =>
 
     // Transient cursors for batch dispatch. Survive across multiple run() calls if a dispatch doesn't fully drain.
     private var askCursor: Nextable    = _
     private var noticeCursor: Nextable = _
 
-    // Dispatch counters — reserved for future use if needed.
-
     // Channel inflight tracking for ChannelsActor dispatch.
     private var pendingChannels: QueueMap[AbstractChannel] = _
 
     // =========================================================================
-    // Counter & inflight management
+    // Inflight management
     // =========================================================================
 
     private[system] def initPendingChannels(): Unit =
@@ -58,56 +53,46 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
 
     /** Dispatch all pending messages in strict priority order.
      *
-     *  Order: replies → exceptions → asks → notices → events → channels → deferred tasks. Barrier messages block
-     *  subsequent asks/notices until all pending stacks complete.
+     *  Order: replies (including exceptions) → asks → notices → events → channels → deferred tasks. Barrier messages
+     *  block subsequent asks/notices until all pending stacks complete.
      *
-     *  Optimization: the [[house.hasMessages]] flag gates entry into the individual mailbox checks. This replaces 5
-     *  volatile reads per dispatch with a single volatile read in the common case (actor is idle, no messages). The
-     *  flag is a hint — false positives (flag true but all mailboxes empty) cause a few wasted volatile reads; false
-     *  negatives (flag false but a mailbox is non-empty) are caught by [[ActorHouse.completeRunning]] which will
-     *  re-schedule the house.
+     *  Optimization: the [[hasMessages]] flag gates entry into the individual mailbox checks. This replaces volatile
+     *  reads per dispatch with a single volatile read in the common case (actor is idle, no messages). The flag is a
+     *  hint — false positives (flag true but all mailboxes empty) cause a few wasted volatile reads; false negatives
+     *  (flag false but a mailbox is non-empty) are caught by [[completeRunning]] which will re-schedule the house.
      */
     def dispatch(): Unit = {
-        if !house.hasMessages then return
+        if !hasMessages then return
 
-        if (house.replyMailbox.nonEmpty) dispatchReplies()
-        if (house.exceptionMailbox.nonEmpty) dispatchExceptions()
+        if (replyMailbox.nonEmpty) dispatchReplyMailbox()
 
-        if (!house.inBarrier && house.askMailbox.nonEmpty) dispatchAsks()
-        if (!house.inBarrier && house.noticeMailbox.nonEmpty) dispatchNotices()
+        if (!inBarrier && askMailbox.nonEmpty) dispatchAsks()
+        if (!inBarrier && noticeMailbox.nonEmpty) dispatchNotices()
 
-        if (house.eventMailbox.nonEmpty) dispatchEvents()
+        if (eventMailbox != null && eventMailbox.nonEmpty) dispatchEvents()
 
-        if (house.actorType == CHANNELS_ACTOR) dispatchChannels()
+        if (actorType == CHANNELS_ACTOR) dispatchChannels()
 
         runLaterTasks()
 
         // Clear the hint after a full dispatch cycle. If messages arrived during dispatch (concurrent put), the flag
         // will be re-set by the producer, and completeRunning will detect nonEmpty and re-schedule this house.
-        house.clearHasMessages()
+        clearHasMessages()
     }
 
     // =========================================================================
     // Replies & exceptions — highest priority, no barrier
     // =========================================================================
 
-    private def dispatchReplies(): Unit = {
-        var cursor = house.replyMailbox.getAll
+    private def dispatchReplyMailbox(): Unit = {
+        var cursor = replyMailbox.getAll
         while (cursor != null) {
             val msg = cursor
             cursor = msg.next
             msg.clearNext()
-            house.dweller.receiveReply(msg.asInstanceOf[Envelope])
-        }
-    }
-
-    private def dispatchExceptions(): Unit = {
-        var cursor = house.exceptionMailbox.getAll
-        while (cursor != null) {
-            val msg = cursor
-            cursor = msg.next
-            msg.clearNext()
-            house.dweller.receiveExceptionReply(msg.asInstanceOf[Envelope])
+            val envelope = msg.asInstanceOf[Envelope]
+            if (envelope.isExceptionReply) dweller.receiveExceptionReply(envelope)
+            else dweller.receiveReply(envelope)
         }
     }
 
@@ -116,33 +101,33 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
     // =========================================================================
 
     private def dispatchAsks(): Unit =
-        if (house.dweller.batchable) dispatchBatchAsks() else dispatchIndividualAsks()
+        if (dweller.batchable) dispatchBatchAsks() else dispatchIndividualAsks()
 
     private def dispatchIndividualAsks(): Unit = {
-        if (askCursor == null) askCursor = house.askMailbox.getAll
-        while (askCursor != null && !house.inBarrier) {
+        if (askCursor == null) askCursor = askMailbox.getAll
+        while (askCursor != null && !inBarrier) {
             val msg = askCursor
             askCursor = msg.next
             msg.clearNext()
             val envelope = msg.asInstanceOf[Envelope]
-            house.inBarrier = house.dweller.isBarrier(envelope.message.asInstanceOf[Call])
-            house.dweller.receiveAsk(envelope)
+            inBarrier = dweller.isBarrier(envelope.message.asInstanceOf[Call])
+            dweller.receiveAsk(envelope)
         }
     }
 
     private def dispatchBatchAsks(): Unit = {
-        if (askCursor == null) askCursor = house.askMailbox.getAll
+        if (askCursor == null) askCursor = askMailbox.getAll
         val buf = ActorThread.threadBuffer[Envelope]
-        while (askCursor != null && !house.inBarrier) {
+        while (askCursor != null && !inBarrier) {
             val envelope = askCursor.asInstanceOf[Envelope]
             askCursor = envelope.next
             envelope.clearNext()
             val ask = envelope.message.asInstanceOf[Ask[?]]
-            if (house.dweller.batchAskFilter(ask)) buf.addOne(envelope)
+            if (dweller.batchAskFilter(ask)) buf.addOne(envelope)
             else {
                 if (buf.nonEmpty) handleBatchAsk(buf)
-                house.inBarrier = house.dweller.isBarrier(ask)
-                house.dweller.receiveAsk(envelope)
+                inBarrier = dweller.isBarrier(ask)
+                dweller.receiveAsk(envelope)
             }
         }
         if (buf.nonEmpty) handleBatchAsk(buf)
@@ -153,35 +138,35 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
     // =========================================================================
 
     private def dispatchNotices(): Unit =
-        if (house.dweller.batchable) dispatchBatchNotices() else dispatchIndividualNotices()
+        if (dweller.batchable) dispatchBatchNotices() else dispatchIndividualNotices()
 
     private def dispatchIndividualNotices(): Unit = {
-        if (noticeCursor == null) noticeCursor = house.noticeMailbox.getAll
-        while (noticeCursor != null && !house.inBarrier) {
+        if (noticeCursor == null) noticeCursor = noticeMailbox.getAll
+        while (noticeCursor != null && !inBarrier) {
             val msg = noticeCursor
             noticeCursor = msg.next
             msg.clearNext()
             val envelope = msg.asInstanceOf[Envelope]
-            house.inBarrier = house.dweller.isBarrier(envelope.message.asInstanceOf[Call])
-            house.dweller.receiveNotice(envelope)
+            inBarrier = dweller.isBarrier(envelope.message.asInstanceOf[Call])
+            dweller.receiveNotice(envelope)
         }
     }
 
     private def dispatchBatchNotices(): Unit = {
-        if (noticeCursor == null) noticeCursor = house.noticeMailbox.getAll
+        if (noticeCursor == null) noticeCursor = noticeMailbox.getAll
         val buf = ActorThread.threadBuffer[Notice]
-        while (noticeCursor != null && !house.inBarrier) {
+        while (noticeCursor != null && !inBarrier) {
             val envelope = noticeCursor.asInstanceOf[Envelope]
             noticeCursor = envelope.next
             envelope.clearNext()
             val notice = envelope.message.asInstanceOf[Notice]
-            if (house.dweller.batchNoticeFilter(notice)) {
+            if (dweller.batchNoticeFilter(notice)) {
                 buf.addOne(notice)
                 envelope.recycle()
             } else {
                 if (buf.nonEmpty) handleBatchNotice(buf)
-                house.inBarrier = house.dweller.isBarrier(envelope.message.asInstanceOf[Call])
-                house.dweller.receiveNotice(envelope)
+                inBarrier = dweller.isBarrier(envelope.message.asInstanceOf[Call])
+                dweller.receiveNotice(envelope)
             }
         }
         if (buf.nonEmpty) handleBatchNotice(buf)
@@ -192,12 +177,12 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
     // =========================================================================
 
     private def dispatchEvents(): Unit = {
-        var cursor = house.eventMailbox.getAll
+        var cursor = eventMailbox.getAll
         while (cursor != null) {
             val msg = cursor.asInstanceOf[Event]
             cursor = msg.next
             msg.clearNext()
-            house.dweller.receiveEvent(msg)
+            dweller.receiveEvent(msg)
         }
     }
 
@@ -219,13 +204,13 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
     private def handleBatchNotice(buf: mutable.ArrayBuffer[Notice]): Unit = {
         val notices = buf.toSeq
         buf.clear()
-        house.dweller.receiveBatchNotice(notices)
+        dweller.receiveBatchNotice(notices)
     }
 
     private def handleBatchAsk(buf: mutable.ArrayBuffer[Envelope]): Unit = {
         val asks = buf.toSeq
         buf.clear()
-        house.dweller.receiveBatchAsk(asks)
+        dweller.receiveBatchAsk(asks)
     }
 
     // =========================================================================
@@ -233,8 +218,8 @@ private[core] class MailboxDispatcher(private val house: ActorHouse) {
     // =========================================================================
 
     private def runLaterTasks(): Unit = {
-        if (house.actorType == CHANNELS_ACTOR) {
-            val tasks = house.manager.laterTasks
+        if (actorType == CHANNELS_ACTOR) {
+            val tasks = manager.laterTasks
             while (tasks.nonEmpty) {
                 val task = tasks.removeHead()
                 task.run()
