@@ -438,3 +438,13 @@ object all extends OtaviaModule {
     )
 
 }
+
+
+
+object techempower extends ScalaModule {
+
+    override def scalaVersion: T[String] = ProjectInfo.scalaVersion
+
+    def moduleDeps: Seq[JavaModule] = Seq(`codec-http`, `sql-postgres-driver`)
+
+}
