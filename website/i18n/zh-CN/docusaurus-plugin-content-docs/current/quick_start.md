@@ -211,6 +211,31 @@ case class Ping() extends Ask[Pong]
 
 ```scala
 final class MultiMsgActor() extends StateActor[Echo | Hello | Ping] {
+  deriveDispatch // 编译时自动生成分发代码
+
+  override def resumeNotice(stack: NoticeStack[Echo]): StackYield = {
+    println("MultiMsgActor received Echo message")
+    stack.`return`()
+  }
+
+  private def handleHello(stack: AskStack[Hello]): StackYield = {
+    println("MultiMsgActor received Hello message")
+    stack.`return`(World())
+  }
+
+  private def handlePing(stack: AskStack[Ping]): StackYield = {
+    println("MultiMsgActor received Ping message")
+    stack.`return`(Pong())
+  }
+}
+```
+
+`deriveDispatch` 是一个编译期宏。它扫描 Actor 类中参数类型为 `AskStack[T]` 或 `NoticeStack[N]` 的方法，验证 Actor 类型参数中的每个消息类型都有对应的 handler，并在编译期生成 if-else 分发链。如果新增了一个消息类型却忘了定义 handler，编译会直接报错。零运行时开销——生成的代码等价于手写分发。
+
+如果你希望显式控制，也可以手动编写 `resumeAsk` / `resumeNotice`：
+
+```scala
+final class MultiMsgActor() extends StateActor[Echo | Hello | Ping] {
 
   override def resumeNotice(stack: NoticeStack[Echo]): StackYield = {
     println("MultiMsgActor received Echo message")

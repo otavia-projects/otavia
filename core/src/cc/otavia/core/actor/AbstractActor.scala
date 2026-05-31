@@ -58,6 +58,22 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     private[core] var currentStack: Stack = _
 
     // =========================================================================
+    // Auto-dispatch (deriveDispatch macro)
+    // =========================================================================
+
+    /** Macro-generated dispatch function for Ask messages. null when not using [[deriveDispatch]]. */
+    private var _askDispatch: AskStack[M & Ask[? <: Reply]] => StackYield = null
+
+    /** Macro-generated dispatch function for Notice messages. null when not using [[deriveDispatch]]. */
+    private var _noticeDispatch: NoticeStack[M & Notice] => StackYield = null
+
+    /** Set the ask dispatch function. Called by [[deriveDispatch]] macro expansion. */
+    protected def setAskDispatch(fn: AskStack[M & Ask[? <: Reply]] => StackYield): Unit = _askDispatch = fn
+
+    /** Set the notice dispatch function. Called by [[deriveDispatch]] macro expansion. */
+    protected def setNoticeDispatch(fn: NoticeStack[M & Notice] => StackYield): Unit = _noticeDispatch = fn
+
+    // =========================================================================
     // Resume methods — user overrides
     // =========================================================================
 
@@ -76,11 +92,13 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
      *  }}}
      */
     protected def resumeAsk(stack: AskStack[M & Ask[? <: Reply]]): StackYield =
-        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
+        if _askDispatch != null then _askDispatch(stack)
+        else throw new NotImplementedError(getClass.getName + ": an implementation is missing")
 
     /** Handle a [[Notice]] message. Called on initial receipt and on each resume. */
     protected def resumeNotice(stack: NoticeStack[M & Notice]): StackYield =
-        throw new NotImplementedError(getClass.getName + ": an implementation is missing")
+        if _noticeDispatch != null then _noticeDispatch(stack)
+        else throw new NotImplementedError(getClass.getName + ": an implementation is missing")
 
     /** Handle a batch of [[Notice]] messages in a single stack. */
     protected def resumeBatchNotice(stack: BatchNoticeStack[M & Notice]): StackYield =
@@ -89,6 +107,13 @@ private[core] abstract class AbstractActor[M <: Call] extends FutureDispatcher w
     /** Handle a batch of [[Ask]] messages in a single stack. */
     protected def resumeBatchAsk(stack: BatchAskStack[M & Ask[? <: Reply]]): StackYield =
         throw new NotImplementedError(getClass.getName + ": an implementation is missing")
+
+    /** Discover handler methods in this actor and generate match/case dispatch.
+     *  Call once in the actor constructor body. The macro scans for methods with [[AskStack]] or [[NoticeStack]]
+     *  parameters, verifies they cover all message types in the actor's type parameter, and generates dispatch code
+     *  equivalent to hand-written match/case.
+     */
+    protected inline def deriveDispatch: Unit = ${ MessageDispatcherMacro.deriveDispatchImpl[M] }
 
     // =========================================================================
     // Utilities

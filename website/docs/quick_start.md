@@ -180,6 +180,33 @@ Then we implement our actor:
 
 ```scala
 final class MultiMsgActor() extends StateActor[Echo | Hello | Ping] {
+  deriveDispatch // auto-generate dispatch at compile time
+
+  override def resumeNotice(stack: NoticeStack[Echo]): StackYield = {
+    println("MultiMsgActor received Echo message")
+    stack.`return`()
+  }
+
+  private def handleHello(stack: AskStack[Hello]): StackYield = {
+    println("MultiMsgActor received Hello message")
+    stack.`return`(World())
+  }
+
+  private def handlePing(stack: AskStack[Ping]): StackYield = {
+    println("MultiMsgActor received Ping message")
+    stack.`return`(Pong())
+  }
+}
+```
+
+`deriveDispatch` is a compile-time macro. It scans the actor for methods whose parameter is `AskStack[T]` or `NoticeStack[N]`, verifies that every message type in the actor's type parameter has a matching handler, and generates if-else dispatch code at compile time. If you add a message type but forget a handler, compilation fails. Zero runtime overhead.
+
+---
+
+If you prefer explicit control, you can still write `resumeAsk` / `resumeNotice` manually:
+
+```scala
+final class MultiMsgActor() extends StateActor[Echo | Hello | Ping] {
 
   override def resumeNotice(stack: NoticeStack[Echo]): StackYield = {
     println("MultiMsgActor received Echo message")

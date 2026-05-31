@@ -16,6 +16,8 @@ The framework is split into two layers: the **user programming interface** (simp
 
 ### What the user writes
 
+For single-message actors, override `resumeAsk`/`resumeNotice` directly:
+
 ```scala
 // 1. Define message types
 case class GetUser(id: Long) extends Ask[User]
@@ -34,7 +36,20 @@ class UserService extends StateActor[Call] {
 }
 ```
 
-The user only needs to: define messages, match on state, call suspend/return. Everything else is handled by the kernel.
+For multi-message actors, use `deriveDispatch` to auto-generate dispatch:
+
+```scala
+type Req = SingleQuery | MultipleQuery | Update
+class DBController extends StateActor[Req] {
+    deriveDispatch  // generates if-else dispatch at compile time
+
+    private def handleSingle(stack: AskStack[SingleQuery]): StackYield = ???
+    private def handleMulti(stack: AskStack[MultipleQuery]): StackYield = ???
+    private def handleUpdate(stack: AskStack[Update]): StackYield = ???
+}
+```
+
+The user only needs to: define messages, define handler methods, call `deriveDispatch`. Everything else is handled by the kernel.
 
 ### What the kernel handles (invisible to the user)
 
