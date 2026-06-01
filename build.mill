@@ -167,6 +167,12 @@ object testkit extends OtaviaModule {
     def artifactName = "otavia-testkit"
     def moduleDeps   = Seq(core)
 
+    object test extends ScalaTests with TestModule.ScalaTest {
+
+        def mvnDeps = Seq(ProjectInfo.testDep)
+
+    }
+
 }
 
 object handler extends OtaviaModule {

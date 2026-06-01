@@ -18,6 +18,7 @@ const sidebars = {
         'guide/threading_model',
         'guide/address_model',
         'guide/ioc',
+        'guide/interceptor',
         'guide/serde',
         'guide/slf4a',
       ],

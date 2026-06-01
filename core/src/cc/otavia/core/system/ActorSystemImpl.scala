@@ -20,6 +20,7 @@ import cc.otavia.core.actor.*
 import cc.otavia.core.address.*
 import cc.otavia.core.channel.ChannelFactory
 import cc.otavia.core.config.OtaviaConfig
+import cc.otavia.core.interceptor.{InterceptorActor, Intercept}
 import cc.otavia.core.ioc.{BeanDefinition, BeanRegistry, DuplicateModuleException, Module, ModuleDependencyException}
 import cc.otavia.core.message.Call
 import cc.otavia.core.pool.IndexedThreadLocal
@@ -139,12 +140,121 @@ final private[core] class ActorSystemImpl(val config: OtaviaConfig) extends Acto
     // format: on
         val actorFactory   = factory.asInstanceOf[ActorFactory[?]]
         val (address, clz) = createActor(actorFactory, num)
+        val finalAddress   = wrapWithInterceptors(address, clz)
 
-        if (global) beanRegistry.register(clz, address, qualifier, primary)
+        if (global) beanRegistry.register(clz, finalAddress, qualifier, primary)
 
-        mountActor(address)
+        finalAddress.asInstanceOf[Address[MessageOf[A]]]
+    }
 
-        address.asInstanceOf[Address[MessageOf[A]]]
+    override private[core] def registerGlobalActor(definition: BeanDefinition): Unit = {
+        val (address, clz) = createActor(definition.factory, definition.num)
+        val finalAddress   = wrapWithInterceptors(address, clz)
+        beanRegistry.register(clz, finalAddress, definition.qualifier, definition.primary)
+    }
+
+    override def intercept[M <: Call](
+        target: Address[M],
+        factories: Seq[Address[M] => InterceptorActor[M]]
+    ): Address[M] = {
+        // foldRight: last factory wraps target first (innermost),
+        // first factory becomes outermost.
+        factories.foldRight[Address[M]](target) { (factory, nextAddr) =>
+            val interceptor = factory(nextAddr).asInstanceOf[AbstractActor[? <: Call]]
+            val thread      = pool.next(false)
+            val address     = setActorContext(interceptor, thread)
+            mountActor(address)
+            address.asInstanceOf[Address[M]]
+        }
+    }
+
+    /** Check for @Intercept annotation and create interceptor chain if present. Mounts the target address
+     *  (and any interceptors) and returns the outermost address.
+     */
+    private def wrapWithInterceptors(address: Address[?], clz: Class[?]): Address[?] = {
+        clz.getAnnotation(classOf[Intercept]) match {
+            case annot if annot != null && annot.value().nonEmpty =>
+                createInterceptorChain(address, annot.value(), annot.perInstance())
+            case _ =>
+                mountActor(address)
+                address
+        }
+    }
+
+    private def createInterceptorChain(
+        targetAddress: Address[?],
+        interceptorClasses: Array[Class[? <: InterceptorActor[?]]],
+        perInstance: Boolean
+    ): Address[?] = {
+        mountActor(targetAddress)
+
+        targetAddress match {
+            case robin: RobinAddress[?] if perInstance =>
+                // perInstance=true + Robin: create one interceptor per target instance
+                var currentAddr: Address[?] = robin
+                var i = interceptorClasses.length - 1
+                while (i >= 0) {
+                    currentAddr = createPerInstanceInterceptors(interceptorClasses(i), currentAddr)
+                    i -= 1
+                }
+                currentAddr
+            case _ =>
+                // Single target or perInstance=false: one interceptor wrapping the whole address
+                interceptorClasses.foldRight(targetAddress: Address[?]) { (clazz, nextAddr) =>
+                    val interceptor = createInterceptorInstance(clazz, nextAddr)
+                    val thread      = pool.next(false)
+                    val address     = setActorContext(interceptor, thread)
+                    mountActor(address)
+                    address
+                }
+        }
+    }
+
+    /** Create one interceptor per target instance, returning a new RobinAddress. */
+    private def createPerInstanceInterceptors(
+        clazz: Class[? <: InterceptorActor[?]],
+        innerAddr: Address[?]
+    ): Address[?] = {
+        innerAddr match {
+            case robin: RobinAddress[?] =>
+                val addresses = robin.underlying.map { targetAddr =>
+                    val interceptor = createInterceptorInstance(clazz, targetAddr)
+                    val thread      = pool.next(false)
+                    val address     = setActorContext(interceptor, thread)
+                    mountActor(address)
+                    address
+                }
+                new RobinAddress[Call](addresses.asInstanceOf[Array[ActorAddress[Call]]])
+            case _ =>
+                // Not a Robin, just create one interceptor
+                val interceptor = createInterceptorInstance(clazz, innerAddr)
+                val thread      = pool.next(false)
+                val address     = setActorContext(interceptor, thread)
+                mountActor(address)
+                address
+        }
+    }
+
+    /** Instantiate an interceptor class via reflection. Requires a public constructor with Address[_] parameter. */
+    private def createInterceptorInstance(
+        clazz: Class[? <: InterceptorActor[?]],
+        nextAddr: Address[?]
+    ): AbstractActor[? <: Call] = {
+        try {
+            val constructor = clazz.getConstructor(classOf[Address[_]])
+            constructor.newInstance(nextAddr).asInstanceOf[AbstractActor[? <: Call]]
+        } catch {
+            case e: NoSuchMethodException =>
+                throw new IllegalArgumentException(
+                    s"Interceptor class [${clazz.getName}] must have a public constructor with an Address[_] parameter",
+                    e
+                )
+            case e: Exception =>
+                throw new RuntimeException(
+                    s"Failed to create interceptor instance of [${clazz.getName}]",
+                    e
+                )
+        }
     }
 
     private def mountActor(address: Address[?]): Unit = {
@@ -193,12 +303,6 @@ final private[core] class ActorSystemImpl(val config: OtaviaConfig) extends Acto
 
             (new RobinAddress[Call](address.asInstanceOf[Array[ActorAddress[Call]]]), actors.head.getClass)
         } else throw new IllegalArgumentException("num must large than 0")
-    }
-
-    override private[core] def registerGlobalActor(definition: BeanDefinition): Unit = {
-        val (address, clz) = createActor(definition.factory, definition.num)
-        beanRegistry.register(clz, address, definition.qualifier, definition.primary)
-        mountActor(address)
     }
 
     override def loadModule(module: Module): Unit = try {

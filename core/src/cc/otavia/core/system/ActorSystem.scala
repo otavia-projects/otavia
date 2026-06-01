@@ -20,6 +20,7 @@ import cc.otavia.core.actor.{Actor, ActorFactory, MessageOf}
 import cc.otavia.core.address.Address
 import cc.otavia.core.channel.ChannelFactory
 import cc.otavia.core.config.OtaviaConfig
+import cc.otavia.core.interceptor.InterceptorActor
 import cc.otavia.core.ioc.{BeanDefinition, Module}
 import cc.otavia.core.message.*
 import cc.otavia.core.pool.IndexedThreadLocal
@@ -73,6 +74,31 @@ trait ActorSystem {
                                           global: Boolean = false, qualifier: Option[String] = None,
                                           primary: Boolean = false): Address[MessageOf[A]]
     // format: on
+
+    /** Wrap a target address with interceptor actors. Interceptors are applied in order: first factory = outermost =
+     *  first to process the request. Each factory receives the next [[Address]] to forward to.
+     *
+     *  {{{
+     *  val target = system.buildActor(new MyHandler())
+     *  val proxied = system.intercept(target, Seq(
+     *    next => new LoggingInterceptor(next),
+     *    next => new AuthInterceptor(next)
+     *  ))
+     *  }}}
+     *
+     *  @param target
+     *    the target address to wrap
+     *  @param factories
+     *    factory functions that create interceptors given the next address
+     *  @tparam M
+     *    the message type, must match the target actor's type
+     *  @return
+     *    the outermost interceptor's address (use this as the public address)
+     */
+    def intercept[M <: Call](
+        target: Address[M],
+        factories: Seq[Address[M] => InterceptorActor[M]]
+    ): Address[M]
 
     private[core] def registerGlobalActor(entry: BeanDefinition): Unit
 

@@ -198,7 +198,7 @@ Inflight management needs both FIFO ordering (backpressure/flow control) and O(1
 - `QueueMap` / `QueueMapEntity` -- O(1) lookup + FIFO ordering dual structure
 
 ### System (`cc.otavia.core.system`)
-- `ActorSystem` / `ActorSystemImpl` -- top-level system, actor creation with pool sizing
+- `ActorSystem` / `ActorSystemImpl` -- top-level system, actor creation with pool sizing, `intercept` API for building interceptor chains
 - `ActorThread` -- IO thread + actor executor, three-phase event loop
 - `ActorHouse` -- per-actor mailbox container, state machine (CREATED->MOUNTING->WAITING->READY->SCHEDULED->RUNNING), cached `_highPriority` flag for scheduling priority
 - `HouseManager` -- priority queue scheduling (high/normal sub-queues), work stealing
@@ -226,6 +226,10 @@ Inflight management needs both FIFO ordering (backpressure/flow control) and O(1
 - `Module` / `AbstractModule` -- BeanDefinition sequences
 - `@Component` -- auto-created actor annotation
 
+### Interceptor (`cc.otavia.core.interceptor`)
+- `InterceptorActor[M]` -- base class for interceptor actors, extends `StateActor[M]`, provides `forwardAsk`/`forwardNotice` helpers
+- `@Intercept` -- Java annotation (runtime retention) declaring interceptors on an actor class; supports `perInstance` for RobinAddress
+
 ## Package Layout
 
 ```
@@ -233,6 +237,7 @@ cc.otavia.core.actor          -- actor hierarchy and lifecycle
 cc.otavia.core.address        -- address types and routing
 cc.otavia.core.pool            -- object pooling and thread-locals
 cc.otavia.core.channel        -- channel pipeline, handler, inflight, socket, udp
+cc.otavia.core.interceptor    -- actor AOP via address proxying (InterceptorActor, @Intercept)
 cc.otavia.core.ioc            -- IoC/DI container
 cc.otavia.core.message        -- Notice, Ask, Reply message types
 cc.otavia.core.reactor        -- file AIO reactor
@@ -246,4 +251,4 @@ cc.otavia.core.util           -- internal utilities
 
 ## Testing
 
-19 test files under `test/src/`.
+19 test files under `test/src/`. Interceptor E2E tests live in `testkit/test/` (testkit depends on core, avoiding circular deps).

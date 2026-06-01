@@ -23,4 +23,5 @@ cc.otavia.core.testkit     -- ProbeActor (internal)
 
 ## Testing
 
-No tests -- this IS the test infrastructure. Used by all other modules' test suites.
+1 test file under `test/src/`:
+- `InterceptorE2ESuite` -- end-to-end tests for the interceptor/AOP feature (uses `TestProbe.askAndExpect`)

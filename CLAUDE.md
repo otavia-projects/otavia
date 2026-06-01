@@ -102,6 +102,7 @@ Read module CLAUDE.md files based on the task at hand. Each entry maps a concern
 | ActorThread event loop, scheduling, mailbox priority | [core](core/CLAUDE.md) |
 | Channel pipeline, handler masking, inflight mechanism | [core](core/CLAUDE.md) |
 | Address routing, timer, object pooling, IoC | [core](core/CLAUDE.md) |
+| Actor AOP, interceptor chains, @Intercept annotation | [core](core/CLAUDE.md) |
 | Byte buffer operations, AdaptiveBuffer, memory allocation | [buffer](buffer/CLAUDE.md) |
 | Adding a new serialization format, Serde/SerdeOps contracts | [serde](serde/CLAUDE.md) + target format module |
 | JSON serialization, JsonSerde derived macro | [serde-json](serde-json/CLAUDE.md) |
